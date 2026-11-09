@@ -1036,7 +1036,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-503, <SESSION_IDENTIFIER>: The DATA directory is returning a server error, so no download & no share link can work.
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/environmentCore.php
 
 FATAL
   NO
@@ -1067,7 +1067,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-504, <SESSION_IDENTIFIER>: The Apache configuration HRConvert2 wrote did not pass apachectl configtest & was withdrawn.
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -2042,17 +2042,24 @@ ERROR DESCRIPTION
   An image conversion was refused because the server could not build a sandbox for it.
   ImageMagick parses untrusted image files & has a long history of memory corruption bugs.
   The delegate system invokes other programs by design, which is what ImageTragick abused.
-  policy.xml restricts that natively, but a policy file is a blocklist & has been bypassed.
+  The policy the Image pipeline carries into each conversion restricts that natively, but a
+  policy file is a blocklist & has been bypassed.
   HRConvert2 therefore runs the conversion inside a bubblewrap namespace that can see only
   the two directories the conversion needs, & refuses rather than running without one.
   Bubblewrap requires unprivileged user namespaces, which several situations prevent.
   The bubblewrap package may not be installed.
-  Debian 12 & Ubuntu 24.04 set kernel.apparmor_restrict_unprivileged_userns to 1, which
-  blocks bubblewrap until an AppArmor profile is installed for it.
+  Ubuntu 23.10 & later set kernel.apparmor_restrict_unprivileged_userns to 1, which blocks
+  bubblewrap unless it runs under an AppArmor profile that permits a user namespace.
+  From v4.0.5 every sandbox runs HRConvert2's own copy of bubblewrap, at
+  /usr/local/libexec/hrconvert2/bwrap, which the hrconvert2-bwrap profile -fp writes is attached
+  to. --setup --install-depends & --update-depends install the copy, & -v says where it is
+  missing or cannot be run. Where bubblewrap refuses a sandbox twice, -fp lifts the restriction,
+  unless --Allow Unprivileged Namespaces-- is FALSE. It never lifts it for an attempt cut short,
+  or to cover a copy that is missing or cannot be run.
   A container blocks the required syscalls unless it was started with the correct options.
   See --Require Sandbox-- & --Require Sandbox On Docker-- in config.php.
-  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
-  See INSTALLATION_INSTRUCTIONS.txt for the AppArmor profile this requires.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox, & how.
+  Documentation/Build/diagnose-bwrap.sh probes it the way HRConvert2 does, & changes nothing.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -3444,8 +3451,10 @@ ERROR DESCRIPTION
   and images, so a PDF parser is a considerably larger attack surface than it appears.
   See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
   NOTE. The ImageMagick step of the advanced OCR method does NOT produce this error.
-  ImageMagick has policy.xml, so an unavailable sandbox is a downgrade to a weaker control
-  rather than to no control, & that step continues with a warning instead.
+  ImageMagick has the policy the OCR pipeline carries, so an unavailable sandbox is a downgrade
+  to a weaker control rather than to no control, & that step continues with a warning instead.
+  Outside a sandbox that policy is read before the host's own, whose rules still decide any
+  coder they name.
   NOTE. The document conversion engine is not sandboxed at all & is unaffected by this.
   It is a persistent listener rather than a process launched per conversion.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
@@ -4192,7 +4201,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26000, <SESSION_IDENTIFIER>: Could not remove the build environment!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -4217,7 +4226,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26001, <SESSION_IDENTIFIER>: Could not remove the development documentation!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -4430,10 +4439,14 @@ ERROR DESCRIPTION
   Bubblewrap may also be installed but non functional on this system.
   Unprivileged user namespaces can be disabled at the kernel level on some hardened systems.
   Check the setting by running 'sysctl kernel.unprivileged_userns_clone' on the server.
+  On Ubuntu 23.10 & later the AppArmor restriction applies too, & -v says whether every sandbox
+  runs HRConvert2's own copy of bubblewrap, which the hrconvert2-bwrap profile -fp writes is
+  attached to. --setup --update-depends installs the copy.
   Some container runtimes also block the namespaces bubblewrap requires.
   Running HRConvert2 inside Docker may require adding the SYS_ADMIN capability, or a seccomp profile that permits unshare.
   Verify the sandbox works by running the following as the web server user, which must exit silently.
   bwrap --unshare-all --ro-bind /usr /usr --proc /proc --dev /dev --tmpfs /tmp /usr/bin/true
+  Where the kernel restricts unprivileged namespaces, run /usr/local/libexec/hrconvert2/bwrap in place of bwrap.
   Set the Allowed Conversion Types configuration entry to exclude Scad if this server cannot support the sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -4805,7 +4818,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29002, <SESSION_IDENTIFIER>: The requested update version does not exist at the update source!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -4832,7 +4845,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29003, <SESSION_IDENTIFIER>: The update package is larger than the configured maximum!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -4857,7 +4870,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29004, <SESSION_IDENTIFIER>: Could not download the update package! Curl exited with code <ADDITIONAL_DATA>.
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -4884,7 +4897,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29005, <SESSION_IDENTIFIER>: The downloaded update package is empty or too small to be valid!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -4908,7 +4921,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29006, <SESSION_IDENTIFIER>: Could not read a configuration file during the merge!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -4930,7 +4943,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29007, <SESSION_IDENTIFIER>: Could not merge the configuration file!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -4954,7 +4967,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29008, <SESSION_IDENTIFIER>: Could not write the merged configuration file!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -4976,7 +4989,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29009, <SESSION_IDENTIFIER>: Automatic updates are disabled in config.php!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5001,7 +5014,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29010, <SESSION_IDENTIFIER>: Could not create a working directory for the update!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5024,7 +5037,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29011, <SESSION_IDENTIFIER>: Could not extract the update package!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5047,7 +5060,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29012, <SESSION_IDENTIFIER>: The update package does not have the expected structure!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5070,7 +5083,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29013, <SESSION_IDENTIFIER>: The update package does not contain convertCore.php!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5093,7 +5106,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29014, <SESSION_IDENTIFIER>: Could not stage the update beside the installation!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5120,7 +5133,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29015, <SESSION_IDENTIFIER>: Could not move the existing installation aside!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5145,7 +5158,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29016, <SESSION_IDENTIFIER>: Could not move the update into place! The previous installation was restored.
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5172,7 +5185,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29017, <SESSION_IDENTIFIER>: The updated installation failed validation & was rolled back!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5201,7 +5214,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29018, <SESSION_IDENTIFIER>: The updated installation failed validation & COULD NOT be rolled back!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   YES
@@ -5237,7 +5250,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-29019, <SESSION_IDENTIFIER>: Could not move the DATA folder into the update, so the update was stopped & nothing was changed!
 
 FILE
-  /convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -5783,7 +5796,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31018, <SESSION_IDENTIFIER>: The installation location resolved to a system directory & was NOT deleted. Check $InstLoc in config.php.
 
 FILE
-  convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   YES
@@ -5806,7 +5819,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31019, <SESSION_IDENTIFIER>: The backup location resolved to a system directory & was NOT emptied. Check $BackupLoc in config.php.
 
 FILE
-  convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   YES
@@ -5827,6 +5840,12 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: An install secret could not be generated, because this host could not supply random bytes!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret could not be written to <FILE_PATH>! <ADDITIONAL_DATA>
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret written to <FILE_PATH> did not read back correctly!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret at <FILE_PATH> could not be reached, because another account could replace <FOLDER_PATH>, so nothing was replaced! <ADDITIONAL_DATA>
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret was not rotated, because another account could replace <FOLDER_PATH>, & the copy there would keep the old key! <ADDITIONAL_DATA>
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret was not written to <FILE_PATH>, because another account could replace it there. <ADDITIONAL_DATA>
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: <WRITE_FAILURE> It is not known to carry the key in use & could not be removed either. <ADDITIONAL_DATA>
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: <WRITE_FAILURE> It still carries the old key until the next command run as root writes the new one there.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The web server account would not read the install secret root holds! <ADDITIONAL_DATA>
 
 FILE
   convertCore.php
@@ -5841,17 +5860,74 @@ ERROR DESCRIPTION
   Root could not put a usable install secret in place.
   Every command run as root reads the install secret, & writes it again when it is missing,
   unusable, or not yet in the shape this release keeps it in. That shape is root:www-data 0640,
-  so the web server user can read the key & cannot change it.
-  Root reads the file with PHP's tokenizer & never runs it. It writes a new file that did not
-  exist a moment before & renames it into place, so nothing at that name is ever followed.
+  so the web server user can read the key & cannot change it. From v4.0.4 the same key is kept
+  in two copies, in Secrets in the data location & at the top of the data location, where every
+  earlier release reads it. The web server user reads the copy in Secrets first once the folder
+  has its role, unless the copy at the top is root's & was written after it, & the copy at the top
+  first until then. The path in the message says which copy.
+  A copy read first that cannot be written is an ERROR when the key is new or a rotation's.
+  Otherwise the key was found in a copy that still carries it, so it is only a WARNING, & the
+  next command run as root tries again. The other copy that cannot be written is only a WARNING.
+  One not known to carry the key in use is removed, so no other key can ever be found there,
+  once the web server user can read the copy it reads first, & is an ERROR when it cannot be
+  removed. While that copy is not right it is left, because that user may read it meanwhile.
+  THE KEY IS IN USE ONLY WHEN THE WEB SERVER USER READS IT. Once the copies are settled, root
+  judges from the owners, the groups & the modes which copy that user would use first, passing
+  over one it cannot read & one it cannot use, as it does, & the key root holds is in use only
+  when that copy carries it. The ninth message says when it does not, & names the copy that user
+  would use, or says it could use neither.
+  Root reads the file with PHP's tokenizer & never runs it. It writes a new copy that did not
+  exist a moment before under a staged name of its own beside the secret's, gives it its group &
+  mode, & renames it over the name, so nothing at either name is ever followed.
   The first message means random_bytes() failed. The host has no usable source of randomness.
   The second message carries the reason the write failed. The data location may be full, on a
-  read only mount, or missing. The warnings above it say whether root could create it.
-  When the write fails, the secret in place is unchanged.
+  read only mount, or missing. The warnings above it say whether root could create it. The new
+  copy may not have taken the name, which a file made immutable refuses, or its mode may not
+  have been set. A copy a default access control list made wider than 0640, in a folder another
+  account owns, is never given the key or the name, because each new copy is made empty & judged
+  before the key is written into it, & only the file judged is filled. When the group cannot be
+  given & the name holds a copy the web server user reads, that copy is kept rather than replaced
+  by one it could not read. When the write fails, the secret in place is unchanged.
   The third message means the file on disk is not the file that was written. Something changed
-  it in the moment between the write & the read, & only the web server user could have. The next
-  command run as root examines it again & replaces it if it is still wrong.
-  Without a secret the installation does not verify, so ERROR 5 follows & the command stops.
+  it in the moment between the write & the read. Once -fp has given each folder its role, only
+  root can write where the secret is kept, so it was another command run as root, a folder
+  somebody made writable since, or a disk that did not keep what it was given. The next command
+  run as root examines it again & replaces it if it is still wrong.
+  The fourth message means the copy in Secrets is out of root's reach, because a folder it is
+  reached through could be replaced by another account. The data location is the usual one. A
+  repair, & every command run as root once Secrets is in it, gives it back to root first, so
+  this follows only when that could not be done, or when Secrets itself is a link. The copy may
+  be the good one, so root makes no new key in its place & changes nothing. ADDITIONAL_DATA
+  names what is in the way. Give that folder back to root, root:root 0755, & run
+    sudo php convertCore.php -fp
+  The fifth message is the same thing during --rotate-secret. The copy in Secrets cannot be
+  written, so it would keep the old key & could be found again, & nothing is rotated.
+  The sixth message means the place the secret is kept could be changed by an account other than
+  its owner, through the folder named in ADDITIONAL_DATA or one above it. A group that may write
+  counts whoever the group is, because under an access control list the group bits are only the
+  list's mask. The web server user would refuse a copy there, & so would the next command run as
+  root, so none is written. -fp gives the data location & Secrets back to root first. A folder
+  above the data location is not this application's, & ERROR 31024 names it.
+  WRITE_FAILURE in the seventh & eighth messages is the second, third or sixth message, about a copy
+  other than the one read first.
+  The seventh message means that copy is not known to carry the key in use & could not be removed
+  either. ADDITIONAL_DATA says why. The web server user reads the key in the copy it reads first,
+  so a key in the other copy is found only when that copy cannot be used. Remove the copy named as
+  root, & run
+    sudo php convertCore.php -fp
+  The eighth message means --rotate-secret wrote the new key into the copy read first & not into
+  the other, which still carries the old key. The copy read first was not given the web server
+  user's group, so the other was not removed either. The WARNING above it says why. Until the
+  next command run as root writes the new key there, the web server user may use the old one.
+  The ninth message means the copy the web server user would use first does not carry the key
+  root holds, or that user could use neither copy. A copy root:root 0640, a folder that user
+  cannot enter, or a copy carrying another key that root could not write are the usual causes,
+  & the WARNINGs above it say which copies could not be written. A file made immutable, a full
+  disk or a read only mount keeps root from correcting them. Correct the cause & run -fp again.
+  Without a key that user reads, the installation does not verify, so ERROR 5 follows & the
+  command stops. Otherwise the command goes on with the key in use. A rotation is done once the
+  copy read first carries the new key, & the ninth message still names a copy that user would
+  read the old key from.
   Correct the cause & run  sudo php convertCore.php -v  to confirm.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -5877,6 +5953,9 @@ ERROR DESCRIPTION
   A fresh installation that has never run a command as root has no secret yet. The installer runs
   as root & creates it, & so does  sudo php convertCore.php -fp
   The data location may have been emptied or replaced by hand since the last command run as root.
+  Secrets may have lost its role, root:www-data 0750, so the web server user cannot enter it,
+  while the copy at the top of the data location is gone too. -fp gives the folder its role again
+  & writes both copies.
   The message names no path, because it can reach a visitor's page.
   Without a secret the installation does not verify, so ERROR 5 follows & the page is not served.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -5914,7 +5993,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31023, <SESSION_IDENTIFIER>: The update was refused, because the folder it would happen in can be changed by an account other than root. <ADDITIONAL_DATA>
 
 FILE
-  convertCore.php
+  Resources/Engine/Cores/setupCore.php
 
 FATAL
   NO
@@ -6343,6 +6422,7 @@ LOGGED
 ERROR DESCRIPTION
   One of the two unit files could not be written to /etc/systemd/system.
   The service & the timer are written together, so this reports either one failing.
+  From v4.0.5 -fp writes them again wherever they are installed, so it can report this too.
   The usual cause is a read only /etc or a full disk. Neither is specific to this
   application, & the listener unit would fail the same way at the same moment.
   Nothing else is affected. The Environment Manager still runs by hand, as

@@ -34,6 +34,10 @@
 # / -----------------------------------------------------------------------------------
 APACHE_USER="${APACHE_USER:-www-data}"
 BW="$(command -v bwrap || echo /usr/bin/bwrap)"
+# / From v4.0.5 every sandbox on a restricting kernel runs HRConvert2's own copy of bubblewrap,
+# / which this profile is attached to & which only root & the web server's group may run.
+PROFILE="${PROFILE:-hrconvert2-bwrap}"
+COPY="${COPY:-/usr/local/libexec/hrconvert2/bwrap}"
 BASE="--ro-bind /usr /usr --ro-bind-try /lib /lib --ro-bind-try /lib64 /lib64 --ro-bind-try /bin /bin --proc /proc --dev /dev --tmpfs /tmp"
 
 run_as() {
@@ -72,6 +76,17 @@ echo "  --- loaded ---"
 grep -iE 'bwrap' /sys/kernel/security/apparmor/profiles 2>/dev/null | sed 's/^/  /' || echo "  none loaded or securityfs unreadable"
 
 echo
+echo "== HRConvert2's own copy of bubblewrap, & the $PROFILE profile attached to it =="
+if [ -f "$COPY" ]; then
+  ls -l "$COPY" | sed 's/^/  /'
+  if cmp -s "$COPY" "$BW"; then echo "  matches $BW"; else echo "  differs from $BW. sudo php convertCore.php --setup --update-depends takes the update."; fi
+else
+  echo "  not installed at $COPY. sudo php convertCore.php --setup --update-depends installs it."
+fi
+if [ -f "/etc/apparmor.d/$PROFILE" ]; then printf '  on disk   %s\n' "/etc/apparmor.d/$PROFILE"; grep -E "^profile " "/etc/apparmor.d/$PROFILE" | sed 's/^/              /'; else echo "  not on disk"; fi
+if grep -q "^$PROFILE (" /sys/kernel/security/apparmor/profiles 2>/dev/null; then echo "  loaded"; else echo "  not loaded, or securityfs unreadable"; fi
+
+echo
 echo "== Probes as root, which can always create a namespace =="
 out="$($BW --unshare-all $BASE /usr/bin/true 2>&1)"; st=$?
 printf '  %-34s exit %-3s %s\n' "--unshare-all" "$st" "${out:-no output}"
@@ -90,8 +105,19 @@ run_as "$APACHE_USER" "all except net"       --unshare-user --unshare-pid --unsh
 run_as "$APACHE_USER" "no unshare at all"
 
 echo
+echo "== Probe as $APACHE_USER through the copy, as HRConvert2 builds one =="
+if [ -f "$COPY" ]; then
+  output="$(su -s /bin/sh "$APACHE_USER" -c "$COPY --unshare-all $BASE /usr/bin/true" 2>&1)"; status=$?
+  printf '  %-34s exit %-3s %s\n' "the copy, --unshare-all" "$status" "${output:-no output}"
+else
+  echo "  the copy is not installed, so there is nothing to probe."
+fi
+
+echo
 echo "== Interpretation =="
 echo "  If every probe fails, the namespace itself is refused."
+echo "  If only the probe through the copy passes, the kernel restricts unprivileged namespaces"
+echo "  & HRConvert2 builds every sandbox through its own copy, which is how it should be."
 echo "  If only the ones including --unshare-net fail, loopback setup is the problem &"
 echo "  everything except network isolation is available."
 echo "  If 'all except net' passes, HRConvert2 can sandbox with --share-net as a fallback,"

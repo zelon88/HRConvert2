@@ -26,6 +26,125 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 
 --------------------
+COMMIT 11/7/2026
+v4.0.5 - What the web server serves & what every sandbox needs from the host move into the Engine.
+
+-v4.0.5.
+-The Apache configuration, the DATA protection file, the live exposure probe & the data & hosted location checks move from convertCore.php into Environment Core, Setup Core & engine.php. convertCore.php is 786 lines shorter.
+-New location role served, owned & moded as web. The Engine writes the rules & the protection file for each served location & probes each one. The contract gives $ConvertTemp the served role.
+-The Engine reports each served location's exposure, the data location & the hosted location itself. $EngineDataPolicyProvider is retired & applicationDataPolicyFindings is removed.
+-The contract maps MaintainProtectionFile to --Maintain HTAccess--, & HostedLocation, ServerURL & DocumentRoot to $HostedLoc, $FullURL & $ServerRootDir. The Engine reads no global it did not read before.
+-A served location must be inside the hosted location & below it, as written, with no . or .. below the hosted location. One anywhere else is refused, given no role & named MISPLACED by the Environment Manager on a placement line.
+-A data location is refused unless it holds the hosted location. One holding only DATA was spared until now.
+-Root makes a missing served folder only beneath a folder no other account can change. The probe encodes each folder name in its address & is named for the application.
+-A request warns when no served location is set inside the hosted location, rather than keeping no protection file in silence, & warns when the application contract was not loaded.
+-The listener re-proves every served location's exposure & names a misplaced one. The resource manager is v4.0.5.
+-Setup Core makes more than one missing folder only beneath a folder root alone can write. A deeper folder below one another account can write, such as /var/log, is made by hand. --setup gives every location its role when nothing is served too.
+-New Environment Core functions classifyServedLocations, pathIsBelowPath, pathTextIsBelow, servedLocations, misplacedServedLocations, servedLocationNames, protectionFileIsMaintained, maintainProtectionFile, verifyServedProtection & verifyServedExposure.
+-The sandbox profile check at start runs once the Engine has loaded. New function verifySandboxPolicyAtStart.
+-A hosted location with nothing served still gets its loader & data location rules.
+-FIX. -v without an Engine ended in a fatal error. It reports what it could not check.
+-FIX. The protection file said one line twice.
+-The generated rules no longer name $DangerousFiles.
+-The first request rewrites an existing protection file & the first -fp an existing Apache configuration, once.
+-The kernel settings & the AppArmor profile every sandbox needs move from convertCore.php into Environment Core, & engine.php reports them before the application's findings.
+-Where the kernel restricts unprivileged namespaces, every sandbox runs HRConvert2's own copy of bubblewrap, /usr/local/libexec/hrconvert2/bwrap, root:www-data 0750.
+-The profile, hrconvert2-bwrap, is attached to that copy alone. It is Ubuntu 26.04's bwrap-userns-restrict, so what bubblewrap starts has no capabilities. -fp writes it wherever the kernel can restrict namespaces. It attached to /usr/bin/bwrap until now.
+-Only --setup --install-depends, --update-depends & --install-complete, the hand over to an installed copy & -u make or refresh the copy. -fp & the Environment Manager never change it.
+-The copy is 0750 before it is given www-data's group, & no folder is made beneath one another account could change. www-data runs it before it is called ready.
+-After -u from v4.0.4 or earlier, run --setup --update-depends once. An earlier release cannot make the copy.
+-A restricted kernel is left in force where the copy carries a sandbox. -fp lifts it only where bubblewrap refuses a sandbox twice & --Allow Unprivileged Namespaces-- permits, & puts it back when lifting does not help either. It is never lifted for an attempt a time limit or a signal cut short, or to cover a copy that is missing or cannot be run. The contract maps that setting as LiftNamespaceRestriction.
+-The profile is never attached where an account other than root could put a program at the copy's path, & a repair takes back one attached before. A container writes none.
+-A copy of a bubblewrap since removed is never run.
+-A lift that did not help is read back once it is put back, & is FAILED where it could not be.
+-A profile still loaded is never called gone. One the parser cannot take out is taken out by name, & its file is kept until it is.
+-The copy is staged by tempnam, 0600, so a default ACL on its folder cannot open it to another account before its mode is set.
+-The policy check's cached answer holds only while the copy's path is held as it was, so the hand over no longer calls a copy it has just made exposed.
+-An administrator who is neither root nor www-data is told the copy & the sandbox are not judged & to run -v as root, rather than NOT RUNNABLE & BLOCKED.
+-A copy that could not be started sends the log to -v rather than -fp. Both probes kill a bubblewrap still running after its time limit.
+-FIX. runAsAccount gave the account it drops to the file root read the exit code back from, so any process running as that account could rewrite the answer. The file stays root's, the exit code is the child's own exit status, & a child a signal ended has failed.
+-The child runAsAccount drops to closes every handle root held, reads & writes /dev/null in place of the standard three & leaves root's session, so nothing it starts holds root's terminal, a lock or a log.
+-hrconvert2-check.py & .sh no longer exempt runAsAccount from the owner check, because it no longer gives its output file away.
+-FIX. Every -fp wrote all three settings into the sysctl drop in, so a boot lowered user.max_user_namespaces to 15000 & lifted the restriction with --Allow Unprivileged Namespaces-- FALSE. It holds only what -fp changed & is removed when that is nothing. One an earlier release wrote keeps a namespace line only where the next boot would refuse namespaces without it.
+-FIX. The restriction was checked twice. The first check called it blocked & the second lifted it, so a corrected host read as unready.
+-FIX. Where the restriction stayed in force, every web request warned twice that the profile was not loaded, because only root can read which profiles are. apparmorProfileIsLoaded also matched a longer name containing the one asked for.
+-The extension of a distribution's bubblewrap profile & the OpenSCAD override are no longer written, & what an earlier release wrote is put back from the copy it kept. aa-remove-unknown, which unloads every profile not in /etc/apparmor.d, is never run.
+-The Image & OCR pipelines carry their own ImageMagick policy in Policy/policy.xml. Inside each sandbox it covers the host's, & outside one MAGICK_CONFIGURE_PATH has it read first. -fp no longer writes /etc/ImageMagick-*/policy.xml & puts back the one an earlier release wrote. New sandbox profile field Overlays.
+-FIX. The OCR page split ran under no ImageMagick policy at all.
+-Each sandbox that runs ImageMagick also covers the policy.xml the installed ImageMagick names. Outside a sandbox the host's policy still decides a coder it names.
+-FIX. An unsandboxed command given environment variables failed wherever per conversion limits put nice or systemd-run in front of it, as MeshLab's did & the Image & OCR pipelines' would have. They go through env.
+-A policy.xml an earlier release replaced without keeping a copy is left in place & reported as kept, rather than removed.
+-No command writes the sandbox profile as it starts. Only -fp does, & -v no longer writes or loads it as root.
+-A profile the parser could not load is taken out again & reported as unsupported, or as unrestricted where the kernel does not restrict now.
+-An unattended Environment Manager repair never lifts the namespace restriction.
+-Where --Allow Unprivileged Namespaces-- is FALSE, -fp switches back on a restriction HRConvert2 had lifted, rather than leaving it to the next boot.
+-The copy has a finding of its own, bubblewrap copy. It reads MISSING, UNSAFE, NOT RUNNABLE, ORPHANED, or BEHIND once the system's bubblewrap is upgraded, & names the command to run.
+-A sysctl drop in that cannot be written is a warning.
+-The OpenSCAD pipeline builds its sandbox through the same launcher. -v & the environment report name the copy when every sandbox runs it, & -fp names a policy it put back.
+-The listener & Environment Manager units name the installed copy rather than the copy -fp was run from to install it. New Setup Core function serviceEntryFolder.
+-FIX. A copy running from outside the web root was said to be served. It reads NOT INSTALLED.
+-FIX. The cgroup delegation drop in was rewritten on every -fp, reloading systemd & asking for a restart each time. A matching one is Unchanged.
+--fp writes the Environment Manager's units again where they are installed, so a first --install-complete leaves them naming the installed copy.
+-The hand over to the installed copy says when a running listener still runs the release it started with.
+-New functions namespaceRestriction, privateBwrapPath, sandboxBinaryIsNeeded, sandboxBinaryIsSafe, sandboxBinaryIsRunnable, sandboxBinaryIsUnusable, sandboxCopyIsJudgedHere, sandboxPathIsHeld, verifySandboxBinary, installSandboxBinary, removeSandboxPolicy, sandboxApparmorProfileName, retirePolicyFile, sysctlValuesElsewhere & maintainNamespaceDropIn in Environment Core, verifySandboxLauncher & sandboxOverlayFlags in engine.php, refreshSandboxBinary in Dependency Core, refreshEnvironmentTimer in Setup Core & coverResolvedImageMagickPolicy in convertCore.php. verifyBwrap is kept & wraps verifySandboxLauncher. unloadApparmorProfile, sandboxApparmorLocalContents, imageMagickPolicyContents & openScadApparmorContents are removed.
+-Documentation/Build/diagnose-bwrap.sh probes through the copy.
+-The core, the contract, the Engine, engineConfig.php, Environment Core, Setup Core, Dependency Core & the Image, OCR & Scad pipelines are v4.0.5, & the core requires the Engine, Setup Core & Dependency Core at v4.0.5.
+-ABOUT_ENGINE_CONTRACT.txt, ABOUT_MANAGED_LOCATIONS.txt, ABOUT_ENVIRONMENT_MANAGER.txt, ABOUT_DATA_DIRECTORY_PROTECTION.txt, ABOUT_PIPELINE_COMPONENTS.txt, ABOUT_COMMAND_LINE_ARGUMENTS.txt & .md, ABOUT_QUALITY_CONTROL.txt, INSTALLATION_INSTRUCTIONS.txt, CODING_CONVENTIONS.txt, ERROR_DESCRIPTIONS.txt, ENGINE_MIGRATION_STATUS.txt, the Dockerfile & --Allow Unprivileged Namespaces-- in config.php describe the above.
+
+--------------------
+COMMIT 11/7/2026
+v4.0.4 - The install secret moves into a folder of its own, Secrets.
+
+-v4.0.4.
+-The install secret is kept in Secrets in the data location, root:www-data 0750, so no other account can even list it. A copy with the same key stays at the top of the data location for earlier releases. Both are root:www-data 0640.
+-Setup Core makes Secrets & gives it the new secret role, never walked. The contract names it $SecretLoc. New Setup Core function applySecretRole.
+-The first -fp copies an earlier release's secret into Secrets with the same key, so no session ends, & going back to an earlier release ends none either.
+-Every command run as root writes its key into each copy that does not already carry it exactly. A copy known to carry the key is never removed. One not known to carry it is removed only when it cannot be written.
+-Root & the web server account read the copy in Secrets first once the folder has its role, & the copy at the top first until then. Every command run as root names a Secrets folder without its role.
+-A copy at the top that root owns & wrote after the one in Secrets is read first, so a key rotated after going back to an earlier release stays in use.
+-Root takes the first usable copy & writes a new key only when it finds none. A damaged copy, or one that carries another key, is given the key in use.
+-A copy counts only when no account but root & the web server account could have written it or any folder above it, & none of them is a link or writable by a group. The web server account judges every copy the same way. Until v4.0.4 a copy at the top counted whoever owned it, & the web server account used any copy it could read.
+-Once root has found a place the secret is kept open to another account, only a copy root owns counts.
+-No copy is written where another account could replace it. A copy in Secrets root cannot reach is never replaced, & a rotation is refused while one is out of reach. Root stops with error 31020 instead.
+-A repair, & every command run as root once Secrets exists, first gives the data location back to root when another account holds it.
+-Commands run as root settle the secret one at a time, under a lock in Engine waited on for at most fifteen seconds.
+-Without PHP's posix functions the web server account & its group are looked up with id & getent.
+-FIX. Root gave a rewritten secret its group only after it took its name, so a request in between failed, & a default access control list could leave the key readable by every account. A new copy is made empty under a staged name, given its group & mode 0640, judged, & only then given the key & renamed over the name.
+-FIX. A key root had written counted as in use whether the web server account could read it or not. It counts only when the copy that account would use first carries it. Otherwise root stops with error 31020 & names the copy.
+-FIX. -fp moved an older layout's sessions & capability cache into whatever Sessions & Cache led to before giving the data location back to root, so a web server account that owned it could steer the move with a link. It gives it back first, & moves nothing into a folder that is a link or that another account could replace.
+-FIX. -fp over a data location an old chown -R had given to the web server account had to be run twice. It gives the data location back to root first.
+-FIX. The web server account ran the install secret with require. It reads it with the tokenizer, as root does, & never changes its mode. A secret that vanishes mid-read no longer ends a request with a fatal error naming its path.
+-New functions olderInstallSecretFile, secretFolderStatus, writeInstallSecretAsRoot, webServerAccountNumbers, secretFolderIsTrusted, installSecretCopyIsTrusted, topSecretCopyIsNewer & webServerCanReadSecretCopy. writeInstallSecretAsRoot is the write & read back resolveInstallSecretAsRoot did inline.
+-provisionAndMigrateDataRoot never takes Secrets for an older layout's session.
+-The -v argument reports the Secrets folder, judges the copy at the top too, & says when the secret is only at the top.
+-FIX. -v passed an install secret the web server account could not read. It judges the group too.
+-FIX. -v as the web server account always failed its Install secret row, judging that account's per user secret in its place. Each is judged by its own role.
+-The Dockerfile removes the build's secret from Secrets too.
+-The core, the Engine & Setup Core are v4.0.4, & the core requires both at v4.0.4. engine.php changes in two comments only. $RequiredSecretVersion does not move.
+-ABOUT_MANAGED_LOCATIONS.txt, ABOUT_ENGINE_CONTRACT.txt, ABOUT_ENVIRONMENT_MANAGER.txt, DOCKER_BUILD_INSTRUCTIONS.txt, ERROR_DESCRIPTIONS.txt & ENGINE_MIGRATION_STATUS.txt describe the above.
+-FIX. ABOUT_COMMAND_LINE_ARGUMENTS.txt & .md listed the data location as the web server account's & root as logging to standard error, as before v4.0.1. Both list the owners -fp leaves now.
+
+--------------------
+COMMIT 11/7/2026
+v4.0.3 - The updater & the installer move into Setup Core.
+
+-v4.0.3.
+-updateApplication, downloadUpdatePackage, mergeConfigFile, cleanBuildEnvironment & handOverToApplication move from convertCore.php into Setup Core, with every body unchanged except that each names the application through the contract. convertCore.php is 440 lines shorter.
+-The -u argument loads Setup Core before it updates, & -fp cleans the build environment only when Setup Core is available.
+-The core & Setup Core are v4.0.3, & the core requires Setup Core at v4.0.3.
+-ERROR_DESCRIPTIONS.txt names Setup Core for the 23 errors those functions raise, & ENGINE_MIGRATION_STATUS.txt records the move as step ten.
+
+--------------------
+COMMIT 11/7/2026
+v4.0.2 - -fp refuses to install part of a release, & a dependency install turns off what it turned on.
+
+-v4.0.2.
+-FIX. -fp installed whatever tree it ran from in place of the whole application, so a drop-in unpacked over the web root replaced a complete installation with a partial one. A tree that lacks any PHP file the installation holds in Resources or UI is now refused & the installation is left as it is. New Setup Core function codeMissingFromTree.
+-FIX. Installing the dependencies on Debian & Ubuntu pulled in javascript-common with the packages Calibre recommends, which published /usr/share/javascript as /javascript on every site the host serves. --install-depends turns off each Apache configuration the contract names in $EngineUnwantedApacheConfs that the install turned on, & leaves one an administrator turned on. New Dependency Core functions enabledApacheConfs & turnOffApacheConfsInstallEnabled.
+-The core, Setup Core & Dependency Core are v4.0.2, & the core requires both cores at v4.0.2. The kernel, the Engine & the bootstrap script stay v4.0.1.
+-ABOUT_MANAGED_LOCATIONS.txt, ABOUT_DEPENDENCIES.txt & ABOUT_ENGINE_CONTRACT.txt describe the above.
+
+--------------------
 COMMIT 11/6/2026
 v4.0.1 - Root stops trusting anything the web server account can change, & the Engine builds its own pins.
 

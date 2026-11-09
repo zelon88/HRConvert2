@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.0.1.
+// / v4.0.5.
 // / This file is the Engine. It provides the environment an application runs in.
 // / It is pinned EXACTLY by the application via $RequiredEngineVersion.
 // / Error block 35000 through 35019 reserved. 35000 is the direct load guard every component
@@ -57,7 +57,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.0.1';
+$EngineVersion = 'v4.0.5';
 // / -----------------------------------------------------------------------------------
 
 
@@ -303,38 +303,59 @@ function validateStartupKey($keyPurpose, $suppliedKey, $singleUse = FALSE) {
 // / has drifted is reported & does not fail the check, because conversions still run.
 function validateOperatingEnvironment() {
   // / Set variables.
-  global $RequireSandbox, $RunningInContainer, $RequireSandboxOnDocker, $EngineEnvironmentProvider, $EnableMemoryProtection;
+  global $RequireSandbox, $RunningInContainer, $RequireSandboxOnDocker, $EngineEnvironmentProvider, $InstLoc, $ApplicationLoc, $RequiredSetupCoreVersion, $DirSep, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
   $EnvironmentIsReady = TRUE;
   $EnvironmentFindings = array();
-  $sandboxIsRequired = $providerIsReady = $scriptIsValid = FALSE;
-  $environmentProvider = $scriptStatus = $scriptDisplayStatus = $scriptDetail = '';
-  $providerFindings = $providerFinding = array();
+  $sandboxIsRequired = $providerIsReady = $scriptIsValid = $locationIsProtected = $setupIsAvailable = FALSE;
+  $environmentProvider = $scriptStatus = $scriptDisplayStatus = $scriptDetail = $servedPath = $exposureStatus = $exposureDetail = $hostedStatus = $hostedDetail = $setupVersion = $hostedLocation = $documentRoot = '';
+  $providerFindings = $providerFinding = $misplacedRoots = $kernelFindings = $kernelFinding = array();
+  $hostedWritten = $hostedRemoved = 0;
+  $kernelIsReady = $policyIsValid = $bwrapBinary = FALSE;
+  $policyStatus = $sandboxLauncher = '';
   // / The sandbox is the one thing a conversion cannot proceed without when it is required.
   $sandboxIsRequired = (bool)$RequireSandbox;
   if ($RunningInContainer && !$RequireSandboxOnDocker) $sandboxIsRequired = FALSE;
   // / The Engine checks what the ENGINE provides & nothing else.
-  // / Bubblewrap is one of the two things here that belong to it, because sandboxCommand is
-  // / what builds the namespace & this is that namespace being proved.
-  if (verifyBwrap() === FALSE) {
+  // / Bubblewrap is one of the things here that belong to it, because sandboxCommand is what
+  // / builds the namespace & this is that namespace being proved.
+  // / The launcher says how, so a host that keeps its namespace restriction can see that it does.
+  list ($bwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
+  // / An administrator who is neither root nor the web server's account cannot run this application's
+  // / own copy of bubblewrap, so a sandbox it cannot build says nothing of the one conversions get.
+  if ($bwrapBinary === FALSE && !sandboxCopyIsJudgedHere() && namespaceRestriction() === '1' && sandboxBinaryIsNeeded()) $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'n/a', 'Detail' => 'Only root & '.$ApacheUser.'\'s group may run '.engineApplicationName().'\'s own bubblewrap, so '.$CurrentUser.' cannot judge the sandbox. Run -v as root.');
+  else if ($bwrapBinary === FALSE) {
     $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'FAILED', 'Detail' => 'Bubblewrap cannot build a namespace.'.($sandboxIsRequired ? ' Every conversion will be refused.' : ' Conversions will run unprotected.'));
     if ($sandboxIsRequired) $EnvironmentIsReady = FALSE; }
-  else $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'ok', 'Detail' => 'Bubblewrap can build a namespace.');
-  // / The bootstrap script is the other. The Engine pins it exactly, & one left by another
+  else $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'ok', 'Detail' => 'Bubblewrap can build a namespace'.($bwrapBinary === privateBwrapPath() ? ', through '.privateBwrapPath().' & the '.sandboxApparmorProfileName().' AppArmor profile attached to it.' : '.'));
+  // / The bootstrap script is another. The Engine pins it exactly, & one left by another
   // / release hands arguments to a core that may no longer accept them. It is reported here so
   // / -v, the listener & the Environment Manager all see it, & -fp changes it as root. It never
   // / stops a conversion, so it never makes the environment unready.
   list ($scriptIsValid, $scriptStatus) = verifyBootstrapScript();
   list ($scriptDisplayStatus, $scriptDetail) = describeBootstrapStatus($scriptStatus);
   $EnvironmentFindings[] = array('Check' => 'Bootstrap script', 'Status' => $scriptDisplayStatus, 'Detail' => $scriptDetail);
-  // / Everything else an installation wants checked is the APPLICATION'S to check.
+  // / WHAT EVERY SANDBOX NEEDS FROM THE HOST IS THE ENGINE'S FROM v4.0.5. The kernel settings & the
+  // / AppArmor profile every sandbox runs under were reported by the application until then, first among
+  // / its findings, which is where they still appear. A kernel that refuses every namespace stops
+  // / every conversion, so it makes the environment unready, & a drifted profile is reported.
+  list ($kernelIsReady, $kernelFindings) = verifySandboxKernel(FALSE);
+  foreach ($kernelFindings as $kernelFinding) $EnvironmentFindings[] = $kernelFinding;
+  if (!$kernelIsReady) $EnvironmentIsReady = FALSE;
+  list ($policyIsValid, $policyStatus) = verifySandboxPolicy(FALSE);
+  $EnvironmentFindings[] = array('Check' => 'Sandbox AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('Sandbox AppArmor', $policyStatus));
+  // / What the application keeps on this host is the APPLICATION'S to check.
   // / The kernel namespace settings, three AppArmor policies & the DATA exposure test all
   // / used to be called from here by name, which meant the Engine could not load without an
   // / application that happened to define those six functions. That is not a shared Engine.
+  // / What the web server serves came back at v4.0.5, as the Engine's own, & is checked below
+  // / from the roles the contract gives each location rather than from any function's name.
+  // / So did the kernel settings & the sandbox profile, above, because every sandbox needs them.
+  // / The policies a tool's own conversions carry are still the application's.
   // / The application names one provider in engineConfig.php & the Engine calls whatever it
   // / was told, exactly as it reads $EngineSandboxProfiles rather than knowing any profile.
   // / A provider returns a readiness boolean & a list of findings, same shape as this
   // / function returns, & the two lists are concatenated.
-  // / An installation that declares none gets the Bubblewrap check & nothing else, which is
+  // / An installation that declares none gets the Engine's own checks & nothing else, which is
   // / correct rather than degraded. Another application using this Engine has no AppArmor
   // / policy for ImageMagick & should not be asked about one.
   $environmentProvider = (isset($EngineEnvironmentProvider) && is_string($EngineEnvironmentProvider)) ? trim($EngineEnvironmentProvider) : '';
@@ -343,10 +364,50 @@ function validateOperatingEnvironment() {
     if (is_array($providerFindings)) foreach ($providerFindings as $providerFinding) $EnvironmentFindings[] = $providerFinding;
     if ($providerIsReady === FALSE) $EnvironmentIsReady = FALSE; }
   else if ($environmentProvider !== '') warningEntry('An environment provider named '.$environmentProvider.' was declared & is not defined. Only the Engine checks ran.');
+  // / WHAT THE WEB SERVER SERVES, FROM v4.0.5. Each served location is asked whether it hands its
+  // / files over inert, the data location is placed outside the document root, & the hosted
+  // / location is compared with the installation. An application without a hosted location
+  // / serves nothing, so it is asked none of this, & a served location it declares is named as
+  // / misplaced. These come after the application's own findings, which is where they always
+  // / appeared, so a report reads as it always did.
   // / An exposed or broken tree does not stop a conversion, so it does not make the
-  // / environment unready. It is reported loudly & the operator decides.
+  // / environment unready. It is reported loudly & the operator decides. Neither does a data
+  // / location in the document root, nor a hosted location that is not in step.
+  // / The hosted location & the document root are the application's, read through the map as
+  // / HostedLocation & DocumentRoot.
+  $hostedLocation = (string)applicationSetting('HostedLocation', '');
+  $documentRoot = (string)applicationSetting('DocumentRoot', '');
+  foreach (servedLocations() as $servedPath) {
+    list ($locationIsProtected, $exposureStatus, $exposureDetail) = verifyServedExposure($servedPath);
+    $EnvironmentFindings[] = array('Check' => basename($servedPath).' exposure', 'Status' => ($exposureStatus === 'protected' ? 'ok' : strtoupper($exposureStatus)), 'Detail' => $exposureDetail); }
+  // / A served location anywhere but inside the hosted location is refused, so no rule is written
+  // / for it & nothing tests it. That is a mistake in the contract, & it is named here on a line of
+  // / its own. It never shares an exposure line's name, because -fp & the listener read a location's
+  // / exposure by that name, & a refused location named alike would stand in for the real answer.
+  foreach (misplacedServedLocations() as $servedPath) $EnvironmentFindings[] = array('Check' => (basename($servedPath) === '' ? $servedPath : basename($servedPath)).' placement', 'Status' => 'MISPLACED', 'Detail' => $servedPath.' has the served role & is not inside the hosted location'.($hostedLocation === '' ? ', because none is set' : ' '.$hostedLocation).', so no rule is written for it & its exposure is not tested.');
+  if ($hostedLocation !== '') {
+    // / The data location itself is never served, & is named here when it sits inside the
+    // / document root, where its sessions, caches & logs could be fetched.
+    $misplacedRoots = misplacedDataRoots();
+    if (count($misplacedRoots) === 0) $EnvironmentFindings[] = array('Check' => 'Data location', 'Status' => 'ok', 'Detail' => 'Outside the document root.');
+    else $EnvironmentFindings[] = array('Check' => 'Data location', 'Status' => 'MISPLACED', 'Detail' => implode(' & ', $misplacedRoots).' '.(count($misplacedRoots) === 1 ? 'is' : 'are').' inside the document root '.$documentRoot.', so sessions, caches & logs could be fetched. Move '.(count($misplacedRoots) === 1 ? 'it' : 'them').' outside it.');
+    // / The application runs from Application in the data location & the web server serves only
+    // / the hosted location, which holds the loader. Both are reported & neither is repaired here.
+    // / An application still running from inside the web root is NOT MOVED, & -fp moves it.
+    // / A copy running from anywhere else is NOT INSTALLED. That is a release unpacked to be
+    // / installed, which -fp installs as it ends. Until v4.0.5 it was said to be served as well.
+    if ((string)@realpath($InstLoc) !== (string)@realpath($ApplicationLoc)) {
+      if (pathHoldsPath($hostedLocation, $InstLoc) or ($documentRoot !== '' && pathHoldsPath($documentRoot, $InstLoc))) $EnvironmentFindings[] = array('Check' => 'Hosted location', 'Status' => 'NOT MOVED', 'Detail' => 'The application runs from '.$InstLoc.', which the web server serves. Run -fp as root to install it into '.$ApplicationLoc.'.');
+      else $EnvironmentFindings[] = array('Check' => 'Hosted location', 'Status' => 'NOT INSTALLED', 'Detail' => 'The application runs from '.$InstLoc.', which is not the installed copy. Run -fp as root to install it into '.$ApplicationLoc.'.'); }
+    else {
+      list ($setupIsAvailable, $setupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+      if ($setupIsAvailable && function_exists('publishHostedLocation')) list ($hostedStatus, $hostedDetail, $hostedWritten, $hostedRemoved) = publishHostedLocation($hostedLocation, $InstLoc, FALSE);
+      else {
+        $hostedStatus = 'UNKNOWN';
+        $hostedDetail = 'The Setup Core is unavailable, so the hosted location could not be checked.'; }
+      $EnvironmentFindings[] = array('Check' => 'Hosted location', 'Status' => $hostedStatus, 'Detail' => $hostedDetail); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $sandboxIsRequired, $environmentProvider, $providerIsReady, $providerFindings, $providerFinding, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $kernelFindings, $kernelFinding, $kernelIsReady, $policyIsValid, $policyStatus, $bwrapBinary, $sandboxLauncher, $sandboxIsRequired, $environmentProvider, $providerIsReady, $providerFindings, $providerFinding, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $locationIsProtected, $setupIsAvailable, $servedPath, $exposureStatus, $exposureDetail, $hostedStatus, $hostedDetail, $setupVersion, $misplacedRoots, $hostedWritten, $hostedRemoved, $hostedLocation, $documentRoot);
   return array($EnvironmentIsReady, $EnvironmentFindings); }
 // / -----------------------------------------------------------------------------------
 
@@ -534,7 +595,7 @@ function getAcceptedManagers() {
   $AcceptedManagers = array();
   $AcceptedManagers = array(
     'coreManager.php' => 'v4.0.0',
-    'resourceManager.php' => 'v4.0.1',
+    'resourceManager.php' => 'v4.0.5',
     'workerManager.php' => 'v4.0.0',
     'requestManager.php' => 'v4.0.0');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -1664,11 +1725,12 @@ function writeManagerState($stateName, $stateData) {
 // / -----------------------------------------------------------------------------------
 // / A function to name the Environment Manager's state file.
 // / Accepts nothing. Returns the path, or an empty string when the data root is not known.
-// / It sits at the top of the data root, beside the install secret, root owned & readable by
-// / the web server account's group. Root owns that folder, so no other account can replace a
-// / name in it, & the web server account can read what a pass found, which is how --status
-// / reports the last one. Engine would hide it from every reader the state exists for, because
-// / no account but root can read anything inside it.
+// / It sits at the top of the data root, root owned & readable by the web server account's
+// / group. Root owns that folder, so no other account can replace a name in it, & the web
+// / server account can read what a pass found, which is how --status reports the last one.
+// / Engine would hide it from every reader the state exists for, because no account but root
+// / can read anything inside it. It is not a secret, & Secrets holds nothing else. The install
+// / secret sat beside it alone until v4.0.4, & is kept in Secrets now, with a copy beside it.
 function environmentStatePath() {
   // / Set variables.
   global $DataRootLoc, $EnableMemoryProtection;
@@ -3355,17 +3417,26 @@ function waitForStream($StreamPID, $newPathname) {
 // / A drop that did not take was never checked, so a failed setuid would have run the command
 // / as root. The child now confirms who it is before it runs anything, & a child that cannot
 // / report back is a failure rather than a silent success.
+// / THE ACCOUNT COULD CHANGE WHAT ROOT READ BACK UNTIL v4.0.5. The output file was given to the
+// / account so the child could write it, so any process running as that account could rewrite it
+// / before root read the exit code from it, & root acted on what it said. The file now stays root's,
+// / the child opens it while it is still root & writes through that handle, & the exit code is the
+// / child's own exit status, which no account can write. A child a signal ended did not finish.
+// / The child also kept root's terminal, its session & every handle root held, a lock among them.
+// / It now closes every handle it was given, reads & writes /dev/null in their place, & leaves
+// / root's session before it drops, so nothing it starts holds anything of root's.
 function runAsAccount($command, $accountName) {
   // / Set variables.
   global $RunningAsRoot, $EnableMemoryProtection;
   $CommandOutput = array();
   $CommandExitCode = 1;
-  $accountRecord = array();
+  $accountRecord = $inheritedStreams = array();
   $outputPath = $outputContents = '';
-  $childPid = $childStatus = 0;
+  $childPid = $childStatus = $waitedPid = 0;
   $dropSucceeded = FALSE;
+  $outputHandle = $inheritedStream = $nullInput = $nullOutput = $nullError = NULL;
   if (!$RunningAsRoot) exec((string)$command, $CommandOutput, $CommandExitCode);
-  else if (!function_exists('pcntl_fork') or !function_exists('posix_setuid') or !function_exists('posix_getpwnam') or !function_exists('posix_initgroups')) {
+  else if (!function_exists('pcntl_fork') or !function_exists('pcntl_wifexited') or !function_exists('posix_setsid') or !function_exists('posix_setuid') or !function_exists('posix_getpwnam') or !function_exists('posix_initgroups')) {
     warningEntry('A command had to run as '.$accountName.' & this PHP has no pcntl or posix extension. It was not run at all, because running it as root would be worse.');
     $CommandExitCode = 1; }
   else {
@@ -3374,37 +3445,46 @@ function runAsAccount($command, $accountName) {
     else {
       // / The child writes to a file rather than a pipe, because the parent must not read
       // / from a descriptor the child still owns while it is changing identity.
-      // / tempnam creates the file 0600 for root in a folder where nobody else can replace it,
-      // / so giving it to the account by name before the fork is safe.
+      // / tempnam creates the file 0600 for root in a folder where nobody else can replace it, &
+      // / it stays root's.
       $outputPath = (string)tempnam(sys_get_temp_dir(), 'hrc2run');
-      if ($outputPath !== '') @chown($outputPath, (int)$accountRecord['uid']);
       $childPid = ($outputPath === '') ? -1 : pcntl_fork();
       if ($childPid === -1) warningEntry('A command that had to run as '.$accountName.' could not be forked.');
       else if ($childPid === 0) {
-        // / Inside the child. Groups first, account second, & none of it can be undone.
-        $dropSucceeded = (posix_initgroups((string)$accountName, (int)$accountRecord['gid']) && posix_setgid((int)$accountRecord['gid']) && posix_setuid((int)$accountRecord['uid']));
+        // / Inside the child. Every handle root holds is closed, & the three standard ones are opened
+        // / again on /dev/null, so the command holds no terminal, lock or log of root's.
+        $inheritedStreams = get_resources('stream');
+        foreach ($inheritedStreams as $inheritedStream) @fclose($inheritedStream);
+        $nullInput = @fopen('/dev/null', 'rb');
+        $nullOutput = @fopen('/dev/null', 'wb');
+        $nullError = @fopen('/dev/null', 'wb');
+        // / The output is opened while this is still root, & is closed to the command that runs.
+        $outputHandle = @fopen($outputPath, 'wbe');
+        // / A new session leaves root's terminal behind. Groups first, account second, & none of it
+        // / can be undone.
+        $dropSucceeded = (posix_setsid() !== -1 && posix_initgroups((string)$accountName, (int)$accountRecord['gid']) && posix_setgid((int)$accountRecord['gid']) && posix_setuid((int)$accountRecord['uid']));
         // / Nothing runs unless the child is the account & nothing more.
         if ($dropSucceeded && (posix_getuid() !== (int)$accountRecord['uid'] or posix_geteuid() !== (int)$accountRecord['uid'] or posix_getgid() !== (int)$accountRecord['gid'] or posix_getegid() !== (int)$accountRecord['gid'] or in_array(0, posix_getgroups(), TRUE))) $dropSucceeded = FALSE;
         if ($dropSucceeded) exec((string)$command, $CommandOutput, $CommandExitCode);
         else {
           $CommandOutput = array('The command was not run, because this process could not become '.$accountName.' & nothing else.');
           $CommandExitCode = 126; }
-        @file_put_contents($outputPath, (string)$CommandExitCode.PHP_EOL.implode(PHP_EOL, $CommandOutput));
-        exit(0); }
+        if (is_resource($outputHandle)) @fwrite($outputHandle, implode(PHP_EOL, $CommandOutput));
+        // / The exit code goes back as this process's own exit status, which only the parent reads.
+        exit((is_int($CommandExitCode) && $CommandExitCode >= 0 && $CommandExitCode <= 255) ? $CommandExitCode : 1); }
       else {
-        pcntl_waitpid($childPid, $childStatus);
+        $waitedPid = (int)pcntl_waitpid($childPid, $childStatus);
         $outputContents = (string)@file_get_contents($outputPath);
         @unlink($outputPath);
-        // / A child that wrote nothing did not report an exit code, & silence is not success.
-        if ($outputContents === '' or !ctype_digit((string)explode(PHP_EOL, $outputContents, 2)[0])) {
-          warningEntry('A command that had to run as '.$accountName.' did not report back, so it is treated as failed.');
-          $CommandOutput = array();
-          $CommandExitCode = 1; }
+        if ($outputContents !== '') $CommandOutput = explode(PHP_EOL, $outputContents);
+        // / The exit code is the child's own exit status. A child that was not waited for, or that a
+        // / signal ended, did not finish, & silence is not success.
+        if ($waitedPid === $childPid && pcntl_wifexited($childStatus)) $CommandExitCode = (int)pcntl_wexitstatus($childStatus);
         else {
-          $CommandOutput = explode(PHP_EOL, $outputContents);
-          $CommandExitCode = (int)array_shift($CommandOutput); } } } }
+          $CommandExitCode = 128 + (($waitedPid === $childPid && pcntl_wifsignaled($childStatus)) ? (int)pcntl_wtermsig($childStatus) : 0);
+          warningEntry('A command that had to run as '.$accountName.' was ended before it finished, so it is treated as failed.'); } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $accountRecord, $outputPath, $outputContents, $childPid, $childStatus, $dropSucceeded, $command, $accountName);
+  purgeSensitiveMemory($EnableMemoryProtection, $accountRecord, $inheritedStreams, $outputPath, $outputContents, $childPid, $childStatus, $waitedPid, $dropSucceeded, $outputHandle, $inheritedStream, $nullInput, $nullOutput, $nullError, $command, $accountName);
   return array($CommandOutput, $CommandExitCode); }
 // / -----------------------------------------------------------------------------------
 
@@ -3825,22 +3905,47 @@ function collectConfigModel() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to collect whatever the application says about its own data exposure.
-// / Accepts nothing. Returns display rows, which may be empty.
+// / A function to report whether each served location is exposed, for a person to read.
+// / Accepts nothing. Returns display rows, which are empty when the application serves nothing.
+// / A row with a Label is a status line. A row with only Text is a paragraph.
 // /
 // / Whether a data tree is reachable by a web server is a question about an application
-// / that HAS a web server. An application without one has nothing to answer & the section
-// / is simply not shown, rather than shown empty or shown as a failure.
+// / that HAS a web server. An application that serves nothing has nothing to answer & the
+// / section is simply not shown, rather than shown empty or shown as a failure.
+// / THE ENGINE ANSWERS IT ITSELF FROM v4.0.5, for each location the contract gives the served
+// / role. Until then the application answered through $EngineDataPolicyProvider, which is
+// / retired. A contract that still names one is not read, because the Engine knows the answer.
+// / The protection file is repaired as it is checked, because only --setup asks for these rows,
+// / as root, while it prepares the locations the protection is written into.
 function collectDataPolicyFindings() {
   // / Set variables.
-  global $EngineDataPolicyProvider, $EnableMemoryProtection;
-  $PolicyFindings = array();
-  $policyFunction = '';
-  $policyFunction = (isset($EngineDataPolicyProvider) && is_string($EngineDataPolicyProvider)) ? trim($EngineDataPolicyProvider) : '';
-  if ($policyFunction !== '' && function_exists($policyFunction)) $PolicyFindings = (array)$policyFunction();
-  else if ($policyFunction !== '') warningEntry('A data policy provider named '.$policyFunction.' was declared & does not exist.');
+  global $EnableMemoryProtection;
+  $PolicyFindings = $servedPaths = array();
+  $servedPath = $locationName = $policyStatus = $exposureStatus = $exposureDetail = '';
+  $policyIsValid = $locationIsProtected = FALSE;
+  $servedPaths = servedLocations();
+  foreach ($servedPaths as $servedPath) {
+    $locationName = basename($servedPath);
+    // / Two locations are told apart by a line naming each. One needs no such line.
+    if (count($servedPaths) > 1) $PolicyFindings[] = array('Text' => '  '.$servedPath);
+    list ($policyIsValid, $policyStatus) = verifyServedProtection($servedPath, TRUE);
+    $PolicyFindings[] = array('Label' => 'Protection file', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus($locationName.' Directory', $policyStatus));
+    list ($locationIsProtected, $exposureStatus, $exposureDetail) = verifyServedExposure($servedPath);
+    $PolicyFindings[] = array('Label' => 'Live exposure', 'Status' => strtoupper($exposureStatus), 'Detail' => $exposureDetail);
+    if ($exposureStatus === 'exposed') {
+      $PolicyFindings[] = array('Text' => '');
+      $PolicyFindings[] = array('Text' => '  THE '.strtoupper($locationName).' DIRECTORY IS EXPOSED. A file a user uploads is served back as a');
+      $PolicyFindings[] = array('Text' => '  document rather than as a download, so an uploaded SVG runs its own script');
+      $PolicyFindings[] = array('Text' => '  in this origin. The protection file is being ignored; Apache reads one only');
+      $PolicyFindings[] = array('Text' => '  where AllowOverride is enabled & nginx never reads one at all. Put the rules');
+      $PolicyFindings[] = array('Text' => '  in the server configuration. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.'); }
+    else if ($exposureStatus !== 'protected') {
+      $PolicyFindings[] = array('Text' => '');
+      $PolicyFindings[] = array('Text' => '  Exposure was NOT established, which is not a pass. If the web server is not');
+      $PolicyFindings[] = array('Text' => '  running yet this is expected; re-run the -fp argument once it is.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $policyFunction);
+  // / $PolicyFindings is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $servedPaths, $servedPath, $locationName, $policyStatus, $exposureStatus, $exposureDetail, $policyIsValid, $locationIsProtected);
   return $PolicyFindings; }
 // / -----------------------------------------------------------------------------------
 
@@ -3928,8 +4033,11 @@ function detectHostArchitecture() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to confirm this server can actually isolate a dependency invocation.
-// / Returns the absolute path of a WORKING bubblewrap binary, or FALSE.
+// / A function to confirm this server can actually isolate a dependency invocation, & to say how.
+// / Accepts nothing.
+// / Returns the absolute path of a WORKING bubblewrap binary or FALSE, the launcher that built the
+// / sandbox, & whether an attempt was cut short, in that order. The launcher is escaped already &
+// / goes where the binary would have gone.
 // / A path is returned ONLY when a real sandbox was launched successfully, so a caller
 // / holding a path may build a command with it without checking anything else.
 // / This is a CAPABILITY check rather than a version check & is the only one in the
@@ -3939,49 +4047,147 @@ function detectHostArchitecture() {
 // / proves nothing at all, so a real minimal sandbox is launched here instead.
 // / A dependency that cannot be isolated must be refused rather than run unprotected, so a
 // / FALSE from this function is the strongest signal the application produces.
-function verifyBwrap() {
+// /
+// / EVERY SANDBOX ON A RESTRICTING KERNEL RUNS THIS APPLICATION'S OWN COPY of bubblewrap.
+// / Ubuntu 23.10 & later permit an unprivileged namespace only to a program running under an
+// / AppArmor profile that grants userns, & Ubuntu grants it through a profile attached to the
+// / program's own binary, as its profiles for Steam, Flatpak & Chrome are. This application's
+// / profile is attached to its own copy, which root alone can change & only root & the web
+// / server's account can run, so a host keeps the restriction every other program on it relies on
+// / & bubblewrap stays as it was for each of them. The copy is tried first wherever the restriction
+// / is in force & never anywhere else, & the system's bubblewrap after it, because a host whose
+// / own profile or a setuid bubblewrap already permits the namespace needs nothing more. A copy
+// / that is not root's alone is never tried. Until v4.0.5 -fp switched the restriction off for the
+// / whole host.
+// / Each attempt is a real sandbox, so the launcher returned is one that has just built one.
+// / IT ALSO SAYS WHETHER AN ATTEMPT WAS CUT SHORT RATHER THAN REFUSED, as its third answer.
+// / Bubblewrap that refuses a sandbox exits 1. A time limit, a signal or a program that could not be
+// / started ends it otherwise, & says nothing about whether the kernel would have built one, so the
+// / kernel check never lifts the restriction on an attempt that ended that way. Until v4.0.5 any
+// / failure counted, & the account the probe runs as could end one on purpose.
+function verifySandboxLauncher() {
   // / Set variables.
   global $Verbose, $RunningAsRoot, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
   $BwrapBinary = FALSE;
-  $bwrapReason = '';
-  $locatedBinary = $bwrapCommand = '';
-  $bwrapOutput = array();
-  $bwrapExitCode = 1;
+  $SandboxLauncher = $commandHint = '';
+  $ProbeWasInterrupted = FALSE;
+  $bwrapReasons = $candidateBinaries = $bwrapOutput = array();
+  $locatedBinary = $privateBinary = $candidateBinary = $bwrapCommand = $candidateLabel = '';
+  $bwrapExitCode = $copyExitCode = 1;
+  $probeAsAccount = $copyIsTried = $privateIsSafe = $copyIsJudged = FALSE;
   $locatedBinary = locateDependency('bwrap');
-  if ($locatedBinary !== '') {
-    // / Launch the smallest possible sandbox & run a command that does nothing but exit.
-    // / This proves the kernel will actually grant the namespaces a real render depends on.
-    // / The ro-bind-try entries are optional & are skipped on systems that do not have them.
-    $bwrapCommand = 'timeout 10 '.escapeshellarg($locatedBinary)
-      .' --unshare-all'
-      .' --die-with-parent'
-      .' --ro-bind /usr /usr'
-      .' --ro-bind-try /lib /lib'
-      .' --ro-bind-try /lib64 /lib64'
-      .' --ro-bind-try /bin /bin'
-      .' --proc /proc'
-      .' --dev /dev'
-      .' --tmpfs /tmp'
-      .' /usr/bin/true 2>&1';
-    // / A probe run as root proves nothing. Root can always create a namespace, so a check
-    // / made by -fp would report a working sandbox while every web request still failed.
-    // / When this is running as root the probe is re-run as the account that will actually
-    // / run conversions, which is the only answer worth reporting.
-    // / The probe runs as the account that will actually run conversions.
-    // / runAsAccount forks & drops rather than spawning a shell through su, so the
-    // / privilege this call exists to give up is not held while the command runs.
-    // / stderr is KEPT. bwrap names the exact reason it could not build a namespace, &
-    // / discarding it left an operator with an exit code & nothing to act on. The usual
-    // / cause is a kernel restricting unprivileged user namespaces, which -fp corrects.
-    if ($RunningAsRoot && $CurrentUser !== $ApacheUser) list ($bwrapOutput, $bwrapExitCode) = runAsAccount($bwrapCommand, $ApacheUser);
-    else exec($bwrapCommand, $bwrapOutput, $bwrapExitCode);
-    if ($bwrapExitCode === 0) $BwrapBinary = $locatedBinary;
-    else $bwrapReason = trim((string)(isset($bwrapOutput[0]) ? $bwrapOutput[0] : 'no reason was reported')); }
-  if ($BwrapBinary === FALSE && $bwrapReason !== '') warningEntry('Bubblewrap could not build a sandbox'.(($RunningAsRoot && $CurrentUser !== $ApacheUser) ? ' as '.$ApacheUser : '').'. '.$bwrapReason.' Run the -fp argument as root to install the AppArmor profile an unprivileged user namespace needs.');
-  if ($Verbose) logEntry('Bubblewrap Sandbox Check: '.($BwrapBinary === FALSE ? 'FAILED' : 'PASSED').', Exit code: '.$bwrapExitCode.($BwrapBinary === FALSE ? ', Reason: '.$bwrapReason : ', Using: '.$BwrapBinary).'.');
+  $privateBinary = privateBwrapPath();
+  $probeAsAccount = ($RunningAsRoot && $CurrentUser !== $ApacheUser);
+  $copyIsJudged = sandboxCopyIsJudgedHere();
+  // / The copy is tried first wherever the restriction is in force, & never anywhere else, where the
+  // / system's bubblewrap needs nothing the copy has. A copy of a bubblewrap since removed is left
+  // / alone, because nothing keeps it current, & so is one the account asking can neither run nor
+  // / hand to an account that can.
+  $copyIsTried = (namespaceRestriction() === '1' && sandboxBinaryIsNeeded() && $locatedBinary !== '' && $copyIsJudged);
+  if ($copyIsTried) {
+    $privateIsSafe = sandboxBinaryIsSafe($privateBinary);
+    if ($privateIsSafe) $candidateBinaries[engineApplicationName().'\'s own bubblewrap'] = $privateBinary;
+    else array_push($bwrapReasons, engineApplicationName().'\'s own bubblewrap is not installed at '.$privateBinary.', or is not root\'s alone.'); }
+  if ($locatedBinary !== '' && $locatedBinary !== $privateBinary) $candidateBinaries['The system\'s bubblewrap'] = $locatedBinary;
+  if (count($candidateBinaries) > 0) {
+    foreach ($candidateBinaries as $candidateLabel => $candidateBinary) {
+      if ($BwrapBinary !== FALSE) continue;
+      // / Launch the smallest possible sandbox & run a command that does nothing but exit.
+      // / This proves the kernel will actually grant the namespaces a real render depends on.
+      // / The ro-bind-try entries are optional & are skipped on systems that do not have them.
+      $bwrapCommand = 'timeout -k 5 10 '.escapeshellarg($candidateBinary)
+        .' --unshare-all'
+        .' --die-with-parent'
+        .' --ro-bind /usr /usr'
+        .' --ro-bind-try /lib /lib'
+        .' --ro-bind-try /lib64 /lib64'
+        .' --ro-bind-try /bin /bin'
+        .' --proc /proc'
+        .' --dev /dev'
+        .' --tmpfs /tmp'
+        .' /usr/bin/true 2>&1';
+      // / A probe run as root proves nothing. Root can always create a namespace, so a check
+      // / made by -fp would report a working sandbox while every web request still failed.
+      // / When this is running as root the probe is re-run as the account that will actually
+      // / run conversions, which is the only answer worth reporting.
+      // / runAsAccount forks & drops rather than spawning a shell through su, so the
+      // / privilege this call exists to give up is not held while the command runs.
+      // / stderr is KEPT. bwrap names the exact reason it could not build a namespace, &
+      // / discarding it left an operator with an exit code & nothing to act on.
+      $bwrapOutput = array();
+      if ($probeAsAccount) list ($bwrapOutput, $bwrapExitCode) = runAsAccount($bwrapCommand, $ApacheUser);
+      else exec($bwrapCommand, $bwrapOutput, $bwrapExitCode);
+      if ($candidateBinary === $privateBinary) $copyExitCode = $bwrapExitCode;
+      if ($bwrapExitCode !== 0 && $bwrapExitCode !== 1) $ProbeWasInterrupted = TRUE;
+      if ($bwrapExitCode === 0) {
+        $BwrapBinary = $candidateBinary;
+        $SandboxLauncher = escapeshellarg($candidateBinary); }
+      else array_push($bwrapReasons, $candidateLabel.': '.trim((string)(isset($bwrapOutput[0]) ? $bwrapOutput[0] : 'no reason was reported'))); } }
+  // / The warning names what answers the failure. A copy that is not there is installed with the
+  // / dependencies & never by -fp, one that could not be started is explained by -v, & an account
+  // / that cannot run the copy is sent to root, who can see what the web server's account can build.
+  if (!$copyIsJudged && namespaceRestriction() === '1' && sandboxBinaryIsNeeded()) $commandHint = ' Only root & '.$ApacheUser.'\'s group may run '.engineApplicationName().'\'s own bubblewrap, so run -v as root to see what '.$ApacheUser.' can build.';
+  else if ($copyIsTried && !$privateIsSafe) $commandHint = ' Run --setup --update-depends as root to install '.engineApplicationName().'\'s own bubblewrap & the AppArmor profile attached to it.';
+  else if ($copyIsTried && ($copyExitCode === 126 or $copyExitCode === 127)) $commandHint = ' '.engineApplicationName().'\'s own bubblewrap could not be started, & -v run as root says why.';
+  else $commandHint = ' Run the -fp argument as root to install the AppArmor profile an unprivileged user namespace needs.';
+  if ($BwrapBinary === FALSE && count($bwrapReasons) > 0) warningEntry('Bubblewrap could not build a sandbox'.($probeAsAccount ? ' as '.$ApacheUser : '').'. '.implode(' ', $bwrapReasons).$commandHint);
+  if ($Verbose) logEntry('Bubblewrap Sandbox Check: '.($BwrapBinary === FALSE ? 'FAILED, Reason: '.implode(' ', $bwrapReasons) : 'PASSED, Using: '.$SandboxLauncher).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $locatedBinary, $bwrapCommand, $bwrapOutput, $bwrapExitCode, $bwrapReason);
+  purgeSensitiveMemory($EnableMemoryProtection, $commandHint, $bwrapReasons, $candidateBinaries, $bwrapOutput, $locatedBinary, $privateBinary, $candidateBinary, $bwrapCommand, $candidateLabel, $bwrapExitCode, $copyExitCode, $probeAsAccount, $copyIsTried, $privateIsSafe, $copyIsJudged);
+  return array($BwrapBinary, $SandboxLauncher, $ProbeWasInterrupted); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm this server can actually isolate a dependency invocation.
+// / Returns the absolute path of a WORKING bubblewrap binary, or FALSE.
+// / A path is returned ONLY when a real sandbox was launched successfully.
+// / It asks verifySandboxLauncher(), which says how the sandbox was built as well. A caller that
+// / builds a command asks that function instead, because the launcher is what the command runs.
+// / Nothing in this application calls it from v4.0.5. It is kept for anything built on the Engine
+// / that still does, & answers exactly as it did.
+function verifyBwrap() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $BwrapBinary = FALSE;
+  $sandboxLauncher = '';
+  list ($BwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $sandboxLauncher);
   return $BwrapBinary; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to assemble the binds that put a calling pipeline's own files in place of host files.
+// / Accepts the profile name & the read only resource the call carries, in that order.
+// / Returns the flags as a string, which may be empty.
+// / A profile declares Overlays as host paths, each naming the file within the call's read only
+// / resource that takes its place inside the namespace, & only there. The host file is never
+// / touched. Each pipeline passes its own resource, so each pipeline's policy is the one its own
+// / conversions see, & two pipelines that need different policies for one tool each get theirs.
+// / A host path that is not a plain file here is skipped, because a bind needs somewhere to land,
+// / & so is one reached through a link, because a link may lead somewhere the namespace does not
+// / show & bubblewrap would then refuse the whole sandbox. A name that is not a plain file inside
+// / the resource is skipped too.
+// / These are emitted after the profile's own binds, so a host path the profile shows is covered,
+// / & one it does not show, as the tesseract profile shows no ImageMagick folder, is made inside the
+// / namespace to hold the pipeline's file.
+function sandboxOverlayFlags($sandboxProfile, $readOnlyResourcePath) {
+  // / Set variables.
+  global $EngineSandboxProfiles, $EnableMemoryProtection;
+  $OverlayFlags = '';
+  $cleanProfile = strtolower(trim((string)$sandboxProfile));
+  $sandboxProfiles = (isset($EngineSandboxProfiles) && is_array($EngineSandboxProfiles)) ? $EngineSandboxProfiles : array();
+  $resourcePath = rtrim(trim((string)$readOnlyResourcePath), DIRECTORY_SEPARATOR);
+  $hostPath = $resourceName = $overlayPath = '';
+  if ($resourcePath !== '' && is_dir($resourcePath) && isset($sandboxProfiles[$cleanProfile]['Overlays']) && is_array($sandboxProfiles[$cleanProfile]['Overlays'])) {
+    foreach ($sandboxProfiles[$cleanProfile]['Overlays'] as $hostPath => $resourceName) {
+      $overlayPath = $resourcePath.DIRECTORY_SEPARATOR.(string)$resourceName;
+      if ((string)$resourceName === '' or strpos((string)$resourceName, '..') !== FALSE or substr((string)$resourceName, 0, 1) === DIRECTORY_SEPARATOR) continue;
+      if (substr((string)$hostPath, 0, 1) !== DIRECTORY_SEPARATOR or !is_file((string)$hostPath) or (string)@realpath((string)$hostPath) !== (string)$hostPath) continue;
+      if (is_file($overlayPath) && !is_link($overlayPath)) $OverlayFlags = $OverlayFlags.' --ro-bind '.escapeshellarg($overlayPath).' '.escapeshellarg((string)$hostPath); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanProfile, $sandboxProfiles, $resourcePath, $hostPath, $resourceName, $overlayPath, $sandboxProfile, $readOnlyResourcePath);
+  return $OverlayFlags; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -4017,6 +4223,8 @@ function verifyBwrap() {
 // / moment --Use PyMeshLab Python Bindings-- was enabled with sandboxing on. It looked like
 // / a broken conversion rather than like a missing bind.
 // / A caller with nothing to bind passes nothing & is unaffected.
+// / A profile's Overlays are found in this directory, so a pipeline that carries its own policy
+// / passes the folder holding it, & that policy covers the host's inside the namespace.
 // / The seventh argument is a set of environment variables the command needs, keyed by
 // / name. A caller must never prefix them onto the command itself.
 // / bwrap execs the command with execvp & never through a shell.
@@ -4025,7 +4233,10 @@ function verifyBwrap() {
 // / The message is  execvp QT_QPA_PLATFORM=offscreen: No such file or directory  which
 // / names a shell feature that was never involved.
 // / A value naming the read only resource is rewritten to its path inside the namespace.
-// / An unsandboxed command is run through a shell & takes the same variables as a prefix.
+// / An unsandboxed command takes the same variables through env, because limitCommand() may put
+// / nice or systemd-run in front of it, & each of those runs its first word as a program. Until
+// / v4.0.5 they were a shell prefix there, which either one tried to run, so every unsandboxed
+// / conversion given a variable failed wherever per conversion limits were on.
 // / The eighth argument is a hosts file the application wrote, bound at /etc/hosts.
 // / It is the ONLY name resolution a networked command is permitted. The application
 // / resolves every name itself, inspects the address, & writes the approved pairs here.
@@ -4040,13 +4251,17 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   // / This initializes TRUE rather than FALSE, because for this variable TRUE is the safe
   // / state. It is overwritten unconditionally below & the initial value is never read.
   $sandboxIsRequired = TRUE;
-  $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = $profileFlags = $resourceFlags = '';
+  $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = $profileFlags = $resourceFlags = $overlayFlags = $sandboxLauncher = '';
   $environmentFlags = $environmentPrefix = $environmentName = $environmentValue = '';
   $rewriteSearch = $rewriteReplace = array();
   $inputDir = $outputDir = $sandboxInput = $sandboxOutput = '';
-  $bwrapBinary = verifyBwrap();
+  // / The launcher is what built the proving sandbox, so it is what builds this one. On a kernel that
+  // / restricts unprivileged namespaces it is this application's own copy of bubblewrap.
+  list ($bwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
   // / Collect the mounts this one dependency needs. Nothing else receives them.
   $profileFlags = sandboxProfileFlags($sandboxProfile);
+  // / The files the calling pipeline carries in place of host files, such as its own policy.
+  $overlayFlags = sandboxOverlayFlags($sandboxProfile, $readOnlyResourcePath);
   // / A container that CAN build a sandbox still gets one. This only decides what happens
   // / when it cannot.
   $sandboxIsRequired = $RunningInContainer ? $RequireSandboxOnDocker : $RequireSandbox;
@@ -4074,7 +4289,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   // / unconditional pair would search the command for an empty quoted argument & replace
   // / every one it found with nothing.
   // / Both forms are built & which one is used depends on whether bwrap is available.
-  // / A sandboxed command takes --setenv & an unsandboxed one takes a shell prefix.
+  // / A sandboxed command takes --setenv & an unsandboxed one takes them through env.
   if (is_array($environmentVariables)) {
     foreach ($environmentVariables as $environmentName => $environmentValue) {
       $environmentPrefix = $environmentPrefix.$environmentName.'='.escapeshellarg((string)$environmentValue).' ';
@@ -4090,7 +4305,9 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   // / An operator who has deliberately accepted the risk gets the command & a warning.
   // / An operator who has not gets a refusal, & every caller already handles that.
   if ($bwrapBinary === FALSE) {
-    $SandboxedCommand = $environmentPrefix.$command;
+    // / env runs unsandboxed, as the command it carries does here, & takes nothing but the
+    // / variables the caller named, each escaped.
+    $SandboxedCommand = ($environmentPrefix === '' ? '' : 'env '.$environmentPrefix).$command;
     if ($sandboxIsRequired) warningEntry('Bubblewrap is unavailable & sandboxing is required, so a conversion was refused. Install bubblewrap, or set '.($RunningInContainer ? '$RequireSandboxOnDocker' : '$RequireSandbox').' to FALSE in config.php to run conversions unprotected.');
     else {
       $CommandMayRun = TRUE;
@@ -4114,7 +4331,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
     // / The rewrite is an exact match on the escaped paths rather than a pattern, so nothing
     // / else in the command can be altered by accident. Neither escaped path can appear
     // / inside the other's replacement, so a single pass is safe.
-    $SandboxedCommand = escapeshellarg($bwrapBinary)
+    $SandboxedCommand = $sandboxLauncher
       .' --unshare-all'.$networkFlag
       .' --die-with-parent'
       .' --new-session'
@@ -4155,6 +4372,8 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
       .$environmentFlags
       // / Headless rendering with no display server & no OpenCL probing.
       .$profileFlags
+      // / A pipeline's own file covers the host's only after the profile has bound the host's.
+      .$overlayFlags
       .$mountFlags
       .' --chdir '.$workingDir
       .' '
@@ -4171,7 +4390,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   // / when the administrator has turned the sandbox off.
   if ($CommandMayRun) $SandboxedCommand = limitCommand($SandboxedCommand, $sandboxProfile);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHostsFile, $environmentFlags, $environmentPrefix, $environmentName, $environmentValue, $environmentVariables, $resourceFlags, $rewriteSearch, $rewriteReplace, $readOnlyResourcePath, $bwrapBinary, $sandboxIsRequired, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
+  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHostsFile, $environmentFlags, $environmentPrefix, $environmentName, $environmentValue, $environmentVariables, $resourceFlags, $rewriteSearch, $rewriteReplace, $readOnlyResourcePath, $bwrapBinary, $sandboxLauncher, $overlayFlags, $sandboxIsRequired, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
   return array($CommandMayRun, $SandboxedCommand); }
 // / -----------------------------------------------------------------------------------
 
@@ -4757,8 +4976,9 @@ function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWh
 // / A function to run one of the Engine's root only commands.
 // / Accepts the command & its target, in that order. Returns the exit status.
 // / The caller has already refused these to anybody but root.
-// / -u is root only too & stays with the application, because updateApplication & its
-// / helpers are the application's & moving them is a migration of its own.
+// / -u is root only too & is still dispatched by the application, which loads Setup Core for
+// / it. updateApplication & its helpers moved into Setup Core at v4.0.3, & the command itself
+// / follows when the rest of the application's commands do.
 function runEngineRootCommand($cliCommand, $cliTarget) {
   // / Set variables.
   global $Lol, $EnableMemoryProtection;

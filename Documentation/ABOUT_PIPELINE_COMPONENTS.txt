@@ -379,13 +379,39 @@ that says stream is a name nobody writing a document fetcher will ever search fo
     sanitizeAllSCADUploads  applies that to every file in the session
 
   STAYED in the core, because the operating environment is not a converter
-    verifyOpenScadPolicy       writes & checks the AppArmor profile
-    openScadApparmorContents   the contents of that profile
+    verifyOpenScadPolicy       checks what confines OpenSCAD on this host
 
-fixManagedPermissions() writes that sandbox profile during installation & validateOperatingEnvironment()
-checks it, whether or not the Scad pipeline is installed at all. A sandbox profile is
-part of the machine, not part of a converter. The same reasoning keeps the ImageMagick
-policy functions in the core.
+fixManagedPermissions() & validateOperatingEnvironment() reach it whether or not the Scad
+pipeline is installed at all. Until v4.0.5 it also wrote a local override into a profile that
+confines OpenSCAD, from openScadApparmorContents, granting the session area by its path on the
+host. A render runs in its sandbox, where that area is /work, so the grant never reached one.
+From v4.0.5 it writes nothing, takes back an override an earlier release wrote, & reports a
+profile that confines OpenSCAD, because that profile is what governs a render.
+
+--A pipeline carries its own policy, from v4.0.5--
+
+A policy a tool reads belongs to the pipeline that runs the tool, & travels with it. The Image
+& OCR pipelines each carry an ImageMagick policy in a Policy folder beside their converter.
+Nothing is written into the host. Until v4.0.5 -fp wrote one policy over the host's own
+policy.xml, a file the package owns, & every program on the host ran under it.
+
+A conversion hands its Policy folder to sandboxCommand() as the read only resource & names it in
+MAGICK_CONFIGURE_PATH, which ImageMagick reads before its own configuration. The imagemagick &
+tesseract sandbox profiles declare Overlays, the host paths where a package or a build from
+source keeps policy.xml, & the pipeline adds the one the installed ImageMagick names before each
+conversion. Inside the namespace the pipeline's policy.xml covers each one that exists here.
+So the policy in force is exactly the pipeline's, & the host's file is never touched. A path
+reached through a link is not covered, & the policy is still read first.
+
+Outside a sandbox, where --Require Sandbox-- permits one, the same variable has ImageMagick
+read the pipeline's policy before the host's. Its resource ceilings hold. A rule in the host's
+own policy that names the same coder decides it, so a host that refuses PDF refuses it there
+although the pipeline grants it, & one that grants MVG back grants it there. The variable goes
+through env, so per conversion limits may still put nice or systemd-run in front of the command.
+
+Two pipelines that need different policies for one tool each carry their own, & each one's
+conversions see only theirs. -fp & the Environment Manager report a pipeline that is installed
+& missing its policy, because its conversions then run under the host's.
 
 --What went to the Stream pipeline instead--
 

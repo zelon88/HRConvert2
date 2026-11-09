@@ -1547,20 +1547,19 @@ def check_config_overlap(root, report):
 # / A PHP chown, chgrp, lchown or lchgrp is reported, & so is chown or chgrp as a word inside
 # / a string, which is how a shell command reaches one. A printed instruction that names
 # / chown is reported as well, & is reworded rather than exempted.
-# / Four functions are exempt & each is exempt for a stated reason.
+# / Three functions are exempt & each is exempt for a stated reason.
 # /   changeOwnerWithoutFollowing  It is the one place the change is made.
 # /   applyCodeRole                It gives the code tree to root with find -execdir chown -h,
 # /   applyRootOnlyRole            which never follows a link, & a name handed to root gives
 # /                                no other account anything. The root only role does the
 # /                                same to the backup.
-# /   runAsAccount                 It gives its own output file to the account it is about to
-# /                                become. tempnam created that file for root a moment earlier,
-# /                                in a folder whose sticky bit stops another account replacing it.
+# / runAsAccount was exempt until v4.0.5, when it gave its output file to the account it was about
+# / to become. That file stays root's now, so it changes no owner & is checked like the rest.
 # / It cannot see an owner changed by a program this one runs, such as a build script.
 OWNER_CALL = re.compile(r'\b(l?chown|l?chgrp)\s*\(')
 OWNER_SHELL = re.compile(r'''(['"])[^'"]*\b(chown|chgrp)\s''')
 def check_owner_changes(files, report):
-    exempt = {'changeOwnerWithoutFollowing', 'applyCodeRole', 'applyRootOnlyRole', 'runAsAccount'}
+    exempt = {'changeOwnerWithoutFollowing', 'applyCodeRole', 'applyRootOnlyRole'}
     faults = 0
     for path in files:
         original, blanked = read_source(path)

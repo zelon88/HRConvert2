@@ -57,6 +57,13 @@ after it, because continuing produces an installation that looks finished & is n
      Installs every entry in Resources/Contract/depends.php, in the order that file lists them.
      A dependency whose own requirements are missing is skipped rather than attempted.
      RAR is never installed automatically. Its licence forbids redistribution.
+     Where the kernel can restrict unprivileged user namespaces, copies bubblewrap to
+       /usr/local/libexec/hrconvert2/bwrap
+     which only root & the web server user's group may run, & runs it as that user to prove it
+     can. The AppArmor profile attached to that copy is installed too, unless an account other
+     than root could put a program at that path. --setup --update-depends brings the copy up to
+     date with the system's bubblewrap, & so does an update of the application. -fp never
+     changes it.
 
   2  DATA LOCATIONS
      Creates the data location, the log directory, the backup location & the socket
@@ -66,13 +73,24 @@ after it, because continuing produces an installation that looks finished & is n
   3  PERMISSIONS & POLICIES
      Gives every managed location its role. The installation is root's & the web server
      user only reads it. See ABOUT_MANAGED_LOCATIONS.txt.
-     Writes the ImageMagick policy at whatever prefix this build actually reads, which is
-     asked of the binary rather than guessed. A build from source does not use /etc.
-     Extends the distribution AppArmor profile for bubblewrap through its local include.
-     Permits the unprivileged user namespaces bubblewrap needs, & persists that.
+     Writes nothing for ImageMagick. Each pipeline that runs it carries its own policy into
+     every conversion's sandbox, & a policy an earlier release wrote into the host is put back
+     as it was.
+     Writes an AppArmor profile named for the application where the kernel can restrict
+     unprivileged user namespaces. It is attached to the application's own copy of bubblewrap
+     & to nothing else, so every sandbox runs that copy & every other program on the host is
+     restricted as before. It is not written where an account other than root could put a
+     program at the copy's path. Lifts that restriction only where bubblewrap refuses a sandbox
+     twice & config.php permits it, & never for an attempt cut short or to cover a copy that is
+     missing or cannot be run.
+     It holds for the next boot only what it changed. A restriction an earlier release lifted
+     stays lifted until it is switched back on, with
+       sudo sysctl kernel.apparmor_restrict_unprivileged_userns=1
+     & the next -fp lets go of it wherever the copy carries a sandbox.
      Writes the PHP settings HRConvert2 needs as a drop in, never editing php.ini.
      Enables systemd lingering & cgroup delegation for per conversion resource limits.
-     Installs the listener service unit, generated from this configuration.
+     Installs the listener service unit, generated from this configuration, & writes the
+     Environment Manager's units again wherever they are installed.
 
   4  CONFIGURATION
      Walks config.php section by section. With -y it keeps the shipped defaults instead.
@@ -195,12 +213,22 @@ RUN IT ONCE AFTER UPDATING FROM v4.0.0. Until v4.0.1 the installer & -fp handed 
 installation to the web server user, & an installation v4.0.0 left behind keeps that
 ownership until -fp gives each location its role.
 
+RUN  'sudo php convertCore.php --setup --update-depends'  ONCE AFTER UPDATING WITH -u FROM
+v4.0.4 OR EARLIER. From v4.0.5 every sandbox on a restricting kernel runs the application's own
+copy of bubblewrap, & an update run by an earlier release cannot make it. An update from an
+unpacked release makes it as the release is installed.
+
 DO NOT HAND THE INSTALLATION TO THE WEB SERVER USER WITH chown. Root runs that code. A
 command run as root no longer leaves a logfile or a secret the web server user cannot use.
 
   Conversions refuse & the log names bubblewrap.
     The sandbox cannot create a namespace. -fp reports which of the three causes it is.
     Kernel restriction, missing AppArmor permission, or a namespace budget of zero.
+    On Ubuntu 23.10 & later every sandbox runs /usr/local/libexec/hrconvert2/bwrap, which the
+    hrconvert2-bwrap AppArmor profile is attached to, & -v says so beside Sandbox, Bubblewrap.
+    Where -fp reports the bubblewrap copy MISSING, UNSAFE, NOT RUNNABLE, ORPHANED or BEHIND, its
+    line names the command to run, which is 'sudo php convertCore.php --setup --update-depends',
+    or --install-depends where bubblewrap itself has gone, & anything to correct first.
 
   Root refuses to run anything & names error 28008.
     Something in the installation, or a folder above it, can be changed by an account other

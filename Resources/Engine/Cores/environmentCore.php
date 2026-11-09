@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.1.
+// / v4.0.5.
 // / The environment the Engine provides to every application built on it.
 // /
 // / THE ENGINE OWNS THESE. An application uses them & does not define them. That is the
@@ -174,8 +174,8 @@ function symlinkmtime($symlinkPath) {
 // / Returns 'ok' when nothing needs doing, or the status unchanged when something does.
 // /
 // / A STATUS COLUMN IS SCANNED, NOT READ. IT MUST ONLY SAY ok WHEN NOTHING IS WRONG.
-// / unrestricted, unconfined & distribution all describe a host that is already correct,
-// / & all three read like something is missing. An administrator skimming a wall of output
+// / unrestricted, unconfined, carried & confined all describe a host where nothing needs doing,
+// / & all four read like something is missing or wrong. An administrator skimming a wall of output
 // / for problems should not have to know which of the unusual looking words are the good
 // / ones. The word becomes ok & the sentence beside it explains why.
 // /
@@ -186,7 +186,9 @@ function policyDisplayStatus($policyStatus) {
   // / Set variables.
   global $EnableMemoryProtection;
   $DisplayStatus = (string)$policyStatus;
-  $benignStatuses = array('ok', 'unchanged', 'unrestricted', 'unconfined', 'distribution', 'absent', 'n/a');
+  $benignStatuses = array('ok', 'unchanged', 'unrestricted', 'unconfined', 'carried', 'confined', 'absent', 'host', 'n/a');
+  // / kept is not flattened, because it is a change an earlier release made that only the
+  // / administrator can undo, & they are owed seeing it.
   if (in_array((string)$policyStatus, $benignStatuses, TRUE)) $DisplayStatus = 'ok';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $benignStatuses, $policyStatus);
@@ -450,9 +452,9 @@ function fetchOwnResponseHeaders($requestURL, $timeoutSeconds) {
 // / Accepts the policy name & the status word, in that order.
 // / Returns a sentence saying whether anything needs doing.
 // / A bare status word is not a report.
-// / unrestricted & unconfined & distribution all mean nothing needs doing, & all three read
-// / like something is missing. An operator should never have to ask which of the words on
-// / this screen are the bad ones.
+// / unrestricted, unconfined, carried & confined all mean nothing needs doing, & all four read
+// / like something is missing or wrong. An operator should never have to ask which of the words
+// / on this screen are the bad ones.
 function describePolicyStatus($policyName, $policyStatus) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -461,24 +463,32 @@ function describePolicyStatus($policyName, $policyStatus) {
   else if ($policyStatus === 'installed') $StatusDescription = 'Written for the first time.';
   else if ($policyStatus === 'repaired') $StatusDescription = 'Rewritten to match this release.';
   else if ($policyStatus === 'unchanged') $StatusDescription = 'Already correct. Nothing to do.';
-  else if ($policyStatus === 'unrestricted') $StatusDescription = 'This kernel does not restrict unprivileged namespaces, so no profile is needed. Nothing to do.';
+  else if ($policyStatus === 'unrestricted') $StatusDescription = 'This kernel does not restrict unprivileged namespaces now, so no profile is needed. Nothing to do.';
   else if ($policyStatus === 'unconfined') $StatusDescription = 'Nothing on this host confines OpenSCAD, so no override is needed. The bubblewrap sandbox is what isolates it. Nothing to do.';
-  else if ($policyStatus === 'distribution') $StatusDescription = 'The distribution profile governs this binary & has been extended through its own include. Nothing to do.';
+  else if ($policyStatus === 'carried') $StatusDescription = 'Each conversion carries this policy into its own sandbox, so nothing on this host is changed for it. Nothing to do.';
+  else if ($policyStatus === 'not carried') $StatusDescription = 'A pipeline that carries this policy is missing it, so its conversions run under the host\'s own. Restore the pipeline from the release this installation came from.';
+  else if ($policyStatus === 'retired') $StatusDescription = 'An earlier release wrote this into the host. It was put back as it was before. Nothing to do.';
+  else if ($policyStatus === 'kept') $StatusDescription = 'An earlier release wrote this over the host\'s file & kept no copy of it. Removing it would leave no policy at all, so it is left in place. Restore the original from the package or the build that provided it.';
+  else if ($policyStatus === 'confined') $StatusDescription = 'A profile on this host confines it, & nothing is added to that profile. If its conversions fail, that profile is why.';
+  else if ($policyStatus === 'unsupported') $StatusDescription = 'This kernel restricts unprivileged namespaces & the AppArmor here cannot load a profile that permits one.';
+  else if ($policyStatus === 'host') $StatusDescription = 'A container\'s AppArmor is its host\'s, so no profile is written here. The kernel\'s line says what the host needs.';
+  else if ($policyStatus === 'exposed') $StatusDescription = 'NOT ATTACHED. An account other than root could put a program where this profile attaches, so it is not written, & one written before is taken out. The log names the folder. Make every folder above it root\'s alone, then run -fp as root.';
   else if ($policyStatus === 'absent') $StatusDescription = 'Not installed on this host, so there is nothing to write a policy for.';
   else if ($policyStatus === 'foreign') $StatusDescription = 'Present but not written by this application. Review it, or re-run -fp to replace it.';
   else if ($policyStatus === 'outdated') $StatusDescription = 'Written by an older release. Re-run -fp as root to repair it.';
   else if ($policyStatus === 'not loaded') $StatusDescription = 'ON DISK BUT NOT IN FORCE. The kernel is not using it. Reload AppArmor, or reboot.';
-  else if ($policyStatus === 'refused') $StatusDescription = 'REFUSED. The existing file could not be backed up, so it was left alone.';
-  else if ($policyStatus === 'removed, distribution profile kept') $StatusDescription = 'Our competing profile was removed. The distribution profile governs this binary.';
+  else if ($policyStatus === 'refused') $StatusDescription = 'REFUSED. The file could not be changed safely, so it was left alone. The log says why.';
   else $StatusDescription = 'Reported '.$policyStatus.'.';
-  // / The DATA policy is the one whose presence proves nothing.
+  // / A served location's protection file is the one policy whose presence proves nothing.
   // / Every other policy here is read by the kernel or by a converter the moment it exists.
   // / This one is a .htaccess, which Apache reads only where AllowOverride is enabled &
   // / permits it, so 'Matches this release. Nothing to do.' would be a lie on
   // / exactly the installations that are exposed. The exposure check further down is the
   // / answer & this line points at it rather than pretending to be it.
+  // / A protection file is named for its folder followed by Directory, as DATA Directory is, &
+  // / no other policy's name ends that way. Until v4.0.5 only DATA Directory was recognised.
   if ($policyStatus === 'disabled') $StatusDescription = 'Not maintained, because --Maintain HTAccess-- is FALSE in config.php. The server configuration is carrying these rules alone.';
-  else if ($policyName === 'DATA Directory' && ($policyStatus === 'ok' or $policyStatus === 'installed' or $policyStatus === 'repaired')) $StatusDescription = $StatusDescription.' This file is INERT unless AllowOverride is enabled. See the exposure check below.';
+  else if (substr((string)$policyName, -10) === ' Directory' && ($policyStatus === 'ok' or $policyStatus === 'installed' or $policyStatus === 'repaired')) $StatusDescription = $StatusDescription.' This file is INERT unless AllowOverride is enabled. See the exposure check below.';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $policyName, $policyStatus);
   return $StatusDescription; }
@@ -779,7 +789,6 @@ function dataProtectionContents() {
     .'# for /var/www, & an ignored .htaccess produces no error, no log line & no warning of'."\n"
     .'# any kind. Prefer a <Directory> block in the server configuration, which the -fp'."\n"
     .'# argument writes & activates for you, & verify with -fp rather than assuming.'."\n"
-    .'# configuration, & verify with the -fp argument rather than assuming.'."\n"
     .'# See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.'."\n"
     .'#'."\n"
     .'# EVERY DIRECTIVE HERE IS LEGAL UNDER AllowOverride FileInfo & NOTHING ELSE IS.'."\n"
@@ -795,9 +804,8 @@ function dataProtectionContents() {
     ."\n"
     .'<IfModule mod_headers.c>'."\n"
     .'  # index.html is this application\'s own document root protection page & is the one'."\n"
-    .'  # file here that is meant to render. It cannot be user supplied, because index.html'."\n"
-    .'  # is a literal entry in $DangerousFiles & the core refuses to stage a file by that'."\n"
-    .'  # name, so excluding it opens nothing.'."\n"
+    .'  # file here that is meant to render. It cannot be user supplied, because the'."\n"
+    .'  # application refuses to stage a file by that name, so excluding it opens nothing.'."\n"
     .'  <FilesMatch "^(?!index\.html$).*$">'."\n"
     .'    Header always set Content-Disposition "attachment"'."\n"
     .'    Header always set X-Content-Type-Options "nosniff"'."\n"
@@ -862,6 +870,1729 @@ function protectHostedLocation($hostedDirectory) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / MOVED FROM THE APPLICATION AT v4.0.5. What the web server serves is the Engine's to guard.
+// / The protection file each served location carries, the probe that proves whether it is in
+// / force, the writer every policy file goes through, & the path helpers that find a data
+// / location inside the document root. The Apache configuration that refuses every data location
+// / moved to Setup Core at the same time, because only root writes it.
+// / A served location is one the contract gives the served role, so none of these knows that
+// / HRConvert2 calls its own DATA. Each names a location by its folder's own name in what it
+// / says, so HRConvert2 reads exactly the words it always read.
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to sort the locations the contract gives the served role by where they are.
+// / Accepts nothing. Returns the locations that are served & the locations that are refused, in
+// / that order. Each list holds paths in the order the contract names them, once each & without
+// / a trailing separator. A setting that is empty or missing is in neither.
+// / A SERVED LOCATION LIES INSIDE THE HOSTED LOCATION, BELOW IT & NEVER AT IT. The rules written
+// / for one turn PHP off & hand every file over as a download, so one at the hosted location or
+// / above it would stop the loader & hand out its source. The probe knows a location's address
+// / only from where it sits below the hosted location. Anywhere else a served location is
+// / refused, so no rule is written for it & its role is not applied, & the Environment Manager
+// / names it. An application that maps no hosted location serves nothing, so each served
+// / location it declares is refused. pathIsBelowPath() says how a path is judged.
+// / REFUSING A LOCATION THE APPLICATION STILL WRITES INTO LEAVES IT SERVED WITHOUT ITS RULES, because
+// / the web server serves the hosted location whatever is written for it. So nothing that is safe
+// / to write rules for is refused. One reached through a link is served by its written path, which
+// / is the path Apache matches, & root's own work there is refused by the kernel instead.
+function classifyServedLocations() {
+  // / Set variables.
+  global $EngineManagedLocations, $EnableMemoryProtection;
+  $ServedLocations = $RefusedLocations = array();
+  $settingName = $locationRole = $locationPath = $hostedLocation = '';
+  $hostedLocation = rtrim((string)applicationSetting('HostedLocation', ''), DIRECTORY_SEPARATOR);
+  if (isset($EngineManagedLocations) && is_array($EngineManagedLocations)) foreach ($EngineManagedLocations as $settingName => $locationRole) {
+    if ($locationRole !== 'served' or !isset($GLOBALS[$settingName]) or !is_string($GLOBALS[$settingName])) continue;
+    $locationPath = rtrim($GLOBALS[$settingName], DIRECTORY_SEPARATOR);
+    // / The top of the filesystem is named as itself, so it is refused by name rather than lost.
+    if ($locationPath === '' && trim($GLOBALS[$settingName]) !== '') $locationPath = DIRECTORY_SEPARATOR;
+    if ($locationPath === '' or in_array($locationPath, $ServedLocations, TRUE) or in_array($locationPath, $RefusedLocations, TRUE)) continue;
+    if (pathIsBelowPath($hostedLocation, $locationPath)) $ServedLocations[] = $locationPath;
+    else $RefusedLocations[] = $locationPath; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / Neither $ServedLocations nor $RefusedLocations is purged, because both are return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $settingName, $locationRole, $locationPath, $hostedLocation);
+  return array($ServedLocations, $RefusedLocations); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether one location lies below another, for a rule a web server matches.
+// / Accepts the outer location & the inner location, in that order. Returns TRUE only when the
+// / inner one lies below the outer one & is not the outer one.
+// / EACH IS JUDGED AS IT IS WRITTEN, because that is the path Apache matches a rule by. The part
+// / of the inner path below the outer one must name no . or .., which Apache resolves itself, so
+// / a rule written for it could land on the outer location or above it. A path that is not
+// / absolute is below nothing. A link below the outer location is served by its written path, &
+// / what root does there is refused by the kernel, which never works through a link.
+function pathIsBelowPath($outerPath, $innerPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PathIsBelow = FALSE;
+  $outerWritten = $innerWritten = '';
+  $belowSegments = array();
+  $outerWritten = rtrim((string)$outerPath, DIRECTORY_SEPARATOR);
+  $innerWritten = rtrim((string)$innerPath, DIRECTORY_SEPARATOR);
+  if ($outerWritten !== '' && substr($outerWritten, 0, 1) === DIRECTORY_SEPARATOR && pathTextIsBelow($outerWritten, $innerWritten)) {
+    $belowSegments = explode(DIRECTORY_SEPARATOR, (string)substr($innerWritten, strlen($outerWritten) + 1));
+    $PathIsBelow = (!in_array('.', $belowSegments, TRUE) && !in_array('..', $belowSegments, TRUE)); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $outerWritten, $innerWritten, $belowSegments, $outerPath, $innerPath);
+  return $PathIsBelow; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to list the locations this application serves user supplied files from.
+// / Accepts nothing. Returns the path of each served location classifyServedLocations() accepts.
+// / An application that serves nothing gets an empty list, & every caller reads that as nothing
+// / to protect rather than as a failure.
+// / HRConvert2 serves one, the DATA folder in its hosted location, which $ConvertTemp names.
+function servedLocations() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ServedLocations = $refusedLocations = array();
+  list ($ServedLocations, $refusedLocations) = classifyServedLocations();
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $ServedLocations is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $refusedLocations);
+  return $ServedLocations; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to list the locations given the served role that are not served.
+// / Accepts nothing. Returns the path of each served location classifyServedLocations() refuses.
+// / Each is a mistake in the contract, so it is named wherever the locations are reported.
+function misplacedServedLocations() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $RefusedLocations = $servedPaths = array();
+  list ($servedPaths, $RefusedLocations) = classifyServedLocations();
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $RefusedLocations is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $servedPaths);
+  return $RefusedLocations; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the served locations in a sentence.
+// / Accepts nothing. Returns the folder name of each served location joined with an ampersand,
+// / or an empty string when the application serves nothing.
+// / HRConvert2 serves one location, so every sentence built with this reads DATA, as it always did.
+function servedLocationNames() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $LocationNames = '';
+  $folderNames = array();
+  $servedPath = '';
+  foreach (servedLocations() as $servedPath) $folderNames[] = basename($servedPath);
+  $LocationNames = implode(' & ', $folderNames);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderNames, $servedPath);
+  return $LocationNames; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether the protection file of each served location is maintained.
+// / Accepts nothing. Returns TRUE unless the application's setting says otherwise.
+// / The setting is the application's & is read through the map in its contract, by the shared
+// / name MaintainProtectionFile. HRConvert2 keeps it in --Maintain HTAccess--. An application
+// / that maps nothing, or a setting that is missing, keeps the file maintained, because a read
+// / that assumes a setting exists is exactly the assumption this codebase does not make.
+function protectionFileIsMaintained() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FileIsMaintained = TRUE;
+  $maintainSetting = NULL;
+  $maintainSetting = applicationSetting('MaintainProtectionFile', TRUE);
+  if ($maintainSetting !== NULL) $FileIsMaintained = (bool)$maintainSetting;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $maintainSetting);
+  return $FileIsMaintained; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to validate, install or repair one policy file.
+// / Accepts a human readable name, the absolute path, the contents the application
+// / requires & a boolean permitting a write, in that order.
+// / Returns a validity boolean & a status word, in that order.
+// / The status is 'ok', 'installed', 'repaired', 'missing', 'outdated', 'foreign' or 'refused'.
+// / A file the application wrote carries its marker, which enginePolicyMarker() names. A file
+// / WITHOUT that marker belongs to the distribution or to the administrator & is NEVER
+// / overwritten without a backup, & never at all outside a repair. Somebody chose that file
+// / deliberately.
+// / A write is only attempted while running as root. Every other context reports & moves on.
+// /
+// / A POLICY IN A FOLDER ANOTHER ACCOUNT CAN CHANGE is read & written without following anything.
+// / The protection file of a served location lives in that location, which the web server
+// / account owns. Until v4.0.1 a link planted where that file belongs made one -fp copy the
+// / link's target into a backup the web server account could read, overwrite the target, &
+// / leave it world readable. That was demonstrated with a stand in for /etc/shadow. In such a
+// / folder only a plain file with one name is read as the policy, through
+// / readFileWithoutFollowing, so a link or a FIFO there is never followed or waited on. Anything
+// / else at the name is not a policy anybody wrote, & is replaced with writeFileWithoutFollowing,
+// / which never opens what was there. A file without the marker there is left alone & reported,
+// / because no backup of it can be kept safely where another account can change the folder.
+// / Until v4.0.1 it was replaced without one. A folder only root can change keeps the behaviour
+// / it always had, backup included, & is worked in by the resolved path its trust check judged.
+// / It moved from the application at v4.0.5, & its marker & backup suffix are named for the
+// / application, so HRConvert2's are exactly what they were.
+function verifyPolicyFile($policyName, $policyPath, $policyContents, $mayRepair) {
+  // / Set variables.
+  global $RunningAsRoot, $Verbose, $EnableMemoryProtection;
+  $PolicyIsValid = FALSE;
+  $PolicyStatus = 'missing';
+  $existingContents = $policyDirectory = $backupPath = $readNotice = '';
+  $bytesWritten = 0;
+  $fileExists = $carriesMarker = $contentsMatch = $directoryIsTrusted = $policyWasWritten = FALSE;
+  $resolvedDirectory = $trustNotice = $writeNotice = $trustedPath = '';
+  $policyDirectory = dirname($policyPath);
+  if (is_dir($policyDirectory)) list ($directoryIsTrusted, $resolvedDirectory, $trustNotice) = pathIsTrustedByRoot($policyDirectory);
+  // / A folder root trusts is worked in by the path that was judged, which is the resolved one.
+  // / A link on the way there sits in a folder that was never judged, & could be pointed at some
+  // / other folder between the check & the write. Until v4.0.1 the name as given was used.
+  if ($directoryIsTrusted) $trustedPath = $resolvedDirectory.DIRECTORY_SEPARATOR.basename((string)$policyPath);
+  if ($directoryIsTrusted) {
+    $fileExists = file_exists($trustedPath);
+    if ($fileExists) $existingContents = (string)@file_get_contents($trustedPath); }
+  // / In a folder another account can change, only a plain file with one name is a policy.
+  else if (is_dir($policyDirectory)) list ($fileExists, $existingContents, $readNotice) = readFileWithoutFollowing($policyPath, 1048576);
+  if ($fileExists) {
+    $carriesMarker = (strpos($existingContents, enginePolicyMarker()) !== FALSE);
+    $contentsMatch = ($existingContents === $policyContents); }
+  // / A file the application wrote, byte for byte as it wants it, needs nothing.
+  if ($fileExists && $contentsMatch) {
+    $PolicyIsValid = TRUE;
+    $PolicyStatus = 'ok'; }
+  // / Everything below here is a change to the filesystem & needs root & permission.
+  else if (!$mayRepair or !$RunningAsRoot) {
+    if (!$fileExists) warningEntry('The '.$policyName.' policy is missing from '.$policyPath.'. Run the -fp argument as root to install it.');
+    else if ($carriesMarker) warningEntry('The '.$policyName.' policy at '.$policyPath.' was written by an older release & no longer matches. Run the -fp argument as root to repair it.');
+    else warningEntry('The '.$policyName.' policy at '.$policyPath.' was not written by this application & may not permit what '.engineApplicationName().' needs. Review it, or run the -fp argument as root to replace it.');
+    $PolicyStatus = ($fileExists ? 'foreign' : 'missing');
+    if ($fileExists && $carriesMarker) $PolicyStatus = 'outdated'; }
+  else {
+    if (!is_dir($policyDirectory)) @mkdir($policyDirectory, 0755, TRUE);
+    // / The folder's trust is decided again here, because it may have just been created.
+    if (is_dir($policyDirectory)) list ($directoryIsTrusted, $resolvedDirectory, $trustNotice) = pathIsTrustedByRoot($policyDirectory);
+    if ($directoryIsTrusted) $trustedPath = $resolvedDirectory.DIRECTORY_SEPARATOR.basename((string)$policyPath);
+    if (!is_dir($policyDirectory)) warningEntry('The directory '.$policyDirectory.' does not exist & could not be created, so the '.$policyName.' policy was not written.');
+    // / A folder another account can change. Nothing is backed up & nothing is followed, so a
+    // / file somebody else wrote there is left exactly as it is.
+    else if (!$directoryIsTrusted && $fileExists && !$carriesMarker) {
+      $PolicyStatus = 'refused';
+      warningEntry('The '.$policyName.' policy at '.$policyPath.' was not written by this application & sits in a folder another account can change, where no backup of it can be kept safely, so it was left alone. Move it aside & run -fp again to install this one.'); }
+    else if (!$directoryIsTrusted) {
+      list ($policyWasWritten, $writeNotice) = writeFileWithoutFollowing($policyPath, $policyContents, 0644);
+      if (!$policyWasWritten) warningEntry('The '.$policyName.' policy could not be written to '.$policyPath.'. '.$writeNotice);
+      else {
+        $PolicyIsValid = TRUE;
+        $PolicyStatus = ($fileExists ? 'repaired' : 'installed');
+        logEntry('The '.$policyName.' policy was '.$PolicyStatus.' at '.$policyPath.' without following anything already there.'); } }
+    else {
+      // / Never replace a file without keeping the original. An administrator who tuned a
+      // / policy by hand must be able to put it back.
+      if ($fileExists && !$carriesMarker) {
+        $backupPath = $trustedPath.'.'.engineApplicationSlug().'-backup-'.date('Y-m-d-His');
+        if (@copy($trustedPath, $backupPath)) warningEntry('The existing '.$policyName.' policy was preserved at '.$backupPath.' before being replaced.');
+        // / A backup that failed leaves the file alone, as the warning says. Until v4.0.1 the
+        // / name was set before the copy & never cleared, so the file was replaced regardless.
+        else {
+          $backupPath = '';
+          warningEntry('The existing '.$policyName.' policy at '.$policyPath.' could not be backed up. It was left alone.'); } }
+      if ($fileExists && !$carriesMarker && $backupPath === '') $PolicyStatus = 'refused';
+      else {
+        $bytesWritten = @file_put_contents($trustedPath, $policyContents);
+        if ($bytesWritten !== strlen($policyContents)) warningEntry('The '.$policyName.' policy could not be written to '.$policyPath.'.');
+        else {
+          @chmod($trustedPath, 0644);
+          $PolicyIsValid = TRUE;
+          $PolicyStatus = ($fileExists ? 'repaired' : 'installed');
+          logEntry('The '.$policyName.' policy was '.$PolicyStatus.' at '.$policyPath.'.'); } } } }
+  if ($Verbose) logEntry('Policy Check: '.$policyName.', Path: '.$policyPath.', Status: '.$PolicyStatus.'.'.($readNotice !== '' ? ' '.$readNotice : ''));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $existingContents, $policyDirectory, $backupPath, $readNotice, $bytesWritten, $fileExists, $carriesMarker, $contentsMatch, $directoryIsTrusted, $policyWasWritten, $resolvedDirectory, $trustNotice, $writeNotice, $trustedPath, $policyName, $policyPath, $policyContents, $mayRepair);
+  return array($PolicyIsValid, $PolicyStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to keep the protection file of one served location current without waiting for -fp.
+// / Accepts the served location & whether the file is maintained, in that order.
+// / Returns TRUE when the file is present & correct, when it belongs to somebody else, or when
+// / it is not maintained & none the application wrote is left behind.
+// /
+// / A protection file the application wrote must never be the reason the server stops.
+// / An earlier release wrote Options & php_flag into this file. Both need AllowOverride
+// / Options, & where that is not granted Apache does not ignore them, it REFUSES the
+// / request, so the whole tree returned 500 & every download & every share link on the
+// / server stopped working. Replacing the PHP does not fix that, because the bad file is
+// / already on disk & nothing rewrites it until an administrator happens to run -fp. An
+// / installation could therefore be upgraded to a fixed release & stay broken indefinitely.
+// /
+// / So the file is brought up to date on every request instead, & an upgrade repairs itself
+// / the first time anybody loads a page. No operator has to know that -fp was the cure.
+// /
+// / Only a file carrying the application's marker is ever touched.
+// / An administrator who wrote their own .htaccess here gets to keep it, exactly as
+// / verifyPolicyFile() treats every other policy. Theirs is left alone & -fp is where the
+// / offer to replace it lives, because that is an interactive, root, deliberate act.
+// /
+// / This is a read & a comparison on a small file, & it writes only when the contents
+// / actually differ, which after the first request is never.
+function maintainProtectionFile($servedPath, $maintainProtection) {
+  // / Set variables.
+  global $Verbose, $RunningAsRoot, $EnableMemoryProtection;
+  $ProtectionIsCurrent = FALSE;
+  $protectionPath = $existingContents = $desiredContents = $readNotice = $removalNotice = $writeNotice = $locationName = '';
+  $carriesMarker = $fileWasRead = $fileWasRemoved = $fileWasWritten = FALSE;
+  $bytesWritten = 0;
+  $locationName = basename((string)$servedPath);
+  $protectionPath = rtrim((string)$servedPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'.htaccess';
+  if ((string)$servedPath === '' or !is_dir($servedPath)) $ProtectionIsCurrent = FALSE;
+  // / Turning the setting off has to actually take effect.
+  // / Leaving a file behind that the application wrote, & then declining to maintain it,
+  // / would give an administrator a stale copy of a rule set that no longer matches the
+  // / release & no way to notice. So a file carrying the marker is removed. A file the
+  // / administrator wrote is left exactly where it is, because it was never ours to delete.
+  else if (!$maintainProtection) {
+    $ProtectionIsCurrent = TRUE;
+    // / Root reaches this through -fp, & the folder is the web server account's, so the file
+    // / is read & removed through the kernel. A link or a FIFO there is never followed or waited on.
+    list ($fileWasRead, $existingContents, $readNotice) = readFileWithoutFollowing($protectionPath, 1048576);
+    if ($fileWasRead && strpos($existingContents, enginePolicyMarker()) !== FALSE) {
+      list ($fileWasRemoved, $removalNotice) = removeFileWithoutFollowing($protectionPath);
+      if ($fileWasRemoved) warningEntry('--Maintain HTAccess-- is disabled, so the '.$locationName.' protection file this application wrote at '.$protectionPath.' was removed. The server configuration is now carrying these rules alone. Run the -fp argument & read the '.$locationName.' exposure line to confirm the tree is still protected.');
+      else warningEntry('--Maintain HTAccess-- is disabled & the '.$locationName.' protection file this application wrote could not be removed. '.$removalNotice); } }
+  else {
+    $desiredContents = dataProtectionContents();
+    list ($fileWasRead, $existingContents, $readNotice) = readFileWithoutFollowing($protectionPath, 1048576);
+    if ($fileWasRead) $carriesMarker = (strpos($existingContents, enginePolicyMarker()) !== FALSE);
+    // / Already exactly right. This is the case on every request after the first.
+    if ($existingContents === $desiredContents) $ProtectionIsCurrent = TRUE;
+    // / Somebody else's file. Leave it completely alone & say nothing on every request.
+    else if ($existingContents !== '' && !$carriesMarker) $ProtectionIsCurrent = TRUE;
+    else {
+      // / A web request writes its own file in its own folder. Root never writes by name there.
+      if ($RunningAsRoot) list ($fileWasWritten, $writeNotice) = writeFileWithoutFollowing($protectionPath, $desiredContents, 0644);
+      else {
+        $bytesWritten = @file_put_contents($protectionPath, $desiredContents);
+        $fileWasWritten = ($bytesWritten === strlen($desiredContents));
+        if ($fileWasWritten) @chmod($protectionPath, 0644); }
+      if ($fileWasWritten) {
+        $ProtectionIsCurrent = TRUE;
+        // / Worth a warning rather than a normal entry, because it means this installation
+        // / was running with a protection file that did not match this release, & on the
+        // / upgrade path from v3.8.6 that file was returning 500 for every download.
+        warningEntry('The '.$locationName.' protection file at '.$protectionPath.' did not match this release & was rewritten. If downloads or share links were returning a server error, that is now corrected.'); }
+      // / A failed write is not fatal. The tree may be exposed or may be broken, & the
+      // / exposure check is what establishes which, so this only records that it happened.
+      else if ($Verbose) logEntry('The '.$locationName.' protection file at '.$protectionPath.' could not be written. '.$writeNotice); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $protectionPath, $existingContents, $desiredContents, $readNotice, $removalNotice, $writeNotice, $locationName, $carriesMarker, $fileWasRead, $fileWasRemoved, $fileWasWritten, $bytesWritten, $servedPath, $maintainProtection);
+  return $ProtectionIsCurrent; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to keep the protection file of every served location current without waiting for -fp.
+// / Accepts no arguments.
+// / Returns TRUE when every one is current, & FALSE when one is not or nothing is served.
+// / A web request calls this on every page, beside the index files. Each location is kept by
+// / maintainProtectionFile(), which says why.
+// / Nothing served is a warning, because whoever calls this expects something to protect. A
+// / missing contract, or a served location it places outside the hosted location, would
+// / otherwise stop the protection file being kept without a word.
+function maintainDataProtection() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ProtectionIsCurrent = FALSE;
+  $servedPaths = array();
+  $servedPath = '';
+  $maintainProtection = TRUE;
+  $maintainProtection = protectionFileIsMaintained();
+  $servedPaths = servedLocations();
+  if (count($servedPaths) === 0) warningEntry('No served location is set inside the hosted location, so no protection file was kept current.');
+  else {
+    $ProtectionIsCurrent = TRUE;
+    foreach ($servedPaths as $servedPath) if (!maintainProtectionFile($servedPath, $maintainProtection)) $ProtectionIsCurrent = FALSE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $servedPaths, $servedPath, $maintainProtection);
+  return $ProtectionIsCurrent; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to install or repair the protection file of one served location.
+// / Accepts the served location & a boolean permitting repair, in that order.
+// / Returns a validity boolean & the status word, in that order.
+// / This is the same shape as every other policy the Engine maintains, so it backs up a file it
+// / did not write before replacing it & refuses rather than clobbering one it cannot back up.
+// / The policy is named for its folder followed by Directory, as DATA Directory is, which is
+// / how describePolicyStatus() knows a protection file from every other policy.
+// / INSTALLING THIS FILE IS NOT THE SAME AS PROVING IT WORKS. verifyServedExposure() is what
+// / proves it, & this function must never be reported as if it had.
+function verifyServedProtection($servedPath, $mayRepair) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PolicyIsValid = FALSE;
+  $PolicyStatus = 'unchecked';
+  $protectionPath = '';
+  $maintainProtection = TRUE;
+  $maintainProtection = protectionFileIsMaintained();
+  if ((string)$servedPath === '') warningEntry('A served location is not set, so its protection file could not be checked.');
+  else if (!$maintainProtection) {
+    // / The administrator has said not to maintain this file, so it is not maintained & the
+    // / server configuration is carrying the rules alone. This is a valid configuration &
+    // / is reported as a deliberate state rather than as a missing one.
+    // / The removal of a file the application wrote earlier lives in maintainProtectionFile()
+    // / & is called rather than repeated, so -fp does it now instead of leaving it for
+    // / whichever web request happens to arrive next. Its answer changes nothing here, because
+    // / a file it could not remove has already been named in a warning.
+    maintainProtectionFile($servedPath, $maintainProtection);
+    $PolicyIsValid = TRUE;
+    $PolicyStatus = 'disabled'; }
+  else {
+    $protectionPath = rtrim((string)$servedPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'.htaccess';
+    list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile(basename((string)$servedPath).' Directory', $protectionPath, dataProtectionContents(), $mayRepair); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $protectionPath, $maintainProtection, $servedPath, $mayRepair);
+  return array($PolicyIsValid, $PolicyStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to install or repair the protection file of every served location.
+// / Accepts a boolean permitting repair.
+// / Returns a validity boolean & the status word, in that order.
+// / The status is the first failed location's, or else the first one that is not ok, so a
+// / location that is fine never hides one that is not. HRConvert2 serves one location, so its
+// / answer is exactly that location's.
+function verifyDataProtectionPolicy($mayRepair) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PolicyIsValid = FALSE;
+  $PolicyStatus = 'unchecked';
+  $servedPaths = array();
+  $servedPath = $locationStatus = '';
+  $locationIsValid = FALSE;
+  $servedPaths = servedLocations();
+  if (count($servedPaths) === 0) warningEntry('No served location is set inside the hosted location, so no protection file could be checked.');
+  else {
+    $PolicyIsValid = TRUE;
+    foreach ($servedPaths as $servedPath) {
+      list ($locationIsValid, $locationStatus) = verifyServedProtection($servedPath, $mayRepair);
+      // / The first location that failed names the status. Until one has, the first that changed
+      // / anything does, so a file written for one location never stands in for one refused.
+      if (!$locationIsValid && $PolicyIsValid) {
+        $PolicyIsValid = FALSE;
+        $PolicyStatus = $locationStatus; }
+      else if ($PolicyIsValid && ($PolicyStatus === 'unchecked' or $PolicyStatus === 'ok')) $PolicyStatus = $locationStatus; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $servedPaths, $servedPath, $locationStatus, $locationIsValid, $mayRepair);
+  return array($PolicyIsValid, $PolicyStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to list the forms a path takes, as it is written & as it resolves.
+// / Accepts the path. Returns each form once, without a trailing separator, with the top of the
+// / filesystem as a lone separator. An empty path has no forms.
+function pathForms($pathText) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PathForms = array();
+  $pathForm = $resolvedPath = '';
+  $pathForm = rtrim((string)$pathText, DIRECTORY_SEPARATOR);
+  if ($pathForm === '' && (string)$pathText !== '') $pathForm = DIRECTORY_SEPARATOR;
+  // / An empty path is never resolved, because realpath answers an empty path with the current
+  // / folder & the comparison would then be against wherever the command happened to be run.
+  if ($pathForm !== '') {
+    $PathForms[] = $pathForm;
+    $resolvedPath = (string)@realpath($pathForm);
+    if ($resolvedPath !== '' && $resolvedPath !== $pathForm) $PathForms[] = $resolvedPath; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $PathForms is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $pathForm, $resolvedPath, $pathText);
+  return $PathForms; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether one path lies below another, by their text alone.
+// / Accepts the outer path & the inner path, in that order, each as one form, written or resolved.
+// / Returns TRUE when the inner path is below the outer one & is not the outer one. The comparison
+// / is by whole folders, so /var/www/html2 is not below /var/www/html, & nothing is resolved.
+function pathTextIsBelow($outerText, $innerText) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $TextIsBelow = FALSE;
+  $outerFolder = $innerFolder = '';
+  // / Each is compared as a folder, ending in one separator, so the top of the filesystem is itself.
+  $outerFolder = rtrim((string)$outerText, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+  $innerFolder = rtrim((string)$innerText, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR;
+  $TextIsBelow = ((string)$innerText !== '' && $innerFolder !== $outerFolder && strpos($innerFolder, $outerFolder) === 0);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $outerFolder, $innerFolder, $outerText, $innerText);
+  return $TextIsBelow; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether one path holds another.
+// / Accepts the outer path & the inner path, in that order.
+// / Returns TRUE when the inner path is the outer path or lies anywhere below it.
+// / The comparison is by whole folders, so /var/www/html2 is not inside /var/www/html.
+// / Each path is judged as it is written & as it resolves, & either way is enough. The web
+// / server walks a path as it is written, so a location written inside the document root is
+// / served even when a link there leads somewhere else, & a link can lead back in from outside.
+function pathHoldsPath($outerPath, $innerPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PathIsHeld = FALSE;
+  $outerForm = $innerForm = '';
+  foreach (pathForms($outerPath) as $outerForm) foreach (pathForms($innerPath) as $innerForm) if ($innerForm === $outerForm or pathTextIsBelow($outerForm, $innerForm)) $PathIsHeld = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $outerForm, $innerForm, $outerPath, $innerPath);
+  return $PathIsHeld; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to list the root of every data location, the primary first & then each pool member.
+// / Accepts nothing. Returns the list, without repeats.
+// / A pool member is declared by its root & verifyGlobals rewrites it to the Sessions folder
+// / below that root, so the root is that folder's parent. Either form is understood here.
+function dataLocationRoots() {
+  // / Set variables.
+  global $DataRootLoc, $AdditionalConvertLocs, $EnableMemoryProtection;
+  $DataRoots = array();
+  $additionalEntry = array();
+  $additionalPath = '';
+  if (isset($DataRootLoc) && is_string($DataRootLoc) && trim($DataRootLoc) !== '') $DataRoots[] = rtrim($DataRootLoc, DIRECTORY_SEPARATOR);
+  if (isset($AdditionalConvertLocs) && is_array($AdditionalConvertLocs)) {
+    foreach ($AdditionalConvertLocs as $additionalEntry) {
+      if (!is_array($additionalEntry) or !isset($additionalEntry[0]) or !is_string($additionalEntry[0]) or trim($additionalEntry[0]) === '') continue;
+      $additionalPath = rtrim($additionalEntry[0], DIRECTORY_SEPARATOR);
+      $DataRoots[] = (basename($additionalPath) === 'Sessions') ? dirname($additionalPath) : $additionalPath; } }
+  $DataRoots = array_values(array_unique($DataRoots));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $DataRoots is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $additionalEntry, $additionalPath);
+  return $DataRoots; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to list every data location inside the web server's document root.
+// / Accepts nothing. Returns the roots of those locations, or nothing when none is inside.
+// / The data location is never meant to be served. Inside the document root its Sessions, Cache
+// / & Logs folders could be fetched by anybody who guessed a name, because the web server account
+// / that serves them can read them. Only the served locations in the hosted location are served.
+// / Nothing checked where the data location was until v4.0.1.
+function misplacedDataRoots() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $MisplacedRoots = array();
+  $dataRoot = $documentRoot = '';
+  // / The document root is the application's setting, read through the map as DocumentRoot.
+  $documentRoot = applicationSetting('DocumentRoot', '');
+  // / With no document root configured there is nothing to be inside.
+  if (is_string($documentRoot) && trim($documentRoot) !== '') foreach (dataLocationRoots() as $dataRoot) if (pathHoldsPath($documentRoot, $dataRoot)) $MisplacedRoots[] = $dataRoot;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $MisplacedRoots is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $dataRoot, $documentRoot);
+  return $MisplacedRoots; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to prove whether one served location serves user content as inert downloads.
+// / Accepts the served location.
+// / Returns a protection boolean, a status word & a sentence explaining it, in that order.
+// /
+// / This asks the server. It does not read a file off the disk & assume.
+// / That distinction is the entire reason this function exists. A .htaccess is only read
+// / when AllowOverride is enabled for its directory; when it is not, Apache ignores it
+// / silently, with no error, no log line & no warning. Debian, Ubuntu & the standard
+// / php:*-apache container all ship AllowOverride None for /var/www.
+// / So the presence of the file proves nothing whatsoever about
+// / whether its rules are in force, & a check that tested for the file would report success
+// / on exactly the installations that are exposed.
+// /
+// / A canary is written into the location, fetched over HTTP & removed again. The canary
+// / carries a script element so the probe has the same shape as the real thing, but the
+// / script does nothing at all.
+// /
+// / THE ADDRESS IS THE SERVER URL & THE LOCATION'S PATH BELOW THE HOSTED LOCATION. HRConvert2's
+// / is DATA, so it asks for /DATA/ below its URL, as it always did. A location outside the hosted
+// / location is not served at an address this can know, & is reported as not established.
+// / classifyServedLocations() refuses such a location, so none of the Engine's callers asks.
+// /
+// / A failure to reach the server is not a pass & is not a failure.
+// / The server URL may be an external name this host cannot resolve from inside itself, &
+// / during a --setup run the web server may not be listening yet. Either way the honest answer
+// / is that this was not established, which is a warning & a distinct status word, never a
+// / silent success.
+// /
+// / The probe is written with writeFileWithoutFollowing & is never changed by name afterwards.
+// / The location belongs to the web server account & this runs as root from -v, -fp & the
+// / Environment Manager. A probe written by name & then chmodded could be swapped for a link in
+// / between, & the chmod would land on whatever the link pointed at.
+function verifyServedExposure($servedPath) {
+  // / Set variables.
+  global $Verbose, $RunningAsRoot, $ApacheUser, $EnableMemoryProtection;
+  $DataIsProtected = FALSE;
+  $ExposureStatus = 'unverified';
+  $ExposureDetail = '';
+  $canaryName = $canaryPath = $canaryURL = $responseHeaders = $locationName = $servedURL = $hostedForm = $servedForm = $hostedLocation = $serverURL = '';
+  $requestSucceeded = $carriesDisposition = $carriesSandbox = $canaryWasWritten = $ownerWasChanged = $canaryWasRemoved = $parentIsHeld = FALSE;
+  $writeNotice = $ownerNotice = $removalNotice = $holdNotice = '';
+  $locationName = basename((string)$servedPath);
+  // / The hosted location & the address it is served at are the application's, read through the
+  // / map as HostedLocation & ServerURL.
+  $hostedLocation = (string)applicationSetting('HostedLocation', '');
+  $serverURL = (string)applicationSetting('ServerURL', '');
+  // / The location's address is worked out from whichever form of each path, as written or as
+  // / resolved, places it below the hosted location. Each folder name in it is encoded, so a
+  // / name holding a space or a # is asked for at the address the web server serves it at.
+  foreach (pathForms($hostedLocation) as $hostedForm) foreach (pathForms((string)$servedPath) as $servedForm) {
+    if ($servedURL === '' && pathTextIsBelow($hostedForm, $servedForm)) $servedURL = rtrim($serverURL, '/').'/'.implode('/', array_map('rawurlencode', explode(DIRECTORY_SEPARATOR, (string)substr($servedForm, strlen(rtrim($hostedForm, DIRECTORY_SEPARATOR)) + 1)))).'/'; }
+  if ((string)$servedPath === '' or $serverURL === '') {
+    $ExposureStatus = 'unverified';
+    $ExposureDetail = 'The '.$locationName.' location or the server URL is not set, so nothing could be tested.';
+    warningEntry('The '.$locationName.' directory exposure check could not run because the '.$locationName.' location or the server URL is not set.'); }
+  else if ($servedURL === '') {
+    $ExposureStatus = 'unverified';
+    $ExposureDetail = $servedPath.' is not inside the hosted location, so the address it is served at is not known & nothing could be tested.';
+    warningEntry('The '.$locationName.' directory exposure check could not run because '.$servedPath.' is not inside the hosted location '.$hostedLocation.'.'); }
+  else {
+    // / A served location root has to create belongs to the web server account, like every other.
+    // / Root makes it only in a folder no other account can change, & never makes the folders
+    // / above it, because mkdir follows every folder above the one it makes.
+    if (!is_dir($servedPath) && !is_link($servedPath)) {
+      list ($parentIsHeld, $holdNotice) = folderIsHeldForRoot(dirname((string)$servedPath));
+      if (!$parentIsHeld) warningEntry('The '.$locationName.' location at '.$servedPath.' does not exist & was not created. '.$holdNotice);
+      else if (@mkdir($servedPath, 0700) && $RunningAsRoot) {
+        list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($servedPath, $ApacheUser, $ApacheUser);
+        if (!$ownerWasChanged) warningEntry($ownerNotice); } }
+    // / The probe is named for the application, as its policy marker is.
+    $canaryName = engineApplicationSlug().'-protection-canary-'.substr(bin2hex(random_bytes(8)), 0, 16).'.svg';
+    $canaryPath = $servedPath.DIRECTORY_SEPARATOR.$canaryName;
+    $canaryURL = $servedURL.$canaryName;
+    // / The probe carries a script element so it has the same shape as a real upload. The
+    // / script is empty, so a browser that did run it would do nothing.
+    list ($canaryWasWritten, $writeNotice) = writeFileWithoutFollowing($canaryPath, '<svg xmlns="http://www.w3.org/2000/svg"><script>/* inert probe */</script></svg>', 0644);
+    if (!$canaryWasWritten) {
+      $ExposureStatus = 'unverified';
+      $ExposureDetail = 'A probe file could not be written into '.$servedPath.', so nothing could be tested.';
+      warningEntry('The '.$locationName.' directory exposure check could not write its probe into '.$servedPath.'. '.$writeNotice); }
+    else {
+      list ($requestSucceeded, $responseHeaders) = fetchOwnResponseHeaders($canaryURL, 5);
+      // / Remove the probe whatever happened. It must never outlive the check that made it.
+      // / The location is the web server account's, so root removes it through the kernel.
+      list ($canaryWasRemoved, $removalNotice) = removeFileWithoutFollowing($canaryPath);
+      if (!$canaryWasRemoved) warningEntry('The '.$locationName.' directory exposure probe could not be removed. '.$removalNotice);
+      if (!$requestSucceeded) {
+        $ExposureStatus = 'unreachable';
+        $ExposureDetail = 'This server could not fetch '.$canaryURL.' from itself, so its exposure was not established. Check it by hand from a browser.';
+        warningEntry('The '.$locationName.' directory exposure check could not reach '.$canaryURL.'. The exposure of this installation was NOT established. Verify it by hand.'); }
+      // / A 5xx is NOT exposure & must never be reported as one. It means this tree is
+      // / serving nothing at all, so every download & every share link on this server is
+      // / broken right now. That is a worse outage than the exposure & it needs its own
+      // / word, its own explanation & the first place to look.
+      // / The overwhelmingly common cause is a directive in the protection file that the
+      // / directory's AllowOverride level does not permit. Apache does not ignore such a
+      // / directive, it refuses the request. An <IfModule> guard does not help, because it
+      // / tests whether a module is loaded rather than whether the directive is allowed.
+      else if (stripos($responseHeaders, ' 500') !== FALSE or stripos($responseHeaders, ' 503') !== FALSE) {
+        $ExposureStatus = 'broken';
+        $ExposureDetail = 'The server returned an error for '.$canaryURL.'. NO download & NO share link works right now. Check the web server error log for a line naming '.$locationName.'/.htaccess.';
+        errorEntry('The '.$locationName.' directory is returning a server error, so no download & no share link can work. The usual cause is a directive in '.$locationName.'/.htaccess that this directory\'s AllowOverride level does not permit; the web server error log names it. Delete that file to restore service, then apply the rules in the server configuration instead.', 503, FALSE); }
+      else if (stripos($responseHeaders, '404 ') !== FALSE or stripos($responseHeaders, '403 ') !== FALSE) {
+        $ExposureStatus = 'unreachable';
+        $ExposureDetail = 'The server refused or did not find '.$canaryURL.'. Either --Server URL-- does not describe this installation, or the '.$locationName.' tree is not served at that path.';
+        warningEntry('The '.$locationName.' directory exposure check received a refusal for '.$canaryURL.'. The --Server URL-- setting may not describe this installation.'); }
+      else {
+        $carriesDisposition = (stripos($responseHeaders, 'content-disposition:') !== FALSE && stripos($responseHeaders, 'attachment') !== FALSE);
+        $carriesSandbox = (stripos($responseHeaders, 'content-security-policy:') !== FALSE && stripos($responseHeaders, 'sandbox') !== FALSE);
+        // / Either one closes it. Both are set together, so one missing is worth saying.
+        if ($carriesDisposition or $carriesSandbox) {
+          $DataIsProtected = TRUE;
+          $ExposureStatus = 'protected';
+          $ExposureDetail = 'The '.$locationName.' tree is served as inert content.';
+          if (!$carriesDisposition) $ExposureDetail = $ExposureDetail.' Content-Disposition is absent & the CSP is carrying this alone.';
+          if (!$carriesSandbox) $ExposureDetail = $ExposureDetail.' The CSP is absent & Content-Disposition is carrying this alone.';
+          if ($Verbose) logEntry($locationName.' Exposure Check: protected. '.($carriesDisposition ? 'Content-Disposition present. ' : '').($carriesSandbox ? 'CSP sandbox present.' : '')); }
+        else {
+          $ExposureStatus = 'exposed';
+          $ExposureDetail = 'The '.$locationName.' tree serves user supplied files as renderable documents. An uploaded SVG will execute its own script in this origin.';
+          // / This is a warning rather than an error because the application still works &
+          // / an administrator can still use it. It is loud because nothing else will say so.
+          warningEntry('THE '.strtoupper($locationName).' DIRECTORY IS EXPOSED. User supplied files at '.$servedURL.' are served as renderable documents rather than as downloads, so an uploaded SVG will execute its own script in this origin. If you installed the '.$locationName.'/.htaccess, it is being ignored; Apache reads one only where AllowOverride is enabled for that directory. Run the -fp argument as root to write & activate the rules in the server configuration instead. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.'); } } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $canaryWasRemoved, $removalNotice, $canaryName, $canaryPath, $canaryURL, $responseHeaders, $locationName, $servedURL, $hostedForm, $servedForm, $hostedLocation, $serverURL, $requestSucceeded, $carriesDisposition, $carriesSandbox, $canaryWasWritten, $writeNotice, $ownerWasChanged, $ownerNotice, $parentIsHeld, $holdNotice, $servedPath);
+  return array($DataIsProtected, $ExposureStatus, $ExposureDetail); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to prove whether every served location serves user content as inert downloads.
+// / Accepts no arguments.
+// / Returns a protection boolean, a status word & a sentence explaining it, in that order.
+// / Each served location is asked on its own by verifyServedExposure(), & the answer returned
+// / is the worst of them, in this order: broken, exposed, unreachable, unverified, protected.
+// / So a location that is fine never hides one that is not. HRConvert2 serves one location, so
+// / its answer is exactly that location's.
+function verifyDataExposure() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $DataIsProtected = FALSE;
+  $ExposureStatus = 'unverified';
+  $ExposureDetail = '';
+  $servedPaths = $statusOrder = array();
+  $servedPath = $locationStatus = $locationDetail = '';
+  $locationIsProtected = FALSE;
+  $worstRank = $locationRank = 0;
+  $statusOrder = array('broken', 'exposed', 'unreachable', 'unverified', 'protected');
+  $worstRank = count($statusOrder);
+  $servedPaths = servedLocations();
+  if (count($servedPaths) === 0) {
+    $ExposureDetail = 'No served location is set inside the hosted location, so nothing could be tested.';
+    warningEntry('The exposure check could not run, because no served location is set inside the hosted location.'); }
+  else foreach ($servedPaths as $servedPath) {
+    list ($locationIsProtected, $locationStatus, $locationDetail) = verifyServedExposure($servedPath);
+    // / A status this does not know is ranked worst, because an answer nobody can read is not a pass.
+    $locationRank = array_search($locationStatus, $statusOrder, TRUE);
+    if ($locationRank === FALSE) $locationRank = 0;
+    if ($locationRank < $worstRank) {
+      $worstRank = $locationRank;
+      $ExposureStatus = $locationStatus;
+      $ExposureDetail = $locationDetail; } }
+  $DataIsProtected = ($ExposureStatus === 'protected');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $servedPaths, $statusOrder, $servedPath, $locationStatus, $locationDetail, $locationIsProtected, $worstRank, $locationRank);
+  return array($DataIsProtected, $ExposureStatus, $ExposureDetail); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the path of this application's own copy of bubblewrap.
+// / Accepts nothing. Returns the absolute path, which is the path the AppArmor profile attaches to.
+// / IT IS THIS APPLICATION'S ALONE. Ubuntu grants an unprivileged namespace through a profile
+// / attached to a program's own binary, as its profiles for Steam, Flatpak & Chrome are. A profile
+// / attached to the system's bubblewrap would hand a namespace to every program on the host that
+// / runs it, so this application runs a copy of its own, in a folder of its own under
+// / /usr/local/libexec, which is where a helper program installed locally belongs. It is named for
+// / the application, so two applications on one host never share one.
+function privateBwrapPath() {
+  // / Set variables.
+  $BinaryPath = '/usr/local/libexec/'.engineApplicationSlug().'/bwrap';
+  return $BinaryPath; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether this host is one where every sandbox runs this application's own
+// / copy of bubblewrap whenever the kernel restricts unprivileged namespaces.
+// / Accepts nothing. Returns TRUE on a host, not a container, whose kernel can restrict them,
+// / whether or not it does now, & whose AppArmor can load the profile attached to the copy.
+// / A container cannot load a profile, a kernel without the restriction needs none, & an AppArmor
+// / that cannot read the userns rule is never handed one, so none of the three takes a copy.
+function sandboxBinaryIsNeeded() {
+  // / Set variables.
+  global $RunningInContainer;
+  $BinaryIsNeeded = FALSE;
+  $BinaryIsNeeded = (!$RunningInContainer && namespaceRestriction() !== '' && is_file('/etc/apparmor.d/abi/4.0'));
+  return $BinaryIsNeeded; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether this application's own copy of bubblewrap may be run.
+// / Accepts the path of the copy. Returns TRUE when it is a plain file root owns, that no other
+// / account can change, in folders root alone can change, & FALSE otherwise.
+// / THE PROFILE GRANTS A NAMESPACE TO WHATEVER RUNS AT THAT PATH, so a copy another account could
+// / change would be that account's way past the restriction. One that is not root's alone is never
+// / run, & --setup --update-depends replaces it. A path reached through a link is refused too,
+// / because AppArmor attaches the profile to the path a program really has.
+// / What PHP remembers of the path is forgotten first, because a process that runs for long, as the
+// / listener does, would otherwise judge what was there when it last looked.
+function sandboxBinaryIsSafe($binaryPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $BinaryIsSafe = $pathIsTrusted = FALSE;
+  $resolvedPath = $trustNotice = '';
+  clearstatcache(TRUE, $binaryPath);
+  if (is_file($binaryPath) && !is_link($binaryPath)) {
+    list ($pathIsTrusted, $resolvedPath, $trustNotice) = pathIsTrustedByRoot($binaryPath);
+    $BinaryIsSafe = ($pathIsTrusted && $resolvedPath === $binaryPath); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $pathIsTrusted, $resolvedPath, $trustNotice, $binaryPath);
+  return $BinaryIsSafe; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether the account asking can judge this application's own copy of bubblewrap.
+// / Accepts nothing. Returns TRUE for root, which runs the copy as the web server's account, & for the
+// / web server's account itself.
+// / ONLY ROOT & THE WEB SERVER'S GROUP MAY RUN THE COPY, so an administrator who is neither cannot run
+// / it & cannot build a sandbox through it. What such an account finds says nothing of what the web
+// / server's account can do, so it is reported as not judged, rather than as a copy that will not run.
+function sandboxCopyIsJudgedHere() {
+  // / Set variables.
+  global $RunningAsRoot, $CurrentUser, $ApacheUser;
+  $CopyIsJudgedHere = ($RunningAsRoot or (string)$CurrentUser === (string)$ApacheUser);
+  return $CopyIsJudgedHere; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether the account that runs conversions can run this application's own
+// / copy of bubblewrap.
+// / Accepts the path of the copy. Returns whether that account ran it & the account it was run as,
+// / in that order.
+// / A COPY ROOT TRUSTS CAN STILL BE ONE THE WEB SERVER'S ACCOUNT CANNOT RUN. A folder above it closed
+// / to that account, a group that is not that account's, or a filesystem that runs no programs
+// / stops it, & lifting the namespace restriction answers none of them. So it is run with --version,
+// / which builds no namespace, as that account when root asks & as the account asking otherwise,
+// / & the answer is about running the program & nothing else.
+function sandboxBinaryIsRunnable($binaryPath) {
+  // / Set variables.
+  global $RunningAsRoot, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
+  $BinaryIsRunnable = FALSE;
+  $RunAccount = $versionCommand = '';
+  $commandOutput = array();
+  $commandExitCode = 1;
+  $RunAccount = (($RunningAsRoot && $CurrentUser !== $ApacheUser) ? (string)$ApacheUser : (string)$CurrentUser);
+  // / This runs unsandboxed, as every probe of the sandbox does, because it is bubblewrap itself.
+  // / It takes no argument but --version, so it starts nothing & reads nothing.
+  $versionCommand = 'timeout -k 5 10 '.escapeshellarg($binaryPath).' --version 2>&1';
+  if ($RunningAsRoot && $CurrentUser !== $ApacheUser) list ($commandOutput, $commandExitCode) = runAsAccount($versionCommand, $ApacheUser);
+  else exec($versionCommand, $commandOutput, $commandExitCode);
+  $BinaryIsRunnable = ($commandExitCode === 0);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $versionCommand, $commandOutput, $commandExitCode, $binaryPath);
+  return array($BinaryIsRunnable, $RunAccount); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether this host's sandboxes want for this application's own copy.
+// / Accepts nothing. Returns TRUE where the host takes a copy & the copy is missing, is not root's
+// / alone, or cannot be run by the account that runs conversions.
+// / A RESTRICTION IS NEVER LIFTED TO COVER ANY OF THOSE, because making the copy again is what
+// / answers each, & --setup --update-depends does that. An account that cannot judge whether the
+// / copy runs takes it for one that does, because what it finds is about itself.
+function sandboxBinaryIsUnusable() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $BinaryIsUnusable = $copyIsRunnable = FALSE;
+  $binaryPath = $runAccount = '';
+  $binaryPath = privateBwrapPath();
+  if (sandboxBinaryIsNeeded()) {
+    if (sandboxBinaryIsSafe($binaryPath) && !sandboxCopyIsJudgedHere()) $copyIsRunnable = TRUE;
+    else if (sandboxBinaryIsSafe($binaryPath)) list ($copyIsRunnable, $runAccount) = sandboxBinaryIsRunnable($binaryPath);
+    $BinaryIsUnusable = !$copyIsRunnable; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $copyIsRunnable, $binaryPath, $runAccount);
+  return $BinaryIsUnusable; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether only root could put a program where the sandbox profile attaches.
+// / Accepts nothing. Returns whether the path is held & the reason it is not, in that order.
+// / THE PROFILE GRANTS A NAMESPACE TO WHATEVER RUNS AT THE COPY'S PATH, whoever put it there. So it
+// / is attached only where the copy, or the deepest part of its path that exists, & every folder
+// / above that are root's alone, as they are on a stock Ubuntu host. A host where another account
+// / can write a folder on the path, as Debian's staff group can write /usr/local, gets no profile.
+function sandboxPathIsHeld() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PathIsHeld = $pathIsTrusted = FALSE;
+  $HoldNotice = $existingPath = $resolvedPath = '';
+  $existingPath = privateBwrapPath();
+  clearstatcache(TRUE, $existingPath);
+  while ($existingPath !== DIRECTORY_SEPARATOR && !file_exists($existingPath) && !is_link($existingPath)) {
+    $existingPath = dirname($existingPath);
+    clearstatcache(TRUE, $existingPath); }
+  list ($pathIsTrusted, $resolvedPath, $HoldNotice) = pathIsTrustedByRoot($existingPath);
+  if ($pathIsTrusted && $resolvedPath !== $existingPath) $HoldNotice = $existingPath.' leads to '.$resolvedPath.'.';
+  $PathIsHeld = ($pathIsTrusted && $resolvedPath === $existingPath);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $pathIsTrusted, $existingPath, $resolvedPath);
+  return array($PathIsHeld, $HoldNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report on this application's own copy of bubblewrap.
+// / Accepts the bubblewrap binary the sandboxes here were just built with, or FALSE where none was
+// / built or none was tried. Returns a status word & a sentence, in that order.
+// / The status is 'none' where no copy is needed, 'ok', 'MISSING' when no sandbox can be built
+// / without it, 'UNSAFE' when it is not root's alone, 'ORPHANED' when the bubblewrap it was copied
+// / from is no longer installed, 'NOT RUNNABLE' when the account that runs conversions cannot run
+// / it, or 'BEHIND' when it is the one every sandbox runs & differs from the system's now. An
+// / account that can neither run it nor hand it to the web server's account is told it is ok &
+// / that root can say whether that account can run it.
+// / IT ONLY REPORTS. A copy is made or refreshed only when dependencies or the application are
+// / updated, so -fp & the Environment Manager never change the program every sandbox runs. A copy
+// / nothing needs right now, because the kernel is not restricting or the system's bubblewrap builds
+// / a namespace without it, is reported 'ok' with what to run before it is needed. A copy behind the
+// / system's is a problem only while it is the one in use, because a fix the system's bubblewrap
+// / was updated for reaches no sandbox until the copy is refreshed.
+function verifySandboxBinary($sandboxBinary) {
+  // / Set variables.
+  global $ApacheUser, $EnableMemoryProtection;
+  $BinaryStatus = 'none';
+  $BinaryDetail = $binaryPath = $systemPath = $binaryHash = $systemHash = $trustNotice = $resolvedPath = $commandHint = $runAccount = '';
+  $copyIsInUse = $pathIsTrusted = $copyIsRunnable = $copyIsJudged = FALSE;
+  $binaryPath = privateBwrapPath();
+  $copyIsInUse = ($sandboxBinary === $binaryPath);
+  $systemPath = locateDependency('bwrap');
+  if ($systemPath !== '') $systemPath = (string)@realpath($systemPath);
+  // / Without the system's bubblewrap there is nothing to copy, & installing the dependencies is
+  // / what makes both.
+  $commandHint = ($systemPath === '' ? ' Run --setup --install-depends as root to install bubblewrap & the copy.' : ' Run --setup --update-depends as root to install it.');
+  clearstatcache(TRUE, $binaryPath);
+  if (!sandboxBinaryIsNeeded()) $BinaryStatus = 'none';
+  else if (!file_exists($binaryPath) && !is_link($binaryPath)) {
+    $BinaryStatus = ((namespaceRestriction() === '1' && $sandboxBinary === FALSE) ? 'MISSING' : 'ok');
+    $BinaryDetail = 'Not installed at '.$binaryPath.'. '.($BinaryStatus === 'MISSING' ? 'No sandbox can be built without it while unprivileged namespaces are restricted.' : 'Nothing needs it now.').$commandHint; }
+  else if (!sandboxBinaryIsSafe($binaryPath)) {
+    list ($pathIsTrusted, $resolvedPath, $trustNotice) = pathIsTrustedByRoot($binaryPath);
+    $BinaryStatus = 'UNSAFE';
+    $BinaryDetail = $binaryPath.' is not root\'s alone, so no sandbox runs it.'.($trustNotice === '' ? '' : ' '.$trustNotice).' Run --setup --update-depends as root to replace it, once every folder above it is root\'s alone.'; }
+  else if ($systemPath === '') {
+    $BinaryStatus = 'ORPHANED';
+    $BinaryDetail = $binaryPath.' is a copy of a bubblewrap that is no longer installed, so nothing keeps it current & no sandbox runs it. Run --setup --install-depends as root to install bubblewrap again.'; }
+  else {
+    // / A copy just used to build a sandbox has run. Any other is run, because root's checks cannot
+    // / see whether the account that runs conversions may, unless the account asking cannot run it.
+    $copyIsJudged = sandboxCopyIsJudgedHere();
+    if ($copyIsInUse) $copyIsRunnable = TRUE;
+    else if ($copyIsJudged) list ($copyIsRunnable, $runAccount) = sandboxBinaryIsRunnable($binaryPath);
+    // / An account that cannot read the copy cannot compare it, & is not told it differs.
+    if ($copyIsRunnable && $systemPath !== $binaryPath) {
+      $binaryHash = (string)@hash_file('sha256', $binaryPath);
+      $systemHash = (string)@hash_file('sha256', $systemPath); }
+    if (!$copyIsInUse && !$copyIsJudged) {
+      $BinaryStatus = 'ok';
+      $BinaryDetail = $binaryPath.', which the '.sandboxApparmorProfileName().' profile is attached to. Only root & '.$ApacheUser.'\'s group may run it, so run -v as root to see whether '.$ApacheUser.' can.'; }
+    else if (!$copyIsRunnable) {
+      $BinaryStatus = 'NOT RUNNABLE';
+      $BinaryDetail = $binaryPath.' is in place, & '.$runAccount.' cannot run it. Every folder above it must let that account through, it must belong to that account\'s group, & its filesystem must run programs. Run --setup --update-depends as root to make it again.'; }
+    else if ($binaryHash !== '' && $systemHash !== '' && $binaryHash !== $systemHash) {
+      $BinaryStatus = ($copyIsInUse ? 'BEHIND' : 'ok');
+      $BinaryDetail = $binaryPath.' differs from '.$systemPath.', which has been updated since it was copied'.($copyIsInUse ? '' : ', & nothing runs it now').'. Run --setup --update-depends as root to take the update.'; }
+    else {
+      $BinaryStatus = 'ok';
+      $BinaryDetail = $binaryPath.', which the '.sandboxApparmorProfileName().' profile is attached to.'; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $binaryPath, $systemPath, $binaryHash, $systemHash, $trustNotice, $resolvedPath, $commandHint, $runAccount, $copyIsInUse, $pathIsTrusted, $copyIsRunnable, $copyIsJudged, $sandboxBinary);
+  return array($BinaryStatus, $BinaryDetail); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to install or refresh this application's own copy of bubblewrap, & the profile
+// / attached to it.
+// / Accepts the width of the column the line's label is printed in, so the line lines up with
+// / those printed around it. Returns a sanity boolean, a status word & a sentence, in that order.
+// / The boolean is TRUE when nothing is left to do, which is a copy matching the system's that the
+// / web server's account can run, with its profile in force, or a host that takes no copy. The
+// / status is 'none' where no copy is needed, 'installed', 'updated', 'unchanged', 'unsupported' or
+// / 'FAILED'. Each but 'none' is printed for the command that asked, & each that leaves something
+// / to do is a warning.
+// / IT RUNS ONLY WHEN DEPENDENCIES OR THE APPLICATION ARE UPDATED, & NEVER FROM -fp. --setup
+// / --install-depends & --update-depends call it, & so does --install-complete, which installs the
+// / dependencies first, the hand over to an installed copy & -u. The program every sandbox runs
+// / changes when the administrator updates something & at no other time, so neither -fp nor an
+// / unattended repair changes it underneath a working installation.
+// / The copy is made from the system's bubblewrap, which must be root's alone, into a folder root
+// / alone can change, & no folder is made beneath one another account could change. It is root's,
+// / & only root & the web server's account's group may read or run it, so no other account can run
+// / it & no account can change it. It is made where only root can open it, given its mode, & only
+// / then given that group, so no other account can hold it open for writing at any moment. tempnam
+// / makes it 0600, which a default ACL on the folder cannot widen as it can the mode copy() would
+// / have made it with, because a default ACL sets the umask aside. It is
+// / written beside its final name & renamed over it, so a sandbox starting meanwhile runs the old
+// / copy or the new one, & never part of either. Then the web server's account runs it, because
+// / root's checks cannot see what that account may run, & the profile is installed, so the copy
+// / carries a sandbox as soon as it is there.
+function installSandboxBinary($columnWidth) {
+  // / Set variables.
+  global $RunningAsRoot, $RunningInContainer, $ApacheUser, $Lol, $EnableMemoryProtection;
+  $SandboxBinaryIsReady = FALSE;
+  $InstallStatus = 'none';
+  $InstallDetail = $binaryPath = $binaryFolder = $folderPath = $systemPath = $resolvedSource = $stagingPath = $resolvedFolder = $resolvedParent = $trustNotice = $policyStatus = $groupAnswer = $sourceHash = $webGroupName = $ownerNotice = $runAccount = '';
+  $accountRecord = $groupRecord = $commandOutput = array();
+  $webGroupNumber = -1;
+  $commandExitCode = 1;
+  $sourceIsTrusted = $folderIsTrusted = $parentIsTrusted = $copyExisted = $copyIsWritten = $modeWasSet = $ownerWasChanged = $copyIsRunnable = $policyIsValid = FALSE;
+  $binaryPath = privateBwrapPath();
+  $binaryFolder = dirname($binaryPath);
+  if (!$RunningAsRoot or $RunningInContainer or namespaceRestriction() === '') $SandboxBinaryIsReady = TRUE;
+  else if (!sandboxBinaryIsNeeded()) {
+    $InstallStatus = 'unsupported';
+    $InstallDetail = 'The AppArmor here cannot read the userns rule the profile needs, so no copy was made.'; }
+  else {
+    $systemPath = locateDependency('bwrap');
+    if ($systemPath !== '') list ($sourceIsTrusted, $resolvedSource, $trustNotice) = pathIsTrustedByRoot($systemPath);
+    // / The web server's account is given the copy through its own group, which is the group it
+    // / runs conversions with. id is asked where PHP has no posix functions, as elsewhere.
+    if (function_exists('posix_getpwnam') && function_exists('posix_getgrgid')) {
+      $accountRecord = @posix_getpwnam((string)$ApacheUser);
+      if (is_array($accountRecord) && isset($accountRecord['gid'])) $groupRecord = @posix_getgrgid((int)$accountRecord['gid']); }
+    if (is_array($groupRecord) && isset($groupRecord['name'], $groupRecord['gid'])) {
+      $webGroupName = (string)$groupRecord['name'];
+      $webGroupNumber = (int)$groupRecord['gid']; }
+    else {
+      exec('id -gn '.escapeshellarg((string)$ApacheUser).' 2>/dev/null', $commandOutput, $commandExitCode);
+      $groupAnswer = trim(implode('', $commandOutput));
+      if ($commandExitCode === 0 && preg_match('/^[A-Za-z0-9_.-]+$/', $groupAnswer) === 1) $webGroupName = $groupAnswer;
+      $commandOutput = array();
+      exec('id -g '.escapeshellarg((string)$ApacheUser).' 2>/dev/null', $commandOutput, $commandExitCode);
+      $groupAnswer = trim(implode('', $commandOutput));
+      if ($commandExitCode === 0 && preg_match('/^[0-9]+$/', $groupAnswer) === 1) $webGroupNumber = (int)$groupAnswer; }
+    if ($systemPath === '' or $resolvedSource === $binaryPath) {
+      $InstallStatus = 'FAILED';
+      $InstallDetail = 'Bubblewrap is not installed, so there is nothing to copy.'; }
+    else if (!$sourceIsTrusted) {
+      $InstallStatus = 'FAILED';
+      $InstallDetail = $systemPath.' is not root\'s alone, so it was not copied. '.$trustNotice; }
+    else if ($webGroupNumber < 0 or $webGroupName === '') {
+      $InstallStatus = 'FAILED';
+      $InstallDetail = 'The web server\'s account, '.$ApacheUser.', could not be found, so no copy could be made for it alone.'; }
+    else {
+      // / Each folder is made only where nothing is, & only beneath a folder root alone can change,
+      // / so nothing is made through a name another account could swap. It is given its mode
+      // / outright, because mkdir leaves out whatever the umask removes.
+      foreach (array(dirname($binaryFolder), $binaryFolder) as $folderPath) {
+        list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot(dirname($folderPath));
+        if ($parentIsTrusted && $resolvedParent === dirname($folderPath) && !file_exists($folderPath) && !is_link($folderPath) && @mkdir($folderPath, 0755)) @chmod($folderPath, 0755); }
+      list ($folderIsTrusted, $resolvedFolder, $trustNotice) = pathIsTrustedByRoot($binaryFolder);
+      // / The copy's own folder is this application's, so the web server's account is let through it
+      // / whatever made it. A folder above it is not, & is said below if it stops that account.
+      if ($folderIsTrusted && $resolvedFolder === $binaryFolder && ((int)@fileperms($binaryFolder) & 07777) !== 0755) @chmod($binaryFolder, 0755);
+      $sourceHash = (string)@hash_file('sha256', $resolvedSource);
+      if (!$folderIsTrusted or $resolvedFolder !== $binaryFolder) {
+        $InstallStatus = 'FAILED';
+        $InstallDetail = $binaryFolder.' is not a folder root alone can change, so nothing was copied into it. '.$trustNotice; }
+      else if (sandboxBinaryIsSafe($binaryPath) && @filegroup($binaryPath) === $webGroupNumber && ((int)@fileperms($binaryPath) & 07777) === 0750 && $sourceHash !== '' && (string)@hash_file('sha256', $binaryPath) === $sourceHash) {
+        $InstallStatus = 'unchanged';
+        $InstallDetail = $binaryPath.' matches '.$resolvedSource.'.'; }
+      else {
+        $copyExisted = (file_exists($binaryPath) or is_link($binaryPath));
+        // / tempnam falls back to the system's temporary folder where it cannot write the one it is
+        // / given, & a staging file anywhere else would never be renamed over the copy.
+        $stagingPath = (string)@tempnam($binaryFolder, '.bwrap-');
+        if ($stagingPath !== '' && dirname($stagingPath) !== $binaryFolder) {
+          @unlink($stagingPath);
+          $stagingPath = ''; }
+        if ($stagingPath !== '') $copyIsWritten = @copy($resolvedSource, $stagingPath);
+        if ($copyIsWritten) $modeWasSet = @chmod($stagingPath, 0750);
+        if ($modeWasSet) list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($stagingPath, 'root', $webGroupName);
+        if ($ownerWasChanged && @rename($stagingPath, $binaryPath)) {
+          $InstallStatus = ($copyExisted ? 'updated' : 'installed');
+          $InstallDetail = $binaryPath.', copied from '.$resolvedSource.'.';
+          logEntry(engineApplicationName().'\'s own bubblewrap was '.$InstallStatus.' at '.$binaryPath.', copied from '.$resolvedSource.'.'); }
+        else {
+          if ($stagingPath !== '') @unlink($stagingPath);
+          $InstallStatus = 'FAILED';
+          $InstallDetail = $binaryPath.' could not be written.'.($ownerNotice !== '' ? ' '.$ownerNotice : ''); } } }
+    // / The account that runs conversions must be able to run the copy, which root's checks cannot
+    // / see, & the profile goes in straight after, so the copy carries a sandbox as soon as it is
+    // / there. Both are said with the copy's result, because it is no use without either.
+    if ($InstallStatus === 'installed' or $InstallStatus === 'updated' or $InstallStatus === 'unchanged') {
+      list ($copyIsRunnable, $runAccount) = sandboxBinaryIsRunnable($binaryPath);
+      list ($policyIsValid, $policyStatus) = verifySandboxPolicy(TRUE);
+      $SandboxBinaryIsReady = ($copyIsRunnable && $policyIsValid);
+      if (!$copyIsRunnable) $InstallDetail = $InstallDetail.' '.$runAccount.' cannot run it. Every folder above it must let that account through, & its filesystem must run programs.';
+      if (!$policyIsValid) $InstallDetail = $InstallDetail.' The '.sandboxApparmorProfileName().' profile is '.$policyStatus.', so no sandbox runs the copy yet.'; } }
+  if ($InstallStatus !== 'none') print('  '.str_pad('Bwrap copy', max(11, (int)$columnWidth)).$InstallStatus.', '.$InstallDetail.$Lol);
+  if ($InstallStatus !== 'none' && !$SandboxBinaryIsReady) warningEntry(engineApplicationName().'\'s own bubblewrap: '.$InstallStatus.'. '.$InstallDetail);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $binaryPath, $binaryFolder, $folderPath, $systemPath, $resolvedSource, $stagingPath, $resolvedFolder, $resolvedParent, $trustNotice, $policyStatus, $groupAnswer, $sourceHash, $webGroupName, $ownerNotice, $runAccount, $accountRecord, $groupRecord, $commandOutput, $webGroupNumber, $commandExitCode, $sourceIsTrusted, $folderIsTrusted, $parentIsTrusted, $copyExisted, $copyIsWritten, $modeWasSet, $ownerWasChanged, $copyIsRunnable, $policyIsValid, $columnWidth);
+  return array($SandboxBinaryIsReady, $InstallStatus, $InstallDetail); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read whether this kernel restricts unprivileged user namespaces through AppArmor.
+// / Accepts nothing. Returns what kernel.apparmor_restrict_unprivileged_userns reads, which is 1
+// / while the restriction is in force, or an empty string on a kernel that has no such setting.
+// / Ubuntu 23.10 & later ship it reading 1. Every account may read it, which is what lets a web
+// / request decide how to build its sandbox without asking root anything.
+function namespaceRestriction() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $RestrictionValue = '';
+  $restrictionPath = '/proc/sys/kernel/apparmor_restrict_unprivileged_userns';
+  if (file_exists($restrictionPath)) $RestrictionValue = trim((string)@file_get_contents($restrictionPath));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $restrictionPath);
+  return $RestrictionValue; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the AppArmor profile attached to this application's own copy of bubblewrap.
+// / Accepts nothing. Returns the profile name, which is also the name of its file in /etc/apparmor.d.
+// / It is named for the application, so two applications on one host never share one. HRConvert2's
+// / is hrconvert2-bwrap, which is the name its profile has always had.
+function sandboxApparmorProfileName() {
+  // / Set variables.
+  $ProfileName = engineApplicationSlug().'-bwrap';
+  return $ProfileName; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to report whether an AppArmor profile is loaded into the kernel.
+// / Accepts the profile name as it is declared inside the profile file.
+// / Returns a loaded boolean & a status word, in that order.
+// / A profile on disk is not a profile in force.
+// / Writing one & running apparmor_parser only at the moment it is written means a load
+// / that failed, or a host that rebooted before AppArmor read it, leaves a file that
+// / matches perfectly & is enforcing nothing. The check reported ok & the sandbox stayed
+// / broken, which is the worst combination a diagnostic can produce.
+// / The loaded set is read from securityfs, which is what the kernel is actually using. Only root
+// / may read it, so any other account is answered 'not readable by this account'.
+// / MOVED FROM THE APPLICATION AT v4.0.5. The name is matched whole, as a line begins. Until v4.0.5
+// / any loaded profile whose name merely contained it was taken for it, & an unreadable list was
+// / taken for one without it.
+function apparmorProfileIsLoaded($profileName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ProfileIsLoaded = FALSE;
+  $ProfileStatus = 'unknown';
+  $profilesPath = '/sys/kernel/security/apparmor/profiles';
+  $loadedProfiles = '';
+  if (!file_exists($profilesPath)) $ProfileStatus = 'apparmor not active';
+  else {
+    $loadedProfiles = @file_get_contents($profilesPath);
+    if (!is_string($loadedProfiles)) $ProfileStatus = 'not readable by this account';
+    else if (preg_match('/^'.preg_quote((string)$profileName, '/').' \(/m', $loadedProfiles) === 1) {
+      $ProfileIsLoaded = TRUE;
+      $ProfileStatus = 'loaded'; }
+    else $ProfileStatus = 'NOT LOADED'; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $profilesPath, $loadedProfiles, $profileName);
+  return array($ProfileIsLoaded, $ProfileStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to load an AppArmor profile that has just been written.
+// / Accepts the absolute path of the profile.
+// / Returns TRUE when the parser accepted it.
+// / A profile that is written but never loaded changes nothing until the next reboot, which
+// / makes a repair look like it failed.
+// / MOVED FROM THE APPLICATION AT v4.0.5.
+function reloadApparmorProfile($profilePath) {
+  // / Set variables.
+  global $RunningAsRoot, $EnableMemoryProtection;
+  $ProfileWasLoaded = FALSE;
+  $parserBinary = '';
+  $parserOutput = array();
+  $parserExitCode = 1;
+  $parserBinary = locateDependency('apparmor_parser');
+  if (!$RunningAsRoot) warningEntry('An AppArmor profile was written but could not be loaded, because loading one requires root.');
+  else if ($parserBinary === '') warningEntry('An AppArmor profile was written but apparmor_parser is not installed, so it was not loaded.');
+  else {
+    exec(escapeshellarg($parserBinary).' -r '.escapeshellarg($profilePath).' 2>&1', $parserOutput, $parserExitCode);
+    if ($parserExitCode === 0) {
+      $ProfileWasLoaded = TRUE;
+      logEntry('The AppArmor profile at '.$profilePath.' was loaded.'); }
+    else warningEntry('apparmor_parser refused the profile at '.$profilePath.'. '.implode(' ', $parserOutput)); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $parserBinary, $parserOutput, $parserExitCode, $profilePath);
+  return $ProfileWasLoaded; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to take this application's sandbox profile out of the kernel & off the disk.
+// / Accepts the absolute path of the profile. Returns TRUE when nothing of it is left on the disk or
+// / in the kernel.
+// / Only a file carrying this application's marker, in a folder root alone can change, is taken.
+// / apparmor_parser -R takes the profiles that file names out of the kernel, & nothing else on the
+// / host is touched. Taking one out needs root, as loading one does.
+// / A PROFILE STILL LOADED IS NEVER CALLED GONE. One the parser could not take out, or one loaded
+// / with no file left to name it, is taken out by its name through the kernel's own interface, which
+// / is what the parser does once it has read the names. The file goes only once neither profile is
+// / loaded, so one that could not be taken out keeps the file that names it & the next repair tries
+// / again. Until v4.0.5 the file went whatever the parser did, & a profile left in the kernel was
+// / reported gone & could never be named again.
+function removeSandboxPolicy($profilePath) {
+  // / Set variables.
+  global $RunningAsRoot, $EnableMemoryProtection;
+  $PolicyWasRemoved = $folderIsTrusted = $fileIsOurs = $fileIsAbsent = $profileIsLoaded = $profileIsHeld = $profileWasUnloaded = FALSE;
+  $parserBinary = $profileContents = $resolvedFolder = $trustNotice = $profileName = $loadStatus = '';
+  $parserOutput = $profileNames = array();
+  $parserExitCode = 1;
+  clearstatcache(TRUE, $profilePath);
+  $profileNames = array(sandboxApparmorProfileName(), engineApplicationSlug().'-unpriv-bwrap');
+  list ($folderIsTrusted, $resolvedFolder, $trustNotice) = pathIsTrustedByRoot(dirname($profilePath));
+  if ($folderIsTrusted && $resolvedFolder === dirname($profilePath) && is_file($profilePath) && !is_link($profilePath)) $profileContents = (string)@file_get_contents($profilePath);
+  $fileIsOurs = (strpos($profileContents, enginePolicyMarker()) !== FALSE);
+  $fileIsAbsent = (!file_exists($profilePath) && !is_link($profilePath));
+  if ($RunningAsRoot && ($fileIsOurs or $fileIsAbsent)) {
+    $parserBinary = locateDependency('apparmor_parser');
+    if ($fileIsOurs && $parserBinary !== '') exec(escapeshellarg($parserBinary).' -R '.escapeshellarg($profilePath).' 2>&1', $parserOutput, $parserExitCode);
+    foreach ($profileNames as $profileName) {
+      list ($profileIsLoaded, $loadStatus) = apparmorProfileIsLoaded($profileName);
+      if ($profileIsLoaded) {
+        @file_put_contents('/sys/kernel/security/apparmor/.remove', $profileName);
+        list ($profileIsLoaded, $loadStatus) = apparmorProfileIsLoaded($profileName);
+        if (!$profileIsLoaded) $profileWasUnloaded = TRUE; }
+      // / A list root cannot read is not a list without the profile.
+      if ($profileIsLoaded or $loadStatus === 'not readable by this account') $profileIsHeld = TRUE; }
+    if ($parserExitCode === 0) $profileWasUnloaded = TRUE;
+    if (!$profileIsHeld && $fileIsOurs) $PolicyWasRemoved = @unlink($profilePath);
+    else if (!$profileIsHeld) $PolicyWasRemoved = TRUE;
+    if ($PolicyWasRemoved && ($fileIsOurs or $profileWasUnloaded)) logEntry('The '.sandboxApparmorProfileName().' profile was '.($profileWasUnloaded ? 'taken out of the kernel' : 'not loaded').($fileIsOurs ? ', & '.$profilePath.' was removed.' : '.')); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderIsTrusted, $fileIsOurs, $fileIsAbsent, $profileIsLoaded, $profileIsHeld, $profileWasUnloaded, $parserBinary, $profileContents, $resolvedFolder, $trustNotice, $profileName, $loadStatus, $parserOutput, $profileNames, $parserExitCode, $profilePath);
+  return $PolicyWasRemoved; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to hold the AppArmor policy every sandbox this application builds runs under.
+// / Accepts no arguments.
+// / Returns the complete contents of an AppArmor profile file, holding two profiles.
+// / Ubuntu 23.10 & later restrict unprivileged user namespaces, which stops bubblewrap dead &
+// / takes every sandboxed conversion with it. A program may make one only under a profile that
+// / grants userns, which this does.
+// / IT IS UBUNTU'S OWN POLICY FOR BUBBLEWRAP, ATTACHED TO THIS APPLICATION'S OWN COPY. Ubuntu
+// / ships it as bwrap-userns-restrict, enabled from 26.04, & this is that release's version. The
+// / first profile is bubblewrap's, which builds the namespace. Everything bubblewrap starts runs
+// / stacked under the second as well, which denies every capability, so a hostile file can use the
+// / namespace to reach nothing it could not reach before. mediate_deleted judges a file a program
+// / made without a name, or has deleted, by the name it had, so linking one into place is allowed.
+// / 24.04's version lacked it & refused exactly that, which broke Flatpak & took that version back
+// / out of 24.04 (Launchpad bug 2072811). It attaches to privateBwrapPath() & nothing else,
+// / so bubblewrap stays as it was for every other program on the host, & a host that stops a
+// / program entering a profile by name, through kernel.apparmor_restrict_unprivileged_unconfined,
+// / does not stop it. The ABI stays 4.0, which 24.04 & every later release can read.
+// / Until v4.0.5 a profile that confined nothing attached to /usr/bin/bwrap, which gave every user
+// / of bubblewrap on the host a namespace with every capability in it.
+// / MOVED FROM THE APPLICATION AT v4.0.5 & named for whichever application uses this Engine.
+function sandboxApparmorContents() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ProfileContents = $profileName = $childName = $sharedRules = '';
+  $profileName = sandboxApparmorProfileName();
+  $childName = engineApplicationSlug().'-unpriv-bwrap';
+  // / Both profiles permit the same things. What separates them is the capabilities, which
+  // / only bubblewrap's has.
+  $sharedRules = '  allow file rwlkm /{**,},'.PHP_EOL
+    .'  allow network,'.PHP_EOL
+    .'  allow unix,'.PHP_EOL
+    .'  allow ptrace,'.PHP_EOL
+    .'  allow signal,'.PHP_EOL
+    .'  allow mqueue,'.PHP_EOL
+    .'  allow io_uring,'.PHP_EOL
+    .'  allow userns,'.PHP_EOL
+    .'  allow mount,'.PHP_EOL
+    .'  allow umount,'.PHP_EOL
+    .'  allow pivot_root,'.PHP_EOL
+    .'  allow dbus,'.PHP_EOL;
+  $ProfileContents = 'abi <abi/4.0>,'.PHP_EOL
+    .'include <tunables/global>'.PHP_EOL
+    .PHP_EOL
+    .'# Written by '.engineApplicationName().'. Do not edit by hand.'.PHP_EOL
+    .'# '.enginePolicyMarker().PHP_EOL
+    .'# Ubuntu\'s policy for bubblewrap, bwrap-userns-restrict, attached to '.engineApplicationName().'\'s own copy.'.PHP_EOL
+    .'# Bubblewrap may build an unprivileged user namespace. Everything it starts runs with no capabilities.'.PHP_EOL
+    .PHP_EOL
+    .'profile '.$profileName.' '.privateBwrapPath().' flags=(attach_disconnected,mediate_deleted) {'.PHP_EOL
+    .'  allow capability,'.PHP_EOL
+    .$sharedRules
+    .'  allow pix /** -> &'.$profileName.'//&'.$childName.','.PHP_EOL
+    .'  include if exists <local/'.$profileName.'>'.PHP_EOL
+    .'}'.PHP_EOL
+    .PHP_EOL
+    .'profile '.$childName.' flags=(attach_disconnected,mediate_deleted) {'.PHP_EOL
+    .$sharedRules
+    .'  allow pix /** -> &'.$childName.','.PHP_EOL
+    .'  audit deny capability,'.PHP_EOL
+    .'  include if exists <local/'.$childName.'>'.PHP_EOL
+    .'}'.PHP_EOL;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $profileName, $childName, $sharedRules);
+  return $ProfileContents; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to take back a policy file an earlier release wrote into the host.
+// / Accepts a human readable name, the absolute path, a boolean permitting a change & a boolean
+// / permitting the file's removal where nothing can be put back, in that order.
+// / Returns whether nothing of this application's is left there & a status word, in that order.
+// / The status is 'none' when nothing of this application's is there, 'retired' when it was taken
+// / back now, 'outdated' when it is there & no change was permitted, 'kept' when it replaced a file
+// / no copy was kept of & may not be removed, or 'refused' when it could not be taken back.
+// /
+// / A FILE IS PUT BACK AS IT WAS BEFORE THIS APPLICATION REPLACED IT. verifyPolicyFile() keeps a
+// / timestamped copy of anything it replaces, so the newest copy is put back, & a file that
+// / replaced nothing is removed. Only a file carrying this application's marker is touched, & only
+// / in a folder root alone can change, because a file without the marker is the distribution's or
+// / the administrator's. The copies are left where they are. Nothing here could make them again.
+// / A FILE A TOOL READS AS ITS WHOLE POLICY IS NEVER REMOVED WHERE NOTHING CAN BE PUT BACK. An earlier
+// / release replaced one without a copy when the copy could not be made, & a copy can be deleted by
+// / hand. Removing such a policy.xml would leave ImageMagick with no policy at all, so it is kept &
+// / reported, & the administrator restores the original from the package or the build it came from.
+// / An AppArmor addition is removed, because the profile that includes it reads none by default.
+function retirePolicyFile($policyName, $policyPath, $mayRepair, $mayRemove) {
+  // / Set variables.
+  global $RunningAsRoot, $Verbose, $EnableMemoryProtection;
+  $PolicyIsRetired = TRUE;
+  $RetireStatus = 'none';
+  $policyDirectory = $resolvedDirectory = $trustNotice = $trustedPath = $backupPrefix = $backupPath = $backupContents = $entryName = '';
+  $directoryIsTrusted = $fileIsOurs = FALSE;
+  $backupNames = array();
+  $policyDirectory = dirname((string)$policyPath);
+  // / Most hosts have nothing at the name, & are answered before anything is walked.
+  if (file_exists((string)$policyPath) && is_dir($policyDirectory)) list ($directoryIsTrusted, $resolvedDirectory, $trustNotice) = pathIsTrustedByRoot($policyDirectory);
+  if ($directoryIsTrusted) {
+    $trustedPath = $resolvedDirectory.DIRECTORY_SEPARATOR.basename((string)$policyPath);
+    $fileIsOurs = (is_file($trustedPath) && strpos((string)@file_get_contents($trustedPath), enginePolicyMarker()) !== FALSE); }
+  else if (file_exists((string)$policyPath) && $Verbose) logEntry('The '.$policyName.' policy at '.$policyPath.' sits in a folder another account can change, so it is not judged here. '.$trustNotice);
+  if ($fileIsOurs) {
+    $backupPrefix = basename($trustedPath).'.'.engineApplicationSlug().'-backup-';
+    foreach ((array)@scandir($resolvedDirectory) as $entryName) if (strpos((string)$entryName, $backupPrefix) === 0 && is_file($resolvedDirectory.DIRECTORY_SEPARATOR.$entryName)) $backupNames[] = (string)$entryName;
+    // / The suffix is a timestamp written year first, so the last name is the newest copy.
+    sort($backupNames, SORT_STRING); }
+  if (!$fileIsOurs) $RetireStatus = 'none';
+  else if (count($backupNames) === 0 && !$mayRemove) {
+    $PolicyIsRetired = FALSE;
+    $RetireStatus = 'kept';
+    if ($mayRepair && $RunningAsRoot) warningEntry('The '.$policyName.' policy an earlier release wrote at '.$policyPath.' kept no copy of what it replaced, & removing it would leave no policy there at all, so it was left in place. Restore the original from the package or the build that provided it.'); }
+  else if (!$mayRepair or !$RunningAsRoot) {
+    $PolicyIsRetired = FALSE;
+    $RetireStatus = 'outdated'; }
+  else {
+    if (count($backupNames) > 0) {
+      $backupPath = $resolvedDirectory.DIRECTORY_SEPARATOR.$backupNames[count($backupNames) - 1];
+      $backupContents = (string)@file_get_contents($backupPath);
+      if (@file_put_contents($trustedPath, $backupContents) === strlen($backupContents) && (string)@file_get_contents($trustedPath) === $backupContents) {
+        $RetireStatus = 'retired';
+        warningEntry('The '.$policyName.' policy an earlier release wrote at '.$policyPath.' was put back as it was, from '.$backupPath.'.'); }
+      else {
+        $PolicyIsRetired = FALSE;
+        $RetireStatus = 'refused';
+        warningEntry('The '.$policyName.' policy an earlier release wrote at '.$policyPath.' could not be put back from '.$backupPath.'. Put it back by hand.'); } }
+    else {
+      @unlink($trustedPath);
+      if (!file_exists($trustedPath)) {
+        $RetireStatus = 'retired';
+        warningEntry('The '.$policyName.' policy an earlier release wrote at '.$policyPath.' replaced nothing, so it was removed.'); }
+      else {
+        $PolicyIsRetired = FALSE;
+        $RetireStatus = 'refused';
+        warningEntry('The '.$policyName.' policy an earlier release wrote at '.$policyPath.' could not be removed. Remove it by hand.'); } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $policyDirectory, $resolvedDirectory, $trustNotice, $trustedPath, $backupPrefix, $backupPath, $backupContents, $entryName, $directoryIsTrusted, $fileIsOurs, $backupNames, $policyName, $policyPath, $mayRepair, $mayRemove);
+  return array($PolicyIsRetired, $RetireStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to validate or repair the AppArmor profile every sandbox this application builds
+// / runs under, which is attached to its own copy of bubblewrap.
+// / Accepts a boolean permitting a write.
+// / Returns a validity boolean & a status word, in that order.
+// / Every sandboxed conversion depends on it, so the application checks it as every request &
+// / command starts, rather than from a dependency check.
+// / IT IS WRITTEN WHEREVER THE KERNEL CAN RESTRICT UNPRIVILEGED NAMESPACES, whether or not it does
+// / now, so a restriction switched on later finds the profile already loaded. A kernel without the
+// / restriction needs none. An AppArmor that cannot read the userns rule is never handed one,
+// / because a profile that fails to load is tripped over at every boot, & a new one the parser
+// / refuses is taken out again.
+// / Where the restriction is off, a profile that is missing or old is not a fault, & is written
+// / only by a command permitted to write it.
+// / Root reads which profiles are loaded & loads this one when it is not. Any other account cannot
+// / read that, & judges the file alone.
+// / IT IS NEVER ATTACHED WHERE AN ACCOUNT OTHER THAN ROOT COULD PUT A PROGRAM. It grants a namespace
+// / to whatever runs at the copy's path, so a path another account can write is reported exposed,
+// / & a repair takes back one attached before. A container's AppArmor is its host's, so a container
+// / writes none.
+// / AN EXTENSION OF A DISTRIBUTION PROFILE IS TAKEN BACK. Until v4.0.5, where a distribution
+// / shipped a profile for bubblewrap, this application extended it through local/bwrap, which gave
+// / every user of bubblewrap on the host what only this application needed. Until it is taken back
+// / it is what this reports, because it is what still needs doing.
+// / MOVED FROM THE APPLICATION AT v4.0.5.
+function verifySandboxPolicy($mayRepair) {
+  // / Set variables.
+  global $RunningAsRoot, $RunningInContainer, $EnableMemoryProtection;
+  static $cachedValid = NULL;
+  static $cachedStatus = 'unchecked';
+  static $cachedMayRepair = FALSE;
+  static $cachedPathIsHeld = TRUE;
+  $PolicyIsValid = FALSE;
+  $PolicyStatus = 'unchecked';
+  $restrictionValue = $profileName = $profilePath = $profileContents = $profileLoadStatus = $retireStatus = $holdNotice = '';
+  $profileIsLoaded = $includeIsRetired = $profileWasLoaded = $profileWasRemoved = FALSE;
+  $pathIsHeld = TRUE;
+  $restrictionValue = namespaceRestriction();
+  if ($restrictionValue !== '' && !$RunningInContainer) list ($pathIsHeld, $holdNotice) = sandboxPathIsHeld();
+  // / A cached result answers every later call but one. A failure found without permission to
+  // / repair is checked again when a repair is permitted, because an Environment Manager pass
+  // / checks before it repairs, & the cached check would answer the repair with the failure it
+  // / was asked to fix. So is an unrestricted answer, because the profile written ahead of a
+  // / restriction is the repair's to write & the check made at start never writes it.
+  // / It answers only while the copy's path is held as it was when the answer was made. An install
+  // / in the same run can make a path that was exposed root's alone, & until v4.0.5 the hand over
+  // / then said the profile was exposed after the copy it had just made was root's.
+  if ($cachedValid !== NULL && $cachedPathIsHeld === $pathIsHeld && ($cachedMayRepair or !$mayRepair or ($cachedValid && $cachedStatus !== 'unrestricted'))) {
+    $PolicyIsValid = $cachedValid;
+    $PolicyStatus = $cachedStatus; }
+  else {
+    $profileName = sandboxApparmorProfileName();
+    $profilePath = '/etc/apparmor.d/'.$profileName;
+    $profileContents = sandboxApparmorContents();
+    list ($includeIsRetired, $retireStatus) = retirePolicyFile('Sandbox AppArmor local', '/etc/apparmor.d/local/bwrap', $mayRepair, TRUE);
+    // / The distribution profile is loaded again without what was added to it.
+    if ($retireStatus === 'retired' && is_file('/etc/apparmor.d/bwrap')) reloadApparmorProfile('/etc/apparmor.d/bwrap');
+    if ($restrictionValue === '') {
+      $PolicyIsValid = TRUE;
+      $PolicyStatus = 'unrestricted'; }
+    else if ($RunningInContainer) {
+      $PolicyIsValid = TRUE;
+      $PolicyStatus = 'host'; }
+    else if (!is_file('/etc/apparmor.d/abi/4.0')) {
+      $PolicyIsValid = ($restrictionValue !== '1');
+      $PolicyStatus = ($PolicyIsValid ? 'unrestricted' : 'unsupported');
+      if (!$PolicyIsValid) warningEntry('This kernel restricts unprivileged user namespaces & the AppArmor on this host cannot load a profile that permits one, so the '.$profileName.' profile was not written.'); }
+    else if ($restrictionValue !== '1' && (!$mayRepair or !$RunningAsRoot)) {
+      $PolicyIsValid = TRUE;
+      $PolicyStatus = 'unrestricted'; }
+    else if (!$pathIsHeld) {
+      $PolicyIsValid = FALSE;
+      $PolicyStatus = 'exposed';
+      if ($mayRepair && $RunningAsRoot) {
+        $profileWasRemoved = removeSandboxPolicy($profilePath);
+        warningEntry('The '.$profileName.' profile is not attached to '.privateBwrapPath().', because an account other than root could put a program there. '.$holdNotice.($profileWasRemoved ? '' : ' The one already at '.$profilePath.' could not be taken out.')); } }
+    else {
+      list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile('Sandbox AppArmor', $profilePath, $profileContents, $mayRepair);
+      if ($RunningAsRoot) {
+        list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded($profileName);
+        // / A matching file the kernel is not using enforces nothing, & one just written is loaded now.
+        if ($mayRepair && $PolicyIsValid && ($PolicyStatus === 'installed' or $PolicyStatus === 'repaired' or !$profileIsLoaded)) {
+          $profileWasLoaded = reloadApparmorProfile($profilePath);
+          // / One taken out again is reported as an AppArmor that cannot load it, as one that cannot
+          // / read the userns rule is, rather than as a file on disk the kernel is not using.
+          if (!$profileWasLoaded && $PolicyStatus === 'installed' && (string)@file_get_contents($profilePath) === $profileContents) {
+            @unlink($profilePath);
+            $PolicyIsValid = ($restrictionValue !== '1');
+            $PolicyStatus = ($PolicyIsValid ? 'unrestricted' : 'unsupported');
+            warningEntry('The '.$profileName.' profile could not be loaded, so it was removed from '.$profilePath.' again & no boot trips over it.'); }
+          list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded($profileName); }
+        if ($PolicyIsValid && is_file($profilePath) && !$profileIsLoaded && $profileLoadStatus === 'NOT LOADED') {
+          $PolicyIsValid = FALSE;
+          $PolicyStatus = 'not loaded'; } } }
+    if ($PolicyIsValid && ($retireStatus === 'outdated' or $retireStatus === 'refused')) {
+      $PolicyIsValid = FALSE;
+      $PolicyStatus = $retireStatus; }
+    $cachedValid = $PolicyIsValid;
+    $cachedStatus = $PolicyStatus;
+    $cachedMayRepair = (bool)$mayRepair;
+    $cachedPathIsHeld = $pathIsHeld; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $restrictionValue, $profileName, $profilePath, $profileContents, $profileLoadStatus, $retireStatus, $holdNotice, $profileIsLoaded, $includeIsRetired, $profileWasLoaded, $profileWasRemoved, $pathIsHeld, $mayRepair);
+  return array($PolicyIsValid, $PolicyStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read what the sysctl files other than this application's drop in set a setting to.
+// / Accepts the setting's name & the path of this application's drop in, in that order.
+// / Returns every value those files give it, in the order they are found, which may be none.
+// / Every place a boot reads sysctl files from is searched, & each value is returned rather than
+// / the one a boot would settle on, because which file a boot reads last is not this
+// / application's to predict. A caller asks whether any of them refuses or permits what it needs.
+function sysctlValuesElsewhere($settingName, $ownPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $SettingValues = array();
+  $configFolder = $configPath = $configLine = '';
+  $configPaths = $lineMatches = array();
+  $configPaths = array('/etc/sysctl.conf');
+  foreach (array('/etc/sysctl.d', '/run/sysctl.d', '/usr/local/lib/sysctl.d', '/usr/lib/sysctl.d', '/lib/sysctl.d') as $configFolder) $configPaths = array_merge($configPaths, glob($configFolder.'/*.conf') ?: array());
+  foreach ($configPaths as $configPath) {
+    if ($configPath === $ownPath or !is_file($configPath)) continue;
+    // / A boot reads a name written with slashes as it reads one written with dots, & ignores the
+    // / leading dash that only asks it to carry on past a setting it cannot apply.
+    foreach (explode("\n", (string)@file_get_contents($configPath)) as $configLine) if (preg_match('/^\s*-?\s*([A-Za-z0-9_.\/]+)\s*=\s*(\S+)\s*$/', $configLine, $lineMatches) === 1 && str_replace('/', '.', $lineMatches[1]) === $settingName) $SettingValues[] = $lineMatches[2]; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $configFolder, $configPath, $configLine, $configPaths, $lineMatches, $settingName, $ownPath);
+  return $SettingValues; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to keep the sysctl drop in that holds, for the next boot, the kernel settings this
+// / application changed.
+// / Accepts the settings changed just now, each as name => value, whether lifting the AppArmor
+// / restriction is permitted, & whether this may change the drop in, in that order.
+// / Returns a status word & a sentence, in that order. The status is 'none' when there is no drop
+// / in & none is needed, & otherwise ok, installed, repaired, removed, outdated or FAILED.
+// /
+// / IT HOLDS WHAT WAS CHANGED, & NOTHING ELSE. Until v4.0.5 every -fp wrote all three settings
+// / whatever the kernel read. The next boot lowered user.max_user_namespaces to 15000 on a host
+// / that allowed more, & lifted the AppArmor restriction on a host whose configuration forbade it.
+// / A setting is held when it was changed now, or when this file held it before & the kernel still
+// / reads what the file says. A kernel that has booted since an earlier release wrote this file
+// / reads what it says whether or not the host needed it, so a namespace setting is held from that
+// / file only where the next boot would refuse namespaces without it. That is where another sysctl
+// / file sets it to 0, or for the clone, whose default is built into the kernel & cannot be read,
+// / where no other file permits it.
+// / The AppArmor restriction is held only while it reads 0 & lifting it is permitted, so a host
+// / whose configuration forbids lifting it gets it back at its next boot.
+// / A restriction that reads 0 is not proved here to need lifting, because proving it means
+// / switching it on for every program on the host. One this file lifted stays lifted until it is
+// / switched on & -fp proves the profile carries a sandbox, & is let go then.
+// / The settings are compared rather than the text, so a file an earlier release wrote that holds
+// / exactly what is needed is left as it is. A file without this application's header is somebody
+// / else's & is never touched.
+function maintainNamespaceDropIn($changedSettings, $mayLiftRestriction, $mayChange) {
+  // / Set variables.
+  global $Verbose, $EnableMemoryProtection;
+  $DropInStatus = 'none';
+  $DropInDetail = '';
+  $dropInPath = $headerText = $existingContents = $existingLine = $settingName = $settingPath = $currentValue = $heldText = $existingText = $heldList = '';
+  $settingPaths = $existingSettings = $heldSettings = $lineMatches = $valuesElsewhere = array();
+  $fileExists = $fileIsOurs = $fileIsCurrent = $settingIsHeld = FALSE;
+  $dropInPath = '/etc/sysctl.d/99-'.engineApplicationSlug().'-userns.conf';
+  $headerText = '# / Written by '.engineApplicationName().'. Holds the kernel settings it changed so a sandbox can build a namespace.'.PHP_EOL;
+  $settingPaths = array(
+    'kernel.unprivileged_userns_clone' => '/proc/sys/kernel/unprivileged_userns_clone',
+    'user.max_user_namespaces' => '/proc/sys/user/max_user_namespaces',
+    'kernel.apparmor_restrict_unprivileged_userns' => '/proc/sys/kernel/apparmor_restrict_unprivileged_userns');
+  $fileExists = is_file($dropInPath);
+  if ($fileExists) {
+    $existingContents = (string)@file_get_contents($dropInPath);
+    $fileIsOurs = (strpos($existingContents, '# / Written by '.engineApplicationName().'.') === 0);
+    $fileIsCurrent = (strpos($existingContents, $headerText) === 0); }
+  if ($fileExists && !$fileIsOurs) {
+    if ($Verbose) logEntry('The sysctl drop in at '.$dropInPath.' was not written by '.engineApplicationName().', so it is left alone.'); }
+  else {
+    foreach (explode("\n", $existingContents) as $existingLine) if (preg_match('/^\s*([a-z_.]+)\s*=\s*(\S+)\s*$/', $existingLine, $lineMatches) === 1) $existingSettings[$lineMatches[1]] = $lineMatches[2];
+    foreach ($settingPaths as $settingName => $settingPath) {
+      if (isset($existingSettings[$settingName])) $existingText = $existingText.$settingName.' = '.$existingSettings[$settingName].PHP_EOL;
+      if (!file_exists($settingPath)) continue;
+      $currentValue = trim((string)@file_get_contents($settingPath));
+      if (isset($changedSettings[$settingName])) $heldSettings[$settingName] = (string)$changedSettings[$settingName];
+      else if (isset($existingSettings[$settingName]) && $existingSettings[$settingName] === $currentValue) {
+        if ($settingName === 'kernel.apparmor_restrict_unprivileged_userns') $settingIsHeld = ($currentValue === '0' && $mayLiftRestriction);
+        else if ($fileIsCurrent) $settingIsHeld = TRUE;
+        else {
+          $valuesElsewhere = sysctlValuesElsewhere($settingName, $dropInPath);
+          $settingIsHeld = (in_array('0', $valuesElsewhere, TRUE) or ($settingName === 'kernel.unprivileged_userns_clone' && count($valuesElsewhere) === 0)); }
+        if ($settingIsHeld) $heldSettings[$settingName] = $currentValue; } }
+    foreach ($heldSettings as $settingName => $currentValue) {
+      $heldText = $heldText.$settingName.' = '.$currentValue.PHP_EOL;
+      $heldList = $heldList.($heldList === '' ? '' : ', ').$settingName.' = '.$currentValue; }
+    if ($heldText === '' && !$fileExists) $DropInStatus = 'none';
+    else if ($fileExists && $heldText === $existingText) {
+      $DropInStatus = 'ok';
+      $DropInDetail = 'Holds '.$heldList.' for the next boot.'; }
+    else if (!$mayChange) {
+      $DropInStatus = 'outdated';
+      $DropInDetail = $dropInPath.' holds '.($heldText === '' ? 'settings nothing needs held any more' : 'other settings than these need').'. Run -fp as root to correct it.'; }
+    else if ($heldText === '') {
+      @unlink($dropInPath);
+      $DropInStatus = (file_exists($dropInPath) ? 'FAILED' : 'removed');
+      $DropInDetail = ($DropInStatus === 'removed' ? 'Removed '.$dropInPath.'. Nothing '.engineApplicationName().' changed needs holding for the next boot.' : $dropInPath.' could not be removed. Remove it by hand.'); }
+    else {
+      $DropInStatus = ($fileExists ? 'repaired' : 'installed');
+      $DropInDetail = 'Wrote '.$dropInPath.', which holds '.$heldList.' for the next boot.';
+      $heldText = $headerText.'# / Remove this file & reboot to restore the distribution default.'.PHP_EOL.$heldText;
+      if (!is_dir(dirname($dropInPath)) or @file_put_contents($dropInPath, $heldText) !== strlen($heldText)) {
+        $DropInStatus = 'FAILED';
+        $DropInDetail = $dropInPath.' could not be written, so what was changed lasts until the next boot.'; }
+      else @chmod($dropInPath, 0644); }
+    // / A drop in that could not be kept is something the administrator should know is happening.
+    if ($DropInStatus === 'FAILED') warningEntry('Sysctl drop in: '.$DropInStatus.'. '.$DropInDetail);
+    else if ($DropInStatus !== 'none' && $DropInStatus !== 'ok') logEntry('Sysctl drop in: '.$DropInStatus.'. '.$DropInDetail); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $dropInPath, $headerText, $existingContents, $existingLine, $settingName, $settingPath, $currentValue, $heldText, $existingText, $heldList, $settingPaths, $existingSettings, $heldSettings, $lineMatches, $valuesElsewhere, $fileExists, $fileIsOurs, $fileIsCurrent, $settingIsHeld, $changedSettings, $mayLiftRestriction, $mayChange);
+  return array($DropInStatus, $DropInDetail); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to check, & optionally correct, the kernel settings a sandbox needs.
+// / Accepts a boolean permitting a change.
+// / Returns a readiness boolean & an array of findings, in that order.
+// /
+// / THREE SEPARATE THINGS BLOCK AN UNPRIVILEGED USER NAMESPACE & ONLY ONE IS AppArmor.
+// / A profile granting userns covers Ubuntu 23.10 & later. It does nothing on a Debian host,
+// / where the blocker is kernel.unprivileged_userns_clone reading zero, & it does nothing where
+// / user.max_user_namespaces has been set to zero.
+// /
+// / THE AppArmor RESTRICTION IS LEFT IN FORCE WHEREVER THIS APPLICATION'S PROFILE CARRIES A SANDBOX.
+// / That is proved by building one, as the web server account, through the profile, once
+// / verifySandboxPolicy() has put the profile in place. Only a sandbox that cannot be built that
+// / way lifts the restriction, & only where the application permits it through the setting it maps
+// / as LiftNamespaceRestriction. Until v4.0.5 every restricted host was lifted, & that is the
+// / fallback now. A host that forbids it is told no sandbox can be built, & is never lifted, at its
+// / next boot either.
+// / Until v4.0.5 the restriction was checked twice. The first check called it blocked & the second
+// / lifted it, so a corrected host read as unready, & one that forbade lifting it read as unable to
+// / build a sandbox while its profile was building every one.
+// / AN UNATTENDED REPAIR NEVER LIFTS IT. Lifting it changes what every program on the host may do,
+// / so it is done only by -fp, which an administrator runs. Until v4.0.5 a permitted Environment
+// / Manager repair could lift it on one probe that failed under load.
+// / A RESTRICTION THIS APPLICATION LIFTED IS PUT BACK WHERE LIFTING IS NOW FORBIDDEN, as a repair
+// / runs rather than at the next boot. The drop in says it was lifted here & no other sysctl file
+// / lifts it, so the next boot would switch it back on anyway. Until v4.0.5 it stayed off until then.
+// / A RESTRICTION IS NEVER LIFTED TO COVER A COPY OF BUBBLEWRAP THAT CANNOT BE USED. Every sandbox on
+// / a restricting kernel runs this application's own copy, which the profile is attached to, & a
+// / copy that is missing, is not root's alone or cannot be run by the web server's account is
+// / answered by making it again, which --setup --update-depends does. So the restriction stays in
+// / force, & the copy's own line names that command. Only a copy that is in place & runs & still
+// / cannot carry a sandbox, twice over, leaves lifting as the last resort.
+// / A SANDBOX ATTEMPT CUT SHORT NEVER LIFTS IT. Bubblewrap that refuses a sandbox exits 1, & an
+// / attempt a time limit or a signal ended says nothing about the kernel. The web server's account,
+// / which every probe made as root runs as, can end one, so until v4.0.5 that account could have
+// / had the restriction lifted for the whole host. A lift that did not help is read back once it is
+// / put back, & one that could not be put back is FAILED & says so.
+// /
+// / A host that blocks the namespace makes bubblewrap fall back to its setuid path, where
+// / it can unshare the network but has already dropped the privilege needed to configure
+// / loopback inside it. That surfaces as a loopback error rather than a namespace error,
+// / which points an operator at networking when the cause is the namespace.
+// / Whatever is changed is held for the next boot by maintainNamespaceDropIn(), which holds that &
+// / nothing else.
+// / MOVED FROM THE APPLICATION AT v4.0.5.
+function verifySandboxKernel($mayRepair) {
+  // / Set variables.
+  global $RunningAsRoot, $RunningInContainer, $Verbose, $EngineSettingNames, $EngineRepairIsUnattended, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
+  $KernelIsReady = TRUE;
+  $KernelFindings = $changedSettings = array();
+  $sysctlPath = $sysctlValue = $bwrapPath = $sandboxLauncher = $profileName = $policyStatus = $dropInStatus = $dropInDetail = $settingHint = '';
+  $dropInPath = $dropInContents = $restoredDetail = $binaryStatus = $binaryDetail = $carriedDetail = '';
+  $mayLiftRestriction = $policyIsValid = $repairIsUnattended = $restrictionWasLifted = $copyIsUnusable = $probeWasInterrupted = $retryWasInterrupted = FALSE;
+  $bwrapBinary = FALSE;
+  // / A container inherits these from its host & cannot change them.
+  // / /proc/sys is mounted read only in every unprivileged container, so a repair here can
+  // / only ever fail. Reporting FAILED for something that was never this machine's to fix
+  // / sends an operator hunting inside the container for a setting that lives outside it.
+  // / The values are still READ & reported, because they are exactly what decides whether
+  // / the sandbox works, & knowing them is what tells an operator to go and fix the host.
+  if ($RunningInContainer) $mayRepair = FALSE;
+  $mayLiftRestriction = (bool)applicationSetting('LiftNamespaceRestriction', TRUE);
+  $repairIsUnattended = (isset($EngineRepairIsUnattended) && $EngineRepairIsUnattended === TRUE);
+  $bwrapPath = locateDependency('bwrap');
+  // / Debian gates unprivileged namespaces behind this. Ubuntu ships it reading 1.
+  $sysctlPath = '/proc/sys/kernel/unprivileged_userns_clone';
+  if (file_exists($sysctlPath)) {
+    $sysctlValue = trim((string)@file_get_contents($sysctlPath));
+    if ($sysctlValue === '1') $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'ok', 'Detail' => 'Unprivileged user namespaces are permitted.');
+    else if (!$mayRepair or !$RunningAsRoot) {
+      $KernelIsReady = FALSE;
+      $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'BLOCKED', 'Detail' => 'Reads '.$sysctlValue.'. Bubblewrap cannot build a namespace. '.($RunningInContainer ? 'This is a HOST setting. Correct it on the host, not in this container.' : 'Run -fp as root.')); }
+    else {
+      @file_put_contents($sysctlPath, '1');
+      $sysctlValue = trim((string)@file_get_contents($sysctlPath));
+      if ($sysctlValue !== '1') {
+        $KernelIsReady = FALSE;
+        $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'FAILED', 'Detail' => 'Could not be set to 1.'); }
+      else {
+        $changedSettings['kernel.unprivileged_userns_clone'] = '1';
+        $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'corrected', 'Detail' => 'Set to 1.'); } } }
+  // / A namespace budget of zero refuses every namespace whatever else is permitted.
+  $sysctlPath = '/proc/sys/user/max_user_namespaces';
+  if (file_exists($sysctlPath)) {
+    $sysctlValue = trim((string)@file_get_contents($sysctlPath));
+    if ((int)$sysctlValue > 0) $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'ok', 'Detail' => $sysctlValue.' namespaces permitted.');
+    else if (!$mayRepair or !$RunningAsRoot) {
+      $KernelIsReady = FALSE;
+      $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'BLOCKED', 'Detail' => 'Reads 0. No namespace can be created. '.($RunningInContainer ? 'This is a HOST setting. Correct it on the host, not in this container.' : 'Run -fp as root.')); }
+    else {
+      @file_put_contents($sysctlPath, '15000');
+      if ((int)trim((string)@file_get_contents($sysctlPath)) < 1) {
+        $KernelIsReady = FALSE;
+        $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'FAILED', 'Detail' => 'Could not be raised.'); }
+      else {
+        $changedSettings['user.max_user_namespaces'] = '15000';
+        $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'corrected', 'Detail' => 'Raised to 15000.'); } } }
+  // / Ubuntu gates the namespace behind AppArmor rather than behind a clone sysctl, so the
+  // / two checks above can both read fine while this one is what refuses.
+  $sysctlPath = '/proc/sys/kernel/apparmor_restrict_unprivileged_userns';
+  if (file_exists($sysctlPath)) {
+    $sysctlValue = namespaceRestriction();
+    $profileName = sandboxApparmorProfileName();
+    $settingHint = (is_array($EngineSettingNames) && isset($EngineSettingNames['LiftNamespaceRestriction'])) ? ' through $'.$EngineSettingNames['LiftNamespaceRestriction'] : '';
+    $carriedDetail = ' Every sandbox runs '.privateBwrapPath().', which the '.$profileName.' profile is attached to.';
+    $dropInPath = '/etc/sysctl.d/99-'.engineApplicationSlug().'-userns.conf';
+    $dropInContents = is_file($dropInPath) ? (string)@file_get_contents($dropInPath) : '';
+    $restrictionWasLifted = (strpos($dropInContents, '# / Written by '.engineApplicationName().'.') === 0 && preg_match('/^\s*kernel\.apparmor_restrict_unprivileged_userns\s*=\s*0\s*$/m', $dropInContents) === 1);
+    if ($sysctlValue === '0' && !$mayLiftRestriction && $restrictionWasLifted && $mayRepair && $RunningAsRoot && !in_array('0', sysctlValuesElsewhere('kernel.apparmor_restrict_unprivileged_userns', $dropInPath), TRUE)) {
+      // / The profile goes in first, so a sandbox can be built through it the moment the
+      // / restriction is back on.
+      list ($policyIsValid, $policyStatus) = verifySandboxPolicy($mayRepair);
+      @file_put_contents($sysctlPath, '1');
+      $sysctlValue = namespaceRestriction();
+      $restoredDetail = 'Switched back on, because '.engineApplicationName().' had lifted it & config.php forbids that now'.$settingHint.'.';
+      if ($sysctlValue === '1' && $bwrapPath !== '') list ($bwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
+      if ($sysctlValue === '1' && $bwrapPath !== '' && $bwrapBinary === FALSE) $copyIsUnusable = sandboxBinaryIsUnusable();
+      if ($sysctlValue !== '1') {
+        $KernelIsReady = FALSE;
+        $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'FAILED', 'Detail' => engineApplicationName().' had lifted it & config.php forbids that now'.$settingHint.', but it could not be switched back on.'); }
+      else if ($bwrapPath === '') $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'corrected', 'Detail' => $restoredDetail);
+      else if ($bwrapBinary !== FALSE) $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'corrected', 'Detail' => $restoredDetail.($bwrapBinary === privateBwrapPath() ? $carriedDetail : ' Bubblewrap builds a namespace here without the '.$profileName.' profile.'));
+      else {
+        $KernelIsReady = FALSE;
+        $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => $restoredDetail.($copyIsUnusable ? ' No sandbox can be built without '.engineApplicationName().'\'s own bubblewrap, which the '.$profileName.' profile is attached to.' : ' The '.$profileName.' profile could not carry a sandbox, so no sandbox can be built.')); } }
+    else if ($sysctlValue !== '1') $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'ok', 'Detail' => 'Not restricting unprivileged namespaces.');
+    else {
+      // / The profile is put in place before a sandbox is built through it, so -fp proves what it
+      // / has just written rather than what was there before. Its own result is reported on a line
+      // / of its own, & what decides this one is whether a sandbox can actually be built.
+      list ($policyIsValid, $policyStatus) = verifySandboxPolicy($mayRepair);
+      if ($bwrapPath !== '') list ($bwrapBinary, $sandboxLauncher, $probeWasInterrupted) = verifySandboxLauncher();
+      if ($bwrapPath !== '' && $bwrapBinary === FALSE) $copyIsUnusable = sandboxBinaryIsUnusable();
+      // / Without bubblewrap nothing here builds a sandbox, so nothing could need the restriction lifted.
+      if ($bwrapPath === '') $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'ok', 'Detail' => 'Restricted, & left in force. Bubblewrap is not installed, so no sandbox needs it lifted.');
+      else if ($bwrapBinary !== FALSE && $bwrapBinary === privateBwrapPath()) $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'ok', 'Detail' => 'Restricted, & left in force.'.$carriedDetail);
+      else if ($bwrapBinary !== FALSE) $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'ok', 'Detail' => 'Restricted, & left in force. Bubblewrap builds a namespace here without the '.$profileName.' profile.');
+      else if ($copyIsUnusable) {
+        $KernelIsReady = FALSE;
+        $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Restricted, & left in force. No sandbox can be built without '.engineApplicationName().'\'s own bubblewrap, which the '.$profileName.' profile is attached to.'); }
+      // / An account that can neither run the copy nor hand it to one that can is told so, rather than
+      // / that a sandbox cannot be built, because what it found is about itself.
+      else if (!sandboxCopyIsJudgedHere() && sandboxBinaryIsNeeded()) $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'n/a', 'Detail' => 'Restricted. Only root & '.$ApacheUser.'\'s group may run '.engineApplicationName().'\'s own bubblewrap, so '.$CurrentUser.' cannot judge whether a sandbox can be built. Run -v as root.');
+      else if (!$mayLiftRestriction) {
+        $KernelIsReady = FALSE;
+        $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Restricted, & the '.$profileName.' profile could not carry a sandbox. config.php forbids lifting the restriction'.$settingHint.', so no sandbox can be built.'); }
+      else if (!$mayRepair or !$RunningAsRoot or $repairIsUnattended) {
+        $KernelIsReady = FALSE;
+        $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Reads 1, & the '.$profileName.' profile could not carry a sandbox. '.($RunningInContainer ? 'This is a HOST setting. Correct it on the host, or run this container with --cap-add SYS_ADMIN.' : ($repairIsUnattended ? 'An unattended repair never lifts it. Run -fp as root.' : 'Run -fp as root.'))); }
+      else {
+        // / THE FALLBACK. The restriction protects a general purpose desktop from a hostile local
+        // / user. Leaving it in force where no sandbox can be built does not make a conversion
+        // / host safer, it disables the sandbox that isolates every hostile FILE the host exists to
+        // / process, which is the threat that actually arrives here. So it is lifted, where the
+        // / application permits, & the log says why the profile could not carry the sandbox.
+        // / A lift is proved like any other repair. One that did not let a sandbox be built is put
+        // / back, because a host is never left weakened for nothing.
+        // / The sandbox is tried once more before anything is lifted, so one that failed under load
+        // / is never answered by lifting the restriction for the whole host.
+        list ($bwrapBinary, $sandboxLauncher, $retryWasInterrupted) = verifySandboxLauncher();
+        if ($bwrapBinary !== FALSE) $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'ok', 'Detail' => 'Restricted, & left in force.'.($bwrapBinary === privateBwrapPath() ? $carriedDetail : ' Bubblewrap builds a namespace here without the '.$profileName.' profile.'));
+        else if ($probeWasInterrupted or $retryWasInterrupted) {
+          $KernelIsReady = FALSE;
+          $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Restricted, & left in force. A sandbox attempt was cut short rather than refused, so nothing was lifted. Run -fp again, & the log says what stopped it.'); }
+        else {
+          @file_put_contents($sysctlPath, '0');
+          $sysctlValue = namespaceRestriction();
+          if ($sysctlValue === '0') list ($bwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
+          if ($sysctlValue !== '0') {
+            $KernelIsReady = FALSE;
+            $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'FAILED', 'Detail' => 'The '.$profileName.' profile could not carry a sandbox, & the restriction could not be lifted either.'); }
+          else if ($bwrapBinary === FALSE) {
+            @file_put_contents($sysctlPath, '1');
+            $sysctlValue = namespaceRestriction();
+            $KernelIsReady = FALSE;
+            if ($sysctlValue === '1') $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'FAILED', 'Detail' => 'Neither the '.$profileName.' profile nor lifting the restriction let a sandbox be built, so the restriction was put back. The log says why.');
+            else {
+              warningEntry('Lifting kernel.apparmor_restrict_unprivileged_userns did not let a sandbox be built, & it could not be switched back on. It reads '.($sysctlValue === '' ? 'nothing' : $sysctlValue).'.');
+              $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'FAILED', 'Detail' => 'Neither the '.$profileName.' profile nor lifting the restriction let a sandbox be built, & the restriction could not be put back. Set kernel.apparmor_restrict_unprivileged_userns to 1 as root.'); } }
+          else {
+            $changedSettings['kernel.apparmor_restrict_unprivileged_userns'] = '0';
+            $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'corrected', 'Detail' => 'Set to 0. The '.$profileName.' profile could not carry a sandbox, so the restriction is lifted for this host. The log says why.'); } } } }
+    // / This application's own copy of bubblewrap has a line of its own, which only reports.
+    list ($binaryStatus, $binaryDetail) = verifySandboxBinary($bwrapBinary);
+    if ($binaryStatus !== 'none') $KernelFindings[] = array('Check' => 'bubblewrap copy', 'Status' => $binaryStatus, 'Detail' => $binaryDetail); }
+  // / A setuid bubblewrap is a symptom rather than a cause. It is how a distribution shipped
+  // / a working sandbox on a host that forbids the namespace, & it is the configuration that
+  // / produces the loopback error. Report it so the cause is not mistaken for networking.
+  if ($bwrapPath !== '' && file_exists($bwrapPath) && (fileperms($bwrapPath) & 0x800)) $KernelFindings[] = array('Check' => 'bubblewrap mode', 'Status' => 'setuid', 'Detail' => 'Running setuid, which cannot configure loopback in a new network namespace. Permitting unprivileged namespaces lets it stop.');
+  // / Whatever was changed is held for the next boot, & whatever no longer needs holding is let go.
+  list ($dropInStatus, $dropInDetail) = maintainNamespaceDropIn($changedSettings, $mayLiftRestriction, ($mayRepair && $RunningAsRoot));
+  if ($dropInStatus !== 'none') $KernelFindings[] = array('Check' => 'sysctl drop in', 'Status' => $dropInStatus, 'Detail' => $dropInDetail);
+  if ($Verbose) logEntry('Sandbox kernel check completed across '.count($KernelFindings).' setting(s). Ready: '.($KernelIsReady ? 'YES' : 'NO').'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $changedSettings, $sysctlPath, $sysctlValue, $bwrapPath, $sandboxLauncher, $profileName, $policyStatus, $dropInStatus, $dropInDetail, $settingHint, $dropInPath, $dropInContents, $restoredDetail, $binaryStatus, $binaryDetail, $carriedDetail, $mayLiftRestriction, $policyIsValid, $repairIsUnattended, $restrictionWasLifted, $copyIsUnusable, $probeWasInterrupted, $retryWasInterrupted, $bwrapBinary, $mayRepair);
+  return array($KernelIsReady, $KernelFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / MOVED FROM THE APPLICATION AT v3.9.3. Printing an environment report is not something
 // / one application does differently from another, & the findings it prints are already
 // / assembled by the Engine & by whatever provider the application named.
@@ -908,7 +2639,7 @@ function findingIsBenign($findingStatus) {
   // / Set variables.
   global $EnableMemoryProtection;
   $FindingIsBenign = FALSE;
-  $FindingIsBenign = in_array((string)$findingStatus, array('ok', 'installed', 'repaired', 'corrected', 'removed', 'disabled'), TRUE);
+  $FindingIsBenign = in_array((string)$findingStatus, array('ok', 'installed', 'repaired', 'corrected', 'removed', 'retired', 'kept', 'disabled'), TRUE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $findingStatus);
   return $FindingIsBenign; }

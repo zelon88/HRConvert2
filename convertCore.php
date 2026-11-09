@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.1.
+// / v4.0.5.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -231,63 +231,6 @@ function generateInstallSecret() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to report whether an AppArmor profile is loaded into the kernel.
-// / Accepts the profile name as it is declared inside the profile file.
-// / Returns a loaded boolean & a status word, in that order.
-// / A profile on disk is not a profile in force.
-// / Writing one & running apparmor_parser only at the moment it is written means a load
-// / that failed, or a host that rebooted before AppArmor read it, leaves a file that
-// / matches perfectly & is enforcing nothing. The check reported ok & the sandbox stayed
-// / broken, which is the worst combination a diagnostic can produce.
-// / The loaded set is read from securityfs, which is what the kernel is actually using.
-function apparmorProfileIsLoaded($profileName) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $ProfileIsLoaded = FALSE;
-  $ProfileStatus = 'unknown';
-  $profilesPath = '/sys/kernel/security/apparmor/profiles';
-  $loadedProfiles = '';
-  if (!file_exists($profilesPath)) $ProfileStatus = 'apparmor not active';
-  else if (!is_readable($profilesPath)) $ProfileStatus = 'not readable by this account';
-  else {
-    $loadedProfiles = (string)@file_get_contents($profilesPath);
-    if (strpos($loadedProfiles, (string)$profileName) !== FALSE) {
-      $ProfileIsLoaded = TRUE;
-      $ProfileStatus = 'loaded'; }
-    else $ProfileStatus = 'NOT LOADED'; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $profilesPath, $loadedProfiles, $profileName);
-  return array($ProfileIsLoaded, $ProfileStatus); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to load an AppArmor profile that has just been written.
-// / Accepts the absolute path of the profile.
-// / Returns TRUE when the parser accepted it.
-// / A profile that is written but never loaded changes nothing until the next reboot, which
-// / makes a repair look like it failed.
-function reloadApparmorProfile($profilePath) {
-  // / Set variables.
-  global $RunningAsRoot, $EnableMemoryProtection;
-  $ProfileWasLoaded = FALSE;
-  $parserBinary = '';
-  $parserOutput = array();
-  $parserExitCode = 1;
-  $parserBinary = locateDependency('apparmor_parser');
-  if (!$RunningAsRoot) warningEntry('An AppArmor profile was written but could not be loaded, because loading one requires root.');
-  else if ($parserBinary === '') warningEntry('An AppArmor profile was written but apparmor_parser is not installed, so it was not loaded.');
-  else {
-    exec(escapeshellarg($parserBinary).' -r '.escapeshellarg($profilePath).' 2>&1', $parserOutput, $parserExitCode);
-    if ($parserExitCode === 0) {
-      $ProfileWasLoaded = TRUE;
-      logEntry('The AppArmor profile at '.$profilePath.' was loaded.'); }
-    else warningEntry('apparmor_parser refused the profile at '.$profilePath.'. '.implode(' ', $parserOutput)); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $parserBinary, $parserOutput, $parserExitCode, $profilePath);
-  return $ProfileWasLoaded; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to read an install secret without running it.
 // / Accepts the path of the secret file.
 // / Returns a success boolean, the key & the version it declares, in that order.
@@ -332,24 +275,57 @@ function readSecretWithoutExecuting($secretFile) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to create the data location as root when it does not exist yet.
+// / A function to create the data location as root when it does not exist yet, & to give it back
+// / to root when another account holds it.
 // / Accepts the data location. Returns TRUE when it exists afterwards.
 // / The installer is documented as creating it, & it never could, because the install secret
 // / is written into it at boot & a missing location stopped every root command with error 5
 // / before the installer ran. A fresh install that followed INSTALLATION_INSTRUCTIONS.txt to
 // / the letter failed on its first command. That was measured on v4.0.0.
 // / The location is created only beneath a folder root can trust, never beneath a system
-// / folder, & its parents are 0755 so the web server account can reach it. The location
-// / itself belongs to the web server account, as it always has.
+// / folder, & its parents are 0755 so the web server account can reach it. The location itself
+// / is root's & 0755 from v4.0.1, & each folder below it has its own role.
+// / ROOT TAKES THE DATA LOCATION BACK WHEN ANOTHER ACCOUNT HOLDS IT, from v4.0.4, during a repair &
+// / whenever Secrets is in it. Root reads & writes the install secret only where no account but
+// / root & the web server account could replace it, & in Secrets only below a folder only root can
+// / change. A data location another account owns or can write, as an old chown -R repair, a
+// / restored backup or a bind mount leaves one, would put every copy out of reach, & -fp would stop
+// / before its data-root role could give it back. So it is given back here first, root:root 0755,
+// / exactly as that role gives it. Any other command leaves a data location with no Secrets in it
+// / alone, because an earlier release may still be keeping its sessions directly in it, as every
+// / release before v4.0.1 did. A data location an account other than root & the web server account
+// / could write sets $SecretPlacesWereOpen before it is taken back, so only a copy of the secret
+// / root owns counts for the rest of the command.
 function prepareDataLocationAsRoot($dataLocation) {
   // / Set variables.
-  global $EnableMemoryProtection;
+  global $SecretPlacesWereOpen, $EnableMemoryProtection;
   $LocationExists = FALSE;
-  $existingAncestor = $systemFolder = $trustNotice = $resolvedAncestor = $ownerNotice = '';
-  $ancestorIsTrusted = $ownerWasChanged = FALSE;
+  $existingAncestor = $systemFolder = $trustNotice = $resolvedAncestor = $ownerNotice = $resolvedLocation = $resolvedParent = $parentNotice = $cliCommand = $cliTarget = $cliSecondTarget = $openNotice = $resolvedOpen = '';
+  $ancestorIsTrusted = $ownerWasChanged = $locationIsTrusted = $modeWasChanged = $parentIsTrusted = $repairRequested = $cliConfirmed = $cliVectorParsed = $locationWasClosed = FALSE;
+  $cliArguments = array();
+  $cliArgumentCount = 0;
   $systemFolders = array('/bin', '/boot', '/dev', '/etc', '/lib', '/lib32', '/lib64', '/proc', '/root', '/run', '/sbin', '/sys', '/usr');
   $dataLocation = rtrim((string)$dataLocation, DIRECTORY_SEPARATOR);
-  if ($dataLocation === '' or is_dir($dataLocation)) $LocationExists = ($dataLocation !== '');
+  if ($dataLocation === '' or is_dir($dataLocation)) {
+    $LocationExists = ($dataLocation !== '');
+    // / A repair is what the code gate lets through, & is told apart from the arguments the same way.
+    list ($cliArguments, $cliArgumentCount, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed, $cliVectorParsed) = parseArgumentVector(isset($_SERVER['argv']) ? $_SERVER['argv'] : array());
+    $repairRequested = (in_array($cliCommand, array('-fp', '--fix-permissions', '--setup'), TRUE) or ($cliCommand === '--config' && $cliTarget === '--repair'));
+    if ($LocationExists && ($repairRequested or is_dir($dataLocation.DIRECTORY_SEPARATOR.'Secrets'))) {
+      list ($locationIsTrusted, $resolvedLocation, $trustNotice) = pathIsTrustedByRoot($dataLocation);
+      list ($parentIsTrusted, $resolvedParent, $parentNotice) = pathIsTrustedByRoot(dirname($dataLocation));
+      list ($locationWasClosed, $resolvedOpen, $openNotice) = secretFolderIsTrusted($dataLocation);
+      if (!$locationIsTrusted && !$locationWasClosed) $SecretPlacesWereOpen = TRUE; }
+    // / Only the location itself is taken, by the path configured & never through a link, & only
+    // / beneath a folder only root can change, so nothing can swap it between the owner change &
+    // / the mode set by name next. Every command run as root stops with ERROR 31024 before this when
+    // / a folder above it is not one, & this checks again rather than rely on that.
+    if ($LocationExists && $resolvedLocation === $dataLocation && !$locationIsTrusted) {
+      if ($parentIsTrusted && $resolvedParent === dirname($dataLocation)) list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($dataLocation, 'root', 'root');
+      else $ownerNotice = $parentNotice;
+      if ($ownerWasChanged) $modeWasChanged = @chmod($dataLocation, 0755);
+      if ($ownerWasChanged && $modeWasChanged) warningEntry('The data location at '.$dataLocation.' could be changed by another account, so root took it back, root:root 0755, as -fp does. '.$trustNotice);
+      else warningEntry('The data location at '.$dataLocation.' could be changed by another account & could not be given back to root, so the install secret below it is out of root\'s reach. '.$trustNotice.' '.$ownerNotice); } }
   else {
     $existingAncestor = dirname($dataLocation);
     while ($existingAncestor !== DIRECTORY_SEPARATOR && !file_exists($existingAncestor)) $existingAncestor = dirname($existingAncestor);
@@ -367,10 +343,10 @@ function prepareDataLocationAsRoot($dataLocation) {
       @mkdir(dirname($dataLocation), 0755, TRUE);
       // / THE DATA LOCATION IS A ROOT ROOT OWNS, 0755, so every account may traverse it to reach
       // / a folder of its own below, & none but root may change what is in it. The install secret
-      // / lives here & is root's, so a root owned root is what keeps the web server account from
-      // / replacing it. The session, cache & log folders below are the web server account's & are
-      // / created with their roles by --setup or -fp. Until v4.0.1 this folder was the web server
-      // / account's, because sessions were kept directly in it.
+      // / is kept below it, in Secrets, & a root owned root is what keeps another account from
+      // / replacing that folder. The session, cache & log folders below are the web server
+      // / account's & are created with their roles by --setup or -fp, & so is Secrets. Until v4.0.1
+      // / this folder was the web server account's, because sessions were kept directly in it.
       if (@mkdir($dataLocation, 0755) && is_dir($dataLocation)) {
         // / The location was created a moment ago in a folder only root can change, so the
         // / name cannot have been swapped, & changeOwnerWithoutFollowing confirms that first.
@@ -379,7 +355,7 @@ function prepareDataLocationAsRoot($dataLocation) {
         $LocationExists = TRUE;
         warningEntry('The data location did not exist & was created at '.$dataLocation.'.'); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $existingAncestor, $systemFolder, $trustNotice, $resolvedAncestor, $ancestorIsTrusted, $ownerWasChanged, $ownerNotice, $systemFolders, $dataLocation);
+  purgeSensitiveMemory($EnableMemoryProtection, $existingAncestor, $systemFolder, $trustNotice, $resolvedAncestor, $resolvedLocation, $resolvedParent, $parentNotice, $cliCommand, $cliTarget, $cliSecondTarget, $openNotice, $resolvedOpen, $ancestorIsTrusted, $ownerWasChanged, $locationIsTrusted, $modeWasChanged, $parentIsTrusted, $repairRequested, $cliConfirmed, $cliVectorParsed, $locationWasClosed, $cliArguments, $cliArgumentCount, $ownerNotice, $systemFolders, $dataLocation);
   return $LocationExists; }
 // / -----------------------------------------------------------------------------------
 
@@ -479,66 +455,567 @@ function reportFoldersRootCannotTrust($untrustedFolders, $rootMustStop) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to name the copy of the install secret at the top of the data location.
+// / Accepts the install secret's file in Secrets.
+// / Returns the same name at the top of the data location.
+// / Every release before v4.0.4 kept the secret there alone. From v4.0.4 the same key is kept
+// / there & in Secrets, & until Secrets has its role the copy there is the one the web server
+// / account reads first. This is the one place the name is built.
+function olderInstallSecretFile($secretFile) {
+  // / Set variables.
+  global $DataRootLoc, $EnableMemoryProtection;
+  $OlderSecretFile = rtrim((string)$DataRootLoc, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.basename((string)$secretFile);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $OlderSecretFile is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $secretFile);
+  return $OlderSecretFile; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to find the number of the web server account & of the group named after it.
+// / Accepts nothing. Returns the account's number & the group's number, in that order, each -1
+// / when it cannot be found.
+// / The group is the one root gives the install secret & Secrets. Some systems do not have the
+// / posix functions, so id & getent are asked instead, as elsewhere in this application. The
+// / answer is kept for the rest of the process, because neither changes while it runs.
+function webServerAccountNumbers() {
+  // / Set variables.
+  global $ApacheUser, $EnableMemoryProtection;
+  // / The answer is kept for the life of the process. It holds two numbers & nothing secret.
+  static $knownNumbers = NULL;
+  $WebAccountNumber = $WebGroupNumber = -1;
+  $accountRecord = $groupRecord = $commandOutput = $groupFields = array();
+  $commandStatus = 1;
+  $commandAnswer = '';
+  if (is_array($knownNumbers)) list ($WebAccountNumber, $WebGroupNumber) = $knownNumbers;
+  else if (trim((string)$ApacheUser) !== '') {
+    if (function_exists('posix_getpwnam')) $accountRecord = @posix_getpwnam((string)$ApacheUser);
+    else exec('id -u '.escapeshellarg((string)$ApacheUser).' 2>/dev/null', $commandOutput, $commandStatus);
+    $commandAnswer = trim(implode('', $commandOutput));
+    if (is_array($accountRecord) && isset($accountRecord['uid'])) $WebAccountNumber = (int)$accountRecord['uid'];
+    else if ($commandStatus === 0 && preg_match('/^[0-9]+$/', $commandAnswer) === 1) $WebAccountNumber = (int)$commandAnswer;
+    $commandOutput = array();
+    $commandStatus = 1;
+    if (function_exists('posix_getgrnam')) $groupRecord = @posix_getgrnam((string)$ApacheUser);
+    else exec('getent group '.escapeshellarg((string)$ApacheUser).' 2>/dev/null', $commandOutput, $commandStatus);
+    $groupFields = explode(':', trim(implode('', $commandOutput)));
+    if (is_array($groupRecord) && isset($groupRecord['gid'])) $WebGroupNumber = (int)$groupRecord['gid'];
+    else if ($commandStatus === 0 && isset($groupFields[2]) && preg_match('/^[0-9]+$/', $groupFields[2]) === 1) $WebGroupNumber = (int)$groupFields[2];
+    $knownNumbers = array($WebAccountNumber, $WebGroupNumber); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $WebAccountNumber & $WebGroupNumber are not purged, because they are the return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $accountRecord, $groupRecord, $commandOutput, $groupFields, $commandStatus, $commandAnswer);
+  return array($WebAccountNumber, $WebGroupNumber); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether only root or the web server account could change a folder of
+// / the install secret's, or any folder above it.
+// / Accepts the folder. Returns whether that holds, the folder it leads to & the reason it does
+// / not, in that order.
+// / Every folder from the filesystem root down must belong to root or the web server account, &
+// / be writable by no account but its owner. An account that can write any of them could put a
+// / file of its own at a name below it between any look & any read. A folder its group may write
+// / is refused whoever the group is, because under an access control list the group bits are
+// / only the list's mask, & cannot say which other accounts the list lets write. A folder reached
+// / through a link is refused too, as folderIsHeldForRoot refuses one for root, because whoever
+// / can change the link could point it somewhere else between the look & the read. Root writes
+// / no copy of the secret where this does not hold, because the web server account would refuse
+// / it there.
+function secretFolderIsTrusted($secretFolder) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FolderIsTrusted = FALSE;
+  $ResolvedFolder = $TrustNotice = '';
+  $walkedPath = $pathComponent = '';
+  $pathComponents = $componentStatus = $trustedOwners = array();
+  $webAccountNumber = -1;
+  list ($webAccountNumber) = webServerAccountNumbers();
+  $trustedOwners = array(0);
+  if ($webAccountNumber >= 0) $trustedOwners[] = $webAccountNumber;
+  if (trim((string)$secretFolder) !== '') $ResolvedFolder = (string)@realpath((string)$secretFolder);
+  if ($ResolvedFolder === '') $TrustNotice = (string)$secretFolder.' does not exist.';
+  else if ($ResolvedFolder !== rtrim((string)$secretFolder, DIRECTORY_SEPARATOR)) $TrustNotice = (string)$secretFolder.' leads to '.$ResolvedFolder.'.';
+  else {
+    // / The empty first component is the filesystem root, which is judged like any other.
+    $pathComponents = array_merge(array(''), array_values(array_filter(explode(DIRECTORY_SEPARATOR, $ResolvedFolder), 'strlen')));
+    foreach ($pathComponents as $pathComponent) {
+      $walkedPath = rtrim($walkedPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$pathComponent;
+      clearstatcache(TRUE, $walkedPath);
+      $componentStatus = @lstat($walkedPath);
+      if (!is_array($componentStatus)) $TrustNotice = $walkedPath.' could not be examined.';
+      else if (((int)$componentStatus['mode'] & 0170000) !== 0040000) $TrustNotice = $walkedPath.' is not a folder.';
+      else if (!in_array((int)$componentStatus['uid'], $trustedOwners, TRUE)) $TrustNotice = $walkedPath.' belongs to an account other than root & the web server account.';
+      else if (((int)$componentStatus['mode'] & 0002) !== 0) $TrustNotice = $walkedPath.' can be written by every account.';
+      else if (((int)$componentStatus['mode'] & 0020) !== 0) $TrustNotice = $walkedPath.' can be written by its group.';
+      if ($TrustNotice !== '') break; }
+    if ($TrustNotice === '') $FolderIsTrusted = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $FolderIsTrusted, $ResolvedFolder & $TrustNotice are not purged, because they are the return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $walkedPath, $pathComponent, $pathComponents, $componentStatus, $trustedOwners, $webAccountNumber, $secretFolder);
+  return array($FolderIsTrusted, $ResolvedFolder, $TrustNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether a copy of the install secret could only have been written by
+// / root or the web server account.
+// / Accepts the copy. Returns whether it may be used & the reason it may not, in that order.
+// / A KEY ANOTHER ACCOUNT COULD HAVE WRITTEN IS A KEY THAT ACCOUNT MAY KNOW. The copy must be a
+// / plain file with one name in a folder secretFolderIsTrusted holds, & it must belong to root or
+// / the web server account & be writable by no account but its owner, by the same rule & for the
+// / same reason as the folders. When all of that holds, nothing but root or the web server account
+// / can change what is read, & both know the key anyway, so a copy is judged before it is read.
+// / Root & the web server account judge every copy this way, so neither uses one the other would
+// / refuse. The kernel reads no file with a second name, which fs.protected_hardlinks keeps any
+// / other account from making.
+// / ONCE A COMMAND RUN AS ROOT HAS FOUND A PLACE THE SECRET IS KEPT OPEN TO ANOTHER ACCOUNT, only a
+// / copy root owns counts for the rest of it. $SecretPlacesWereOpen says so. Root takes such a
+// / place back before it reads, so the folders pass afterwards, but the account that could write
+// / there could have put a file the web server account owns at the name, & every such file is a
+// / key that account chose. The web server account never sets it.
+function installSecretCopyIsTrusted($secretFile) {
+  // / Set variables.
+  global $SecretPlacesWereOpen, $EnableMemoryProtection;
+  $CopyIsTrusted = FALSE;
+  $TrustNotice = '';
+  $folderIsTrusted = FALSE;
+  $resolvedFolder = $judgedCopy = '';
+  $copyStatus = $trustedOwners = array();
+  $webAccountNumber = -1;
+  list ($folderIsTrusted, $resolvedFolder, $TrustNotice) = secretFolderIsTrusted(dirname((string)$secretFile));
+  if ($folderIsTrusted) {
+    list ($webAccountNumber) = webServerAccountNumbers();
+    $trustedOwners = array(0);
+    if ($webAccountNumber >= 0 && (!isset($SecretPlacesWereOpen) or $SecretPlacesWereOpen !== TRUE)) $trustedOwners[] = $webAccountNumber;
+    $judgedCopy = rtrim($resolvedFolder, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.basename((string)$secretFile);
+    clearstatcache(TRUE, $judgedCopy);
+    $copyStatus = @lstat($judgedCopy);
+    if (!is_array($copyStatus)) $TrustNotice = $judgedCopy.' could not be examined.';
+    else if (((int)$copyStatus['mode'] & 0170000) !== 0100000) $TrustNotice = $judgedCopy.' is not a plain file.';
+    else if ((int)$copyStatus['nlink'] !== 1) $TrustNotice = $judgedCopy.' has more than one name.';
+    else if (!in_array((int)$copyStatus['uid'], $trustedOwners, TRUE) && $webAccountNumber >= 0 && (int)$copyStatus['uid'] === $webAccountNumber) $TrustNotice = $judgedCopy.' belongs to the web server account, & only a copy root owns counts once a place the secret is kept was found open to another account.';
+    else if (!in_array((int)$copyStatus['uid'], $trustedOwners, TRUE) && $webAccountNumber < 0) $TrustNotice = $judgedCopy.' does not belong to root, & the web server account could not be looked up.';
+    else if (!in_array((int)$copyStatus['uid'], $trustedOwners, TRUE)) $TrustNotice = $judgedCopy.' belongs to an account other than root & the web server account.';
+    else if (((int)$copyStatus['mode'] & 0002) !== 0) $TrustNotice = $judgedCopy.' can be written by every account.';
+    else if (((int)$copyStatus['mode'] & 0020) !== 0) $TrustNotice = $judgedCopy.' can be written by its group.';
+    else $CopyIsTrusted = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $CopyIsTrusted & $TrustNotice are not purged, because they are the return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderIsTrusted, $resolvedFolder, $judgedCopy, $copyStatus, $trustedOwners, $webAccountNumber, $secretFile);
+  return array($CopyIsTrusted, $TrustNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether the copy of the install secret at the top of the data location
+// / was written after the copy in Secrets.
+// / Accepts the install secret's file in Secrets. Returns TRUE when both copies are plain files,
+// / the one at the top is root's & no other account can write it, & it was written later.
+// / A RELEASE BEFORE v4.0.4 KNOWS ONLY THE COPY AT THE TOP. Going back to one & rotating the key
+// / there, or letting it make a new one, leaves the copy in Secrets carrying the key that was
+// / replaced. The copy written last carries the key in use, so root & the web server account both
+// / read the copy at the top first when this holds, & root then writes its key into Secrets.
+// / Only a copy root owns is put first this way, so a copy another account owns never outranks one
+// / root wrote. This release writes one key into both copies, so the order changes nothing until
+// / they disagree. The times are whole seconds of the host's clock, so two copies written in the
+// / same second keep the usual order, & a clock set back between the two writes keeps it too.
+function topSecretCopyIsNewer($secretFile) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $TopIsNewer = FALSE;
+  $olderSecretFile = '';
+  $topStatus = $secretsStatus = array();
+  $olderSecretFile = olderInstallSecretFile($secretFile);
+  if ($olderSecretFile !== (string)$secretFile) {
+    clearstatcache(TRUE, $olderSecretFile);
+    clearstatcache(TRUE, (string)$secretFile);
+    $topStatus = @lstat($olderSecretFile);
+    $secretsStatus = @lstat((string)$secretFile);
+    $TopIsNewer = (is_array($topStatus) && is_array($secretsStatus) && ((int)$topStatus['mode'] & 0170000) === 0100000 && ((int)$secretsStatus['mode'] & 0170000) === 0100000 && (int)$topStatus['uid'] === 0 && ((int)$topStatus['mode'] & 0022) === 0 && (int)$topStatus['mtime'] > (int)$secretsStatus['mtime']); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $TopIsNewer is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $olderSecretFile, $topStatus, $secretsStatus, $secretFile);
+  return $TopIsNewer; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to examine the folder the install secret is kept in, without following anything.
+// / Accepts the folder. Returns its state, its mode & its owner & group, in that order.
+// / The state is ok, missing, not a folder, wrong or unjudged. The mode & the owner are empty
+// / unless a folder is there. A folder is unjudged when the group named after the web server
+// / account cannot be looked up, because then nothing can say whether its group is that one.
+// / The group is compared by number, so a host without the posix functions judges it the same.
+// / Setup Core gives the folder the secret role, which is root's, the web server account's group
+// / & 0750, so that account may read the secret & change nothing, & no other account may list
+// / the folder. The copy in a folder in any other state is never the one read first, because the
+// / web server account might not be able to read it there, & every request would stop.
+function secretFolderStatus($secretFolder) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FolderState = 'missing';
+  $FolderMode = $FolderOwnership = '';
+  $folderStatus = $ownerRecord = $groupRecord = array();
+  $ownerName = $groupName = '';
+  $webAccountNumber = $webGroupNumber = -1;
+  clearstatcache(TRUE, (string)$secretFolder);
+  if ((string)$secretFolder !== '') $folderStatus = @lstat((string)$secretFolder);
+  if (is_array($folderStatus) && ((int)$folderStatus['mode'] & 0170000) !== 0040000) $FolderState = 'not a folder';
+  else if (is_array($folderStatus)) {
+    if (function_exists('posix_getpwuid')) $ownerRecord = @posix_getpwuid((int)$folderStatus['uid']);
+    if (function_exists('posix_getgrgid')) $groupRecord = @posix_getgrgid((int)$folderStatus['gid']);
+    $ownerName = (is_array($ownerRecord) && isset($ownerRecord['name'])) ? (string)$ownerRecord['name'] : (string)$folderStatus['uid'];
+    $groupName = (is_array($groupRecord) && isset($groupRecord['name'])) ? (string)$groupRecord['name'] : (string)$folderStatus['gid'];
+    $FolderMode = sprintf('%04o', (int)$folderStatus['mode'] & 07777);
+    $FolderOwnership = $ownerName.':'.$groupName;
+    list ($webAccountNumber, $webGroupNumber) = webServerAccountNumbers();
+    if ($webGroupNumber < 0) $FolderState = 'unjudged';
+    else $FolderState = ((int)$folderStatus['uid'] === 0 && $FolderMode === '0750' && (int)$folderStatus['gid'] === $webGroupNumber) ? 'ok' : 'wrong'; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $FolderState, $FolderMode & $FolderOwnership are not purged, because they are the return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderStatus, $ownerRecord, $groupRecord, $ownerName, $groupName, $webAccountNumber, $webGroupNumber, $secretFolder);
+  return array($FolderState, $FolderMode, $FolderOwnership); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write the install wide secret as root & read it back.
+// / Accepts the file, the key & the version the file declares.
+// / Returns whether the file holds the key, whether the web server account's group can read it,
+// / & the reason the file does not hold the key, in that order.
+// / THE NEW COPY IS FINISHED BEFORE IT TAKES THE NAME. It is made beside the name as a staged copy,
+// / under a name of its own for every write, through the kernel, as a new file renamed into place,
+// / so nothing planted at either name is followed & nothing left at one can stop the next. It is
+// / made EMPTY, given the web server account's group & its mode, & judged, & only then is the key
+// / written into it, through a handle the kernel compares with what was judged. Then it is renamed
+// / over the name, so the name always holds a whole copy, & one that account can read whenever its
+// / group could be given. Until v4.0.4 the group was given after the copy took the name, & a
+// / request in between found a copy it could not read. The owner stays root. The file is then
+// / read back exactly as root reads it next time.
+// / A DEFAULT ACCESS CONTROL LIST DECIDES A NEW FILE'S MODE IN PLACE OF THE UMASK, & could leave
+// / the secret readable by every account, so the mode is set again by name. That is done only in
+// / a folder root owns that no other account can write, because only there can nothing swap the
+// / staged name between the write & the change. Every folder -fp gives a copy is one. Anywhere
+// / else a copy wider than 0640 is given no key & never takes the name. A list that names another
+// / account can still let that account read a copy, which no mode shows.
+// / A group that could not be changed is warned about here & is not a failure to write, because
+// / root still reads the key, unless the name holds a copy the web server account reads now,
+// / which is never replaced by one it could not read. The caller decides the rest.
+function writeInstallSecretAsRoot($secretFile, $secretKey, $secretVersion) {
+  // / Set variables.
+  global $ApacheUser, $EnableMemoryProtection;
+  $SecretWasWritten = $GroupWasChanged = FALSE;
+  $WriteFailure = '';
+  $fileWasWritten = $readBackSucceeded = $folderIsRootsAlone = $modeWasSet = $stagedWasRemoved = $stagedWasCreated = $placeIsReadable = $handleIsJudged = FALSE;
+  $secretFileContent = $writeNotice = $groupNotice = $readBackKey = $readBackVersion = $stagedFile = $removalNotice = $randomPart = $openNotice = '';
+  $folderStatus = $stagedStatus = $handleStatus = array();
+  $randomError = NULL;
+  $stagedHandle = FALSE;
+  $bytesWritten = 0;
+  $secretFileContent = addSillyString($secretKey, $secretVersion);
+  try { $randomPart = bin2hex(random_bytes(6)); }
+  catch (Throwable $randomError) { $randomPart = str_replace('.', '', uniqid('', TRUE)); }
+  $stagedFile = dirname((string)$secretFile).DIRECTORY_SEPARATOR.'.'.basename((string)$secretFile).'.'.$randomPart.'.staged';
+  list ($fileWasWritten, $writeNotice) = writeFileWithoutFollowing($stagedFile, '', 0640);
+  if (!$fileWasWritten) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! '.$writeNotice;
+  else {
+    // / The owner stays root. Only the group becomes the web server's, so it can read the key.
+    list ($GroupWasChanged, $groupNotice) = changeOwnerWithoutFollowing($stagedFile, '', (string)$ApacheUser);
+    if (!$GroupWasChanged) warningEntry($groupNotice.' The web server account cannot read the install secret until it is.');
+    // / A copy that account reads is never replaced by one it cannot.
+    $placeIsReadable = (!$GroupWasChanged && webServerCanReadSecretCopy($secretFile));
+    clearstatcache(TRUE, dirname((string)$secretFile));
+    $folderStatus = @lstat(dirname((string)$secretFile));
+    $folderIsRootsAlone = (is_array($folderStatus) && ((int)$folderStatus['mode'] & 0170000) === 0040000 && (int)$folderStatus['uid'] === 0 && ((int)$folderStatus['mode'] & 0022) === 0);
+    if ($folderIsRootsAlone) $modeWasSet = @chmod($stagedFile, 0640);
+    clearstatcache(TRUE, $stagedFile);
+    $stagedStatus = @lstat($stagedFile);
+    if ($placeIsReadable) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! Its group could not be given, & the copy there now is one the web server account reads.';
+    else if ($folderIsRootsAlone && !$modeWasSet) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! Its mode could not be set.';
+    else if (!is_array($stagedStatus) or ((int)$stagedStatus['mode'] & 0037) !== 0) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! The new copy was made wider than 0640, as a default access control list makes it.';
+    else {
+      // / Only now is the key written into it, & only into the file judged above, by device, inode,
+      // / owner, size & mode, so a file swapped in at the staged name since is never filled, even
+      // / one given the same inode number again.
+      list ($stagedHandle, $stagedWasCreated, $openNotice) = openFileWithoutFollowing($stagedFile, 0640);
+      if (is_resource($stagedHandle)) $handleStatus = @fstat($stagedHandle);
+      $handleIsJudged = (is_resource($stagedHandle) && !$stagedWasCreated && is_array($handleStatus) && $handleStatus['dev'] === $stagedStatus['dev'] && $handleStatus['ino'] === $stagedStatus['ino'] && (int)$handleStatus['uid'] === 0 && (int)$handleStatus['size'] === 0 && ((int)$handleStatus['mode'] & 0037) === 0);
+      if ($handleIsJudged) {
+        $bytesWritten = (int)@fwrite($stagedHandle, $secretFileContent);
+        @fflush($stagedHandle); }
+      if (is_resource($stagedHandle)) @fclose($stagedHandle);
+      if (!$handleIsJudged or $bytesWritten !== strlen($secretFileContent)) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! The new copy could not be filled. '.$openNotice;
+      else if (!@rename($stagedFile, (string)$secretFile)) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! The new copy could not be moved into place.';
+      else {
+        // / Read the new file back exactly as root will read it next time.
+        list ($readBackSucceeded, $readBackKey, $readBackVersion) = readSecretWithoutExecuting($secretFile);
+        if (!$readBackSucceeded or $readBackKey !== $secretKey) $WriteFailure = 'The install secret written to '.$secretFile.' did not read back correctly!';
+        else $SecretWasWritten = TRUE; } }
+    // / A staged copy that did not take the name is removed. Removing a name never follows it.
+    if (file_exists($stagedFile) or is_link($stagedFile)) list ($stagedWasRemoved, $removalNotice) = removeFileWithoutFollowing($stagedFile);
+    if (file_exists($stagedFile) or is_link($stagedFile)) warningEntry('The staged copy of the install secret at '.$stagedFile.' could not be removed. '.$removalNotice); }
+  // / Manually clean up sensitive memory. Every target is passed directly by reference.
+  // / $SecretWasWritten, $GroupWasChanged & $WriteFailure are not purged, because they are the return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $fileWasWritten, $readBackSucceeded, $folderIsRootsAlone, $modeWasSet, $stagedWasRemoved, $stagedWasCreated, $placeIsReadable, $handleIsJudged, $handleStatus, $secretFileContent, $writeNotice, $groupNotice, $readBackKey, $readBackVersion, $stagedFile, $removalNotice, $randomPart, $openNotice, $folderStatus, $stagedStatus, $randomError, $stagedHandle, $bytesWritten, $secretFile, $secretKey, $secretVersion);
+  return array($SecretWasWritten, $GroupWasChanged, $WriteFailure); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether the web server account would read a copy of the install secret.
+// / Accepts the copy. Returns TRUE when that account would judge it as it judges every copy, & could
+// / open it.
+// / Root cannot open a file as another account, so this is judged from the owner, the group & the
+// / mode of the copy & of the folder it is in, the way the kernel would judge that account's open.
+// / The account judges a copy without the closer rule a command run as root takes on once it finds
+// / a place the secret is kept open, so a copy it owns counts here. When the account or its group
+// / cannot be looked up, nothing can be judged, & a copy is taken to be readable, so a host where
+// / they cannot be is not stopped by a check it cannot make, & root says so elsewhere.
+function webServerCanReadSecretCopy($secretFile) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $CopyIsReadable = $folderIsTrusted = FALSE;
+  $resolvedFolder = $trustNotice = '';
+  $copyStatus = $folderStatus = array();
+  $webAccountNumber = $webGroupNumber = -1;
+  $readBits = $searchBits = 0;
+  list ($webAccountNumber, $webGroupNumber) = webServerAccountNumbers();
+  list ($folderIsTrusted, $resolvedFolder, $trustNotice) = secretFolderIsTrusted(dirname((string)$secretFile));
+  clearstatcache(TRUE, (string)$secretFile);
+  clearstatcache(TRUE, dirname((string)$secretFile));
+  $copyStatus = @lstat((string)$secretFile);
+  $folderStatus = @lstat(dirname((string)$secretFile));
+  if ($folderIsTrusted && is_array($copyStatus) && is_array($folderStatus) && ((int)$copyStatus['mode'] & 0170000) === 0100000 && (int)$copyStatus['nlink'] === 1 && ((int)$copyStatus['mode'] & 0022) === 0) {
+    if ($webAccountNumber < 0 or $webGroupNumber < 0) $CopyIsReadable = TRUE;
+    else if (in_array((int)$copyStatus['uid'], array(0, $webAccountNumber), TRUE)) {
+      // / The owner's bits apply to the owner, the group's to a member, & the rest to anybody else.
+      $readBits = ((int)$copyStatus['uid'] === $webAccountNumber) ? 0400 : (((int)$copyStatus['gid'] === $webGroupNumber) ? 0040 : 0004);
+      $searchBits = ((int)$folderStatus['uid'] === $webAccountNumber) ? 0100 : (((int)$folderStatus['gid'] === $webGroupNumber) ? 0010 : 0001);
+      $CopyIsReadable = (((int)$copyStatus['mode'] & $readBits) !== 0 && ((int)$folderStatus['mode'] & $searchBits) !== 0); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $CopyIsReadable is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderIsTrusted, $resolvedFolder, $trustNotice, $copyStatus, $folderStatus, $webAccountNumber, $webGroupNumber, $readBits, $searchBits, $secretFile);
+  return $CopyIsReadable; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to load, create or rotate the install wide secret as root.
 // / Accepts the secret file, the version this core requires & whether a new key was asked for.
 // / Returns a readiness boolean & the key, in that order.
 // /
-// / Root reads the secret with readSecretWithoutExecuting & writes it with
-// / writeFileWithoutFollowing, because the file sits in the data location & the web server
-// / account owns that folder. Nothing here requires the file, follows a link, or changes a
-// / mode by name. The group is changed by changeOwnerWithoutFollowing, which changes the name
-// / itself, never what a link points at, & only when a hard link cannot be swapped in.
+// / Root reads the secret with readSecretWithoutExecuting & writes it through
+// / writeInstallSecretAsRoot, because the data location around it belonged to the web server
+// / account in every release before v4.0.1. Nothing here requires the file or follows a link.
 // /
-// / A file that is already correct is left exactly as it is. A file this core can use that the
-// / web server account owns, which is how every release before v4.0.1 left it, is written
-// / again with the SAME key, so moving it to root costs no session anything. The new copy is
-// / root's & only the web server account's group can read it. A file that cannot be used is
-// / replaced with a new key, & so is every file when a rotation is asked for.
+// / TWO COPIES CARRY ONE KEY, & NEITHER IS REMOVED WHILE IT IS KNOWN TO CARRY IT. From v4.0.4 the
+// / secret is kept in Secrets once Setup Core has given the folder its role, & the copy at the top
+// / of the data location, where every earlier release reads it, is kept beside it with the SAME
+// / key. Every command run as root writes the key it holds into each copy that does not already
+// / carry it exactly, so a web server running this release, an earlier one, or one that has not
+// / been installed yet always finds the key, & going back to an earlier release costs no session.
+// / The web server account reads the copy in Secrets first once the folder has its role & the data
+// / location is root's, unless topSecretCopyIsNewer finds the copy at the top root's & written
+// / after it, & the copy at the top first until then. A copy known to carry the key is never
+// / removed, because a web server that can no longer read the copy it reads is a site that stops,
+// / & a release that reads only the top, or a hosted tree that was never installed, cannot be told
+// / apart from here. The one copy removed is one not known to carry the key, because it carries
+// / another, none, or could not be trusted to be read, & that could not be written, & only once
+// / the web server account can read the key in the copy it reads first, so no other key can ever
+// / be found there. A later release removes the copy at the top once no release that reads only it
+// / can still be running. Until v4.0.4 there was one copy, at the top.
+// / A COPY AT THE TOP ROOT WROTE AFTER THE COPY IN SECRETS IS READ FIRST. A release before v4.0.4
+// / writes only the copy at the top, so after going back to one, a key it rotated or made there is
+// / newer than the copy in Secrets, & reading Secrets first would bring back the key it replaced.
+// / This release writes one key into both, so the order matters only when the two disagree.
+// / THE FIRST USABLE COPY WINS. The copy the web server account reads first is looked in, then the
+// / other, then the first again. A copy that cannot be used is passed over & named, & is written
+// / again with the key in use. A copy that vanishes or changes while it is read was moved or
+// / replaced by a release before v4.0.4 running as root, & a later look finds it.
+// / A COPY COUNTS ONLY WHEN installSecretCopyIsTrusted SAYS SO, before it is read. The copy & every
+// / folder above it must be ones only root or the web server account could have written, which is
+// / how the web server account judges the copy it reads too, so neither uses a copy the other
+// / refuses. A copy the web server account owns is taken, because every release before v4.0.1
+// / left the secret so, an old chown -R leaves it so again, & that account reads the key whoever
+// / owns the file. It is written again as root's with its SAME key. Once this process has found a
+// / place the secret is kept writable by another account, only a copy root owns counts, because
+// / that account could have put a file the web server account owns there.
+// / A NEW KEY IS WRITTEN ONLY WHEN NO USABLE COPY IS FOUND, & never in place of a copy root cannot
+// / reach. Root does not read in Secrets while another account could replace the folder, so a copy
+// / there may be the good one, & root stops with ERROR 31020 & names why rather than replace it.
+// / prepareDataLocationAsRoot gives the data location back to root first, which is the usual cause.
+// / A rotation writes its new key into every copy, & is refused with ERROR 31020 while a copy in
+// / Secrets is out of reach, because that copy would keep the old key & could be found again.
+// / No copy is written where another account could replace it.
+// / THE KEY IS IN USE ONLY WHEN THE WEB SERVER ACCOUNT READS IT. Once the copies are settled,
+// / webServerCanReadSecretCopy judges which copy that account would read first, & the key is
+// / ready only when that copy carries it, whichever copy it was found in. A rotation is done once
+// / the copy read first carries the new key.
+// / ONE COMMAND RUN AS ROOT SETTLES THE SECRET AT A TIME. A lock in Engine, root's own folder,
+// / opened through the kernel, is held while this runs, so a command that read the old key can
+// / never write it back over a rotation another command has just made. It is taken only in an
+// / Engine that is root's own, because a lock another account could hold could stall every repair,
+// / & a command that has waited fifteen seconds goes on without it & says so. A command that finds
+// / no Engine, as before the first -fp, goes on without it, because nothing else can be settling a
+// / secret there yet.
 function resolveInstallSecretAsRoot($secretFile, $requiredSecretVersion, $rotationRequested) {
   // / Set variables.
-  global $ApacheUser, $EnableMemoryProtection;
+  global $ApacheUser, $EngineDir, $SecretPlacesWereOpen, $EnableMemoryProtection;
   $SecretIsReady = FALSE;
   $ResolvedSecretKey = '';
-  $existingWasRead = $keyWasGenerated = $secretWasWritten = $readBackSucceeded = $fileIsCurrent = $groupWasChanged = FALSE;
-  $existingKey = $existingVersion = $candidateKey = $cleanRequiredVersion = $secretFileContent = $writeNotice = $readBackKey = $readBackVersion = $groupName = $groupNotice = '';
-  $secretStatus = $groupRecord = array();
+  $existingWasRead = $keyWasGenerated = $copyWasWritten = $groupWasChanged = $copyIsRight = $folderIsHeld = $folderIsReady = $secretIsUnreachable = $copyIsTrusted = $lockIsHeld = $lockWasCreated = $placeIsTrusted = $engineIsTrusted = $lockWouldBlock = $preferredIsRight = $keptWasRead = $keptIsTrusted = $preferredIsReadable = $staleWasRemoved = $judgedWasRead = $webReadsKey = FALSE;
+  $existingKey = $existingVersion = $candidateKey = $cleanRequiredVersion = $writeFailure = $trustNotice = $holdNotice = $lockNotice = $folderProblem = $refusalNotice = $resolvedPlace = $placeNotice = $resolvedEngine = $engineNotice = $keptKey = $keptVersion = $keptNotice = $removalNotice = '';
+  $secretFolder = $olderSecretFile = $preferredCopy = $otherCopy = $keptCopy = $sourceFile = $candidateFile = $refusedFile = $folderState = $folderMode = $folderOwnership = $lockPath = $writtenCopies = '';
+  $judgedCopy = $judgedKey = $judgedVersion = $webCopy = '';
+  $secretStatus = $candidateFiles = $refusedCopies = $keptCopies = array();
+  $webAccountNumber = $webGroupNumber = -1;
+  $lockDeadline = 0;
+  $lockHandle = FALSE;
   $cleanRequiredVersion = ltrim(trim((string)$requiredSecretVersion), 'vV');
-  if (!$rotationRequested && (file_exists($secretFile) or is_link($secretFile))) {
-    list ($existingWasRead, $existingKey, $existingVersion) = readSecretWithoutExecuting($secretFile);
-    if ($existingWasRead && ltrim($existingVersion, 'vV') === $cleanRequiredVersion) $candidateKey = $existingKey;
-    else warningEntry('The secret file at '.$secretFile.' is not one this core can use, or it carries something this application did not write. It is being replaced & every session derived from it is now invalid.'); }
-  // / A usable file is current when root owns it, it is 0640 & its group is the web server's.
-  if ($candidateKey !== '') {
-    clearstatcache(TRUE, $secretFile);
-    $secretStatus = @lstat($secretFile);
-    if (is_array($secretStatus) && function_exists('posix_getgrgid')) $groupRecord = @posix_getgrgid((int)$secretStatus['gid']);
-    if (is_array($groupRecord) && isset($groupRecord['name'])) $groupName = (string)$groupRecord['name'];
-    $fileIsCurrent = (is_array($secretStatus) && ((int)$secretStatus['mode'] & 0170000) === 0100000 && (int)$secretStatus['uid'] === 0 && ((int)$secretStatus['mode'] & 0777) === 0640 && $groupName === (string)$ApacheUser); }
-  if ($candidateKey === '') list ($candidateKey, $keyWasGenerated) = generateInstallSecret();
-  if (!is_string($candidateKey) or $candidateKey === '') errorEntry('An install secret could not be generated, because this host could not supply random bytes!', 31020, FALSE);
-  else if ($fileIsCurrent) {
-    $ResolvedSecretKey = $candidateKey;
-    $SecretIsReady = TRUE; }
-  else {
-    $secretFileContent = addSillyString($candidateKey, $cleanRequiredVersion);
-    list ($secretWasWritten, $writeNotice) = writeFileWithoutFollowing($secretFile, $secretFileContent, 0640);
-    if (!$secretWasWritten) errorEntry('The install secret could not be written to '.$secretFile.'! '.$writeNotice, 31020, FALSE);
+  $secretFolder = dirname((string)$secretFile);
+  $olderSecretFile = olderInstallSecretFile($secretFile);
+  list ($webAccountNumber, $webGroupNumber) = webServerAccountNumbers();
+  if ($webAccountNumber < 0 or $webGroupNumber < 0) warningEntry('The web server account '.$ApacheUser.' or the group of the same name could not be looked up, so only a copy of the install secret root owns counts, & Secrets cannot be judged.');
+  // / The lock is taken before anything is looked at, & only in an Engine that is root's own. A
+  // / lock file another command run as root created a moment ago is opened again, once.
+  if (isset($EngineDir) && is_string($EngineDir) && $EngineDir !== '' && is_dir($EngineDir)) {
+    list ($engineIsTrusted, $resolvedEngine, $engineNotice) = pathIsTrustedByRoot($EngineDir);
+    if (!$engineIsTrusted or $resolvedEngine !== rtrim($EngineDir, DIRECTORY_SEPARATOR)) $lockNotice = 'Engine is not root\'s own yet. '.$engineNotice;
     else {
-      // / The owner stays root. Only the group becomes the web server's, so it can read the key.
-      list ($groupWasChanged, $groupNotice) = changeOwnerWithoutFollowing($secretFile, '', (string)$ApacheUser);
-      if (!$groupWasChanged) warningEntry($groupNotice.' The web server account cannot read the install secret until it is.');
-      // / Read the new file back exactly as root will read it next time.
-      list ($readBackSucceeded, $readBackKey, $readBackVersion) = readSecretWithoutExecuting($secretFile);
-      if (!$readBackSucceeded or $readBackKey !== $candidateKey) errorEntry('The install secret written to '.$secretFile.' did not read back correctly!', 31020, FALSE);
-      else {
-        $ResolvedSecretKey = $candidateKey;
+      $lockPath = $resolvedEngine.DIRECTORY_SEPARATOR.'secret.lock';
+      list ($lockHandle, $lockWasCreated, $lockNotice) = openFileWithoutFollowing($lockPath, 0600);
+      if (!is_resource($lockHandle)) list ($lockHandle, $lockWasCreated, $lockNotice) = openFileWithoutFollowing($lockPath, 0600);
+      $lockDeadline = hrtime(TRUE) + 15000000000;
+      while (is_resource($lockHandle) && !$lockIsHeld) {
+        $lockIsHeld = @flock($lockHandle, LOCK_EX | LOCK_NB, $lockWouldBlock);
+        if ($lockIsHeld or !$lockWouldBlock or hrtime(TRUE) >= $lockDeadline) break;
+        usleep(100000); }
+      if (is_resource($lockHandle) && !$lockIsHeld) $lockNotice = $lockWouldBlock ? 'Another command run as root held the lock for fifteen seconds.' : 'This filesystem cannot lock it.'; }
+    if (!$lockIsHeld) warningEntry('The install secret was settled without its lock, so another command run as root could have been settling it at the same moment. '.$lockNotice); }
+  // / The web server account reads the copy in Secrets first once the folder has its role & only
+  // / root could replace it, unless the copy at the top is root's & was written after it, & the
+  // / copy at the top first until then. Root looks in the same order.
+  list ($folderState, $folderMode, $folderOwnership) = secretFolderStatus($secretFolder);
+  list ($folderIsHeld, $holdNotice) = folderIsHeldForRoot($secretFolder);
+  $folderIsReady = ($folderState === 'ok' && $folderIsHeld && $olderSecretFile !== (string)$secretFile);
+  $preferredCopy = ($folderIsReady && !topSecretCopyIsNewer($secretFile)) ? (string)$secretFile : $olderSecretFile;
+  $otherCopy = ($preferredCopy === $olderSecretFile) ? (string)$secretFile : $olderSecretFile;
+  // / Root neither reads nor writes in Secrets while another account could replace the folder.
+  $secretIsUnreachable = (!$folderIsHeld && $olderSecretFile !== (string)$secretFile && (file_exists($secretFile) or is_link($secretFile)));
+  // / A place another account could write makes every copy there one only root's own may stand for.
+  list ($placeIsTrusted, $resolvedPlace, $placeNotice) = secretFolderIsTrusted($secretFolder);
+  if ($folderIsHeld && !$placeIsTrusted && file_exists($secretFolder)) $SecretPlacesWereOpen = TRUE;
+  // / The copies root keeps. The top always. Secrets once the folder has its role, & any copy root
+  // / can reach there before then, so it carries the same key.
+  $keptCopies = array($preferredCopy);
+  if ($otherCopy === $olderSecretFile or ($folderIsHeld && (file_exists($otherCopy) or is_link($otherCopy)))) $keptCopies[] = $otherCopy;
+  // / Find the first usable key, unless a new one was asked for.
+  if (!$rotationRequested) {
+    $candidateFiles = array($preferredCopy, $otherCopy, $preferredCopy);
+    foreach ($candidateFiles as $candidateFile) {
+      if (!file_exists($candidateFile) && !is_link($candidateFile)) continue;
+      if ($candidateFile === (string)$secretFile && !$folderIsHeld) continue;
+      $existingWasRead = FALSE;
+      $existingKey = $existingVersion = '';
+      list ($copyIsTrusted, $trustNotice) = installSecretCopyIsTrusted($candidateFile);
+      if ($copyIsTrusted) list ($existingWasRead, $existingKey, $existingVersion) = readSecretWithoutExecuting($candidateFile);
+      if ($copyIsTrusted && $existingWasRead && ltrim($existingVersion, 'vV') === $cleanRequiredVersion) {
+        $sourceFile = $candidateFile;
+        $candidateKey = $existingKey;
+        unset($refusedCopies[$candidateFile]);
+        break; }
+      // / A copy that is there & cannot be used is named once, with why, & the looks go on.
+      if (!isset($refusedCopies[$candidateFile]) && (file_exists($candidateFile) or is_link($candidateFile))) $refusedCopies[$candidateFile] = $copyIsTrusted ? 'It is not one this core can use, or carries something this application did not write.' : $trustNotice; }
+    foreach ($refusedCopies as $refusedFile => $refusalNotice) warningEntry('The copy of the install secret at '.$refusedFile.' is not used. '.$refusalNotice); }
+  // / A copy in Secrets root cannot reach may be the good one, so nothing is written in its place.
+  if ($rotationRequested && $secretIsUnreachable) errorEntry('The install secret was not rotated, because another account could replace '.$secretFolder.', & the copy there would keep the old key! '.$holdNotice, 31020, FALSE);
+  else if ($candidateKey === '' && $secretIsUnreachable) errorEntry('The install secret at '.$secretFile.' could not be reached, because another account could replace '.$secretFolder.', so nothing was replaced! '.$holdNotice, 31020, FALSE);
+  else {
+    if ($candidateKey === '') list ($candidateKey, $keyWasGenerated) = generateInstallSecret();
+    if (!is_string($candidateKey) or $candidateKey === '') errorEntry('An install secret could not be generated, because this host could not supply random bytes!', 31020, FALSE);
+    else {
+      // / Every copy root keeps is made to carry the key exactly, the one read first first. A copy
+      // / is right when it is root's, 0640, its group is the web server account's & it already
+      // / carries the key. No copy is written where another account could replace it.
+      foreach ($keptCopies as $keptCopy) {
+        $copyIsRight = $keptWasRead = $keptIsTrusted = $copyWasWritten = $groupWasChanged = FALSE;
+        $keptKey = $keptVersion = $writeFailure = $keptNotice = '';
+        $secretStatus = array();
+        if (!$keyWasGenerated && $keptCopy === $sourceFile) $keptKey = $candidateKey;
+        else if (!$keyWasGenerated && (file_exists($keptCopy) or is_link($keptCopy))) {
+          list ($keptIsTrusted, $keptNotice) = installSecretCopyIsTrusted($keptCopy);
+          if ($keptIsTrusted) list ($keptWasRead, $keptKey, $keptVersion) = readSecretWithoutExecuting($keptCopy); }
+        clearstatcache(TRUE, $keptCopy);
+        $secretStatus = @lstat($keptCopy);
+        // / When the group cannot be looked up, no copy's group can be judged, so a copy is not
+        // / written again on every command for a group nobody here can name.
+        $copyIsRight = ($keptKey === $candidateKey && is_array($secretStatus) && ((int)$secretStatus['mode'] & 0170000) === 0100000 && (int)$secretStatus['uid'] === 0 && ((int)$secretStatus['mode'] & 0777) === 0640 && ($webGroupNumber < 0 or (int)$secretStatus['gid'] === $webGroupNumber));
+        if (!$copyIsRight) {
+          list ($placeIsTrusted, $resolvedPlace, $placeNotice) = secretFolderIsTrusted(dirname($keptCopy));
+          if ($placeIsTrusted) list ($copyWasWritten, $groupWasChanged, $writeFailure) = writeInstallSecretAsRoot($keptCopy, $candidateKey, $cleanRequiredVersion);
+          else $writeFailure = 'The install secret was not written to '.$keptCopy.', because another account could replace it there. '.$placeNotice;
+          // / A copy written whose group could not be given is warned about by the writer. A copy
+          // / read first that could not be written is an error when the key is new or a rotation's.
+          // / Otherwise the key was found in a copy, which still carries it, so it is only warned
+          // / about, & whether the web server account reads the key is judged once every copy is
+          // / settled, below.
+          if (!$copyWasWritten && $keptCopy === $preferredCopy && ($sourceFile === '' or $rotationRequested or $keyWasGenerated)) errorEntry($writeFailure, 31020, FALSE);
+          else if (!$copyWasWritten && $keptCopy === $preferredCopy) warningEntry($writeFailure.' The copy at '.$sourceFile.' still carries the key, & the next command run as root tries again.');
+          // / A copy that is not there carries nothing & is only named.
+          else if (!$copyWasWritten && !file_exists($keptCopy) && !is_link($keptCopy)) warningEntry($writeFailure);
+          // / Another copy not known to carry the key, because it carries another, none, or could not
+          // / be trusted to be read, & that could not be written goes, once the web server account
+          // / can read the key in the copy it reads first, so no other key can ever be found there.
+          // / One known to carry the key is left, because it is right but for its owner or mode.
+          else if (!$copyWasWritten && $preferredIsReadable && $keptKey !== $candidateKey) {
+            list ($staleWasRemoved, $removalNotice) = removeFileWithoutFollowing($keptCopy);
+            if ($staleWasRemoved) warningEntry($writeFailure.' It was not known to carry the key in use, so it was removed. The copy at '.$preferredCopy.' carries the key.');
+            else errorEntry($writeFailure.' It is not known to carry the key in use & could not be removed either. '.$removalNotice, 31020, FALSE); }
+          // / While the copy read first is not right, the web server account may read this one, so
+          // / one not known to carry the key is left, & the judgment below says what it means.
+          else if (!$copyWasWritten && $keptKey !== $candidateKey && !$rotationRequested) warningEntry($writeFailure.' It is not known to carry the key in use, & is left while the copy at '.$preferredCopy.' is not right.');
+          else if (!$copyWasWritten && $rotationRequested) errorEntry($writeFailure.' It still carries the old key until the next command run as root writes the new one there.', 31020, FALSE);
+          else if (!$copyWasWritten) warningEntry($writeFailure.' It carries the key in use, & the next command run as root tries again.');
+          else if (!$keyWasGenerated && !$rotationRequested && ($keptCopy === $sourceFile or $keptKey === $candidateKey)) warningEntry('The install secret at '.$keptCopy.' was rewritten as root with its existing key. Every session is unaffected.');
+          else if (!$keyWasGenerated && !$rotationRequested && $keptWasRead && $keptKey !== '' && $keptKey !== $candidateKey && ltrim($keptVersion, 'vV') === $cleanRequiredVersion) warningEntry('The copy of the install secret at '.$keptCopy.' carried another key, & now carries the one at '.$sourceFile.'. Every session derived from its key is now invalid.');
+          else if (!$keyWasGenerated && !$rotationRequested) warningEntry('The install secret at '.$sourceFile.' was copied to '.$keptCopy.' with its existing key. Every session is unaffected.');
+          if ($copyWasWritten) $writtenCopies .= ($writtenCopies === '' ? '' : ' & ').$keptCopy; }
+        if ($keptCopy === $preferredCopy) {
+          $preferredIsRight = ($copyIsRight or $copyWasWritten);
+          $preferredIsReadable = ($copyIsRight or ($copyWasWritten && $groupWasChanged)); }
+        // / A rotation stops at the first copy it could not write, so no later copy gets a key the
+        // / earlier one does not carry.
+        if ($rotationRequested && !$copyIsRight && !$copyWasWritten) break; }
+      // / THE KEY IS IN USE ONLY WHEN THE WEB SERVER ACCOUNT READS IT. That account uses the first
+      // / copy it can read & use, in the order root looked, & passes over one it cannot read & one
+      // / not in the shape this core reads. So each copy is judged the same way, & read as root reads
+      // / it, & the key root holds is in use only when the copy that account would use carries it,
+      // / whichever copy it was found in & whether or not every copy could be written. A rotation is
+      // / done once the copy read first carries the new key, & is named here too when that account
+      // / would not read it. Until v4.0.4 a key written counted as in use whether that account could
+      // / read it or not.
+      foreach (array($preferredCopy, $otherCopy) as $judgedCopy) {
+        if ($webCopy !== '' or !webServerCanReadSecretCopy($judgedCopy)) continue;
+        list ($judgedWasRead, $judgedKey, $judgedVersion) = readSecretWithoutExecuting($judgedCopy);
+        if ($judgedWasRead && ltrim($judgedVersion, 'vV') === $cleanRequiredVersion) {
+          $webCopy = $judgedCopy;
+          $webReadsKey = ($judgedKey === $candidateKey); } }
+      if (!$webReadsKey) errorEntry('The web server account would not read the install secret root holds! '.($webCopy !== '' ? 'The first copy it would use, at '.$webCopy.', carries another key.' : 'It can use neither copy.'), 31020, FALSE);
+      if (($rotationRequested && $preferredIsRight) or (!$rotationRequested && $webReadsKey)) {
         $SecretIsReady = TRUE;
+        $ResolvedSecretKey = $candidateKey;
         if ($rotationRequested) warningEntry('The install secret was rotated. Every session derived from the old one is now invalid.');
-        else if (!$keyWasGenerated) warningEntry('The install secret at '.$secretFile.' was rewritten as root with its existing key. Every session is unaffected.');
-        else warningEntry('A new install secret was written to '.$secretFile.'.'); } } }
+        else if ($keyWasGenerated) warningEntry('A new install secret was written to '.$writtenCopies.'.'); } } }
+  // / A folder that is there without its role is what keeps the copy there from being read first,
+  // / so it is named, whether or not a key was put in place.
+  if (!$folderIsReady && $folderState !== 'missing' && $olderSecretFile !== (string)$secretFile) {
+    if ($folderState === 'not a folder') $folderProblem = $secretFolder.' is not a folder & is never followed. Remove it & run -fp as root.';
+    else if ($folderState === 'unjudged') $folderProblem = $secretFolder.' has a group that cannot be judged, because the group '.$ApacheUser.' could not be looked up.';
+    else if ($folderState === 'wrong') $folderProblem = $secretFolder.' is '.$folderOwnership.' '.$folderMode.' & needs root:'.$ApacheUser.' 0750. -fp gives the folder its role & copies the secret in.';
+    else $folderProblem = 'another account could replace '.$secretFolder.'. '.$holdNotice;
+    warningEntry('The web server account reads the install secret at '.$olderSecretFile.' first, because '.$folderProblem); }
+  // / The lock is released & closed whatever happened above.
+  if (is_resource($lockHandle)) {
+    if ($lockIsHeld) @flock($lockHandle, LOCK_UN);
+    @fclose($lockHandle); }
   // / Manually clean up sensitive memory. Every target is passed directly by reference.
   // / $ResolvedSecretKey is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $existingWasRead, $keyWasGenerated, $secretWasWritten, $readBackSucceeded, $fileIsCurrent, $groupWasChanged, $groupNotice, $existingKey, $existingVersion, $candidateKey, $cleanRequiredVersion, $secretFileContent, $writeNotice, $readBackKey, $readBackVersion, $groupName, $secretStatus, $groupRecord, $secretFile, $requiredSecretVersion, $rotationRequested);
+  purgeSensitiveMemory($EnableMemoryProtection, $existingWasRead, $keyWasGenerated, $copyWasWritten, $groupWasChanged, $copyIsRight, $folderIsHeld, $folderIsReady, $secretIsUnreachable, $copyIsTrusted, $lockIsHeld, $lockWasCreated, $placeIsTrusted, $engineIsTrusted, $lockWouldBlock, $preferredIsRight, $keptWasRead, $keptIsTrusted, $preferredIsReadable, $staleWasRemoved, $judgedWasRead, $webReadsKey, $judgedKey, $judgedVersion, $judgedCopy, $webCopy, $existingKey, $existingVersion, $candidateKey, $cleanRequiredVersion, $writeFailure, $trustNotice, $holdNotice, $lockNotice, $folderProblem, $refusalNotice, $resolvedPlace, $placeNotice, $resolvedEngine, $engineNotice, $keptKey, $keptVersion, $keptNotice, $removalNotice, $secretFolder, $olderSecretFile, $preferredCopy, $otherCopy, $keptCopy, $sourceFile, $candidateFile, $refusedFile, $folderState, $folderMode, $folderOwnership, $lockPath, $writtenCopies, $secretStatus, $candidateFiles, $refusedCopies, $keptCopies, $webAccountNumber, $webGroupNumber, $lockDeadline, $lockHandle, $secretFile, $requiredSecretVersion, $rotationRequested);
   return array($SecretIsReady, $ResolvedSecretKey); }
 // / -----------------------------------------------------------------------------------
 
@@ -551,7 +1028,9 @@ function resolveInstallSecretAsRoot($secretFile, $requiredSecretVersion, $rotati
 // / Appending to an existing file would produce a file that loads & carries a key nobody generated.
 // / A file that fails that check is deleted.
 // / A per user secret is chmod 0600 on every path, because a secret another account can read is
-// / not a secret. The install wide secret is root's, so the same chmod changes nothing on it.
+// / not a secret. The install wide secret is never changed here, from v4.0.4, because the web
+// / server account only reads it. Until then the same chmod changed a copy that account owned, as
+// / every release before v4.0.1 & an old chown -R left it.
 // / This is called for the install wide secret & for a per user secret in a folder of its own.
 // / The logic is identical & only the supplied path differs, so it lives here rather than twice.
 // / $SecretKey is capitalized against convention 3 because the secret file defines it under that name.
@@ -559,9 +1038,15 @@ function resolveInstallSecretAsRoot($secretFile, $requiredSecretVersion, $rotati
 // /
 // / ROOT DOES NOT COME HERE, & THE WEB SERVER ACCOUNT ONLY READS. Root reads the install wide
 // / secret through resolveInstallSecretAsRoot, which never requires it. The web server account
-// / requires the file root wrote, & it neither removes nor creates that one, because a secret
+// / reads the file root wrote, & it neither removes nor creates that one, because a secret
 // / the web server account could write is a secret root would one day have to read. A file it
-// / cannot use is reported, & -fp as root replaces it. A per user secret is still created here,
+// / cannot use is reported, & -fp as root replaces it.
+// / THE WEB SERVER ACCOUNT NEVER RUNS THE INSTALL SECRET, FROM v4.0.4. It reads it with
+// / readSecretWithoutExecuting, as root does. Until then it required it, so whoever could write
+// / the file, through a folder somebody had made writable, ran code as the web server account on
+// / the next request, & a file that vanished between the look & the require ended that request
+// / with a fatal error naming its path. A per user secret is its own account's file, & is still
+// / required by that account alone. A per user secret is still created here,
 // / in a folder only its account can reach, & that includes the web server account's own. Until
 // / v4.0.1 the rule caught that one too, so -v run as the web server account stopped with error 5
 // / on any host where it had not made one before.
@@ -573,10 +1058,10 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
   $SecretIsReady = FALSE;
   $ResolvedSecretKey = $secret = $secretFileContent = '';
   $detectedSecretVersion = $cleanRequiredVersion = $rotationNotice = $strayOutput = '';
-  $secretGenerated = $existingIsUsable = $loggingIsReady = $payloadIsWellFormed = $secretIsReadable = $creationIsPermitted = $isInstallSecret = FALSE;
+  $secretGenerated = $existingIsUsable = $loggingIsReady = $payloadIsWellFormed = $secretIsReadable = $creationIsPermitted = $isInstallSecret = $secretWasRead = FALSE;
   $bytesWritten = 0;
-  // / Both are only ever defined by the require below.
-  // / They are initialized here so a path that never reaches the require leaves neither undefined.
+  // / Both are only ever defined by the require or the read below.
+  // / They are initialized here so a path that reaches neither leaves neither undefined.
   $SecretKey = '';
   $SecretVersion = '';
   $cleanRequiredVersion = ltrim(trim((string)$requiredSecretVersion), 'vV');
@@ -585,7 +1070,7 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
   $creationIsPermitted = ((string)$CurrentUser !== (string)$ApacheUser or !$isInstallSecret);
   // / Load an existing secret file & decide whether this core may still use it.
   if (file_exists($secretFile)) {
-    @chmod($secretFile, 0600);
+    if ($creationIsPermitted) @chmod($secretFile, 0600);
     // / A file this process cannot read must NEVER reach require. PHP reports that as a
     // / raw warning, which reaches the page & names an absolute path outside the web root.
     // / This happens when a root command line run created the file, because it is then
@@ -595,6 +1080,10 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
       $rotationNotice = 'The secret file at '.$secretFile.' exists but cannot be read by '.$CurrentUser.'. It was almost certainly created by a different account. '.($creationIsPermitted ? 'Delete it as root & run the command again.' : 'Run the -fp argument as root to replace it.');
       if ($loggingIsReady) warningEntry($rotationNotice);
       else error_log('WARNING!!! HRConvert2: '.$rotationNotice); }
+    // / The install secret, read by the web server account, is read & never run.
+    else if (!$creationIsPermitted) {
+      list ($secretWasRead, $SecretKey, $SecretVersion) = readSecretWithoutExecuting($secretFile);
+      $detectedSecretVersion = ltrim(trim((string)$SecretVersion), 'vV'); }
     else {
       // / require rather than require_once, because a second file may be resolved in the same request.
       // / The buffer is what stops a malformed file printing the key into the response.
@@ -681,7 +1170,7 @@ function resolveSecretFile($secretFile, $requiredSecretVersion) {
   // / Manually clean up sensitive memory. Every target is passed directly by reference.
   // / $ResolvedSecretKey is not purged, because it is the return value.
   // / PHP separates the shared buffer when $SecretKey is shredded, so the return survives intact.
-  if (!purgeSensitiveMemory($EnableMemoryProtection, $SecretKey, $SecretVersion, $secret, $secretFile, $secretFileContent, $bytesWritten, $secretGenerated, $existingIsUsable, $detectedSecretVersion, $cleanRequiredVersion, $rotationNotice, $strayOutput, $loggingIsReady, $payloadIsWellFormed, $secretIsReadable, $creationIsPermitted, $isInstallSecret, $requiredSecretVersion)) {
+  if (!purgeSensitiveMemory($EnableMemoryProtection, $SecretKey, $SecretVersion, $secret, $secretFile, $secretFileContent, $bytesWritten, $secretGenerated, $existingIsUsable, $detectedSecretVersion, $cleanRequiredVersion, $rotationNotice, $strayOutput, $loggingIsReady, $payloadIsWellFormed, $secretIsReadable, $creationIsPermitted, $isInstallSecret, $secretWasRead, $requiredSecretVersion)) {
     // / The failure is already logged under this function's name & is not logged again here.
     // / A secret that loaded correctly is still correct, so readiness is not withdrawn.
     $SecretIsReady = $SecretIsReady; }
@@ -828,8 +1317,8 @@ function verifyCodeIsTrustedByRoot($treePath) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir,
-    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $EngineApplicationVersion, $CodeIsTrusted, $HostedLoc, $ApplicationLoc;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc,
+    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $EngineApplicationVersion, $CodeIsTrusted, $HostedLoc, $ApplicationLoc, $SecretPlacesWereOpen;
   $rootRecord = array();
   $legacyWasRemoved = FALSE;
   $legacyNotice = $homeTarget = '';
@@ -848,14 +1337,22 @@ function verifyInstallation() {
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
   $secretAuthorized = $userSecretAuthorized = $secretIsReady = $configIsValid = $componentIsAvailable = FALSE;
   $SecretKey = $CurrentUser = $detectedConfigVersion = $configFile = $secretFolder = '';
-  $applicationSlug = $legacySecretFile = $accountSlug = $listenerCommand = '';
-  $secretFolderIsReady = $configRepairRequested = $sandboxPolicyIsValid = $bootstrapWritten = FALSE;
-  $bootstrapSetup = $bootstrapEngine = $sandboxPolicyStatus = '';
-  $listenerArguments = $bootArguments = array();
-  $listenerArgumentCount = $bootstrapCount = $bootArgumentCount = 0;
-  $bootCommand = $entryScript = '';
+  $applicationSlug = $legacySecretFile = $olderSecretFile = $installSecretFile = $webCandidate = $trustNotice = $accountSlug = $listenerCommand = '';
+  $webSecretsState = $webSecretsMode = $webSecretsOwnership = $resolvedDataLocation = $dataLocationNotice = '';
+  $webCandidates = $webTried = array();
+  $webCandidateIndex = 0;
+  $copyIsTrusted = $dataLocationIsTrusted = FALSE;
+  $secretFolderIsReady = $configRepairRequested = $bootstrapWritten = FALSE;
+  $bootstrapSetup = $bootstrapEngine = '';
+  $listenerArguments = array();
+  $listenerArgumentCount = $bootstrapCount = 0;
+  $entryScript = '';
   $runningIsInstalled = FALSE;
   $SecretFile = '';
+  // / Set by prepareDataLocationAsRoot or resolveInstallSecretAsRoot when a place the secret is kept
+  // / could be written by an account other than root & the web server account. See
+  // / installSecretCopyIsTrusted.
+  $SecretPlacesWereOpen = FALSE;
   $missingConfigVars = array();
   $blockingWereJudged = $limitingWereJudged = FALSE;
   $blockingFolders = $limitingFolders = $limitingLocations = $additionalLocation = array();
@@ -910,7 +1407,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.0.1';
+  $HRConvertVersion = 'v4.0.5';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -939,11 +1436,11 @@ function verifyInstallation() {
   // / Setup Core holds the configuration model, so this MUST be raised whenever
   // / $RequiredConfigVersion is raised. Forgetting does not break anything immediately.
   // / The utility reports a variable it does not know as unaccounted & carries on.
-  $RequiredSetupCoreVersion = 'v4.0.1';
+  $RequiredSetupCoreVersion = 'v4.0.5';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v4.0.1';
+  $RequiredDependencyCoreVersion = 'v4.0.5';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
@@ -966,7 +1463,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.0.1';
+  $RequiredEngineVersion = 'v4.0.5';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects. This is an EXACT match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -1099,18 +1596,19 @@ function verifyInstallation() {
   else if (!$configIsValid) warningEntry('The configuration is missing '.count($missingConfigVars).' required setting(s). Only --config --repair can run.');
   // / The data location is a root root owns, & each kind of file lives in a folder of its own
   // / below it. Sessions & the web server account's cache are that account's, root's log folder
-  // / is root's, & the install secret, the log folder & the socket folder keep the names they
-  // / have always had. Each path is derived once, here, from the configured data location, so a
-  // / web request, a command line run & the listener all build the same path. The data location
-  // / itself is still $ConvertLoc & still holds the install secret, which is root's & which the
-  // / web server account's group reads, so a root owned data location is enough to keep that
-  // / account from replacing it & no folder of its own is needed. verifyGlobals narrows
+  // / is root's, & the log folder & the socket folder keep the names they have always had. Each
+  // / path is derived once, here, from the configured data location, so a web request, a command
+  // / line run & the listener all build the same path. The data location itself is still
+  // / $ConvertLoc. The install secret is kept in Secrets below it from v4.0.4, a folder that is
+  // / root's & that only the web server account's group may enter, so no other account can even
+  // / list it. Until v4.0.4 it sat at the top of the data location. verifyGlobals narrows
   // / $ConvertLoc to a pooled session area later, so these are taken now, before it does.
   // / See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
   $DataRootLoc = rtrim((string)$ConvertLoc, DIRECTORY_SEPARATOR);
   $SessionLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Sessions';
   $CacheLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Cache';
   $EngineDir = $DataRootLoc.DIRECTORY_SEPARATOR.'Engine';
+  $SecretLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Secrets';
   // / Every account but root runs its tools with its home in the cache folder, set now that
   // / config.php has been read. A $HomeLoc that still names the data location, as an older
   // / config.php does, is the data location root now owns, so the cache folder is used instead
@@ -1128,10 +1626,11 @@ function verifyInstallation() {
   $applicationSlug = sanitizeString($ApplicationName, TRUE);
   if ($applicationSlug === '') $applicationSlug = 'HRConvert2';
   // / Establish a secret. The path differs by authorization & nothing else does.
-  // / The install wide secret lives in the data location, outside the web root.
+  // / The install wide secret lives in Secrets in the data location, outside the web root.
   if ($secretAuthorized) {
-    $SecretFile = $ConvertLoc.DIRECTORY_SEPARATOR.$applicationSlug.'-secret.php';
-    $legacySecretFile = $ConvertLoc.DIRECTORY_SEPARATOR.'secret.php';
+    $SecretFile = $SecretLoc.DIRECTORY_SEPARATOR.$applicationSlug.'-secret.php';
+    $olderSecretFile = olderInstallSecretFile($SecretFile);
+    $legacySecretFile = $DataRootLoc.DIRECTORY_SEPARATOR.'secret.php';
     // / Root reads & writes the install wide secret without ever running it, & creates the
     // / data location first when an installation has none yet.
     // / The secret is beneath the data location, so a folder above it that another account can
@@ -1154,9 +1653,31 @@ function verifyInstallation() {
         if (count($limitingFolders) > 0) reportFoldersRootCannotTrust($limitingFolders, FALSE);
         if (prepareDataLocationAsRoot($ConvertLoc)) list ($secretIsReady, $SecretKey) = resolveInstallSecretAsRoot($SecretFile, $RequiredSecretVersion, FALSE); } }
     // / The web server account only ever reads it, & never writes one of its own.
-    // / The message names no path, because a halt at boot shows it to the visitor.
-    else if (!file_exists($SecretFile)) errorEntry('There is no install secret & the web server account does not create one. Run -fp as root to create it.', 31021, FALSE);
-    else list ($secretIsReady, $SecretKey) = resolveSecretFile($SecretFile, $RequiredSecretVersion);
+    // / IT READS FIRST THE COPY ROOT READS FIRST, by the same rule. That is the copy in Secrets once
+    // / the folder has its role & the data location is root's, unless the copy at the top is root's
+    // / & was written after it, & the copy an earlier release kept at the top of the data location
+    // / otherwise. The other copy is tried when the first cannot be used, & the first again after
+    // / it, because a copy root replaced at that moment is whole a moment later. Root writes the
+    // / same key into both, & removes only a copy not known to carry it, so either carries the key
+    // / in use. Until v4.0.4 there was one copy, at the top.
+    // / A COPY IS JUDGED BEFORE IT IS READ, by installSecretCopyIsTrusted, exactly as root judges
+    // / it, so a copy another account could have written is never used. Until v4.0.4 this account
+    // / read a copy root had refused, in a folder somebody had opened up, & used its key.
+    // / The messages name no path, because a halt at boot shows them to the visitor.
+    else {
+      list ($webSecretsState, $webSecretsMode, $webSecretsOwnership) = secretFolderStatus($SecretLoc);
+      list ($dataLocationIsTrusted, $resolvedDataLocation, $dataLocationNotice) = pathIsTrustedByRoot($DataRootLoc);
+      $installSecretFile = ($webSecretsState === 'ok' && $dataLocationIsTrusted && $resolvedDataLocation === rtrim((string)$DataRootLoc, DIRECTORY_SEPARATOR) && !topSecretCopyIsNewer($SecretFile)) ? $SecretFile : $olderSecretFile;
+      $webCandidates = array($installSecretFile, ($installSecretFile === $SecretFile ? $olderSecretFile : $SecretFile), $installSecretFile);
+      // / A copy refused once is named once. The third look reads the first copy again only when this
+      // / account can open it, because one it cannot open was not replaced in the moment between.
+      foreach ($webCandidates as $webCandidateIndex => $webCandidate) {
+        if ($secretIsReady or !file_exists($webCandidate) or ($webCandidateIndex === 2 && !is_readable($webCandidate))) continue;
+        list ($copyIsTrusted, $trustNotice) = installSecretCopyIsTrusted($webCandidate);
+        if ($copyIsTrusted) list ($secretIsReady, $SecretKey) = resolveSecretFile($webCandidate, $RequiredSecretVersion);
+        else if (!isset($webTried[$webCandidate])) warningEntry('A copy of the install secret is not used, because another account could have written it. Run -fp as root, which names it & why.');
+        $webTried[$webCandidate] = TRUE; }
+      if (!$secretIsReady && !file_exists($SecretFile) && !file_exists($olderSecretFile)) errorEntry('There is no install secret & the web server account does not create one. Run -fp as root to create it.', 31021, FALSE); }
     // / Remove the unnamed secret file left by a release before this one.
     // / It is removed only once a replacement is in place, so a failure above leaves the
     // / old file usable & the installation recoverable.
@@ -1177,17 +1698,9 @@ function verifyInstallation() {
       $LogDir = $secretFolder.DIRECTORY_SEPARATOR.'Logs'.DIRECTORY_SEPARATOR;
       $SecretFile = $secretFolder.DIRECTORY_SEPARATOR.$applicationSlug.'-secret-'.$accountSlug.'.php';
       list ($secretIsReady, $SecretKey) = resolveSecretFile($SecretFile, $RequiredSecretVersion); } }
-  // / Validate the AppArmor profile every sandboxed conversion depends on.
-  // / This is not owned by any one conversion pipeline, so it is checked here rather than
-  // / from a dependency check. A root run repairs it & every other context reports it.
-  // / The check is consumed & not acted on here, because the callee has already logged
-  // / whatever it found & convention 9 says the caller need not log it twice.
-  // / AN ENVIRONMENT MANAGER PASS ONLY CHECKS IT HERE, although it runs as root. A pass watches
-  // / unless its own repair is permitted & due, & that repair is -fp's, which repairs this profile
-  // / itself. Repaired here, a pass told only to watch would rewrite a drifted profile every hour
-  // / & then report it as fine. The command is read with the kernel's parser, as above.
-  if ($RunningAsRoot && $RunningFromCLI) list ($bootArguments, $bootArgumentCount, $bootCommand) = parseArgumentVector(isset($_SERVER['argv']) ? $_SERVER['argv'] : array());
-  list ($sandboxPolicyIsValid, $sandboxPolicyStatus) = verifySandboxPolicy($RunningAsRoot && $bootCommand !== '--run-environment-manager');
+  // / The AppArmor profile every sandboxed conversion depends on was validated here until v4.0.5.
+  // / Its policy file is written by the Engine's writer since then, so it is validated as soon as
+  // / the Engine has loaded, by verifySandboxPolicyAtStart(), which says why.
   // / Resource awareness is no longer decided here & the reason is ordering.
   // / It used to depend on a Core Manager component this function resolved. Every manager
   // / role now lives inside the Engine, & the Engine is verified after this function runs,
@@ -1208,7 +1721,7 @@ function verifyInstallation() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SecretKey is deliberately NOT cleared here because the rest of the core needs it.
   // / $SecretFile is deliberately NOT cleared here because it is a global the core reads later.
-  purgeSensitiveMemory($EnableMemoryProtection, $entryScript, $runningIsInstalled, $bootstrapEngine, $configRepairRequested, $bootstrapSetup, $bootstrapWritten, $bootstrapCount, $sandboxPolicyIsValid, $sandboxPolicyStatus, $secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $applicationSlug, $legacySecretFile, $componentIsAvailable, $accountSlug, $secretFolderIsReady, $listenerArguments, $listenerArgumentCount, $listenerCommand, $bootArguments, $bootArgumentCount, $bootCommand, $rootRecord, $legacyWasRemoved, $legacyNotice, $homeTarget, $blockingWereJudged, $limitingWereJudged, $blockingFolders, $limitingFolders, $limitingLocations, $additionalLocation);
+  purgeSensitiveMemory($EnableMemoryProtection, $entryScript, $runningIsInstalled, $bootstrapEngine, $configRepairRequested, $bootstrapSetup, $bootstrapWritten, $bootstrapCount, $secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $applicationSlug, $legacySecretFile, $componentIsAvailable, $accountSlug, $secretFolderIsReady, $listenerArguments, $listenerArgumentCount, $listenerCommand, $rootRecord, $legacyWasRemoved, $legacyNotice, $olderSecretFile, $installSecretFile, $webCandidates, $webCandidate, $webCandidateIndex, $webTried, $copyIsTrusted, $trustNotice, $webSecretsState, $webSecretsMode, $webSecretsOwnership, $dataLocationIsTrusted, $resolvedDataLocation, $dataLocationNotice, $homeTarget, $blockingWereJudged, $limitingWereJudged, $blockingFolders, $limitingFolders, $limitingLocations, $additionalLocation);
   return array($InstallationIsVerified, $configFile, $Version, $CoreLoaded); }
 // / -----------------------------------------------------------------------------------
 
@@ -1790,7 +2303,7 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
-    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $HostedLoc, $ApplicationLoc;
+    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $HostedLoc, $ApplicationLoc;
   // / Application related variables.
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
   $SleepTimer = 0;
@@ -1882,6 +2395,7 @@ function verifyGlobals() {
   $SessionLoc = $DataRootLoc.$DirSep.'Sessions';
   $CacheLoc = $DataRootLoc.$DirSep.'Cache';
   $EngineDir = $DataRootLoc.$DirSep.'Engine';
+  $SecretLoc = $DataRootLoc.$DirSep.'Secrets';
   $PrimaryConvertLoc = $SessionLoc;
   // / Each additional data location is a root too, so its session area is the pool member.
   if (is_array($AdditionalConvertLocs)) {
@@ -2018,276 +2532,6 @@ function verifyGlobals() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to hold the ImageMagick policy this application requires.
-// / Accepts no arguments.
-// / Returns the complete contents of a policy.xml file.
-// / The stock Debian policy disables the document coders outright, which stops every PDF,
-// / PostScript & XPS conversion this application offers. This policy re-enables exactly
-// / those & leaves every coder that reaches the network or the filesystem disabled.
-// / Every conversion also runs inside a sandbox with no network, so the network coders are
-// / already unreachable. They are disabled here as well because a policy that depends on
-// / another control being present is not a policy.
-function imageMagickPolicyContents() {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $PolicyContents = '';
-  $PolicyContents = '<?xml version="1.0" encoding="UTF-8"?>'.PHP_EOL
-    .'<!DOCTYPE policymap ['.PHP_EOL
-    .'  <!ELEMENT policymap (policy)*>'.PHP_EOL
-    .'  <!ATTLIST policymap xmlns CDATA #FIXED "">'.PHP_EOL
-    .'  <!ELEMENT policy EMPTY>'.PHP_EOL
-    .'  <!ATTLIST policy xmlns CDATA #FIXED "" domain NMTOKEN #REQUIRED'.PHP_EOL
-    .'    name NMTOKEN #IMPLIED pattern CDATA #IMPLIED rights NMTOKEN #IMPLIED'.PHP_EOL
-    .'    stealth NMTOKEN #IMPLIED value CDATA #IMPLIED>'.PHP_EOL
-    .']>'.PHP_EOL
-    .'<!-- Written by HRConvert2. Do not edit by hand. -->'.PHP_EOL
-    .'<!-- HRCONVERT2-POLICY-MARKER -->'.PHP_EOL
-    .'<policymap>'.PHP_EOL
-    .'  <!-- Resource ceilings. A malformed image must not exhaust the host. -->'.PHP_EOL
-    .'  <policy domain="resource" name="temporary-path" value="/tmp"/>'.PHP_EOL
-    .'  <policy domain="resource" name="memory" value="512MiB"/>'.PHP_EOL
-    .'  <policy domain="resource" name="map" value="1GiB"/>'.PHP_EOL
-    .'  <policy domain="resource" name="width" value="32KP"/>'.PHP_EOL
-    .'  <policy domain="resource" name="height" value="32KP"/>'.PHP_EOL
-    .'  <policy domain="resource" name="area" value="512MP"/>'.PHP_EOL
-    .'  <policy domain="resource" name="disk" value="4GiB"/>'.PHP_EOL
-    .'  <policy domain="resource" name="file" value="768"/>'.PHP_EOL
-    .'  <policy domain="resource" name="thread" value="2"/>'.PHP_EOL
-    .'  <policy domain="resource" name="time" value="300"/>'.PHP_EOL
-    .'  <policy domain="resource" name="list-length" value="128"/>'.PHP_EOL
-    .'  <!-- Coders that reach off the machine. A conversion never needs these. -->'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="URL"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="HTTPS"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="HTTP"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="FTP"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="MSL"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="MVG"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="EPHEMERAL"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="SHOW"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="WIN"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="PLT"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="TEXT"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="none" pattern="LABEL"/>'.PHP_EOL
-    .'  <!-- Indirect reads. An @ prefixed argument reads a path off the filesystem. -->'.PHP_EOL
-    .'  <policy domain="path" rights="none" pattern="@*"/>'.PHP_EOL
-    .'  <!-- Delegates are disabled. Ghostscript is reached through the coders below. -->'.PHP_EOL
-    .'  <policy domain="delegate" rights="none" pattern="HTTPS"/>'.PHP_EOL
-    .'  <policy domain="delegate" rights="none" pattern="HTTP"/>'.PHP_EOL
-    .'  <!-- Document coders. HRConvert2 converts these & the stock policy blocks them. -->'.PHP_EOL
-    .'  <policy domain="module" rights="read|write" pattern="{PDF,PS,PS2,PS3,EPS,XPS,EPI,EPT}"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="read|write" pattern="PDF"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="read|write" pattern="PS"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="read|write" pattern="PS2"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="read|write" pattern="PS3"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="read|write" pattern="EPS"/>'.PHP_EOL
-    .'  <policy domain="coder" rights="read|write" pattern="XPS"/>'.PHP_EOL
-    .'  <!-- Cache & system policies are fixed once written. -->'.PHP_EOL
-    .'  <policy domain="cache" name="shared-secret" value="passphrase" stealth="true"/>'.PHP_EOL
-    .'  <policy domain="system" name="shred" value="1"/>'.PHP_EOL
-    .'  <policy domain="system" name="max-memory-request" value="256MiB"/>'.PHP_EOL
-    .'</policymap>'.PHP_EOL;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection);
-  return $PolicyContents; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to hold the additions a distribution profile needs to run our sandbox.
-// / Accepts no arguments.
-// / Returns the contents of an AppArmor local include.
-// / A distribution profile is extended, never competed with.
-// / Ubuntu ships /etc/apparmor.d/bwrap ending in an include of <local/bwrap>. That include
-// / is the supported extension point. Writing there means our additions are pulled into
-// / THEIR profile, one attachment governs the binary, & a package update that replaces
-// / their file leaves ours untouched because it lives in a different directory.
-// / Installing a second profile for the same executable, which an earlier release did,
-// / leaves two attachments for one path & no defined outcome.
-function sandboxApparmorLocalContents() {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $LocalContents = '';
-  $LocalContents = '# / Written by HRConvert2. Do not edit by hand.'.PHP_EOL
-    .'# / HRCONVERT2-POLICY-MARKER'.PHP_EOL
-    .'# / Included by /etc/apparmor.d/bwrap through its local include.'.PHP_EOL
-    .'# / A package update replaces that profile & never touches this file, so these'.PHP_EOL
-    .'# / additions survive an upgrade of the distribution profile.'.PHP_EOL
-    .PHP_EOL
-    .'  # / Permit the unprivileged user namespace every sandboxed conversion is built in.'.PHP_EOL
-    .'  userns,'.PHP_EOL
-    .PHP_EOL
-    .'  # / Permit the network namespace & the loopback interface set up inside it.'.PHP_EOL
-    .'  # / Without these a namespace is created & then fails configuring its own loopback.'.PHP_EOL
-    .'  capability net_admin,'.PHP_EOL
-    .'  capability sys_admin,'.PHP_EOL
-    .'  capability setuid,'.PHP_EOL
-    .'  capability setgid,'.PHP_EOL
-    .'  network netlink raw,'.PHP_EOL;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection);
-  return $LocalContents; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to hold the AppArmor profile that lets bubblewrap create a namespace.
-// / Accepts no arguments.
-// / Returns the complete contents of an AppArmor profile.
-// / Ubuntu 23.10 and later restrict unprivileged user namespaces, which stops bubblewrap
-// / dead & takes every sandboxed conversion with it. The supported remedy is a profile that
-// / names the binary & grants userns, which is what this is.
-// / flags=(unconfined) means this profile adds the userns permission & confines nothing
-// / else. The confinement HRConvert2 relies on is the sandbox, not AppArmor.
-function sandboxApparmorContents() {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $ProfileContents = '';
-  $ProfileContents = 'abi <abi/4.0>,'.PHP_EOL
-    .'include <tunables/global>'.PHP_EOL
-    .PHP_EOL
-    .'# Written by HRConvert2. Do not edit by hand.'.PHP_EOL
-    .'# HRCONVERT2-POLICY-MARKER'.PHP_EOL
-    .'# Grants bubblewrap permission to create an unprivileged user namespace.'.PHP_EOL
-    .'# Without this, kernel.apparmor_restrict_unprivileged_userns blocks every sandbox.'.PHP_EOL
-    .PHP_EOL
-    .'profile hrconvert2-bwrap /usr/bin/bwrap flags=(unconfined) {'.PHP_EOL
-    .'  userns,'.PHP_EOL
-    .'  include if exists <local/hrconvert2-bwrap>'.PHP_EOL
-    .'}'.PHP_EOL;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection);
-  return $ProfileContents; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to hold a permissive local override for a confined OpenSCAD.
-// / Accepts no arguments.
-// / Returns the complete contents of an AppArmor local include.
-// / This is only written when a distribution already ships an AppArmor profile for OpenSCAD.
-// / A confined OpenSCAD cannot read the temporary directory the sandbox binds for it, which
-// / presents as a conversion that produces nothing & reports no reason.
-function openScadApparmorContents() {
-  // / Set variables.
-  global $SessionLoc, $EnableMemoryProtection, $DirSep;
-  $ProfileContents = '';
-  // / The grant is the session area, not the whole data location. Sessions sit in Sessions
-  // / below the data location, & that is the only part a conversion reads or writes. The data
-  // / location itself is root's & holds the install secret & root's own folders, so a grant on
-  // / the whole of it would hand a confined OpenSCAD write access to the secret. Until v4.0.1
-  // / the grant was the whole data location, which was the web server account's then.
-  $ProfileContents = '# Written by HRConvert2. Do not edit by hand.'.PHP_EOL
-    .'# HRCONVERT2-POLICY-MARKER'.PHP_EOL
-    .'# Permits a confined OpenSCAD to read & write the locations HRConvert2 binds for it.'.PHP_EOL
-    .'# This file is a local include & is only consulted by an existing OpenSCAD profile.'.PHP_EOL
-    .PHP_EOL
-    .'  owner /tmp/** rwk,'.PHP_EOL
-    .'  owner '.rtrim((string)$SessionLoc, $DirSep).'/** rwk,'.PHP_EOL
-    .'  /usr/share/openscad/** r,'.PHP_EOL;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection);
-  return $ProfileContents; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to validate, install or repair one policy file.
-// / Accepts a human readable name, the absolute path, the contents this application
-// / requires & a boolean permitting a write, in that order.
-// / Returns a validity boolean & a status word, in that order.
-// / The status is 'ok', 'installed', 'repaired', 'missing', 'outdated', 'foreign' or 'refused'.
-// / A file this application wrote carries a marker. A file WITHOUT that marker belongs to
-// / the distribution or to the administrator & is NEVER overwritten without a backup, &
-// / never at all outside a repair. Somebody chose that file deliberately.
-// / A write is only attempted while running as root. Every other context reports & moves on.
-// /
-// / A POLICY IN A FOLDER ANOTHER ACCOUNT CAN CHANGE is read & written without following anything.
-// / The DATA protection file lives in the DATA staging folder, which the web server account
-// / owns. Until v4.0.1 a link planted where that file belongs made one -fp copy the link's
-// / target into a backup the web server account could read, overwrite the target, & leave it
-// / world readable. That was demonstrated with a stand in for /etc/shadow. In such a folder
-// / only a plain file with one name is read as the policy, through readFileWithoutFollowing,
-// / so a link or a FIFO there is never followed or waited on. Anything else at the name is not
-// / a policy anybody wrote, & is replaced with writeFileWithoutFollowing, which never opens what
-// / was there. A file without our marker there is left alone & reported, because no backup of
-// / it can be kept safely where another account can change the folder. Until v4.0.1 it was
-// / replaced without one. A folder only root can change keeps the behaviour it always had,
-// / backup included, & is worked in by the resolved path its trust check judged.
-function verifyPolicyFile($policyName, $policyPath, $policyContents, $mayRepair) {
-  // / Set variables.
-  global $RunningAsRoot, $Verbose, $EnableMemoryProtection;
-  $PolicyIsValid = FALSE;
-  $PolicyStatus = 'missing';
-  $existingContents = $policyDirectory = $backupPath = $readNotice = '';
-  $bytesWritten = 0;
-  $fileExists = $carriesMarker = $contentsMatch = $directoryIsTrusted = $policyWasWritten = FALSE;
-  $resolvedDirectory = $trustNotice = $writeNotice = $trustedPath = '';
-  $policyDirectory = dirname($policyPath);
-  if (is_dir($policyDirectory)) list ($directoryIsTrusted, $resolvedDirectory, $trustNotice) = pathIsTrustedByRoot($policyDirectory);
-  // / A folder root trusts is worked in by the path that was judged, which is the resolved one.
-  // / A link on the way there sits in a folder that was never judged, & could be pointed at some
-  // / other folder between the check & the write. Until v4.0.1 the name as given was used.
-  if ($directoryIsTrusted) $trustedPath = $resolvedDirectory.DIRECTORY_SEPARATOR.basename((string)$policyPath);
-  if ($directoryIsTrusted) {
-    $fileExists = file_exists($trustedPath);
-    if ($fileExists) $existingContents = (string)@file_get_contents($trustedPath); }
-  // / In a folder another account can change, only a plain file with one name is a policy.
-  else if (is_dir($policyDirectory)) list ($fileExists, $existingContents, $readNotice) = readFileWithoutFollowing($policyPath, 1048576);
-  if ($fileExists) {
-    $carriesMarker = (strpos($existingContents, 'HRCONVERT2-POLICY-MARKER') !== FALSE);
-    $contentsMatch = ($existingContents === $policyContents); }
-  // / A file this application wrote, byte for byte as it wants it, needs nothing.
-  if ($fileExists && $contentsMatch) {
-    $PolicyIsValid = TRUE;
-    $PolicyStatus = 'ok'; }
-  // / Everything below here is a change to the filesystem & needs root & permission.
-  else if (!$mayRepair or !$RunningAsRoot) {
-    if (!$fileExists) warningEntry('The '.$policyName.' policy is missing from '.$policyPath.'. Run the -fp argument as root to install it.');
-    else if ($carriesMarker) warningEntry('The '.$policyName.' policy at '.$policyPath.' was written by an older release & no longer matches. Run the -fp argument as root to repair it.');
-    else warningEntry('The '.$policyName.' policy at '.$policyPath.' was not written by this application & may not permit what HRConvert2 needs. Review it, or run the -fp argument as root to replace it.');
-    $PolicyStatus = ($fileExists ? 'foreign' : 'missing');
-    if ($fileExists && $carriesMarker) $PolicyStatus = 'outdated'; }
-  else {
-    if (!is_dir($policyDirectory)) @mkdir($policyDirectory, 0755, TRUE);
-    // / The folder's trust is decided again here, because it may have just been created.
-    if (is_dir($policyDirectory)) list ($directoryIsTrusted, $resolvedDirectory, $trustNotice) = pathIsTrustedByRoot($policyDirectory);
-    if ($directoryIsTrusted) $trustedPath = $resolvedDirectory.DIRECTORY_SEPARATOR.basename((string)$policyPath);
-    if (!is_dir($policyDirectory)) warningEntry('The directory '.$policyDirectory.' does not exist & could not be created, so the '.$policyName.' policy was not written.');
-    // / A folder another account can change. Nothing is backed up & nothing is followed, so a
-    // / file somebody else wrote there is left exactly as it is.
-    else if (!$directoryIsTrusted && $fileExists && !$carriesMarker) {
-      $PolicyStatus = 'refused';
-      warningEntry('The '.$policyName.' policy at '.$policyPath.' was not written by this application & sits in a folder another account can change, where no backup of it can be kept safely, so it was left alone. Move it aside & run -fp again to install this one.'); }
-    else if (!$directoryIsTrusted) {
-      list ($policyWasWritten, $writeNotice) = writeFileWithoutFollowing($policyPath, $policyContents, 0644);
-      if (!$policyWasWritten) warningEntry('The '.$policyName.' policy could not be written to '.$policyPath.'. '.$writeNotice);
-      else {
-        $PolicyIsValid = TRUE;
-        $PolicyStatus = ($fileExists ? 'repaired' : 'installed');
-        logEntry('The '.$policyName.' policy was '.$PolicyStatus.' at '.$policyPath.' without following anything already there.'); } }
-    else {
-      // / Never replace a file without keeping the original. An administrator who tuned a
-      // / policy by hand must be able to put it back.
-      if ($fileExists && !$carriesMarker) {
-        $backupPath = $trustedPath.'.hrconvert2-backup-'.date('Y-m-d-His');
-        if (@copy($trustedPath, $backupPath)) warningEntry('The existing '.$policyName.' policy was preserved at '.$backupPath.' before being replaced.');
-        // / A backup that failed leaves the file alone, as the warning says. Until v4.0.1 the
-        // / name was set before the copy & never cleared, so the file was replaced regardless.
-        else {
-          $backupPath = '';
-          warningEntry('The existing '.$policyName.' policy at '.$policyPath.' could not be backed up. It was left alone.'); } }
-      if ($fileExists && !$carriesMarker && $backupPath === '') $PolicyStatus = 'refused';
-      else {
-        $bytesWritten = @file_put_contents($trustedPath, $policyContents);
-        if ($bytesWritten !== strlen($policyContents)) warningEntry('The '.$policyName.' policy could not be written to '.$policyPath.'.');
-        else {
-          @chmod($trustedPath, 0644);
-          $PolicyIsValid = TRUE;
-          $PolicyStatus = ($fileExists ? 'repaired' : 'installed');
-          logEntry('The '.$policyName.' policy was '.$PolicyStatus.' at '.$policyPath.'.'); } } } }
-  if ($Verbose) logEntry('Policy Check: '.$policyName.', Path: '.$policyPath.', Status: '.$PolicyStatus.'.'.($readNotice !== '' ? ' '.$readNotice : ''));
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $existingContents, $policyDirectory, $backupPath, $readNotice, $bytesWritten, $fileExists, $carriesMarker, $contentsMatch, $directoryIsTrusted, $policyWasWritten, $resolvedDirectory, $trustNotice, $writeNotice, $trustedPath, $policyName, $policyPath, $policyContents, $mayRepair);
-  return array($PolicyIsValid, $PolicyStatus); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to ask ImageMagick where its configuration actually lives.
 // / Accepts no arguments.
 // / Returns the absolute configuration directory, or an empty string when none is found.
@@ -2298,6 +2542,8 @@ function verifyPolicyFile($policyName, $policyPath, $policyContents, $mayRepair)
 // / source built version 7 never reads, so the policy did nothing & the stock policy that
 // / actually was being read went on refusing every document coder.
 // / ImageMagick reports its own configuration path, so it is asked rather than guessed.
+// / Nothing is written there from v4.0.5. It is asked so that the policy an earlier release wrote
+// / there is found & put back.
 function resolveImageMagickConfigDir() {
   // / Set variables.
   global $Verbose, $EnableMemoryProtection;
@@ -2331,24 +2577,55 @@ function resolveImageMagickConfigDir() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to validate or repair the ImageMagick policy.
-// / Accepts a boolean permitting a write.
+// / A function to cover the policy.xml the installed ImageMagick reads, inside one sandbox profile.
+// / Accepts the sandbox profile a conversion is about to run under.
+// / Returns TRUE when that profile now covers the file, & FALSE when ImageMagick named no folder.
+// / The profiles name where a package or a build from source keeps the policy. A build with another
+// / prefix keeps it somewhere else, so ImageMagick is asked, as it is everywhere else, & the answer
+// / joins the profile's Overlays. It is asked as a conversion that needs the answer is about to run,
+// / because asking as every request starts would run ImageMagick for requests that convert nothing.
+function coverResolvedImageMagickPolicy($sandboxProfile) {
+  // / Set variables.
+  global $EngineSandboxProfiles, $DirSep, $EnableMemoryProtection;
+  $PolicyIsCovered = FALSE;
+  $configDirectory = $policyPath = '';
+  $configDirectory = resolveImageMagickConfigDir();
+  if ($configDirectory !== '' && is_array($EngineSandboxProfiles) && isset($EngineSandboxProfiles[$sandboxProfile]) && is_array($EngineSandboxProfiles[$sandboxProfile])) {
+    $policyPath = $configDirectory.$DirSep.'policy.xml';
+    if (!isset($EngineSandboxProfiles[$sandboxProfile]['Overlays']) or !is_array($EngineSandboxProfiles[$sandboxProfile]['Overlays'])) $EngineSandboxProfiles[$sandboxProfile]['Overlays'] = array();
+    if (!isset($EngineSandboxProfiles[$sandboxProfile]['Overlays'][$policyPath])) $EngineSandboxProfiles[$sandboxProfile]['Overlays'][$policyPath] = 'policy.xml';
+    $PolicyIsCovered = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $configDirectory, $policyPath, $sandboxProfile);
+  return $PolicyIsCovered; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to check the ImageMagick policy each conversion carries, & to take back the one an
+// / earlier release wrote into the host.
+// / Accepts a boolean permitting a change.
 // / Returns a validity boolean & a status word, in that order.
-// / The directory is resolved from the binary rather than guessed, so a build from source
-// / is corrected where it actually reads rather than somewhere it never looks.
-// / An installation with no configuration directory is left alone, because writing a policy
-// / for a version that is not installed helps nobody.
-// / The result is cached for the request. This is called from the image pipeline, which
-// / runs once per file, & the policy cannot change underneath a running request.
+// / EACH PIPELINE THAT RUNS IMAGEMAGICK CARRIES ITS OWN POLICY, in a Policy folder beside its
+// / converter, & takes it into every conversion's sandbox. Nothing is written into the host. Until
+// / v4.0.5 -fp wrote this application's policy over the host's policy.xml, a file the package owns,
+// / & every program on the host ran under it. That copy is put back as it was here, from the copy
+// / verifyPolicyFile() kept, which is why the directory is still resolved from the binary rather
+// / than guessed.
+// / A pipeline that is installed & is missing its policy is reported, because its conversions then
+// / run under the host's own.
+// / A copy of this application's that kept no backup of what it replaced is left in place & called
+// / kept, because removing it would leave ImageMagick with no policy at all.
+// / The result is cached for the request. The policy cannot change underneath a running request.
 function verifyImageMagickPolicy($mayRepair) {
   // / Set variables.
-  global $Verbose, $EnableMemoryProtection, $DirSep;
+  global $Verbose, $EnableMemoryProtection, $DirSep, $InstLoc;
   static $cachedValid = NULL;
   static $cachedStatus = 'unchecked';
   static $cachedMayRepair = FALSE;
   $PolicyIsValid = FALSE;
   $PolicyStatus = 'unchecked';
-  $policyPath = $configDirectory = '';
+  $configDirectory = $retireStatus = $pipelineName = $pipelineFolder = '';
+  $hostCopyIsRetired = $policyIsCarried = FALSE;
   // / A cached result answers every later call but one. A failure found without permission to
   // / repair is checked again when a repair is permitted, because an Environment Manager pass
   // / checks before it repairs, & the cached check would answer the repair with the failure it
@@ -2358,27 +2635,39 @@ function verifyImageMagickPolicy($mayRepair) {
     $PolicyStatus = $cachedStatus; }
   else {
     $configDirectory = resolveImageMagickConfigDir();
-    if ($configDirectory === '') {
-      $PolicyStatus = 'absent';
-      if ($Verbose) logEntry('Policy Check: ImageMagick, Status: absent, no configuration directory is installed.'); }
-    else {
-      $policyPath = $configDirectory.$DirSep.'policy.xml';
-      list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile('ImageMagick', $policyPath, imageMagickPolicyContents(), $mayRepair); }
+    $retireStatus = 'none';
+    if ($configDirectory !== '') list ($hostCopyIsRetired, $retireStatus) = retirePolicyFile('ImageMagick', $configDirectory.$DirSep.'policy.xml', $mayRepair, FALSE);
+    // / Every pipeline here that runs ImageMagick carries a policy, & is judged only if it is installed.
+    $policyIsCarried = TRUE;
+    foreach (array('Image', 'OCR') as $pipelineName) {
+      $pipelineFolder = $InstLoc.$DirSep.'Resources'.$DirSep.'Pipelines'.$DirSep.$pipelineName;
+      if (is_file($pipelineFolder.$DirSep.'pipeline.php') && !is_file($pipelineFolder.$DirSep.'Policy'.$DirSep.'policy.xml')) $policyIsCarried = FALSE; }
+    if (!$policyIsCarried) $PolicyStatus = 'not carried';
+    else if ($retireStatus === 'outdated' or $retireStatus === 'refused') $PolicyStatus = $retireStatus;
+    else if ($retireStatus === 'retired' or $retireStatus === 'kept') $PolicyStatus = $retireStatus;
+    else if ($configDirectory === '') $PolicyStatus = 'absent';
+    else $PolicyStatus = 'carried';
+    $PolicyIsValid = ($PolicyStatus === 'carried' or $PolicyStatus === 'retired' or $PolicyStatus === 'kept' or $PolicyStatus === 'absent');
+    if ($Verbose) logEntry('Policy Check: ImageMagick, Status: '.$PolicyStatus.'.');
     $cachedValid = $PolicyIsValid;
     $cachedStatus = $PolicyStatus;
     $cachedMayRepair = (bool)$mayRepair; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $policyPath, $configDirectory, $mayRepair);
+  purgeSensitiveMemory($EnableMemoryProtection, $configDirectory, $retireStatus, $pipelineName, $pipelineFolder, $hostCopyIsRetired, $policyIsCarried, $mayRepair);
   return array($PolicyIsValid, $PolicyStatus); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to validate or repair the OpenSCAD AppArmor override.
-// / Accepts a boolean permitting a write.
+// / A function to check what confines OpenSCAD on this host, & to take back the override an
+// / earlier release added to it.
+// / Accepts a boolean permitting a change.
 // / Returns a validity boolean & a status word, in that order.
-// / Nothing is written unless a confining profile already exists.
-// / Most distributions do not confine OpenSCAD at all. Installing an override for a profile
-// / that is not there would leave a file nothing reads & imply a problem that is not present.
+// / NOTHING IS ADDED TO A PROFILE THAT CONFINES OPENSCAD. Until v4.0.5 -fp wrote a local override
+// / into a distribution's OpenSCAD profile, granting the session area by its path on the host. A
+// / render runs in its sandbox, where the session area is /work, so that grant never reached one,
+// / & it changed a profile every program on the host runs under. The override is taken back here,
+// / & a profile that confines OpenSCAD is reported, because it is what governs a render.
+// / Most distributions do not confine OpenSCAD at all, & then there is nothing to report.
 // / The result is cached for the request.
 function verifyOpenScadPolicy($mayRepair) {
   // / Set variables.
@@ -2388,13 +2677,10 @@ function verifyOpenScadPolicy($mayRepair) {
   static $cachedMayRepair = FALSE;
   $PolicyIsValid = FALSE;
   $PolicyStatus = 'unchecked';
-  $confiningProfile = $overridePath = '';
+  $confiningProfile = $overridePath = $retireStatus = $candidateProfile = '';
   $candidateProfiles = array('/etc/apparmor.d/usr.bin.openscad', '/etc/apparmor.d/openscad');
-  $candidateProfile = '';
-  // / A cached result answers every later call but one. A failure found without permission to
-  // / repair is checked again when a repair is permitted, because an Environment Manager pass
-  // / checks before it repairs, & the cached check would answer the repair with the failure it
-  // / was asked to fix.
+  $overrideIsRetired = FALSE;
+  // / A cached result answers every later call but one, as verifyImageMagickPolicy() says.
   if ($cachedValid !== NULL && ($cachedValid or $cachedMayRepair or !$mayRepair)) {
     $PolicyIsValid = $cachedValid;
     $PolicyStatus = $cachedStatus; }
@@ -2402,533 +2688,50 @@ function verifyOpenScadPolicy($mayRepair) {
     foreach ($candidateProfiles as $candidateProfile) {
       if ($confiningProfile === '' && file_exists($candidateProfile)) $confiningProfile = $candidateProfile; }
     if ($confiningProfile === '') {
-      // / No profile confines OpenSCAD, so there is nothing to override & nothing is wrong.
+      // / No profile confines OpenSCAD, so there is nothing to report & nothing is wrong.
       $PolicyIsValid = TRUE;
       $PolicyStatus = 'unconfined';
       // / Logged once per request rather than per conversion. A host where nothing confines
       // / OpenSCAD reports this on every single model, which is noise about a non event.
-      // / The static cache above already prevents the check running twice, but the entry was
-      // / written before the cache was consulted.
       if ($Verbose) logEntry('Policy Check: OpenSCAD, Status: unconfined, nothing confines it & the sandbox is what isolates it.'); }
     else {
       $overridePath = '/etc/apparmor.d/local/'.basename($confiningProfile);
-      list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile('OpenSCAD AppArmor', $overridePath, openScadApparmorContents(), $mayRepair);
-      if ($PolicyStatus === 'installed' or $PolicyStatus === 'repaired') reloadApparmorProfile($confiningProfile); }
+      list ($overrideIsRetired, $retireStatus) = retirePolicyFile('OpenSCAD AppArmor', $overridePath, $mayRepair, TRUE);
+      // / The profile is loaded again without what was added to it.
+      if ($retireStatus === 'retired') reloadApparmorProfile($confiningProfile);
+      $PolicyStatus = ($retireStatus === 'none' ? 'confined' : $retireStatus);
+      $PolicyIsValid = ($PolicyStatus === 'confined' or $PolicyStatus === 'retired');
+      if ($Verbose) logEntry('Policy Check: OpenSCAD, Status: '.$PolicyStatus.', confined by '.$confiningProfile.'.'); }
     $cachedValid = $PolicyIsValid;
     $cachedStatus = $PolicyStatus;
     $cachedMayRepair = (bool)$mayRepair; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $confiningProfile, $overridePath, $candidateProfiles, $candidateProfile, $mayRepair);
+  purgeSensitiveMemory($EnableMemoryProtection, $confiningProfile, $overridePath, $retireStatus, $candidateProfile, $candidateProfiles, $overrideIsRetired, $mayRepair);
   return array($PolicyIsValid, $PolicyStatus); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to install or repair the DATA directory protection file.
-// / Accepts a boolean permitting repair.
-// / Returns a validity boolean & the status word, in that order.
-// / This is the same shape as every other policy this application maintains, so it backs up
-// / a file it did not write before replacing it & refuses rather than clobbering one it
-// / cannot back up.
-// / INSTALLING THIS FILE IS NOT THE SAME AS PROVING IT WORKS. verifyDataExposure() is what
-// / proves it, & this function must never be reported as if it had.
-function verifyDataProtectionPolicy($mayRepair) {
-  // / Set variables.
-  global $ConvertTemp, $DirSep, $MaintainHTAccess, $EnableMemoryProtection;
-  $PolicyIsValid = FALSE;
-  $PolicyStatus = 'unchecked';
-  $protectionPath = '';
-  // / A local fallback the configuration cannot remove by omission, on the doctrine every
-  // / other setting here follows. --Maintain HTAccess-- is a required setting, so a config
-  // / lacking it is refused long before this runs, but a read that assumes a global exists
-  // / is exactly the assumption this codebase does not make.
-  $maintainHtaccess = TRUE;
-  if (isset($MaintainHTAccess)) $maintainHtaccess = (bool)$MaintainHTAccess;
-  if ((string)$ConvertTemp === '') warningEntry('The DATA location is not set, so its protection file could not be checked.');
-  else if (!$maintainHtaccess) {
-    // / The administrator has said not to maintain this file, so it is not maintained & the
-    // / server configuration is carrying the rules alone. This is a valid configuration &
-    // / is reported as a deliberate state rather than as a missing one.
-    // / The removal of a file this application previously wrote lives in
-    // / maintainDataProtection() & is called rather than repeated, so -fp does it now
-    // / instead of leaving it for whichever web request happens to arrive next.
-    maintainDataProtection();
-    $PolicyIsValid = TRUE;
-    $PolicyStatus = 'disabled'; }
-  else {
-    $protectionPath = $ConvertTemp.$DirSep.'.htaccess';
-    list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile('DATA Directory', $protectionPath, dataProtectionContents(), $mayRepair); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $protectionPath, $maintainHtaccess, $mayRepair);
-  return array($PolicyIsValid, $PolicyStatus); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to list the forms a path takes, as it is written & as it resolves.
-// / Accepts the path. Returns each form once, without a trailing separator, with the top of the
-// / filesystem as a lone separator. An empty path has no forms.
-function pathForms($pathText) {
+// / A function to check the AppArmor profile bubblewrap needs, as a request or a command starts.
+// / Accepts nothing. Returns the validity verifySandboxPolicy() reported, which no caller acts
+// / on, because the callee has already logged whatever it found & convention 9 says the caller
+// / need not log it twice.
+// / EVERY COMMAND ONLY CHECKS IT HERE, root's included. Only -fp writes the host's files, & -fp
+// / repairs this profile itself, as does an Environment Manager pass whose repair is permitted &
+// / due, because that repair is -fp's. Until v4.0.5 every root command but a pass repaired it as
+// / it started, so one run only to report, -v among them, wrote & loaded an AppArmor profile.
+// / IT RUNS ONCE THE ENGINE HAS LOADED, & NOT AT ALL WITHOUT ONE. Until v4.0.5 it ran inside
+// / verifyInstallation(), before the Engine loads. The profile & the check are the Engine's from
+// / v4.0.5, & without an Engine there is no sandbox for the profile to serve. When the check runs
+// / is still the application's, because it is the application that knows when a request starts.
+function verifySandboxPolicyAtStart() {
   // / Set variables.
   global $EnableMemoryProtection;
-  $PathForms = array();
-  $pathForm = $resolvedPath = '';
-  $pathForm = rtrim((string)$pathText, DIRECTORY_SEPARATOR);
-  if ($pathForm === '' && (string)$pathText !== '') $pathForm = DIRECTORY_SEPARATOR;
-  // / An empty path is never resolved, because realpath answers an empty path with the current
-  // / folder & the comparison would then be against wherever the command happened to be run.
-  if ($pathForm !== '') {
-    $PathForms[] = $pathForm;
-    $resolvedPath = (string)@realpath($pathForm);
-    if ($resolvedPath !== '' && $resolvedPath !== $pathForm) $PathForms[] = $resolvedPath; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $PathForms is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $pathForm, $resolvedPath, $pathText);
-  return $PathForms; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to say whether one path holds another.
-// / Accepts the outer path & the inner path, in that order.
-// / Returns TRUE when the inner path is the outer path or lies anywhere below it.
-// / The comparison is by whole folders, so /var/www/html2 is not inside /var/www/html.
-// / Each path is judged as it is written & as it resolves, & either way is enough. The web
-// / server walks a path as it is written, so a location written inside the document root is
-// / served even when a link there leads somewhere else, & a link can lead back in from outside.
-function pathHoldsPath($outerPath, $innerPath) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $PathIsHeld = FALSE;
-  $outerForm = $innerForm = '';
-  foreach (pathForms($outerPath) as $outerForm) foreach (pathForms($innerPath) as $innerForm) if ($innerForm === $outerForm or strpos($innerForm.DIRECTORY_SEPARATOR, rtrim($outerForm, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR) === 0) $PathIsHeld = TRUE;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $outerForm, $innerForm, $outerPath, $innerPath);
-  return $PathIsHeld; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to list the root of every data location, the primary first & then each pool member.
-// / Accepts nothing. Returns the list, without repeats.
-// / A pool member is declared by its root & verifyGlobals rewrites it to the Sessions folder
-// / below that root, so the root is that folder's parent. Either form is understood here.
-function dataLocationRoots() {
-  // / Set variables.
-  global $DataRootLoc, $AdditionalConvertLocs, $EnableMemoryProtection;
-  $DataRoots = array();
-  $additionalEntry = array();
-  $additionalPath = '';
-  if (isset($DataRootLoc) && is_string($DataRootLoc) && trim($DataRootLoc) !== '') $DataRoots[] = rtrim($DataRootLoc, DIRECTORY_SEPARATOR);
-  if (isset($AdditionalConvertLocs) && is_array($AdditionalConvertLocs)) {
-    foreach ($AdditionalConvertLocs as $additionalEntry) {
-      if (!is_array($additionalEntry) or !isset($additionalEntry[0]) or !is_string($additionalEntry[0]) or trim($additionalEntry[0]) === '') continue;
-      $additionalPath = rtrim($additionalEntry[0], DIRECTORY_SEPARATOR);
-      $DataRoots[] = (basename($additionalPath) === 'Sessions') ? dirname($additionalPath) : $additionalPath; } }
-  $DataRoots = array_values(array_unique($DataRoots));
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $DataRoots is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $additionalEntry, $additionalPath);
-  return $DataRoots; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to list every data location inside the web server's document root.
-// / Accepts nothing. Returns the roots of those locations, or nothing when none is inside.
-// / The data location is never meant to be served. Inside the document root its Sessions, Cache
-// / & Logs folders could be fetched by anybody who guessed a name, because the web server account
-// / that serves them can read them. Only the DATA tree inside the installation is served.
-// / Nothing checked where the data location was until v4.0.1.
-function misplacedDataRoots() {
-  // / Set variables.
-  global $ServerRootDir, $EnableMemoryProtection;
-  $MisplacedRoots = array();
-  $dataRoot = '';
-  // / With no document root configured there is nothing to be inside.
-  if (isset($ServerRootDir) && is_string($ServerRootDir) && trim($ServerRootDir) !== '') foreach (dataLocationRoots() as $dataRoot) if (pathHoldsPath($ServerRootDir, $dataRoot)) $MisplacedRoots[] = $dataRoot;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $MisplacedRoots is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $dataRoot);
-  return $MisplacedRoots; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to prove whether the DATA tree serves user content as inert downloads.
-// / Accepts no arguments.
-// / Returns a protection boolean, a status word & a sentence explaining it, in that order.
-// /
-// / This asks the server. It does not read a file off the disk & assume.
-// / That distinction is the entire reason this function exists. A .htaccess is only read
-// / when AllowOverride is enabled for its directory; when it is not, Apache ignores it
-// / silently, with no error, no log line & no warning. Debian, Ubuntu & the standard
-// / php:*-apache container all ship AllowOverride None for /var/www.
-// / So the presence of the file proves nothing whatsoever about
-// / whether its rules are in force, & a check that tested for the file would report success
-// / on exactly the installations that are exposed.
-// /
-// / A canary is written into the DATA tree, fetched over HTTP & removed again. The canary
-// / carries a script element so the probe has the same shape as the real thing, but the
-// / script does nothing at all.
-// /
-// / A failure to reach the server is not a pass & is not a failure.
-// / $URL may be an external name this host cannot resolve from inside itself, & during a
-// / --setup run the web server may not be listening yet. Either way the honest answer is
-// / that this was not established, which is a warning & a distinct status word, never a
-// / silent success.
-// /
-// / The probe is written with writeFileWithoutFollowing & is never changed by name afterwards.
-// / The DATA tree belongs to the web server account & this runs as root from -v, -fp & the
-// / Environment Manager. A probe written by name & then chmodded could be swapped for a link in
-// / between, & the chmod would land on whatever the link pointed at.
-function verifyDataExposure() {
-  // / Set variables.
-  global $ConvertTemp, $FullURL, $DirSep, $Verbose, $RunningAsRoot, $ApacheUser, $EnableMemoryProtection;
-  $DataIsProtected = FALSE;
-  $ExposureStatus = 'unverified';
-  $ExposureDetail = '';
-  $canaryName = $canaryPath = $canaryURL = $responseHeaders = '';
-  $requestSucceeded = $carriesDisposition = $carriesSandbox = $canaryWasWritten = $ownerWasChanged = $canaryWasRemoved = FALSE;
-  $writeNotice = $ownerNotice = $removalNotice = '';
-  if ((string)$ConvertTemp === '' or (string)$FullURL === '') {
-    $ExposureStatus = 'unverified';
-    $ExposureDetail = 'The DATA location or the server URL is not set, so nothing could be tested.';
-    warningEntry('The DATA directory exposure check could not run because the DATA location or the server URL is not set.'); }
-  else {
-    // / A DATA folder root has to create belongs to the web server account, like every other.
-    if (!is_dir($ConvertTemp) && @mkdir($ConvertTemp, 0700, TRUE) && $RunningAsRoot) {
-      list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($ConvertTemp, $ApacheUser, $ApacheUser);
-      if (!$ownerWasChanged) warningEntry($ownerNotice); }
-    $canaryName = 'hrc2-protection-canary-'.substr(bin2hex(random_bytes(8)), 0, 16).'.svg';
-    $canaryPath = $ConvertTemp.$DirSep.$canaryName;
-    $canaryURL = rtrim((string)$FullURL, '/').'/DATA/'.$canaryName;
-    // / The probe carries a script element so it has the same shape as a real upload. The
-    // / script is empty, so a browser that did run it would do nothing.
-    list ($canaryWasWritten, $writeNotice) = writeFileWithoutFollowing($canaryPath, '<svg xmlns="http://www.w3.org/2000/svg"><script>/* inert probe */</script></svg>', 0644);
-    if (!$canaryWasWritten) {
-      $ExposureStatus = 'unverified';
-      $ExposureDetail = 'A probe file could not be written into '.$ConvertTemp.', so nothing could be tested.';
-      warningEntry('The DATA directory exposure check could not write its probe into '.$ConvertTemp.'. '.$writeNotice); }
-    else {
-      // / The self request lives in the Engine. Without one there is nothing to test with, &
-      // / the existing unreachable wording is already the right answer: exposure is neither
-      // / confirmed nor cleared & the operator is told to check by hand. The warning names the
-      // / Engine so the log says WHY it could not be established rather than only that it was not.
-      if (function_exists('fetchOwnResponseHeaders')) list ($requestSucceeded, $responseHeaders) = fetchOwnResponseHeaders($canaryURL, 5);
-      else warningEntry('The DATA directory exposure check needs the Engine to request a URL from this server & the Engine is unavailable. The exposure of this installation was NOT established.');
-      // / Remove the probe whatever happened. It must never outlive the check that made it.
-      // / The DATA folder is the web server account's, so root removes it through the kernel.
-      list ($canaryWasRemoved, $removalNotice) = removeFileWithoutFollowing($canaryPath);
-      if (!$canaryWasRemoved) warningEntry('The DATA directory exposure probe could not be removed. '.$removalNotice);
-      if (!$requestSucceeded) {
-        $ExposureStatus = 'unreachable';
-        $ExposureDetail = 'This server could not fetch '.$canaryURL.' from itself, so its exposure was not established. Check it by hand from a browser.';
-        warningEntry('The DATA directory exposure check could not reach '.$canaryURL.'. The exposure of this installation was NOT established. Verify it by hand.'); }
-      // / A 5xx is NOT exposure & must never be reported as one. It means this tree is
-      // / serving nothing at all, so every download & every share link on this server is
-      // / broken right now. That is a worse outage than the exposure & it needs its own
-      // / word, its own explanation & the first place to look.
-      // / The overwhelmingly common cause is a directive in the protection file that the
-      // / directory's AllowOverride level does not permit. Apache does not ignore such a
-      // / directive, it refuses the request. An <IfModule> guard does not help, because it
-      // / tests whether a module is loaded rather than whether the directive is allowed.
-      else if (stripos($responseHeaders, ' 500') !== FALSE or stripos($responseHeaders, ' 503') !== FALSE) {
-        $ExposureStatus = 'broken';
-        $ExposureDetail = 'The server returned an error for '.$canaryURL.'. NO download & NO share link works right now. Check the web server error log for a line naming DATA/.htaccess.';
-        errorEntry('The DATA directory is returning a server error, so no download & no share link can work. The usual cause is a directive in DATA/.htaccess that this directory\'s AllowOverride level does not permit; the web server error log names it. Delete that file to restore service, then apply the rules in the server configuration instead.', 503, FALSE); }
-      else if (stripos($responseHeaders, '404 ') !== FALSE or stripos($responseHeaders, '403 ') !== FALSE) {
-        $ExposureStatus = 'unreachable';
-        $ExposureDetail = 'The server refused or did not find '.$canaryURL.'. Either --Server URL-- does not describe this installation, or the DATA tree is not served at that path.';
-        warningEntry('The DATA directory exposure check received a refusal for '.$canaryURL.'. The --Server URL-- setting may not describe this installation.'); }
-      else {
-        $carriesDisposition = (stripos($responseHeaders, 'content-disposition:') !== FALSE && stripos($responseHeaders, 'attachment') !== FALSE);
-        $carriesSandbox = (stripos($responseHeaders, 'content-security-policy:') !== FALSE && stripos($responseHeaders, 'sandbox') !== FALSE);
-        // / Either one closes it. Both are set together, so one missing is worth saying.
-        if ($carriesDisposition or $carriesSandbox) {
-          $DataIsProtected = TRUE;
-          $ExposureStatus = 'protected';
-          $ExposureDetail = 'The DATA tree is served as inert content.';
-          if (!$carriesDisposition) $ExposureDetail = $ExposureDetail.' Content-Disposition is absent & the CSP is carrying this alone.';
-          if (!$carriesSandbox) $ExposureDetail = $ExposureDetail.' The CSP is absent & Content-Disposition is carrying this alone.';
-          if ($Verbose) logEntry('DATA Exposure Check: protected. '.($carriesDisposition ? 'Content-Disposition present. ' : '').($carriesSandbox ? 'CSP sandbox present.' : '')); }
-        else {
-          $ExposureStatus = 'exposed';
-          $ExposureDetail = 'The DATA tree serves user supplied files as renderable documents. An uploaded SVG will execute its own script in this origin.';
-          // / This is a warning rather than an error because the application still works &
-          // / an administrator can still use it. It is loud because nothing else will say so.
-          warningEntry('THE DATA DIRECTORY IS EXPOSED. User supplied files at '.rtrim((string)$FullURL, '/').'/DATA/ are served as renderable documents rather than as downloads, so an uploaded SVG will execute its own script in this origin. If you installed the DATA/.htaccess, it is being ignored; Apache reads one only where AllowOverride is enabled for that directory. Run the -fp argument as root to write & activate the rules in the server configuration instead. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.'); } } } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $canaryWasRemoved, $removalNotice, $canaryName, $canaryPath, $canaryURL, $responseHeaders, $requestSucceeded, $carriesDisposition, $carriesSandbox, $canaryWasWritten, $writeNotice, $ownerWasChanged, $ownerNotice);
-  return array($DataIsProtected, $ExposureStatus, $ExposureDetail); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to check, & optionally correct, the kernel settings a sandbox needs.
-// / Accepts a boolean permitting a write.
-// / Returns a readiness boolean & an array of findings, in that order.
-// /
-// / THREE SEPARATE THINGS BLOCK AN UNPRIVILEGED USER NAMESPACE & ONLY ONE IS AppArmor.
-// / An AppArmor profile granting userns covers Ubuntu 23.10 & later. It does nothing on a
-// / Debian host, where the blocker is kernel.unprivileged_userns_clone reading zero, & it
-// / does nothing where user.max_user_namespaces has been set to zero.
-// /
-// / A host that blocks the namespace makes bubblewrap fall back to its setuid path, where
-// / it can unshare the network but has already dropped the privilege needed to configure
-// / loopback inside it. That surfaces as a loopback error rather than a namespace error,
-// / which points an operator at networking when the cause is the namespace.
-// / A correction is written to /etc/sysctl.d so it survives a reboot.
-function verifySandboxKernel($mayRepair) {
-  // / Set variables.
-  global $RunningAsRoot, $AllowUnprivilegedNamespaces, $RunningInContainer, $Verbose, $EnableMemoryProtection;
-  $KernelIsReady = TRUE;
-  $KernelFindings = array();
-  $sysctlPath = $sysctlValue = $persistPath = $persistContents = $bwrapBinary = '';
-  $commandOutput = array();
-  $commandExitCode = 0;
-  $bytesWritten = 0;
-  $profileIsLoaded = FALSE;
-  $profileLoadStatus = '';
-  // / A container inherits these from its host & cannot change them.
-  // / /proc/sys is mounted read only in every unprivileged container, so a repair here can
-  // / only ever fail. Reporting FAILED for something that was never this machine's to fix
-  // / sends an operator hunting inside the container for a setting that lives outside it.
-  // / The values are still READ & reported, because they are exactly what decides whether
-  // / the sandbox works, & knowing them is what tells an operator to go and fix the host.
-  if ($RunningInContainer) $mayRepair = FALSE;
-  // / Debian gates unprivileged namespaces behind this. Ubuntu does not ship it at all.
-  $sysctlPath = '/proc/sys/kernel/unprivileged_userns_clone';
-  if (file_exists($sysctlPath)) {
-    $sysctlValue = trim((string)@file_get_contents($sysctlPath));
-    if ($sysctlValue === '1') $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'ok', 'Detail' => 'Unprivileged user namespaces are permitted.');
-    else if (!$mayRepair or !$RunningAsRoot) {
-      $KernelIsReady = FALSE;
-      $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'BLOCKED', 'Detail' => 'Reads '.$sysctlValue.'. Bubblewrap cannot build a namespace. '.($RunningInContainer ? 'This is a HOST setting. Correct it on the host, not in this container.' : 'Run -fp as root.')); }
-    else {
-      @file_put_contents($sysctlPath, '1');
-      $sysctlValue = trim((string)@file_get_contents($sysctlPath));
-      if ($sysctlValue !== '1') {
-        $KernelIsReady = FALSE;
-        $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'FAILED', 'Detail' => 'Could not be set to 1.'); }
-      else $KernelFindings[] = array('Check' => 'unprivileged_userns_clone', 'Status' => 'corrected', 'Detail' => 'Set to 1 & persisted.'); } }
-  // / A namespace budget of zero refuses every namespace whatever else is permitted.
-  $sysctlPath = '/proc/sys/user/max_user_namespaces';
-  if (file_exists($sysctlPath)) {
-    $sysctlValue = trim((string)@file_get_contents($sysctlPath));
-    if ((int)$sysctlValue > 0) $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'ok', 'Detail' => $sysctlValue.' namespaces permitted.');
-    else if (!$mayRepair or !$RunningAsRoot) {
-      $KernelIsReady = FALSE;
-      $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'BLOCKED', 'Detail' => 'Reads 0. No namespace can be created. '.($RunningInContainer ? 'This is a HOST setting. Correct it on the host, not in this container.' : 'Run -fp as root.')); }
-    else {
-      @file_put_contents($sysctlPath, '15000');
-      if ((int)trim((string)@file_get_contents($sysctlPath)) < 1) {
-        $KernelIsReady = FALSE;
-        $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'FAILED', 'Detail' => 'Could not be raised.'); }
-      else $KernelFindings[] = array('Check' => 'max_user_namespaces', 'Status' => 'corrected', 'Detail' => 'Raised & persisted.'); } }
-  // / Ubuntu gates the namespace behind AppArmor rather than behind a clone sysctl, so the
-  // / two checks above can both read fine while this one is what refuses.
-  $sysctlPath = '/proc/sys/kernel/apparmor_restrict_unprivileged_userns';
-  if (file_exists($sysctlPath)) {
-    $sysctlValue = trim((string)@file_get_contents($sysctlPath));
-    if ($sysctlValue !== '1') $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'ok', 'Detail' => 'Not restricting unprivileged namespaces.');
-    else {
-      // / Restricted. A namespace is only permitted to a binary carrying a profile that
-      // / grants userns, so whether ours is LOADED is the whole question.
-      list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded('hrconvert2-bwrap');
-      if ($profileIsLoaded) $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'ok', 'Detail' => 'Restricted, & the hrconvert2-bwrap profile is loaded.');
-      else {
-        $KernelIsReady = FALSE;
-        $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Restricted & the hrconvert2-bwrap profile is '.$profileLoadStatus.'. Run -fp as root.'); } } }
-  // / A competing profile for the same binary is undefined behaviour. Name it rather than
-  // / adding a second one beside it & hoping the right one wins.
-  // / A profile loaded with no file behind it is an orphan from an earlier release. It is
-  // / still attached to the binary & is invisible to anything that only lists /etc.
-  list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded('hrconvert2-bwrap');
-  if ($profileIsLoaded && !file_exists('/etc/apparmor.d/hrconvert2-bwrap')) {
-    if ($mayRepair && $RunningAsRoot) {
-      unloadApparmorProfile('/etc/apparmor.d/hrconvert2-bwrap', 'hrconvert2-bwrap');
-      list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded('hrconvert2-bwrap');
-      $KernelFindings[] = array('Check' => 'orphaned profile', 'Status' => ($profileIsLoaded ? 'STILL LOADED' : 'removed'), 'Detail' => ($profileIsLoaded ? 'hrconvert2-bwrap is loaded with no file behind it & would not unload. Reboot to clear it.' : 'An orphaned hrconvert2-bwrap profile was unloaded.')); }
-    else $KernelFindings[] = array('Check' => 'orphaned profile', 'Status' => 'WARNING', 'Detail' => 'hrconvert2-bwrap is loaded with no file behind it. Run -fp as root to unload it.'); }
-  // / This is the setting that refuses the namespace on Ubuntu 23.10 & later.
-  // / With it at 1 the kernel demands an AppArmor profile granting userns before an
-  // / unprivileged process may create one, & bubblewrap fails writing its uid map long
-  // / before it reaches anything to do with networking.
-  // /
-  // / HRConvert2 SETS THIS TO ZERO, DELIBERATELY, & THAT IS A NET SECURITY GAIN.
-  // / The restriction protects a general purpose desktop from a hostile local user. This
-  // / machine is a dedicated conversion appliance whose local users are the administrator
-  // / & the web server. Leaving it at 1 does not make that machine safer, it disables the
-  // / sandbox that isolates every hostile FILE the machine exists to process, which is the
-  // / threat that actually arrives here. A hardening measure that switches off the primary
-  // / isolation mechanism is a loss, not a gain.
-  // / Set --Allow Unprivileged Namespaces-- to FALSE in config.php to leave it alone.
-  $sysctlPath = '/proc/sys/kernel/apparmor_restrict_unprivileged_userns';
-  if (file_exists($sysctlPath)) {
-    $sysctlValue = trim((string)@file_get_contents($sysctlPath));
-    if ($sysctlValue === '0') $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'ok', 'Detail' => 'Not restricting. Bubblewrap can create a namespace.');
-    else if (isset($AllowUnprivilegedNamespaces) && !$AllowUnprivilegedNamespaces) {
-      $KernelIsReady = FALSE;
-      $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Restricted & config.php forbids changing it. The sandbox cannot work.'); }
-    else if (!$mayRepair or !$RunningAsRoot) {
-      $KernelIsReady = FALSE;
-      $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'BLOCKED', 'Detail' => 'Reads 1. Bubblewrap cannot write a uid map. '.($RunningInContainer ? 'This is a HOST setting. Correct it on the host, or run this container with --cap-add SYS_ADMIN.' : 'Run -fp as root.')); }
-    else {
-      @file_put_contents($sysctlPath, '0');
-      $sysctlValue = trim((string)@file_get_contents($sysctlPath));
-      if ($sysctlValue !== '0') {
-        $KernelIsReady = FALSE;
-        $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'FAILED', 'Detail' => 'Could not be set to 0.'); }
-      else $KernelFindings[] = array('Check' => 'apparmor userns restrict', 'Status' => 'corrected', 'Detail' => 'Set to 0 & persisted. The sandbox can now build a namespace.'); } }
-  // / A setuid bubblewrap is a symptom rather than a cause. It is how a distribution shipped
-  // / a working sandbox on a host that forbids the namespace, & it is the configuration that
-  // / produces the loopback error. Report it so the cause is not mistaken for networking.
-  $bwrapBinary = locateDependency('bwrap');
-  if ($bwrapBinary !== '' && file_exists($bwrapBinary) && (fileperms($bwrapBinary) & 0x800)) $KernelFindings[] = array('Check' => 'bubblewrap mode', 'Status' => 'setuid', 'Detail' => 'Running setuid, which cannot configure loopback in a new network namespace. Permitting unprivileged namespaces lets it stop.');
-  // / Persist whatever was corrected, so a reboot does not undo it.
-  if ($mayRepair && $RunningAsRoot && is_dir('/etc/sysctl.d')) {
-    $persistPath = '/etc/sysctl.d/99-hrconvert2-userns.conf';
-    $persistContents = '# / Written by HRConvert2. Permits the unprivileged user namespaces bubblewrap needs.'.PHP_EOL
-      .'# / Remove this file & reboot to restore the distribution default.'.PHP_EOL
-      .'kernel.unprivileged_userns_clone = 1'.PHP_EOL
-      .'user.max_user_namespaces = 15000'.PHP_EOL
-      .'kernel.apparmor_restrict_unprivileged_userns = 0'.PHP_EOL;
-    if ((string)@file_get_contents($persistPath) !== $persistContents) {
-      $bytesWritten = @file_put_contents($persistPath, $persistContents);
-      if ($bytesWritten === strlen($persistContents)) {
-        @chmod($persistPath, 0644);
-        logEntry('Wrote '.$persistPath.' so the sandbox settings survive a reboot.'); } } }
-  if ($Verbose) logEntry('Sandbox kernel check completed across '.count($KernelFindings).' setting(s). Ready: '.($KernelIsReady ? 'YES' : 'NO').'.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $sysctlPath, $sysctlValue, $persistPath, $persistContents, $bwrapBinary, $commandOutput, $commandExitCode, $bytesWritten, $profileIsLoaded, $profileLoadStatus, $mayRepair);
-  return array($KernelIsReady, $KernelFindings); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to validate or repair the AppArmor profile bubblewrap needs.
-// / Accepts a boolean permitting a write.
-// / Returns a validity boolean & a status word, in that order.
-// / This is not tied to one conversion pipeline. Every sandboxed conversion depends on it,
-// / so it is checked from verifyInstallation rather than from a dependency check.
-// / A kernel that does not restrict unprivileged user namespaces needs no profile at all.
-function verifySandboxPolicy($mayRepair) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection, $RunningAsRoot;
-  static $cachedValid = NULL;
-  static $cachedStatus = 'unchecked';
-  static $cachedMayRepair = FALSE;
   $PolicyIsValid = FALSE;
-  $PolicyStatus = 'unchecked';
-  $restrictionPath = '/proc/sys/kernel/apparmor_restrict_unprivileged_userns';
-  $profilePath = '/etc/apparmor.d/hrconvert2-bwrap';
-  $restrictionIsActive = $profileIsLoaded = FALSE;
-  $profileLoadStatus = $distributionProfile = $localIncludePath = '';
-  // / A cached result answers every later call but one. A failure found without permission to
-  // / repair is checked again when a repair is permitted, because an Environment Manager pass
-  // / checks before it repairs, & the cached check would answer the repair with the failure it
-  // / was asked to fix.
-  if ($cachedValid !== NULL && ($cachedValid or $cachedMayRepair or !$mayRepair)) {
-    $PolicyIsValid = $cachedValid;
-    $PolicyStatus = $cachedStatus; }
-  else {
-    if (file_exists($restrictionPath)) $restrictionIsActive = (trim((string)@file_get_contents($restrictionPath)) === '1');
-    if (!$restrictionIsActive) {
-      // / Nothing is blocking a namespace, so no profile is required.
-      $PolicyIsValid = TRUE;
-      $PolicyStatus = 'unrestricted';
-      // / Nothing is logged here & that is deliberate.
-      // / An unrestricted kernel is the state this sandbox needs rather than a finding.
-      // / Reporting it announced normal operation on every run, before a session existed,
-      // / as the first line of every logfile.
-      // / The -v argument reports the sandbox state for an operator who wants it.
-      $restrictionIsActive = FALSE; }
-    // / A distribution profile for the same binary is not something to compete with.
-    // / Ubuntu ships /etc/apparmor.d/bwrap granting userns, which is the whole reason the
-    // / restriction is survivable there. Adding a second profile attached to the same
-    // / executable leaves two attachments for one path, which AppArmor does not define an
-    // / outcome for. Defer to theirs & remove ours if an earlier release installed one.
-    else if (file_exists('/etc/apparmor.d/bwrap') && strpos((string)@file_get_contents('/etc/apparmor.d/bwrap'), '/usr/bin/bwrap') !== FALSE) {
-      // / Extend the distribution profile through its own include rather than beside it.
-      $distributionProfile = (string)@file_get_contents('/etc/apparmor.d/bwrap');
-      $localIncludePath = '/etc/apparmor.d/local/bwrap';
-      if (strpos($distributionProfile, 'local/bwrap') === FALSE) warningEntry('The distribution profile at /etc/apparmor.d/bwrap does not include <local/bwrap>, so HRConvert2 cannot extend it. Add the include by hand, or remove the profile & let -fp manage its own.');
-      else {
-        if (!is_dir('/etc/apparmor.d/local')) @mkdir('/etc/apparmor.d/local', 0755, TRUE);
-        list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile('Sandbox AppArmor local', $localIncludePath, sandboxApparmorLocalContents(), $mayRepair);
-        // / Reload THEIR profile, because that is the one the include belongs to.
-        if ($PolicyStatus === 'installed' or $PolicyStatus === 'repaired') reloadApparmorProfile('/etc/apparmor.d/bwrap'); }
-      $PolicyIsValid = TRUE;
-      $PolicyStatus = 'distribution';
-      if (file_exists($profilePath) && strpos((string)@file_get_contents($profilePath), 'HRCONVERT2-POLICY-MARKER') !== FALSE) {
-        if (!$mayRepair or !$RunningAsRoot) warningEntry('This installation added '.$profilePath.' beside the distribution profile at /etc/apparmor.d/bwrap. Two profiles for one binary is undefined. Run -fp as root to remove ours.');
-        else {
-          // / UNLOAD BEFORE DELETING. Reloading AppArmor loads what is on disk & never
-          // / unloads what is not. Deleting the file first leaves the profile resident in
-          // / the kernel until a reboot, still attached to the binary, still competing
-          // / with the distribution profile & invisible to anything that only lists files.
-          unloadApparmorProfile($profilePath, 'hrconvert2-bwrap');
-          @unlink($profilePath);
-          if (!file_exists($profilePath)) {
-            $PolicyStatus = 'removed, distribution profile kept';
-            warningEntry('Removed '.$profilePath.'. The distribution already ships a profile for this binary. Two attachments for one path is undefined.'); }
-          else warningEntry('Could not remove '.$profilePath.'. Delete it by hand, then run apparmor_parser -R against it.'); } }
-      if ($Verbose) logEntry('Policy Check: Sandbox AppArmor, Status: '.$PolicyStatus.', the distribution profile at /etc/apparmor.d/bwrap governs this binary.'); }
-    else if (!is_dir('/etc/apparmor.d')) {
-      $PolicyStatus = 'absent';
-      warningEntry('This kernel restricts unprivileged user namespaces & AppArmor is not installed, so bubblewrap cannot build a sandbox.'); }
-    else {
-      list ($PolicyIsValid, $PolicyStatus) = verifyPolicyFile('Sandbox AppArmor', $profilePath, sandboxApparmorContents(), $mayRepair);
-      // / A matching file that is not loaded is enforcing nothing. Load it whatever the
-      // / file status was, because on disk & in force are different questions.
-      list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded('hrconvert2-bwrap');
-      if ($PolicyStatus === 'installed' or $PolicyStatus === 'repaired' or !$profileIsLoaded) {
-        if (!$profileIsLoaded && $PolicyStatus === 'ok') warningEntry('The sandbox AppArmor profile matches this release but is '.$profileLoadStatus.'. Loading it now.');
-        reloadApparmorProfile($profilePath);
-        list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded('hrconvert2-bwrap'); }
-      // / A profile that will not load is reported as a failure rather than as ok.
-      if (!$profileIsLoaded && $profileLoadStatus === 'NOT LOADED') {
-        $PolicyIsValid = FALSE;
-        $PolicyStatus = 'not loaded'; } }
-    $cachedValid = $PolicyIsValid;
-    $cachedStatus = $PolicyStatus;
-    $cachedMayRepair = (bool)$mayRepair; }
+  $policyStatus = '';
+  list ($PolicyIsValid, $policyStatus) = verifySandboxPolicy(FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $restrictionPath, $profilePath, $restrictionIsActive, $profileIsLoaded, $profileLoadStatus, $distributionProfile, $localIncludePath, $mayRepair);
-  return array($PolicyIsValid, $PolicyStatus); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to unload an AppArmor profile from the kernel.
-// / Accepts the profile file path & the profile name it declares, in that order.
-// / Returns TRUE when the profile is no longer loaded.
-// / A profile is unloaded from its FILE, so this must run BEFORE the file is deleted.
-// / Reloading AppArmor loads what is on disk & never unloads what is not, so deleting
-// / first strands the profile in the kernel until a reboot, still attached to the binary.
-// / aa-remove-unknown is the fallback for a profile whose file has already gone.
-function unloadApparmorProfile($profilePath, $profileName) {
-  // / Set variables.
-  global $RunningAsRoot, $EnableMemoryProtection;
-  $ProfileWasUnloaded = FALSE;
-  $parserBinary = $removeBinary = '';
-  $commandOutput = array();
-  $commandExitCode = 1;
-  $profileIsLoaded = FALSE;
-  $profileLoadStatus = '';
-  $parserBinary = locateDependency('apparmor_parser');
-  if (!$RunningAsRoot) warningEntry('An AppArmor profile could not be unloaded, because unloading one requires root.');
-  else if ($parserBinary === '') warningEntry('An AppArmor profile could not be unloaded, because apparmor_parser is not installed.');
-  else {
-    // / -R removes the profile the named file declares.
-    if (file_exists($profilePath)) exec(escapeshellarg($parserBinary).' -R '.escapeshellarg($profilePath).' 2>&1', $commandOutput, $commandExitCode);
-    list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded($profileName);
-    // / The file was already gone, so the parser had nothing to read. Sweep the orphan.
-    if ($profileIsLoaded) {
-      $removeBinary = locateDependency('aa-remove-unknown');
-      if ($removeBinary !== '') {
-        $commandOutput = array();
-        exec(escapeshellarg($removeBinary).' 2>&1', $commandOutput, $commandExitCode);
-        list ($profileIsLoaded, $profileLoadStatus) = apparmorProfileIsLoaded($profileName); } }
-    if (!$profileIsLoaded) {
-      $ProfileWasUnloaded = TRUE;
-      logEntry('The AppArmor profile '.$profileName.' was unloaded.'); }
-    else warningEntry('The AppArmor profile '.$profileName.' is still loaded & its file is gone. Run aa-remove-unknown as root, or reboot.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $parserBinary, $removeBinary, $commandOutput, $commandExitCode, $profileIsLoaded, $profileLoadStatus, $profilePath, $profileName);
-  return $ProfileWasUnloaded; }
+  purgeSensitiveMemory($EnableMemoryProtection, $policyStatus);
+  return $PolicyIsValid; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2985,12 +2788,13 @@ function toolRequirement($manifestName) {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $SecretFile, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
+  global $EngineActive, $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $SecretFile, $SecretLoc, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
   $listenerIsRunning = $bwrapBinary = FALSE;
+  $sandboxLauncher = '';
   $listenerStatus = array();
   $installedGui = $installedLang = $installedEndonym = $checkDir = $checkFile = $foundVersion = $langLine = '';
   $guiMatches = $langMatches = array();
@@ -3001,12 +2805,14 @@ function showVersionInfo() {
   $componentName = $dependencyName = $subsystemName = $scriptStatus = $scriptDisplayStatus = $scriptDetail = $hostedStatus = $hostedDetail = $setupVersion = '';
   $misplacedRoots = array();
   $hostedWritten = $hostedRemoved = 0;
-  $setupIsAvailable = FALSE;
+  $setupIsAvailable = $treeIsServed = FALSE;
   $subsystemIsReady = $scriptIsValid = FALSE;
   $failureCount = 0;
   $maintainHtaccess = $apacheConfigIsInstalled = $dataIsProtected = FALSE;
   $exposureStatus = $exposureDetail = $secretMode = $socketMode = $manifestVersion = $pipelineKind = $secretExpected = '';
-  $secretOwner = -1;
+  $secretShown = $olderSecretFile = $secretsState = $secretsMode = $secretsOwnership = $topCopyMode = '';
+  $secretOwner = $topCopyOwner = $secretGroup = $topCopyGroup = $secretGroupExpected = $webAccountNumber = -1;
+  $secretPasses = FALSE;
   $pipelineKindCounts = $pipelineKindLabels = $pipelineRecord = $disabledFeatures = $disabledFeature = array();
   $pipelineKindCount = 0;
   // / Run every dependency check so this reports what WORKS, not what is configured.
@@ -3032,7 +2838,9 @@ function showVersionInfo() {
   $isoHybridBinary = toolPath('Syslinux Utils');
   // / The sandbox probe lives in the Engine. With no Engine there is nothing to probe with,
   // / & not functional is the honest answer rather than a guess.
-  $bwrapBinary = (function_exists('verifyBwrap') ? verifyBwrap() : FALSE);
+  // / The launcher says whether a sandbox runs the application's own copy of bubblewrap, which is how
+  // / a kernel restricting unprivileged namespaces is kept restricted from v4.0.5.
+  if (function_exists('verifySandboxLauncher')) list ($bwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
   // / Report what is installed & what state it is in.
   // / Every line is a fact. An explanation belongs in Documentation, not in this output.
   print($Lol.$ApplicationName.' '.$HRConvertVersion.$Lol);
@@ -3126,7 +2934,7 @@ function showVersionInfo() {
     else {
       $failureCount++;
       print('  '.str_pad($dependencyName, 28).'FAILED, requires '.$dependencyState[1].' or later'.($dependencyState[2] ? '' : ', optional').$Lol); } }
-  print('  '.str_pad(($RunningInContainer ? 'Sandbox, Docker' : 'Sandbox, Bubblewrap'), 28).($bwrapBinary === FALSE ? 'FAILED, not functional' : 'OK').$Lol);
+  print('  '.str_pad(($RunningInContainer ? 'Sandbox, Docker' : 'Sandbox, Bubblewrap'), 28).($bwrapBinary === FALSE ? 'FAILED, not functional' : 'OK'.((function_exists('privateBwrapPath') && $bwrapBinary === privateBwrapPath()) ? ', '.privateBwrapPath().', which the '.sandboxApparmorProfileName().' AppArmor profile is attached to' : '')).$Lol);
   if ($bwrapBinary === FALSE) $failureCount++;
   print('  '.str_pad('PyMeshLab, models', 28).($UsePyMeshLab ? 'enabled, Meshlab not required' : 'disabled, Meshlab required').$Lol);
 
@@ -3196,27 +3004,70 @@ function showVersionInfo() {
     if ($langLine !== '') $failureCount++;
     print('  '.str_pad($installedGui, 28).$langOk.' of '.$langTotal.' OK'.($langLine === '' ? '' : ', failed:'.$langLine).$Lol); }
 
-  // / The two paths the manager security model rests on.
+  // / The three paths the manager security model rests on.
   // / The install secret is root's & 0640, so the web server account's group reads it, nothing
   // / else can, & only root can change it. It was the web server account's & 0600 until
   // / v4.0.1, which let that account rewrite a file root required. A standard user's own
   // / secret is that user's & 0600. The socket directory is the web server account's & 0700.
+  // / The install secret is kept in Secrets from v4.0.4, which is root's, the web server
+  // / account's group & 0750, so no other account can even list it. Until -fp moves it there,
+  // / the copy an earlier release kept at the top of the data location is the one in use, & so
+  // / the one judged here.
   // / A startup key is only worth anything because those hold. Nothing checked them at
   // / startup, so an installation that never had -fp run as root, or one whose permissions
   // / were widened by a restore, lost the property silently.
-  $secretExpected = ($RunningAsRoot or (string)$CurrentUser === (string)$ApacheUser) ? '0640' : '0600';
-  if (isset($SecretFile) && $SecretFile !== '' && file_exists($SecretFile)) {
-    $secretMode = substr(sprintf('%o', fileperms($SecretFile)), -4);
-    $secretOwner = (int)fileowner($SecretFile); }
+  // / THE ROW JUDGES THE SECRET THIS COMMAND HOLDS BY ITS OWN ROLE. The install secret is the one
+  // / name ending in -secret.php, & a per user secret carries its account after that, as
+  // / resolveSecretFile says. Until v4.0.4 the expectation followed the account instead, & the
+  // / web server account on the command line holds a per user secret for -v, so -v as that
+  // / account always failed this row on a correct installation.
+  $secretShown = isset($SecretFile) ? (string)$SecretFile : '';
+  $secretExpected = (substr(basename($secretShown), -11) === '-secret.php') ? '0640' : '0600';
+  // / The install secret's group is judged too, by number, because a copy that is root:root 0640 is
+  // / one the web server account cannot read. It is not judged when the group cannot be looked up.
+  // / Until v4.0.4 such a copy passed this row.
+  if ($secretExpected === '0640') {
+    $olderSecretFile = olderInstallSecretFile($secretShown);
+    list ($webAccountNumber, $secretGroupExpected) = webServerAccountNumbers(); }
+  if ($olderSecretFile !== '' && !file_exists($secretShown) && file_exists($olderSecretFile)) $secretShown = $olderSecretFile;
+  if ($secretShown !== '' && file_exists($secretShown)) {
+    $secretMode = substr(sprintf('%o', fileperms($secretShown)), -4);
+    $secretOwner = (int)fileowner($secretShown);
+    $secretGroup = (int)filegroup($secretShown); }
+  $secretPasses = ($secretMode === $secretExpected && ($secretExpected !== '0640' or ($secretOwner === 0 && ($secretGroupExpected < 0 or $secretGroup === $secretGroupExpected))));
+  // / The copy at the top carries the same key as the copy in Secrets, so a copy there another
+  // / account may read gives the key away just the same, & it is judged too when that one passes.
+  if ($olderSecretFile !== '' && $secretShown !== $olderSecretFile && $secretPasses && file_exists($olderSecretFile)) {
+    $topCopyMode = substr(sprintf('%o', fileperms($olderSecretFile)), -4);
+    $topCopyOwner = (int)fileowner($olderSecretFile);
+    $topCopyGroup = (int)filegroup($olderSecretFile);
+    if ($topCopyMode !== $secretExpected or $topCopyOwner !== 0 or ($secretGroupExpected >= 0 && $topCopyGroup !== $secretGroupExpected)) {
+      $secretShown = $olderSecretFile;
+      $secretMode = $topCopyMode;
+      $secretOwner = $topCopyOwner;
+      $secretGroup = $topCopyGroup;
+      $secretPasses = FALSE; } }
+  list ($secretsState, $secretsMode, $secretsOwnership) = secretFolderStatus(isset($SecretLoc) ? (string)$SecretLoc : '');
   if (isset($ManagerSocketDir) && $ManagerSocketDir !== '' && is_dir($ManagerSocketDir)) $socketMode = substr(sprintf('%o', fileperms($ManagerSocketDir)), -4);
 
   // / The environment every conversion runs in.
   print($Lol.'Environment'.$Lol);
   if ($secretMode === '') print('  '.str_pad('Install secret', 28).'NOT PRESENT, it is created by the first command run as root'.$Lol);
-  else if ($secretMode !== $secretExpected or ($secretExpected === '0640' && $secretOwner !== 0)) {
+  else if (!$secretPasses) {
     $failureCount++;
-    print('  '.str_pad('Install secret', 28).'FAILED, mode '.$secretMode.($secretOwner === 0 ? ', root' : ', not root').', expected '.$secretExpected.($secretExpected === '0640' ? ' & root' : '').'. Run -fp as root'.$Lol); }
-  else print('  '.str_pad('Install secret', 28).'OK, '.$secretExpected.($secretExpected === '0640' ? ', root' : '').$Lol);
+    print('  '.str_pad('Install secret', 28).'FAILED, '.($secretShown === $olderSecretFile ? 'the copy at the top of the data location, ' : '').'mode '.$secretMode.($secretOwner === 0 ? ', root' : ', not root').(($secretExpected === '0640' && $secretGroupExpected >= 0) ? ($secretGroup === $secretGroupExpected ? ', group '.$ApacheUser : ', group not '.$ApacheUser) : '').', expected '.$secretExpected.($secretExpected === '0640' ? ', root'.($secretGroupExpected >= 0 ? ' & group '.$ApacheUser : '') : '').'. Run -fp as root'.$Lol); }
+  else print('  '.str_pad('Install secret', 28).'OK, '.$secretExpected.($secretExpected === '0640' ? ', root' : '').($secretShown === $olderSecretFile ? ', at the top of the data location until -fp copies it into Secrets' : '').$Lol);
+  if ($secretsState === 'missing') print('  '.str_pad('Secrets folder', 28).'NOT PRESENT, -fp creates it'.$Lol);
+  else if ($secretsState === 'not a folder') {
+    $failureCount++;
+    print('  '.str_pad('Secrets folder', 28).'FAILED, not a folder & never followed. Remove it & run -fp as root'.$Lol); }
+  else if ($secretsState === 'unjudged') {
+    $failureCount++;
+    print('  '.str_pad('Secrets folder', 28).'FAILED, '.$secretsOwnership.' '.$secretsMode.', & the group '.$ApacheUser.' could not be looked up'.$Lol); }
+  else if ($secretsState !== 'ok') {
+    $failureCount++;
+    print('  '.str_pad('Secrets folder', 28).'FAILED, '.$secretsOwnership.' '.$secretsMode.', expected root:'.$ApacheUser.' 0750. Run -fp as root'.$Lol); }
+  else print('  '.str_pad('Secrets folder', 28).'OK, 0750, root:'.$ApacheUser.$Lol);
   if ($socketMode === '') print('  '.str_pad('Manager socket directory', 28).'NOT PRESENT, it is created with the listener'.$Lol);
   else if ($socketMode !== '0700') {
     $failureCount++;
@@ -3224,16 +3075,24 @@ function showVersionInfo() {
   else print('  '.str_pad('Manager socket directory', 28).'OK, 0700'.$Lol);
   // / Where the application runs from & what the web server serves. Since v4.0.1 the application
   // / is installed outside the web root & the hosted location holds its loader.
+  // / A copy running from outside the web root is a release unpacked to be installed, & is not served.
+  // / The Engine judges that when it has loaded, & a copy without one is judged against the hosted
+  // / location alone. Until v4.0.5 every copy not installed was said to be served.
   if ((string)@realpath($InstLoc) === (string)@realpath($ApplicationLoc)) print('  '.str_pad('Installation', 28).'OK, '.$InstLoc.$Lol);
   else {
     $failureCount++;
-    print('  '.str_pad('Installation', 28).'NOT MOVED, runs from '.$InstLoc.', which the web server serves. Run -fp as root'.$Lol); }
+    $treeIsServed = (function_exists('pathHoldsPath') ? (pathHoldsPath($HostedLoc, $InstLoc) or (trim((string)$ServerRootDir) !== '' && pathHoldsPath($ServerRootDir, $InstLoc))) : ((string)@realpath($InstLoc) === (string)@realpath($HostedLoc)));
+    if ($treeIsServed) print('  '.str_pad('Installation', 28).'NOT MOVED, runs from '.$InstLoc.', which the web server serves. Run -fp as root'.$Lol);
+    else print('  '.str_pad('Installation', 28).'NOT INSTALLED, runs from '.$InstLoc.', which is not the installed copy. Run -fp as root'.$Lol); }
+  // / Setup Core is an Engine core & calls the Engine's own functions, so without an Engine it is
+  // / not loaded at all. Until v4.0.5 it was, & -v died with a fatal error on this line, on the
+  // / one installation an operator runs -v on to find out why.
   if ((string)@realpath($InstLoc) === (string)@realpath($ApplicationLoc)) {
-    list ($setupIsAvailable, $setupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+    if (isset($EngineActive) && $EngineActive) list ($setupIsAvailable, $setupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
     if ($setupIsAvailable && function_exists('publishHostedLocation')) list ($hostedStatus, $hostedDetail, $hostedWritten, $hostedRemoved) = publishHostedLocation($HostedLoc, $InstLoc, FALSE);
     else {
       $hostedStatus = 'UNKNOWN';
-      $hostedDetail = 'The Setup Core is unavailable, so it could not be checked'; }
+      $hostedDetail = ((isset($EngineActive) && $EngineActive) ? 'The Setup Core is unavailable' : 'The Engine is unavailable').', so it could not be checked'; }
     if ($hostedStatus !== 'ok') $failureCount++;
     print('  '.str_pad('Hosted location', 28).strtoupper($hostedStatus).', '.$HostedLoc.'. '.$hostedDetail.$Lol); }
   print('  '.str_pad('Current user', 28).$CurrentUser.($RunningAsRoot ? ', running as root' : '').$Lol);
@@ -3247,14 +3106,20 @@ function showVersionInfo() {
   $maintainHtaccess = TRUE;
   if (isset($MaintainHTAccess)) $maintainHtaccess = (bool)$MaintainHTAccess;
   $apacheConfigIsInstalled = (file_exists('/etc/apache2/conf-enabled/hrconvert2.conf') or file_exists('/etc/apache2/conf.d/hrconvert2.conf') or file_exists('/etc/httpd/conf.d/hrconvert2.conf'));
-  list ($dataIsProtected, $exposureStatus, $exposureDetail) = verifyDataExposure();
+  // / Both checks are the Engine's from v4.0.5, so without an Engine neither is made & each says so.
+  if (function_exists('verifyDataExposure')) list ($dataIsProtected, $exposureStatus, $exposureDetail) = verifyDataExposure();
+  else {
+    $exposureStatus = 'unverified';
+    $exposureDetail = 'The Engine is unavailable, so the exposure of this installation was not established.'; }
   print($Lol.'Data directory'.$Lol);
   print('  '.str_pad('Location', 28).$ConvertTemp.$Lol);
   // / The data location itself is never served. Inside the document root its sessions, caches &
   // / logs could be fetched, so that is a failure. It was not checked here until v4.0.1.
-  $misplacedRoots = misplacedDataRoots();
-  if (count($misplacedRoots) > 0) $failureCount++;
-  print('  '.str_pad('Data location', 28).(count($misplacedRoots) === 0 ? 'OK, outside the document root' : 'MISPLACED, '.implode(' & ', $misplacedRoots).' inside '.$ServerRootDir.'. Move '.(count($misplacedRoots) === 1 ? 'it' : 'them').' outside the document root').$Lol);
+  if (function_exists('misplacedDataRoots')) {
+    $misplacedRoots = misplacedDataRoots();
+    if (count($misplacedRoots) > 0) $failureCount++;
+    print('  '.str_pad('Data location', 28).(count($misplacedRoots) === 0 ? 'OK, outside the document root' : 'MISPLACED, '.implode(' & ', $misplacedRoots).' inside '.$ServerRootDir.'. Move '.(count($misplacedRoots) === 1 ? 'it' : 'them').' outside the document root').$Lol); }
+  else print('  '.str_pad('Data location', 28).'UNKNOWN, the Engine is unavailable, so it could not be checked'.$Lol);
   print('  '.str_pad('Maintain .htaccess', 28).($maintainHtaccess ? 'YES' : 'NO, disabled in config.php').$Lol);
   print('  '.str_pad('Apache configuration', 28).($apacheConfigIsInstalled ? 'INSTALLED' : 'not installed, run -fp as root').$Lol);
   print('  '.str_pad('Live exposure', 28).strtoupper($exposureStatus).', '.$exposureDetail.$Lol);
@@ -3295,7 +3160,7 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $secretOwner, $secretExpected, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $sandboxLauncher, $treeIsServed, $secretShown, $olderSecretFile, $topCopyMode, $topCopyOwner, $secretGroup, $topCopyGroup, $secretGroupExpected, $webAccountNumber, $secretPasses, $secretsState, $secretsMode, $secretsOwnership, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $secretOwner, $secretExpected, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -3411,15 +3276,16 @@ function showHelpInfo() {
 // / interface, which is what a request with no arguments is.
 function parseCommandLine() {
   // / Set variables.
-  global $EngineActive, $Lol, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EngineApplicationArgumentHandler;
+  global $EngineActive, $Lol, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EngineApplicationArgumentHandler, $DirSep, $RequiredSetupCoreVersion;
   $CommandLineHandled = FALSE;
   $CommandLineStatus = 0;
   $UserType = 'web';
   $cliArgumentCount = 0;
   $cliArguments = $appArgumentParts = array();
   $cliCommand = $cliTarget = $cliSecondTarget = $cliWhoami = $applicationHandler = $appTarget = $appSecondTarget = '';
-  $cliConfirmed = $cliVectorParsed = $engineCommandHandled = FALSE;
+  $cliConfirmed = $cliVectorParsed = $engineCommandHandled = $cliSetupIsAvailable = FALSE;
   $engineCommandStatus = 0;
+  $cliSetupVersion = '';
   // / A web request has no command line & must return immediately.
   // / This is the ONLY path that returns FALSE. Every other path handles & stops.
   if (!$RunningFromCLI) $CommandLineHandled = FALSE;
@@ -3523,12 +3389,17 @@ function parseCommandLine() {
       else {
         list ($engineCommandHandled, $engineCommandStatus) = dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed);
         if ($engineCommandHandled) $CommandLineStatus = (int)$engineCommandStatus;
-        // / Self update stays here, because updateApplication & its helpers are this
-        // / application's & moving them is a migration of its own. It is root only.
+        // / -u is still answered here, & it is root only. The updater itself is Setup Core's from
+        // / v4.0.3, loaded only for the command that needs it, as -fp & --setup load it.
         else if (($cliCommand === '-u' or $cliCommand === '--update') && !$RunningAsRoot) $CommandLineStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A root only command was refused for an unauthorized user.');
         else if ($cliCommand === '-u' or $cliCommand === '--update') {
           logEntry('Command line invocation. Performing an application update.');
-          if (!updateApplication(strtolower($cliTarget))) $CommandLineStatus = 1; }
+          list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
+          if (!$cliSetupIsAvailable or !function_exists('updateApplication')) {
+            $CommandLineStatus = 1;
+            warningEntry('The Setup Core is unavailable, so no update was attempted.');
+            print($Lol.'The Setup Core is unavailable, so no update was attempted. Run -v to see why.'.$Lol.$Lol); }
+          else if (!updateApplication(strtolower($cliTarget))) $CommandLineStatus = 1; }
         // / The install secret is this application's until an authentication manager owns it,
         // / so rotating it is this application's command. It is root only, like -u.
         else if ($cliCommand === '--rotate-secret' && !$RunningAsRoot) $CommandLineStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A root only command was refused for an unauthorized user.');
@@ -3546,7 +3417,7 @@ function parseCommandLine() {
   // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
   if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliArgumentCount, $cliArguments, $appArgumentParts, $cliCommand, $cliTarget, $cliSecondTarget, $cliWhoami, $applicationHandler, $appTarget, $appSecondTarget, $cliConfirmed, $cliVectorParsed, $engineCommandHandled, $engineCommandStatus);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliArgumentCount, $cliArguments, $appArgumentParts, $cliCommand, $cliTarget, $cliSecondTarget, $cliWhoami, $applicationHandler, $appTarget, $appSecondTarget, $cliConfirmed, $cliVectorParsed, $engineCommandHandled, $engineCommandStatus, $cliSetupIsAvailable, $cliSetupVersion);
   return array($CommandLineHandled, $UserType, $CommandLineStatus); }
 // / -----------------------------------------------------------------------------------
 
@@ -3574,84 +3445,6 @@ function reportUnrecognizedArgument($cliCommand, $subOptionOwners) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $owningCommand, $cliCommand, $subOptionOwners);
   return $ArgumentWasAnOption; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to remove the build & development environments when config.php asks for it.
-// / Accepts nothing & is run by root from the -fp argument.
-// / Returns a success boolean, then whether the build environment & the development
-// / documentation are gone, in that order. Gone means gone, whoever removed them.
-// / These paths live under the application directory, not part of the regular cleanup routine.
-// /
-// / UNTIL v4.0.1 EVERY WEB REQUEST RAN THIS AS THE WEB SERVER ACCOUNT. That only worked while
-// / the account could write to the installation, & it no longer can, because the code is
-// / root's. Root removes by name here, so every name goes through removeFileWithoutFollowing()
-// / & the Build folder is not entered until root trusts it. Before -fp first gives the code to
-// / root, the web server account can put a link to /etc where the Build folder belongs.
-function cleanBuildEnvironment() {
-  // / Set variables.
-  global $Verbose, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $DirSep, $EnableMemoryProtection, $RunningAsRoot;
-  $BuildEnvCleaned = TRUE;
-  $BuildEnvDeleted = $DevDocsDeleted = $buildDirIsTrusted = $entryWasRemoved = FALSE;
-  $removalTargets = array();
-  $buildDirContents = FALSE;
-  $buildDirEntry = $removalTarget = $removalNotice = $resolvedBuildDir = $trustNotice = '';
-  // / The installation this file belongs to. PHP resolves every link in __FILE__, so none of
-  // / the names below is reached through one.
-  $installDir = dirname(__FILE__);
-  $dockerFile = $installDir.$DirSep.'Documentation'.$DirSep.'Build'.$DirSep.'Dockerfile';
-  $changelogFile = $installDir.$DirSep.'Documentation'.$DirSep.'CHANGELOG.txt';
-  $readmeFile = $installDir.$DirSep.'README.md';
-  // / The Build folder in the installation directory, as config.php describes it. This read
-  // / dirname(__DIR__) until v4.0.0, which is the folder ABOVE the installation, so it never
-  // / found its own Build folder & would have emptied a Build folder belonging to a neighbour.
-  $buildDir = $installDir.$DirSep.'Build';
-  clearstatcache();
-  $buildDirStatus = @lstat($buildDir);
-  if (!$RunningAsRoot && ($DeleteBuildEnvironment or $DeleteDevelopmentDocumentation)) {
-    $BuildEnvCleaned = FALSE;
-    warningEntry('The build environment was not removed. Only root removes it, from the -fp argument.'); }
-  // / Delete the build environment if specified by config.php.
-  else if ($DeleteBuildEnvironment) {
-    if ($Verbose) logEntry('Removing the build environment.');
-    $removalTargets = array($dockerFile);
-    // / A Build that is not a folder, a link included, is one name & is removed as one.
-    if (is_array($buildDirStatus) && ((int)$buildDirStatus['mode'] & 0170000) !== 0040000) $removalTargets[] = $buildDir;
-    // / A Build folder is emptied one name at a time, & only once root trusts it.
-    else if (is_array($buildDirStatus)) {
-      list ($buildDirIsTrusted, $resolvedBuildDir, $trustNotice) = pathIsTrustedByRoot($buildDir);
-      if ($buildDirIsTrusted && $resolvedBuildDir === $buildDir) $buildDirContents = @scandir($buildDir);
-      else warningEntry('The Build folder was left as it is, because root does not trust it. '.($trustNotice !== '' ? $trustNotice : $buildDir.' leads to '.$resolvedBuildDir.'.'));
-      if (is_array($buildDirContents)) foreach (array_diff($buildDirContents, array('.', '..')) as $buildDirEntry) $removalTargets[] = $buildDir.$DirSep.$buildDirEntry; }
-    foreach ($removalTargets as $removalTarget) {
-      list ($entryWasRemoved, $removalNotice) = removeFileWithoutFollowing($removalTarget);
-      if (!$entryWasRemoved) warningEntry($removalNotice); }
-    // / A folder left inside Build keeps it in place, which is the documented behaviour.
-    if (is_array($buildDirContents)) @rmdir($buildDir);
-    // / Confirm the build environment is actually gone before reporting success.
-    clearstatcache();
-    if (@lstat($dockerFile) === FALSE && @lstat($buildDir) === FALSE) $BuildEnvDeleted = TRUE;
-    else {
-      $BuildEnvCleaned = FALSE;
-      errorEntry('Could not remove the build environment!', 26000, FALSE); }
-    if ($Verbose && $BuildEnvDeleted) logEntry('Removed the build environment.'); }
-  // / Delete the development documentation if specified by config.php.
-  if ($RunningAsRoot && $DeleteDevelopmentDocumentation) {
-    if ($Verbose) logEntry('Removing the development documentation.');
-    $removalTargets = array($changelogFile, $readmeFile);
-    foreach ($removalTargets as $removalTarget) {
-      list ($entryWasRemoved, $removalNotice) = removeFileWithoutFollowing($removalTarget);
-      if (!$entryWasRemoved) warningEntry($removalNotice); }
-    // / Confirm the development documentation is actually gone before reporting success.
-    clearstatcache();
-    if (@lstat($changelogFile) === FALSE && @lstat($readmeFile) === FALSE) $DevDocsDeleted = TRUE;
-    else {
-      $BuildEnvCleaned = FALSE;
-      errorEntry('Could not remove the development documentation!', 26001, FALSE); }
-    if ($Verbose && $DevDocsDeleted) logEntry('Removed the development documentation.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $installDir, $dockerFile, $changelogFile, $readmeFile, $buildDir, $buildDirStatus, $buildDirContents, $buildDirEntry, $buildDirIsTrusted, $resolvedBuildDir, $trustNotice, $removalTargets, $removalTarget, $removalNotice, $entryWasRemoved);
-  return array($BuildEnvCleaned, $BuildEnvDeleted, $DevDocsDeleted); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -3756,6 +3549,10 @@ function getFiles($pathToFiles) {
 // /                   bwrap execs without a shell & would read NAME=value as a program.
 // /   MapToRoot       Maps this process to root INSIDE the namespace & nowhere else.
 // /                   An unprivileged user namespace, so it confers nothing on the host.
+// /   Overlays        Host files a calling pipeline's own file covers inside the namespace,
+// /                   keyed by the host path & naming the file within the read only resource
+// /                   the call carries. The host file is never touched. A host path that is
+// /                   not a plain file here, or that is reached through a link, is skipped.
 // /   Reason          Why this profile is not empty. Read this before changing anything.
 // /
 // / Adding a profile.
@@ -3775,18 +3572,33 @@ function getSandboxProfiles() {
       'Environment' => array('SAL_USE_VCLPLUGIN' => 'svp', 'SAL_DISABLE_OPENCL' => '1'),
       'Reason' => 'Headless rendering with no display server & no OpenCL probing.'),
 
-    // / Both major versions are bound, because a host may carry either & the policy file
-    // / this application writes lives beside whichever one is installed.
+    // / Both major versions are bound, because a host may carry either. The delegate list & the
+    // / rest of the configuration are the host's, & the policy is the calling pipeline's own, which
+    // / covers the host's wherever a package or a build from source keeps one. Until v4.0.5 -fp
+    // / wrote this application's policy over the host's, for every program on the host.
     'imagemagick' => array(
       'OperationType' => 'Image',
       'ReadOnlyPaths' => array('/etc/ImageMagick-7', '/etc/ImageMagick-6', '/usr/share/ImageMagick-7', '/usr/share/ImageMagick-6'),
-      'Reason' => 'The policy file & the delegate list are read from these directories.'),
+      'Overlays' => array(
+        '/etc/ImageMagick-7/policy.xml' => 'policy.xml',
+        '/etc/ImageMagick-6/policy.xml' => 'policy.xml',
+        '/usr/local/etc/ImageMagick-7/policy.xml' => 'policy.xml',
+        '/usr/local/etc/ImageMagick-6/policy.xml' => 'policy.xml'),
+      'Reason' => 'The delegate list is read from these directories, & the calling pipeline\'s policy covers the host\'s.'),
 
     // / Language data lives in one of two places depending on how it was installed.
+    // / The OCR page split runs ImageMagick under this profile too, & carries its own policy. A
+    // / build from source keeps its policy below /usr, which every sandbox shows, so the carried one
+    // / covers each place a policy is kept, as it does for the imagemagick profile.
     'tesseract' => array(
       'OperationType' => 'OCR',
       'ReadOnlyPaths' => array('/usr/share/tesseract-ocr', '/usr/share/tessdata'),
-      'Reason' => 'Recognition fails with no language data & the failure names no cause.'),
+      'Overlays' => array(
+        '/etc/ImageMagick-7/policy.xml' => 'policy.xml',
+        '/etc/ImageMagick-6/policy.xml' => 'policy.xml',
+        '/usr/local/etc/ImageMagick-7/policy.xml' => 'policy.xml',
+        '/usr/local/etc/ImageMagick-6/policy.xml' => 'policy.xml'),
+      'Reason' => 'Recognition fails with no language data & the failure names no cause. The page split\'s policy covers the host\'s.'),
 
     'inkscape' => array(
       'OperationType' => 'SVG',
@@ -4049,45 +3861,6 @@ function applicationConfigModel() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to report whether this application's data tree is exposed by a web server.
-// / Accepts nothing. Returns display rows.
-// /
-// / The Engine calls this because engineConfig.php names it in $EngineDataPolicyProvider,
-// / & not because the Engine knows anything about web servers.
-// / It USED to be four calls made directly from Setup Core, which meant Setup Core knew
-// / this application serves files over http, that Apache reads a protection file only where
-// / AllowOverride is enabled, that nginx never reads one, & that an uploaded SVG runs script
-// / in its own origin. None of that is true of an engine.
-// /
-// / A row with a Label is a status line. A row with only Text is a paragraph. The Engine
-// / prints both without understanding either.
-function applicationDataPolicyFindings() {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $PolicyFindings = array();
-  $dataPolicyIsValid = $dataIsProtected = FALSE;
-  $dataPolicyStatus = $exposureStatus = $exposureDetail = '';
-  list ($dataPolicyIsValid, $dataPolicyStatus) = verifyDataProtectionPolicy(TRUE);
-  $PolicyFindings[] = array('Label' => 'Protection file', 'Status' => policyDisplayStatus($dataPolicyStatus), 'Detail' => describePolicyStatus('DATA Directory', $dataPolicyStatus));
-  list ($dataIsProtected, $exposureStatus, $exposureDetail) = verifyDataExposure();
-  $PolicyFindings[] = array('Label' => 'Live exposure', 'Status' => strtoupper($exposureStatus), 'Detail' => $exposureDetail);
-  if ($exposureStatus === 'exposed') {
-    $PolicyFindings[] = array('Text' => '');
-    $PolicyFindings[] = array('Text' => '  THE DATA DIRECTORY IS EXPOSED. A file a user uploads is served back as a');
-    $PolicyFindings[] = array('Text' => '  document rather than as a download, so an uploaded SVG runs its own script');
-    $PolicyFindings[] = array('Text' => '  in this origin. The protection file is being ignored; Apache reads one only');
-    $PolicyFindings[] = array('Text' => '  where AllowOverride is enabled & nginx never reads one at all. Put the rules');
-    $PolicyFindings[] = array('Text' => '  in the server configuration. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.'); }
-  else if ($exposureStatus !== 'protected') {
-    $PolicyFindings[] = array('Text' => '');
-    $PolicyFindings[] = array('Text' => '  Exposure was NOT established, which is not a pass. If the web server is not');
-    $PolicyFindings[] = array('Text' => '  running yet this is expected; re-run the -fp argument once it is.'); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dataPolicyIsValid, $dataIsProtected, $dataPolicyStatus, $exposureStatus, $exposureDetail);
-  return $PolicyFindings; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to report on the parts of the environment that belong to HRConvert2.
 // / Accepts nothing. Returns a readiness boolean & a list of findings, in that order.
 // / Each finding is an array of Check, Status & Detail, which is the shape the Engine
@@ -4096,65 +3869,35 @@ function applicationDataPolicyFindings() {
 // / The Engine calls this because engineConfig.php names it in $EngineEnvironmentProvider,
 // / & not because the Engine knows anything about it. It is handed over the same way
 // / getSandboxProfiles() above is, & for the same reason.
-// / Every check below is specific to this application. The kernel namespace settings, the
-// / three AppArmor policies & the DATA exposure test are HRConvert2's business, & another
-// / application on the same Engine has no ImageMagick policy to check.
+// / Every check below is specific to this application. The policies its tools' conversions carry
+// / are HRConvert2's business, & another application on the same Engine has no ImageMagick
+// / policy to check.
+// / THE DATA EXPOSURE TEST, THE DATA LOCATION & THE HOSTED LOCATION ARE THE ENGINE'S FROM v4.0.5.
+// / What the web server serves comes from the roles in the contract, so the Engine reports them
+// / itself, directly after these, which is where they appeared when they were reported here.
+// / SO ARE THE KERNEL SETTINGS & THE SANDBOX PROFILE, because every sandbox the Engine builds
+// / needs them. The Engine reports them directly before these, which is where they were too.
 // /
 // / NOTHING HERE REPAIRS ANYTHING. Repair needs root & the listener does not have it, so a
 // / validator that tried would fail confusingly on every pass. It reports, & -fp fixes.
 // / A drifted policy is reported & does not fail readiness, because conversions still run.
 function applicationEnvironmentFindings() {
   // / Set variables.
-  global $ServerRootDir, $InstLoc, $HostedLoc, $ApplicationLoc, $DirSep, $RequiredSetupCoreVersion, $EnableMemoryProtection;
+  global $EnableMemoryProtection;
   $ApplicationIsReady = TRUE;
   $ApplicationFindings = array();
-  $policyIsValid = $kernelIsReady = $dataIsProtected = $setupIsAvailable = FALSE;
-  $policyStatus = $exposureStatus = $exposureDetail = $hostedStatus = $hostedDetail = $setupVersion = '';
-  $hostedWritten = $hostedRemoved = 0;
-  $kernelFindings = $kernelFinding = $misplacedRoots = array();
-  // / Report the kernel settings first. A sandbox failure is almost always one of these &
-  // / naming the setting is more use than naming the symptom.
-  list ($kernelIsReady, $kernelFindings) = verifySandboxKernel(FALSE);
-  foreach ($kernelFindings as $kernelFinding) $ApplicationFindings[] = $kernelFinding;
-  if (!$kernelIsReady) $ApplicationIsReady = FALSE;
+  $policyIsValid = FALSE;
+  $policyStatus = '';
   // / Policies are validated & never repaired here. A drifted policy is reported.
   // / The status word is reported as it is, rather than flattened to ok, & the sentence
   // / beside it says whether anything needs doing. Flattening lost the difference between
   // / a policy that matches & a host that never needed one.
-  list ($policyIsValid, $policyStatus) = verifySandboxPolicy(FALSE);
-  $ApplicationFindings[] = array('Check' => 'Sandbox AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('Sandbox AppArmor', $policyStatus));
   list ($policyIsValid, $policyStatus) = verifyImageMagickPolicy(FALSE);
   $ApplicationFindings[] = array('Check' => 'ImageMagick policy', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('ImageMagick', $policyStatus));
   list ($policyIsValid, $policyStatus) = verifyOpenScadPolicy(FALSE);
   $ApplicationFindings[] = array('Check' => 'OpenSCAD AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('OpenSCAD AppArmor', $policyStatus));
-  // / The DATA tree is part of the environment & is counted with everything else.
-  // / It was reported separately & AFTER the summary line, so a run could print that every
-  // / check passed & then say the tree was exposed directly underneath it. A summary that
-  // / does not cover a check is worse than no summary, because it is read instead of the
-  // / thing it failed to include.
-  // / An exposed tree does not stop a conversion, so it does not make the environment
-  // / unready. It is reported loudly & the operator decides.
-  list ($dataIsProtected, $exposureStatus, $exposureDetail) = verifyDataExposure();
-  $ApplicationFindings[] = array('Check' => 'DATA exposure', 'Status' => ($exposureStatus === 'protected' ? 'ok' : strtoupper($exposureStatus)), 'Detail' => $exposureDetail);
-  // / The data location itself is never served, & is named here when it sits inside the document
-  // / root, where its sessions, caches & logs could be fetched. It does not stop a conversion, so
-  // / it does not make the environment unready. It was not checked at all until v4.0.1.
-  $misplacedRoots = misplacedDataRoots();
-  if (count($misplacedRoots) === 0) $ApplicationFindings[] = array('Check' => 'Data location', 'Status' => 'ok', 'Detail' => 'Outside the document root.');
-  else $ApplicationFindings[] = array('Check' => 'Data location', 'Status' => 'MISPLACED', 'Detail' => implode(' & ', $misplacedRoots).' '.(count($misplacedRoots) === 1 ? 'is' : 'are').' inside the document root '.$ServerRootDir.', so sessions, caches & logs could be fetched. Move '.(count($misplacedRoots) === 1 ? 'it' : 'them').' outside it.');
-  // / The application runs from Application in the data location & the web server serves only the
-  // / hosted location, which holds the loader. Both are reported & neither is repaired here. An
-  // / application still running from inside the web root is NOT MOVED, & -fp moves it.
-  if ((string)@realpath($InstLoc) !== (string)@realpath($ApplicationLoc)) $ApplicationFindings[] = array('Check' => 'Hosted location', 'Status' => 'NOT MOVED', 'Detail' => 'The application runs from '.$InstLoc.', which the web server serves. Run -fp as root to install it into '.$ApplicationLoc.'.');
-  else {
-    list ($setupIsAvailable, $setupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
-    if ($setupIsAvailable && function_exists('publishHostedLocation')) list ($hostedStatus, $hostedDetail, $hostedWritten, $hostedRemoved) = publishHostedLocation($HostedLoc, $InstLoc, FALSE);
-    else {
-      $hostedStatus = 'UNKNOWN';
-      $hostedDetail = 'The Setup Core is unavailable, so the hosted location could not be checked.'; }
-    $ApplicationFindings[] = array('Check' => 'Hosted location', 'Status' => $hostedStatus, 'Detail' => $hostedDetail); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $policyIsValid, $policyStatus, $kernelIsReady, $kernelFindings, $kernelFinding, $dataIsProtected, $exposureStatus, $exposureDetail, $misplacedRoots, $setupIsAvailable, $setupVersion, $hostedStatus, $hostedDetail, $hostedWritten, $hostedRemoved);
+  purgeSensitiveMemory($EnableMemoryProtection, $policyIsValid, $policyStatus);
   return array($ApplicationIsReady, $ApplicationFindings); }
 // / -----------------------------------------------------------------------------------
 
@@ -4196,85 +3939,6 @@ function virusScan($path) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to keep the DATA protection file current without waiting for -fp.
-// / Accepts no arguments.
-// / Returns TRUE when the file is present & correct, or when it belongs to somebody else.
-// /
-// / A protection file this application wrote must never be the reason the server stops.
-// / An earlier release wrote Options & php_flag into this file. Both need AllowOverride
-// / Options, & where that is not granted Apache does not ignore them, it REFUSES the
-// / request, so the whole DATA tree returned 500 & every download & every share link on the
-// / server stopped working. Replacing the PHP does not fix that, because the bad file is
-// / already on disk & nothing rewrites it until an administrator happens to run -fp. An
-// / installation could therefore be upgraded to a fixed release & stay broken indefinitely.
-// /
-// / So the file is brought up to date here instead, next to the index.html files, on the
-// / same schedule & by the same request. An upgrade repairs itself the first time anybody
-// / loads a page & no operator has to know that -fp was the cure.
-// /
-// / Only a file carrying our own marker is ever touched.
-// / An administrator who wrote their own .htaccess here gets to keep it, exactly as
-// / verifyPolicyFile() treats every other policy. Theirs is left alone & -fp is where the
-// / offer to replace it lives, because that is an interactive, root, deliberate act.
-// /
-// / This is a read & a comparison on a small file, & it writes only when the contents
-// / actually differ, which after the first request is never.
-function maintainDataProtection() {
-  // / Set variables.
-  global $ConvertTemp, $DirSep, $MaintainHTAccess, $Verbose, $RunningAsRoot, $EnableMemoryProtection;
-  $ProtectionIsCurrent = FALSE;
-  $protectionPath = $existingContents = $desiredContents = $readNotice = $removalNotice = $writeNotice = '';
-  $carriesMarker = $fileWasRead = $fileWasRemoved = $fileWasWritten = FALSE;
-  $bytesWritten = 0;
-  $maintainHtaccess = TRUE;
-  if (isset($MaintainHTAccess)) $maintainHtaccess = (bool)$MaintainHTAccess;
-  if ((string)$ConvertTemp === '' or !is_dir($ConvertTemp)) $ProtectionIsCurrent = FALSE;
-  // / Turning the setting off has to actually take effect.
-  // / Leaving a file behind that this application wrote, & then declining to maintain it,
-  // / would give an administrator a stale copy of a rule set that no longer matches the
-  // / release & no way to notice. So a file carrying OUR marker is removed. A file the
-  // / administrator wrote is left exactly where it is, because it was never ours to delete.
-  else if (!$maintainHtaccess) {
-    $protectionPath = $ConvertTemp.$DirSep.'.htaccess';
-    $ProtectionIsCurrent = TRUE;
-    // / Root reaches this through -fp, & the DATA folder is the web server account's, so the file
-    // / is read & removed through the kernel. A link or a FIFO there is never followed or waited on.
-    list ($fileWasRead, $existingContents, $readNotice) = readFileWithoutFollowing($protectionPath, 1048576);
-    if ($fileWasRead && strpos($existingContents, 'HRCONVERT2-POLICY-MARKER') !== FALSE) {
-      list ($fileWasRemoved, $removalNotice) = removeFileWithoutFollowing($protectionPath);
-      if ($fileWasRemoved) warningEntry('--Maintain HTAccess-- is disabled, so the DATA protection file this application wrote at '.$protectionPath.' was removed. The server configuration is now carrying these rules alone. Run the -fp argument & read the DATA exposure line to confirm the tree is still protected.');
-      else warningEntry('--Maintain HTAccess-- is disabled & the DATA protection file this application wrote could not be removed. '.$removalNotice); } }
-  else {
-    $protectionPath = $ConvertTemp.$DirSep.'.htaccess';
-    $desiredContents = dataProtectionContents();
-    list ($fileWasRead, $existingContents, $readNotice) = readFileWithoutFollowing($protectionPath, 1048576);
-    if ($fileWasRead) $carriesMarker = (strpos($existingContents, 'HRCONVERT2-POLICY-MARKER') !== FALSE);
-    // / Already exactly right. This is the case on every request after the first.
-    if ($existingContents === $desiredContents) $ProtectionIsCurrent = TRUE;
-    // / Somebody else's file. Leave it completely alone & say nothing on every request.
-    else if ($existingContents !== '' && !$carriesMarker) $ProtectionIsCurrent = TRUE;
-    else {
-      // / A web request writes its own file in its own folder. Root never writes by name there.
-      if ($RunningAsRoot) list ($fileWasWritten, $writeNotice) = writeFileWithoutFollowing($protectionPath, $desiredContents, 0644);
-      else {
-        $bytesWritten = @file_put_contents($protectionPath, $desiredContents);
-        $fileWasWritten = ($bytesWritten === strlen($desiredContents));
-        if ($fileWasWritten) @chmod($protectionPath, 0644); }
-      if ($fileWasWritten) {
-        $ProtectionIsCurrent = TRUE;
-        // / Worth a warning rather than a normal entry, because it means this installation
-        // / was running with a protection file that did not match this release, & on the
-        // / upgrade path from v3.8.6 that file was returning 500 for every download.
-        warningEntry('The DATA protection file at '.$protectionPath.' did not match this release & was rewritten. If downloads or share links were returning a server error, that is now corrected.'); }
-      // / A failed write is not fatal. The tree may be exposed or may be broken, & the
-      // / exposure check is what establishes which, so this only records that it happened.
-      else if ($Verbose) logEntry('The DATA protection file at '.$protectionPath.' could not be written. '.$writeNotice); } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $protectionPath, $existingContents, $desiredContents, $readNotice, $removalNotice, $writeNotice, $carriesMarker, $fileWasRead, $fileWasRemoved, $fileWasWritten, $maintainHtaccess, $bytesWritten);
-  return $ProtectionIsCurrent; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to create required directories if they do not exist.
 // / Maintenance folders are emptied by passing their children to cleanFiles().
 // / cleanFiles() refuses to operate on an approved root, so the root itself is never passed.
@@ -4287,7 +3951,7 @@ function verifyRequiredDirs() {
   global $ConvertLoc, $RequiredDirs, $RequiredIndexes, $RequiredCleanupFolders, $Verbose, $PermissionLevels, $DirSep, $InstLoc, $EnableMemoryProtection;
   $DirectoriesVerified = $directoriesProtected = 0;
   $locationIsProtected = $protectionWasWritten = FALSE;
-  $RequiredDirsExist = TRUE;
+  $protectionIsCurrent = $RequiredDirsExist = TRUE;
   $cleanupContents = array();
   $requiredDir = $requiredIndex = $requiredCleanupFolder = $cleanupEntry = $cleanupPath = '';
   // / The roots this sweep may clean under, named rather than assumed.
@@ -4326,8 +3990,12 @@ function verifyRequiredDirs() {
       errorEntry('Could not create a directory at '.$requiredDir.'!', 1001, TRUE); } }
   // / Make sure that each required directory has an index.html file for document root protection.
   foreach ($RequiredIndexes as $requiredIndex) @copy($InstLoc.$DirSep.'index.html', $requiredIndex.$DirSep.'index.html');
-  // / Keep the DATA protection file correct on every request, beside the index files.
-  maintainDataProtection();
+  // / Keep the DATA protection file correct on every request, beside the index files. It is the
+  // / Engine's from v4.0.5, & a request without an Engine was refused long before this line.
+  // / A file that is not current does not stop a request. The Engine has said why wherever it
+  // / knew, & the exposure check is what establishes whether it matters.
+  if (function_exists('maintainDataProtection')) $protectionIsCurrent = maintainDataProtection();
+  if (!$protectionIsCurrent && $Verbose) logEntry('The DATA protection file is not current. Run the -fp argument as root & read what it reports for DATA.');
   // / Clear the contents of each maintenance folder, then delete the folder itself.
   foreach ($RequiredCleanupFolders as $requiredCleanupFolder) {
     if (!is_dir($requiredCleanupFolder)) continue;
@@ -4340,335 +4008,8 @@ function verifyRequiredDirs() {
     // / The folder itself is removed only once its contents are gone.
     @rmdir($requiredCleanupFolder); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $directoriesProtected, $locationIsProtected, $protectionWasWritten, $allowedCleanupRoots, $requiredDir, $requiredIndex, $requiredCleanupFolder, $cleanupEntry, $cleanupPath, $cleanupContents);
+  purgeSensitiveMemory($EnableMemoryProtection, $directoriesProtected, $locationIsProtected, $protectionWasWritten, $protectionIsCurrent, $allowedCleanupRoots, $requiredDir, $requiredIndex, $requiredCleanupFolder, $cleanupEntry, $cleanupPath, $cleanupContents);
   return array($RequiredDirsExist, $RequiredDirs, $DirectoriesVerified); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to download an update package to a temporary location.
-// / curl is used rather than wget because GitHub redirects a tarball request twice, first
-// / to codeload.github.com & then to object storage. curl -L follows the chain. A wget
-// / based updater was attempted previously & was defeated by exactly this.
-// / The download is bounded by size & by time so a hostile or broken source cannot fill
-// / the disk or hold the process open indefinitely.
-function downloadUpdatePackage($targetURL, $downloadPath) {
-  // / Set variables.
-  global $Verbose, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $EnableMemoryProtection;
-  $PackageDownloaded = FALSE;
-  $curlCommand = '';
-  $curlOutput = array();
-  $curlExitCode = 1;
-  if ($Verbose) logEntry('Downloading update package.');
-  // / -q reads no .curlrc & has to come first, so no configuration file changes this request.
-  // / -L follows redirects. -f fails on an HTTP error rather than writing the error page.
-  // / --max-filesize refuses a package larger than the configured ceiling.
-  // / --max-time bounds the whole transfer, not just the connection.
-  $curlCommand = 'curl -q -L -f -s'
-    .' --max-time '.(int)$UpdateConnectionTimeout
-    .' --max-filesize '.(int)$MaxUpdatePackageSize
-    .' -H '.escapeshellarg('User-Agent: HRConvert2-Updater')
-    .' -o '.escapeshellarg($downloadPath)
-    .' '.escapeshellarg($targetURL).' 2>/dev/null';
-  exec($curlCommand, $curlOutput, $curlExitCode);
-  // / curl exits 22 on an HTTP error, which for a tag means the tag does not exist.
-  if ($curlExitCode === 22) errorEntry('The requested update version does not exist at the update source!', 29002, FALSE);
-  else if ($curlExitCode === 63) errorEntry('The update package is larger than the configured maximum!', 29003, FALSE);
-  else if ($curlExitCode !== 0) errorEntry('Could not download the update package! Curl exited with code '.$curlExitCode.'.', 29004, FALSE);
-  else if (!file_exists($downloadPath) or filesize($downloadPath) < 1024) errorEntry('The downloaded update package is empty or too small to be valid!', 29005, FALSE);
-  else $PackageDownloaded = TRUE;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $curlCommand, $curlOutput, $curlExitCode, $targetURL, $downloadPath);
-  return $PackageDownloaded; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to merge the live configuration into a freshly downloaded one.
-// / The NEW file provides the structure, the comments & the set of settings that exist.
-// / The OLD file provides the values, for every setting that exists in both.
-// / A setting that is new in this release keeps the new default.
-// / A setting that was removed in this release is discarded with the old file.
-// / A setting whose name was corrected is treated as a removal & an addition. No attempt
-// / is made to guess that two differently spelled names mean the same thing.
-// /
-// / ARRAYS ARE NOT MERGED. The new default is kept & the difference is reported.
-// / A scalar can be substituted into the new file safely. An array cannot be rewritten
-// / without reformatting it, which would destroy the alignment & comments in the new file,
-// / & a partial merge of a two hundred element format list is worse than either version.
-// / The administrator is told which arrays differed so an intentional change can be
-// / reapplied by hand.
-function mergeConfigFile($oldConfigPath, $newConfigPath) {
-  // / Set variables.
-  global $Verbose, $EnableMemoryProtection;
-  $ConfigMerged = FALSE;
-  $ChangedArrays = $PreservedSettings = array();
-  $oldValues = $matches = $match = array();
-  $oldContents = $newContents = $mergedContents = $settingName = $settingValue = $exportedValue = $newValue = $oldValue = '';
-  $bytesWritten = 0;
-  // / Read every scalar assignment out of the OLD file without executing it.
-  // / The old file is trusted PHP, but reading it by pattern avoids any side effect &
-  // / avoids polluting this scope with seventy variables.
-  $oldContents = @file_get_contents($oldConfigPath);
-  $newContents = @file_get_contents($newConfigPath);
-  if ($oldContents === FALSE or $newContents === FALSE) errorEntry('Could not read a configuration file during the merge!', 29006, FALSE);
-  else {
-    // / Collect every assignment in the old file. Arrays are captured but not substituted.
-    if (preg_match_all('/^\$([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+?);\s*$/m', $oldContents, $matches, PREG_SET_ORDER)) {
-      foreach ($matches as $match) $oldValues[$match[1]] = trim($match[2]); }
-    // / Walk the NEW file & substitute the old value wherever both files define a setting.
-    $mergedContents = preg_replace_callback(
-      '/^\$([A-Za-z_][A-Za-z0-9_]*)(\s*=\s*)(.+?);\s*$/m',
-      function ($match) use ($oldValues, &$ChangedArrays, &$PreservedSettings) {
-        $settingName = $match[1];
-        $newValue = trim($match[3]);
-        // / A setting that does not exist in the old file keeps the new default.
-        if (!isset($oldValues[$settingName])) return $match[0];
-        $oldValue = $oldValues[$settingName];
-        // / An array keeps the new default. Report it only if the old value differed.
-        if (stripos($newValue, 'array(') === 0 or stripos($oldValue, 'array(') === 0 or strpos($newValue, '[') === 0) {
-          if ($oldValue !== $newValue) array_push($ChangedArrays, $settingName);
-          return $match[0]; }
-        // / A scalar takes the old value. Nothing else on the line is touched, so every
-        // / comment & every alignment in the new file survives.
-        if ($oldValue !== $newValue) array_push($PreservedSettings, $settingName);
-        return '$'.$settingName.$match[2].$oldValue.';'; },
-      $newContents);
-    if (!is_string($mergedContents)) errorEntry('Could not merge the configuration file!', 29007, FALSE);
-    else {
-      $bytesWritten = @file_put_contents($newConfigPath, $mergedContents, LOCK_EX);
-      if ($bytesWritten === strlen($mergedContents)) $ConfigMerged = TRUE;
-      else errorEntry('Could not write the merged configuration file!', 29008, FALSE); } }
-  if ($Verbose && $ConfigMerged) logEntry('Configuration merged. '.count($PreservedSettings).' setting(s) carried over. '.count($ChangedArrays).' array(s) reset to the new default.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $match, $newValue, $oldValue, $oldContents, $newContents, $mergedContents, $matches, $oldValues, $settingName, $settingValue, $exportedValue, $bytesWritten, $oldConfigPath, $newConfigPath);
-  return array($ConfigMerged, $PreservedSettings, $ChangedArrays); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to update the application in place.
-// / Called by the -u & --update command line arguments. NEVER reachable from the web.
-// / Replacing application code requires write access to the installation directory, which
-// / is the correct authorization for this operation & is what shell access already implies.
-// / An HTTP endpoint protected by a secret would turn that into one guessable string.
-// /
-// / The sequence is stage, swap, validate, rollback on failure.
-// / Nothing touches the live installation until a complete & correct replacement exists.
-// / The previous installation is retained until the NEXT update runs, so an administrator
-// / who discovers a problem an hour later still has something to restore by hand.
-// /
-// / NOTHING THE UPDATE TOUCHES IS EVER THE WEB SERVER ACCOUNT'S. Until v4.0.1 the release was
-// / downloaded & unpacked inside a session folder that account owns, & the staged copy was
-// / handed to it with chown -R before root ran it to validate it, so the web server account
-// / could edit code root was about to run. The work now happens beside the installation, in a
-// / folder only root can change, & the update refuses to start when that folder is not one.
-// / The staged copy is root's & is 0700 until it is in place, so nothing serves it early.
-// / The archive's own owners are ignored, so a release cannot hand a file to another account.
-function updateApplication($requestedVersion) {
-  // / Set variables.
-  global $InstLoc, $ProprietaryLoc, $DirSep, $HRConvertVersion, $AutoUpdateTargetVersion, $EnableAutoUpdates, $BackupLoc, $PermissionLevels, $Lol, $EnableMemoryProtection;
-  $UpdateSucceeded = $targetResolved = $packageDownloaded = $configMerged = $installationIsValid = FALSE;
-  $updatePermissionsFixed = $alreadyInstalled = FALSE;
-  $updateRepairExitCode = 1;
-  $swapCompleted = $rolledBack = FALSE;
-  $targetVersion = $targetURL = $workDir = $downloadPath = $extractedDir = $stagedDir = $oldDir = $backupOutput = '';
-  $preservedSettings = $changedArrays = $extractOutput = $extractedRoots = array();
-  $extractExitCode = $backupExitCode = 1;
-  $parentIsTrusted = $backupIsHeld = FALSE;
-  $resolvedParent = $trustNotice = $resolvedBackupParent = $backupNotice = '';
-  $backupStatus = array();
-  // / An update must be explicitly enabled. A server that does not want this cannot get it.
-  if (!$EnableAutoUpdates) {
-    errorEntry('Automatic updates are disabled in config.php!', 29009, FALSE);
-    print($Lol.'Automatic updates are disabled. Set $EnableAutoUpdates to TRUE in config.php.'.$Lol.$Lol); }
-  else {
-    // / The command line argument overrides the configured default when one is supplied.
-    if ($requestedVersion === '') $requestedVersion = $AutoUpdateTargetVersion;
-    list ($targetResolved, $targetVersion, $targetURL) = resolveUpdateTarget($requestedVersion);
-    // / Refuse to reinstall the version that is already running.
-    // / edge is always fetched, because master moves without the version stamp changing.
-    if ($targetResolved && $targetVersion !== 'edge' && ltrim($targetVersion, 'vV') === ltrim($HRConvertVersion, 'vV')) {
-      $targetResolved = FALSE;
-      print($Lol.'Version '.$targetVersion.' is already installed. Nothing to do.'.$Lol.$Lol);
-      logEntry('Update requested but '.$targetVersion.' is already installed.');
-      // / The requested version is installed when this returns, which is what success means.
-      // / It returned FALSE here until v3.9.9, which read as a failure to anything checking.
-      // / NOTHING WAS INSTALLED, SO NOTHING BELOW MAY RUN. Every step after this one is gated
-      // / on success & assumes a new release arrived, so each is gated on this as well.
-      // / Without it a no-op would repair permissions, report an update & name a backup.
-      $UpdateSucceeded = $alreadyInstalled = TRUE; } }
-  // / The folder the swap happens in must be one only root can change, or the web server
-  // / account could rename the installation aside & put its own in its place.
-  if ($targetResolved && !$alreadyInstalled) {
-    list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot(dirname($InstLoc));
-    if ($parentIsTrusted && dirname($InstLoc) !== rtrim((string)$ProprietaryLoc, $DirSep)) list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot($ProprietaryLoc);
-    if (!$parentIsTrusted) {
-      $targetResolved = FALSE;
-      errorEntry('The update was refused, because the folder it would happen in can be changed by an account other than root. '.$trustNotice, 31023, FALSE);
-      print($Lol.'The update was refused. '.$trustNotice.$Lol.'Run  sudo php convertCore.php -fp  & try again. A folder above '.$ProprietaryLoc.' is not'.$Lol.'this application\'s & -fp leaves it alone. See error 31023 in Documentation/ERROR_DESCRIPTIONS.txt.'.$Lol.$Lol); } }
-  // / Download & stage the release.
-  if ($targetResolved && !$alreadyInstalled) {
-    $workDir = dirname($InstLoc).$DirSep.'.'.basename($InstLoc).'-update-'.bin2hex(random_bytes(8));
-    $downloadPath = $workDir.$DirSep.'package.tar.gz';
-    $stagedDir = $workDir.$DirSep.'staged';
-    if (!@mkdir($workDir, $PermissionLevels, TRUE)) errorEntry('Could not create a working directory for the update!', 29010, FALSE);
-    else {
-      print($Lol.'Downloading '.$targetVersion.' ...'.$Lol);
-      $packageDownloaded = downloadUpdatePackage($targetURL, $downloadPath); } }
-  // / Extract the package & locate the single directory GitHub wraps every archive in.
-  // / GITHUB'S ARCHIVES CARRY 0664 & 0775, because git archive applies umask 002. Extracted as
-  // / they are, every file in the new release could be written by root's group, root would
-  // / refuse to run it, & every update would fail validation & roll back. The modes are taken
-  // / through umask 022 instead, which is what a release built by hand already has.
-  if ($packageDownloaded) {
-    @mkdir($stagedDir, $PermissionLevels, TRUE);
-    exec('umask 022 && tar --no-same-owner --no-same-permissions -xzf '.escapeshellarg($downloadPath).' -C '.escapeshellarg($stagedDir).' 2>&1', $extractOutput, $extractExitCode);
-    if ($extractExitCode !== 0) errorEntry('Could not extract the update package!', 29011, FALSE);
-    else {
-      // / A GitHub tarball contains exactly one top level directory named for the ref.
-      $extractedRoots = array_diff(scandir($stagedDir), array('.', '..'));
-      if (count($extractedRoots) !== 1) errorEntry('The update package does not have the expected structure!', 29012, FALSE);
-      else {
-        $extractedDir = $stagedDir.$DirSep.reset($extractedRoots);
-        // / A release that does not contain a core is not a release.
-        if (!file_exists($extractedDir.$DirSep.'convertCore.php')) errorEntry('The update package does not contain convertCore.php!', 29013, FALSE);
-        else {
-          print('Merging configuration ...'.$Lol);
-          list ($configMerged, $preservedSettings, $changedArrays) = mergeConfigFile(
-            $InstLoc.$DirSep.'Resources'.$DirSep.'config.php',
-            $extractedDir.$DirSep.'Resources'.$DirSep.'config.php'); } } } }
-  // / Carry the live data directory across & perform the swap.
-  if ($configMerged) {
-    $oldDir = $InstLoc.'.old';
-    // / A previous update should not have left this behind, but a crashed one might have.
-    if (is_dir($oldDir)) exec('rm -rf '.escapeshellarg($oldDir).' 2>&1');
-    // / The staged copy must be on the same filesystem as the installation, or rename()
-    // / is not atomic & may not work at all. It is moved beside the installation first.
-    // / Beside it by name too, so the work folder, the staged copy & .old share one folder.
-    $stagedDir = $InstLoc.'.new';
-    if (is_dir($stagedDir)) exec('rm -rf '.escapeshellarg($stagedDir).' 2>&1');
-    if (!@rename($extractedDir, $stagedDir)) {
-      // / rename() across filesystems fails, so fall back to a copy.
-      exec('cp -a '.escapeshellarg($extractedDir).' '.escapeshellarg($stagedDir).' 2>&1'); }
-    if (!is_dir($stagedDir)) errorEntry('Could not stage the update beside the installation!', 29014, FALSE);
-    else {
-      // / Nothing serves the staged copy before it is in place.
-      @chmod($stagedDir, 0700);
-      // / DATA holds live user sessions & is moved rather than copied. It stays the web server
-      // / account's. Everything else in the new release is root's, & its own -fp sets its modes.
-      // / THE RELEASE SHIPS A DATA FOLDER OF ITS OWN, holding only its placeholder page, & a
-      // / folder cannot be renamed over one that is not empty. Until v4.0.1 that rename failed
-      // / in silence, the live DATA left with the old installation, & was deleted with it, so a
-      // / successful update deleted every session. The release's own copy is removed first, &
-      // / an update whose DATA cannot be moved stops here rather than going on without it.
-      // / An installation in Application holds no DATA, because DATA stays in the hosted location,
-      // / so from v4.0.1 on there is nothing to move & only the release's own copy is removed.
-      if (is_dir($stagedDir.$DirSep.'DATA')) exec('rm -rf '.escapeshellarg($stagedDir.$DirSep.'DATA').' 2>&1');
-      if (is_dir($InstLoc.$DirSep.'DATA') && !@rename($InstLoc.$DirSep.'DATA', $stagedDir.$DirSep.'DATA')) errorEntry('Could not move the DATA folder into the update, so the update was stopped & nothing was changed!', 29019, FALSE);
-      else print('Swapping installation ...'.$Lol);
-      // / Two atomic renames. There is no moment where the installation is incomplete.
-      if (is_dir($InstLoc.$DirSep.'DATA')) $swapCompleted = FALSE;
-      else if (!@rename($InstLoc, $oldDir)) {
-        // / The live DATA is back where it came from, so an update that stops here loses nothing.
-        @rename($stagedDir.$DirSep.'DATA', $InstLoc.$DirSep.'DATA');
-        errorEntry('Could not move the existing installation aside!', 29015, FALSE); }
-      else if (!@rename($stagedDir, $InstLoc)) {
-        // / The installation is currently absent. Put it back immediately, & its DATA with it.
-        @rename($oldDir, $InstLoc);
-        @chmod($InstLoc, 0755);
-        @rename($stagedDir.$DirSep.'DATA', $InstLoc.$DirSep.'DATA');
-        errorEntry('Could not move the update into place! The previous installation was restored.', 29016, FALSE); }
-      else {
-        // / The new installation is served from here on & the old one never again.
-        @chmod($InstLoc, 0755);
-        @chmod($oldDir, 0700);
-        $swapCompleted = TRUE; } } }
-  // / Validate the swapped installation & roll back if it cannot run.
-  if ($swapCompleted) {
-    print('Validating ...'.$Lol);
-    $installationIsValid = validateInstallation($InstLoc);
-    if (!$installationIsValid) {
-      warningEntry('The updated installation failed validation. Rolling back.');
-      // / Return the data directory to the installation being restored.
-      if (is_dir($InstLoc.$DirSep.'DATA')) @rename($InstLoc.$DirSep.'DATA', $oldDir.$DirSep.'DATA');
-      // / The installation is about to be REPLACED, so this deletes it. That is the single
-      // / most destructive line in this application & it runs as root.
-      // / A configuration pointing $InstLoc at a system directory would delete the operating
-      // / system instead. The guard resolves symlinks & .. before judging.
-      if (!pathIsSafeToModifyRecursively($InstLoc)) errorEntry('The installation location resolved to a system directory & was NOT deleted. Check $InstLoc in config.php. Path: '.$InstLoc.'.', 31018, TRUE);
-      exec('rm -rf '.escapeshellarg($InstLoc).' 2>&1');
-      // / Rollback is a single rename because the previous installation never left the
-      // / filesystem it lived on. This is the reason .old exists at all.
-      if (@rename($oldDir, $InstLoc)) {
-        // / The old installation was closed to the web server when it was moved aside.
-        @chmod($InstLoc, 0755);
-        $rolledBack = TRUE;
-        errorEntry('The updated installation failed validation & was rolled back!', 29017, FALSE); }
-      else errorEntry('The updated installation failed validation & COULD NOT be rolled back!', 29018, TRUE); }
-    else $UpdateSucceeded = TRUE; }
-  // / Preserve the previous installation outside the web root, then remove it from inside it.
-  // / .old sits in $ProprietaryLoc because rename() is only atomic within one filesystem,
-  // / & $ProprietaryLoc is served by Apache. A stale convertCore.php left there would be
-  // / a second, older copy of the application answering requests over HTTP.
-  // / The backup location is inside the non hosted data location & is never served.
-  // / DATA is excluded. It holds live user sessions, it has already been moved into the
-  // / new installation, & a copy of it would be swept on the delete threshold anyway.
-  if ($UpdateSucceeded && !$alreadyInstalled && is_dir($oldDir)) {
-    // / ROOT KEEPS A BACKUP ONLY WHERE NOTHING ELSE CAN REPLACE IT. Emptying, copying into &
-    // / pruning the backup all work by name, so every folder above it must be root's & the
-    // / backup itself must not be a link. It sits in the data location by default, which the
-    // / web server account owns, so by default it is skipped & a WARNING says so. Until v4.0.1
-    // / it was written there regardless. A later release gives it a folder of its own.
-    list ($backupIsHeld, $resolvedBackupParent, $backupNotice) = pathIsTrustedByRoot(dirname((string)$BackupLoc));
-    if ($backupIsHeld && $resolvedBackupParent !== dirname((string)$BackupLoc)) $backupIsHeld = FALSE;
-    clearstatcache(TRUE, (string)$BackupLoc);
-    $backupStatus = @lstat((string)$BackupLoc);
-    if ($backupIsHeld && is_array($backupStatus) && ((int)$backupStatus['mode'] & 0170000) !== 0040000) {
-      $backupIsHeld = FALSE;
-      $backupNotice = $BackupLoc.' is not a folder.'; }
-    if (!$backupIsHeld) warningEntry('The previous installation was not preserved, because the backup location at '.$BackupLoc.' sits where another account could replace it. '.$backupNotice.' The update itself is unaffected.');
-    // / The backup location is emptied before a new backup is written into it.
-    // / A misconfigured $BackupLoc would empty whatever it points at instead.
-    else if (is_dir($BackupLoc) && !pathIsSafeToModifyRecursively($BackupLoc)) errorEntry('The backup location resolved to a system directory & was NOT emptied. Check $BackupLoc in config.php. Path: '.$BackupLoc.'.', 31019, TRUE);
-    else {
-      if (is_dir($BackupLoc)) exec('rm -rf '.escapeshellarg($BackupLoc).' 2>&1');
-      exec('cp -a '.escapeshellarg($oldDir).' '.escapeshellarg($BackupLoc).' 2>&1', $backupOutput, $backupExitCode);
-      if ($backupExitCode === 0 && is_dir($BackupLoc)) {
-        if (is_dir($BackupLoc.$DirSep.'DATA')) exec('rm -rf '.escapeshellarg($BackupLoc.$DirSep.'DATA').' 2>&1');
-        // / The backup is root's alone. -fp below gives it its role, root-only, & until v4.0.1
-        // / it was handed to the web server account, so a restore could reinstall its edits.
-        logEntry('Previous installation preserved at '.$BackupLoc.'.'); }
-      else warningEntry('Could not preserve the previous installation at '.$BackupLoc.'. It will be discarded.'); }
-    // / The previous installation must not remain inside the web root under any outcome.
-    exec('rm -rf '.escapeshellarg($oldDir).' 2>&1'); }
-  // / Correct everything the new files arrived with. An update ships a fresh tree owned by
-  // / whoever unpacked it, & a release that changes a policy, a service unit or a required
-  // / version leaves the installed copies behind. Running the repair here is the difference
-  // / between an update that works & one that needs an operator to know to run -fp next.
-  // / THE NEW RELEASE REPAIRS ITSELF, as its own process. This process is the old release, &
-  // / its exact pins refuse the new release's Setup Core, so until v4.0.1 the repair here was
-  // / the old one, could not load Setup Core, & corrected nothing. The new release knows its
-  // / own locations & roles, which is also the only way a release can change them.
-  if ($UpdateSucceeded && !$alreadyInstalled) {
-    print($Lol.'Correcting permissions, policies & the service unit for the new release.'.$Lol);
-    passthru('php '.escapeshellarg($InstLoc.$DirSep.engineApplicationEntryPoint()).' -fp', $updateRepairExitCode);
-    $updatePermissionsFixed = ($updateRepairExitCode === 0);
-    if (!$updatePermissionsFixed) warningEntry('The update completed but the new release could not correct its permissions & policies. Run  sudo php convertCore.php -fp  by hand.'); }
-  // / Report the outcome.
-  if ($UpdateSucceeded && !$alreadyInstalled) {
-    logEntry('Application updated to '.$targetVersion.' from '.$HRConvertVersion.'.');
-    print($Lol.'Updated to '.$targetVersion.'.'.$Lol);
-    print('The previous installation is preserved at '.$BackupLoc.'.'.$Lol);
-    if (count($preservedSettings) > 0) print($Lol.count($preservedSettings).' configuration setting(s) were carried over.'.$Lol);
-    if (count($changedArrays) > 0) {
-      print($Lol.'The following array settings were RESET to the new defaults.'.$Lol);
-      print('Reapply any intentional changes by hand.'.$Lol);
-      foreach ($changedArrays as $changedArray) print('  $'.$changedArray.$Lol); }
-    print($Lol.'Run  php convertCore.php -v  to confirm the new installation.'.$Lol.$Lol); }
-  else if ($rolledBack) print($Lol.'The update failed validation & was rolled back. The previous version is running.'.$Lol.$Lol);
-  // / Remove the temporary working directory whatever the outcome.
-  if ($workDir !== '' && is_dir($workDir)) exec('rm -rf '.escapeshellarg($workDir).' 2>&1');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $backupExitCode, $backupOutput, $changedArray, $targetResolved, $packageDownloaded, $configMerged, $installationIsValid, $swapCompleted, $rolledBack, $targetVersion, $targetURL, $workDir, $downloadPath, $extractedDir, $stagedDir, $oldDir, $preservedSettings, $changedArrays, $extractOutput, $extractedRoots, $extractExitCode, $requestedVersion, $updatePermissionsFixed, $updateRepairExitCode, $alreadyInstalled, $parentIsTrusted, $resolvedParent, $trustNotice, $backupIsHeld, $resolvedBackupParent, $backupNotice, $backupStatus);
-  return $UpdateSucceeded; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -5743,358 +5084,14 @@ function userVirusScan($FilesToScan, $type) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to build the Apache rules that refuse every data location.
-// / Accepts nothing. Returns the rules & the roots they could not refuse, in that order.
-// /
-// / A DATA LOCATION IS NEVER SERVED, WHEREVER IT IS. Its Sessions, Cache & Logs folders belong
-// / to the web server account, which is the account that serves files, so a data location
-// / inside the document root hands them to anybody who guesses a name. One outside it is still
-// / granted wherever the host grants a folder above it, as Debian grants all of /var/www, & is
-// / one Alias or one wider document root away from being served. So each one is refused
-// / outright, as it is written & as it resolves, & no .htaccess inside it is read.
-// / A location that holds the hosted location or its DATA tree is not refused, because refusing
-// / it would refuse HRConvert2 as well. It is returned, so the caller can say so. The installation
-// / itself is inside the data location since v4.0.1, & is refused with it, because nothing in it
-// / is ever meant to be fetched.
-function apacheDataLocationRules() {
-  // / Set variables.
-  global $HostedLoc, $ConvertTemp, $EnableMemoryProtection;
-  $LocationRules = '';
-  $UnrefusedRoots = array();
-  $dataRoot = $rootForm = '';
-  foreach (dataLocationRoots() as $dataRoot) {
-    if (pathHoldsPath($dataRoot, $HostedLoc) or pathHoldsPath($dataRoot, $ConvertTemp)) $UnrefusedRoots[] = $dataRoot;
-    else foreach (pathForms($dataRoot) as $rootForm) $LocationRules = $LocationRules.'<Directory '.escapeApacheConfigPath($rootForm).'>'.PHP_EOL
-      .'  Require all denied'.PHP_EOL
-      .'  AllowOverride None'.PHP_EOL
-      .'  Options None'.PHP_EOL
-      .'</Directory>'.PHP_EOL; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / Neither $LocationRules nor $UnrefusedRoots is purged, because both are return values.
-  purgeSensitiveMemory($EnableMemoryProtection, $dataRoot, $rootForm);
-  return array($LocationRules, $UnrefusedRoots); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to say whether the web server is running.
-// / Accepts the Apache control program. Returns running, stopped or unknown.
-// /
-// / apachectl -k graceful STARTS A SERVER THAT IS NOT RUNNING. Measured; it says httpd not
-// / running, trying to start, & starts it. Until v4.0.1 -fp reported that as a reload, & an
-// / unattended Environment Manager pass permitted to rewrite configuration would have started
-// / a web server somebody had stopped, after saying it starts nothing. So a reload is asked for
-// / only while the server is running, & a stopped one reads the configuration when it starts.
-// / The server names its own pid file in its run configuration. The process that file names
-// / must still be a web server, because a pid file outlives a crash & its number is used again.
-function apacheIsRunning($controlBinary) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $ServerState = 'unknown';
-  $commandOutput = $pathMatch = array();
-  $commandExitCode = 1;
-  $processId = 0;
-  $outputLine = $serverRoot = $pidPath = $pidFolder = $pidText = $processName = $readNotice = '';
-  $pidWasRead = FALSE;
-  exec(escapeshellarg((string)$controlBinary).' -t -D DUMP_RUN_CFG 2>/dev/null', $commandOutput, $commandExitCode);
-  foreach ($commandOutput as $outputLine) {
-    if (preg_match('/^ServerRoot: "(.+)"$/', trim((string)$outputLine), $pathMatch) === 1) $serverRoot = $pathMatch[1];
-    if (preg_match('/^PidFile: "(.+)"$/', trim((string)$outputLine), $pathMatch) === 1) $pidPath = $pathMatch[1]; }
-  // / A relative pid file is relative to the server root.
-  if ($pidPath !== '' && $pidPath[0] !== DIRECTORY_SEPARATOR) $pidPath = rtrim($serverRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$pidPath;
-  // / /var/run leads to /run almost everywhere & the kernel reads nothing through a link, so the
-  // / folder is resolved first. A server that is not running leaves no pid file behind.
-  if ($commandExitCode === 0 && $pidPath !== '') {
-    $pidFolder = (string)@realpath(dirname($pidPath));
-    if ($pidFolder === '') $ServerState = 'stopped';
-    else {
-      list ($pidWasRead, $pidText, $readNotice) = readFileWithoutFollowing($pidFolder.DIRECTORY_SEPARATOR.basename($pidPath), 64);
-      if (!$pidWasRead && !is_array(@lstat($pidFolder.DIRECTORY_SEPARATOR.basename($pidPath)))) $ServerState = 'stopped';
-      else if ($pidWasRead) {
-        $processId = (int)trim($pidText);
-        if ($processId > 1) $processName = trim((string)@file_get_contents('/proc/'.$processId.'/comm'));
-        $ServerState = (preg_match('/^(apache2|httpd)/', $processName) === 1) ? 'running' : 'stopped'; } } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $commandOutput, $pathMatch, $commandExitCode, $processId, $outputLine, $serverRoot, $pidPath, $pidFolder, $pidText, $processName, $readNotice, $pidWasRead, $controlBinary);
-  return $ServerState; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to write & activate the Apache configuration HRConvert2 needs.
-// / Accepts a boolean permitting repair.
-// / Returns a validity boolean & the number of locations written, in that order.
-// /
-// / THIS IS WHERE THE DATA RULES BELONG. THE .htaccess IS THE FALLBACK, NOT THE ANSWER.
-// / A .htaccess is read only where AllowOverride permits it, & Debian, Ubuntu & the standard
-// / php:*-apache container all ship AllowOverride None for /var/www. It is also constrained;
-// / a directive the override level does not allow is not ignored, it is a hard 500 for the
-// / whole tree. Server configuration has neither problem. Nothing is silently dropped &
-// / nothing is refused, so the full rule set can live here & be relied upon.
-// /
-// / Every path in this block is read from this installation, never typed.
-// / The same reasoning as generateListenerService(). An administrator who moves the
-// / installation moves this with it, & a block naming a directory that no longer exists
-// / protects nothing while looking like it does.
-// /
-// / The data locations are refused in the same file. apacheDataLocationRules() says why.
-// /
-// / The configuration is tested before it is allowed to take effect.
-// / This application has already shipped one protection file that returned 500 for an entire
-// / directory tree, so writing web server configuration & walking away is not something it
-// / gets to do twice. The file is written, apachectl configtest is run, & a configuration
-// / that does not pass is WITHDRAWN before anything reloads. What was there before is put back
-// / exactly, & the test is run again to prove it. Until v4.0.1 a file this replaced was deleted
-// / rather than put back, & a link an administrator had made was removed with it.
-// /
-// / Root reads & writes this file through the kernel, as it does every other file it writes.
-// / The write is atomic, so the web server never starts against half a file, & nothing is
-// / written through a link at the name. A name the kernel cannot read as a plain file is left
-// / as it is & reported, because a file that was never examined cannot be put back.
-// / Only a running server is reloaded. apacheIsRunning() says why.
-function verifyApacheConfiguration($mayRepair) {
-  // / Set variables.
-  global $ConvertTemp, $InstLoc, $HostedLoc, $RunningAsRoot, $Lol, $Verbose, $EnableMemoryProtection, $DirSep;
-  $ConfigurationIsValid = TRUE;
-  $ConfigurationsWritten = 0;
-  $dropInContents = $dropInPath = $existingContents = $candidateDir = $enabledDir = $enabledPath = '';
-  $controlBinary = $configTestOutput = $reloadOutput = $locationRules = $unrefusedRoot = $readNotice = $writeNotice = $restoreNotice = $serverState = '';
-  $candidateDirectories = $unrefusedRoots = $previousContents = array();
-  $commandOutput = array();
-  $commandExitCode = 0;
-  $configTestPassed = $baselineTestPassed = $linkWasMade = $writtenThisRun = $moduleIsLoaded = FALSE;
-  $dropInExists = $existingWasRead = $dropInWasWritten = $restoreWorked = FALSE;
-  $moduleStatus = '';
-  if ((string)$ConvertTemp === '') {
-    $ConfigurationIsValid = FALSE;
-    warningEntry('The DATA location is not set, so the Apache configuration could not be built.'); }
-  else {
-    list ($locationRules, $unrefusedRoots) = apacheDataLocationRules();
-    $dropInContents = '# / Written by HRConvert2. Do not edit by hand.'.PHP_EOL
-      .'# / HRCONVERT2-POLICY-MARKER'.PHP_EOL
-      .'# / Re-run  sudo php convertCore.php -fp  to rewrite this file.'.PHP_EOL
-      .'# / Paths are read from this installation, so moving it moves these rules with it.'.PHP_EOL
-      .PHP_EOL
-      .'# / THE HOSTED LOCATION RUNS ONE PHP FILE, THE LOADER. HRConvert2 is installed outside the'.PHP_EOL
-      .'# / web root, & everything else the web server serves from here is a static file, so a'.PHP_EOL
-      .'# / PHP file anybody leaves here is refused rather than run.'.PHP_EOL
-      .'<Directory '.escapeApacheConfigPath($HostedLoc).'>'.PHP_EOL
-      .'  Options -Indexes'.PHP_EOL
-      .'  <FilesMatch "\.(?i:php[0-9]?|phtml|phps|phar)$">'.PHP_EOL
-      .'    Require all denied'.PHP_EOL
-      .'  </FilesMatch>'.PHP_EOL
-      .'  <Files "convertCore.php">'.PHP_EOL
-      .'    Require all granted'.PHP_EOL
-      .'  </Files>'.PHP_EOL
-      .'</Directory>'.PHP_EOL
-      .PHP_EOL
-      .'# / THIS TREE HOLDS USER SUPPLIED BYTES & IS SERVED DIRECTLY BY THE WEB SERVER.'.PHP_EOL
-      .'# / Every file a user uploads or converts is staged here so a browser can fetch it,'.PHP_EOL
-      .'# / which means the server hands out attacker chosen content from this origin. For any'.PHP_EOL
-      .'# / format a browser treats as ACTIVE that content is code; an SVG is served as'.PHP_EOL
-      .'# / image/svg+xml & a <script> inside it executes.'.PHP_EOL
-      .'# /'.PHP_EOL
-      .'# / Content-Disposition closes that by handing the file over as a download, so it is'.PHP_EOL
-      .'# / never rendered as a document. The CSP closes it a second time & independently.'.PHP_EOL
-      .'# / X-Content-Type-Options does NOT close it; the type here is already correct, so'.PHP_EOL
-      .'# / there is nothing to sniff. It is set for the neighbouring ambiguous type case only.'.PHP_EOL
-      .'<Directory '.escapeApacheConfigPath($ConvertTemp).'>'.PHP_EOL
-      .'  # / A .htaccess in this tree cannot loosen what is set here.'.PHP_EOL
-      .'  AllowOverride None'.PHP_EOL
-      .'  Require all granted'.PHP_EOL
-      .'  # / No listing, & nothing here is ever a program.'.PHP_EOL
-      .'  # / SymLinksIfOwnerMatch rather than FollowSymLinks. A link is followed only when'.PHP_EOL
-      .'  # / the link & its target have the same owner, so a link written by an uploader'.PHP_EOL
-      .'  # / cannot reach a file owned by somebody else.'.PHP_EOL
-      .'  # / Nothing here creates a link into a session today. This is set now because the'.PHP_EOL
-      .'  # / default is FollowSymLinks on most builds, & the first time somebody serves a'.PHP_EOL
-      .'  # / stored file through a link is not the moment to discover that.'.PHP_EOL
-      .'  Options -Indexes -ExecCGI -FollowSymLinks +SymLinksIfOwnerMatch'.PHP_EOL
-      .'  # / index.html is the ONLY index. Without this, a request for the directory'.PHP_EOL
-      .'  # / falls to whatever the server was configured to prefer, which on a default'.PHP_EOL
-      .'  # / installation is index.php first. That name is refused by this application'.PHP_EOL
-      .'  # / & cannot be staged, so the effect today is a 403 rather than a listing.'.PHP_EOL
-      .'  # / Naming it explicitly serves the protection page instead of the 403, & stops'.PHP_EOL
-      .'  # / this depending on what a server happens to prefer.'.PHP_EOL
-      .'  # / A directive whose module is not loaded does not parse, & then this whole file is'.PHP_EOL
-      .'  # / withdrawn, Header rules included. So each one that needs a module is guarded by it.'.PHP_EOL
-      .'  <IfModule mod_dir.c>'.PHP_EOL
-      .'    DirectoryIndex index.html'.PHP_EOL
-      .'  </IfModule>'.PHP_EOL
-      .'  <IfModule mod_headers.c>'.PHP_EOL
-      .'    # / index.html is the document root protection page & is the one file here meant'.PHP_EOL
-      .'    # / to render. It cannot be user supplied; index.html is a literal entry in'.PHP_EOL
-      .'    # / $DangerousFiles & the core refuses to stage a file by that name.'.PHP_EOL
-      .'    <FilesMatch "^(?!index\.html$).*$">'.PHP_EOL
-      .'      Header always set Content-Disposition "attachment"'.PHP_EOL
-      .'      Header always set X-Content-Type-Options "nosniff"'.PHP_EOL
-      .'      Header always set Content-Security-Policy "default-src \'none\'; sandbox"'.PHP_EOL
-      .'      Header always set Referrer-Policy "no-referrer"'.PHP_EOL
-      .'    </FilesMatch>'.PHP_EOL
-      .'  </IfModule>'.PHP_EOL
-      .'  # / php_flag is legal here because server configuration is not subject to an'.PHP_EOL
-      .'  # / override level. It must NEVER be written into a .htaccess, where it returns 500'.PHP_EOL
-      .'  # / wherever AllowOverride does not grant Options.'.PHP_EOL
-      .'  <IfModule mod_php.c>'.PHP_EOL
-      .'    php_flag engine off'.PHP_EOL
-      .'  </IfModule>'.PHP_EOL
-      .'  <IfModule mod_mime.c>'.PHP_EOL
-      .'    RemoveHandler .php .phtml .phps .php3 .php4 .php5 .php7 .php8 .phar .cgi .pl .py .sh'.PHP_EOL
-      .'  </IfModule>'.PHP_EOL
-      .'</Directory>'.PHP_EOL
-      .($locationRules === '' ? '' : PHP_EOL
-      .'# / THE DATA LOCATION IS NEVER SERVED, WHEREVER IT IS. Its sessions, caches & logs belong'.PHP_EOL
-      .'# / to the account that serves files, so each data location is refused outright.'.PHP_EOL
-      .$locationRules);
-    // / Every layout this host might be running. Debian & Ubuntu separate available from
-    // / enabled & need the link made; every other layout includes its directory outright.
-    if (is_dir('/etc/apache2/conf-available')) $candidateDirectories[] = '/etc/apache2/conf-available';
-    else if (is_dir('/etc/apache2/conf.d')) $candidateDirectories[] = '/etc/apache2/conf.d';
-    if (is_dir('/etc/httpd/conf.d')) $candidateDirectories[] = '/etc/httpd/conf.d';
-    if (empty($candidateDirectories)) {
-      // / Not a failure. An installation may be behind a web server this application does
-      // / not configure, & the exposure check is what establishes whether that matters.
-      warningEntry('No Apache configuration directory was found, so the DATA rules were not written there. The DATA/.htaccess is the fallback & the exposure check reports whether it is in force.');
-      print('  '.str_pad('Skipped', 12).'No Apache configuration directory on this host.'.$Lol); }
-    else {
-      // / A data location that holds HRConvert2 cannot be refused without refusing HRConvert2.
-      foreach ($unrefusedRoots as $unrefusedRoot) {
-        print('  '.str_pad('Skipped', 12).$unrefusedRoot.' holds what the web server serves, so it is not refused.'.$Lol);
-        warningEntry('The data location '.$unrefusedRoot.' holds the hosted location or its DATA tree, so the Apache configuration cannot refuse it without refusing HRConvert2 as well. Move the data location outside the web root.'); }
-      // / The rules are Header directives, so the module they need is confirmed & enabled
-      // / before the configuration that depends on it is written. Enabling it here means the
-      // / single reload at the end of this function covers both.
-      list ($moduleIsLoaded, $moduleStatus) = verifyApacheModule('headers_module', $mayRepair);
-      print('  '.str_pad(($moduleStatus === 'enabled' ? 'Enabled' : ($moduleStatus === 'ok' ? 'Present' : 'MISSING')), 12).'headers_module'.($moduleStatus === 'missing' ? ', the DATA rules will be skipped without it' : '').$Lol);
-      // / Establish whether this host's configuration parsed BEFORE we touched it, so a
-      // / pre-existing fault is never mistaken for one of ours.
-      $controlBinary = locateDependency('apachectl');
-      if ($controlBinary === '') $controlBinary = locateDependency('apache2ctl');
-      if ($controlBinary !== '') {
-        exec(escapeshellarg($controlBinary).' configtest 2>&1', $commandOutput, $commandExitCode);
-        $baselineTestPassed = ($commandExitCode === 0);
-        $commandOutput = array(); }
-      foreach ($candidateDirectories as $candidateDir) {
-        $dropInPath = $candidateDir.$DirSep.'hrconvert2.conf';
-        clearstatcache(TRUE, $dropInPath);
-        $dropInExists = is_array(@lstat($dropInPath));
-        $existingWasRead = FALSE;
-        $existingContents = $readNotice = '';
-        if ($dropInExists) list ($existingWasRead, $existingContents, $readNotice) = readFileWithoutFollowing($dropInPath, 1048576);
-        // / Nothing HRConvert2 writes comes near a megabyte, & a file cut short cannot be put back.
-        if ($existingWasRead && strlen($existingContents) >= 1048576) {
-          $existingWasRead = FALSE;
-          $readNotice = $dropInPath.' is far larger than anything HRConvert2 writes.'; }
-        if ($dropInExists && !$existingWasRead) {
-          $ConfigurationIsValid = FALSE;
-          print('  '.str_pad('FAILED', 12).$dropInPath.' could not be examined & was left as it is.'.$Lol);
-          warningEntry('The Apache configuration at '.$dropInPath.' could not be examined, so it was left as it is. Remove it & run the -fp argument again. '.$readNotice); }
-        else if ($existingContents === $dropInContents) print('  '.str_pad('Unchanged', 12).$dropInPath.$Lol);
-        else if (!$mayRepair or !$RunningAsRoot) {
-          $ConfigurationIsValid = FALSE;
-          print('  '.str_pad(($dropInExists ? 'Differs' : 'Missing'), 12).$dropInPath.$Lol); }
-        else {
-          list ($dropInWasWritten, $writeNotice) = writeFileWithoutFollowing($dropInPath, $dropInContents, 0644);
-          if (!$dropInWasWritten) {
-            $ConfigurationIsValid = FALSE;
-            print('  '.str_pad('FAILED', 12).$dropInPath.$Lol);
-            warningEntry('The Apache configuration could not be written. '.$writeNotice); }
-          else {
-            // / What was there is kept, so a configuration that fails its test can be put back exactly.
-            $previousContents[$dropInPath] = ($dropInExists ? $existingContents : NULL);
-            $ConfigurationsWritten++;
-            $writtenThisRun = TRUE;
-            print('  '.str_pad(($dropInExists ? 'Updated' : 'Written'), 12).$dropInPath.$Lol); } }
-        // / Debian keeps enabled configuration as links. Made directly rather than through
-        // / a2enconf, because a2enconf is a Debian script & this has to work without it.
-        $enabledDir = '/etc/apache2/conf-enabled';
-        if ($candidateDir === '/etc/apache2/conf-available' && is_dir($enabledDir)) {
-          $enabledPath = $enabledDir.$DirSep.'hrconvert2.conf';
-          if (!file_exists($enabledPath) && $mayRepair && $RunningAsRoot) {
-            $linkWasMade = @symlink('../conf-available/hrconvert2.conf', $enabledPath);
-            if ($linkWasMade) print('  '.str_pad('Enabled', 12).$enabledPath.$Lol);
-            else {
-              $ConfigurationIsValid = FALSE;
-              print('  '.str_pad('FAILED', 12).$enabledPath.$Lol);
-              warningEntry('The HRConvert2 Apache configuration was written but could not be enabled at '.$enabledPath.'.'); } }
-          else if (file_exists($enabledPath)) print('  '.str_pad('Enabled', 12).$enabledPath.$Lol); } }
-      // / Prove it parses before anything reloads, & undo it if it does not.
-      // / A configuration that does not parse takes the whole server down on the next
-      // / restart, which would be a far worse outcome than the exposure this closes.
-      if ($writtenThisRun or $moduleStatus === 'enabled') {
-        $controlBinary = locateDependency('apachectl');
-        if ($controlBinary === '') $controlBinary = locateDependency('apache2ctl');
-        if ($controlBinary === '') {
-          warningEntry('The Apache configuration was written but apachectl could not be found, so it was not tested. Run a configuration test & reload the web server by hand.');
-          print('  '.str_pad('Note', 12).'apachectl not found. Test & reload the web server by hand.'.$Lol); }
-        else {
-          exec(escapeshellarg($controlBinary).' configtest 2>&1', $commandOutput, $commandExitCode);
-          $configTestOutput = implode(' ', $commandOutput);
-          $configTestPassed = ($commandExitCode === 0);
-          // / Only withdraw for a fault that is ours.
-          // / A host whose configuration ALREADY did not parse before this ran would
-          // / otherwise have a perfectly good file removed & be told, wrongly, that
-          // / HRConvert2 wrote something invalid. The baseline was captured before the write
-          // / for exactly this reason; a test that was already failing stays the
-          // / administrator's problem & is reported as theirs.
-          if (!$configTestPassed && !$baselineTestPassed) {
-            warningEntry('The Apache configuration on this host did not parse BEFORE HRConvert2 wrote anything, so its file was kept & the pre-existing fault was left for the administrator. apachectl reported: '.trim($configTestOutput));
-            print('  '.str_pad('Note', 12).'This host\'s Apache configuration already did not parse before this ran.'.$Lol);
-            print('  '.str_pad('', 12).'The HRConvert2 file was kept. Fix the pre-existing fault & reload.'.$Lol); }
-          else if (!$configTestPassed) {
-            // / Put back exactly what was found. A file this run created is removed, a file it
-            // / replaced is written back as it was, & the link goes only when this run made it.
-            foreach ($previousContents as $dropInPath => $existingContents) {
-              if ($existingContents === NULL) list ($restoreWorked, $restoreNotice) = removeFileWithoutFollowing($dropInPath);
-              else list ($restoreWorked, $restoreNotice) = writeFileWithoutFollowing($dropInPath, $existingContents, 0644);
-              if (!$restoreWorked) warningEntry('The Apache configuration at '.$dropInPath.' could not be put back as it was. '.$restoreNotice); }
-            if ($linkWasMade) {
-              list ($restoreWorked, $restoreNotice) = removeFileWithoutFollowing('/etc/apache2/conf-enabled/hrconvert2.conf');
-              if (!$restoreWorked) warningEntry('The link that enabled the HRConvert2 Apache configuration could not be removed. '.$restoreNotice); }
-            $ConfigurationIsValid = FALSE;
-            $ConfigurationsWritten = 0;
-            print('  '.str_pad('WITHDRAWN', 12).'The configuration did not pass a syntax test, & what was there before is back.'.$Lol);
-            print('  '.str_pad('', 12).trim($configTestOutput).$Lol);
-            errorEntry('The Apache configuration HRConvert2 wrote did not pass apachectl configtest & was withdrawn. The test reported: '.trim($configTestOutput), 504, FALSE);
-            // / The test passed before anything was written, so it must pass again now. It is run
-            // / again to prove that rather than to assume it.
-            $commandOutput = array();
-            exec(escapeshellarg($controlBinary).' configtest 2>&1', $commandOutput, $commandExitCode);
-            if ($commandExitCode === 0) print('  '.str_pad('Tested', 12).'The configuration parses as it did before.'.$Lol);
-            else {
-              warningEntry('The Apache configuration still does not parse after HRConvert2 withdrew its file. Fix what apachectl configtest reports before the web server next starts. It reported: '.trim(implode(' ', $commandOutput)));
-              print('  '.str_pad('Note', 12).'The configuration still does not parse. See the log.'.$Lol); } }
-          else {
-            print('  '.str_pad('Tested', 12).'The configuration parses.'.$Lol);
-            // / A graceful reload finishes the requests already in flight & then picks up
-            // / the new configuration. It cannot drop a connection & it cannot fail closed,
-            // / because the test above already proved the configuration parses.
-            $serverState = apacheIsRunning($controlBinary);
-            if ($serverState === 'stopped') print('  '.str_pad('Not running', 12).'The web server was left stopped. It reads this configuration when it starts.'.$Lol);
-            else if ($serverState !== 'running') {
-              warningEntry('The Apache configuration was written & tested, but whether the web server is running could not be told, so it was not reloaded. Reload it by hand for the DATA rules to take effect.');
-              print('  '.str_pad('Note', 12).'Could not tell whether the web server is running. Reload it by hand.'.$Lol); }
-            else {
-              $commandOutput = array();
-              exec(escapeshellarg($controlBinary).' -k graceful 2>&1', $commandOutput, $commandExitCode);
-              $reloadOutput = implode(' ', $commandOutput);
-              if ($commandExitCode === 0) print('  '.str_pad('Reloaded', 12).'The web server picked up the new configuration.'.$Lol);
-              else {
-                warningEntry('The Apache configuration was written & tested but the web server could not be reloaded. Reload it by hand for the DATA rules to take effect.');
-                print('  '.str_pad('Note', 12).'Could not reload the web server. Reload it by hand.'.$Lol); } } } } }
-      if ($ConfigurationsWritten > 0) logEntry('Wrote Apache configuration to '.$ConfigurationsWritten.' location(s) for '.$ConvertTemp.'.'); } }
-  if ($Verbose) logEntry('Apache Configuration: '.count($candidateDirectories).' location(s) examined, '.$ConfigurationsWritten.' written.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dropInContents, $dropInPath, $existingContents, $candidateDir, $enabledDir, $enabledPath, $controlBinary, $configTestOutput, $reloadOutput, $locationRules, $unrefusedRoot, $readNotice, $writeNotice, $restoreNotice, $serverState, $candidateDirectories, $unrefusedRoots, $previousContents, $commandOutput, $commandExitCode, $configTestPassed, $baselineTestPassed, $linkWasMade, $writtenThisRun, $moduleIsLoaded, $dropInExists, $existingWasRead, $dropInWasWritten, $restoreWorked, $moduleStatus, $mayRepair);
-  return array($ConfigurationIsValid, $ConfigurationsWritten); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to correct ownership & permissions on every managed path.
 // / Accepts no arguments & must be run as root.
 // / Returns a success boolean & the number of paths corrected, in that order.
 function fixManagedPermissions() {
   // / Set variables.
-  global $ApacheUser, $Lol, $RunningAsRoot, $EnablePerConversionLimits, $RequiredSetupCoreVersion, $EnableMemoryProtection, $DirSep, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $InstLoc, $EngineRepairIsUnattended, $EnvironmentManagerMayRewriteConfigs, $HostedLoc, $ApplicationLoc, $ConvertTemp;
-  $buildEnvCleaned = $buildEnvDeleted = $devDocsDeleted = $codeIsTrustedNow = $repairIsUnattended = $configsMayChange = $scriptIsValid = FALSE;
+  global $ApacheUser, $Lol, $RunningAsRoot, $EnablePerConversionLimits, $RequiredSetupCoreVersion, $EnableMemoryProtection, $DirSep, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $InstLoc, $EngineRepairIsUnattended, $EnvironmentManagerMayRewriteConfigs, $HostedLoc, $ApplicationLoc, $ConvertTemp, $SecretFile, $SecretKey, $SecretLoc, $RequiredSecretVersion;
+  $buildEnvCleaned = $buildEnvDeleted = $devDocsDeleted = $codeIsTrustedNow = $repairIsUnattended = $configsMayChange = $scriptIsValid = $secretIsReady = FALSE;
+  $placedSecretKey = '';
   $codeTrustNotice = $scriptStatus = $scriptDisplayStatus = $scriptDetail = $hostedStatus = $hostedDetail = '';
   $hostedWritten = $hostedRemoved = 0;
   // / The policy sweep collapses to a count & names only what is not in place.
@@ -6130,7 +5127,8 @@ function fixManagedPermissions() {
     // / Which locations this application keeps & what each one is are in its contract, as
     // / $EngineManagedLocations. What a role means for an owner & a mode is Setup Core's.
     // / The install secret is not one of them. Root's boot has already read it & rewritten it
-    // / without following anything, before this function was ever called.
+    // / without following anything, before this function was ever called. The folder it is kept
+    // / in, Secrets, is one, & the secret is copied into it below once the folder has its role.
     print($Lol.'Managed locations'.$Lol);
     // / Create the data root's folders & move an older layout's sessions into Sessions before
     // / the roles are applied, so -fp after an upgrade reaches the same shape as a fresh install
@@ -6143,6 +5141,17 @@ function fixManagedPermissions() {
     // / where it never ran is reported here.
     if (!$setupIsAvailable or !function_exists('correctManagedLocations')) warningEntry('Setup Core is unavailable, so no managed location could be corrected.');
     print('  '.$PathsCorrected.' location(s) corrected'.($pathsRefused > 0 ? ', '.$pathsRefused.' refused or incomplete. See the lines above.' : '.').$Lol);
+    // / THE INSTALL SECRET IS COPIED INTO Secrets WITH ITS KEY, NOW THAT THE FOLDER HAS ITS ROLE.
+    // / Root's boot read it where an earlier release kept it, before this command made the folder,
+    // / so an upgrade finishes in this one run. The copy at the top is kept with the same key. A
+    // / copy that is already right is left exactly as it is.
+    // / $SecretKey is the documented exception to convention 3 & is assigned here because the key
+    // / root holds must be the one on disk, which a copy leaves exactly as it was.
+    if ($setupIsAvailable) {
+      list ($secretIsReady, $placedSecretKey) = resolveInstallSecretAsRoot($SecretFile, $RequiredSecretVersion, FALSE);
+      if ($secretIsReady) $SecretKey = $placedSecretKey;
+      if ($secretIsReady && is_file($SecretFile)) print('  The install secret is in '.$SecretLoc.', & only the web server account\'s group may read it.'.$Lol);
+      else print('  The install secret is not in '.$SecretLoc.' yet. See the lines above & root\'s log.'.$Lol); }
     // / Whether root may run the installation now, read exactly as every command run as root
     // / reads it before anything is loaded. A tree that still fails is named here, once.
     list ($codeIsTrustedNow, $codeTrustNotice) = treeIsTrustedByRoot($InstLoc, array($InstLoc.$DirSep.'DATA'));
@@ -6155,7 +5164,9 @@ function fixManagedPermissions() {
     // / because the code is root's. Straight after the code was given to root is the moment.
     if ($DeleteBuildEnvironment or $DeleteDevelopmentDocumentation) {
       print($Lol.'Build environment'.$Lol);
-      list ($buildEnvCleaned, $buildEnvDeleted, $devDocsDeleted) = cleanBuildEnvironment();
+      // / The cleanup is Setup Core's, loaded at the top of this function.
+      if ($setupIsAvailable && function_exists('cleanBuildEnvironment')) list ($buildEnvCleaned, $buildEnvDeleted, $devDocsDeleted) = cleanBuildEnvironment();
+      else warningEntry('Setup Core is unavailable, so the build environment was not cleaned.');
       if (!$buildEnvCleaned) errorEntry('Could not clean the build environment!', 26, FALSE);
       if ($DeleteBuildEnvironment) print('  '.str_pad('Build & Dockerfile', 28).($buildEnvDeleted ? 'NOT PRESENT' : 'FAILED, see the log').$Lol);
       if ($DeleteDevelopmentDocumentation) print('  '.str_pad('README.md & CHANGELOG.txt', 28).($devDocsDeleted ? 'NOT PRESENT' : 'FAILED, see the log').$Lol); }
@@ -6197,13 +5208,18 @@ function fixManagedPermissions() {
     // / are written, tested & activated here. The .htaccess further down stays as the
     // / fallback for an installation this cannot configure.
     print($Lol.'Apache configuration'.$Lol);
-    list ($apacheConfigIsValid, $apacheConfigsWritten) = verifyApacheConfiguration($configsMayChange);
+    // / The configuration is Setup Core's from v4.0.5, loaded at the top of this function.
+    if ($setupIsAvailable && function_exists('verifyApacheConfiguration')) list ($apacheConfigIsValid, $apacheConfigsWritten) = verifyApacheConfiguration($configsMayChange);
+    else print('  Skipped     The Setup Core is unavailable, so the Apache configuration was not checked.'.$Lol);
     print($Lol.'Sandbox kernel'.$Lol);
     list ($kernelIsReady, $kernelFindings) = verifySandboxKernel($configsMayChange);
     showEnvironmentFindings($kernelFindings, FALSE);
     // / Policy files. A count when every one is in place, & a named line when one is not.
     // / Half of these status words read like a fault & are not one, so a line that does
     // / appear carries the explanation with it.
+    // / A policy this run changed on the host is named too, because the operator is owed that
+    // / whether or not a terminal shows the warning that says it. From v4.0.5 that includes a
+    // / policy an earlier release wrote & this one put back.
     $policyChecks = array('Sandbox AppArmor', 'ImageMagick', 'OpenSCAD AppArmor');
     foreach ($policyChecks as $policyName) {
       $policiesTotal++;
@@ -6211,14 +5227,16 @@ function fixManagedPermissions() {
       else if ($policyName === 'ImageMagick') list ($policyIsValid, $policyStatus) = verifyImageMagickPolicy($configsMayChange);
       else list ($policyIsValid, $policyStatus) = verifyOpenScadPolicy($configsMayChange);
       if ($policyIsValid) $policiesOk++;
-      else array_push($policyLines, '  '.str_pad($policyName, 22).str_pad(policyDisplayStatus($policyStatus), 14).describePolicyStatus($policyName, $policyStatus)); }
+      if (!$policyIsValid or in_array($policyStatus, array('installed', 'repaired', 'retired', 'kept'), TRUE)) array_push($policyLines, '  '.str_pad($policyName, 22).str_pad(policyDisplayStatus($policyStatus), 14).describePolicyStatus($policyName, $policyStatus)); }
     print($Lol.'Policy files     '.$policiesOk.' of '.$policiesTotal.' OK'.$Lol);
     foreach ($policyLines as $policyLine) print($policyLine.$Lol);
     // / The DATA tree protection file. This is the only policy this application maintains
     // / that governs its OWN web root rather than a converter, & it is the only one whose
     // / installation proves nothing on its own, so it is verified separately below.
-    list ($policyIsValid, $policyStatus) = verifyDataProtectionPolicy(TRUE);
-    print('  '.str_pad('DATA Directory', 22).str_pad(policyDisplayStatus($policyStatus), 14).describePolicyStatus('DATA Directory', $policyStatus).$Lol);
+    // / The protection file is the Engine's from v4.0.5, as policyDisplayStatus & describePolicyStatus already were.
+    if (function_exists('verifyDataProtectionPolicy')) {
+      list ($policyIsValid, $policyStatus) = verifyDataProtectionPolicy(TRUE);
+      print('  '.str_pad('DATA Directory', 22).str_pad(policyDisplayStatus($policyStatus), 14).describePolicyStatus('DATA Directory', $policyStatus).$Lol); }
     // / Give the web server user its own systemd manager while we are still root.
     // / This is the only moment the application legitimately holds the privilege needed,
     // / & it is what lets an unprivileged account set a resource ceiling later.
@@ -6238,6 +5256,10 @@ function fixManagedPermissions() {
     print($Lol.'Listener service'.$Lol);
     if (!$setupIsAvailable) print('  Skipped     The Setup Core component is unavailable.'.$Lol);
     else installListenerService(!$repairIsUnattended, !$repairIsUnattended);
+    // / The Environment Manager's units are written by --setup --install-complete, which may run from
+    // / a copy it then installs, so they are written again wherever they are installed & name the
+    // / installed copy, as the listener's does. Nothing enables or starts them here.
+    if ($setupIsAvailable && function_exists('refreshEnvironmentTimer')) refreshEnvironmentTimer();
     // / Prove the repairs worked. Writing an AppArmor profile & never re-testing the
     // / sandbox is how an operator ends up with a green permissions run & a server that
     // / refuses every conversion.
@@ -6277,48 +5299,8 @@ function fixManagedPermissions() {
     $PermissionsWereFixed = $codeIsTrustedNow;
     logEntry('Permissions were corrected on '.$PathsCorrected.' managed path(s).'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $hostedStatus, $hostedDetail, $hostedWritten, $hostedRemoved, $buildEnvCleaned, $buildEnvDeleted, $devDocsDeleted, $codeIsTrustedNow, $repairIsUnattended, $configsMayChange, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $codeTrustNotice, $pathCorrectionRan, $pathsRefused, $provisioningReady, $sessionsMoved, $limitsWereEnabled, $limitSteps, $policyIsValid, $policyStatus, $exposureStatus, $setupIsAvailable, $setupVersion, $environmentIsReady, $environmentFindings, $kernelIsReady, $kernelFindings, $phpConfigIsValid, $phpConfigsWritten, $apacheConfigIsValid, $apacheConfigsWritten, $policyLines, $policyChecks, $policyName, $policyLine, $policiesOk, $policiesTotal);
+  purgeSensitiveMemory($EnableMemoryProtection, $secretIsReady, $placedSecretKey, $hostedStatus, $hostedDetail, $hostedWritten, $hostedRemoved, $buildEnvCleaned, $buildEnvDeleted, $devDocsDeleted, $codeIsTrustedNow, $repairIsUnattended, $configsMayChange, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $codeTrustNotice, $pathCorrectionRan, $pathsRefused, $provisioningReady, $sessionsMoved, $limitsWereEnabled, $limitSteps, $policyIsValid, $policyStatus, $exposureStatus, $setupIsAvailable, $setupVersion, $environmentIsReady, $environmentFindings, $kernelIsReady, $kernelFindings, $phpConfigIsValid, $phpConfigsWritten, $apacheConfigIsValid, $apacheConfigsWritten, $policyLines, $policyChecks, $policyName, $policyLine, $policiesOk, $policiesTotal);
   return array($PermissionsWereFixed, $PathsCorrected); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to install the tree a root command ran from, & hand the rest to the installed copy.
-// / Accepts the exit status the command earned. Returns the exit status to leave with.
-// /
-// / -fp & --setup --install-complete install the application when they run from a tree that is
-// / not the one in Application in the data location, which is how every release before v4.0.1
-// / runs & how a release unpacked anywhere runs. It happens as the command ENDS & never part way
-// / through, because the hosted location the command may have started from is about to hold only
-// / the loader, & nothing may still be running from it when it does. By then the command has
-// / given the tree to root & made the data location root's, which installing needs.
-// / The installed copy then runs -fp, which serves it from the hosted location & does every other
-// / repair again from the installed tree, & its exit status is the one this leaves with. A tree
-// / that cannot be installed leaves with status one, because what -fp is for is not done, & the
-// / application goes on running from where it is.
-function handOverToApplication($commandStatus) {
-  // / Set variables.
-  global $RunningAsRoot, $RunningFromCLI, $InstLoc, $ApplicationLoc, $BackupLoc, $Lol, $EnableMemoryProtection;
-  $ExitStatus = (int)$commandStatus;
-  $cliArguments = array();
-  $cliArgumentCount = $childStatus = 0;
-  $cliCommand = $cliTarget = $cliSecondTarget = $installNotice = $phpBinary = '';
-  $cliConfirmed = $cliVectorParsed = $commandInstalls = $treeWasInstalled = FALSE;
-  if ($RunningAsRoot && $RunningFromCLI) {
-    list ($cliArguments, $cliArgumentCount, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed, $cliVectorParsed) = parseArgumentVector(isset($_SERVER['argv']) ? $_SERVER['argv'] : array());
-    $commandInstalls = ($cliCommand === '-fp' or $cliCommand === '--fix-permissions' or ($cliCommand === '--setup' && $cliTarget === '--install-complete')); }
-  if ($commandInstalls && (string)@realpath($InstLoc) !== (string)@realpath($ApplicationLoc) && function_exists('installApplicationTree')) {
-    print($Lol.'Installation'.$Lol);
-    list ($treeWasInstalled, $installNotice) = installApplicationTree($InstLoc, $ApplicationLoc, $BackupLoc);
-    print('  '.str_pad(($treeWasInstalled ? 'Installed' : 'NOT DONE'), 12).$installNotice.$Lol);
-    if (!$treeWasInstalled) $ExitStatus = 1;
-    else {
-      $phpBinary = ((string)PHP_BINARY !== '') ? (string)PHP_BINARY : 'php';
-      print('  '.str_pad('Running', 12).$ApplicationLoc.DIRECTORY_SEPARATOR.'convertCore.php -fp, which serves the installed copy.'.$Lol);
-      passthru(escapeshellarg($phpBinary).' '.escapeshellarg($ApplicationLoc.DIRECTORY_SEPARATOR.'convertCore.php').' -fp', $childStatus);
-      $ExitStatus = (int)$childStatus; } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliArguments, $cliArgumentCount, $childStatus, $cliCommand, $cliTarget, $cliSecondTarget, $installNotice, $phpBinary, $cliConfirmed, $cliVectorParsed, $commandInstalls, $treeWasInstalled, $commandStatus);
-  return $ExitStatus; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -6466,9 +5448,17 @@ else {
   // / them. This is the one line that connects what this application knows to what the
   // / Engine does with it.
   $EngineSandboxProfiles = getSandboxProfiles();
+  // / The AppArmor profile those profiles depend on is checked as soon as the Engine has loaded.
+  // / verifySandboxPolicyAtStart() says why it waits for the Engine, & why nothing acts on this.
+  $SandboxProfileIsValid = verifySandboxPolicyAtStart();
   // / Resource awareness belongs to the Engine now that every manager role lives in it.
   if ($EnableResourceAwareness) $ResourceAwarenessActive = TRUE;
   if (!isset($EngineConfigVersion)) warningEntry('The Engine loaded & its configuration is missing. Every capability it gates is treated as enabled & every logging option it carries is treated as disabled.');
+  // / The contract is this application's own, & without it the Engine knows no location, no served
+  // / folder & no mapped setting, so it protects & checks nothing that depends on one. That is said
+  // / here, on every request, rather than read as an application that serves nothing. The Engine's
+  // / configuration is what loads the contract, so a missing configuration is said above instead.
+  if (isset($EngineConfigVersion) && (!isset($EngineManagedLocations) or !is_array($EngineManagedLocations))) warningEntry('The application contract at Resources/Contract/app-engine-config.php was not loaded, so the Engine knows no managed location, no served folder & no mapped setting. Restore it from the release this core came from.');
   if ($Verbose && (!isset($EngineReportsItsOwnLoad) or $EngineReportsItsOwnLoad)) logEntry('Engine '.ltrim((string)$EngineVersion, 'vV').' loaded for '.(isset($EngineApplicationName) ? $EngineApplicationName : $ApplicationName).'.'); }
 
 // / An administrator may refuse to run rather than accept work they cannot account for.
@@ -6506,8 +5496,9 @@ else if ($Verbose) logEntry('Verified the Pipeline Core. '.$PipelineCount.' conv
 // / Error 27 should not be possible & should never be able to fire. If it does something is seriously wrong.
 list ($CommandLineHandled, $UserType, $CommandLineStatus) = parseCommandLine();
 // / A root command that installs, run from a tree that is not installed, installs it as it ends
-// / & hands over to the installed copy. handOverToApplication says why it waits until now.
-if ($CommandLineHandled) $CommandLineStatus = handOverToApplication($CommandLineStatus);
+// / & hands over to the installed copy. handOverToApplication says why it waits until now. It is
+// / Setup Core's, & every command it acts on has loaded Setup Core by the time it returns here.
+if ($CommandLineHandled && function_exists('handOverToApplication')) $CommandLineStatus = handOverToApplication($CommandLineStatus);
 // / The application tells the Engine how it was reached, once it knows.
 // / A CLI invocation & an HTTP request reach the same file, so the Engine cannot work
 // / this out & is told. A pipeline declaring a surface it does not permit is refused.

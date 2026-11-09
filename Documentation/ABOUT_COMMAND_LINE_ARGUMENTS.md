@@ -67,7 +67,7 @@ Arguments are case insensitive as of v3.9.9. A path or a name given to an option
 ### Running as Root
 HRConvert2 should be run as **root** when using the command line.
 
-* **Nothing Left Unusable:** The data location and its folders belong to the web server user. Root writes no logfile and prints its log lines to standard error. The install secret belongs to root and is readable by the web server user's group.
+* **Nothing Left Unusable:** The data location is root's, and the session, cache, log and socket folders in it belong to the web server user. Root logs to a file of its own in `Engine`, which no other account can read. The install secret is kept in `Secrets`, belongs to root and is readable by the web server user's group and nobody else.
 * **The Two Rules:** Root never runs, reads as code, or works by name inside anything the web server user can change. See [ABOUT_MANAGED_LOCATIONS.txt](ABOUT_MANAGED_LOCATIONS.txt).
 * **The Gate:** Every command run as root first reads the whole installation. Every name in it must belong to root and be writable by nobody else, with no links, and every folder above it must pass the same test, `/var/www/html` included. Anything else stops the command with error 28008. Only the repairs, `-fp`, `--setup` and `--config --repair`, run anyway after a warning, because they are what give an installation to root.
 
@@ -76,7 +76,7 @@ Running as a non-root user is safe but structurally limited.
 
 * **Fail-Safe Filesystem:** Any operation requiring write access that the current user lacks will fail safely rather than partially completing. The filesystem is never left in a broken state.
 * **Unrestricted Flags:** The version (`-v`) and help (`-h`) arguments work for any user.
-* **Secret File Protection:** The install secret is `root:www-data 0640`, so a non-root user who is also not the web server user cannot read it. This is deliberate, because this file derives every session identifier in the application. Such a user is given a secret of its own, in a folder of its own.
+* **Secret File Protection:** The install secret is `root:www-data 0640`, in a folder that is `root:www-data 0750` and at the top of the data location, so a non-root user who is also not the web server user can read neither copy, and cannot even list `Secrets`. This is deliberate, because this file derives every session identifier in the application. Such a user is given a secret of its own, in a folder of its own.
 
 ### Manual Permission Management
 An administrator who modifies an HRConvert2 installation using external tools must leave every location the way `-fp` leaves it:
@@ -85,9 +85,12 @@ An administrator who modifies an HRConvert2 installation using external tools mu
 | :--- | :--- |
 | **The installation** | `root:root`, folders `0755`, files `0644` |
 | **The DATA folder in it** | `www-data:www-data 0700` |
-| **The data location** | `www-data:www-data 0700`, & its `Logs` & `Sockets` folders the same |
+| **The data location** | `root:root 0755` |
+| **Its `Sessions`, `Cache`, `Logs` & `Sockets` folders** | `www-data:www-data 0700` |
+| **Its `Engine` folder** | `root:root 0700` |
+| **Its `Secrets` folder** | `root:www-data 0750` |
+| **The install secret** | `root:www-data 0640`, in `Secrets` and at the top of the data location |
 | **The backup** | `root:root 0700` |
-| **The install secret** | `root:www-data 0640` |
 
 > ⚠️ **Do not give the installation to the web server user.** `chown -R www-data` was the documented repair until v4.0.1, and it let the web server user change code that root then runs. To correct anything, run `-fp` instead:
 
@@ -205,9 +208,20 @@ Corrects everything about an installation that root is required to correct.
   removes every copy of the application left there.
 - Removes the build environment and the development documentation when `config.php` asks for it.
 - Disables a bootstrap script that does not match this core, and enables one that matches again.
-- Installs or repairs the ImageMagick policy that permits document coders.
-- Installs or repairs the AppArmor profile bubblewrap needs to build a sandbox.
-- Installs or repairs the AppArmor override a confined OpenSCAD needs.
+- Installs or repairs the AppArmor profile named for the application, where the kernel can
+  restrict unprivileged namespaces. It is attached to the application's own copy of bubblewrap,
+  which every sandbox runs, and only where no account but root could put a program at that path.
+  One attached where that is no longer so is taken out. The copy is made only by
+  `--setup --install-depends`, `--update-depends` and `--install-complete` and as an update is
+  installed, and never by `-fp` run from the installed copy.
+- Lifts that restriction only where bubblewrap refuses a sandbox twice and `config.php` permits
+  it, and never for an attempt cut short or to cover a copy that is missing or cannot be run, and
+  holds for the next boot only the kernel settings it changed. Where `config.php` forbids lifting
+  it, switches back on a restriction this application lifted.
+- Writes the listener's service unit, and the Environment Manager's where they are installed, for
+  the installed copy.
+- Puts back, as they were, the ImageMagick policy and the AppArmor additions an earlier release
+  wrote into the host. Each pipeline now carries its own policy into its sandbox.
 - Enables lingering and cgroup delegation for the web server user, when per conversion limits
   are enabled.
 

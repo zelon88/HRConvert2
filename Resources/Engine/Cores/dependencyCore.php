@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.0.1.
+// / v4.0.5.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -47,7 +47,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v4.0.1';
+$DependencyCoreVersion = 'v4.0.5';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -941,6 +941,84 @@ function dependencyInstallCommand($packageManager, $packageList) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to list which of the given Apache configurations are enabled.
+// / Accepts the configuration names, each without .conf.
+// / Returns the names enabled now.
+// / A configuration is enabled while its name is in conf-enabled, which is where a2enconf puts it.
+function enabledApacheConfs($confNames) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $EnabledConfs = array();
+  $confName = $enabledPath = '';
+  foreach ((array)$confNames as $confName) {
+    $confName = basename((string)$confName);
+    $enabledPath = '/etc/apache2/conf-enabled/'.$confName.'.conf';
+    // / The same name is asked about before & after an install, so nothing PHP remembers of it
+    // / may answer the second question.
+    clearstatcache(TRUE, $enabledPath);
+    if ($confName !== '' && (file_exists($enabledPath) or is_link($enabledPath))) $EnabledConfs[] = $confName; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $EnabledConfs is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $confName, $enabledPath, $confNames);
+  return $EnabledConfs; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to turn off the Apache configurations a dependency install turned on.
+// / Accepts the names enabled before the install & the names the contract does not want.
+// / Returns the names turned off.
+// / A PACKAGE CAN PUBLISH SOMETHING ON EVERY SITE AS IT INSTALLS. javascript-common, which the
+// / packages Calibre recommends pull in, turns on an alias of /javascript for every site the host
+// / serves, & this application uses none of it. Only a configuration this install turned on is
+// / turned off, so one an administrator enabled stays. a2disconf records the choice as the
+// / administrator's, so a later upgrade of the package does not turn it on again. A web server
+// / that is already running keeps the alias until it is reloaded, & the operator is told so.
+function turnOffApacheConfsInstallEnabled($enabledBefore, $unwantedConfs) {
+  // / Set variables.
+  global $Lol, $EnableMemoryProtection;
+  $ConfsTurnedOff = array();
+  $confName = '';
+  $commandOutput = array();
+  $commandExitCode = 1;
+  foreach (enabledApacheConfs($unwantedConfs) as $confName) {
+    if (in_array($confName, (array)$enabledBefore, TRUE)) continue;
+    $commandOutput = array();
+    // / This runs unsandboxed & convention 22 requires that to be said. a2disconf changes the
+    // / host's web server configuration, which is its whole purpose, & the name is the contract's.
+    exec('a2disconf -q '.escapeshellarg($confName).' 2>&1', $commandOutput, $commandExitCode);
+    if ($commandExitCode === 0) {
+      $ConfsTurnedOff[] = $confName;
+      print('  '.str_pad($confName, 20).'turned off, because this install turned it on & nothing here uses it. Reload Apache.'.$Lol);
+      warningEntry('The dependency install turned on the Apache configuration '.$confName.', which this application does not use, so it was turned off. A running web server keeps it until it is reloaded.'); }
+    else warningEntry('The dependency install turned on the Apache configuration '.$confName.', which this application does not use, & it could not be turned off. '.trim(implode(' ', $commandOutput)).' Run  a2disconf '.$confName.'  as root.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $ConfsTurnedOff is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $confName, $commandOutput, $commandExitCode, $enabledBefore, $unwantedConfs);
+  return $ConfsTurnedOff; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to bring this application's own copy of bubblewrap up to date with the dependencies.
+// / Accepts the manifest & the subsystem filter the command was given, in that order.
+// / Returns TRUE when nothing is left to do for the copy, as installSandboxBinary() decides, or
+// / where the filter does not cover it.
+// / A DEPENDENCY INSTALL OR UPDATE IS ONE OF THE TWO TIMES THE COPY CHANGES, & an application
+// / update is the other. It runs when the filter covers the subsystem bubblewrap is listed in, &
+// / installSandboxBinary() says what it did on a line of the dependency list.
+function refreshSandboxBinary($dependsManifest, $subsystemFilter) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $BinaryIsReady = TRUE;
+  $sandboxSubsystem = $binaryStatus = $binaryDetail = '';
+  $dependencyEntry = array();
+  foreach ((array)$dependsManifest as $dependencyEntry) if (is_array($dependencyEntry) && isset($dependencyEntry['Binary'], $dependencyEntry['Subsystem']) && (string)$dependencyEntry['Binary'] === 'bwrap') $sandboxSubsystem = (string)$dependencyEntry['Subsystem'];
+  if (function_exists('installSandboxBinary') && $sandboxSubsystem !== '' && (trim((string)$subsystemFilter) === '' or stripos($sandboxSubsystem, trim((string)$subsystemFilter)) !== FALSE)) list ($BinaryIsReady, $binaryStatus, $binaryDetail) = installSandboxBinary(20);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $sandboxSubsystem, $binaryStatus, $binaryDetail, $dependencyEntry, $dependsManifest, $subsystemFilter);
+  return $BinaryIsReady; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to install every dependency that is absent or too old.
 // / Accepts the authorization token, a subsystem filter & a confirmation boolean.
 // / Returns a success boolean & the number installed, in that order.
@@ -949,12 +1027,13 @@ function dependencyInstallCommand($packageManager, $packageList) {
 // / installing it would fail & would bury the reason under a second error.
 function installDepends($authorizationToken, $subsystemFilter, $operatorConfirmed) {
   // / Set variables.
-  global $RequiredDependsVersion, $Lol, $Verbose, $EnableMemoryProtection;
+  global $RequiredDependsVersion, $Lol, $Verbose, $EnableMemoryProtection, $EngineUnwantedApacheConfs;
   $InstallSucceeded = TRUE;
   $DependenciesInstalled = 0;
   $dependsManifest = $dependencyEntry = $installedNames = $missingRequirements = $commandOutput = array();
   $commandExitCode = 1;
-  $manifestIsAvailable = $dependencyIsPresent = $installOneSucceeded = $callerIsAuthorized = FALSE;
+  $confsBefore = $confsTurnedOff = array();
+  $manifestIsAvailable = $dependencyIsPresent = $installOneSucceeded = $callerIsAuthorized = $sandboxBinaryIsReady = FALSE;
   $rawOutput = $detectedVersion = $dependencyStatus = $detectedDependsVersion = $packageManager = $returnData = $requirementName = $operatorChoice = '';
   $callerIsAuthorized = validateDependencyAuthorization($authorizationToken);
   if (!$callerIsAuthorized) $InstallSucceeded = FALSE;
@@ -968,6 +1047,9 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
         $operatorChoice = promptOperator('Type YES to continue. Anything else cancels. ');
         if ($operatorChoice !== 'YES') { print($Lol.'Cancelled. Nothing was installed.'.$Lol.$Lol); $InstallSucceeded = FALSE; } }
       if ($InstallSucceeded) {
+        // / Which unwanted Apache configurations are on before anything is installed, so only one
+        // / this install turns on is turned off again.
+        $confsBefore = enabledApacheConfs($EngineUnwantedApacheConfs);
         // / Refresh the package index once rather than once per dependency.
         // / The index refresh is checked. A refresh that failed makes every install below
         // / fail with a message about the package rather than about the index.
@@ -1027,9 +1109,14 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
             if ($Verbose && trim($returnData) !== '') print('      '.str_replace(PHP_EOL, PHP_EOL.'      ', trim($returnData)).$Lol);
             if ($dependencyEntry['Required']) $InstallSucceeded = FALSE;
             warningEntry('Dependency '.(string)$dependencyEntry['Name'].' could not be installed. '.trim($returnData)); } }
-        print($Lol.'Installed '.$DependenciesInstalled.' dependenc(ies).'.$Lol.$Lol); } } }
+        $confsTurnedOff = turnOffApacheConfsInstallEnabled($confsBefore, $EngineUnwantedApacheConfs);
+        // / The answer is not acted on. installSandboxBinary() has already printed the copy's line &
+        // / warned where it is not ready, & the system's bubblewrap still builds every sandbox the
+        // / kernel permits it to, so the dependencies themselves are not failed for it.
+        $sandboxBinaryIsReady = refreshSandboxBinary($dependsManifest, $subsystemFilter);
+        print($Lol.'Installed '.$DependenciesInstalled.' dependenc(ies).'.(count($confsTurnedOff) > 0 ? ' Turned off '.count($confsTurnedOff).' Apache configuration(s) the install turned on.' : '').$Lol.$Lol); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $installedNames, $manifestIsAvailable, $dependencyIsPresent, $installOneSucceeded, $callerIsAuthorized, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $returnData, $requirementName, $operatorChoice, $missingRequirements, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
+  purgeSensitiveMemory($EnableMemoryProtection, $confsBefore, $confsTurnedOff, $dependsManifest, $dependencyEntry, $installedNames, $manifestIsAvailable, $dependencyIsPresent, $installOneSucceeded, $callerIsAuthorized, $sandboxBinaryIsReady, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $returnData, $requirementName, $operatorChoice, $missingRequirements, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
   return array($InstallSucceeded, $DependenciesInstalled); }
 // / -----------------------------------------------------------------------------------
 
@@ -1039,13 +1126,15 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
 // / Returns a success boolean & the number upgraded, in that order.
 // / An absent dependency is NOT installed here. Updating & installing are different
 // / intentions & an operator who asked to update did not ask to add anything.
+// / This application's own copy of bubblewrap is made here when it is missing, because it is a
+// / copy of a dependency rather than one, & this is the command a host is told to run for it.
 function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed) {
   // / Set variables.
   global $RequiredDependsVersion, $Lol, $EnableMemoryProtection;
   $UpdateSucceeded = TRUE;
   $DependenciesUpdated = 0;
   $dependsManifest = $dependencyEntry = array();
-  $manifestIsAvailable = $dependencyIsPresent = $callerIsAuthorized = FALSE;
+  $manifestIsAvailable = $dependencyIsPresent = $callerIsAuthorized = $sandboxBinaryIsReady = FALSE;
   $rawOutput = $detectedVersion = $dependencyStatus = $detectedDependsVersion = $packageManager = $updateCommand = $operatorChoice = '';
   $commandOutput = array();
   $commandExitCode = 1;
@@ -1095,9 +1184,13 @@ function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed
           else {
             print('  '.str_pad((string)$dependencyEntry['Name'], 20).'FAILED'.$Lol);
             warningEntry('Dependency '.(string)$dependencyEntry['Name'].' could not be upgraded.'); } }
+        // / The copy follows the bubblewrap just upgraded. The answer is not acted on, because
+        // / installSandboxBinary() has already printed the copy's line & warned where it is not
+        // / ready, & the upgrade is not failed for it, as for an install.
+        $sandboxBinaryIsReady = refreshSandboxBinary($dependsManifest, $subsystemFilter);
         print($Lol.'Upgraded '.$DependenciesUpdated.' dependenc(ies).'.$Lol.$Lol); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $manifestIsAvailable, $dependencyIsPresent, $callerIsAuthorized, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $updateCommand, $operatorChoice, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
+  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $manifestIsAvailable, $dependencyIsPresent, $callerIsAuthorized, $sandboxBinaryIsReady, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $updateCommand, $operatorChoice, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
   return array($UpdateSucceeded, $DependenciesUpdated); }
 // / -----------------------------------------------------------------------------------
 

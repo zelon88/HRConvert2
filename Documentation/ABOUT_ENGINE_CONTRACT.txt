@@ -151,10 +151,34 @@ The kernel's pin & the Engine's are moved by hand, from v4.0.1, because the buil
 both & cannot rewrite what loads it.
 THE APPLICATION NAMES ITS LOCATIONS & THE ENGINE OWNS WHAT THEY MEAN, FROM v4.0.1.
 $EngineManagedLocations in the contract names every location the application keeps on disk,
-by the setting that holds it, & gives each a role. A role is code, web, root-only or shared.
-Setup Core decides the owner & the mode each role means, & the contract cannot ask for a mode,
-so no location can be made writable by the account root protects itself from. -fp applies
-them. See ABOUT_MANAGED_LOCATIONS.txt.
+by the setting that holds it, & gives each a role. A role is code, data-root, secret, web,
+served, root-only or shared. Setup Core decides the owner & the mode each role means, & the contract
+cannot ask for a mode, so no location can be made writable by the account root protects itself
+from. -fp applies them. See ABOUT_MANAGED_LOCATIONS.txt.
+A FOLDER FOR SECRETS IS AN ENGINE LOCATION, FROM v4.0.4. The secret role is root's, the web
+server account's group & 0750, so that account reads what root keeps there & changes none of it,
+& no other account can list it. Setup Core makes the folder & gives it the role, & puts nothing
+in it. HRConvert2 names Secrets as $SecretLoc & keeps its install secret there. Reading, writing &
+copying the secret is still the application's, until authentication has a core of its own.
+THE ENGINE KNOWS WHAT THE WEB SERVER SERVES, FROM v4.0.5. A location the contract gives the
+served role is a folder of the web server account's that browsers fetch files from, & HRConvert2
+names DATA in its hosted location that way. Setup Core writes the Apache configuration from the
+roles & the hosted location, so the hosted location runs only the loader, every served location
+hands each file over as an inert download, & every data location refuses every request. The
+contract maps the hosted location, its address & the document root as HostedLocation, ServerURL
+& DocumentRoot. A served location must be inside the hosted location & below it, as written. One
+anywhere else is refused, given no role & named MISPLACED, because rules that turn PHP off would
+stop the loader at the hosted location or above it. Without the
+contract the Engine knows no location at all, so the application warns on every request. The contract names a location & can never write a
+rule, as it can never ask for a mode. Environment Core keeps each served
+location's protection file current & proves the rules are in force by fetching a canary, & the
+Engine reports that itself, so $EngineDataPolicyProvider is retired. Two things are the
+application's & cannot be the Engine's. index.html in a served location is the protection page &
+is the one file there served as a page, so the application must never stage a user's file by
+that name. HRConvert2 refuses it by name wherever it stages a file. Root reads every tree it runs
+before the contract can be read, so the application leaves its own served locations out of that
+read. HRConvert2 leaves out DATA. A served location the read does not leave out stops every
+command root runs but a repair.
 THE APPLICATION IS INSTALLED OUTSIDE THE WEB ROOT, FROM v4.0.1. $EngineApplicationLayout in the
 contract names the entries at the top of a release that make up the application. Setup Core's
 installApplicationTree copies exactly those into the folder the application names, & keeps the
@@ -162,12 +186,26 @@ one it replaces as the backup. $EngineHostedAssetFolders & $EngineHostedAssetTyp
 static files a browser fetches. publishHostedLocation writes them, with a loader carrying the
 entry point's name, into the folder the web server serves, & removes only what is a copy of the
 installation. An application that names no layout installs nothing & runs where it is.
+A DEPENDENCY INSTALL TURNS OFF WHAT IT TURNED ON, FROM v4.0.2. $EngineUnwantedApacheConfs in the
+contract names the Apache configurations a dependency's package turns on that the application
+never uses. Dependency Core's installDepends notes which are on before it installs anything, &
+turns off each one the install turned on. One an administrator turned on is left as it is. See
+ABOUT_DEPENDENCIES.txt.
 THE APPLICATION'S SETTINGS ARE READ THROUGH A MAP, FROM v3.9.9. $EngineSettingNames in the
 contract names, for each name a shared layer uses, the setting the application keeps the value
 in. applicationSetting in the kernel reads it, or the shared layer's own default when the
-application maps nothing. An operator's setting keeps its name, & no shared layer names one
-application's settings. The names read today are FormatDetectionType, WarnOnCapabilityMismatch
-& DefaultScanner. The startup key's variable & the policy marker are built from the identity.
+application maps nothing. An operator's setting keeps its name, & no shared layer reads one
+application's settings by their names. The names read today are FormatDetectionType,
+WarnOnCapabilityMismatch, DefaultScanner, MaintainProtectionFile, LiftNamespaceRestriction,
+HostedLocation, ServerURL & DocumentRoot. The last three name values the application works out
+as it starts, which the map reads the same way. LiftNamespaceRestriction, from v4.0.5, says
+whether -fp may lift the kernel's AppArmor restriction on unprivileged namespaces where
+bubblewrap, run through the application's own copy & the profile attached to it, refuses a
+sandbox twice, & an application that maps nothing permits it. It is never lifted for an attempt
+cut short, or to cover a copy that is missing or cannot be run. The startup key's variable & the
+policy marker are built from the identity.
+Some of the Engine's messages still name settings as config.php labels them, which
+ENGINE_MIGRATION_STATUS.txt lists under step nine.
 
 THE COMMAND LINE IS SPLIT AT ONE CALL, ALSO AT v3.9.9. An application reads the command line
 with the kernel's parseArgumentVector & serves -v, -h & everything beginning --app itself.
@@ -418,6 +456,11 @@ locateDependency was moved in the first pass & returned to the kernel in a later
 Finding an executable is a primitive that boot code needs before the Engine can exist.
 verifyInstallation reaches it through verifySandboxPolicy & unloadApparmorProfile, & that
 path runs before any component has been verified.
+From v4.0.5 that check runs once the Engine has loaded, so verifyInstallation no longer
+reaches it, & verifySandboxPolicy is the Engine's own. unloadApparmorProfile is gone. It fell
+back to aa-remove-unknown, which unloads every profile on the host that is not in
+/etc/apparmor.d, & nothing needs it now that the profile replaces itself by name.
+locateDependency stays in the kernel.
 It was found by a call order check that follows the call graph rather than by reading, &
 Documentation/Build/hrconvert2-check.py is that check.
 
@@ -434,12 +477,14 @@ They fall into three groups & each group has a different answer.
   THE POLICY GROUP, reached from validateOperatingEnvironment.
   RESOLVED AT v3.9.1. The Engine named six application functions & could not load without
   an application that defined all six. That is not a shared Engine.
-  It now checks what the Engine PROVIDES, which is Bubblewrap & nothing else, & calls one
-  provider named by the application in $EngineEnvironmentProvider. The provider returns a
+  It now checks what the Engine PROVIDES, which was Bubblewrap alone then & is Bubblewrap, the
+  bootstrap script, the kernel settings & the AppArmor profile every sandbox needs, & what the
+  web server serves from v4.0.5, & calls one provider named by the
+  application in $EngineEnvironmentProvider. The provider returns a
   readiness boolean & a list of findings & the Engine appends them to its own.
   HRConvert2 supplies applicationEnvironmentFindings() in convertCore.php, beside
   getSandboxProfiles(), which is handed over the same way & for the same reason.
-  An installation declaring no provider gets the Bubblewrap check alone, which is correct
+  An installation declaring no provider gets the Engine's own checks alone, which is correct
   rather than degraded. An application with no ImageMagick policy is not asked about one.
   A name declared & not defined is a warning, because a check nobody notices is missing is
   worse than one that was never claimed.
@@ -453,6 +498,9 @@ They fall into three groups & each group has a different answer.
   verifyDataExposure asks whether a web server is serving a directory it should not be,
   which only an application with a web server can answer. It should be a value passed in
   rather than a call made out.
+  ANSWERED THE OTHER WAY AT v4.0.5. The Engine took the web server rather than the answer. The
+  contract says which locations are served, by role, & the Engine writes their rules & proves
+  them, so the exposure check is the Engine's own & calls nothing of the application's.
   cleanFiles reads the application's own paths & belongs to the application.
 
 That list is empty as at v3.9.9, so the Engine no longer depends on an application defining

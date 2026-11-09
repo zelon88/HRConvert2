@@ -344,6 +344,38 @@ the code moves, not by the code moving.
   6. SESSION & SECRET WAIT FOR AN AUTHENTICATION CORE.                             DEFERRED
      Decided at v3.9.9. They move with authentication, into a core of their own, & not into
      the kernel. See What Is Deliberately Not Moving above.
+     THE FOLDER THE SECRET IS KEPT IN IS THE ENGINE'S, FROM v4.0.4. Setup Core makes Secrets in
+     the data location & gives it the secret role, root's, the web server account's group &
+     0750, & puts nothing in it. The contract names it as $SecretLoc. It was built in the Engine
+     rather than in convertCore.php so that it never has to move. The secret itself, & copying
+     an earlier release's key into the folder, stay the application's with the rest of this
+     step, because only the application knows what the file is & how to read it back.
+     PROVEN BY   A hundred & four checks over a fresh install, a copy at the top -v must name by
+                 its mode & by its group, an upgrade from v4.0.3 with a visitor whose session
+                 goes on through the drop in & the copy, a folder without its role, a copy in
+                 Secrets the web server account cannot read, an older copy at the top with
+                 another key, a rotation, a data location another account took, a chown -R over
+                 all of it, a secret the web server account must not run, -fp's session sweep,
+                 an upgrade over a data location a chown -R gave away, in one -fp, a secret
+                 another account could write, Sessions & Cache swapped for links, -fp from a
+                 tree it cannot install, a v4.0.3 data location every account can write, going
+                 back to v4.0.3 & forward again with a visitor, a key v4.0.3 rotated after going
+                 back, & an access control list that let another account write the copy, & one
+                 more check that runs ninety one cases over the moments another command run as
+                 root could interfere, a copy that cannot be written, a copy root cannot reach,
+                 a folder without its role, two copies with two keys & the one written last,
+                 which copy the web server account would use & whether it carries the key, a
+                 copy it can open but not use, who may own or write a copy & the folders above
+                 it, a group that may write, a copy made empty & judged before it is given the
+                 key under a staged name of its own, a file swapped in at that name, a copy made
+                 wider than 0640, a copy the web server account reads that a group which cannot
+                 be given would have replaced, a host that cannot look up the web server
+                 account, a folder reached through a link, & the lock. The control, the same
+                 function with only two looks, replaces a key that was moved while it was read.
+                 The web server account reads a copy root rewrites fifteen hundred times & never
+                 finds one it cannot open, where the writer before left more than half its reads
+                 without the key. Forty nine of the hundred & five checks fail on v4.0.3, which
+                 moved a session through the link.
 
   7. AN ENGINE COMMAND DISPATCHER. STEP SIX OF THE ABSORPTION CONTRACT, REDERIVED.     DONE
      dispatchEngineCommand in engine.php owns the listener, the manager entry points,
@@ -462,6 +494,11 @@ the code moves, not by the code moving.
      the rest, move to the same map one at a time. They are read in the managers, budgeting &
      cleaning, so each wants its own proof rather than one sweep. A cost rather than a
      blocker, & the mechanism is now in place.
+     The Engine's messages still use the application's words in places. They name settings as
+     config.php labels them, such as --Maintain HTAccess--, --Server URL-- & --Maximum Per
+     Conversion Resources--, name files under Documentation, & a few temporary names begin
+     hrc2-. Each reads correctly for HRConvert2 & would mislead another application, so each
+     wants a name built from the identity or the map, as the policy marker's is.
      PROVEN BY   With the real kernel, Engine configuration, contract, Engine & Pipeline Core,
                  HRConvert2's variable & marker read HRCONVERT2_STARTUP_KEY &
                  HRCONVERT2-POLICY-MARKER, & the data protection file the Engine writes is
@@ -475,6 +512,221 @@ the code moves, not by the code moving.
                  every subordinate still reads it. The snapshots differ only in the OCR
                  pipeline's version.
                  grep -rn HRCONVERT2 Resources/Engine   finds comments only.
+
+  10. THE UPDATER & THE INSTALLER JOIN SETUP CORE.                                   DONE
+     updateApplication, downloadUpdatePackage, mergeConfigFile, cleanBuildEnvironment &
+     handOverToApplication left convertCore.php for Setup Core at v4.0.3, 440 lines with every
+     body byte identical. They call nothing of the application's, which is why they went first.
+     The only edits made to a lifted body name the application through the contract. The entry
+     point is engineApplicationEntryPoint(), the updater's User-Agent is built from
+     engineApplicationName() & the version compared is $EngineApplicationVersion. Each call
+     site loads Setup Core first, as -fp & --setup already did, & -u now does too.
+     fixManagedPermissions stays the application's repair for now. It calls the Apache, policy
+     & sandbox functions, which are still the application's, so it can follow only once they
+     have moved, or check eight fails.
+     PROVEN BY   Nine invocations recorded before & after the move, normalized for times,
+                 sessions, process numbers & random names. -fp installing & handing over, -fp
+                 again, -v, -h, -u to the installed version, to a broken release & to a good
+                 one, & -fp cleaning the build environment. All nine are identical. The
+                 control is the same tree with handOverToApplication missing, & five of the
+                 nine change.
+                 Check eight passes, so nothing moved calls back into the application.
+
+  11. WHAT THE WEB SERVER SERVES JOINS THE ENGINE.                                    DONE
+     The Apache configuration, the protection file, the live exposure probe & the data &
+     hosted location checks left convertCore.php for the Engine at v4.0.5. Eleven functions
+     moved & the provider that reported them went too, 799 lines in all. Each was written for
+     DATA, so each now works on every location the contract gives the served role, which is
+     new & is owned & moded as web is. Each names a location by its folder's own name, so
+     HRConvert2 still reads DATA wherever it did.
+     The Engine answers for what it serves itself, so $EngineDataPolicyProvider, which asked
+     the application, is retired. Whether the protection file is kept is read through the
+     settings map as MaintainProtectionFile. The hosted location, its address & the document
+     root are read through the map too, as HostedLocation, ServerURL & DocumentRoot, so the
+     Engine reads no global of the application's that it did not read before. Setup Core no
+     longer reads $ConvertTemp, & the Engine reads it only to clean it.
+     A served location is served only below the hosted location as written, with no . or ..
+     below it. The rules written for one turn PHP off, so one at the hosted location or above
+     it would stop the loader, & the probe knows an address only below the hosted location.
+     Anywhere else it is refused, given no role & named MISPLACED by the Environment Manager on
+     a line of its own. Nothing safe to write rules for is refused, because a folder the
+     application still writes into would then be served without them. A data location is
+     refused unless it holds the hosted location. Without the contract the Engine knows no
+     location, so HRConvert2 warns on every request. The listener re-proves every served
+     location, where it read the DATA line alone.
+     The start up check of the sandbox profile runs once the Engine has loaded, because the
+     sandbox moves into the Engine next. fixManagedPermissions stays the application's until
+     then, since it still calls the sandbox & policy functions.
+     PROVEN BY   Every path the move touches, recorded before & after & normalized for times,
+                 sequence numbers & random names. -fp installing & handing over & again, the
+                 Apache configuration & protection file it writes, -v as root & as www-data
+                 against a running Apache, an Environment Manager pass & its findings, a web
+                 request rewriting an outdated protection file, a complete installation, & the
+                 same without an Engine. The records differ in versions, in the two comments
+                 changed on purpose, & in -v without an Engine, which ended in a fatal error &
+                 now reports what it could not check.
+                 Sixty three checks against a real Apache, one of them thirty two checks of
+                 the functions alone. A second served location gets its own rules, protection
+                 file, probe & finding. With its rules taken out by hand -v reports it exposed
+                 while DATA stays protected, & -fp puts them back. One at the hosted location &
+                 one in the data location are refused, keep their owners, get no rule & are
+                 named MISPLACED on a line of their own, & --setup with only a refused one
+                 stops at the data locations. With nothing served the loader & data location
+                 rules are still written. A missing contract is said in root's log. A path
+                 with a . or a .. below the hosted location is refused & one through a link is
+                 served by its written path. Thirty two fail against v4.0.4, & each of
+                 eighteen copies broken in one place fails the checks that guard it. They
+                 write one block, report the first location as the worst, read the setting
+                 past the map, report one finding, check before the Engine loads, accept
+                 every served location, accept a . or a .., refuse a link, let a benign
+                 status hide a failure, leave a folder name unencoded, spare a data location
+                 for a served location, keep nothing in silence, name the probe as before,
+                 give a refused location its role, make two folders below one another account
+                 can write, skip the roles in --setup, say nothing of a missing contract, &
+                 re-prove DATA alone.
+                 Check eight passes, so nothing moved calls back into the application.
+
+  12. WHAT EVERY SANDBOX NEEDS FROM THE HOST JOINS THE ENGINE.                        DONE
+     The kernel settings & the AppArmor profile left convertCore.php for Environment Core at
+     v4.0.5, with the AppArmor helpers they use. engine.php reports them itself, first, where the
+     application's provider did, & the provider keeps only the policies its tools' conversions
+     carry. Wherever the kernel restricts unprivileged namespaces, every sandbox, OpenSCAD's
+     included, runs the application's own copy of bubblewrap, which verifySandboxLauncher tries
+     first there & nowhere else. The profile is named for the application & attached to that copy
+     & nothing else, as Ubuntu attaches its own to Steam, Flatpak & Chrome. It is Ubuntu 26.04's
+     bwrap-userns-restrict, so what bubblewrap starts runs with no capabilities. The copy is
+     root's & the web server's group's, 0750 before that group is given it, & is run as the web
+     server's account before it is called ready. installSandboxBinary makes it from the system's
+     bubblewrap, beside its name & renamed over it, & only the dependency commands,
+     --install-complete's first stage among them, the hand over to an installed copy & -u ask for
+     it, so the program every sandbox runs changes when the administrator updates something & at
+     no other time. -fp writes the profile wherever the kernel can restrict namespaces & no
+     account but root could put a program at the copy's path, & no command writes it as it starts.
+     A repair takes out one written before where that is no longer so, & a container writes none.
+     A restricted kernel stays restricted wherever the copy works. It is lifted only where
+     bubblewrap refuses a sandbox twice & the application permits it, which the settings map reads
+     as LiftNamespaceRestriction, & never for an attempt a time limit or a signal cut short, or to
+     cover a copy that is missing or that the web server's account cannot run. A copy of a
+     bubblewrap since removed is never run. A lift that does not help is put back & read back, an
+     unattended repair never lifts, & where lifting is forbidden a repair switches back on a
+     restriction this application lifted. The copy has a finding of its own, which names the
+     command that installs it or takes the update the system's bubblewrap got, & an account that
+     can neither run it nor hand it to the web server's account is told it cannot judge it. A
+     profile still loaded is never called gone, & one the parser cannot take out is taken out by
+     name. The copy is staged by tempnam, so a default ACL on its folder opens it to no account.
+     runAsAccount, which every probe made as root runs through, keeps the file it reads the output
+     from root's, takes the exit code from the child's own exit status, & leaves the child no
+     handle, terminal or session of root's. maintainNamespaceDropIn holds for the next boot what
+     -fp changed & nothing else, where every release until now held all three settings on every
+     host. A boot since then reads what they held whether or not the host needed it, so a
+     namespace line from one of them is kept only where the next boot would refuse namespaces
+     without it.
+     A policy a tool reads travels with the pipeline that runs the tool. The Image & OCR pipelines
+     carry ImageMagick's, & a sandbox profile's Overlays cover the host's copy with it inside the
+     namespace, the copy the installed ImageMagick names included. Outside a sandbox it is read
+     first, & the host's rules still decide any coder they name. retirePolicyFile puts back what
+     an earlier release wrote into the host, & keeps a policy.xml it cannot put back rather than
+     leave ImageMagick none. Nothing in /etc is written for ImageMagick, for OpenSCAD or for a
+     distribution's bubblewrap profile.
+     fixManagedPermissions stays the application's. It still calls the two tool policy checks,
+     which are the application's, so it follows once those are reached through the provider.
+     PROVEN BY   Every path the move touches, recorded before & after from the same host state &
+                 normalized as for step eleven. The records differ where intended & nowhere
+                 else. The baseline wrote a three line sysctl drop in & its ImageMagick policy
+                 over the host's on a host that needed neither, & this writes neither. The
+                 bubblewrap log line names the launcher, four more files are installed, & the
+                 report's sentences for the two policies changed. Recorded again before & after
+                 the copy of bubblewrap, on a host whose kernel cannot restrict namespaces, they
+                 differ in Dependency Core's version alone, so such a host is given no copy.
+                 One hundred & fifty eight unit checks of the kernel, the profile & when it is
+                 written or taken out, the copy, what makes it, whether the web server's account
+                 can run it & what it reports, the drop in & what an earlier release's held, a
+                 lift put back & read back, an attempt cut short rather than refused, a profile
+                 taken out by name, what is put back & what is kept, the launcher & what it tells
+                 an account that cannot run the copy, the overlays & OpenSCAD's command, with a
+                 restricting kernel stood in by scratch /proc, sysctl, AppArmor & libexec files &
+                 by a bwrap & an apparmor_parser that grant a namespace only where a loaded
+                 profile is attached to the path bubblewrap was run from, as a restricted Ubuntu
+                 kernel does. Twenty one of the units, the delegation drop in, the Environment
+                 Manager's units written again, the hand over's restart note & the copy it asks
+                 for before the installed copy's -fp.
+                 Twenty four with real bubblewrap & ImageMagick as www-data: the carried policy
+                 refuses MVG & TEXT where the host's permits both, covers the host's path inside
+                 the namespace only, & is read first outside one with its ceilings in force, an
+                 ordinary conversion still works, the OCR page split, which ran under no policy at
+                 all, runs under its own, a conversion with no sandbox & per conversion limits on
+                 hands its policy over through env behind nice, & where the restriction reads 1
+                 the launcher takes a real copy, root's & the web server group's & 0750, &
+                 conversions run through it. The copy made for real by root, with the Kernel's own
+                 trust & ownership functions under a umask that would close it: www-data builds a
+                 real sandbox through it, an account outside the group cannot run it, an upgraded
+                 system bubblewrap reads BEHIND to the account that runs it & to no account that
+                 cannot read it, & the next dependency update takes the update. A folder above it
+                 www-data cannot enter reads NOT RUNNABLE though root trusts the copy, a
+                 dependency update leaves that folder as it is & says the copy is not ready, & the
+                 copy's own folder closed to www-data is opened again. Root's drop to www-data,
+                 run for real: the exit code is the command's, www-data cannot write the file root
+                 reads the output from, a child a signal ends has failed, & the child reads no
+                 input of root's, holds none of its handles & runs in a session of its own. A
+                 default ACL on the copy's folder naming an account lets that account do nothing
+                 with the staging file before its mode is set. Twenty two checks. The profile
+                 compiles with Ubuntu 24.04's apparmor_parser, which refuses it with one fault put
+                 in. Nine more read the code: nothing but the dependency commands, the hand over &
+                 -u asks for the copy, each of the last two asks before the new release's -fp
+                 runs, both probes kill a bubblewrap still running after its time limit, & the
+                 report's sandbox line is n/a for an account that cannot run the copy. Both
+                 linters flag runAsAccount giving its file away again. An upgrade rehearsed from
+                 v4.0.4 through the earlier v4.0.5 to this one puts the ImageMagick policy back
+                 from the copy kept of it, removes the drop in, reads NOT INSTALLED from the copy
+                 unpacked to install it & goes back again, nineteen checks. Step eleven's sixty
+                 three checks pass. Each of a hundred copies broken in one place fails the checks
+                 that guard it. They hold what was held whatever the kernel reads, hold the
+                 restriction lifted where lifting is forbidden, keep all an earlier release held,
+                 let its clone line go where nothing says what the kernel does, count any value,
+                 no other file, not /etc/sysctl.conf or not a name written with slashes, lift
+                 where the copy carries a sandbox or to cover a copy that is missing, lift
+                 unattended, leave a lift of their own in place where lifting is forbidden, switch
+                 back on one another file lifts or a file without the header holds, leave a lift
+                 that did not help, never try the copy, try it where nothing restricts, try the
+                 system's first, run one another account could change or one swapped behind a
+                 process that runs for long, give a container one, attach the profile to the
+                 system's bubblewrap, stack nothing under it, leave what it starts its
+                 capabilities or refuse a file a converter deleted, report no copy, call a missing
+                 one ok or one behind current, make it from -fp or from the kernel check, make it
+                 with no profile, for every account, for no account, written where it runs, from a
+                 bubblewrap or into a folder another account could change, under the umask's
+                 modes, or again when it matches, leave it alone in the hand over, in -u or in a
+                 dependency update, make it for any subsystem, warn of a profile where none is
+                 needed, hand one to an AppArmor that cannot read it, keep one the parser refused,
+                 call one taken out again installed or on disk, put nothing back, remove a
+                 policy.xml nothing can replace, match a longer name, cover a host path reached
+                 through a link, declare no overlay for either ImageMagick profile, add none for
+                 the folder ImageMagick names, or ask for none from either pipeline, hand the
+                 Image or the OCR pipeline no policy, hand an unsandboxed command its variables as
+                 a prefix, log a drop in that could not be written as routine, name the copy -fp
+                 ran from, leave the Environment Manager's units naming it, rewrite the delegation
+                 drop in on every run, write the profile at start, answer a repair from the report
+                 made at start, call a copy not installed served, call a copy runnable without
+                 running it, lift for one the web server's account cannot run or after one failed
+                 sandbox, call an install ready whatever that account can run, run a copy of a
+                 bubblewrap since removed or call it ok, attach the profile whoever could put a
+                 program at its path, leave one attached there, take out a profile without the
+                 marker, write one in a container, give the copy its group before its mode, make a
+                 folder beneath one another account could change, leave the copy's own folder
+                 closed to that account, give the account the file root reads back, take any exit
+                 code but the command's, take a child a signal ended for a success, keep root's
+                 session, root's input or every handle but the standard three, leave the command
+                 the file its output goes to, lift on an attempt cut short or on a first one cut
+                 short, never say one was, never read a put back, remove a profile's file while it
+                 is loaded, never take one out by name, answer from a path that has changed since,
+                 judge the copy from an account that cannot run it, send a copy that could not
+                 start to -fp, stage the copy with the mode copy() gives it, let bubblewrap
+                 outlive the launcher's time limit, or call the sandbox FAILED for an account that
+                 cannot run the copy, & say nothing of a listener running the old release, or say
+                 it twice.
+                 Check eight passes, so nothing moved calls back into the application.
+                 A kernel that restricts unprivileged namespaces is not available here, so the
+                 first proof on one is PuterVIIII with the restriction switched back on.
 
 WHAT DROPS OUT.
   The step six sort written earlier in this release, which assumed the work was moving
@@ -896,7 +1148,8 @@ This said three until the kernel was moved & the record in environmentCore.php w
   locateDependency      Out at v3.9.0 era, back later. Finding an executable is a primitive
                         boot code needs. Found by a call order check, not by reading.
   reloadApparmorProfile Out at v3.9.3, back at v3.9.5. Reached through verifySandboxPolicy
-                        on the boot path, before any component is verified.
+                        on the boot path, before any component is verified. Out again at
+                        v4.0.5, with verifySandboxPolicy, once that check waited for the Engine.
   closeHRC2Connection   Out at v3.9.3, back at v3.9.5, & it is in the kernel now under the
                         name closeClientConnection. quickDie calls it.
   extractCliOption      Out at v3.9.6, back at v3.9.9. Reads one option out of an argument

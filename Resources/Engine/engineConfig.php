@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.5.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -51,7 +51,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 // / The version of this configuration. Matched as a MINIMUM by the Engine, the same way
 // / an application matches its own configuration. A newer file carrying every required
 // / setting is fine, because a setting this Engine does not know is simply not read.
-$EngineConfigVersion = 'v4.0.0';
+$EngineConfigVersion = 'v4.0.5';
 // / -----------------------------------------------------------------------------------
 
 
@@ -224,8 +224,9 @@ $EnginePerWorkerLogFiles = FALSE;
 // / -----------------------------------------------------------------------------------
 // /  --Engine Environment Provider--
 // /   The name of an application function that reports on THIS application's environment.
-// /   The Engine checks what the Engine provides, which is Bubblewrap & nothing else. Every
-// /   other check an installation wants belongs to the application that wants it.
+// /   The Engine checks what the Engine provides, which is Bubblewrap, the bootstrap script &,
+// /   from v4.0.5, what the web server serves. Every other check an installation wants belongs
+// /   to the application that wants it.
 // /   The named function accepts nothing & returns a readiness boolean & a list of findings,
 // /   each finding an array of Check, Status & Detail. The Engine appends them to its own.
 // /   Leave it empty & only the Engine's own checks run, which is correct rather than
@@ -243,15 +244,9 @@ $EngineEnvironmentProvider = '';
 // /   the safe answer. Nothing destructive happens because nobody could be asked.
 $EngineOperatorPrompt = '';
 
-// /  --Engine Data Policy Provider--
-// /   The name of a function reporting whether this application's data is exposed.
-// /   Whether a data tree is reachable by a web server is a question about an application
-// /   that HAS a web server. An engine cannot know, & an application without one has no
-// /   equivalent question to answer.
-// /   It returns display rows the same shape the environment provider returns, & the
-// /   Engine prints what it is given without understanding any of it.
-// /   Naming nothing means the section is not shown.
-$EngineDataPolicyProvider = '';
+// /  --Engine Data Policy Provider-- WAS RETIRED AT v4.0.5.
+// /   The Engine reports the exposure of every location the contract gives the served role
+// /   itself, so it no longer asks the application. A contract that still names one is not read.
 
 // /  --Engine Config Model Provider--
 // /   The name of a function returning this application's configuration model.

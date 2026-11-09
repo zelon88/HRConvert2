@@ -35,6 +35,8 @@
 # every conversion is refused, unless --Require Sandbox On Docker-- is FALSE in config.php,
 # which runs conversions unprotected & is not recommended for anything public facing.
 # An alternative to the capability is  --security-opt seccomp=unconfined  on some hosts.
+# A container makes no copy of bubblewrap & writes no AppArmor profile. The host's kernel
+# decides both, so a restricting host is corrected on the host.
 #
 # DEPENDENCY REQUIREMENTS ...
 # Nothing is listed here on purpose. Resources/Contract/depends.php is the manifest & this file
@@ -110,9 +112,11 @@ RUN mkdir -p /DATA/HRConvert2
 
 # / THE INSTALL IS THE SAME ONE A BARE METAL HOST RUNS.
 # / --install-complete creates the data locations, corrects permissions, writes the PHP
-# / drop in, writes the ImageMagick policy at whatever prefix this image actually uses, &
-# / verifies the result. The dependency stage above has already run, so it finds every
-# / dependency present & moves on.
+# / drop in & verifies the result. Nothing is written into ImageMagick's configuration. Each
+# / pipeline that runs it carries its own policy into every conversion's sandbox. Without
+# / SYS_ADMIN there is no sandbox, & that policy is read before the image's own, whose rules
+# / decide any coder they name.
+# / The dependency stage above has already run, so it finds every dependency present & moves on.
 # / -y answers the confirmation, because a build has nobody to ask.
 # / The listener service unit is not installed. A container has no systemd & the entrypoint
 # / starts the listener directly when the configuration asks for one.
@@ -129,7 +133,9 @@ RUN php ./convertCore.php -v || true
 # / from the image. The entrypoint's -fp creates a fresh one, in the container's own volume,
 # / the first time the container starts. A container from an older image keeps the shared one
 # / until  php convertCore.php --rotate-secret -y  is run inside it once.
-RUN rm -f /DATA/HRConvert2/*-secret.php /DATA/HRConvert2/secret.php
+# / The secret is kept in Secrets from v4.0.4, with a copy carrying the same key at the top of
+# / the data location, so both places are emptied. The Secrets folder itself stays, with its role.
+RUN rm -f /DATA/HRConvert2/Secrets/*-secret.php /DATA/HRConvert2/*-secret.php /DATA/HRConvert2/secret.php
 
 # / THE IMAGE KEEPS THE RELEASE IN THE WEB ROOT, & THE ENTRYPOINT INSTALLS IT.
 # / Since v4.0.1 -fp installs the application into Application in the data location & leaves

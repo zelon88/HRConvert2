@@ -62,8 +62,10 @@ account root is protecting itself from.
   ROLE        LOCATIONS                              OWNER & MODE
   code        $InstLoc, the installation             root:root, folders 0755, files 0644
   data-root   $DataRootLoc                           root:root, 0755, never walked
-  web         $ConvertTemp, $SessionLoc, $CacheLoc,  the web server account, 0700
-              $LogDir, $ManagerSocketDir
+  secret      $SecretLoc, Secrets                    root:www-data, 0750, never walked
+  web         $SessionLoc, $CacheLoc, $LogDir,       the web server account, 0700
+              $ManagerSocketDir
+  served      $ConvertTemp, DATA                     the web server account, 0700, served inert
   root-only   $EngineDir, $BackupLoc                  root:root, folders 0700, files 0600
   shared      $ProprietaryLoc                        checked, & only its own entry corrected
 
@@ -72,10 +74,11 @@ it. $ConvertLoc is the data location & $DataRootLoc holds that same path on the 
 where $ConvertLoc has been narrowed to the session area a request uses. Sessions live in
 Sessions, the web server account's caches & its home in Cache, its logs in Logs & its sockets
 in Sockets. Root's own log folder is Engine & the previous installation is Last-Installed-Version.
-The install secret sits at the top of the data location, which is enough to keep the web server
-account from replacing it now that the data location is root's. The Environment Manager's state
-sits beside it, hrconvert2-environment.state, root's & readable by the web server account's group
-for the same reason. See ABOUT_ENVIRONMENT_MANAGER.txt.
+The install secret is kept in Secrets, from v4.0.4, which only root may change & only the web
+server account's group may enter, & a copy with the same key stays at the top for every release
+that reads it there. The Environment Manager's state sits at the top of the data location,
+hrconvert2-environment.state, root's & readable by the web server account's group. It is not a
+secret, & Secrets holds nothing else. See ABOUT_ENVIRONMENT_MANAGER.txt.
 
 CODE.
 The installation the command is running from, & no other. Since v4.0.1 that is Application in
@@ -94,12 +97,48 @@ corrected. Until v4.0.1 the data location was the web server account's, because 
 kept directly in it, & that is what let that account replace the install secret or swap a
 managed location for a link. The named path is $DataRootLoc, not $ConvertLoc, because $ConvertLoc
 is narrowed to a session area on the command line where the role is applied.
+It is given its role before the installation is walked, because the installation sits inside it
+as Application, & root walks only a tree whose every folder above is root's. Until v4.0.4 the
+installation came first, so -fp over a data location an old chown -R had given away refused the
+installation, & had to be run a second time.
+It is also given back before -fp moves an older layout's sessions into Sessions & its capability
+cache into Cache, & nothing is moved into either unless it is a real folder no other account can
+replace. Until v4.0.4 both were moved first, into whatever Sessions & Cache led to, so a web server
+account that owned the data location could swap either for a link & have root move a folder or file
+of its own wherever the link led. A move refused for that reason is named in root's log.
+
+SECRET.
+Secrets in the data location, from v4.0.4. It belongs to root, its group is the web server
+account's & it is 0750, so that account may read what root keeps there & can change none of it,
+& no other account may even list it. It is never walked, & only the folder's own owner, group &
+mode are corrected, by changeOwnerWithoutFollowing & then by name, which is safe because the data
+location above it is root's. Root writes each secret in it through the kernel, with the mode that
+secret needs. A folder whose owner & group cannot both be given is left without its role, & until
+it has its role the web server account reads the copy at the top of the data location first.
+Setup Core makes the folder & gives it the role, & puts nothing in it. The application keeps its
+own secrets there. See --About The Install Secret--.
 
 WEB.
 A folder the web server account owns & writes — the session area, the cache, the log folder &
 the socket folder. Root gives each folder itself to that account & has the account set its own
 mode, through runAsAccount, so a link swapped in can only send the change to a file that account
 could already change. Nothing inside is touched. Every session, upload & log stays as it is.
+
+SERVED.
+A web folder the web server hands to browsers, from v4.0.5. HRConvert2's is DATA in the hosted
+location, which held the web role until then. Its owner & mode are given exactly as a web folder's
+are. What makes it served is the Apache configuration -fp writes from the same roles, which hands
+every file in it over as an inert download, & the protection file kept in it on every request.
+The Engine proves both by fetching a canary from it. See ABOUT_DATA_DIRECTORY_PROTECTION.txt.
+It must be inside the hosted location & below it, as written, with no . or .. below the hosted
+location. The rules written for it turn PHP off, so at the hosted location or above it they would
+stop the loader. One reached through a link is served by its written path, which is the path
+Apache matches, & root does nothing through the link. One anywhere else is refused, is given
+no role & has no rule written for it, & the Environment Manager names it MISPLACED. Root makes a
+missing one only beneath a folder no other account can change.
+Root reads every tree it runs before the contract can be read, so the application leaves its own
+served locations out of that read. HRConvert2 leaves out DATA. A served location in the hosted
+location that the read does not leave out stops every command root runs but a repair.
 
 ROOT-ONLY.
 Root's own log folder, Engine, & the previous installation kept for an operator after an update.
@@ -128,7 +167,7 @@ installation was until v4.0.1. Its URL has not changed. It holds four things.
   convertCore.php    the loader, the only PHP the web server runs here      root:root, 0644
   index.html         the protection page                                    root:root, 0644
   UI                 a copy of every static file a browser fetches          root:root, 0755 & 0644
-  DATA               the staging tree, the web server account's, as before  web role
+  DATA               the staging tree, the web server account's, as before  served role
 Everything but DATA is written by -fp as root, through the kernel, from the installation. The
 Apache configuration refuses every other PHP file there. See ABOUT_DATA_DIRECTORY_PROTECTION.txt.
 
@@ -166,32 +205,154 @@ UPGRADING ONCE THE APPLICATION HAS MOVED.
   there. Its config.php is installed with it, as unpacking over the installation has always
   replaced it, & the configuration it replaced is in Last-Installed-Version.
   A drop in of changed files is unpacked into Application, followed by -fp.
+    sudo tar -xzf <drop in> -C <data location>/Application --exclude='./Resources/config.php'
+    sudo php <data location>/Application/convertCore.php -fp
+  A drop in unpacked over the hosted location is refused rather than installed, because it is
+  not a whole release. -fp compares the tree it would install with Application, & a tree that
+  lacks any PHP file Application holds in Resources or UI is not installed. It names the first
+  file missing & where the drop in belongs, & Application is left as it was. A release that
+  removes code on purpose installs once Application has been moved aside by hand.
 A Docker image keeps its release in the web root, & the entrypoint's -fp installs it into the
 data volume on every start, so a volume kept from an older container runs the new release.
 
 -v reports where the application runs from, as Installation, & the hosted location, as Hosted
 location. The environment findings carry a Hosted location check, which the Environment Manager
 records & the listener warns about, & which reads NOT MOVED until the first -fp of v4.0.1.
+A copy running from anywhere the web server does not serve, such as a release unpacked to be
+installed, reads NOT INSTALLED instead. Until v4.0.5 it read NOT MOVED & was said to be served.
+The listener & Environment Manager units name the installed copy whenever there is one, so an
+-fp run from a copy unpacked to be installed writes them for Application, where until v4.0.5
+they named the copy until the installed copy's own -fp wrote them again. That -fp writes the
+Environment Manager's again too, wherever they are installed, so the ones a first --setup
+--install-complete writes from the copy it installs name Application once it ends. Until v4.0.5
+they went on naming that copy. The hand over says when a listener that was running still runs
+the release it started with.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The Install Secret--
 
-The install secret derives every session, token & startup key. It sits at the top of the data
-location, as HRConvert2-secret.php by default.
+The install secret derives every session, token & startup key. It is kept in Secrets in the data
+location, as Secrets/HRConvert2-secret.php by default, from v4.0.4, & a copy carrying the same key
+is kept at the top of the data location, where every earlier release reads it.
 
-It belongs to root & only the web server account's group can read it, root:www-data 0640. The
-data location around it is root's & 0755 now, so the web server account can neither write the
-secret nor remove its name nor put a file of its own beside it. That is the main thing that
-keeps the secret the one root wrote. Root still never runs it, never follows it, & takes nothing
-from it but a key in the exact shape this application writes, because that costs nothing & holds
-even on a host where the data location is somehow not yet root's.
+Each copy belongs to root & only the web server account's group can read it, root:www-data 0640.
+Secrets is root:www-data 0750, so no other account can even list it, & the data location above both
+is root:root 0755. The web server account can neither write a copy nor remove its name nor put a
+file of its own beside it. That is the main thing that keeps the secret the one root wrote. Root
+still never runs it, never follows it, & takes nothing from it but a key in the exact shape this
+application writes, because that costs nothing & holds even on a host where the folders around it
+are somehow not yet root's.
 
-ROOT NEVER RUNS IT.
+EVERY RELEASE BEFORE v4.0.4 KEPT IT AT THE TOP OF THE DATA LOCATION.
+The first -fp of v4.0.4 makes Secrets, gives it its role & copies the secret in with its SAME key,
+so no session ends & no visitor notices. Root's log says so, & -v run as root says where it is.
+
+TWO COPIES CARRY ONE KEY. Every command run as root writes the key it holds into each copy that
+does not already carry it exactly, as root's & 0640 with the web server account's group. So a web
+server running this release, an earlier one, or a tree that was never installed always finds the
+key, & going back to an earlier release costs no session. The web server account reads the copy in
+Secrets first once the folder has its role & the data location is root's, unless the copy at the
+top is root's & was written after it, & the copy at the top first until then, & root looks in the
+same order. Every command run as root names a Secrets that is there without its role, because it is
+what keeps the copy there from being read first. A later release removes the copy at the top once
+no release that reads only it can still be running.
+
+A COPY AT THE TOP ROOT WROTE AFTER THE COPY IN SECRETS IS READ FIRST. A release before v4.0.4
+writes only the copy at the top. After going back to one, a key it rotates or makes there is newer
+than the copy in Secrets, so when this release returns it reads that copy first, by root & by the
+web server account, & root writes its key into Secrets. Reading Secrets first would bring back the
+key that was rotated away. This release writes one key into both copies, so which it reads first
+matters only when the two disagree. Only a copy root owns is put first this way, so a copy another
+account owns never outranks one root wrote. The times are whole seconds of the host's clock, so
+two copies written in the same second, or a clock set back between the two writes, keep the usual
+order.
+
+A COPY KNOWN TO CARRY THE KEY IS NEVER REMOVED. The one copy root removes is one not known to carry
+the key in use, because it carries another, none, or could not be trusted to be read, & that could
+not be written, & only once the web server account can read the key in the copy it reads first, so
+no other key can ever be found there. While that copy is not right, such a copy is left, because
+the web server account may read it in the meantime. Until v4.0.4 there was one copy.
+
+THE KEY IS IN USE ONLY WHEN THE WEB SERVER ACCOUNT READS IT. Once the copies are settled, root
+judges from the owners, the groups & the modes which copy that account would use first, passing
+over one it cannot read & one it cannot use, as it does, & the key root holds is in use only when
+that copy carries it. A copy that could not be written costs nothing while that account reads the
+key from the other, & the next command run as root tries again. When the copy it would use does not
+carry the key, root stops with ERROR 31020 & names the copy, or says it could use neither. Until
+v4.0.4 a key root had written counted as in use whether that account could read it or not.
+
+A COPY IS FINISHED BEFORE IT TAKES ITS NAME. Root makes a new copy EMPTY beside the name, under a
+staged name of its own for every write, gives it the web server account's group & mode 0640, judges
+it, & only then writes the key into it, through a handle the kernel compares with what was judged,
+& renames it over the name. So a request never finds a copy only partly there, & finds one it can
+read whenever the group could be given, & nothing left at a staged name stops the next write. When
+the group cannot be given, a copy that account reads already is kept rather than replaced by one it
+could not read. The mode is set by name, because a default access control list decides a new file's
+mode in place of the umask & could leave the key readable by every account. That is done only in a
+folder root owns that no other account can write, where nothing can swap the name in between.
+Anywhere else a copy wider than 0640 is given no key & never takes the name. A list that names
+another account can still let it read a copy, which no mode shows.
+
+THE FIRST USABLE COPY WINS. A command run as root looks in the copy the web server account reads
+first, then the other, then the first again, & takes the first it can use. A copy that cannot be
+used is passed over & named, & is written again with the key in use, so a damaged copy never costs
+a good one. Two copies that carry two keys are made to carry the one read first, & root's log says
+the other key is gone. A copy that vanishes or changes while it is read was moved or replaced by a
+release before v4.0.4 running as root, & a later look finds it. The web server account looks the
+same way.
+
+A COPY COUNTS ONLY WHEN NO ACCOUNT BUT ROOT & THE WEB SERVER ACCOUNT COULD HAVE WRITTEN IT. The
+copy must be a plain file with one name, & it & every folder from / down to it must belong to root
+or the web server account & be writable by no account but its owner. A group that may write is
+refused whoever the group is, because under an access control list the group bits are only the
+list's mask, & cannot say which other accounts the list lets write. So a copy or a folder its group
+may write, as a chmod -R 775 leaves one, ends every session once, when root writes a new key. A key
+another account could have put there, through a folder somebody opened up, is a key that account
+may know. The folders count as much as the file, because an account that can write one could put a
+file of its own at the name between any look & any read, & a folder reached through a link is
+refused, because whoever can change the link could point it elsewhere in between. So each copy is
+judged before it is read, & by the web server account exactly as by root, so neither uses a copy
+the other refuses. A copy the web server account owns is taken, because every release before v4.0.1
+left the secret so, an old chown -R repair leaves it so again, & that account reads the key whoever
+owns the file. It is written again as root's with its SAME key, so no session ends. Once a command
+run as root has found a place the secret is kept open to another account, only a copy root owns
+counts for the rest of it, because that account could have put a file the web server account owns
+there. Until v4.0.4 a copy at the top counted whoever owned it, & the web server account judged no
+copy. Without PHP's posix functions the web server account & its group are looked up with id &
+getent. When neither can be found, only a copy root owns counts, Secrets & the group of a copy
+cannot be judged, & root says so. A copy another account could only read is still used, & is
+written again 0640 with its key. A list that lets another account read a copy, & nothing more,
+shows in no mode, & is not seen.
+
+A NEW KEY IS WRITTEN ONLY WHEN NO USABLE COPY IS FOUND, & NEVER IN PLACE OF ONE ROOT CANNOT REACH.
+Root reads in Secrets only while every folder above it is root's. A data location another account
+owns or can write, as an old chown -R repair, a restored backup or a bind mount leaves one, would
+put the secret out of reach, so a command run as root gives the data location back to root,
+root:root 0755, before it reads, exactly as -fp's data-root role does, during a repair & whenever
+Secrets is in it. Any other command leaves a data location with no Secrets in it alone, because an
+earlier release may still keep its sessions directly in it. While the installation is inside the
+data location, only the repairs get that far, because the gate stops every other command first with
+ERROR 28008, & -fp is what to run. When the copy in Secrets is out of reach all the same, it may be
+the good one, so root makes no new key, changes nothing & stops with ERROR 31020, naming what is in
+the way. A rotation writes its new key into every copy, & is refused the same way while a copy is
+out of reach, because that copy would keep the old key. No copy is ever written where an account
+other than root & the web server account could replace it, because neither would use it.
+
+ONE COMMAND RUN AS ROOT SETTLES IT AT A TIME. A lock, secret.lock in Engine, opened through the
+kernel, is held while the secret is settled. Without it a command that had read the old key could
+write it back over a rotation another command had just made, after that rotation had been reported
+done. The lock is taken only while Engine is root's own, because a lock another account could hold
+could stall every repair, & a command that has waited fifteen seconds goes on without it & says so.
+Before the first -fp there is no Engine & nothing else to wait for.
+
+NOBODY RUNS IT.
 Until v4.0.1 every command run as root loaded it with require, so a web server account that
 wrote PHP into it had that PHP run as root. Root now reads it with PHP's tokenizer & accepts
 it only in the exact shape this application writes. Anything else is replaced with a new key,
-& a warning says so.
+& a warning says so. The web server account reads it the same way from v4.0.4. Until then it
+required it, so whoever could write the file, through a folder somebody had made writable, ran
+code as the web server account on its next request.
 
 Every command run as root checks it, & writes it again when it is missing, unusable or not in
 that shape. Root writes it without following anything. A file an earlier release left, owned
@@ -361,6 +522,11 @@ off, the owner is left as it is & a WARNING entry says so. Anything root creates
 folder the web server account owns, such as the data location or a file beside it, then stays
 root's until it is turned on. Turn it on & keep it on.
 
+With it off, an account that can reach a copy of the install secret can also give it a second name,
+& every reader refuses a file with two names, so no request finds a key in that copy until the next
+command run as root writes it again. Before Secrets has its role the copy at the top is the only
+one, & that command makes a new key, which ends every session.
+
   sudo sysctl -w fs.protected_hardlinks=1
   echo 'fs.protected_hardlinks = 1' | sudo tee /etc/sysctl.d/90-protected-hardlinks.conf
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -368,10 +534,13 @@ root's until it is turned on. Turn it on & keep it on.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Who Applies The Roles--
 
-  -fp                   Applies every role, then removes the build environment when
+  -fp                   Applies every role, copies the install secret into Secrets once that
+                        folder has its role, then removes the build environment when
                         config.php asks for it. Run it after installing & after any change.
-  Any command as root   Creates the data location when it is missing, & checks the install
-                        secret & writes it again when it is not right.
+  Any command as root   Creates the data location when it is missing, & gives it back to root
+                        when another account holds it & Secrets is in it. Checks the install
+                        secret & writes it again when it is not right. Once Secrets has its
+                        role, the key is written into it too, & the copy at the top is kept.
   -u                    Refuses unless the folder the swap happens in is root's, ERROR
                         31023, & runs the new release's own -fp as it finishes. A release
                         arrives 0664 from GitHub & is extracted through umask 022. The
@@ -411,6 +580,11 @@ The folders above the hosted location & above each additional data location, suc
 are named the same way as a warning, & -fp goes on. It makes the session folders in an
 additional data location once the folder above it is root's.
 
+A data location its group may write, as a chmod -R 775 leaves one, is one the install secret is
+never trusted in. The web server account refuses the secret there from the moment v4.0.4 is in
+place until -fp gives the location back to root, & -fp then writes a new key, which ends every
+session once. The default, 0755, keeps the key.
+
 The listener service keeps running the release it started with. When -fp updates its unit it
 says so, & the service is restarted once by hand.
 
@@ -443,9 +617,10 @@ WHAT THIS STEP SETTLED. The data location is a root root owns now, so the things
 releases could not place safely have a home. Root's log is a file in Engine rather than standard
 error. The web server account's home is Cache rather than the data location, which closes the
 empty HOME an earlier release ran its tools with. Sessions live in Sessions & the backup is kept
-again by default, because its folder above is root's. The install secret stays at the top of the
-data location, now protected by the root owned folder around it rather than by a folder of its
-own. See Documentation/ABOUT_LOGGING.txt for where root's log goes.
+again by default, because its folder above is root's. The install secret stayed at the top of the
+data location, protected by the root owned folder around it, until v4.0.4 gave it a folder of its
+own, Secrets, & kept a copy with the same key at the top for earlier releases. See
+Documentation/ABOUT_LOGGING.txt for where root's log goes.
 
 THE ENVIRONMENT MANAGER RUNS AGAIN, & KEEPS BOTH RULES.
 Until v4.0.1 every pass halted with Engine-35000 & exit status 0, so the hourly root pass never
@@ -463,8 +638,19 @@ ABOUT_COMPONENTS.txt.
 
 THE APPLICATION IS INSTALLED OUTSIDE THE WEB ROOT.
 The web root keeps only the loader & what a browser fetches, so no code, configuration or build
-tooling of this application can be requested there any longer. Secrets still sit at the top of
-the data location rather than in a folder of their own.
+tooling of this application can be requested there any longer.
+
+THE INSTALL SECRET HAS A FOLDER OF ITS OWN, FROM v4.0.4.
+Secrets is root's & only the web server account's group may enter it, so no other account can
+list it, & -fp copies an earlier release's secret into it with its key. How the secret is read,
+written & turned into sessions is still the application's, & moves with authentication into a
+core of its own. Only the folder is the Engine's. See ENGINE_MIGRATION_STATUS.txt, step six.
+A release before v4.0.4 does not know Secrets, & reads the copy at the top, which carries the same
+key, so going back ends no session. Its -fp moves Secrets into Sessions as if it were a session,
+& the next -fp of v4.0.4 makes it again & copies the key back in. Nothing reads the folder left in
+Sessions, which stays root's, & it may be deleted. While a folder of that name is there, going back
+again leaves Secrets where it is. A key the earlier release rotates or makes at the top is newer
+than the copy in Secrets, so this release reads it first when it returns & writes it into Secrets.
 
 THE APACHE CONFIGURATION REFUSES THE DATA LOCATION, & ROOT WRITES IT THROUGH THE KERNEL.
 hrconvert2.conf refuses every data location outright, so Sessions, Cache & Logs are not served

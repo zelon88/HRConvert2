@@ -137,6 +137,8 @@ fault of either kind does not wait for another one.
               reloadApparmorProfile, closeHRC2Connection (now closeClientConnection),
               extractCliOption & parseArgumentVector. Every one passed questions one, two & four of
               ABOUT_ENGINE_CONTRACT.txt & failed three, & every one was caught by hand.
+              reloadApparmorProfile went back into the Engine at v4.0.5, with the sandbox
+              it serves, which left nothing in the application that calls it.
   pins        Verified by hand every release until it was not.
   config      A fatal on --check-depends after eight settings were added to config.php, to
               the required list & to the file, & not to the global declaration where the file

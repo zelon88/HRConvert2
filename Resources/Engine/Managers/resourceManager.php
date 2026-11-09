@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.1.
+// / v4.0.5.
 // / This file is the Resource Manager. It is a manager subcomponent of the Engine.
 // / The Resource Manager polls the host, calculates the budget every operation is granted from & sweeps anything that has outlived its welcome.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.1';
+$ManagerVersion = 'v4.0.5';
 // / -----------------------------------------------------------------------------------
 
 
@@ -63,7 +63,8 @@ function runResourceManager() {
   $lastPollTime = $lastReapTime = $lastSweepTime = $locationsSwept = $entriesDropped = 0;
   $environmentIsReady = $dataIsProtected = FALSE;
   $environmentFindings = $scriptFinding = array();
-  $exposureStatus = $exposureDetail = $scriptStatus = $scriptDetail = $locationStatus = $hostedStatus = $hostedDetail = '';
+  $exposureStatus = $exposureDetail = $scriptStatus = $scriptDetail = $locationStatus = $hostedStatus = $hostedDetail = $locationName = $findingCheck = '';
+  $locationFinding = array();
   $socketPath = buildManagerSocketPath('resource-manager');
   list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
   if (!$serverIsOpen) errorEntry('The Resource Manager could not open its socket!', 31002, TRUE);
@@ -140,13 +141,25 @@ function runResourceManager() {
         // / a second time here. Its status is read back out of the findings so the listener
         // / can say the right thing about it, because the three outcomes need three
         // / different sentences & a degraded environment warning covers none of them.
-        $exposureStatus = environmentFindingStatus($environmentFindings, 'DATA exposure');
-        if ($exposureStatus === 'EXPOSED') warningEntry('The DATA directory is EXPOSED. Uploaded files are served as renderable documents rather than as downloads. Run the -fp argument as root & apply the rules in the server configuration. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.');
-        // / A broken tree is an outage rather than an exposure & is worth saying so plainly.
-        // / Every download & every share link is failing while this is true.
-        else if ($exposureStatus === 'BROKEN') warningEntry('The DATA directory is returning a server error, so no download & no share link works. Check the web server error log for a line naming DATA/.htaccess. Deleting that file restores service.');
-        else if ($exposureStatus !== 'ok') warningEntry('The exposure of the DATA directory could not be established. It reported '.$exposureStatus.'.');
-        else if ($Verbose) logEntry('DATA directory exposure revalidated. The tree serves inert content.');
+        // / Each served location has an exposure line named for its folder, so HRConvert2's reads
+        // / DATA, & one the Engine refused has a placement line instead. Until v4.0.5 only the DATA
+        // / line was read, so a location it did not name was never re-proved at all.
+        foreach ($environmentFindings as $locationFinding) {
+          if (!isset($locationFinding['Check'], $locationFinding['Status'])) continue;
+          $findingCheck = (string)$locationFinding['Check'];
+          $exposureStatus = (string)$locationFinding['Status'];
+          $exposureDetail = isset($locationFinding['Detail']) ? (string)$locationFinding['Detail'] : '';
+          if (substr($findingCheck, -10) === ' placement') {
+            if ($exposureStatus !== 'ok') warningEntry('The '.substr($findingCheck, 0, -10).' location reported '.$exposureStatus.'. '.$exposureDetail);
+            continue; }
+          if (substr($findingCheck, -9) !== ' exposure') continue;
+          $locationName = substr($findingCheck, 0, -9);
+          if ($exposureStatus === 'EXPOSED') warningEntry('The '.$locationName.' directory is EXPOSED. Uploaded files are served as renderable documents rather than as downloads. Run the -fp argument as root & apply the rules in the server configuration. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.');
+          // / A broken tree is an outage rather than an exposure & is worth saying so plainly.
+          // / Every download & every share link is failing while this is true.
+          else if ($exposureStatus === 'BROKEN') warningEntry('The '.$locationName.' directory is returning a server error, so no download & no share link works. Check the web server error log for a line naming '.$locationName.'/.htaccess. Deleting that file restores service.');
+          else if ($exposureStatus !== 'ok') warningEntry('The exposure of the '.$locationName.' directory could not be established. It reported '.$exposureStatus.'.');
+          else if ($Verbose) logEntry($locationName.' directory exposure revalidated. The tree serves inert content.'); }
         $lastSweepTime = time(); }
       list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'internal', (int)$ManagerMessageBatchSize, (int)$ManagerSocketTimeout);
       $messageIndex = 0;
@@ -188,7 +201,7 @@ function runResourceManager() {
         $messageIndex++; } }
     $ResourceManagerExitedCleanly = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $scriptFinding, $scriptStatus, $scriptDetail, $locationStatus, $hostedStatus, $hostedDetail, $dataIsProtected, $exposureStatus, $exposureDetail, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
+  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $scriptFinding, $scriptStatus, $scriptDetail, $locationStatus, $hostedStatus, $hostedDetail, $dataIsProtected, $exposureStatus, $exposureDetail, $locationName, $findingCheck, $locationFinding, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
   return $ResourceManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 

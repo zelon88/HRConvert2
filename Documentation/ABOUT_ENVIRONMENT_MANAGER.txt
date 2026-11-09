@@ -109,13 +109,19 @@ repair reads it. An unattended repair starts & enables no service, & rewrites th
 configuration files this application owns only when --Environment Manager May Rewrite Configs--
 is TRUE. Everything else it does is exactly what -fp does. -fp itself never sees the flag.
 
-A WATCHING PASS CHANGES NOTHING, ITS OWN BOOT INCLUDED.
-Every command root runs checks the sandbox AppArmor profile while it boots, & every other
-command repairs it there. A pass only checks it, because its repair, when one is permitted &
-due, is -fp's & repairs the profile itself. The three policy checks keep their result for the
-rest of a run, & a result found without permission to repair is checked again when a repair is
-permitted, so the check a pass made first cannot answer the repair with the failure it was
-asked to fix.
+A WATCHING PASS CHANGES NOTHING IT CHECKS, ITS OWN BOOT INCLUDED.
+Every command checks the sandbox AppArmor profile while it boots, & none repairs it there. A
+pass's repair, when one is permitted & due, is -fp's & repairs the profile itself. Until v4.0.5
+every root command but a pass repaired it while it booted, -v among them. The three policy
+checks keep their result for the rest of a run, & a result found without permission to repair
+is checked again when a repair is permitted, so the check a pass made first cannot answer the
+repair with the failure it was asked to fix.
+One thing is not a check, & a pass does it while it boots exactly as -v does. It settles the
+install secret, which can write the key into a copy that does not carry it, or remove a copy not
+known to carry it that cannot be written. A data location another account holds stops a pass
+before that with ERROR 28008, as the gate stops every command run as root but a repair, because
+the installation is inside it. -fp takes it back.
+See ABOUT_MANAGED_LOCATIONS.txt, --About The Install Secret--.
 
 IT LOOKS EVERY HOUR & REPAIRS ONCE A DAY.
 A repair walks the data tree, rewrites configuration & touches services. Doing that hourly
@@ -156,8 +162,12 @@ And only when --Environment Manager May Rewrite Configs-- is TRUE.
   99-hrconvert2.ini in the php conf.d, & hrconvert2.conf in the Apache conf-available, which
   reloads Apache once the new configuration has passed its own test, & only while Apache is
   running. Until v4.0.1 that reload started an Apache somebody had stopped.
-  The sandbox kernel settings & the drop in that keeps them across a reboot.
-  The sandbox AppArmor profile, the ImageMagick policy & the OpenSCAD AppArmor override.
+  The sandbox kernel settings & the drop in that keeps them across a reboot. From v4.0.5 the
+  drop in holds only what was changed, & one holding more is reported as outdated. One an
+  earlier release wrote held all three settings on every host, so it keeps a namespace line
+  only where the next boot would refuse namespaces without it.
+  The sandbox AppArmor profile, & the ImageMagick policy & the AppArmor additions an earlier
+  release wrote into the host, which a permitted repair puts back as they were.
 With it FALSE each of those is checked & reported, & left exactly as it was found.
 Every one of them is a file this application owns or a setting it needs. That is why
 --Environment Manager May Rewrite Configs-- defaults to TRUE while repair itself defaults to
@@ -174,14 +184,37 @@ $EngineEnvironmentProvider names the function that reports on an application's e
 There is one definition of what a healthy installation looks like & three things read it.
 
 For HRConvert2 that is applicationEnvironmentFindings() in convertCore.php, covering the
-kernel namespace settings, the sandbox AppArmor profile, the ImageMagick policy, the OpenSCAD
-AppArmor override, the DATA exposure test, where the data location is & the hosted location. A
-data location inside the document root is reported as MISPLACED, & a release unpacked over the
-hosted location & not installed as UNINSTALLED.
+ImageMagick policy each pipeline carries & what confines OpenSCAD.
 
-The Engine adds two checks of its own, because both are things it provides. Bubblewrap must be
+The Engine adds checks of its own, because each is something it provides. Bubblewrap must be
 able to build a namespace, & the bootstrap script must match the core or be disabled. A script
 from another release is reported as MISMATCHED & a permitted repair disables it, as -fp does.
+FROM v4.0.5 THE ENGINE ALSO CHECKS THE KERNEL SETTINGS & THE APPARMOR PROFILE EVERY SANDBOX
+NEEDS, which were the application's until then & are reported where they always were, first.
+On a kernel that restricts unprivileged namespaces, the restriction is reported as left in
+force when every sandbox runs the application's own copy of bubblewrap, which the profile is
+attached to, & as BLOCKED when that copy is missing or cannot be run, or cannot carry one &
+lifting it is not permitted. A pass never lifts it, & neither does a pass's repair, because
+lifting it changes what every program on the host may do & is -fp's alone. Where lifting is
+forbidden, a permitted repair switches back on a restriction HRConvert2 had lifted. The profile
+reads exposed where an account other than root could put a program at the copy's path, & a
+permitted repair takes it out. The copy has a line of its own. It reads MISSING where no
+sandbox can be built without it, UNSAFE where an account other than root could change it,
+NOT RUNNABLE where the web server's account cannot run it, ORPHANED where the bubblewrap it
+was copied from has been removed, & BEHIND where it is in use & the system's bubblewrap has
+been upgraded since it was copied. Neither a pass nor its repair changes the copy, so each
+pass warns until the dependency command its line names is run. The sysctl drop in has a line
+of its own wherever there is one.
+FROM v4.0.5 THE ENGINE ALSO CHECKS WHAT THE WEB SERVER SERVES, from the roles in the contract.
+Each served location is asked whether it hands its files over inert, which HRConvert2 reads as
+the DATA exposure test, & the data location & the hosted location are checked as before. They
+were the application's until then & are reported where they always were, after its own. A data
+location inside the document root is reported as MISPLACED, & a release unpacked over the
+hosted location & not installed as UNINSTALLED. A copy running from a folder the web server
+does not serve, unpacked to be installed, is NOT INSTALLED, where until v4.0.5 it was said to be
+served. A served location the contract places anywhere
+but inside the hosted location is refused & reported as MISPLACED on a placement line of its own,
+which never stands in for a location's exposure line.
 
 An application supplying no provider gets the Engine's own checks & a manager with very
 little to do, which is correct rather than broken.
@@ -198,7 +231,7 @@ That answers the question an operator actually asks, which is not whether the en
 is healthy right now but whether anything has been quietly wrong since the last time
 somebody looked. --status asks it, as root or as the web server account.
 
-IT LIVES AT THE TOP OF THE DATA LOCATION, BESIDE THE INSTALL SECRET.
+IT LIVES AT THE TOP OF THE DATA LOCATION, BESIDE A COPY OF THE INSTALL SECRET.
   <data location>/hrconvert2-environment.state     root:<web server group> 0640
 Root owns that folder, so no other account can replace a name in it. The file is root's & only
 its group is the web server account's, so that account can read what a pass found & can never
@@ -206,6 +239,9 @@ change it. Root writes it through the kernel, as a new file renamed into place, 
 the last state or the new one & never part of either, & nothing planted at the name is followed.
 Every reader reads it through the kernel too. Engine was considered & refused, because no account
 but root can read anything inside it, which would hide the state from every reader it exists for.
+Secrets holds secrets & nothing else, & the state is not one, so it is not kept there either. The
+install secret sat beside the state alone until v4.0.4. It is kept in Secrets now, & a copy with
+the same key stays beside the state for every release that reads it there.
 Until v4.0.1 it was written into the web server account's socket folder, where root writes nothing.
 
 A state the pass cannot read counts as no repair today, so one is allowed, & the pass says why.

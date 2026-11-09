@@ -574,7 +574,7 @@ check_config() {
 # / -----------------------------------------------------------------------------------
 # / CHECK. An owner is changed only through changeOwnerWithoutFollowing().
 # / The second rule of ABOUT_MANAGED_LOCATIONS.txt. The Python states why, & exempts the same
-# / four functions for the same reasons. A call is found in the blanked copy, where no string or
+# / three functions for the same reasons. A call is found in the blanked copy, where no string or
 # / comment can fake one. A shell command is found in the original, on a line that is code.
 check_owner() {
   while IFS= read -r file; do
@@ -582,7 +582,7 @@ check_owner() {
       FNR == NR { original[FNR] = $0; next }
       { blanked[FNR] = $0; count = FNR }
       END {
-        exempt["changeOwnerWithoutFollowing"] = 1; exempt["applyCodeRole"] = 1; exempt["applyRootOnlyRole"] = 1; exempt["runAsAccount"] = 1
+        exempt["changeOwnerWithoutFollowing"] = 1; exempt["applyCodeRole"] = 1; exempt["applyRootOnlyRole"] = 1
         current = ""; started = 0; depth = 0
         for (i = 1; i <= count; i++) {
           line = blanked[i]

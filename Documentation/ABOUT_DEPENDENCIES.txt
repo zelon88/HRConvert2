@@ -129,6 +129,13 @@ An install can take hours on a slow connection, because some dependencies are la
 rather than quick package installs. A status line is printed every minute while one runs, with
 the elapsed time & the last thing the installer said, so a slow install is distinguishable
 from a stuck one.
+
+A package can publish something on every site the host serves as it installs. javascript-common,
+which arrives with the packages Calibre recommends, turns on an alias of /javascript to
+/usr/share/javascript. --install-depends notes which of the Apache configurations the contract
+names in $EngineUnwantedApacheConfs are on before it installs anything, & turns off with
+a2disconf each one the install turned on. One an administrator turned on is left as it is. A
+running web server keeps it until it is reloaded, which the install says.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

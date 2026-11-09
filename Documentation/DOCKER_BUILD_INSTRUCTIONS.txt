@@ -195,7 +195,7 @@ NOTE ON THE GITHUB CONTAINER REGISTRY.
 4. A Docker container is disposable. A Docker user updates by pulling a new image, not by
    running the built in updater. The updater exists for bare metal installations.
 5. Everything a container must keep across a replacement lives outside the image.
-  5a. The data location, which holds every session and the install secret, HRConvert2-secret.php.
+  5a. The data location, which holds every session and both copies of the install secret.
   5b. Resources/config.php.
   5c. Confirm both are on a volume before telling anyone to pull a new image.
 6. An image built before v4.0.1 shipped the install secret it was built with, so every

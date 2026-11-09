@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policymap [
+  <!ELEMENT policymap (policy)*>
+  <!ATTLIST policymap xmlns CDATA #FIXED "">
+  <!ELEMENT policy EMPTY>
+  <!ATTLIST policy xmlns CDATA #FIXED "" domain NMTOKEN #REQUIRED
+    name NMTOKEN #IMPLIED pattern CDATA #IMPLIED rights NMTOKEN #IMPLIED
+    stealth NMTOKEN #IMPLIED value CDATA #IMPLIED>
+]>
+<!-- Carried by the HRConvert2 Image pipeline into each of its conversions. Do not edit by hand. -->
+<!-- Inside a sandbox it takes the place of the host's policy.xml. Outside one it is read first. -->
+<!-- Nothing writes it into the host. A copy put there by hand is the administrator's own. -->
+<policymap>
+  <!-- Resource ceilings. A malformed image must not exhaust the host. -->
+  <policy domain="resource" name="temporary-path" value="/tmp"/>
+  <policy domain="resource" name="memory" value="512MiB"/>
+  <policy domain="resource" name="map" value="1GiB"/>
+  <policy domain="resource" name="width" value="32KP"/>
+  <policy domain="resource" name="height" value="32KP"/>
+  <policy domain="resource" name="area" value="512MP"/>
+  <policy domain="resource" name="disk" value="4GiB"/>
+  <policy domain="resource" name="file" value="768"/>
+  <policy domain="resource" name="thread" value="2"/>
+  <policy domain="resource" name="time" value="300"/>
+  <policy domain="resource" name="list-length" value="128"/>
+  <!-- Coders that reach off the machine. A conversion never needs these. -->
+  <policy domain="coder" rights="none" pattern="URL"/>
+  <policy domain="coder" rights="none" pattern="HTTPS"/>
+  <policy domain="coder" rights="none" pattern="HTTP"/>
+  <policy domain="coder" rights="none" pattern="FTP"/>
+  <policy domain="coder" rights="none" pattern="MSL"/>
+  <policy domain="coder" rights="none" pattern="MVG"/>
+  <policy domain="coder" rights="none" pattern="EPHEMERAL"/>
+  <policy domain="coder" rights="none" pattern="SHOW"/>
+  <policy domain="coder" rights="none" pattern="WIN"/>
+  <policy domain="coder" rights="none" pattern="PLT"/>
+  <policy domain="coder" rights="none" pattern="TEXT"/>
+  <policy domain="coder" rights="none" pattern="LABEL"/>
+  <!-- Indirect reads. An @ prefixed argument reads a path off the filesystem. -->
+  <policy domain="path" rights="none" pattern="@*"/>
+  <!-- Delegates are disabled. Ghostscript is reached through the coders below. -->
+  <policy domain="delegate" rights="none" pattern="HTTPS"/>
+  <policy domain="delegate" rights="none" pattern="HTTP"/>
+  <!-- Document coders. HRConvert2 converts these & the stock policy blocks them. -->
+  <policy domain="module" rights="read|write" pattern="{PDF,PS,PS2,PS3,EPS,XPS,EPI,EPT}"/>
+  <policy domain="coder" rights="read|write" pattern="PDF"/>
+  <policy domain="coder" rights="read|write" pattern="PS"/>
+  <policy domain="coder" rights="read|write" pattern="PS2"/>
+  <policy domain="coder" rights="read|write" pattern="PS3"/>
+  <policy domain="coder" rights="read|write" pattern="EPS"/>
+  <policy domain="coder" rights="read|write" pattern="XPS"/>
+  <!-- Cache & system policies are fixed once written. -->
+  <policy domain="cache" name="shared-secret" value="passphrase" stealth="true"/>
+  <policy domain="system" name="shred" value="1"/>
+  <policy domain="system" name="max-memory-request" value="256MiB"/>
+</policymap>

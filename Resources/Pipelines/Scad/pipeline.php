@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.5.
 // / This file is the converter for the Scad pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Scad conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -26,15 +26,15 @@
 // /   rectifySCAD           rewrites the source using what the Sanitizer found
 // /   sanitizeAllSCADUploads  applies that to every file in the session
 // / All four are knowledge about what OpenSCAD source MEANS, which is this pipeline's job.
-// / The policy files did not move & must not.
-// / verifyOpenScadPolicy() & openScadApparmorContents() stay in convertCore.php.
-// / fixManagedPermissions() & validateOperatingEnvironment() write & check that policy
-// / during installation, whether or not this pipeline is installed at all. A sandbox
-// / profile is part of the operating environment rather than part of a converter.
+// / The policy check did not move & must not. verifyOpenScadPolicy() stays in convertCore.php,
+// / where fixManagedPermissions() & validateOperatingEnvironment() reach it whether or not this
+// / pipeline is installed at all. From v4.0.5 it writes nothing. It takes back the override an
+// / earlier release added to a profile confining OpenSCAD, which a render in its sandbox never
+// / reached, & reports such a profile, because that profile is what governs a render.
 // / This pipeline asks for OpenSCAD through verifiedToolPath(), which answers from the
-// / manifest, & calls sandboxCommand(), limitCommand(), verifyBwrap(), verifyRequiredDirs(),
-// / cleanFiles() & is_dir_empty(), which remain in convertCore.php because the core uses
-// / them elsewhere.
+// / manifest, & calls limitCommand(), verifySandboxLauncher(), cleanFiles() & is_dir_empty(), which
+// / are the Engine's. It builds its own sandbox rather than calling sandboxCommand(), as
+// / convertSCAD() says.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -450,13 +450,18 @@ function convertSCAD($pathname, $newPathname, $extension) {
   $ConversionSuccess = $ConversionErrors = FALSE;
   $allSanitized = $readyToRender = FALSE;
   $scadBinary = $bwrapBinary = FALSE;
+  $sandboxLauncher = '';
   $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = 0;
   $openscadExitCode = $missingIncludes = 0;
   $sanitizedPath = $openscadCommand = $sandboxOutputName = $sandboxOutputPath = '';
   $openscadOutput = array();
   // / Confirm this server can isolate a render before anything else happens.
   // / A server that cannot isolate a render must refuse to render at all.
-  $bwrapBinary = verifyBwrap();
+  // / The launcher is what built the proving sandbox, so it is what builds this one. On a kernel
+  // / that restricts unprivileged namespaces it is the application's own copy of bubblewrap, which
+  // / its AppArmor profile is attached to, & until v4.0.5 this ran the system's bubblewrap, which
+  // / relied on the profile an earlier release attached to it, or on the restriction being lifted.
+  list ($bwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
   if ($bwrapBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('Bubblewrap is missing or non functional, so OpenSCAD renders cannot be isolated!', 27007, FALSE); }
@@ -495,7 +500,7 @@ function convertSCAD($pathname, $newPathname, $extension) {
     // / The render is wrapped in its resource ceiling below, in place of the fixed
     // / nice -n 19 this used to carry. See the note under the command.
     $openscadCommand = 'timeout '.(int)$SCADConversionTimeout
-      .' '.escapeshellarg($bwrapBinary)
+      .' '.$sandboxLauncher
       .' --unshare-all'
       .' --die-with-parent'
       .' --new-session'
@@ -577,7 +582,7 @@ function convertSCAD($pathname, $newPathname, $extension) {
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $openscadOutput may hold quoted source lines & is cleared like everything else.
-  purgeSensitiveMemory($EnableMemoryProtection, $sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $missingIncludes, $readyToRender, $scadBinary, $bwrapBinary, $allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved, $sandboxOutputName, $sandboxOutputPath, $pathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $missingIncludes, $readyToRender, $scadBinary, $bwrapBinary, $sandboxLauncher, $allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved, $sandboxOutputName, $sandboxOutputPath, $pathname);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

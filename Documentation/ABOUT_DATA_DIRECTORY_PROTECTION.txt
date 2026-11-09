@@ -93,15 +93,16 @@ That failure mode is the whole argument. A control that fails silently is worse 
 control, because it also removes the reason to look.
 
   Preferred    Server configuration, WRITTEN & ACTIVATED AUTOMATICALLY by -fp.
-               verifyApacheConfiguration() builds a <Directory> block for this
-               installation's own DATA path, & one refusing each data location, writes
+               verifyApacheConfiguration() in Setup Core builds a <Directory> block for
+               each location the contract gives the served role, which for HRConvert2 is
+               its own DATA path, & one refusing each data location, writes
                them to the Apache configuration directory this host uses, links the file
                into conf-enabled on a Debian layout, proves it parses with apachectl
                configtest & gracefully reloads a server that is running.
                No override level applies to server configuration, so the whole rule set is
                reliable there & nothing is silently dropped.
   Fallback     DATA/.htaccess, written by -fp & --setup & kept current on every request by
-               maintainDataProtection(). It needs AllowOverride FileInfo or better on that
+               maintainDataProtection() in Environment Core. It needs AllowOverride FileInfo or better on that
                directory & is inert without it. It exists for an installation whose web
                server this cannot configure.
 
@@ -193,8 +194,8 @@ So the file -fp writes refuses each data location outright, the primary & every 
   </Directory>
 
 A data location reached through a link is refused as it is written & as it resolves. One that
-holds the installation or its DATA tree is not refused, because refusing it would refuse
-HRConvert2 as well, & -fp names it in a warning instead. Measured on Apache 2.4, a data
+holds the hosted location is not refused, because refusing it would refuse HRConvert2 as well, &
+-fp names it in a warning instead. Until v4.0.5 one holding only the DATA tree was spared too. Measured on Apache 2.4, a data
 location inside the document root answered 200 for its own files without this block & 403
 with it.
 

@@ -66,10 +66,11 @@ their lower case forms. A path or a name given to an option is passed exactly as
 
 HRConvert2 should be run as root when using the command line.
 
-Running as root does NOT leave anything the web server user cannot use. The data location &
-its folders belong to the web server user, root writes no logfile & prints its log lines to
-standard error, & the install secret belongs to root & is readable by the web server user's group. Root never runs, reads as code,
-or works by name inside anything the web server user can change.
+Running as root does NOT leave anything the web server user cannot use. The data location is
+root's, & the session, cache, log & socket folders in it belong to the web server user. Root logs
+to a file of its own in Engine, which no other account can read. The install secret is kept in
+Secrets, belongs to root & is readable by the web server user's group & nobody else. Root never
+runs, reads as code, or works by name inside anything the web server user can change.
 See ABOUT_MANAGED_LOCATIONS.txt.
 
 ROOT RUNS NOTHING ANOTHER ACCOUNT COULD HAVE CHANGED. Every command run as root first reads
@@ -83,8 +84,9 @@ Running as a non root user is safe but limited. Any operation that would require
 the current user does not have will fail rather than partially complete. The filesystem is
 not left in a broken state. The version & help arguments work as any user.
 
-The install secret is root:www-data 0640, so a non root user who is also not the web server
-user cannot read it. This is deliberate. That file derives every session identifier in the
+The install secret is root:www-data 0640, in a folder that is root:www-data 0750 & at the top of
+the data location, so a non root user who is also not the web server user can read neither copy,
+& cannot even list Secrets. This is deliberate. That file derives every session identifier in the
 application. Such a user is given a secret of its own, in a folder of its own.
 
 An administrator who modifies an HRConvert2 installation using external tools must leave
@@ -92,9 +94,13 @@ every location the way -fp leaves it.
 
   The installation        root:root, folders 0755, files 0644
   The DATA folder in it   www-data:www-data 0700
-  The data location       www-data:www-data 0700, & its Logs & Sockets folders the same
+  The data location       root:root 0755
+  Its Sessions, Cache,    www-data:www-data 0700
+  Logs & Sockets folders
+  Its Engine folder       root:root 0700
+  Its Secrets folder      root:www-data 0750
+  The install secret      root:www-data 0640, in Secrets & at the top
   The backup              root:root 0700
-  The install secret      root:www-data 0640
 
 DO NOT GIVE THE INSTALLATION TO THE WEB SERVER USER.
 chown -R www-data was the documented repair until v4.0.1, & it let the web server user change
@@ -260,6 +266,15 @@ Removing every dependency in the manifest would take PHP, Apache & the package m
 & leave a host that cannot be recovered without physical access. A dependency belonging to the
 Core subsystem, or a required part of the Sandbox subsystem, is never removed at all.
 
+--install-depends & --update-depends ALSO MAKE THE COPY OF BUBBLEWRAP EVERY SANDBOX RUNS.
+Where the kernel can restrict unprivileged namespaces, each copies the system's bubblewrap to
+/usr/local/libexec/hrconvert2/bwrap, which only root & the web server user's group may run,
+runs it as that user to prove it can, & installs the AppArmor profile attached to it, unless an
+account other than root could put a program at that path. --install-complete does the same, as
+it installs the dependencies first. A copy that already matches is left as it is, & a filter
+that does not cover the Sandbox subsystem leaves it alone. -fp never changes the copy, so run
+--update-depends after the system's bubblewrap is upgraded. -v says when it is.
+
 --install-complete runs seven stages, in the order an installation actually depends on.
 
   1  Dependencies.          Nothing below can be verified until the tools exist.
@@ -336,7 +351,10 @@ answers whether an installation will actually work rather than what it is config
 A dependency that reports FAILED is missing, unidentifiable, or older than the minimum, & the
 conversion type that depends on it will refuse to run rather than fail in a confusing way.
 
-This argument works when run as any user.
+This argument works when run as any user. Where the kernel restricts unprivileged namespaces,
+only root & the web server user's group may run the copy of bubblewrap every sandbox runs, so
+an account that is neither reads the sandbox & the copy as not judged, & is told to run -v as
+root.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -519,9 +537,20 @@ It performs the following.
   every copy of the application left there.
   Removes the build environment & the development documentation when config.php asks for it.
   Disables a bootstrap script that does not match this core, & enables one that matches again.
-  Installs or repairs the ImageMagick policy that permits document coders.
-  Installs or repairs the AppArmor profile bubblewrap needs to build a sandbox.
-  Installs or repairs the AppArmor override a confined OpenSCAD needs.
+  Installs or repairs the AppArmor profile named for the application, where the kernel can
+  restrict unprivileged namespaces. It is attached to the application's own copy of bubblewrap,
+  which every sandbox runs, & only where no account but root could put a program at that path.
+  One attached where that is no longer so is taken out. The copy is made only by
+  --setup --install-depends, --update-depends & --install-complete & as an update is installed,
+  & never by -fp run from the installed copy.
+  Lifts that restriction only where bubblewrap refuses a sandbox twice & config.php permits it,
+  & never for an attempt cut short or to cover a copy that is missing or cannot be run, & holds
+  for the next boot only the kernel settings it changed. Where config.php forbids lifting it,
+  switches back on a restriction this application lifted.
+  Writes the listener's service unit, & the Environment Manager's where they are installed, for
+  the installed copy.
+  Puts back, as they were, the ImageMagick policy & the AppArmor additions an earlier release
+  wrote into the host. Each pipeline now carries its own policy into its sandbox.
   Enables lingering & cgroup delegation for the web server user, when per conversion limits are on.
 
 Every step is idempotent & is safe to run again.

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.5.
 // / This file is the converter for the Image pipeline. It is loaded by pipelineCore.php
 // / ONLY when an Image conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -20,7 +20,10 @@
 // / the same ImageMagick. Those numbers came with the code when it
 // / moved out of convertCore.php & they did not change, because operators have read them.
 // / This pipeline asks for ImageMagick through verifiedToolPath(), which answers from the
-// / manifest, & calls sandboxCommand(), which remains in convertCore.php.
+// / manifest, & calls sandboxCommand(), which is the Engine's.
+// / THIS PIPELINE CARRIES ITS OWN IMAGEMAGICK POLICY, in Policy/policy.xml beside this file. Each
+// / conversion takes it into its sandbox, where it covers the host's, & nothing is written into the
+// / host. Until v4.0.5 -fp rewrote the host's policy.xml, for every program on the host.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -43,7 +46,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / asked for both exactly.
 function convertImages($pathname, $newPathname, $extension, $height, $width, $rotate) {
   // / Set variables.
-  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $EnableMemoryProtection;
+  global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $DirSep, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
   // / This converter produces neither of the last two itself, so it declares the defaults.
   // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
@@ -52,7 +55,8 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $imageBinary = FALSE;
-  $returnData = $wh = $wxh = $bgSwitch = $outputExt = $magickCommand = '';
+  $returnData = $wh = $wxh = $bgSwitch = $outputExt = $magickCommand = $policyFolder = '';
+  $policyVariables = array();
   $stopper = 0;
   $sleepTime = $SleepTimer;
   // / Locate & verify ImageMagick. A path is returned only when both succeeded.
@@ -83,7 +87,18 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
     // / The input comes FIRST. -alpha remove is an operation & needs an image already
     // / loaded, so a settings block placed before the input fails with no images found.
     $magickCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.$bgSwitch.$wh.$rotate.escapeshellarg($newPathname);
-    list ($commandMayRun, $magickCommand) = sandboxCommand($magickCommand, $pathname, $newPathname, FALSE, 'imagemagick');
+    // / The policy folder is the sandbox's read only resource, where the profile's Overlays put its
+    // / policy.xml in place of the host's, & it is named in MAGICK_CONFIGURE_PATH, which ImageMagick
+    // / reads before its own configuration, so a host whose policy sits somewhere else still loads
+    // / this one first.
+    $policyFolder = dirname(__FILE__).$DirSep.'Policy';
+    if (is_file($policyFolder.$DirSep.'policy.xml')) $policyVariables = array('MAGICK_CONFIGURE_PATH' => $policyFolder);
+    else {
+      $policyFolder = '';
+      warningEntry('The ImageMagick policy the Image pipeline carries is missing, so this conversion runs under the host\'s own. Restore the pipeline from the release this installation came from.'); }
+    // / The policy.xml the installed ImageMagick reads is covered too, wherever its build keeps it.
+    if ($policyFolder !== '' && function_exists('coverResolvedImageMagickPolicy')) coverResolvedImageMagickPolicy('imagemagick');
+    list ($commandMayRun, $magickCommand) = sandboxCommand($magickCommand, $pathname, $newPathname, FALSE, 'imagemagick', $policyFolder, $policyVariables);
     if (!$commandMayRun) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this image conversion cannot be isolated!', 8002, FALSE); }
@@ -107,7 +122,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageBinary, $magickCommand, $commandMayRun);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageBinary, $magickCommand, $commandMayRun, $policyFolder, $policyVariables);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

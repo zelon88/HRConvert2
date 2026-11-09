@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.5.
 // / This file is the converter for the OCR pipeline. It is loaded by pipelineCore.php
 // / ONLY when an OCR operation is about to be dispatched to it, so a request that does
 // / something else never parses a line of it.
@@ -27,8 +27,12 @@
 // / This pipeline declares the LibreOffice shared module, which the Document pipeline also
 // / declares. Both in one request load it once between them.
 // / This pipeline asks for Tesseract, Poppler Utils & ImageMagick through verifiedToolPath(),
-// / & scans through runVirusScan(), both in the Pipeline Core. sandboxCommand(), verifyFile()
-// / & locateDependency() remain in convertCore.php.
+// / & scans through runVirusScan(), both in the Pipeline Core. sandboxCommand() is the Engine's, &
+// / verifyFile() remains in convertCore.php.
+// / THIS PIPELINE CARRIES ITS OWN IMAGEMAGICK POLICY, in Policy/policy.xml beside this file, for
+// / the page split that hands Tesseract an image. Nothing is written into the host. Until v4.0.5
+// / -fp rewrote the host's policy.xml, & the page split, whose sandbox shows no ImageMagick
+// / configuration, ran under no policy at all.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -57,7 +61,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / left with no boundary at all.
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
-  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $Append, $EnableMemoryProtection;
+  global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $Append, $DirSep, $EnableMemoryProtection;
   $documentConverted = $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
   $fileIsVerified = $scanComplete = $documentEngineStarted = $commandMayRun = $anyFileSucceeded = $loopCheck = FALSE;
   $ocrToolsAreValid = FALSE;
@@ -66,7 +70,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   $returnData = $file = $pathname = $oldPathname = $oldExtension = $newPathname = '';
   $pathnameTEMP = $pathnameTEMP0 = $pathnameTEMP1 = $pathnameTEMP3 = $pathnameTEMPTesseract = '';
   $filename = $cleanFilname = $pageNumber = $pagedFile = $readPageData = '';
-  $ocrCommand = '';
+  $ocrCommand = $policyFolder = '';
+  $policyVariables = array();
   $documentEnginePID = $writePageData = 0;
   $pagedFilesArrRAW = array();
   // / The names of every file this operation produced, in the order they were produced.
@@ -165,10 +170,19 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               if ($Verbose) logEntry('Performing OCR intermediate operation using method 2.');
               // / Perform the conversion using ImageMagick.
               $ocrCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP1);
-              list ($commandMayRun, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP1, FALSE, 'tesseract');
-              // / ImageMagick has policy.xml, so an unavailable sandbox is a downgrade to a
+              // / The policy this pipeline carries goes with the command. In the sandbox it is the only
+              // / ImageMagick configuration there is, & outside one MAGICK_CONFIGURE_PATH has it read first.
+              $policyFolder = dirname(__FILE__).$DirSep.'Policy';
+              if (is_file($policyFolder.$DirSep.'policy.xml')) $policyVariables = array('MAGICK_CONFIGURE_PATH' => $policyFolder);
+              else {
+                $policyFolder = '';
+                warningEntry('The ImageMagick policy the OCR pipeline carries is missing, so this page split runs under the host\'s own. Restore the pipeline from the release this installation came from.'); }
+              // / The policy.xml the installed ImageMagick reads is covered too, wherever its build keeps it.
+              if ($policyFolder !== '' && function_exists('coverResolvedImageMagickPolicy')) coverResolvedImageMagickPolicy('tesseract');
+              list ($commandMayRun, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP1, FALSE, 'tesseract', $policyFolder, $policyVariables);
+              // / ImageMagick has a policy, so an unavailable sandbox is a downgrade to a
               // / weaker control rather than to no control at all. The operation continues.
-              if (!$commandMayRun) warningEntry('Bubblewrap is unavailable. This OCR page split will run unsandboxed & is protected only by policy.xml.');
+              if (!$commandMayRun) warningEntry('Bubblewrap is unavailable. This OCR page split will run unsandboxed under the ImageMagick policy this pipeline carries, which is read first, so the host\'s own policy still decides any coder it names.');
               $returnData = shell_exec($ocrCommand);
               // / Log the output of the operation to the logfile, if it is not blank.
               if ($Verbose && trim($returnData) !== '') logEntry('The converter (IM-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
@@ -324,7 +338,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Error handler for if any failures happened during file loops.
   if ($anyFileSucceeded) $OperationSuccessful = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $commandMayRun, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $PDFWorkSelected, $UserFilename, $UserExtension, $Method, $documentConverted);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $commandMayRun, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $policyFolder, $policyVariables, $PDFWorkSelected, $UserFilename, $UserExtension, $Method, $documentConverted);
   return array($OperationSuccessful, $OperationErrors, $OutputFilenames); }
 // / -----------------------------------------------------------------------------------
 

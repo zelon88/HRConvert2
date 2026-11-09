@@ -349,17 +349,26 @@ $SCADConversionTimeout = 180;
 // /   Default is TRUE.
 $UsePyMeshLab = TRUE;
 // /  --Allow Unprivileged Namespaces--
-// /   Permits HRConvert2 to switch off kernel.apparmor_restrict_unprivileged_userns.
-// /   The switch is thrown during the -fp argument & at no other time.
-// /   Bubblewrap needs that restriction lifted to create the namespace every sandbox is built in.
+// /   Permits HRConvert2 to switch off kernel.apparmor_restrict_unprivileged_userns, as a last resort.
+// /   Ubuntu 23.10 & later turn that restriction on, & every sandbox is built in an unprivileged namespace.
+// /   HRConvert2 builds each sandbox through its own copy of bubblewrap, which only root & the web server's group may run.
+// /   Its own AppArmor profile is attached to that copy, as Ubuntu attaches its own to Steam, Flatpak & Chrome.
+// /   --setup --install-depends, --update-depends & --install-complete install the copy, & so does an update.
+// /   -fp only installs the profile.
+// /   Where the copy works, a restriction in force stays in force & this setting changes nothing.
+// /   The restriction is never switched off to cover a copy that is missing or that the web server's account cannot run.
+// /   One an earlier release switched off stays off until it is switched back on, & -fp then lets it go.
+// /   Where bubblewrap refuses a sandbox twice, the -fp argument switches the restriction off, & nothing else ever does.
+// /   An attempt a time limit or a signal cut short is never taken for a refusal.
 // /   The restriction protects a general purpose desktop from a hostile local user.
-// /   This machine is a dedicated appliance whose only local users are the administrator & the web server.
-// /   Leaving the restriction in force here does not make the machine safer.
-// /   It disables the sandbox that isolates every hostile file the machine exists to process.
+// /   On a dedicated appliance it disables the sandbox that isolates every hostile file the machine exists to process.
 // /   That file is the threat which actually arrives on an appliance like this one.
 // /   Set this to FALSE on a shared host carrying untrusted local users.
-// /   The restriction is doing real work on a machine of that kind.
-// /   Conversions will then refuse unless --Require Sandbox-- is also FALSE.
+// /   The restriction is then never switched off, & one HRConvert2 switched off is switched back on by the next -fp.
+// /   Where kernel.apparmor_restrict_unprivileged_unconfined is 0, any local account can enter a profile that permits a
+// /   namespace by name, this one & the distribution's own among them. Setting it to 1 closes that for every profile, &
+// /   costs HRConvert2 nothing, because its profile is attached by path rather than entered by name. Do so on a shared host.
+// /   Conversions will refuse where the copy does not work, unless --Require Sandbox-- is also FALSE.
 // /   Setting both to FALSE runs every conversion unprotected & is worse again.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.

@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.1.
+// / v4.0.5.
 // / THIS APPLICATION'S ENGINE SETTINGS. It is loaded AFTER engineConfig.php & anything it
 // / sets wins.
 // /
@@ -50,7 +50,8 @@ $EngineApplicationSlug = 'hrconvert2';
 // / -----------------------------------------------------------------------------------
 // / THE PROVIDERS. Every one names a function this application defines, & the Engine calls
 // / what it is given without knowing anything else about it.
-// / This is the whole of how the Engine learns about an application. Six names.
+// / This is the whole of how the Engine learns about an application. Five names. A sixth, the
+// / data policy provider, was retired at v4.0.5, because the Engine knows what it serves now.
 // /
 // / An Engine with none of them still runs & does less, which is the correct degradation
 // / rather than a failure. See ABOUT_ENGINE_CONTRACT.txt.
@@ -60,9 +61,6 @@ $EngineEnvironmentProvider = 'applicationEnvironmentFindings';
 
 // /   Asks a human a question & returns their answer. An empty answer is a refusal.
 $EngineOperatorPrompt = 'askOperator';
-
-// /   Reports whether this application's data is exposed by a web server.
-$EngineDataPolicyProvider = 'applicationDataPolicyFindings';
 
 // /   Returns the configuration model. What a config file cannot say about itself.
 $EngineConfigModelProvider = 'applicationConfigModel';
@@ -92,13 +90,13 @@ $EngineApplicationArgumentHandler = '';
 // / The order is the order pipelines are enumerated & listed in.
 $EngineAcceptedPipelines = array(
   'Stream' => 'v4.0.0',
-  'Scad' => 'v4.0.0',
-  'OCR' => 'v4.0.0',
+  'Scad' => 'v4.0.5',
+  'OCR' => 'v4.0.5',
   'Document' => 'v3.8.8',
   'Subtitle' => 'v3.9.6',
   'SVG' => 'v3.9.6',
   'Drawing' => 'v3.9.6',
-  'Image' => 'v4.0.0',
+  'Image' => 'v4.0.5',
   'Model' => 'v3.9.6',
   'Video' => 'v3.9.6',
   'Ebook' => 'v4.0.0',
@@ -135,7 +133,13 @@ $EnginePinSources = array(
 // / mode, & this contract cannot ask for a mode, so a location can never be made writable by
 // / the account root is protecting itself from. -fp & the Environment Manager apply them.
 // /   code       The installation. root's, 0755 & 0644, read by the web server account.
+// /   data-root  The data location itself. root's & 0755, & never walked.
+// /   secret     The folder secrets are kept in. root's, the web server account's group &
+// /              0750, & never walked.
 // /   web        A folder the web server account writes. 0700 & never walked by root.
+// /   served     A web folder the web server hands to browsers. The Engine writes the Apache
+// /              rules that make every file in it an inert download, & proves they are in force.
+// /              It must be inside HostedLocation & below it, or the Engine refuses it.
 // /   root-only  root alone. 0700 & 0600.
 // /   shared     A folder other software shares. Checked & never walked.
 // / A location inside another keeps its own role, so DATA stays the web server account's
@@ -145,6 +149,8 @@ $EnginePinSources = array(
 // / folder & the previous installation are root's. The data location itself is never walked &
 // / only its own owner & mode are corrected, which is what the data-root role means. HomeLoc is
 // / no longer listed, because the cache folder is the web server account's home now.
+// / SecretLoc is Secrets, where this application keeps its install secret from v4.0.4. Root
+// / writes it & the web server account's group reads it, & no other account can list the folder.
 // / The data location is named by $DataRootLoc here, not $ConvertLoc. $ConvertLoc is narrowed to
 // / the session area a request uses, so it is not the root on the command line where this is
 // / applied. $DataRootLoc always holds the configured root. SessionLoc is the session area below
@@ -152,8 +158,9 @@ $EnginePinSources = array(
 $EngineManagedLocations = array(
   'ProprietaryLoc' => 'shared',
   'InstLoc' => 'code',
-  'ConvertTemp' => 'web',
+  'ConvertTemp' => 'served',
   'DataRootLoc' => 'data-root',
+  'SecretLoc' => 'secret',
   'SessionLoc' => 'web',
   'CacheLoc' => 'web',
   'LogDir' => 'web',
@@ -175,12 +182,29 @@ $EngineApplicationLayout = array('convertCore.php', 'index.html', 'README.md', '
 $EngineHostedAssetFolders = array('UI');
 $EngineHostedAssetTypes = array('css', 'js', 'gif', 'png', 'jpg', 'jpeg', 'svg', 'ico', 'webp', 'woff', 'woff2', 'ttf', 'otf', 'html');
 
-// / The settings in config.php that each shared name reads. Operators keep the names they
-// / have always used, & the shared layers ask for a value by a name that says nothing about
-// / this application.
+// / Apache configurations a dependency's package turns on as it installs, which this application
+// / never uses. javascript-common arrives with the packages Calibre recommends & publishes
+// / /usr/share/javascript as /javascript on every site the host serves. A dependency install that
+// / turns one on turns it off again, & one an administrator turned on is left as it is.
+$EngineUnwantedApacheConfs = array('javascript-common');
+
+// / The settings in config.php that each shared name reads, & the values this application works
+// / out from them as it starts. Operators keep the names they have always used, & the shared
+// / layers ask for a value by a name that says nothing about this application.
+// / HostedLocation is the folder the web server serves this application from, ServerURL is the
+// / address of that folder, & DocumentRoot is the web server's document root. An application
+// / that maps no hosted location serves nothing.
+// / LiftNamespaceRestriction says whether -fp may lift the kernel's AppArmor restriction on
+// / unprivileged namespaces where this application's own profile cannot carry a sandbox. An
+// / application that maps nothing permits it, as every release did until v4.0.5.
 $EngineSettingNames = array(
   'FormatDetectionType' => 'SupportedFormatDetectionType',
   'WarnOnCapabilityMismatch' => 'WarnOnCapabilityMismatch',
-  'DefaultScanner' => 'DefaultVirusScanner');
+  'DefaultScanner' => 'DefaultVirusScanner',
+  'HostedLocation' => 'HostedLoc',
+  'ServerURL' => 'FullURL',
+  'DocumentRoot' => 'ServerRootDir',
+  'MaintainProtectionFile' => 'MaintainHTAccess',
+  'LiftNamespaceRestriction' => 'AllowUnprivilegedNamespaces');
 // / -----------------------------------------------------------------------------------
 ?>

@@ -307,14 +307,29 @@ than everything, because a missing mount fails loudly & a spare one fails silent
 
 -----SYSTEM CONFIGURATION-----
 
-HRConvert2 WRITES SYSTEM FILES. ALL OF IT HAPPENS IN -fp & NOWHERE ELSE.
+HRConvert2 WRITES SYSTEM FILES. -fp WRITES ALL BUT ONE, & ONLY AN UPDATE WRITES THAT ONE.
 
   A PHP drop in at conf.d/99-hrconvert2.ini, for every SAPI present.
-  An AppArmor local include, extending the distribution profile for bubblewrap.
-  An ImageMagick policy, at the prefix the binary reports rather than a guessed path.
-  A sysctl drop in permitting the unprivileged namespaces the sandbox needs.
-  A systemd service unit, generated from the live configuration.
+  An AppArmor profile named for the application, where the kernel can restrict unprivileged
+  namespaces. It is attached to the application's own copy of bubblewrap & to nothing else, &
+  only where no account but root could put a program at that copy's path.
+  That copy, at /usr/local/libexec/<application>/bwrap, which only root & the web server
+  user's group may run. --setup --install-depends, --update-depends & --install-complete write
+  it, & so does an update of the application, & nothing else does, so the program every sandbox
+  runs changes when the administrator updates something & at no other time.
+  A sysctl drop in holding only the kernel settings -fp had to change, & none at all where it
+  changed nothing.
+  The listener's systemd service unit, & the Environment Manager's where they are installed,
+  generated from the live configuration.
   A systemd drop in delegating cgroup controllers to the web server user.
+
+A FILE ANOTHER PROGRAM ALSO READS IS NOT CHANGED FOR THIS APPLICATION'S SAKE. Until v4.0.5 -fp
+wrote an ImageMagick policy over the host's policy.xml & extended the distribution's profiles
+for bubblewrap & OpenSCAD, & every program on the host ran under what was written. A policy a
+tool reads now travels with the pipeline that runs the tool, into that conversion's sandbox,
+& what an earlier release wrote is put back as it was. A setting the whole host shares, such as
+the kernel's AppArmor restriction on unprivileged namespaces, is changed only where nothing
+narrower works, & only where the configuration permits it.
 
 REPAIR NEEDS ROOT. EVERYTHING ELSE VALIDATES & REPORTS.
 The listener runs as the web server user & cannot repair anything, so a validator that tried
@@ -324,13 +339,20 @@ called at listener startup, on the Resource Manager sweep, & at the end of -fp.
 NEVER EDIT A FILE A PACKAGE MANAGER OWNS. Write a drop in instead.
 php.ini edited in place is reverted by the next PHP upgrade, months later, with no obvious
 cause. A second AppArmor profile beside the distribution one leaves two attachments for one
-binary & no defined outcome. Use the extension point the package already provides.
+binary & no defined outcome, which is why this application's is attached to a copy of its own,
+as Ubuntu attaches its own profiles to Steam, Flatpak & Chrome, & never to a program a
+distribution ships.
 
 ASK A TOOL WHERE ITS CONFIGURATION LIVES. DO NOT GUESS.
 A distribution package puts the ImageMagick policy in /etc. A build from source puts it
 under its prefix. Guessing from a hardcoded list wrote a version 7 policy into a version 6
 directory that the running version 7 never read, so the policy did nothing & the one being
 read went on refusing every document coder.
+A policy a pipeline carries is named to the tool through the tool's own search path, which
+the tool always reads, such as MAGICK_CONFIGURE_PATH. Inside the sandbox it also covers the
+host's copy, where a package or a build keeps one & where the tool says it keeps one, which only
+stops that copy overriding it. Outside a sandbox the host's copy is read after it, so its
+ceilings hold & a host rule naming the same coder decides that coder.
 
 BACK UP ANYTHING NOT WRITTEN BY THIS APPLICATION BEFORE REPLACING IT.
 A file carrying no HRCONVERT2-POLICY-MARKER belongs to the distribution or the
@@ -338,7 +360,10 @@ administrator. Copy it with a timestamp first, & refuse the write if the backup 
 
 UNLOAD BEFORE DELETING. Reloading AppArmor loads what is on disk & never unloads what is
 not. Deleting a profile first strands it in the kernel until a reboot, still attached to the
-binary & invisible to anything that only lists files.
+binary & invisible to anything that only lists files. A profile replaced by one of the same
+name is replaced in the kernel by the load, which is how the profile attached to bubblewrap
+before v4.0.5 loses its attachment. Never sweep with aa-remove-unknown, which unloads every
+profile on the host that is not in /etc/apparmor.d, other applications' included.
 -----------------------------------------------------------------------------------
 
 

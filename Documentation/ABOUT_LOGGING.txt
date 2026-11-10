@@ -234,6 +234,20 @@ verifyLogs() advances the increment in the filename until it finds one under tha
 A rotation therefore happens at the start of a request rather than in the middle of one.
 No entry is ever split across two files.
 
+A MANAGER ROTATES ONCE A MINUTE. It runs for weeks & handles no request, so every manager loop
+asks refreshLogFile() through $EngineLogProvider, which reads the date again & runs verifyLogs().
+Until v4.0.6 a manager wrote the logfile it started with for as long as it ran, past 38M on one
+host & under the date it started on. Root runs nothing for days & is left as it is.
+
+A logfile the web server account makes is 0600, as the folder it is in is 0700. Until v4.0.6 it
+was given whatever the process's umask allowed, & earlier releases made them 0755. Those keep the
+mode they were made with.
+
+NEITHER SESSION TOKEN IS WRITTEN TO A LOG. The tokens are the session, so a reader of the log could
+take the session over. Until v4.0.6 both were logged with --Enhanced Logging Verbosity-- on. Every
+entry still names the session by its two folder names, which come from the tokens through a keyed
+hash & cannot be turned back into them.
+
 The scanner pipelines report through the application log, & a user requested scan writes its
 own report into the session. verifyLogs() also named & rotated a ClamLog file until v4.0.0,
 which nothing had written since ClamAV moved into its pipeline.

@@ -58,10 +58,10 @@ A virus scanner dispatching workers wants sockets, budgets, worker tracking & su
                     three, restarts one that dies, routes every request to the role that
                     answers it, & is the only one an operator starts.
 
-  resource-manager  Polls the host. Load average, memory & processor count. Calculates the
-                    budget every operation is granted from, grants & reclaims it, keeps the
-                    worker registry & the session map, & finds a worker that has outlived
-                    its expected runtime.
+  resource-manager  Polls the host. Load average, memory, processor count & the web server
+                    account's user namespaces. Calculates the budget every operation is
+                    granted from, grants & reclaims it, keeps the worker registry & the
+                    session map, & finds a worker that has outlived its expected runtime.
 
   worker-manager    Ends the worker it is told to end. It keeps no registry of its own & is
                     the only role that acts on a process without negotiation.
@@ -210,4 +210,16 @@ writes, so a service manager can watch the real process rather than a fork of it
 
 The foreground entry point exists for that service unit. It does not fork & does not return,
 so systemd can restart it when it dies & report its true state.
+
+A STOP SIGNAL STOPS THE LISTENER AS -k DOES. systemctl stop sends TERM to the Core Manager alone,
+& the unit's KillMode=mixed kills whatever is left once it exits. The Core Manager answers TERM by
+sending each subordinate TERM & waiting for it to go, for up to twenty seconds, & kills one still
+running after that, so nothing is left for systemd to kill. Until v4.0.6 nothing answered TERM, &
+systemd killed the three subordinates on every stop. Where PHP cannot handle a signal, which needs
+pcntl, the Core Manager says so as it starts, & a stop kills the subordinates as it always did.
+
+EVERY MANAGER MOVES ON TO THE LOGFILE IT SHOULD BE WRITING, once a minute. A logfile is named for
+its date & moves on to the next once it reaches --Maximum Log File Size--, & a manager runs for
+weeks, so each loop asks the application through $EngineLogProvider. Until v4.0.6 a manager kept
+the logfile it started with, whatever the date & whatever its size.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

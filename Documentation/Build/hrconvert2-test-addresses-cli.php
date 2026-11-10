@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.3.
+// / v4.0.6.
 // / This file tests isPubliclyRoutableIP() against every address bypass known to it.
 // /
 // / A range this refuses is a range no dependency can ever be pointed at. A miss here is an
@@ -23,7 +23,8 @@
 // /   php Documentation/Build/hrconvert2-test-addresses-cli.php
 // /
 // / It exits zero when every case is judged correctly & one when any is not.
-// / This is a build tool & is removed by --Delete Build Environment-- in config.php.
+// / This is a build tool, & nothing loads it. --Delete Build Environment-- in config.php leaves it
+// / where it is, because the application reads other scripts in Documentation/Build as it runs.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------

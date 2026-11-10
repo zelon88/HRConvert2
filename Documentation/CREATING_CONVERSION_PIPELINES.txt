@@ -156,6 +156,9 @@ Read these before writing code. They are preconditions, not steps.
     2g. The output file is the only verdict on whether a conversion succeeded.
     2h. Test `file_exists($newPathname)` inside the gates, never outside them.
     2i. A stale file from an earlier attempt otherwise reports a false success.
+    2j. Pipeline Core holds a reported success to that file, from v4.0.6. It must be a file
+        with something in it, though a plain text format may be empty. An empty one is
+        removed & raises 34010, so a pipeline never needs to measure its own output.
 
   3. The sandbox is the security boundary. `sandboxCommand()` is how you get one.
     3a. It returns a permission boolean & a finished command string.
@@ -291,7 +294,10 @@ Read these before writing code. They are preconditions, not steps.
   8h. Build the command once, before the retry loop. It never changes.
   8i. Sandbox the command, then test the permission boolean.
   8j. Refuse with your reserved sandbox number when that boolean is FALSE.
-  8k. Retry up to `$StopCounter` times. Exit the loop as soon as the output exists.
+  8k. Retry while `pipelineAttemptIsDue($newPathname, $stopper)` says so. It allows
+      `$StopCounter` attempts, & always one, & stops as soon as the output exists. Sleep
+      before every attempt but the first. Raise your error once, after the loop, when the
+      output still does not exist, & name the number of attempts made.
   8l. Log dependency output under `$Verbose`, but only when it is not blank.
   8m. Clean up every local in the cleanup line. Never null anything you return.
 

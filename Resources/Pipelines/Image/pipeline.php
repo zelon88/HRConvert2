@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.5.
+// / v4.0.6.
 // / This file is the converter for the Image pipeline. It is loaded by pipelineCore.php
 // / ONLY when an Image conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -55,7 +55,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $imageBinary = FALSE;
-  $returnData = $wh = $wxh = $bgSwitch = $outputExt = $magickCommand = $policyFolder = '';
+  $returnData = $wh = $wxh = $bgSwitch = $outputExt = $magickCommand = $policyFolder = $iconLimit = '';
   $policyVariables = array();
   $stopper = 0;
   $sleepTime = $SleepTimer;
@@ -83,10 +83,14 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
     // / Without this a transparent PNG becomes a black JPEG rather than a white one.
     if ($outputExt === 'jpg' or $outputExt === 'jpeg') $bgSwitch = '-background white -alpha remove ';
     else $bgSwitch = '-background none ';
+    // / An icon holds nothing larger than 256 pixels a side, & ImageMagick refuses a larger one & leaves
+    // / an empty file. So a larger image is shrunk to fit, after any size the user asked for, & a
+    // / smaller one is left as it is. Until v4.0.6 a screenshot converted to an empty icon.
+    if ($outputExt === 'ico') $iconLimit = '-resize '.escapeshellarg('256x256>').' ';
     // / Build & sandbox the command once. It does not change between retries.
     // / The input comes FIRST. -alpha remove is an operation & needs an image already
     // / loaded, so a settings block placed before the input fails with no images found.
-    $magickCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.$bgSwitch.$wh.$rotate.escapeshellarg($newPathname);
+    $magickCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.$bgSwitch.$wh.$rotate.$iconLimit.escapeshellarg($newPathname);
     // / The policy folder is the sandbox's read only resource, where the profile's Overlays put its
     // / policy.xml in place of the host's, & it is named in MAGICK_CONFIGURE_PATH, which ImageMagick
     // / reads before its own configuration, so a host whose policy sits somewhere else still loads
@@ -104,25 +108,28 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
       errorEntry('Bubblewrap is missing or non functional, so this image conversion cannot be isolated!', 8002, FALSE); }
     else {
       if ($Verbose) logEntry('Converting image.');
-      // / This code will attempt the conversion up to $StopCounter number of times.
-      while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
+      // / first attempt that leaves a file.
+      while (pipelineAttemptIsDue($newPathname, $stopper)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
-        $returnData = shell_exec($magickCommand);
+        $returnData = (string)shell_exec($magickCommand.' 2>&1');
         // / Count the number of conversions to avoid infinite loops.
-        $stopper++;
-        // / Stop attempting the conversion after $StopCounter number of attempts.
-        if ($stopper === $StopCounter) {
-          $ConversionErrors = TRUE;
-          errorEntry('The image converter timed out!', 8000, FALSE); } }
+        $stopper++; }
       // / Log the output of the operation to the logfile, if it is not blank.
       if ($Verbose && trim($returnData) !== '') logEntry('ImageMagick returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / Every attempt was made & none left a file. What the converter printed is logged above this,
+      // / with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the converter had timed out, which no time limit
+      // / ever caused, & then made one more attempt.
+      if (!file_exists($newPathname)) {
+        $ConversionErrors = TRUE;
+        errorEntry('The image converter produced no file after '.$stopper.' attempt(s)!', 8000, FALSE); }
       // / The output file is the only verdict on whether the conversion produced anything.
       // / This check must stay inside the gates, or a stale output file from an earlier
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $imageBinary, $magickCommand, $commandMayRun, $policyFolder, $policyVariables);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $iconLimit, $imageBinary, $magickCommand, $commandMayRun, $policyFolder, $policyVariables);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

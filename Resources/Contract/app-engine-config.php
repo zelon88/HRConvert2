@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.5.
+// / v4.0.6.
 // / THIS APPLICATION'S ENGINE SETTINGS. It is loaded AFTER engineConfig.php & anything it
 // / sets wins.
 // /
@@ -50,8 +50,9 @@ $EngineApplicationSlug = 'hrconvert2';
 // / -----------------------------------------------------------------------------------
 // / THE PROVIDERS. Every one names a function this application defines, & the Engine calls
 // / what it is given without knowing anything else about it.
-// / This is the whole of how the Engine learns about an application. Five names. A sixth, the
-// / data policy provider, was retired at v4.0.5, because the Engine knows what it serves now.
+// / This is the whole of how the Engine learns about an application. Six names. The log provider
+// / joined them at v4.0.6, & the data policy provider was retired at v4.0.5, because the Engine
+// / knows what it serves now.
 // /
 // / An Engine with none of them still runs & does less, which is the correct degradation
 // / rather than a failure. See ABOUT_ENGINE_CONTRACT.txt.
@@ -67,6 +68,9 @@ $EngineConfigModelProvider = 'applicationConfigModel';
 
 // /   Repairs whatever this application manages.
 $EngineRepairProvider = 'fixManagedPermissions';
+
+// /   Moves a manager that has run for a while on to the logfile it should be writing now.
+$EngineLogProvider = 'refreshLogFile';
 
 // /   A real config.php at defaults. What this application's configuration looks like.
 $EngineConfigTemplate = 'Contract/config-template.php';
@@ -92,16 +96,16 @@ $EngineAcceptedPipelines = array(
   'Stream' => 'v4.0.0',
   'Scad' => 'v4.0.5',
   'OCR' => 'v4.0.5',
-  'Document' => 'v3.8.8',
-  'Subtitle' => 'v3.9.6',
-  'SVG' => 'v3.9.6',
-  'Drawing' => 'v3.9.6',
-  'Image' => 'v4.0.5',
-  'Model' => 'v3.9.6',
-  'Video' => 'v3.9.6',
-  'Ebook' => 'v4.0.0',
-  'Audio' => 'v4.0.0',
-  'Archive' => 'v4.0.0',
+  'Document' => 'v4.0.6',
+  'Subtitle' => 'v4.0.6',
+  'SVG' => 'v4.0.6',
+  'Drawing' => 'v4.0.6',
+  'Image' => 'v4.0.6',
+  'Model' => 'v4.0.6',
+  'Video' => 'v4.0.6',
+  'Ebook' => 'v4.0.6',
+  'Audio' => 'v4.0.6',
+  'Archive' => 'v4.0.6',
   // / Scanner pipelines. They declare no formats & are chosen by name.
   'ClamAV' => 'v3.9.9',
   // / The first pipeline of kind file. Operations that do not care what is in a file.
@@ -111,7 +115,7 @@ $EngineAcceptedPipelines = array(
 // / The shared modules a pipeline may load & the exact version each must report.
 // / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.
 $EngineAcceptedSharedModules = array(
-  'libreOffice.php' => 'v4.0.0');
+  'libreOffice.php' => 'v4.0.6');
 
 // / Where each of this application's own pins reads its version from.
 // / php convertCore.php --build --pins --write writes every pin from the files named here,
@@ -175,6 +179,17 @@ $EngineManagedLocations = array(
 // / removed. DATA is not one of them, because the web server serves it where it is.
 // / See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
 $EngineApplicationLayout = array('convertCore.php', 'index.html', 'README.md', 'LICENSE', 'Documentation', 'Resources', 'UI');
+
+// / Paths inside an installation that no release of this application ships, by their path below
+// / it. -fp takes each one away as root, without following anything in it, once it has given the
+// / rest of the installation to root, so an installation an earlier release left one in is one
+// / root may run again. Each must stay inside the installation, & one that names . or .. is refused.
+// / FFmpeg's build left its whole tree in Documentation/Build/ffmpeg-build until v4.0.6, links &
+// / files with more than one name included, & root refuses an installation holding a link from
+// / v4.0.1 on. -fp could not take it away, so the installation stayed one root refused, which is
+// / why the v4.0.5 image never answered.
+// / See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
+$EngineRetiredPaths = array('Documentation/Build/ffmpeg-build');
 
 // / The folders of the application whose static files a browser fetches, & the types those are.
 // / The hosted location holds a copy of each beside the loader, written by -fp as root. Nothing

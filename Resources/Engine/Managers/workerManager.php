@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.6.
 // / This file is the Worker Manager. It is a manager subcomponent of the Engine.
 // / The Worker Manager ends the worker it is told to end. The Resource Manager keeps the
 // / worker registry & finds a worker that has outlived its expected runtime.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.0';
+$ManagerVersion = 'v4.0.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -57,6 +57,7 @@ function runWorkerManager() {
   $socketPath = '';
   $managerMessages = $managerConnections = $replyPayload = array();
   $messagesReceived = $messageIndex = $killedCount = 0;
+  $lastLogRefresh = time();
   $socketPath = buildManagerSocketPath('worker-manager');
   list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
   if (!$serverIsOpen) errorEntry('The Worker Manager could not open its socket!', 31003, TRUE);
@@ -64,6 +65,8 @@ function runWorkerManager() {
     logEntry('Worker Manager started.');
     $keepRunning = TRUE;
     while ($keepRunning) {
+      // / A manager runs for weeks, so it moves on to the logfile it should be writing now, once a minute.
+      $lastLogRefresh = refreshProcessLog($lastLogRefresh);
       list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'internal', (int)$ManagerMessageBatchSize, (int)$ManagerSocketTimeout);
       $messageIndex = 0;
       while ($messageIndex < $messagesReceived) {
@@ -80,7 +83,7 @@ function runWorkerManager() {
         $messageIndex++; } }
     $WorkerManagerExitedCleanly = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $processWasTerminated, $socketPath, $managerMessages, $managerConnections, $replyPayload, $messagesReceived, $messageIndex, $killedCount);
+  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $processWasTerminated, $socketPath, $managerMessages, $managerConnections, $replyPayload, $messagesReceived, $messageIndex, $killedCount, $lastLogRefresh);
   return $WorkerManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 

@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.6.
 // / This file is the Core Manager. It is a manager subcomponent of the Engine.
 // / The Core Manager is the listener. It starts the other three, restarts one that dies & is
 // / the only role an operator starts directly.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.0';
+$ManagerVersion = 'v4.0.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -50,19 +50,28 @@ $ManagerVersion = 'v4.0.0';
 // / Core Manager owns no budget & no registry. It routes, supervises & reaps.
 function runCoreManager() {
   // / Set variables.
-  global $CoreManagerSubprocessPollInterval, $ManagerSocketTimeout, $ManagerMessageBatchSize, $Verbose, $EnableMemoryProtection;
-  $CoreManagerExitedCleanly = FALSE;
+  global $CoreManagerSubprocessPollInterval, $ManagerSocketTimeout, $ManagerMessageBatchSize, $Verbose, $EnableMemoryProtection, $CoreManagerStopRequested;
+  $CoreManagerExitedCleanly = $CoreManagerStopRequested = FALSE;
   $socketServer = FALSE;
   $serverIsOpen = $keepRunning = $stateWasWritten = FALSE;
   $socketPath = $managerRole = $targetSocket = '';
   $managerState = $managerMessages = $managerConnections = $replyPayload = $routedReply = array();
   $messagesReceived = $messageIndex = $managerPid = 0;
-  $managerWasSpawned = $replyWasDelivered = FALSE;
+  $lastLogRefresh = time();
+  $managerWasSpawned = $replyWasDelivered = $signalIsHandled = $subordinatesStopped = FALSE;
   $subordinateRoles = array('request-manager', 'resource-manager', 'worker-manager');
   $socketPath = buildManagerSocketPath('core-manager');
   list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
   if (!$serverIsOpen) errorEntry('The Core Manager could not open its socket!', 31000, TRUE);
   else {
+    // / A STOP SIGNAL IS A STOP INSTRUCTION. systemctl stop sends one to this process alone, &
+    // / KillMode=mixed kills whatever is left once it exits. Until v4.0.6 nothing here answered it,
+    // / so this process died at once & the three subordinates, which are not its children, were
+    // / killed by the service manager on every stop. It is answered as the loop below waits.
+    if (function_exists('pcntl_async_signals') && function_exists('pcntl_signal') && defined('SIGTERM')) {
+      pcntl_async_signals(TRUE);
+      $signalIsHandled = pcntl_signal(SIGTERM, 'noteCoreManagerStop'); }
+    if (!$signalIsHandled) warningEntry('The Core Manager cannot answer a stop signal, because PHP cannot handle one here. Its subordinates are stopped by whatever stops it.');
     // / Start every subordinate & record the process identifiers for supervision.
     $managerState = array('CoreManagerPid' => getmypid(), 'StartTime' => time(), 'Subordinates' => array());
     foreach ($subordinateRoles as $managerRole) {
@@ -74,7 +83,14 @@ function runCoreManager() {
     if ($Verbose) logEntry('Core Manager starting supervisor loop. Poll interval '.(int)$CoreManagerSubprocessPollInterval.' second(s).');
     $keepRunning = TRUE;
     while ($keepRunning) {
+      // / A manager runs for weeks, so it moves on to the logfile it should be writing now, once a minute.
+      $lastLogRefresh = refreshProcessLog($lastLogRefresh);
       list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'core', (int)$ManagerMessageBatchSize, (int)$CoreManagerSubprocessPollInterval);
+      // / A stop signal ends the wait above at once, & is answered before anything else.
+      if (isset($CoreManagerStopRequested) && $CoreManagerStopRequested === TRUE) {
+        $keepRunning = FALSE;
+        $CoreManagerExitedCleanly = TRUE;
+        logEntry('Core Manager received a stop signal & is stopping its subordinate managers.'); }
       $messageIndex = 0;
       while ($messageIndex < $messagesReceived) {
         $replyPayload = array('Approved' => FALSE, 'Reason' => 'Unrecognized request type.');
@@ -108,13 +124,65 @@ function runCoreManager() {
               $managerState['Subordinates'][$managerRole] = $managerPid;
               writeManagerState('managers', $managerState); } } } } }
     // / Stop every subordinate before leaving, so no orphan keeps a socket bound.
-    foreach ($managerState['Subordinates'] as $managerRole => $managerPid) terminateWorkerProcess($managerPid, FALSE, 0);
+    $subordinatesStopped = stopSubordinateManagers($managerState['Subordinates']);
+    if (!$subordinatesStopped) warningEntry('A subordinate manager outlived a stop signal & a kill signal.');
     if (is_resource($socketServer)) @fclose($socketServer);
     if (file_exists($socketPath)) @unlink($socketPath);
     logEntry('Core Manager stopped.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $stateWasWritten, $socketPath, $managerRole, $targetSocket, $managerState, $managerMessages, $managerConnections, $replyPayload, $routedReply, $messagesReceived, $messageIndex, $managerPid, $managerWasSpawned, $replyWasDelivered, $subordinateRoles);
+  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $stateWasWritten, $socketPath, $managerRole, $targetSocket, $managerState, $managerMessages, $managerConnections, $replyPayload, $routedReply, $messagesReceived, $messageIndex, $managerPid, $lastLogRefresh, $managerWasSpawned, $replyWasDelivered, $signalIsHandled, $subordinatesStopped, $subordinateRoles);
   return $CoreManagerExitedCleanly; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to note that the Core Manager was sent a stop signal.
+// / Accepts the signal number, which PHP hands every signal handler. Returns TRUE, which PHP
+// / does not read.
+// / A signal can arrive between any two instructions, so this only notes it. The loop in
+// / runCoreManager() reads the note once its wait ends, which the signal itself ends at once.
+function noteCoreManagerStop($signalNumber) {
+  // / Set variables.
+  global $CoreManagerStopRequested;
+  $CoreManagerStopRequested = TRUE;
+  // / The signal number says nothing the note needs. It is cleared by hand, because a signal can
+  // / arrive while purgeSensitiveMemory is already running.
+  $signalNumber = NULL;
+  unset($signalNumber);
+  return $CoreManagerStopRequested; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to stop every subordinate manager & wait until each one has gone.
+// / Accepts the recorded subordinates, as role => process identifier.
+// / Returns TRUE when none of them is still running.
+// / Each is asked to stop with TERM, which ends one at once, & is waited for, so none is left for
+// / the service manager to kill after this process exits. One still running after twenty
+// / seconds, inside the thirty systemd allows, is killed. Until v4.0.6 each was signalled once &
+// / none was waited for.
+function stopSubordinateManagers($subordinatePids) {
+  // / Set variables.
+  global $Verbose, $EnableMemoryProtection;
+  $SubordinatesStopped = $managerWasKilled = FALSE;
+  $managerRole = '';
+  $managerPid = $waitedTenths = 0;
+  $runningPids = array();
+  if (is_array($subordinatePids)) foreach ($subordinatePids as $managerRole => $managerPid) {
+    if (managerProcessIsAlive((int)$managerPid)) $runningPids[$managerRole] = (int)$managerPid; }
+  foreach ($runningPids as $managerRole => $managerPid) terminateWorkerProcess($managerPid, FALSE, 0);
+  while (count($runningPids) > 0 && $waitedTenths < 200) {
+    foreach ($runningPids as $managerRole => $managerPid) if (!managerProcessIsAlive($managerPid)) unset($runningPids[$managerRole]);
+    if (count($runningPids) > 0) usleep(100000);
+    $waitedTenths++; }
+  // / A killed manager nobody has collected yet is gone all the same, so each is asked again by state.
+  foreach ($runningPids as $managerRole => $managerPid) {
+    warningEntry('The '.$managerRole.' process '.$managerPid.' did not stop within twenty seconds & was killed.');
+    $managerWasKilled = terminateWorkerProcess($managerPid, TRUE, 0);
+    if ($managerWasKilled or !managerProcessIsAlive($managerPid)) unset($runningPids[$managerRole]); }
+  $SubordinatesStopped = (count($runningPids) === 0);
+  if ($Verbose && $SubordinatesStopped) logEntry('Every subordinate manager has stopped.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $managerWasKilled, $managerRole, $managerPid, $waitedTenths, $runningPids, $subordinatePids);
+  return $SubordinatesStopped; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

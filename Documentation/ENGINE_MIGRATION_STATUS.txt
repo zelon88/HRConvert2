@@ -728,6 +728,122 @@ the code moves, not by the code moving.
                  A kernel that restricts unprivileged namespaces is not available here, so the
                  first proof on one is PuterVIIII with the restriction switched back on.
 
+  13. A DEPENDENCY THE PACKAGE MANAGER CARRIES TOO OLD IS BUILT BY THE ENGINE.         DONE
+     Dependency Core reads a Fallback from an apt entry in the manifest, & builds the
+     application's own copy where the package manager's is missing or outside the window, into
+     /usr/local/libexec/<slug>/builds beside its copy of bubblewrap. The package manager's copy &
+     every other program on the host are left as they are. The own copy is asked first wherever
+     its entry is used & the window decides, so a pipeline, -v, --check-depends, capability
+     detection & the supply chain audit all name the program that runs. It is built beside the
+     one in service, in a folder only root can open, & renamed into place only once every name in
+     it is root's alone & it reports the version its Fallback pins, inside the window. It is used
+     only where the web server's account can run it. Only the dependency commands make, refresh or
+     take it away, one at a time under a lock, & each takes away what an interrupted run or a
+     renamed entry left. --update-depends takes it away once the package manager catches up, so a
+     Fallback taken out of the manifest leaves nothing behind on any host. A build taken away is
+     made root's alone folder by folder before it is emptied, so nothing in it can point root's
+     removal elsewhere. The contract says what to build & a script beside the application's other
+     build scripts says how, so the Engine names no dependency. 7-Zip is the first entry to declare
+     one, because Ubuntu 24.04 carries 23.01 & the floor is 26.02.
+     PROVEN BY   Ninety four unit checks, with libexec moved under a scratch folder & a package
+                 manager, a program & a build that do what files tell them: which entries may
+                 have an own build & where it lives, which program answers for each own build &
+                 package manager's copy inside or outside the window, one with any part another
+                 account could change or reached through a link, one the web server's account
+                 cannot run, building & building again under a lock, every way a build can fail
+                 leaving the one in service as it was, taking one away without following a link or
+                 reaching outside the builds folder, settling after the package manager, a package
+                 manager believed only inside the window, what an interrupted run left,
+                 --install-depends, --update-depends, --uninstall-depends, verifiedToolPath,
+                 capability detection & the report. The web server's account swapping a folder it
+                 owns in a build for a link while root takes the build away is refused, & root's
+                 file is kept. Twenty nine made for real on this host, whose package manager
+                 carries 23.01: --setup --install-depends builds 26.06 from the source 7-Zip
+                 publishes, checked against its pinned checksum, -v & --check-depends as root & as
+                 www-data name it, the next install & update leave it alone, a package manager that
+                 catches up is named & then has it taken away, a floor it does not meet has it
+                 built again, one another account could change is never run, one behind a folder
+                 www-data cannot enter is not used & says why, & the supply chain audit records it.
+                 The build script refuses every value it cannot check & never unpacks an archive
+                 whose checksum differs, with every network route closed & without curl. Each of
+                 fifty five copies broken in one place fails the checks that guard it, the three
+                 that break the walk which takes a build away among them, in the Kernel, where it
+                 is from v4.0.6.
+                 Check eight passes, so the Engine still calls nothing in the application.
+
+  14. WHAT NO RELEASE SHIPS IS TAKEN OUT OF AN INSTALLATION BY THE ENGINE.            DONE
+     The contract names, in $EngineRetiredPaths, the paths inside an installation that no release
+     ships. -fp leaves each out of the walk that gives the installation to root, & then removes it
+     with removeTreeWithoutFollowing, which the Kernel holds from v4.0.6 & Dependency Core's
+     removeOwnBuildTree calls too, so one walk takes away a build & a leftover alike. It follows
+     nothing, makes every folder root's alone before listing it & never leaves the filesystem the
+     folder holding the tree is on. A path that leaves the installation is refused, & one in a
+     folder the web server's account owns is left & named. HRConvert2 names the tree FFmpeg's
+     build left in Documentation/Build/ffmpeg-build until v4.0.6. Root refuses an installation
+     holding a link from v4.0.1 on, so every installation that build ran in, the Docker image's
+     web root among them, was one root refused with error 28008, & -fp could not put that right.
+     Every source build works in a folder of its own under /var/tmp from v4.0.6, so nothing new is
+     left, & the Engine names no path of the application's.
+     PROVEN BY   Forty four checks run the manifest's own FFmpeg build command, with the upstream
+                 build stood in for by a script that leaves what it leaves, & then -fp & -v as
+                 the image & its smoke test run them. v4.0.5 as committed does what the smoke test
+                 saw: its build left its tree in the web root, -fp ended 1 & named the link, & -v
+                 as root ended with 28008. This release builds outside the installation, -fp
+                 leaves both copies ones root may run, & -v answers. Over a tree v4.0.5's build
+                 left, with folders www-data owns & links out of it, -fp takes it away, takes back
+                 three folders first, touches nothing a link led to, & installs the release
+                 without it. A tree that is a link is taken away as a link. Another link is named
+                 with what to do, & 28008 says the same. Six paths that leave the installation are
+                 refused & named in each copy, one in a folder www-data owns is left & named, &
+                 config.php asking for the build environment to go has it go, which no release
+                 since v4.0.3 did. A drop-in holding no Engine, unpacked beside the loader, is
+                 told where the installation is. Eight more run the Kernel's walk in a private
+                 mount namespace: something mounted inside a tree, or at one, is left as it was
+                 & said to be.
+                 Thirteen run every build script the manifest names, with the network, the
+                 compiler & the package manager stood in for: each builds in a new folder under
+                 /var/tmp, or TMPDIR, & leaves nothing, whether it ends well or fails. The web
+                 server's account swapping a folder it owns for a link while root takes a retired
+                 tree away is refused, & root's file is kept. The Docker simulation runs the
+                 build command before the image's install, & passes twenty one checks where v4.0.5
+                 fails eight. Over a leftover of twenty thousand files, -fp took twenty four seconds
+                 on v4.0.5 & refused the installation, & four on this release, which removed it.
+                 Each of twenty copies broken in one place fails the checks that guard it.
+                 Check eight passes, so the Engine still calls nothing in the application.
+
+  15. A MANAGER'S BUDGET, LOGFILE & STOP ARE KEPT RIGHT BY THE ENGINE.                  DONE
+     The Resource Manager works the budget out from the conversions tracked when a request
+     arrives, scales the limits before it registers the conversion, & shares memory by what the
+     host has available, so a conversion is never counted against itself. Every manager asks the
+     function the contract names in $EngineLogProvider, once a minute, to move it on to the
+     logfile it should be writing, & the Core Manager stops every manager it started when it is
+     told to stop, & waits for them. Pipeline Core holds a reported success to what the pipeline
+     left, & gives every pipeline one retry count. Environment Core names a lift an earlier
+     release made & a profile no package installed, & changes neither, & writes PHP settings only
+     for a PHP that is installed. Setup Core moves only a session into Sessions, counts only what
+     it changed, & names what a release left in & beside the hosted location, which the Apache
+     configuration it writes refuses.
+     PROVEN BY   Sixty four unit checks, with the real functions lifted out & the host stood in
+                 for. On the desktop the cohesion report measured, v4.0.5 gave a document
+                 conversion on its own 13% & 137M of 50% & 512M, & this release gives it the
+                 512M configured & a processor share less only the load. The budget is worked
+                 out per request. Each of ten pipelines makes the attempts it is given, & raises
+                 one error after the last. An empty, missing or folder result fails, & falls
+                 back first where it can. A real ImageMagick writes the icon. Three real manager
+                 processes stop when asked, & one that ignores the signal is killed after twenty
+                 seconds. Both ImageMagick policies are put back, where v4.0.5 put back one.
+                 One hundred & seventy six sandbox checks, eighteen of them new, for a lift that
+                 is kept, one config.php forbids & one another file holds, & a hand written
+                 profile. Forty three made for real on this host, through Apache with mod_php, a
+                 running listener & a browser, from a fresh install: the listener gave
+                 LibreOffice the 512M configured, the managers moved on to a new logfile &
+                 stopped with the Core Manager, & -fp, -v, --status, -c & --setup
+                 --install-service said & did what is described. v4.0.5 as committed fails
+                 twenty seven of the forty three. Each of twenty five copies broken in one place
+                 fails the checks that guard it.
+                 Check eight passes, so the Engine calls the application only through what the
+                 contract names.
+
 WHAT DROPS OUT.
   The step six sort written earlier in this release, which assumed the work was moving
   command machinery into the Engine. Step seven replaces it.

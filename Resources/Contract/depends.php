@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v3.8.1.
+// / v4.0.6.
 // / HRConvert2 Dependency Manifest.
 // / This file is data. It defines nothing & does nothing.
 // / dependencyCore.php reads it. Nothing else may.
@@ -40,6 +40,24 @@
 // /   Source           Where it comes from. Read by the supply chain audit.
 // /   Purpose          Why HRConvert2 needs it. Read by the supply chain audit.
 // /   BuildCommand     For a source Type. The shell command that builds & installs it.
+// /   Fallback         For an apt Type, optional. How this application builds its OWN copy
+// /                    where the package manager's is missing or outside the window.
+// /
+// / A Fallback holds a BuildCommand, & may hold the Version it builds, the Sha256 of what that
+// / command downloads, & the Source & License of what it builds. It is honoured only where Binary
+// / is a plain name & VersionCommand runs that program, because the version asked must be the own
+// / build's. Dependency Core hands the command a new folder only root can open as DEPENDENCY_PREFIX,
+// / with DEPENDENCY_VERSION & DEPENDENCY_SHA256, & the command installs the program at bin/ under
+// / it, named as Binary names it. What it built is asked its version exactly as the package
+// / manager's would be, & is put in service only when every name in it is root's alone, it answers
+// / inside the window & it is the Version pinned. It is ready once the account that runs
+// / conversions can run it.
+// / The own copy lives in a folder of this application's own under /usr/local/libexec, so the
+// / package manager's copy & every other program on the host are left exactly as they are.
+// / It is asked FIRST wherever the entry is used, & the window decides. --update-depends asks
+// / the package manager's copy again after the package manager has run, & takes the own copy
+// / away once that one answers inside the window, so an entry falls back only for as long as
+// / the package manager is behind. An entry with no Fallback is unchanged.
 // /
 // / A bundled Type is a microservice this project distributes rather than a package this
 // / project installs. It is never installed, never updated & never removed.
@@ -104,7 +122,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v3.9.3';
+$DependsVersion = 'v4.0.6';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -157,7 +175,19 @@ $DependsManifest = array(
 
   // / ---- Archives. Needed early because other dependencies arrive compressed. ----
   array('Name' => '7-Zip', 'Binary' => '7z', 'Type' => 'apt', 'Package' => 'p7zip-full p7zip-rar',
-    'MinimumVersion' => '23.01', 'VersionCommand' => '7z i', 'VersionPattern' => '/7-Zip.*?(\d+\.\d+)/',
+    // / 26.02 IS THE FLOOR because every release from 21.07 through 26.01 decodes XZ with a heap
+    // / overflow a crafted archive reaches, CVE-2026-14266. 26.01 fixed a heap overflow in the
+    // / NTFS handler & seven out of bounds or uninitialized reads in others, & 25.01 fixed the
+    // / symbolic links a chain of them could walk out of the extraction folder through,
+    // / CVE-2025-55188. 7-Zip picks a handler by what a file holds rather than by its name, so
+    // / every one of those is reachable from any upload offered for extraction.
+    // / Debian's security archive carries 26.02 for bookworm, which the Docker image is built on.
+    // / Ubuntu 24.04 carries 23.01, so that host builds this application's own, from the source
+    // / 7-Zip publishes, pinned by version & checksum below.
+    'MinimumVersion' => '26.02', 'VersionCommand' => '7z i', 'VersionPattern' => '/7-Zip.*?(\d+\.\d+)/',
+    'Fallback' => array('Version' => '26.06', 'Sha256' => 'a4e374c8f864f51df48c2cfd0e1413ec3b2ea030deae852d6a655402ebb61ac4',
+      'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'build-7zip.sh'),
+      'Source' => 'https://github.com/ip7z/7zip', 'License' => 'LGPL-2.1'),
     'Required' => TRUE, 'Subsystem' => 'Archives', 'Requires' => array(),
     'License' => 'LGPL-2.1', 'Source' => 'https://www.7-zip.org', 'Purpose' => 'Extracts every archive format offered.'),
   array('Name' => 'Zip', 'Binary' => 'zip', 'Type' => 'apt', 'Package' => 'zip unzip',
@@ -191,8 +221,11 @@ $DependsManifest = array(
   // / the manifest did not know this dependency was built & the audit did not record it.
   // / The script still does the work. The manifest now decides when it runs & whether it
   // / worked, which is the arrangement every other dependency already had.
+  // / The script builds in a folder of its own under /var/tmp & removes it. Until v4.0.6 this
+  // / command changed into Documentation/Build first, so the whole build, links & all, was left
+  // / in the installation, & root refuses an installation holding a link from v4.0.1 on.
   array('Name' => 'FFMPEG', 'Binary' => 'ffmpeg', 'Type' => 'source', 'Package' => '',
-    'BuildCommand' => 'cd '.$InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build && bash ffmpeg-build.sh',
+    'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'ffmpeg-build.sh'),
     'MinimumVersion' => '6.1', 'VersionCommand' => 'ffmpeg -version', 'VersionPattern' => '/ffmpeg version n?(\d+\.\d+)/',
     // / FFMPEG names muxers rather than extensions. It has no mkv & no wmv. Matroska is
     // / the muxer behind one & ASF is the muxer behind the other, so both are aliased here
@@ -229,7 +262,7 @@ $DependsManifest = array(
   // / The packaged build carries no HEIC, AVIF or JPEG XL support & this application
   // / offers all three. The same reasoning as FFMPEG applies to how it is invoked.
   array('Name' => 'ImageMagick', 'Binary' => 'magick', 'Type' => 'source', 'Package' => '',
-    'BuildCommand' => 'bash '.$InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'build-imagemagick-v7.sh',
+    'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'build-imagemagick-v7.sh'),
     'MinimumVersion' => '7.1', 'VersionCommand' => 'magick -version', 'VersionPattern' => '/ImageMagick (\d+\.\d+)/',
     // / The format column may carry a hyphen & may overrun its width, as RADIAL-GRADIENT
     // / does, so the name is not anchored to a column. A trailing asterisk is native blob
@@ -306,7 +339,7 @@ $DependsManifest = array(
     // / The index lists every CPython release. The Engine filters it to the declared
     // / window & hands the highest back as DEPENDENCY_VERSION.
     'VersionSource' => 'wget -qO- https://www.python.org/ftp/python/ 2>/dev/null | grep -oE [0-9]+[.][0-9]+[.][0-9]+/ | tr -d /',
-    'BuildCommand' => 'bash '.$InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-python-build.sh',
+    'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-python-build.sh'),
     'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array(),
     'License' => 'PSF-2.0', 'Source' => 'https://www.python.org', 'Purpose' => 'Loads the bundled PyMeshLab, which is the only mesh route MeshLab has not removed.'),
   // / NumPy, which PyMeshLab imports before it does anything else.
@@ -424,8 +457,11 @@ $DependsManifest = array(
     'MinimumVersion' => '', 'VersionCommand' => 'QT_QPA_PLATFORM=offscreen QT_PLUGIN_PATH='.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab'.DIRECTORY_SEPARATOR.'pymeshlab'.DIRECTORY_SEPARATOR.'lib'.DIRECTORY_SEPARATOR.'plugins'.' LIBGL_ALWAYS_SOFTWARE=1 __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json LD_LIBRARY_PATH='.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab'.DIRECTORY_SEPARATOR.'pymeshlab'.DIRECTORY_SEPARATOR.'lib'.' python3.14 -c "import sys; sys.path.insert(0, \''.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab\'); import pymeshlab; print(\'bundled\')"', 'VersionPattern' => '',
     'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Assimp', 'Python 3.14', 'pip 3.14', 'NumPy 3.14'),
     'License' => 'GPL-3.0', 'Source' => 'Bundled at Resources/PyMeshLab', 'Purpose' => 'Repairs & simplifies meshes. Replaces MeshLab. Ships with HRConvert2.'),
+  // / meshlabserver is a Qt program & aborts where there is no display, which is every web request &
+  // / every listener, so its version is asked through Qt's offscreen platform. Until v4.0.6 a request
+  // / found no MeshLab while -v run from a desktop found it, & every Model request warned.
   array('Name' => 'MeshLab', 'Binary' => 'meshlabserver', 'Type' => 'apt', 'Package' => 'meshlab',
-    'MinimumVersion' => '2020.09', 'VersionCommand' => 'meshlabserver --version', 'VersionPattern' => '/(\d+\.\d+)/',
+    'MinimumVersion' => '2020.09', 'VersionCommand' => 'QT_QPA_PLATFORM=offscreen meshlabserver --version', 'VersionPattern' => '/(\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Assimp'),
     'License' => 'GPL-3.0', 'Source' => 'https://www.meshlab.net', 'Purpose' => 'Mesh processing. Only needed when PyMeshLab is disabled.'),
 

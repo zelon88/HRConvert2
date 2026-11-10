@@ -290,6 +290,18 @@ Contracts 1 through 3 are unchanged & still live in CREATING_CONVERSION_PIPELINE
     4g. A pipeline that has nothing to say in a slot returns what it was given.
     4h. $OutputFilename defaults to basename($NewPathname). It is never returned empty.
     4i. An undefined return value is a PHP warning & a warning corrupts an AJAX response.
+    4j. A reported success is held to what the pipeline left, from v4.0.6. Pipeline Core's
+        runConversion asks pipelineOutputIsUsable() whenever a pipeline reports success with
+        no worker. A result is a file with something in it. A plain text format may be empty,
+        because a document or an image with no text in it converts to an empty one. An empty
+        file is removed, anything that is not a file is left for the sweep, & a success that
+        left nothing is named too. Each is a warning while another pipeline can still try the
+        pair, & error 34010 once none can. Until v4.0.6 anything at the path was offered, an
+        empty icon & a folder included.
+    4k. Every pipeline that retries asks pipelineAttemptIsDue(), from v4.0.6, so every one
+        makes --File Operation Retry Count-- attempts, & always one. Until v4.0.6 most made one
+        attempt more than that & raised their error after the attempt that used it up, whether
+        that attempt worked or not.
 
   5. A NON-ZERO $WorkerPID MEANS THE CORE MUST STAY ALIVE AFTER SERVING THE USER.
 

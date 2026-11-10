@@ -12,7 +12,7 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v4.0.0.
+# / v4.0.6.
 # / This file is the ImageMagick 7 source build for HRConvert2.
 # / It removes the packaged ImageMagick & any earlier source build, then builds & installs
 # / version 7 under /usr/local with HEIC, AVIF & JPEG XL support, which the packaged build
@@ -88,10 +88,13 @@ apt-get install -y \
     libfontconfig1-dev
 
 echo "=== Downloading ImageMagick v7 source ==="
-cd /tmp
-# Remove old downloads if they exist
-rm -f ImageMagick.tar.gz
-rm -rf ImageMagick-7*
+# / The source is fetched & built in a folder made new for this run under /var/tmp or TMPDIR,
+# / that only root can open & that is removed however the build ends. Until v4.0.6 it was
+# / fetched to fixed names in /tmp, where every account can write, so a folder another account
+# / put there first was one root unpacked into & built from.
+WORK="$(mktemp -d "${TMPDIR:-/var/tmp}/hrconvert2-imagemagick.XXXXXXXX")"
+trap 'rm -rf "$WORK"' EXIT
+cd "$WORK"
 
 MAX_RETRIES=5
 RETRY_COUNT=0

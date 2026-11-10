@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.8.8.
+// / v4.0.6.
 // / This file is the converter for the Document pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Document operation is about to be dispatched to it, so a request that does
 // / something else never parses a line of it.
@@ -62,8 +62,9 @@ function convertDocuments($pathname, $newPathname, $extension) {
   // / The following code performs the actual document conversion.
   if ($documentEngineStarted) {
     if ($Verbose) logEntry('Converting document.');
-    // / This code will attempt the conversion up to $StopCounter number of times.
-    while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+    // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
+    // / first attempt that leaves a file.
+    while (pipelineAttemptIsDue($newPathname, $stopper)) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / An XPS file is handled by xpstopdf, which is also sandboxed & also has no network.
@@ -76,13 +77,16 @@ function convertDocuments($pathname, $newPathname, $extension) {
       // / Everything else goes to LibreOffice, one sandboxed process per conversion.
       else list ($conversionCompleted, $returnData) = convertWithLibreOffice($pathname, $newPathname, $extension);
       // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-      // / Stop attempting the conversion after $StopCounter number of attempts.
-      if ($stopper === $StopCounter) {
-        $ConversionErrors = TRUE;
-        errorEntry('The document converter timed out!', 7001, FALSE); } }
+      $stopper++; }
     // / Log the output of the operation to the logfile, if it is not blank.
-    if ($Verbose && trim($returnData) !== '') logEntry('The document converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); }
+    if ($Verbose && trim((string)$returnData) !== '') logEntry('The document converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim((string)$returnData)))));
+    // / Every attempt was made & none left a file. What the converter printed is logged above this,
+    // / with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the converter had timed out, which no time limit
+    // / ever caused, & then made one more attempt.
+    // / A LibreOffice its ceiling killed is named in a warning above, by the shared module.
+    if (!file_exists($newPathname)) {
+      $ConversionErrors = TRUE;
+      errorEntry('The document converter produced no file after '.$stopper.' attempt(s)!', 7001, FALSE); } }
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $stopper, $pathname, $returnData, $documentEngineStarted, $documentEnginePID, $conversionCompleted, $commandMayRun, $xpsCommand, $sandboxedCommand, $sleepTime, $oldExtension, $arrayxpsi);

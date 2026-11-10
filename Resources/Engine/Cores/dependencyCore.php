@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.0.5.
+// / v4.0.6.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -47,7 +47,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v4.0.5';
+$DependencyCoreVersion = 'v4.0.6';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -557,6 +557,634 @@ function resolveDependencyState($dependencyEntry) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to say which versions of a dependency this release accepts.
+// / Accepts a manifest entry. Returns text such as 26.02 or later.
+function dependencyWindowText($dependencyEntry) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $WindowText = 'any version';
+  $minimumVersion = $maximumVersion = '';
+  $minimumVersion = isset($dependencyEntry['MinimumVersion']) ? trim((string)$dependencyEntry['MinimumVersion']) : '';
+  $maximumVersion = isset($dependencyEntry['MaximumVersion']) ? trim((string)$dependencyEntry['MaximumVersion']) : '';
+  if ($minimumVersion !== '' && $maximumVersion !== '') $WindowText = $minimumVersion.' or later & earlier than '.$maximumVersion;
+  else if ($minimumVersion !== '') $WindowText = $minimumVersion.' or later';
+  else if ($maximumVersion !== '') $WindowText = 'a version earlier than '.$maximumVersion;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $minimumVersion, $maximumVersion, $dependencyEntry);
+  return $WindowText; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the folder every dependency this application builds for itself lives under.
+// / Accepts nothing. Returns the absolute path.
+// / IT IS THIS APPLICATION'S ALONE. It sits under /usr/local/libexec beside this application's own
+// / copy of bubblewrap, in the folder named for the application, so two applications on one host
+// / never share a build & neither touches the copy a package manager keeps.
+function ownBuildsRoot() {
+  // / Set variables.
+  $BuildsRoot = '/usr/local/libexec/'.engineApplicationSlug().'/builds';
+  return $BuildsRoot; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the folder this application's own build of one dependency lives in.
+// / Accepts a manifest entry. Returns the absolute path, or an empty string for a name nothing safe
+// / can be made from.
+// / The folder is named for the entry & is laid out as a prefix, so a build installs its program at
+// / bin/ beneath it, as one handed --prefix would.
+function ownBuildFolder($dependencyEntry) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $BuildFolder = $nameSlug = '';
+  $nameSlug = trim((string)preg_replace('/[^a-z0-9]+/', '-', strtolower(isset($dependencyEntry['Name']) ? (string)$dependencyEntry['Name'] : '')), '-');
+  if ($nameSlug !== '') $BuildFolder = ownBuildsRoot().DIRECTORY_SEPARATOR.$nameSlug;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $nameSlug, $dependencyEntry);
+  return $BuildFolder; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether a manifest entry asks for this application's own build where the
+// / package manager's falls short.
+// / Accepts the entry, with its architecture rules applied. Returns TRUE when a package manager
+// / installs it, it declares a Fallback carrying a build command, it names its program by a plain
+// / name, & its VersionCommand runs that program.
+// / AN OWN BUILD IS FOUND BY ITS PROGRAM, so an entry with none, or one naming a path an operator
+// / chose, has nowhere to put one. Every other Type already says how it is made, so only a package
+// / manager's entry falls back.
+// / THE VERSION ASKED IS THE PROGRAM'S OWN. The build's folder is put first on the PATH of the
+// / version command, which finds the own build only where the command runs the program by its name.
+// / A command running some other program would be answered by the package manager's copy of that one,
+// / & the own build would be judged by a version it never gave.
+function ownBuildIsDeclared($dependencyEntry) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $BuildIsDeclared = FALSE;
+  $binaryName = $versionCommand = '';
+  $binaryName = isset($dependencyEntry['Binary']) ? (string)$dependencyEntry['Binary'] : '';
+  $versionCommand = isset($dependencyEntry['VersionCommand']) ? trim((string)$dependencyEntry['VersionCommand']) : '';
+  $BuildIsDeclared = (isset($dependencyEntry['Type'], $dependencyEntry['Fallback']) && (string)$dependencyEntry['Type'] === 'apt'
+    && is_array($dependencyEntry['Fallback']) && isset($dependencyEntry['Fallback']['BuildCommand'])
+    && trim((string)$dependencyEntry['Fallback']['BuildCommand']) !== ''
+    && preg_match('/^[A-Za-z0-9][A-Za-z0-9._+-]*$/', $binaryName) === 1
+    && preg_match('/^'.preg_quote($binaryName, '/').'(\s|$)/', $versionCommand) === 1 && ownBuildFolder($dependencyEntry) !== '');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $binaryName, $versionCommand, $dependencyEntry);
+  return $BuildIsDeclared; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether the program of this application's own build of a dependency may
+// / be run.
+// / Accepts the build's folder & the path of its program. Returns whether it may & why it may not,
+// / in that order.
+// / ROOT RUNS IT TO ASK ITS VERSION, so it must be a plain file root owns, that no other account can
+// / change, in folders root alone can change, exactly as this application's own copy of bubblewrap
+// / must be. A path where nothing is has no reason, because there is simply no build. A program that
+// / is there & fails is never run, & the reason says why.
+// / THE WHOLE BUILD IS JUDGED, not only the path to its program. A program may read what was installed
+// / beside it, & a folder in the build another account could change is one root later empties to
+// / take the build away, so every name in it must be root's alone, & none may be a link.
+// / treeIsTrustedByRoot() judges every folder above the build as well.
+function ownBuildIsTrusted($buildFolder, $binaryPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $BuildIsTrusted = $treeIsTrusted = FALSE;
+  $TrustNotice = $trustNotice = '';
+  clearstatcache(TRUE, $binaryPath);
+  if (!file_exists($binaryPath) && !is_link($binaryPath)) $TrustNotice = '';
+  else if (is_link($binaryPath) or !is_file($binaryPath)) $TrustNotice = $binaryPath.' is not a plain file.';
+  else {
+    list ($treeIsTrusted, $trustNotice) = treeIsTrustedByRoot($buildFolder, array());
+    if (!$treeIsTrusted) $TrustNotice = $trustNotice;
+    else if (!is_executable($binaryPath)) $TrustNotice = $binaryPath.' cannot be run.';
+    else $BuildIsTrusted = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $treeIsTrusted, $trustNotice, $buildFolder, $binaryPath);
+  return array($BuildIsTrusted, $TrustNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether the account that runs conversions can run this application's own
+// / build of a dependency.
+// / Accepts the path of the program. Returns whether that account can & the account it is, in that
+// / order.
+// / A BUILD ROOT TRUSTS CAN STILL BE ONE THE WEB SERVER'S ACCOUNT CANNOT RUN. A folder above it closed
+// / to that account, or a filesystem that runs no programs, stops it, & root's own checks see neither.
+// / So root asks as that account whether the program may be read & run, which runs nothing, as the copy
+// / of bubblewrap is asked. Any other account is the one asking, & its own version probe has just run
+// / the program, so it is answered TRUE.
+function ownBuildIsRunnable($binaryPath) {
+  // / Set variables.
+  global $RunningAsRoot, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
+  $BuildIsRunnable = TRUE;
+  $RunAccount = (string)$CurrentUser;
+  $accessCommand = '';
+  $commandOutput = array();
+  $commandExitCode = 1;
+  if ($RunningAsRoot && (string)$CurrentUser !== (string)$ApacheUser) {
+    $RunAccount = (string)$ApacheUser;
+    // / This runs unsandboxed, as the probe of the copy of bubblewrap does. It is the shell's own test
+    // / & reads nothing but the permissions on the way to the program.
+    $accessCommand = 'test -r '.escapeshellarg((string)$binaryPath).' && test -x '.escapeshellarg((string)$binaryPath);
+    list ($commandOutput, $commandExitCode) = runAsAccount($accessCommand, (string)$ApacheUser);
+    $BuildIsRunnable = ($commandExitCode === 0); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $accessCommand, $commandOutput, $commandExitCode, $binaryPath);
+  return array($BuildIsRunnable, $RunAccount); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to describe a manifest entry as its own build in one folder.
+// / Accepts the entry, with its architecture rules applied, & the folder. Returns the entry rewritten
+// / so every probe runs the program in that folder. Binary is its path, the folder's bin is put
+// / first on the PATH of every command the entry runs, & the Source & License are the Fallback's.
+// / The PATH is put ahead of a command rather than written into it, because a command is written by
+// / whoever added the entry & rewriting their text is a good way to break a quoting they got right.
+// / The architecture keys are taken off, because they are already applied & applying them again
+// / would put back the Binary they name.
+function ownBuildEntry($dependencyEntry, $buildFolder) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OwnEntry = $dependencyEntry;
+  $binFolder = $pathPrefix = $commandKey = $provenanceField = '';
+  $binFolder = rtrim((string)$buildFolder, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'bin';
+  $pathPrefix = 'export PATH='.escapeshellarg($binFolder).':"$PATH"; ';
+  $OwnEntry['Binary'] = $binFolder.DIRECTORY_SEPARATOR.(string)$dependencyEntry['Binary'];
+  foreach (array('VersionCommand', 'CapabilityCommand', 'CapabilityWriteCommand') as $commandKey) {
+    if (isset($OwnEntry[$commandKey]) && trim((string)$OwnEntry[$commandKey]) !== '') $OwnEntry[$commandKey] = $pathPrefix.(string)$OwnEntry[$commandKey]; }
+  foreach (array('Source', 'License') as $provenanceField) {
+    if (isset($dependencyEntry['Fallback'][$provenanceField]) && trim((string)$dependencyEntry['Fallback'][$provenanceField]) !== '') $OwnEntry[$provenanceField] = (string)$dependencyEntry['Fallback'][$provenanceField]; }
+  unset($OwnEntry['Fallback'], $OwnEntry['Architectures'], $OwnEntry['ArchitectureOverrides']);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $OwnEntry is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $binFolder, $pathPrefix, $commandKey, $provenanceField, $dependencyEntry, $buildFolder);
+  return $OwnEntry; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the program of this application's own build of a dependency, where one may
+// / be run, without asking it anything.
+// / Accepts a manifest entry. Returns the entry as its own build & the program's path where one may
+// / be run, or the entry unchanged & an empty path, in that order.
+// / It asks no version, so it costs no process. resolveDependencyChoice() asks the version, & that
+// / is what decides whether a conversion uses the build. This is for what only needs the program.
+function ownBuildInService($dependencyEntry) {
+  // / Set variables.
+  global $HostArchitecture, $EnableMemoryProtection;
+  $ServiceEntry = $dependencyEntry;
+  $ServicePath = '';
+  $resolvedEntry = array();
+  $architectureIsSupported = $buildIsTrusted = FALSE;
+  $unsupportedReason = $buildFolder = $binaryPath = $trustNotice = '';
+  list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
+  if ($architectureIsSupported && ownBuildIsDeclared($resolvedEntry)) {
+    $buildFolder = ownBuildFolder($resolvedEntry);
+    $binaryPath = $buildFolder.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.(string)$resolvedEntry['Binary'];
+    list ($buildIsTrusted, $trustNotice) = ownBuildIsTrusted($buildFolder, $binaryPath);
+    if ($buildIsTrusted) {
+      $ServiceEntry = ownBuildEntry($resolvedEntry, $buildFolder);
+      $ServicePath = $binaryPath; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $architectureIsSupported, $buildIsTrusted, $unsupportedReason, $buildFolder, $binaryPath, $trustNotice, $dependencyEntry);
+  return array($ServiceEntry, $ServicePath); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the state of a dependency, from this application's own build where it has one.
+// / Accepts a manifest entry. Returns a presence boolean, the detected version, a status word, the
+// / raw output, the path of the program & where the program came from, in that order. The first four
+// / are exactly what resolveDependencyState() returns. Where it came from is 'own' for this
+// / application's own build & 'system' for anything else, & the path is empty where there is no
+// / program to name.
+// / THE OWN BUILD IS ASKED FIRST & THE WINDOW DECIDES. One that answers inside the window is the
+// / program used. One that does not falls back to the package manager's, which is used where it
+// / answers inside the window, & a warning says so. Where neither does, the own build's state is the
+// / one returned, because an install builds it again, & one answering with no version this release
+// / can read is misconfigured, because a build this application made always reports its version.
+// / An own build that is not root's alone is never run. One root asks about must be one the account
+// / that runs conversions can run, or it is not used, because root's answer would describe a program
+// / no conversion reaches. Where the package manager's answers inside the window, it is used, & the
+// / warning says --update-depends takes the own build away. Where it does not, the entry is
+// / misconfigured & says why.
+// / resolveDependencyState() still reads the package manager's alone, because whether the own build
+// / is needed at all is a question about that copy.
+function resolveDependencyChoice($dependencyEntry) {
+  // / Set variables.
+  global $HostArchitecture, $EnableMemoryProtection;
+  $DependencyIsPresent = FALSE;
+  $DetectedVersion = $RawOutput = $BinaryPath = '';
+  $DependencyStatus = 'absent';
+  $BinaryOrigin = 'system';
+  $resolvedEntry = array();
+  $architectureIsSupported = $ownIsTrusted = $ownIsPresent = $ownIsRunnable = FALSE;
+  $unsupportedReason = $ownFolder = $ownPath = $ownNotice = $ownLead = $ownAdvice = $ownVersion = $ownStatus = $ownOutput = $runAccount = '';
+  list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
+  if ($architectureIsSupported && ownBuildIsDeclared($resolvedEntry)) {
+    $ownFolder = ownBuildFolder($resolvedEntry);
+    $ownPath = $ownFolder.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.(string)$resolvedEntry['Binary'];
+    list ($ownIsTrusted, $ownNotice) = ownBuildIsTrusted($ownFolder, $ownPath);
+    if ($ownNotice !== '') {
+      $ownLead = ' is never run. ';
+      $ownAdvice = ' Run --setup --install-depends as root to build it again.'; }
+    if ($ownIsTrusted) list ($ownIsPresent, $ownVersion, $ownStatus, $ownOutput) = resolveDependencyState(ownBuildEntry($resolvedEntry, $ownFolder));
+    if ($ownIsTrusted && $ownStatus === 'ok') list ($ownIsRunnable, $runAccount) = ownBuildIsRunnable($ownPath);
+    if ($ownIsTrusted && $ownStatus === 'ok' && !$ownIsRunnable) {
+      $ownLead = ' is not used. ';
+      $ownNotice = $runAccount.', which runs conversions, cannot run '.$ownPath.'. Every folder above it must let that account through, & its filesystem must run programs.'; } }
+  if ($ownIsTrusted && $ownStatus === 'ok' && $ownIsRunnable) {
+    list ($DependencyIsPresent, $DetectedVersion, $DependencyStatus, $RawOutput) = array($ownIsPresent, $ownVersion, $ownStatus, $ownOutput);
+    $BinaryPath = $ownPath;
+    $BinaryOrigin = 'own'; }
+  else {
+    list ($DependencyIsPresent, $DetectedVersion, $DependencyStatus, $RawOutput) = resolveDependencyState($dependencyEntry);
+    // / The package manager's program is found exactly as it always was, by its name unless the
+    // / manifest named a path.
+    if ($DependencyIsPresent) $BinaryPath = (string)$resolvedEntry['Binary'];
+    if ($BinaryPath !== '' && strpos($BinaryPath, DIRECTORY_SEPARATOR) === FALSE) $BinaryPath = locateDependency($BinaryPath);
+    // / The advice follows what is in service. --install-depends finds a package manager's copy that
+    // / answers & leaves everything as it is, so only --update-depends takes the own build away.
+    if ($ownNotice !== '' && $DependencyStatus === 'ok') warningEntry(engineApplicationName().'\'s own build of '.(string)$resolvedEntry['Name'].$ownLead.$ownNotice.' The package manager\'s '.$DetectedVersion.' is used. Run --setup --update-depends as root to take the own build away.');
+    else if ($ownNotice !== '') {
+      $DependencyStatus = 'misconfigured';
+      $RawOutput = engineApplicationName().'\'s own build'.$ownLead.$ownNotice;
+      warningEntry(engineApplicationName().'\'s own build of '.(string)$resolvedEntry['Name'].$ownLead.$ownNotice.$ownAdvice); }
+    else if ($ownIsTrusted && $DependencyStatus === 'ok') warningEntry(engineApplicationName().'\'s own build of '.(string)$resolvedEntry['Name'].' is '.$ownStatus.($ownVersion !== '' ? ' at '.$ownVersion : '').', so the package manager\'s '.$DetectedVersion.' is used. Run --setup --update-depends as root to take the own build away.');
+    else if ($ownIsTrusted) {
+      list ($DependencyIsPresent, $DetectedVersion, $DependencyStatus, $RawOutput) = array($ownIsPresent, $ownVersion, $ownStatus, $ownOutput);
+      $BinaryPath = $ownPath;
+      $BinaryOrigin = 'own';
+      if ($ownStatus === 'unknown-version') {
+        $DependencyStatus = 'misconfigured';
+        $RawOutput = engineApplicationName().'\'s own build answers with no version this release can read. '.$ownOutput; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $architectureIsSupported, $ownIsTrusted, $ownIsPresent, $ownIsRunnable, $unsupportedReason, $ownFolder, $ownPath, $ownNotice, $ownLead, $ownAdvice, $ownVersion, $ownStatus, $ownOutput, $runAccount, $dependencyEntry);
+  return array($DependencyIsPresent, $DetectedVersion, $DependencyStatus, $RawOutput, $BinaryPath, $BinaryOrigin); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to remove a folder this application built, & everything in it, without following
+// / anything.
+// / Accepts the folder's path. Returns whether nothing is left of it.
+// / IT REMOVES ONLY A FOLDER DIRECTLY IN THE BUILDS FOLDER, & only while that folder is root's alone,
+// / so no account but root could have put a name in the way. removeTreeWithoutFollowing() in the
+// / Kernel does the removal. It examines every name with lstat, removes a link as a link, & makes
+// / every folder root's alone before anything in it is listed, which matters here because a build
+// / is often taken away for being one another account could change. A removal it could not finish
+// / is warned about here, & the caller says which build it was.
+function removeOwnBuildTree($treePath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $TreeIsRemoved = $parentIsTrusted = FALSE;
+  $resolvedParent = $trustNotice = $treeName = $removalNotice = '';
+  $treePath = rtrim((string)$treePath, DIRECTORY_SEPARATOR);
+  $treeName = basename($treePath);
+  if (dirname($treePath) === ownBuildsRoot() && $treeName !== '' && $treeName !== '.' && $treeName !== '..') list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot(ownBuildsRoot());
+  if ($parentIsTrusted && $resolvedParent === ownBuildsRoot()) list ($TreeIsRemoved, $removalNotice) = removeTreeWithoutFollowing($treePath);
+  else {
+    clearstatcache(TRUE, $treePath);
+    $TreeIsRemoved = (!file_exists($treePath) && !is_link($treePath)); }
+  if (!$TreeIsRemoved && $removalNotice !== '') warningEntry($removalNotice);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $parentIsTrusted, $resolvedParent, $trustNotice, $treeName, $removalNotice, $treePath);
+  return $TreeIsRemoved; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to hold the lock every change to this application's own builds is made under.
+// / Accepts nothing. Returns the open handle holding the lock, or FALSE where none could be held.
+// / ONE CHANGE AT A TIME. A build, a removal & a sweep each hold it while they change the builds
+// / folder, so a sweep never takes away a folder another run is building in. The lock file sits in the
+// / builds folder, which root alone can change, & is opened without following anything. The kernel
+// / lets go of it when a process ends, however it ends, so an interrupted run never leaves it held.
+// / A run that has to wait for another says so first, because a build can take an hour on arm.
+function holdOwnBuildLock() {
+  // / Set variables.
+  global $Lol, $EnableMemoryProtection;
+  $LockHandle = FALSE;
+  $lockPath = $lockNotice = '';
+  $lockWasCreated = $lockWouldBlock = FALSE;
+  $lockPath = ownBuildsRoot().DIRECTORY_SEPARATOR.'.lock';
+  list ($LockHandle, $lockWasCreated, $lockNotice) = openFileWithoutFollowing($lockPath, 0600);
+  if ($LockHandle !== FALSE && !@flock($LockHandle, LOCK_EX | LOCK_NB, $lockWouldBlock)) {
+    if ($lockWouldBlock) print('  '.str_pad('Own builds', 20).'waiting, because another run is changing them.'.$Lol);
+    if (!@flock($LockHandle, LOCK_EX)) {
+      @fclose($LockHandle);
+      $LockHandle = FALSE;
+      $lockNotice = $lockPath.' could not be locked.'; } }
+  if ($LockHandle === FALSE) warningEntry(engineApplicationName().'\'s own builds could not be locked, so none was changed. '.$lockNotice);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $LockHandle is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $lockPath, $lockNotice, $lockWasCreated, $lockWouldBlock);
+  return $LockHandle; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to let go of the lock holdOwnBuildLock() took.
+// / Accepts the handle it returned. Returns whether the lock was let go of, which is TRUE where there
+// / was none to let go of.
+function releaseOwnBuildLock($lockHandle) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $LockIsReleased = TRUE;
+  if (is_resource($lockHandle)) {
+    $LockIsReleased = @flock($lockHandle, LOCK_UN);
+    @fclose($lockHandle); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $lockHandle);
+  return $LockIsReleased; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to build this application's own copy of a dependency & put it in service.
+// / Accepts the entry, with its architecture rules applied, & a sentence saying why it is built.
+// / Returns a sanity boolean, a status word & a sentence, in that order. The boolean is TRUE when a
+// / build answering inside the entry's window is in service. The status is 'installed', 'updated'
+// / or 'FAILED'.
+// / IT IS BUILT BESIDE THE ONE IN SERVICE & ONLY THEN PUT IN ITS PLACE. The Fallback's command is
+// / handed a new folder only root can open as DEPENDENCY_PREFIX, with the Version & Sha256 the
+// / Fallback pins as DEPENDENCY_VERSION & DEPENDENCY_SHA256. Both are set, empty where nothing is
+// / pinned, so a value left in root's environment never stands in for one. What it built is asked
+// / its version exactly as the one in service would be, & is renamed into place only when it is
+// / root's alone throughout, answers inside the window & is the version pinned. A sandbox therefore
+// / runs the old build or the new one & never part of either. The one in service is renamed aside
+// / first, because a folder cannot be renamed over another, so a conversion starting in the instant
+// / between the two renames finds neither, & runs the package manager's copy where that answers
+// / inside the window or is refused where it does not. A build that fails leaves the one in service
+// / as it was. Each folder is made only where nothing is & only beneath one root alone can change, as
+// / the copy of bubblewrap's folders are, & this application's own folders are opened to every
+// / account, because the account that runs conversions must reach the build through them.
+// / The whole build is made under holdOwnBuildLock(), & is ready only once the account that runs
+// / conversions can run what was put in service.
+function buildOwnCopy($dependencyEntry, $buildReason) {
+  // / Set variables.
+  global $RunningAsRoot, $HostArchitecture, $Lol, $EnableMemoryProtection;
+  $BuildIsReady = FALSE;
+  $BuildStatus = 'FAILED';
+  $BuildDetail = '';
+  $finalFolder = $buildsFolder = $folderPath = $resolvedFolder = $resolvedParent = $trustNotice = $stagingFolder = $retiredFolder = $runAccount = '';
+  $pinnedVersion = $pinnedChecksum = $environmentExports = $stagedBinary = $stagedNotice = $stagedVersion = $stagedStatus = $stagedOutput = '';
+  $folderIsTrusted = $parentIsTrusted = $commandStarted = $stagedIsTrusted = $stagedIsPresent = $copyExisted = $copyIsInService = $copyIsRunnable = $lockIsReleased = FALSE;
+  $lockHandle = FALSE;
+  $commandOutput = array();
+  $commandExitCode = 1;
+  $finalFolder = ownBuildFolder($dependencyEntry);
+  $buildsFolder = ownBuildsRoot();
+  $pinnedVersion = isset($dependencyEntry['Fallback']['Version']) ? trim((string)$dependencyEntry['Fallback']['Version']) : '';
+  $pinnedChecksum = isset($dependencyEntry['Fallback']['Sha256']) ? strtolower(trim((string)$dependencyEntry['Fallback']['Sha256'])) : '';
+  if (!$RunningAsRoot) $BuildDetail = 'Only root builds one.';
+  else if (!ownBuildIsDeclared($dependencyEntry)) $BuildDetail = 'Its manifest entry declares no Fallback that can be built.';
+  else {
+    // / Each folder is made only where nothing is, & only beneath a folder root alone can change, so
+    // / nothing is made through a name another account could swap. It is given its mode outright,
+    // / because mkdir leaves out whatever the umask removes.
+    foreach (array(dirname(dirname($buildsFolder)), dirname($buildsFolder), $buildsFolder) as $folderPath) {
+      list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot(dirname($folderPath));
+      if ($parentIsTrusted && $resolvedParent === dirname($folderPath) && !file_exists($folderPath) && !is_link($folderPath) && @mkdir($folderPath, 0755)) @chmod($folderPath, 0755); }
+    list ($folderIsTrusted, $resolvedFolder, $trustNotice) = pathIsTrustedByRoot($buildsFolder);
+    if (!$folderIsTrusted or $resolvedFolder !== $buildsFolder) $BuildDetail = $buildsFolder.' is not a folder root alone can change, so nothing was built into it. '.$trustNotice;
+    else {
+      // / The application's folder & the builds folder are this application's, so the account that
+      // / runs conversions is let through them whatever made them. A folder above them is not, & is
+      // / said below if it stops that account.
+      foreach (array(dirname($buildsFolder), $buildsFolder) as $folderPath) if (((int)@fileperms($folderPath) & 07777) !== 0755) @chmod($folderPath, 0755);
+      $lockHandle = holdOwnBuildLock();
+      $stagingFolder = $buildsFolder.DIRECTORY_SEPARATOR.'.'.basename($finalFolder).'-'.bin2hex(random_bytes(6));
+      if ($lockHandle === FALSE) $BuildDetail = $buildsFolder.' could not be locked, so nothing was built into it.';
+      else if (!@mkdir($stagingFolder, 0700)) $BuildDetail = $stagingFolder.' could not be made.';
+      else {
+        print('  '.str_pad((string)$dependencyEntry['Name'], 20).'building '.engineApplicationName().'\'s own'.($pinnedVersion !== '' ? ' '.$pinnedVersion : '').' from source. Reason: '.$buildReason.' '.((in_array((string)$HostArchitecture, array('arm64', 'arm'), TRUE)) ? 'An hour or more on this machine' : 'A few minutes').'. A status line follows every minute.'.$Lol);
+        logEntry('Building '.engineApplicationName().'\'s own '.(string)$dependencyEntry['Name'].', because '.$buildReason);
+        $environmentExports = 'export DEPENDENCY_PREFIX='.escapeshellarg($stagingFolder).'; export DEPENDENCY_VERSION='.escapeshellarg($pinnedVersion).'; export DEPENDENCY_SHA256='.escapeshellarg($pinnedChecksum).'; ';
+        list ($commandStarted, $commandOutput, $commandExitCode) = runInstallCommand(dependencyEnvironmentPrefix().$environmentExports.'('.(string)$dependencyEntry['Fallback']['BuildCommand'].')', (string)$dependencyEntry['Name']);
+        $stagedBinary = $stagingFolder.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.(string)$dependencyEntry['Binary'];
+        if (!$commandStarted) $BuildDetail = 'The build could not be started.';
+        else if ($commandExitCode !== 0) $BuildDetail = 'The build exited with code '.$commandExitCode.'. '.trim(implode(' ', array_slice($commandOutput, -3)));
+        else {
+          list ($stagedIsTrusted, $stagedNotice) = ownBuildIsTrusted($stagingFolder, $stagedBinary);
+          if ($stagedIsTrusted) list ($stagedIsPresent, $stagedVersion, $stagedStatus, $stagedOutput) = resolveDependencyState(ownBuildEntry($dependencyEntry, $stagingFolder));
+          if (!$stagedIsTrusted) $BuildDetail = 'The build put no program root alone can change at '.$stagedBinary.'. '.$stagedNotice;
+          else if ($stagedStatus !== 'ok') $BuildDetail = 'What it built is '.$stagedStatus.($stagedVersion !== '' ? ' at '.$stagedVersion : '').', & this release needs '.dependencyWindowText($dependencyEntry).'.';
+          else if ($pinnedVersion !== '' && !(compareVersionMinimum($stagedVersion, $pinnedVersion) && compareVersionMinimum($pinnedVersion, $stagedVersion))) $BuildDetail = 'It built '.$stagedVersion.' & the Fallback pins '.$pinnedVersion.'.';
+          else {
+            // / The build is opened to every account only now, & then renamed into place. A build
+            // / already in service is renamed aside first & removed once the new one is in.
+            @chmod($stagingFolder, 0755);
+            clearstatcache(TRUE, $finalFolder);
+            $copyExisted = (file_exists($finalFolder) or is_link($finalFolder));
+            if ($copyExisted) {
+              $retiredFolder = $buildsFolder.DIRECTORY_SEPARATOR.'.'.basename($finalFolder).'-retired-'.bin2hex(random_bytes(6));
+              if (!@rename($finalFolder, $retiredFolder)) $retiredFolder = ''; }
+            if ($copyExisted && $retiredFolder === '') $BuildDetail = $finalFolder.' could not be moved aside, so the new build was not put in service.';
+            else if (!@rename($stagingFolder, $finalFolder)) {
+              $BuildDetail = $finalFolder.' could not be written, so the new build was not put in service.';
+              if ($retiredFolder !== '' && @rename($retiredFolder, $finalFolder)) $retiredFolder = ''; }
+            else {
+              $copyIsInService = TRUE;
+              $BuildStatus = ($copyExisted ? 'updated' : 'installed');
+              $BuildDetail = $finalFolder.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.(string)$dependencyEntry['Binary'].', '.(string)$dependencyEntry['Name'].' '.$stagedVersion.'.';
+              logEntry(engineApplicationName().'\'s own build of '.(string)$dependencyEntry['Name'].' was '.$BuildStatus.' at '.$finalFolder.', version '.$stagedVersion.'.'); }
+            if ($copyIsInService && $retiredFolder !== '' && !removeOwnBuildTree($retiredFolder)) warningEntry($retiredFolder.', a build taken out of service, could not be removed.');
+            else if (!$copyIsInService && $retiredFolder !== '') warningEntry($finalFolder.' could not be put back, & the build that was in service is kept at '.$retiredFolder.'.'); } }
+        if (!$copyIsInService && !removeOwnBuildTree($stagingFolder)) warningEntry($stagingFolder.', a build that was not put in service, could not be removed.'); }
+      $lockIsReleased = releaseOwnBuildLock($lockHandle); }
+    // / What is in service is no use to a conversion until the account that runs one can run it, which
+    // / root's own checks cannot see, so it is said with the build's result.
+    if ($copyIsInService) {
+      list ($copyIsRunnable, $runAccount) = ownBuildIsRunnable($finalFolder.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.(string)$dependencyEntry['Binary']);
+      $BuildIsReady = $copyIsRunnable;
+      if (!$copyIsRunnable) $BuildDetail = $BuildDetail.' '.$runAccount.', which runs conversions, cannot run it. Every folder above it must let that account through, & its filesystem must run programs.'; } }
+  if (!$BuildIsReady) warningEntry(engineApplicationName().'\'s own build of '.(string)$dependencyEntry['Name'].' '.($copyIsInService ? 'is in service & not ready' : 'FAILED').'. '.$BuildDetail);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $finalFolder, $buildsFolder, $folderPath, $resolvedFolder, $resolvedParent, $trustNotice, $stagingFolder, $retiredFolder, $runAccount, $pinnedVersion, $pinnedChecksum, $environmentExports, $stagedBinary, $stagedNotice, $stagedVersion, $stagedStatus, $stagedOutput, $folderIsTrusted, $parentIsTrusted, $commandStarted, $stagedIsTrusted, $stagedIsPresent, $copyExisted, $copyIsInService, $copyIsRunnable, $lockIsReleased, $lockHandle, $commandOutput, $commandExitCode, $dependencyEntry, $buildReason);
+  return array($BuildIsReady, $BuildStatus, $BuildDetail); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to take this application's own build of a dependency out of service & remove it.
+// / Accepts a manifest entry. Returns whether none is left in service & a sentence, in that order.
+// / The sentence is empty where there was nothing to take away.
+// / It is renamed aside first, so a conversion starting meanwhile finds the package manager's copy &
+// / never part of this one, & what was renamed is removed afterwards. Nothing is done beneath a
+// / builds folder another account could change, & everything is done under holdOwnBuildLock().
+function detachOwnCopy($dependencyEntry) {
+  // / Set variables.
+  global $RunningAsRoot, $EnableMemoryProtection;
+  $CopyIsDetached = TRUE;
+  $DetachDetail = '';
+  $finalFolder = $retiredFolder = $resolvedFolder = $trustNotice = '';
+  $folderIsTrusted = $lockIsReleased = FALSE;
+  $lockHandle = FALSE;
+  $finalFolder = ownBuildFolder($dependencyEntry);
+  if ($finalFolder !== '') clearstatcache(TRUE, $finalFolder);
+  if ($finalFolder !== '' && (file_exists($finalFolder) or is_link($finalFolder))) {
+    $CopyIsDetached = FALSE;
+    list ($folderIsTrusted, $resolvedFolder, $trustNotice) = pathIsTrustedByRoot(ownBuildsRoot());
+    if (!$RunningAsRoot) $DetachDetail = 'Only root takes '.$finalFolder.' away.';
+    else if (!$folderIsTrusted or $resolvedFolder !== ownBuildsRoot()) $DetachDetail = ownBuildsRoot().' is not a folder root alone can change, so '.$finalFolder.' was left where it is. '.$trustNotice;
+    else {
+      $lockHandle = holdOwnBuildLock();
+      $retiredFolder = ownBuildsRoot().DIRECTORY_SEPARATOR.'.'.basename($finalFolder).'-retired-'.bin2hex(random_bytes(6));
+      if ($lockHandle === FALSE) $DetachDetail = ownBuildsRoot().' could not be locked, so '.$finalFolder.' is still in service.';
+      else if (!@rename($finalFolder, $retiredFolder)) $DetachDetail = $finalFolder.' could not be moved aside, so it is still in service.';
+      else {
+        $CopyIsDetached = TRUE;
+        $DetachDetail = $finalFolder.' was taken away.';
+        logEntry(engineApplicationName().'\'s own build of '.(string)$dependencyEntry['Name'].' was taken out of service from '.$finalFolder.'.');
+        if (!removeOwnBuildTree($retiredFolder)) warningEntry($retiredFolder.', a build taken out of service, could not be removed.'); }
+      $lockIsReleased = releaseOwnBuildLock($lockHandle); }
+    if (!$CopyIsDetached) warningEntry(engineApplicationName().'\'s own build of '.(string)$dependencyEntry['Name'].' could not be taken away. '.$DetachDetail); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $finalFolder, $retiredFolder, $resolvedFolder, $trustNotice, $folderIsTrusted, $lockIsReleased, $lockHandle, $dependencyEntry);
+  return array($CopyIsDetached, $DetachDetail); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to take away whatever is in the builds folder & is not a build the manifest declares.
+// / Accepts the whole manifest. Returns a sanity boolean & the number taken away, in that order. The
+// / boolean is TRUE when nothing is left that should not be.
+// / A RUN THAT STOPS PART WAY LEAVES ITS WORK BEHIND. A build interrupted while it runs leaves the
+// / folder it was building in, & one interrupted between its two renames leaves the build it took out
+// / of service. An entry an update renamed or took out of the manifest leaves its build. Each is taken
+// / away under holdOwnBuildLock(), so nothing another run is building is touched. Only a folder named
+// / for an entry declaring a Fallback this host can build is kept, whatever filter the command was
+// / given, & each one taken away is printed. Whether a kept build should stay is settleOwnBuild()'s
+// / question & not this one's.
+function sweepOwnBuilds($dependsManifest) {
+  // / Set variables.
+  global $RunningAsRoot, $HostArchitecture, $Lol, $EnableMemoryProtection;
+  $SweepIsClean = TRUE;
+  $ItemsRemoved = 0;
+  $keptNames = $folderEntries = $dependencyEntry = $resolvedEntry = array();
+  $folderEntry = $resolvedFolder = $trustNotice = $unsupportedReason = '';
+  $folderIsTrusted = $architectureIsSupported = $lockIsReleased = FALSE;
+  $lockHandle = FALSE;
+  clearstatcache(TRUE, ownBuildsRoot());
+  if ($RunningAsRoot && (is_dir(ownBuildsRoot()) or is_link(ownBuildsRoot()))) {
+    list ($folderIsTrusted, $resolvedFolder, $trustNotice) = pathIsTrustedByRoot(ownBuildsRoot());
+    if (!$folderIsTrusted or $resolvedFolder !== ownBuildsRoot()) {
+      $SweepIsClean = FALSE;
+      warningEntry(ownBuildsRoot().' is not a folder root alone can change, so nothing left in it was taken away. '.$trustNotice); }
+    else {
+      foreach ((array)$dependsManifest as $dependencyEntry) {
+        if (!is_array($dependencyEntry)) continue;
+        list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
+        if ($architectureIsSupported && ownBuildIsDeclared($resolvedEntry)) $keptNames[basename(ownBuildFolder($resolvedEntry))] = TRUE; }
+      $lockHandle = holdOwnBuildLock();
+      if ($lockHandle === FALSE) $SweepIsClean = FALSE;
+      else {
+        $folderEntries = @scandir(ownBuildsRoot());
+        foreach ((is_array($folderEntries) ? $folderEntries : array()) as $folderEntry) {
+          if ($folderEntry === '.' or $folderEntry === '..' or $folderEntry === '.lock' or isset($keptNames[$folderEntry])) continue;
+          if (removeOwnBuildTree(ownBuildsRoot().DIRECTORY_SEPARATOR.$folderEntry)) {
+            $ItemsRemoved++;
+            print('  '.str_pad('Own builds', 20).'took away '.$folderEntry.', which no build in service owns.'.$Lol); }
+          else {
+            $SweepIsClean = FALSE;
+            warningEntry(ownBuildsRoot().DIRECTORY_SEPARATOR.$folderEntry.' belongs to no build in service & could not be taken away.'); } }
+        $lockIsReleased = releaseOwnBuildLock($lockHandle); } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $keptNames, $folderEntries, $dependencyEntry, $resolvedEntry, $folderEntry, $resolvedFolder, $trustNotice, $unsupportedReason, $folderIsTrusted, $architectureIsSupported, $lockIsReleased, $lockHandle, $dependsManifest);
+  return array($SweepIsClean, $ItemsRemoved); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether a dependency needs this application's own build, & to make that so.
+// / Accepts a manifest entry. Returns a sanity boolean, a status word & a sentence, in that order.
+// / The boolean is TRUE when nothing is left to do, which is an entry answering inside its window,
+// / from the package manager's copy or from the own build, or an entry declaring no Fallback with no
+// / own build left behind. The status is 'none' where there was nothing to do, 'removed' where an own
+// / build was taken away, 'unchanged' where the own build in service answers & is the version
+// / pinned, & otherwise 'installed', 'updated' or 'FAILED'. Each but 'none' & 'unchanged' is printed.
+// / IT RUNS ONLY WHEN DEPENDENCIES ARE INSTALLED OR UPDATED, always after the package manager has.
+// / The package manager's copy is asked first. One answering inside the window is used & any own
+// / build is taken away, so a host whose package manager has caught up goes back to the copy it keeps
+// / current. Otherwise the own build is built, or built again where it is missing, is not root's
+// / alone, does not answer inside the window, is older than the version the Fallback pins or cannot
+// / be run by the account that runs conversions. An own build an entry no longer declares is taken
+// / away, so dropping a Fallback detaches it everywhere, & a Fallback this release cannot use is
+// / warned about, because nothing else would say why it was never built.
+function settleOwnBuild($dependencyEntry) {
+  // / Set variables.
+  global $HostArchitecture, $Lol, $EnableMemoryProtection;
+  $BuildIsSettled = FALSE;
+  $SettleStatus = 'none';
+  $SettleDetail = '';
+  $resolvedEntry = array();
+  $architectureIsSupported = $systemIsPresent = $ownIsTrusted = $ownIsPresent = $ownIsRunnable = FALSE;
+  $unsupportedReason = $systemVersion = $systemStatus = $systemOutput = $detachDetail = $ownFolder = $ownPath = $ownNotice = $ownVersion = $ownStatus = $ownOutput = $pinnedVersion = $buildReason = $runAccount = '';
+  list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
+  if ($architectureIsSupported && isset($resolvedEntry['Fallback']) && !ownBuildIsDeclared($resolvedEntry)) warningEntry((string)$resolvedEntry['Name'].' declares a Fallback this release cannot use, so no own build is made. Only an apt entry naming its program by a plain name, with a VersionCommand that runs that program, may have one, & its Fallback must carry a BuildCommand.');
+  if (!$architectureIsSupported or !ownBuildIsDeclared($resolvedEntry)) {
+    list ($BuildIsSettled, $detachDetail) = detachOwnCopy($resolvedEntry);
+    if ($detachDetail !== '') {
+      $SettleStatus = ($BuildIsSettled ? 'removed' : 'FAILED');
+      $SettleDetail = (!$BuildIsSettled ? $detachDetail : 'its manifest entry declares no Fallback here, so '.$detachDetail); } }
+  else {
+    list ($systemIsPresent, $systemVersion, $systemStatus, $systemOutput) = resolveDependencyState($resolvedEntry);
+    if ($systemStatus === 'ok') {
+      list ($BuildIsSettled, $detachDetail) = detachOwnCopy($resolvedEntry);
+      // / The package manager's copy answers whether or not an own build could be taken away, &
+      // / resolveDependencyChoice() warns while one is still there.
+      $BuildIsSettled = TRUE;
+      if ($detachDetail !== '') {
+        $SettleStatus = 'removed';
+        $SettleDetail = 'the package manager\'s '.$systemVersion.' is inside the window, so '.$detachDetail; } }
+    else {
+      $ownFolder = ownBuildFolder($resolvedEntry);
+      $ownPath = $ownFolder.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.(string)$resolvedEntry['Binary'];
+      $pinnedVersion = isset($resolvedEntry['Fallback']['Version']) ? trim((string)$resolvedEntry['Fallback']['Version']) : '';
+      list ($ownIsTrusted, $ownNotice) = ownBuildIsTrusted($ownFolder, $ownPath);
+      if ($ownIsTrusted) list ($ownIsPresent, $ownVersion, $ownStatus, $ownOutput) = resolveDependencyState(ownBuildEntry($resolvedEntry, $ownFolder));
+      if ($ownIsTrusted && $ownStatus === 'ok') list ($ownIsRunnable, $runAccount) = ownBuildIsRunnable($ownPath);
+      if ($ownIsTrusted && $ownStatus === 'ok' && $ownIsRunnable && ($pinnedVersion === '' or compareVersionMinimum($ownVersion, $pinnedVersion))) {
+        $BuildIsSettled = TRUE;
+        $SettleStatus = 'unchanged';
+        $SettleDetail = $ownPath.', '.(string)$resolvedEntry['Name'].' '.$ownVersion.'.'; }
+      else {
+        if ($systemStatus === 'absent') $buildReason = 'the package manager installed none';
+        else $buildReason = 'the package manager\'s is '.($systemVersion !== '' ? $systemVersion : $systemStatus);
+        $buildReason = $buildReason.', & this release needs '.dependencyWindowText($resolvedEntry).'.';
+        list ($BuildIsSettled, $SettleStatus, $SettleDetail) = buildOwnCopy($resolvedEntry, $buildReason); } } }
+  if ($SettleStatus !== 'none' && $SettleStatus !== 'unchanged') print('  '.str_pad((string)$resolvedEntry['Name'].' own build', 20).$SettleStatus.', '.$SettleDetail.$Lol);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $architectureIsSupported, $systemIsPresent, $ownIsTrusted, $ownIsPresent, $ownIsRunnable, $unsupportedReason, $systemVersion, $systemStatus, $systemOutput, $detachDetail, $ownFolder, $ownPath, $ownNotice, $ownVersion, $ownStatus, $ownOutput, $pinnedVersion, $buildReason, $runAccount, $dependencyEntry);
+  return array($BuildIsSettled, $SettleStatus, $SettleDetail); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether a package manager's install gave a dependency this release accepts.
+// / Accepts the entry, whether the package manager reported success & what it printed, in that order.
+// / Returns whether the entry now answers inside its window & what to report, in that order.
+// / A PACKAGE MANAGER REPORTS SUCCESS FOR WHATEVER VERSION IT HAS. Ubuntu 24.04 installs 7-Zip 23.01 &
+// / says so, & until v4.0.6 that was reported as installed above a report refusing it. So an install
+// / is believed once the entry answers inside its window. An entry declaring a Fallback is believed
+// / once settleOwnBuild() has settled it, which builds this application's own copy where the package
+// / manager's falls short, whether or not the package manager succeeded, because falling back comes
+// / before failing.
+function believePackageInstall($dependencyEntry, $packageWasInstalled, $packageOutput) {
+  // / Set variables.
+  global $HostArchitecture, $EnableMemoryProtection;
+  $InstallIsBelieved = FALSE;
+  $ReportText = (string)$packageOutput;
+  $resolvedEntry = array();
+  $architectureIsSupported = $fallbackIsDeclared = $buildIsSettled = $dependencyIsPresent = FALSE;
+  $unsupportedReason = $settleStatus = $settleDetail = $detectedVersion = $dependencyStatus = $rawOutput = '';
+  list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
+  $fallbackIsDeclared = ($architectureIsSupported && ownBuildIsDeclared($resolvedEntry));
+  list ($buildIsSettled, $settleStatus, $settleDetail) = settleOwnBuild($dependencyEntry);
+  if ($settleDetail !== '') $ReportText = trim($ReportText.PHP_EOL.$settleDetail);
+  if ($fallbackIsDeclared) $InstallIsBelieved = $buildIsSettled;
+  else if ($packageWasInstalled) {
+    list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyState($dependencyEntry);
+    $InstallIsBelieved = ($dependencyStatus === 'ok' or $dependencyStatus === 'unknown-version');
+    if (!$InstallIsBelieved) $ReportText = trim($ReportText.PHP_EOL.'The package manager reported success, & '.(string)$dependencyEntry['Name'].' is '.$dependencyStatus.($detectedVersion !== '' ? ' at '.$detectedVersion : '').'. This release needs '.dependencyWindowText($resolvedEntry).'.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $architectureIsSupported, $fallbackIsDeclared, $buildIsSettled, $dependencyIsPresent, $unsupportedReason, $settleStatus, $settleDetail, $detectedVersion, $dependencyStatus, $rawOutput, $dependencyEntry, $packageWasInstalled, $packageOutput);
+  return array($InstallIsBelieved, $ReportText); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to report the state of every dependency.
 // / Accepts a subsystem filter, which may be empty for all of them.
 // / Returns a readiness boolean, an array of findings & the count of optional problems,
@@ -566,14 +1194,14 @@ function resolveDependencyState($dependencyEntry) {
 // / THIS CHANGES NOTHING & NEEDS NO AUTHORIZATION. It is safe to run from anywhere.
 function checkDepends($subsystemFilter) {
   // / Set variables.
-  global $RequiredDependsVersion, $Verbose, $EnableMemoryProtection;
+  global $RequiredDependsVersion, $Verbose, $HostArchitecture, $EnableMemoryProtection;
   $DependenciesAreReady = TRUE;
   $DependencyFindings = array();
   $OptionalProblems = 0;
   $finding = array();
-  $dependsManifest = $dependencyEntry = $missingRequirements = array();
-  $manifestIsAvailable = $dependencyIsPresent = FALSE;
-  $detectedVersion = $dependencyStatus = $detectedDependsVersion = $requirementName = $rawOutput = '';
+  $dependsManifest = $dependencyEntry = $missingRequirements = $resolvedEntry = array();
+  $manifestIsAvailable = $dependencyIsPresent = $architectureIsSupported = $systemIsPresent = FALSE;
+  $detectedVersion = $dependencyStatus = $detectedDependsVersion = $requirementName = $rawOutput = $binaryPath = $binaryOrigin = $unsupportedReason = $systemVersion = $systemStatus = $systemOutput = '';
   $presenceMap = $stateMap = array();
   list ($manifestIsAvailable, $dependsManifest, $detectedDependsVersion) = verifyDependsManifest($RequiredDependsVersion);
   if (!$manifestIsAvailable) $DependenciesAreReady = FALSE;
@@ -584,10 +1212,17 @@ function checkDepends($subsystemFilter) {
     // / the filtered entries left every one of those requirements unknown. The isset test
     // / below then read unknown as satisfied & the report claimed a subsystem was ready
     // / without ever having looked at what it depends on.
+    // / Each entry is read from this application's own build where it has one, so the report names the
+    // / program a conversion runs, & says whether the entry can have one. An own build in service is
+    // / asked first wherever it is used, so the package manager's copy is asked here as well, & the
+    // / report says when that one has caught up, because nothing else would.
     foreach ($dependsManifest as $dependencyEntry) {
-      list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyState($dependencyEntry);
+      list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput, $binaryPath, $binaryOrigin) = resolveDependencyChoice($dependencyEntry);
+      list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
+      $systemVersion = $systemStatus = '';
+      if ($binaryOrigin === 'own' && $dependencyStatus === 'ok') list ($systemIsPresent, $systemVersion, $systemStatus, $systemOutput) = resolveDependencyState($dependencyEntry);
       $presenceMap[(string)$dependencyEntry['Name']] = ($dependencyStatus === 'ok' or $dependencyStatus === 'unknown-version');
-      $stateMap[(string)$dependencyEntry['Name']] = array($detectedVersion, $dependencyStatus, $rawOutput); }
+      $stateMap[(string)$dependencyEntry['Name']] = array($detectedVersion, $dependencyStatus, $rawOutput, $binaryPath, $binaryOrigin, ($architectureIsSupported && ownBuildIsDeclared($resolvedEntry)), ($systemStatus === 'ok' ? $systemVersion : '')); }
     foreach ($dependsManifest as $dependencyEntry) {
       if (trim((string)$subsystemFilter) !== '' && stripos((string)$dependencyEntry['Subsystem'], trim((string)$subsystemFilter)) === FALSE) continue;
       $detectedVersion = $stateMap[(string)$dependencyEntry['Name']][0];
@@ -618,7 +1253,11 @@ function checkDepends($subsystemFilter) {
         'Type' => (string)$dependencyEntry['Type'],
         'Package' => (string)$dependencyEntry['Package'],
         'Missing' => $missingRequirements,
-        'Output' => $rawOutput); } }
+        'Output' => $rawOutput,
+        'Path' => $stateMap[(string)$dependencyEntry['Name']][3],
+        'Origin' => $stateMap[(string)$dependencyEntry['Name']][4],
+        'Fallback' => $stateMap[(string)$dependencyEntry['Name']][5],
+        'SystemVersion' => $stateMap[(string)$dependencyEntry['Name']][6]); } }
   // / Count what is wrong but optional, so the summary can say so. A report that says
   // / every requirement is met, printed directly beneath two failures, invites an operator
   // / to believe the failures do not matter without ever saying that they do not.
@@ -626,7 +1265,7 @@ function checkDepends($subsystemFilter) {
     if (!$finding['Required'] && (in_array($finding['Status'], array('absent', 'outdated', 'too-new', 'misconfigured', 'refused'), TRUE))) $OptionalProblems++; }
   if ($Verbose) logEntry('Dependency check completed across '.count($DependencyFindings).' dependenc(ies). Ready: '.($DependenciesAreReady ? 'YES' : 'NO').'. Optional problems: '.$OptionalProblems.'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $missingRequirements, $manifestIsAvailable, $dependencyIsPresent, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $requirementName, $rawOutput, $presenceMap, $stateMap, $finding, $subsystemFilter);
+  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $missingRequirements, $resolvedEntry, $manifestIsAvailable, $dependencyIsPresent, $architectureIsSupported, $systemIsPresent, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $requirementName, $rawOutput, $binaryPath, $binaryOrigin, $unsupportedReason, $systemVersion, $systemStatus, $systemOutput, $presenceMap, $stateMap, $finding, $subsystemFilter);
   return array($DependenciesAreReady, $DependencyFindings, $OptionalProblems); }
 // / -----------------------------------------------------------------------------------
 
@@ -654,7 +1293,15 @@ function showDependencyFindings($dependencyFindings) {
     if (!empty($finding['Missing'])) print(str_pad('', 20).'waiting on '.implode(', ', $finding['Missing']).$Lol);
     // / A version command that ran & produced something the pattern did not match. Showing
     // / what it actually printed is the only way to correct the pattern in depends.php.
-    if (($finding['Status'] === 'unknown-version' or $finding['Status'] === 'absent' or $finding['Status'] === 'misconfigured' or $finding['Status'] === 'refused') && trim((string)$finding['Output']) !== '') print(str_pad('', 20).'reported: '.substr(trim((string)$finding['Output']), 0, 90).$Lol);
+    if (($finding['Status'] === 'unknown-version' or $finding['Status'] === 'absent') && trim((string)$finding['Output']) !== '') print(str_pad('', 20).'reported: '.substr(trim((string)$finding['Output']), 0, 90).$Lol);
+    // / A reason this application gives itself is printed whole, because the end of it, which says
+    // / what is wrong, is the part an operator acts on. Only a tool's own output is cut short.
+    else if (($finding['Status'] === 'misconfigured' or $finding['Status'] === 'refused') && trim((string)$finding['Output']) !== '') print(str_pad('', 20).'reported: '.trim((string)$finding['Output']).$Lol);
+    // / A program this application built for itself is named with where it is, so it is never taken for
+    // / the package manager's, which the host keeps current. One the package manager has caught up with
+    // / says what takes it away. An entry that can have one & is not ready says what makes one.
+    if (isset($finding['Origin']) && $finding['Origin'] === 'own') print(str_pad('', 20).engineApplicationName().'\'s own build, '.(string)$finding['Path'].(!empty($finding['SystemVersion']) ? '. The package manager\'s '.(string)$finding['SystemVersion'].' qualifies too. --setup --update-depends, run as root, removes the own build.' : '').$Lol);
+    else if (!empty($finding['Fallback']) && in_array($finding['Status'], array('absent', 'outdated', 'too-new', 'unknown-version', 'misconfigured'), TRUE)) print(str_pad('', 20).'--setup --install-depends, run as root, builds '.engineApplicationName().'\'s own'.$Lol);
     // / A problem is anything that is not ok & not deliberately unverifiable.
     if ($finding['Status'] !== 'ok' && $finding['Status'] !== 'unverifiable') {
       if ($finding['Required']) $requiredProblems++;
@@ -667,8 +1314,8 @@ function showDependencyFindings($dependencyFindings) {
   // / present, while the check itself had failed. The manifest moved at v3.9.9, which made
   // / an installation without one more likely, so the sentence that covered for it went.
   if ($LinesPrinted === 0) print($Lol.'No dependency was checked. Either no entry matches the subsystem named, or the manifest at '.contractPath('depends.php').' could not be loaded. Run -v to see which.'.$Lol);
-  else print($Lol.($requiredProblems === 0 ? 'Every required dependency is present & current.' : $requiredProblems.' REQUIRED dependenc(ies) are missing or too old. The subsystems that need them will refuse.').$Lol);
-  if ($optionalProblems > 0) print($optionalProblems.' optional dependenc(ies) are missing or unverified. Those subsystems are unavailable & everything else works.'.$Lol);
+  else print($Lol.($requiredProblems === 0 ? 'Every required dependency is present & current.' : $requiredProblems.' REQUIRED dependenc(ies) are missing or too old. Their subsystems refuse.').$Lol);
+  if ($optionalProblems > 0) print($optionalProblems.' optional dependenc(ies) are missing or unverified. Their subsystems are unavailable.'.$Lol);
   print($Lol);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $optionalProblems, $requiredProblems, $finding, $dependencyFindings);
@@ -749,8 +1396,9 @@ function runInstallCommand($commandText, $displayName) {
 // / Returns a success boolean & whatever the package manager printed, in that order.
 // / A dependency of Type manual is NEVER installed. Its licence forbids redistribution or
 // / it needs a decision this utility is not entitled to make. It is reported instead.
-// / A dependency of Type source is not built here either. Building from source is its own
-// / problem & is handled separately.
+// / A dependency of Type source runs the build command its entry carries.
+// / A package manager's install is believed once the entry answers inside its window, & an entry
+// / declaring a Fallback builds this application's own copy where the package manager's does not.
 function installOneDependency($dependencyEntry, $packageManager) {
   // / Set variables.
   // / $Lol is declared because a source build reports its progress. A build takes minutes
@@ -815,7 +1463,7 @@ function installOneDependency($dependencyEntry, $packageManager) {
       // / This reads the architecture rather than timing anything, because a guess made
       // / before the build starts is worth more than an accurate figure afterwards.
       $buildUsesPip = (bool)preg_match('/\bpip[\d.]*\s+install\b/', (string)$dependencyEntry['BuildCommand']);
-      print('  '.str_pad((string)$dependencyEntry['Name'], 20).(($buildUsesPip) ? 'installing with pip. It downloads everything first, so a slow connection makes this slow' : 'building from source, this takes '.((in_array((string)$HostArchitecture, array('arm64', 'arm'), TRUE)) ? 'a long time on this machine. An hour or more is normal here, & it has not hung' : 'several minutes')).'. A status line appears every minute while it runs.'.$Lol);
+      print('  '.str_pad((string)$dependencyEntry['Name'], 20).(($buildUsesPip) ? 'installing with pip. A slow connection makes this slow' : 'building from source. '.((in_array((string)$HostArchitecture, array('arm64', 'arm'), TRUE)) ? 'An hour or more on this machine' : 'Several minutes')).'. A status line follows every minute.'.$Lol);
       logEntry((($buildUsesPip) ? 'Installing '.(string)$dependencyEntry['Name'].' with pip.' : 'Building '.(string)$dependencyEntry['Name'].' from source.'));
       $commandOutput = array();
       // / A chosen version is handed to the build command as DEPENDENCY_VERSION.
@@ -878,6 +1526,10 @@ function installOneDependency($dependencyEntry, $packageManager) {
     list ($commandStarted, $commandOutput, $commandExitCode) = runInstallCommand($installCommand, (string)$dependencyEntry['Name']);
     $ReturnData = implode(PHP_EOL, $commandOutput);
     if ($commandStarted && $commandExitCode === 0) $InstallSucceeded = TRUE; }
+  // / A package manager reports success for whatever version it has, so its install is believed once
+  // / the entry answers inside its window. One declaring a Fallback is settled whether or not the
+  // / package manager succeeded, because falling back comes before failing.
+  if ((string)$dependencyEntry['Type'] === 'apt') list ($InstallSucceeded, $ReturnData) = believePackageInstall($dependencyEntry, $InstallSucceeded, $ReturnData);
   // / Closes the blocked check above.
   }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -988,7 +1640,7 @@ function turnOffApacheConfsInstallEnabled($enabledBefore, $unwantedConfs) {
     exec('a2disconf -q '.escapeshellarg($confName).' 2>&1', $commandOutput, $commandExitCode);
     if ($commandExitCode === 0) {
       $ConfsTurnedOff[] = $confName;
-      print('  '.str_pad($confName, 20).'turned off, because this install turned it on & nothing here uses it. Reload Apache.'.$Lol);
+      print('  '.str_pad($confName, 20).'turned off. This install turned it on & nothing uses it. Reload Apache.'.$Lol);
       warningEntry('The dependency install turned on the Apache configuration '.$confName.', which this application does not use, so it was turned off. A running web server keeps it until it is reloaded.'); }
     else warningEntry('The dependency install turned on the Apache configuration '.$confName.', which this application does not use, & it could not be turned off. '.trim(implode(' ', $commandOutput)).' Run  a2disconf '.$confName.'  as root.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -1033,7 +1685,8 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
   $dependsManifest = $dependencyEntry = $installedNames = $missingRequirements = $commandOutput = array();
   $commandExitCode = 1;
   $confsBefore = $confsTurnedOff = array();
-  $manifestIsAvailable = $dependencyIsPresent = $installOneSucceeded = $callerIsAuthorized = $sandboxBinaryIsReady = FALSE;
+  $manifestIsAvailable = $dependencyIsPresent = $installOneSucceeded = $callerIsAuthorized = $sandboxBinaryIsReady = $sweepIsClean = FALSE;
+  $itemsSwept = 0;
   $rawOutput = $detectedVersion = $dependencyStatus = $detectedDependsVersion = $packageManager = $returnData = $requirementName = $operatorChoice = '';
   $callerIsAuthorized = validateDependencyAuthorization($authorizationToken);
   if (!$callerIsAuthorized) $InstallSucceeded = FALSE;
@@ -1064,12 +1717,12 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
         // / Ebooks subsystem reported that Calibre was waiting on Bubblewrap, on a host
         // / where Bubblewrap was installed & working.
         foreach ($dependsManifest as $dependencyEntry) {
-          list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyState($dependencyEntry);
+          list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyChoice($dependencyEntry);
           if ($dependencyStatus === 'ok' or $dependencyStatus === 'unknown-version') $installedNames[(string)$dependencyEntry['Name']] = TRUE; }
         print($Lol.'Installing dependencies in manifest order.'.$Lol);
         foreach ($dependsManifest as $dependencyEntry) {
           if (trim((string)$subsystemFilter) !== '' && stripos((string)$dependencyEntry['Subsystem'], trim((string)$subsystemFilter)) === FALSE) continue;
-          list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyState($dependencyEntry);
+          list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyChoice($dependencyEntry);
           if ($dependencyStatus === 'ok' or $dependencyStatus === 'unknown-version') {
             $installedNames[(string)$dependencyEntry['Name']] = TRUE;
             // / Present, not installed. Installed is reserved for work this run actually
@@ -1109,6 +1762,10 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
             if ($Verbose && trim($returnData) !== '') print('      '.str_replace(PHP_EOL, PHP_EOL.'      ', trim($returnData)).$Lol);
             if ($dependencyEntry['Required']) $InstallSucceeded = FALSE;
             warningEntry('Dependency '.(string)$dependencyEntry['Name'].' could not be installed. '.trim($returnData)); } }
+        // / What an interrupted run or a renamed entry left among this application's own builds is taken
+        // / away. The answer is not acted on, because sweepOwnBuilds() has already warned about anything
+        // / it could not take away, & nothing it leaves is ever run.
+        list ($sweepIsClean, $itemsSwept) = sweepOwnBuilds($dependsManifest);
         $confsTurnedOff = turnOffApacheConfsInstallEnabled($confsBefore, $EngineUnwantedApacheConfs);
         // / The answer is not acted on. installSandboxBinary() has already printed the copy's line &
         // / warned where it is not ready, & the system's bubblewrap still builds every sandbox the
@@ -1116,7 +1773,7 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
         $sandboxBinaryIsReady = refreshSandboxBinary($dependsManifest, $subsystemFilter);
         print($Lol.'Installed '.$DependenciesInstalled.' dependenc(ies).'.(count($confsTurnedOff) > 0 ? ' Turned off '.count($confsTurnedOff).' Apache configuration(s) the install turned on.' : '').$Lol.$Lol); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $confsBefore, $confsTurnedOff, $dependsManifest, $dependencyEntry, $installedNames, $manifestIsAvailable, $dependencyIsPresent, $installOneSucceeded, $callerIsAuthorized, $sandboxBinaryIsReady, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $returnData, $requirementName, $operatorChoice, $missingRequirements, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
+  purgeSensitiveMemory($EnableMemoryProtection, $confsBefore, $confsTurnedOff, $dependsManifest, $dependencyEntry, $installedNames, $manifestIsAvailable, $dependencyIsPresent, $installOneSucceeded, $callerIsAuthorized, $sandboxBinaryIsReady, $sweepIsClean, $itemsSwept, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $returnData, $requirementName, $operatorChoice, $missingRequirements, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
   return array($InstallSucceeded, $DependenciesInstalled); }
 // / -----------------------------------------------------------------------------------
 
@@ -1128,14 +1785,18 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
 // / intentions & an operator who asked to update did not ask to add anything.
 // / This application's own copy of bubblewrap is made here when it is missing, because it is a
 // / copy of a dependency rather than one, & this is the command a host is told to run for it.
+// / This application's own build of a dependency is settled after the package manager, which takes
+// / it away where the package manager has caught up & builds it again where it is behind the
+// / version its Fallback pins.
 function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed) {
   // / Set variables.
   global $RequiredDependsVersion, $Lol, $EnableMemoryProtection;
   $UpdateSucceeded = TRUE;
   $DependenciesUpdated = 0;
   $dependsManifest = $dependencyEntry = array();
-  $manifestIsAvailable = $dependencyIsPresent = $callerIsAuthorized = $sandboxBinaryIsReady = FALSE;
-  $rawOutput = $detectedVersion = $dependencyStatus = $detectedDependsVersion = $packageManager = $updateCommand = $operatorChoice = '';
+  $manifestIsAvailable = $dependencyIsPresent = $callerIsAuthorized = $sandboxBinaryIsReady = $ownBuildIsSettled = $sweepIsClean = FALSE;
+  $itemsSwept = 0;
+  $rawOutput = $detectedVersion = $dependencyStatus = $detectedDependsVersion = $packageManager = $updateCommand = $operatorChoice = $settleStatus = $settleDetail = '';
   $commandOutput = array();
   $commandExitCode = 1;
   $callerIsAuthorized = validateDependencyAuthorization($authorizationToken);
@@ -1162,13 +1823,13 @@ function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed
           // / A bundled dependency travels with the application & is upgraded by updating it.
           // / An extension travels with PHP & is upgraded by upgrading PHP.
           if ((string)$dependencyEntry['Type'] !== 'apt' && (string)$dependencyEntry['Type'] !== 'pip') continue;
-          list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyState($dependencyEntry);
+          list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyChoice($dependencyEntry);
           // / An unsupported dependency is named & skipped rather than attempted.
           // / Installing a package that does not exist for this architecture produces a
           // / package manager error that reads like a broken mirror, & an operator then goes
-          // / looking for a network fault that is not there.
-          if ($dependencyStatus === 'unsupported') print('  '.str_pad((string)$dependencyEntry['Name'], 20).'not available on this machine. '.(string)$rawOutput.$Lol);
-          else
+          // / looking for a network fault that is not there. Until v4.0.6 it was named & then
+          // / attempted anyway, which failed on arm for Syslinux Utils.
+          if ($dependencyStatus === 'unsupported') { print('  '.str_pad((string)$dependencyEntry['Name'], 20).'not available on this machine. '.(string)$rawOutput.$Lol); continue; }
           if ($dependencyStatus === 'absent') { print('  '.str_pad((string)$dependencyEntry['Name'], 20).'not installed, skipped'.$Lol); continue; }
           $commandOutput = array();
           // / The command is tested before the redirect is appended. Comparing the finished
@@ -1176,21 +1837,31 @@ function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed
           // / command would have been executed the moment it did.
           if ((string)$dependencyEntry['Type'] === 'pip') $updateCommand = 'pip3 install --break-system-packages --upgrade '.escapeshellarg((string)$dependencyEntry['Package']);
           else $updateCommand = dependencyPackageCommand($packageManager, (string)$dependencyEntry['Package'], 'update');
-          if (trim($updateCommand) === '') { print('  '.str_pad((string)$dependencyEntry['Name'], 20).'no package manager, skipped'.$Lol); continue; }
-          exec($updateCommand.' 2>&1', $commandOutput, $commandExitCode);
-          if ($commandExitCode === 0) {
-            $DependenciesUpdated++;
-            print('  '.str_pad((string)$dependencyEntry['Name'], 20).'upgraded'.$Lol); }
+          if (trim($updateCommand) === '') print('  '.str_pad((string)$dependencyEntry['Name'], 20).'no package manager, skipped'.$Lol);
           else {
-            print('  '.str_pad((string)$dependencyEntry['Name'], 20).'FAILED'.$Lol);
-            warningEntry('Dependency '.(string)$dependencyEntry['Name'].' could not be upgraded.'); } }
+            exec($updateCommand.' 2>&1', $commandOutput, $commandExitCode);
+            if ($commandExitCode === 0) {
+              $DependenciesUpdated++;
+              print('  '.str_pad((string)$dependencyEntry['Name'], 20).'upgraded'.$Lol); }
+            else {
+              print('  '.str_pad((string)$dependencyEntry['Name'], 20).'FAILED'.$Lol);
+              warningEntry('Dependency '.(string)$dependencyEntry['Name'].' could not be upgraded.'); } }
+          // / The own build is settled after the package manager, whatever the package manager did,
+          // / & a required dependency it leaves outside its window fails the update.
+          if ((string)$dependencyEntry['Type'] === 'apt') {
+            list ($ownBuildIsSettled, $settleStatus, $settleDetail) = settleOwnBuild($dependencyEntry);
+            if ($settleStatus === 'installed' or $settleStatus === 'updated') $DependenciesUpdated++;
+            if (!$ownBuildIsSettled && $dependencyEntry['Required']) $UpdateSucceeded = FALSE; } }
+        // / What an interrupted run or a renamed entry left among this application's own builds is taken
+        // / away, as an install does, & the answer is not acted on for the same reason.
+        list ($sweepIsClean, $itemsSwept) = sweepOwnBuilds($dependsManifest);
         // / The copy follows the bubblewrap just upgraded. The answer is not acted on, because
         // / installSandboxBinary() has already printed the copy's line & warned where it is not
         // / ready, & the upgrade is not failed for it, as for an install.
         $sandboxBinaryIsReady = refreshSandboxBinary($dependsManifest, $subsystemFilter);
         print($Lol.'Upgraded '.$DependenciesUpdated.' dependenc(ies).'.$Lol.$Lol); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $manifestIsAvailable, $dependencyIsPresent, $callerIsAuthorized, $sandboxBinaryIsReady, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $updateCommand, $operatorChoice, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
+  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $manifestIsAvailable, $dependencyIsPresent, $callerIsAuthorized, $sandboxBinaryIsReady, $ownBuildIsSettled, $sweepIsClean, $itemsSwept, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $updateCommand, $operatorChoice, $settleStatus, $settleDetail, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
   return array($UpdateSucceeded, $DependenciesUpdated); }
 // / -----------------------------------------------------------------------------------
 
@@ -1204,22 +1875,23 @@ function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed
 // / operator has confirmed.
 // / Nothing in the Core subsystem is ever removed, whatever the operator confirmed.
 // / A dependency marked Required in the Sandbox subsystem is never removed either.
+// / This application's own build of a dependency goes with the package it stands in for.
 function uninstallDepends($authorizationToken, $subsystemFilter, $operatorConfirmed) {
   // / Set variables.
   global $RequiredDependsVersion, $Lol, $EnableMemoryProtection;
   $UninstallSucceeded = TRUE;
   $DependenciesRemoved = 0;
   $dependsManifest = $dependencyEntry = array();
-  $manifestIsAvailable = $callerIsAuthorized = FALSE;
-  $detectedDependsVersion = $packageManager = $removeCommand = $operatorChoice = '';
+  $manifestIsAvailable = $callerIsAuthorized = $ownBuildIsGone = $sweepIsClean = FALSE;
+  $itemsSwept = 0;
+  $detectedDependsVersion = $packageManager = $removeCommand = $operatorChoice = $detachDetail = '';
   $commandOutput = array();
   $commandExitCode = 1;
   $callerIsAuthorized = validateDependencyAuthorization($authorizationToken);
   if (!$callerIsAuthorized) $UninstallSucceeded = FALSE;
   else if (trim((string)$subsystemFilter) === '') {
     $UninstallSucceeded = FALSE;
-    print($Lol.'A subsystem must be named. Removing every dependency would remove PHP,'.$Lol);
-    print('Apache & the package manager, & leave a host that cannot be recovered remotely.'.$Lol);
+    print($Lol.'A subsystem must be named. Every dependency includes PHP, Apache & the package manager.'.$Lol);
     print($Lol.'  sudo php '.engineApplicationEntryPoint().' --setup --uninstall-depends --subsystem=Ebooks'.$Lol.$Lol);
     warningEntry('An unfiltered dependency removal was refused.'); }
   else {
@@ -1241,6 +1913,11 @@ function uninstallDepends($authorizationToken, $subsystemFilter, $operatorConfir
             print('  '.str_pad((string)$dependencyEntry['Name'], 20).'REFUSED, this is core infrastructure'.$Lol);
             continue; }
           if ((string)$dependencyEntry['Type'] !== 'apt') { print('  '.str_pad((string)$dependencyEntry['Name'], 20).'not managed by a package manager, skipped'.$Lol); continue; }
+          // / An own build is taken away first, so removing a subsystem leaves nothing of this
+          // / application's behind, whatever the package manager then does.
+          list ($ownBuildIsGone, $detachDetail) = detachOwnCopy($dependencyEntry);
+          if ($detachDetail !== '') print('  '.str_pad((string)$dependencyEntry['Name'].' own build', 20).($ownBuildIsGone ? 'removed, ' : 'FAILED, ').$detachDetail.$Lol);
+          if (!$ownBuildIsGone) $UninstallSucceeded = FALSE;
           $commandOutput = array();
           $removeCommand = dependencyPackageCommand($packageManager, (string)$dependencyEntry['Package'], 'remove');
           if (trim($removeCommand) === '') { print('  '.str_pad((string)$dependencyEntry['Name'], 20).'no package manager, skipped'.$Lol); continue; }
@@ -1255,9 +1932,12 @@ function uninstallDepends($authorizationToken, $subsystemFilter, $operatorConfir
             $UninstallSucceeded = FALSE;
             print('  '.str_pad((string)$dependencyEntry['Name'], 20).'FAILED'.$Lol);
             warningEntry('Dependency '.(string)$dependencyEntry['Name'].' could not be removed.'); } }
+        // / Whatever an interrupted run left beside the builds just taken away goes with them. The answer
+        // / is not acted on, because sweepOwnBuilds() has already warned about anything it left.
+        list ($sweepIsClean, $itemsSwept) = sweepOwnBuilds($dependsManifest);
         print($Lol.'Removed '.$DependenciesRemoved.' dependenc(ies).'.$Lol.$Lol); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $manifestIsAvailable, $callerIsAuthorized, $detectedDependsVersion, $packageManager, $removeCommand, $operatorChoice, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed);
+  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $manifestIsAvailable, $callerIsAuthorized, $ownBuildIsGone, $sweepIsClean, $itemsSwept, $detectedDependsVersion, $packageManager, $removeCommand, $operatorChoice, $detachDetail, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed);
   return array($UninstallSucceeded, $DependenciesRemoved); }
 // / -----------------------------------------------------------------------------------
 
@@ -1391,18 +2071,24 @@ function detectDependencyCapability($dependencyEntry) {
   $ReadState = $WriteState = 'unknown';
   $ReadableExtensions = $WritableExtensions = array();
   $commandSucceeded = $writeSucceeded = FALSE;
-  $readTokens = $writeTokens = $secondRead = $secondWrite = $aliasTable = array();
+  $readTokens = $writeTokens = $secondRead = $secondWrite = $aliasTable = $probeEntry = array();
   $binaryPath = $firstDirection = '';
-  if ((string)$dependencyEntry['Binary'] !== '') {
-    $binaryPath = locateDependency((string)$dependencyEntry['Binary']);
+  // / This application's own build answers for an entry with one in service, through the same
+  // / commands with its folder first on the PATH, because that is the program a conversion runs.
+  list ($probeEntry, $binaryPath) = ownBuildInService($dependencyEntry);
+  if ($binaryPath === '' && (string)$probeEntry['Binary'] !== '') {
+    // / A path the manifest names is looked for where it says, as resolveDependencyState() looks.
+    // / locateDependency() refuses a path, which reported a tool named by its path unavailable.
+    if (strpos((string)$probeEntry['Binary'], DIRECTORY_SEPARATOR) !== FALSE) $binaryPath = ((is_file((string)$probeEntry['Binary']) && is_executable((string)$probeEntry['Binary'])) ? (string)$probeEntry['Binary'] : '');
+    else $binaryPath = locateDependency((string)$probeEntry['Binary']);
     if ($binaryPath === '') $ReadState = $WriteState = 'unavailable'; }
-  if ($ReadState !== 'unavailable' && isset($dependencyEntry['CapabilityCommand']) && (string)$dependencyEntry['CapabilityCommand'] !== '') {
-    $aliasTable = (isset($dependencyEntry['CapabilityAliases']) && is_array($dependencyEntry['CapabilityAliases'])) ? $dependencyEntry['CapabilityAliases'] : array();
-    $firstDirection = (isset($dependencyEntry['CapabilityDirection']) ? (string)$dependencyEntry['CapabilityDirection'] : 'readwrite');
+  if ($ReadState !== 'unavailable' && isset($probeEntry['CapabilityCommand']) && (string)$probeEntry['CapabilityCommand'] !== '') {
+    $aliasTable = (isset($probeEntry['CapabilityAliases']) && is_array($probeEntry['CapabilityAliases'])) ? $probeEntry['CapabilityAliases'] : array();
+    $firstDirection = (isset($probeEntry['CapabilityDirection']) ? (string)$probeEntry['CapabilityDirection'] : 'readwrite');
     list ($commandSucceeded, $readTokens, $writeTokens) = runCapabilityCommand(
-      (string)$dependencyEntry['CapabilityCommand'],
-      (isset($dependencyEntry['CapabilityStyle']) ? (string)$dependencyEntry['CapabilityStyle'] : 'matrix'),
-      (string)$dependencyEntry['CapabilityPattern'],
+      (string)$probeEntry['CapabilityCommand'],
+      (isset($probeEntry['CapabilityStyle']) ? (string)$probeEntry['CapabilityStyle'] : 'matrix'),
+      (string)$probeEntry['CapabilityPattern'],
       $firstDirection);
     // / A command only settles the directions it was asked about. A read only command
     // / leaves the write state exactly as it was, which is unknown.
@@ -1413,15 +2099,15 @@ function detectDependencyCapability($dependencyEntry) {
       if ($firstDirection !== 'read') {
         $WritableExtensions = applyCapabilityAliases($writeTokens, $aliasTable);
         $WriteState = 'detected'; } }
-    else warningEntry('Capability detection for '.(string)$dependencyEntry['Name'].' produced nothing usable. Its declared formats will be trusted instead.');
+    else warningEntry('Capability detection for '.(string)$probeEntry['Name'].' produced nothing usable. Its declared formats will be trusted instead.');
     // / A dependency answering two questions with two commands runs the second one here.
     // / Assimp reports what it can import with listext & what it can export with
     // / listexport, & neither command mentions the other direction at all.
-    if (isset($dependencyEntry['CapabilityWriteCommand']) && (string)$dependencyEntry['CapabilityWriteCommand'] !== '') {
+    if (isset($probeEntry['CapabilityWriteCommand']) && (string)$probeEntry['CapabilityWriteCommand'] !== '') {
       list ($writeSucceeded, $secondRead, $secondWrite) = runCapabilityCommand(
-        (string)$dependencyEntry['CapabilityWriteCommand'],
-        (isset($dependencyEntry['CapabilityWriteStyle']) ? (string)$dependencyEntry['CapabilityWriteStyle'] : 'list'),
-        (string)$dependencyEntry['CapabilityWritePattern'],
+        (string)$probeEntry['CapabilityWriteCommand'],
+        (isset($probeEntry['CapabilityWriteStyle']) ? (string)$probeEntry['CapabilityWriteStyle'] : 'list'),
+        (string)$probeEntry['CapabilityWritePattern'],
         'write');
       // / A second command that failed leaves the write state unknown & the write set
       // / empty. Those two together are read as nothing being known about writing, which
@@ -1432,10 +2118,10 @@ function detectDependencyCapability($dependencyEntry) {
       else {
         $WritableExtensions = array();
         $WriteState = 'unknown';
-        warningEntry('The write capability command for '.(string)$dependencyEntry['Name'].' produced nothing usable. Its declared output formats will be trusted instead.'); } } }
+        warningEntry('The write capability command for '.(string)$probeEntry['Name'].' produced nothing usable. Its declared output formats will be trusted instead.'); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / The two extension sets are not purged, because they are return values.
-  purgeSensitiveMemory($EnableMemoryProtection, $commandSucceeded, $writeSucceeded, $readTokens, $writeTokens, $secondRead, $secondWrite, $aliasTable, $binaryPath, $firstDirection, $dependencyEntry);
+  purgeSensitiveMemory($EnableMemoryProtection, $commandSucceeded, $writeSucceeded, $readTokens, $writeTokens, $secondRead, $secondWrite, $aliasTable, $probeEntry, $binaryPath, $firstDirection, $dependencyEntry);
   return array($ReadState, $WriteState, $ReadableExtensions, $WritableExtensions); }
 // / -----------------------------------------------------------------------------------
 
@@ -1581,7 +2267,8 @@ function outputSupplyChain($outputPath) {
   $ReportPath = $reportName = $writeNotice = $fallbackNotice = '';
   $dependsManifest = $dependencyEntry = $reportRows = array();
   $manifestIsAvailable = $dependencyIsPresent = FALSE;
-  $rawOutput = $detectedVersion = $dependencyStatus = $detectedDependsVersion = $reportContents = $requestedName = '';
+  $rawOutput = $detectedVersion = $dependencyStatus = $detectedDependsVersion = $reportContents = $requestedName = $binaryPath = $binaryOrigin = $servicePath = '';
+  $auditEntry = array();
   $bytesWritten = 0;
   list ($manifestIsAvailable, $dependsManifest, $detectedDependsVersion) = verifyDependsManifest($RequiredDependsVersion);
   if (!$manifestIsAvailable) print($Lol.'The dependency manifest is unavailable, so no report was written.'.$Lol.$Lol);
@@ -1607,18 +2294,22 @@ function outputSupplyChain($outputPath) {
     $reportRows[] = array('Dependency', 'Package', 'Type', 'Installed Version', 'Minimum Required', 'Status', 'Required', 'Subsystem', 'Licence', 'Upstream Source', 'Purpose',
       'Reviewed By', 'Review Date', 'CVE Check Performed', 'Known Advisories', 'Licence Still Acceptable', 'Upstream Still Maintained', 'Action Required', 'Notes');
     foreach ($dependsManifest as $dependencyEntry) {
-      list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyState($dependencyEntry);
+      list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput, $binaryPath, $binaryOrigin) = resolveDependencyChoice($dependencyEntry);
+      // / A program this application built for itself is audited as what the host runs, with the
+      // / licence & upstream its Fallback declares.
+      $auditEntry = $dependencyEntry;
+      if ($binaryOrigin === 'own') list ($auditEntry, $servicePath) = ownBuildInService($dependencyEntry);
       $reportRows[] = array(
         (string)$dependencyEntry['Name'],
         ((string)$dependencyEntry['Package'] !== '' ? (string)$dependencyEntry['Package'] : 'none, '.(string)$dependencyEntry['Type']),
-        (string)$dependencyEntry['Type'],
+        (string)$dependencyEntry['Type'].($binaryOrigin === 'own' ? ', '.engineApplicationName().'\'s own build at '.$binaryPath : ''),
         ($detectedVersion === '' ? 'not detected' : $detectedVersion),
         ((string)$dependencyEntry['MinimumVersion'] === '' ? 'any' : (string)$dependencyEntry['MinimumVersion']),
         $dependencyStatus,
         ($dependencyEntry['Required'] ? 'yes' : 'no'),
         (string)$dependencyEntry['Subsystem'],
-        (string)$dependencyEntry['License'],
-        (string)$dependencyEntry['Source'],
+        (string)$auditEntry['License'],
+        (string)$auditEntry['Source'],
         (string)$dependencyEntry['Purpose'],
         '', '', '', '', '', '', '', ''); }
     $reportContents = buildCsvContents($reportRows);
@@ -1647,7 +2338,7 @@ function outputSupplyChain($outputPath) {
       print($ReportPath.$Lol);
       print($Lol.'The right hand columns are blank on purpose. They are the audit.'.$Lol.$Lol); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $reportRows, $manifestIsAvailable, $dependencyIsPresent, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $reportContents, $reportWasWritten, $reportName, $writeNotice, $fallbackNotice, $bytesWritten, $requestedName, $outputPath, $rawOutput);
+  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $reportRows, $manifestIsAvailable, $dependencyIsPresent, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $reportContents, $reportWasWritten, $reportName, $writeNotice, $fallbackNotice, $bytesWritten, $requestedName, $outputPath, $rawOutput, $binaryPath, $binaryOrigin, $servicePath, $auditEntry);
   return array($ReportWasWritten, $ReportPath); }
 // / -----------------------------------------------------------------------------------
 

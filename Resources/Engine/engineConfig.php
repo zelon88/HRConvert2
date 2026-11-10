@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.5.
+// / v4.0.6.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -51,7 +51,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 // / The version of this configuration. Matched as a MINIMUM by the Engine, the same way
 // / an application matches its own configuration. A newer file carrying every required
 // / setting is fine, because a setting this Engine does not know is simply not read.
-$EngineConfigVersion = 'v4.0.5';
+$EngineConfigVersion = 'v4.0.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -353,6 +353,15 @@ $EngineActiveSurface = '';
 // /   Already read by the Environment Manager. Setup Core uses the same seam, so there is
 // /   one place an application declares how it fixes itself rather than two.
 $EngineRepairProvider = '';
+
+// /  --Engine Log Provider--
+// /   The name of a function that moves a process on to the logfile it should be writing now.
+// /   The application names its logfiles, by date & by size, & a request names one as it starts.
+// /   A manager runs for weeks, so every manager loop asks this once a minute, & until v4.0.6
+// /   one wrote to the file it started with, whatever its size & whatever the date.
+// /   The named function accepts nothing & returns whether a logfile is in use & its path.
+// /   Leave it empty & a manager keeps the logfile it started with.
+$EngineLogProvider = '';
 
 // /  --Engine Accepted Pipelines--
 // /   Which pipeline folders under Resources/Pipelines this application accepts, each

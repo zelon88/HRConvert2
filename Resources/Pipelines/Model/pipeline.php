@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v4.0.6.
 // / This file is the converter for the Model pipeline. It is loaded by pipelineCore.php
 // / ONLY when a Model conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -300,7 +300,7 @@ function convertModels($pathname, $newPathname, $extension) {
   $sleepTime = $SleepTimer;
   $outputExt = $conversionRoute = $pyMeshLabInterpreter = $sidecarPathname = '';
   $meshlabEnvironment = array();
-  $pyMeshLabInUse = FALSE;
+  $pyMeshLabInUse = $pyMeshLabIsInstalled = FALSE;
   $assimpCanWrite = $meshlabCanWrite = $meshlabCanRead = array();
   // / Detect the installed versions of Assimp & MeshLab.
   // / Each tool by its manifest name. PyMeshLab stands in for MeshLab when it is enabled, so
@@ -391,8 +391,9 @@ function convertModels($pathname, $newPathname, $extension) {
     // / $UsePyMeshLab, so an installation with PyMeshLab enabled & failing to import logged
     // / nothing at all & left no record of which utility actually did the work.
     if ($conversionRoute !== '' && $Verbose) logEntry('MeshLab work will run through '.($pyMeshLabInUse ? 'the bundled PyMeshLab.' : 'the meshlabserver binary.'));
-    // / This code will attempt the conversion up to $StopCounter number of times.
-    while ($conversionRoute !== '' && !file_exists($newPathname) && $stopper <= $StopCounter) {
+    // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
+    // / first attempt that leaves a file.
+    while ($conversionRoute !== '' && pipelineAttemptIsDue($newPathname, $stopper)) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / Route normalize. MeshLab triangulates the mesh & Assimp writes the output.
@@ -454,18 +455,19 @@ function convertModels($pathname, $newPathname, $extension) {
           break; }
         $returnData = shell_exec($meshlabCommand); }
       // / Count the number of conversions to avoid infinite loops.
-      $stopper++;
-      // / Stop attempting the conversion after $StopCounter number of attempts.
-      // / The loop is left immediately, because an attempt that has already been counted as
-      // / the last one must not run again after the timeout has been reported.
-      if ($stopper >= $StopCounter) {
-        $ConversionErrors = TRUE;
-        errorEntry('The model converter timed out!', 9000, FALSE);
-        // / A timeout on its own says only that something was tried repeatedly. The command
-        // / is what was tried, & without it an operator has a number & no way to reproduce
-        // / the failure. It names paths this session already owns & carries no secret.
-        warningEntry('The command that timed out was: '.trim(($conversionRoute === 'assimp' ? $assimpCommand : $meshlabCommand)));
-        break; } }
+      $stopper++; }
+    // / Every attempt was made & none left a file. What the converter printed is logged above this,
+    // / with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the converter had timed out, which no time limit
+    // / ever caused, & then made one more attempt.
+    // / Until then it was raised after the attempt that used the count up, even one that worked.
+    // / A route that could not be sandboxed has already said so, & ran nothing to judge.
+    if ($conversionRoute !== '' && $commandMayRun && !file_exists($newPathname)) {
+      $ConversionErrors = TRUE;
+      errorEntry('The model converter produced no file after '.$stopper.' attempt(s)!', 9000, FALSE);
+      // / The error on its own says only that something was tried repeatedly. The command is what
+      // / was tried, & without it an operator has a number & no way to reproduce the failure. It
+      // / names paths this session already owns & carries no secret.
+      warningEntry('The command that produced no file was: '.trim(($conversionRoute === 'assimp' ? $assimpCommand : $meshlabCommand))); }
     // / Log the output of each utility to the logfile, if it is not blank.
     // / A converter that produced nothing at all is worth a line of its own. Testing for
     // / output & staying silent when there is none meant the one case that needed

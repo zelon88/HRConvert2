@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.8.
+// / v4.0.6.
 // / This file attacks sanitizeSCAD() with every evasion shape known to it, & then attacks
 // / rectifySCAD() with the shapes that survive a rewrite rather than a scan.
 // / Testing the lexer alone was not enough. The lexer found every call in the reported
@@ -26,7 +26,8 @@
 // /   php Documentation/Build/hrconvert2-test-scad-cli.php
 // /
 // / It exits zero when every case is judged correctly & one when any is not.
-// / This is a build tool & is removed by --Delete Build Environment-- in config.php.
+// / This is a build tool, & nothing loads it. --Delete Build Environment-- in config.php leaves it
+// / where it is, because the application reads other scripts in Documentation/Build as it runs.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------

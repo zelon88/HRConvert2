@@ -76,7 +76,7 @@ Running as a non-root user is safe but structurally limited.
 
 * **Fail-Safe Filesystem:** Any operation requiring write access that the current user lacks will fail safely rather than partially completing. The filesystem is never left in a broken state.
 * **Unrestricted Flags:** The version (`-v`) and help (`-h`) arguments work for any user.
-* **Secret File Protection:** The install secret is `root:www-data 0640`, in a folder that is `root:www-data 0750` and at the top of the data location, so a non-root user who is also not the web server user can read neither copy, and cannot even list `Secrets`. This is deliberate, because this file derives every session identifier in the application. Such a user is given a secret of its own, in a folder of its own.
+* **Secret File Protection:** The install secret is `root:www-data 0640`, in a folder that is `root:www-data 0750` and at the top of the data location, so a non-root user who is not the web server user and is not in its group can read neither copy, and cannot even list `Secrets`. This is deliberate, because this file derives every session identifier in the application. Any other account's command is given a secret of its own, in a folder of its own, even where that account is in the group, and so is the web server user's for anything but the listener's commands, `-c` and `--status`. `-v` names that row `Per user secret`.
 
 ### Manual Permission Management
 An administrator who modifies an HRConvert2 installation using external tools must leave every location the way `-fp` leaves it:
@@ -84,7 +84,7 @@ An administrator who modifies an HRConvert2 installation using external tools mu
 | Location | Owner & Mode |
 | :--- | :--- |
 | **The installation** | `root:root`, folders `0755`, files `0644` |
-| **The DATA folder in it** | `www-data:www-data 0700` |
+| **The DATA folder in the hosted location** | `www-data:www-data 0700` |
 | **The data location** | `root:root 0755` |
 | **Its `Sessions`, `Cache`, `Logs` & `Sockets` folders** | `www-data:www-data 0700` |
 | **Its `Engine` folder** | `root:root 0700` |
@@ -155,6 +155,9 @@ It analyzes and reports:
 
 > 🛠️ **Diagnostic Value:** Because these dependency checks are identical to the ones executed by active converters, this flag tells you if conversions will actually work. Any dependency reporting `FAILED` will cleanly refuse to run rather than failing mid-process in a confusing manner. This argument works for **any user**.
 
+* **Only the web server user asks the listener.** Its state is in a folder only that account can read, so `-v` run as root or any other account reports the listener as `NOT ASKED` and names `--status`, which root hands to that account. Until v4.0.6 another account reported a running listener as `STOPPED`.
+* **The secret row is named for the secret it judges.** An account with a secret of its own reads `Per user secret`, where until v4.0.6 it read `Install secret`.
+
 ### ❓ About `-h` and `--help`
 Displays the built-in help message. It lists every supported argument and references the relevant in-depth manuals located in the `Documentation` folder.
 
@@ -172,6 +175,7 @@ Sweeps expired sessions from the temporary location and from the data location. 
 * **Typo Protection:** Values that are neither a whole number nor the word `now` are rejected, falling back to the configured default. A warning is written to the logs and printed to the shell to prevent accidental sweeps.
 * **Scope Isolation:** Nothing outside a designated session directory is ever touched. The log directory, LibreOffice profiles, and update backups live alongside session data but are strictly protected by name validation. Any location that is not one of the configured data locations is refused outright.
 * **The Web Server User Sweeps:** Every name in a session belongs to the web server user, which can swap any of them for a link mid-sweep. Root hands the whole argument to that user instead of sweeping itself, and prints what it reports. Until v4.0.1 root swept as itself.
+* **Only What That User Owns:** A day or a session folder another account put in a data location is left where it is, because the web server user could never remove it, and `-fp` names it. Until v4.0.6 the sweep tried, failed on every pass, and said only that it had not completed cleanly.
 * **The Whole DATA Folder:** From v4.0.1 the temporary location is the whole DATA folder. Until then this argument and every web request swept only the session folder of the request making them, so no expired session in DATA was ever removed.
 * **Privileges:** This argument requires root or the web server user.
 
@@ -184,10 +188,11 @@ running identity, whether the component is available, the socket directory, each
 process identifier, tracked workers, remaining budget and mapped sessions. It also reports when
 the last Environment Manager pass ran, what it found and when it last repaired.
 
-**A standard user cannot read the socket directory and will be told so.** The directory is `0700`
-and belongs to the web server user, so a standard user sees a listener that appears stopped
-whether it is running or not. The report distinguishes the two cases. Run it as root for the true
-picture.
+**A standard user cannot read the socket directory and is not asked.** The directory is `0700`
+and belongs to the web server user, so a standard user could only ever see a listener that
+appears stopped, whether it is running or not. The listener row says `NOT ASKED` to such a user
+and leaves the listener's own rows out. Until v4.0.6 it said `STOPPED`, with a note that it might
+be wrong. Run it as root for the true picture.
 
 **Root does not read the state itself.** It hands `--status` to the web server user and relays
 what that user saw, because the state file belongs to that user. The report names root as asking
@@ -199,13 +204,27 @@ and the web server user as answering.
 
 Corrects everything about an installation that root is required to correct.
 
-- Gives every managed location its role. The installation is root's, the data locations are the
-  web server user's and the backup is root's alone. See
-  [ABOUT_MANAGED_LOCATIONS.txt](ABOUT_MANAGED_LOCATIONS.txt).
+- Gives every managed location its role. The installation is root's, each data root is root's
+  with its sessions, cache, logs and sockets the web server user's, and the backup is root's
+  alone. See [ABOUT_MANAGED_LOCATIONS.txt](ABOUT_MANAGED_LOCATIONS.txt). A location counts as
+  corrected only when its owner or mode differed from its role, so a run straight after another
+  corrects none. Until v4.0.6 every location a role was applied to was counted.
+- Moves each session an older release kept at the top of a data root into that root's `Sessions`
+  folder. Only a folder the web server user owns, named as the core names a session, is moved.
+  Every other folder there, and every name in `Sessions` that user does not own, is named and
+  left, because the sweep runs as that user and could never remove it. Until v4.0.6 every folder
+  was moved, so a release unpacked into a data root went into `Sessions` as root's. The capability
+  cache an older release left at the top of a data root is moved into `Cache` or removed.
+- Removes from the installation what an earlier release left there and no release ships, such as
+  the tree FFmpeg's build left in `Documentation/Build/ffmpeg-build` until v4.0.6, without
+  following anything in it. A link or a file with more than one name it does not know is named,
+  to be removed by hand before `-fp` is run again.
 - Installs the tree it runs from into `Application` in the data location, when that tree is not
   the installed one, and hands over to the installed copy as it ends.
 - Writes the loader, the protection page and the static files into the hosted location, and
-  removes every copy of the application left there.
+  removes every copy of the application left there. Names a `.git` or `.github` folder a release
+  left in it and an `.old` installation an update left beside it, which the Apache configuration
+  it writes refuses, and removes none of them.
 - Removes the build environment and the development documentation when `config.php` asks for it.
 - Disables a bootstrap script that does not match this core, and enables one that matches again.
 - Installs or repairs the AppArmor profile named for the application, where the kernel can
@@ -214,16 +233,25 @@ Corrects everything about an installation that root is required to correct.
   One attached where that is no longer so is taken out. The copy is made only by
   `--setup --install-depends`, `--update-depends` and `--install-complete` and as an update is
   installed, and never by `-fp` run from the installed copy.
+- Never builds or removes the application's own build of a dependency, which only
+  `--setup --install-depends`, `--update-depends` and `--uninstall-depends` do. See
+  [ABOUT_DEPENDENCIES.txt](ABOUT_DEPENDENCIES.txt).
 - Lifts that restriction only where bubblewrap refuses a sandbox twice and `config.php` permits
   it, and never for an attempt cut short or to cover a copy that is missing or cannot be run, and
   holds for the next boot only the kernel settings it changed. Where `config.php` forbids lifting
   it, switches back on a restriction this application lifted.
+- Names a restriction an earlier release lifted that the application's own copy of bubblewrap no
+  longer needs lifted, and says how to put it back, but leaves it lifted, because by now other
+  programs on the host may rely on it. Names `/etc/apparmor.d/bwrap` where no package installed
+  it, which install guides before v3.8.0 asked for, and leaves it as it is.
 - Writes the listener's service unit, and the Environment Manager's where they are installed, for
   the installed copy.
 - Puts back, as they were, the ImageMagick policy and the AppArmor additions an earlier release
   wrote into the host. Each pipeline now carries its own policy into its sandbox.
 - Enables lingering and cgroup delegation for the web server user, when per conversion limits
-  are enabled.
+  are enabled. Lingering already on is left as it is.
+- Writes the PHP settings into the configuration folder of every PHP that is installed, and
+  passes over a folder a removed PHP left behind, which nothing reads.
 
 Every step is idempotent. A policy file this application did not write is backed up with a
 timestamp before replacement; if the backup fails, the original is left alone and the step is
@@ -241,7 +269,9 @@ server user cannot use, so it no longer has to be followed by this.
 ## `--run-environment-manager`
 
 Runs one Environment Manager pass and exits. The timer `--setup --install-service` writes runs it
-hourly once an administrator enables that timer, and an administrator may run it by hand.
+hourly once an administrator enables that timer, and an administrator may run it by hand. Until
+v4.0.6 only `--setup --install-complete` wrote that timer, so a host that installed its listener
+with `--install-service` had no timer, and the manager never ran there.
 
 It checks what `-v` checks, logs every problem as a warning, records what it found and prints it.
 **It changes nothing** unless `--Environment Manager May Repair--` is `TRUE` in `config.php`. Then
@@ -281,7 +311,7 @@ the secret its image was built with, and every container started from the image 
 Starts the resource listener — four processes holding a resource budget, deciding which data
 location each session uses, and managing worker lifecycle.
 
-Resource awareness is optional and disabled by default. With no listener running, HRConvert2
+Resource awareness is optional and enabled by default. With no listener running, HRConvert2
 behaves exactly as it always has. `$EnableResourceAwareness` must be `TRUE` before this does
 anything.
 
@@ -293,6 +323,11 @@ The startup key is never printed and never logged. A failed start points at the 
 reproducing the command.
 
 Normally started at boot by the service unit `--setup --install-service` writes, or from a container entrypoint, rather than by hand.
+
+**A stop signal stops every manager, not only the first.** When the service is stopped, the Core
+Manager signals each manager it started, waits up to twenty seconds for them all to end, ends any
+still running, and only then ends itself. The managers are not its children by then, so until
+v4.0.6 it ended alone and the service manager killed the three it left behind.
 
 ---
 

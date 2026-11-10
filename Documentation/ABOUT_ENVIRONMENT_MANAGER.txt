@@ -48,7 +48,12 @@ The listener could not start it even if something convinced the listener to try,
 the listener is www-data & this refuses to run as anything but root.
 
 It is started by a systemd timer & by an administrator running the command by hand.
-Those are the only two ways in.
+Those are the only two ways in. --setup --install-service & --install-complete write the timer
+& leave it off, so an administrator reads one pass before scheduling root, & then enables it.
+  sudo php <installation>/convertCore.php --run-environment-manager
+  sudo systemctl enable --now hrconvert2-environment.timer
+Until v4.0.6 only --install-complete wrote it, so a host whose listener --install-service had
+installed had no timer, & the manager never ran there.
 
 IT RUNS AGAIN AS OF v4.0.1, & IT IS THE FIRST RELEASE IN WHICH IT HAS RUN AT ALL.
 Until v4.0.1 every pass halted before it began. Its file was required from inside a function
@@ -196,10 +201,18 @@ force when every sandbox runs the application's own copy of bubblewrap, which th
 attached to, & as BLOCKED when that copy is missing or cannot be run, or cannot carry one &
 lifting it is not permitted. A pass never lifts it, & neither does a pass's repair, because
 lifting it changes what every program on the host may do & is -fp's alone. Where lifting is
-forbidden, a permitted repair switches back on a restriction HRConvert2 had lifted. The profile
-reads exposed where an account other than root could put a program at the copy's path, & a
-permitted repair takes it out. The copy has a line of its own. It reads MISSING where no
-sandbox can be built without it, UNSAFE where an account other than root could change it,
+forbidden, a permitted repair switches back on a restriction HRConvert2 had lifted, & a pass reads
+it as outdated until then. Until v4.0.6 a pass read it as ok, so no pass ever repaired it. Where
+lifting is permitted, a restriction an earlier release lifted that the copy no longer needs lifted
+reads kept, which is benign, & names the command that switches it back on. Other programs on the
+host may rely on it by now, so switching it back on is the administrator's decision, & -fp lets
+the drop in go once it is on. Until v4.0.6 it read ok & said only that nothing was restricted.
+/etc/apparmor.d/bwrap reads kept too where no package installed it. Install guides before v3.8.0
+had an administrator write that profile, which lets any program on the host build a namespace
+through the system's bubblewrap. HRConvert2 does not use it, & neither a pass nor -fp changes it.
+The profile reads exposed where an account other than root could put a program at the copy's
+path, & a permitted repair takes it out. The copy has a line of its own. It reads MISSING where
+no sandbox can be built without it, UNSAFE where an account other than root could change it,
 NOT RUNNABLE where the web server's account cannot run it, ORPHANED where the bubblewrap it
 was copied from has been removed, & BEHIND where it is in use & the system's bubblewrap has
 been upgraded since it was copied. Neither a pass nor its repair changes the copy, so each

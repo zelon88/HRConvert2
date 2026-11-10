@@ -32,7 +32,7 @@ HRConvert2 has no request rate limiting of its own. A busy server accepts every 
 offered & will happily accept more work than the hardware can perform.
 
 Resource rate limiting adds a budget mechanism that lets config.php place limits on resource
-intensive operations. It is entirely optional & is disabled by default.
+intensive operations. It is optional & is enabled by default.
 
 WHEN IT IS DISABLED, HRCONVERT2 BEHAVES EXACTLY AS IT ALWAYS HAS.
 Nothing is checked, nothing is refused & no additional process runs. This is the default & is
@@ -129,8 +129,9 @@ argument with a key & are refused without one. They are deliberately absent from
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The Resource Budget--
 
-The budget is measured in arbitrary cost units. It is recalculated every --Resource Poll
-Interval-- seconds from three figures:
+The budget is measured in arbitrary cost units. The host is polled every --Resource Poll
+Interval-- seconds, & the budget is worked out from that poll & the operations in flight each
+time one asks for it, from three figures:
 
   A base budget.
       --Total Resource Budget-- when it is set.
@@ -144,6 +145,9 @@ Interval-- seconds from three figures:
       Scaled to whichever of load average or memory usage is under more pressure.
 
 An idle server throttles nothing. A loaded server stops accepting work before it falls over.
+
+Until v4.0.6 the budget was worked out only as the host was polled, so every request between two
+polls was judged against the same remaining budget, however many of them had been approved since.
 
 FOUR OPERATIONS TAKE A BUDGET. Conversion, archiving, OCR & the user virus scan.
 
@@ -162,6 +166,12 @@ An operation requests a budget before it begins, declaring a cost & an expected 
 request is refused when the runtime exceeds --Maximum Expected Runtime--, when the tracked worker
 count has reached --Maximum Concurrent Workers--, or when the remaining budget is smaller than
 the cost requested.
+
+EVERY REQUEST IS REFUSED WHILE 1% OR LESS OF THE USER NAMESPACES ARE FREE.
+Every sandbox is a user namespace, & the kernel refuses a new one once the web server account
+holds user.max_user_namespaces of them. The Resource Manager counts that account's user
+namespaces at each poll. It warns once 10% or less are free, & raises ERROR 31025 & refuses work
+once 1% or less are. A conversion is refused before its sandbox could fail, & says why.
 
 A refused operation is not an error. Nothing failed & nothing was attempted. The core writes a
 warning naming the operation & prints the same alert string a refused conversion prints, which
@@ -306,9 +316,22 @@ set the value yourself. Anything an administrator DOES set always wins.
 The resolution order is the listener's scaled table, then --Maximum Per Conversion Resources--,
 then the core's built-in for that type, then --Default Per Conversion Resources--.
 
-These are MAXIMA. With a listener running they are scaled down against current load & against how
-many conversions are already in flight, & never below --Minimum Per Conversion Resources--. With
-no listener they are used unchanged.
+These are MAXIMA. With a listener running each is scaled down by what the host has free, &
+never below --Minimum Per Conversion Resources--. With no listener they are used unchanged.
+
+  The processor share shrinks with load, & is split between the conversions in flight & the new one.
+  The memory ceiling is what the host has available, less --Reserve Resource Percentage--, split
+  the same way, & never more than the configured ceiling. A kernel that does not report available
+  memory gives each conversion its split of the configured ceiling instead.
+
+A conversion counts only those already in flight. Until v4.0.6 the listener registered the new
+conversion before it scaled, so a conversion on its own counted itself & was given half. Both
+ceilings also shrank by whichever of load or memory in use was higher, as a share of the ceiling,
+so a desktop with half its memory in use halved every memory ceiling again while gigabytes stood
+free. LibreOffice was killed inside the 137M a 512M document ceiling had become.
+
+A conversion killed inside its ceiling exits 137. LibreOffice's is named in a warning from v4.0.6,
+& each pipeline's error says its converter produced no file after every attempt.
 
 SCAN'S MEMORY IS NEVER SCALED. Only its processor share is. A scanner needs the memory its loaded
 signature database takes, & neither the file nor the load changes that, so a smaller ceiling does

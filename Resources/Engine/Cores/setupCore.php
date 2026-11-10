@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.0.5.
+// / v4.0.6.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.0.5';
+$SetupCoreVersion = 'v4.0.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -437,7 +437,7 @@ function showConfigSection($sectionName, $sectionModel, $detectedVariables) {
   $variableName = $currentValue = $defaultValue = $dependsNote = $statusNote = '';
   $variableModel = array();
   print($Lol.'== '.$sectionName.' =='.$Lol);
-  if (!$sectionModel['Writable']) print('   This section is displayed only. It is never written by this utility.'.$Lol);
+  if (!$sectionModel['Writable']) print('   Display only. This utility never writes this section.'.$Lol);
   foreach ($detectedVariables as $variableName => $variableRecord) {
     $currentValue = (string)$variableRecord['Value'];
     if (strlen($currentValue) > 58) $currentValue = substr($currentValue, 0, 55).'...';
@@ -705,11 +705,17 @@ function enableConversionLimits() {
   else {
     // / Lingering starts a user manager for the account at boot, with no login session.
     // / Without it there is no user bus for systemd-run --user to reach.
-    exec('loginctl enable-linger '.escapeshellarg($ApacheUser).' 2>&1', $commandOutput, $commandExitCode);
-    if ($commandExitCode !== 0) print('  FAILED     Could not enable lingering for '.$ApacheUser.'.'.$Lol);
-    else {
+    // / systemd keeps a file for each account that lingers, so one that already does is left as it is.
+    // / Until v4.0.6 every -fp enabled it again.
+    if (is_file('/var/lib/systemd/linger/'.$ApacheUser)) {
       $StepsCompleted++;
-      print('  Enabled    Lingering for '.$ApacheUser.$Lol); }
+      print('  Present    Lingering for '.$ApacheUser.$Lol); }
+    else {
+      exec('loginctl enable-linger '.escapeshellarg($ApacheUser).' 2>&1', $commandOutput, $commandExitCode);
+      if ($commandExitCode !== 0) print('  FAILED     Could not enable lingering for '.$ApacheUser.'.'.$Lol);
+      else {
+        $StepsCompleted++;
+        print('  Enabled    Lingering for '.$ApacheUser.$Lol); } }
     // / Lingering is enabled & that is not the same as a limit being possible.
     // / A kernel that delegates no cgroup controllers cannot hold a per conversion limit no
     // / matter how the accounts are configured, & many NAS & appliance kernels are built
@@ -717,10 +723,8 @@ function enableConversionLimits() {
     // / Saying so HERE, while an administrator is watching a repair run, is worth more than
     // / saying it in a log they read after a conversion behaved oddly.
     if (function_exists('cgroupDelegationIsAvailable') && !cgroupDelegationIsAvailable()) {
-      print('  Note       This kernel delegates no cgroup controllers, so a per conversion'.$Lol);
-      print('             limit cannot be held here whatever is configured. Conversions are'.$Lol);
-      print('             still bounded by scheduling priority. This is a kernel decision'.$Lol);
-      print('             & is normal on a NAS or appliance.'.$Lol);
+      print('  Note       No cgroup controllers are delegated. Per conversion limits cannot'.$Lol);
+      print('             apply. Conversions are bounded by scheduling priority.'.$Lol);
       warningEntry('This kernel delegates no cgroup controllers, so per conversion limits fall back to scheduling priority.'); }
     // / A user manager is given the memory & pids controllers by default. The processor
     // / controller has to be delegated explicitly or CPUQuota is silently ignored.
@@ -800,6 +804,65 @@ function applyCodeRole($treePath, $prunedPaths) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $pruneExpression, $prunedPath, $findPrefix, $commandOutput, $linkedFiles, $ownerExitCode, $modeExitCode, $linkedExitCode, $treePath, $prunedPaths);
   return $RoleWasApplied; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to list, inside one installation, the paths the contract says no release ships.
+// / Accepts the installation. Returns each path in full.
+// / The contract names each in $EngineRetiredPaths, by its path below the installation. One that
+// / is not a string, or is empty, is not a path. One that is absolute, or has a part that is
+// / empty, . or .., could reach outside the installation. Each is refused & warned about, &
+// / nothing is done for it.
+function retiredPathsIn($treePath) {
+  // / Set variables.
+  global $EngineRetiredPaths, $EnableMemoryProtection;
+  $RetiredPaths = array();
+  $retiredPath = $pathPart = '';
+  $pathParts = array();
+  $pathIsValid = FALSE;
+  $treePath = rtrim((string)$treePath, DIRECTORY_SEPARATOR);
+  foreach (((isset($EngineRetiredPaths) && is_array($EngineRetiredPaths)) ? $EngineRetiredPaths : array()) as $retiredPath) {
+    $pathIsValid = (is_string($retiredPath) && $retiredPath !== '' && substr($retiredPath, 0, 1) !== '/' && strpos($retiredPath, "\0") === FALSE && $treePath !== '');
+    $pathParts = $pathIsValid ? explode('/', $retiredPath) : array();
+    foreach ($pathParts as $pathPart) if ($pathPart === '' or $pathPart === '.' or $pathPart === '..') $pathIsValid = FALSE;
+    if ($pathIsValid) $RetiredPaths[] = $treePath.DIRECTORY_SEPARATOR.implode(DIRECTORY_SEPARATOR, $pathParts);
+    else warningEntry('The contract names '.(is_string($retiredPath) ? $retiredPath : gettype($retiredPath)).' among the paths no release ships, & it is not a path inside the installation, so nothing was done for it.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $RetiredPaths is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $retiredPath, $pathPart, $pathParts, $pathIsValid, $treePath);
+  return $RetiredPaths; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to take away, from an installation, the paths no release of this application ships.
+// / Accepts the paths in full, as retiredPathsIn() lists them. Returns a sanity boolean, which is
+// / TRUE when none of them is left.
+// / Each is removed by removeTreeWithoutFollowing() in the Kernel, which follows nothing in it &
+// / makes every folder in it root's alone before listing it. That needs the folder holding each
+// / path to be root's alone already, so correctManagedLocations() calls this once applyCodeRole()
+// / has given the rest of the installation to root, & leaves these paths out of that walk. Each
+// / one taken away is printed, & each one left is warned about with what to do.
+function removeRetiredPaths($retiredPaths) {
+  // / Set variables.
+  global $Lol, $EnableMemoryProtection;
+  $RetiredPathsAreGone = TRUE;
+  $retiredPath = $removalNotice = '';
+  $pathIsRemoved = FALSE;
+  foreach ($retiredPaths as $retiredPath) {
+    clearstatcache(TRUE, $retiredPath);
+    if (!file_exists($retiredPath) && !is_link($retiredPath)) continue;
+    list ($pathIsRemoved, $removalNotice) = removeTreeWithoutFollowing($retiredPath);
+    if ($pathIsRemoved) {
+      print('  '.str_pad('REMOVED', 12).$retiredPath.', which no release of '.engineApplicationName().' ships.'.$Lol);
+      logEntry('Removed '.$retiredPath.' from the installation, because no release ships it.'); }
+    else {
+      $RetiredPathsAreGone = FALSE;
+      print('  '.str_pad('NOT REMOVED', 12).$retiredPath.'. '.$removalNotice.$Lol);
+      warningEntry($retiredPath.' is in the installation, no release ships it, & it could not be taken away. '.$removalNotice.' Remove it & run -fp again.'); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $RetiredPathsAreGone is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $retiredPath, $removalNotice, $pathIsRemoved, $retiredPaths);
+  return $RetiredPathsAreGone; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -982,9 +1045,57 @@ function applySecretRole($folderPath, $webAccount) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to say whether a location differs from what its role makes it.
+// / Accepts the location, its role, the web server account & the paths a walk leaves out, in that
+// / order. Returns TRUE when anything the role would change is not so already.
+// / -fp counts the locations it changed by this, so a run that changes nothing says so. Until v4.0.6
+// / it counted every location it gave a role, & every run said it had corrected all of them.
+// / A tree a role walks is read by GNU find, which changes nothing, never follows a link & never
+// / leaves the filesystem it started on, & stops at the first name that differs. A folder a role
+// / does not walk is judged by itself. A role this does not know is taken to differ.
+function locationDiffersFromRole($locationPath, $roleName, $webAccount, $prunedPaths) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $LocationDiffers = TRUE;
+  $folderStatus = $webRecord = $groupRecord = $commandOutput = array();
+  $pruneExpression = $prunedPath = $findPrefix = $folderMode = $fileMode = '';
+  $commandExitCode = 1;
+  $webUid = $webGid = -1;
+  $folderPermissions = 0;
+  if (function_exists('posix_getpwnam')) $webRecord = @posix_getpwnam((string)$webAccount);
+  if (function_exists('posix_getgrnam')) $groupRecord = @posix_getgrnam((string)$webAccount);
+  if (is_array($webRecord) && isset($webRecord['uid'])) $webUid = (int)$webRecord['uid'];
+  if (is_array($groupRecord) && isset($groupRecord['gid'])) $webGid = (int)$groupRecord['gid'];
+  else if (is_array($webRecord) && isset($webRecord['gid'])) $webGid = (int)$webRecord['gid'];
+  clearstatcache(TRUE, (string)$locationPath);
+  $folderStatus = @lstat((string)$locationPath);
+  if (is_array($folderStatus)) $folderPermissions = ((int)$folderStatus['mode'] & 07777);
+  if (!is_array($folderStatus)) $LocationDiffers = TRUE;
+  else if ($roleName === 'code' or $roleName === 'root-only') {
+    $folderMode = ($roleName === 'code') ? '0755' : '0700';
+    $fileMode = ($roleName === 'code') ? '0644' : '0600';
+    $findPrefix = 'PATH=/usr/sbin:/usr/bin:/sbin:/bin find '.escapeshellarg((string)$locationPath).' -xdev';
+    // / -path reads a pattern, so a bracket, star or question mark in a real path is escaped.
+    foreach ((array)$prunedPaths as $prunedPath) $pruneExpression .= ' -path '.escapeshellarg(addcslashes((string)$prunedPath, '*?[]\\')).' -prune -o';
+    // / The walk gives every name but a file with more than one name to root, & sets the mode of
+    // / every folder & of every file with one name, so those are what is compared.
+    exec($findPrefix.$pruneExpression.' \( \( ! \( -type f -links +1 \) \( ! -user 0 -o ! -group 0 \) \) -o \( -type d ! -perm '.$folderMode.' \) -o \( -type f -links 1 ! -perm '.$fileMode.' \) \) -print -quit 2>/dev/null', $commandOutput, $commandExitCode);
+    $LocationDiffers = ($commandExitCode !== 0 or count($commandOutput) > 0); }
+  else if ($roleName === 'data-root') $LocationDiffers = ((int)$folderStatus['uid'] !== 0 or (int)$folderStatus['gid'] !== 0 or $folderPermissions !== 0755);
+  else if ($roleName === 'secret') $LocationDiffers = ((int)$folderStatus['uid'] !== 0 or (int)$folderStatus['gid'] !== $webGid or $folderPermissions !== 0750);
+  else if ($roleName === 'web' or $roleName === 'served') $LocationDiffers = ((int)$folderStatus['uid'] !== $webUid or (int)$folderStatus['gid'] !== $webGid or $folderPermissions !== 0700);
+  // / A shared folder is changed only where the web server account could change it.
+  else if ($roleName === 'shared') $LocationDiffers = ((int)$folderStatus['uid'] === $webUid or ($folderPermissions & 0022) !== 0);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderStatus, $webRecord, $groupRecord, $commandOutput, $pruneExpression, $prunedPath, $findPrefix, $folderMode, $fileMode, $commandExitCode, $webUid, $webGid, $folderPermissions, $locationPath, $roleName, $webAccount, $prunedPaths);
+  return $LocationDiffers; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to give every location the application declares the owner & mode its role needs.
 // / Accepts the web server account. Must be run as root.
-// / Returns whether the pass ran, how many locations were corrected & how many were refused.
+// / Returns whether the pass ran, how many locations it changed & how many were refused. A location
+// / that already had what its role gives it is not counted. Until v4.0.6 every one given a role was.
 // /
 // / THE CONTRACT SAYS WHAT A LOCATION IS, & this decides what that means.
 // / An application names each location by the setting that holds it & gives it a role in
@@ -1015,16 +1126,17 @@ function applySecretRole($folderPath, $webAccount) {
 // / THE INSTALLATION IS THE ONE THAT IS RUNNING. A code location is accepted only when it is
 // / the folder this Engine is running from, so a wrong setting cannot hand some other tree
 // / to root. It is never the filesystem root, a system folder, a shared folder or the folder
-// / above one. A location with another role inside it is left out of the walk.
+// / above one. A location with another role inside it is left out of the walk, & so is a path
+// / the contract names in $EngineRetiredPaths, which is taken away once the rest is root's.
 function correctManagedLocations($webAccount) {
   // / Set variables.
   global $EngineManagedLocations, $RunningAsRoot, $Lol, $EnableMemoryProtection;
   $CorrectionRan = FALSE;
   $LocationsCorrected = $LocationsRefused = 0;
   $roleOrder = array('shared', 'data-root', 'code', 'secret', 'root-only', 'web', 'served');
-  $locationRoles = $resolvedLocations = $prunedPaths = $sharedPaths = $otherLocation = $seenLocations = $servedPaths = array();
-  $settingName = $locationRole = $roleName = $locationPath = $runningInstall = $configuredPath = $holdNotice = '';
-  $roleWasApplied = $treeIsHeld = FALSE;
+  $locationRoles = $resolvedLocations = $prunedPaths = $sharedPaths = $otherLocation = $seenLocations = $servedPaths = $retiredPaths = array();
+  $settingName = $locationRole = $roleName = $locationPath = $runningInstall = $configuredPath = $holdNotice = $retiredPath = '';
+  $roleWasApplied = $treeIsHeld = $retiredPathsAreGone = $locationDiffered = FALSE;
   if (!$RunningAsRoot) warningEntry('Managed locations can only be corrected by root, so nothing was changed.');
   else if (!isset($EngineManagedLocations) or !is_array($EngineManagedLocations)) warningEntry('The contract declares no managed locations in $EngineManagedLocations, so nothing was corrected.');
   else {
@@ -1092,7 +1204,7 @@ function correctManagedLocations($webAccount) {
         // / nothing there & walks nothing there, so it is skipped & left exactly as it is. That is
         // / not a fault in any location, so --setup goes on, & the updater keeps no backup there.
         if ($roleName === 'root-only' && !$treeIsHeld) {
-          print('  '.str_pad('SKIPPED', 12).$locationPath.' could be replaced by another account, so root keeps nothing there & left it as it is. '.$holdNotice.$Lol);
+          print('  '.str_pad('SKIPPED', 12).$locationPath.' could be replaced by another account. Left as it is. '.$holdNotice.$Lol);
           warningEntry('The managed location '.$locationRoles[2].' at '.$locationPath.' could be replaced by another account, so root did not walk it & keeps nothing there. '.$holdNotice);
           continue; }
         if ($roleName === 'code' && !$treeIsHeld) {
@@ -1100,6 +1212,8 @@ function correctManagedLocations($webAccount) {
           warningEntry('The managed location '.$locationRoles[2].' at '.$locationPath.' could be replaced by another account, so root did not walk it. '.$holdNotice);
           $LocationsRefused++;
           continue; }
+        // / Whether anything is about to change is read first, because once the role is given it is too late.
+        $locationDiffered = ($roleName === 'code') ? FALSE : locationDiffersFromRole($locationPath, $roleName, $webAccount, array());
         if ($roleName === 'shared') $roleWasApplied = applySharedRole($locationPath, $webAccount);
         else if ($roleName === 'data-root') $roleWasApplied = applyDataRootRole($locationPath);
         else if ($roleName === 'secret') $roleWasApplied = applySecretRole($locationPath, $webAccount);
@@ -1108,15 +1222,27 @@ function correctManagedLocations($webAccount) {
           $prunedPaths = array();
           foreach ($resolvedLocations as $otherLocation) {
             if ($otherLocation[0] !== $locationPath && strpos($otherLocation[0].DIRECTORY_SEPARATOR, $locationPath.DIRECTORY_SEPARATOR) === 0) $prunedPaths[] = $otherLocation[0]; }
-          $roleWasApplied = applyCodeRole($locationPath, $prunedPaths); }
+          // / WHAT NO RELEASE SHIPS IS LEFT OUT OF THE WALK. It is taken away once the rest is root's.
+          // / Walking it first would spend the time on a tree about to go, & a tree an earlier build
+          // / left can hold links & files with more than one name, which the walk cannot put right.
+          // / Until v4.0.6 nothing took one away, so an installation holding one stayed refused.
+          $retiredPaths = retiredPathsIn($locationPath);
+          foreach ($retiredPaths as $retiredPath) $prunedPaths[] = $retiredPath;
+          // / A path no release ships is about to be taken away, which is a change too.
+          $locationDiffered = locationDiffersFromRole($locationPath, $roleName, $webAccount, $prunedPaths);
+          foreach ($retiredPaths as $retiredPath) if (file_exists($retiredPath) or is_link($retiredPath)) $locationDiffered = TRUE;
+          $roleWasApplied = applyCodeRole($locationPath, $prunedPaths);
+          $retiredPathsAreGone = removeRetiredPaths($retiredPaths);
+          // / An installation still holding one is not root's alone, so the location is incomplete.
+          if (!$retiredPathsAreGone) $roleWasApplied = FALSE; }
         else if ($roleName === 'root-only') $roleWasApplied = applyRootOnlyRole($locationPath);
         // / A served location is owned & moded exactly as a web one. What makes it served is the
         // / Apache configuration, which is written from the same contract.
         else $roleWasApplied = applyWebRole($locationPath, $webAccount);
-        if ($roleWasApplied) $LocationsCorrected++;
-        else $LocationsRefused++; } } }
+        if (!$roleWasApplied) $LocationsRefused++;
+        else if ($locationDiffered) $LocationsCorrected++; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $roleOrder, $locationRoles, $resolvedLocations, $prunedPaths, $sharedPaths, $otherLocation, $seenLocations, $servedPaths, $settingName, $locationRole, $roleName, $locationPath, $runningInstall, $configuredPath, $holdNotice, $roleWasApplied, $treeIsHeld, $webAccount);
+  purgeSensitiveMemory($EnableMemoryProtection, $roleOrder, $locationRoles, $resolvedLocations, $prunedPaths, $sharedPaths, $otherLocation, $seenLocations, $servedPaths, $retiredPaths, $settingName, $locationRole, $roleName, $locationPath, $runningInstall, $configuredPath, $holdNotice, $retiredPath, $roleWasApplied, $treeIsHeld, $retiredPathsAreGone, $locationDiffered, $webAccount);
   return array($CorrectionRan, $LocationsCorrected, $LocationsRefused); }
 // / -----------------------------------------------------------------------------------
 
@@ -1212,11 +1338,11 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
   // / operator who has deleted config.php has to be able to get it back with the tool
   // / they already have.
   if (!$targetWasResolved && $utilityMode === 'repair' && $RunningAsRoot) {
-    print($Lol.'No configuration file was found. Writing a default one from the template.'.$Lol);
+    print($Lol.'No config.php was found. Writing the defaults from the template.'.$Lol);
     list ($generatedOk, $generatedCount) = generateConfigFile($suppliedPath !== '' ? $suppliedPath : $InstLoc.$DirSep.'Resources'.$DirSep.'config.php');
     if ($generatedOk) {
       $UtilityCompleted = TRUE;
-      print($Lol.'Wrote '.$generatedCount.' setting(s). Every value is a default & is yours to change.'.$Lol.$Lol); }
+      print($Lol.'Wrote '.$generatedCount.' setting(s), all defaults. Change them with --config.'.$Lol.$Lol); }
     else print($Lol.'A configuration file could not be written. See the log.'.$Lol.$Lol); }
   else if (!$targetWasResolved) print($Lol.'No configuration file could be resolved. Nothing was done.'.$Lol.$Lol);
   // / A backup damages nothing, so it is the one mode a standard user may run.
@@ -1255,8 +1381,8 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
           foreach ($dependencyFindings as $finding) print('  '.$finding['Detail'].$Lol); }
         if (!$sectionsAreTrusted) {
           print($Lol.'ONE OR MORE SECTIONS FAILED VALIDATION.'.$Lol);
-          print('This file does not have the shape this utility expects, so it will not be'.$Lol);
-          print('written to. Nothing has been changed. Edit it by hand, or restore a backup.'.$Lol.$Lol); }
+          print('This file does not have the expected shape. Nothing was written.'.$Lol);
+          print('Edit it by hand, or restore a backup.'.$Lol.$Lol); }
         else {
           // / Every mode below writes. Each one collects a change set & applies it once.
           if ($utilityMode === 'view') {
@@ -1402,6 +1528,24 @@ function createHeldFolder($folderPath) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to name some of a list of names in one sentence.
+// / Accepts the names. Returns a sentence naming up to ten of them, or nothing for none.
+// / A folder can hold thousands of names, & a log line that lists them all is never read.
+function namesToList($entryNames) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $NameSentence = '';
+  $shownNames = array();
+  if (is_array($entryNames) && count($entryNames) > 0) {
+    $shownNames = array_slice(array_values($entryNames), 0, 10);
+    $NameSentence = (count($entryNames) > count($shownNames) ? 'The first '.count($shownNames).' are ' : 'They are ').implode(', ', $shownNames).'.'; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $NameSentence is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $shownNames, $entryNames);
+  return $NameSentence; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to create the data root's folders & move an older layout's sessions into them.
 // / Accepts the web server account. Must run as root. Returns whether the primary folders are
 // / present & how many session directories were moved, in that order.
@@ -1416,8 +1560,10 @@ function createHeldFolder($folderPath) {
 // / AN OLDER RELEASE KEPT EACH SESSION DIRECTLY IN A DATA LOCATION. Every session directory
 // / found at the top of a data root is moved into that root's Sessions folder, so no open
 // / session is lost, which is why -fp after an upgrade keeps visitors signed in. Each moved
-// / directory keeps the web server account's ownership it already had. The capability cache an
-// / older release left at the root is moved into the cache folder with it.
+// / directory keeps the web server account's ownership it already had. Only a folder that is a
+// / session is moved, & every other is named, as is anything in Sessions the sweep cannot remove.
+// / The capability cache an older release left at the primary root is moved into the cache
+// / folder with it, & one left anywhere else is removed.
 // / EACH ROOT IS GIVEN BACK TO ROOT BEFORE ANYTHING IS MOVED BELOW IT. A rename follows a link
 // / in the folder it moves into, & until v4.0.4 the primary root was given back only by
 // / correctManagedLocations, after this, & Sessions & Cache were judged with is_dir, which follows
@@ -1431,9 +1577,10 @@ function provisionAndMigrateDataRoot($webAccount) {
   global $DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $ManagerSocketDir, $AdditionalConvertLocs, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
   $FoldersAreReady = TRUE;
   $MovedCount = 0;
-  $primaryFolders = $additionalEntry = $additionalRoots = $rootEntries = $sessionEntries = $cacheStatus = array();
-  $folderPath = $additionalRoot = $rootToMigrate = $sessionTarget = $rootEntry = $entryPath = $holdNotice = $cacheSource = $cacheTarget = '';
-  $targetIsHeld = $cacheIsHeld = $rootWasTaken = FALSE;
+  $primaryFolders = $additionalEntry = $additionalRoots = $rootEntries = $sessionEntries = $cacheStatus = $foreignEntries = $sessionNames = $strangerEntries = $entryStatus = $webRecord = array();
+  $folderPath = $additionalRoot = $rootToMigrate = $sessionTarget = $rootEntry = $entryPath = $holdNotice = $cacheSource = $cacheTarget = $sessionName = $removalNotice = '';
+  $targetIsHeld = $cacheIsHeld = $rootWasTaken = $cacheWasRemoved = FALSE;
+  $webUid = -1;
   $reservedNames = array('.', '..', 'Sessions', 'Cache', 'Logs', 'Sockets', 'Engine', 'Secrets', 'Last-Installed-Version', 'Application', 'lost+found', '.cache', '.config');
   if (!$RunningAsRoot) { warningEntry('The data root can only be provisioned while running as root, so nothing was created or moved.'); $FoldersAreReady = FALSE; }
   else {
@@ -1460,9 +1607,10 @@ function provisionAndMigrateDataRoot($webAccount) {
     foreach ($additionalRoots as $additionalRoot) {
       if (createHeldFolder($additionalRoot) && applyDataRootRole($additionalRoot) && createHeldFolder($additionalRoot.$DirSep.'Sessions')) applyWebRole($additionalRoot.$DirSep.'Sessions', $webAccount); }
     // / Move an older layout's sessions into each root's Sessions folder. The primary root &
-    // / every additional root is swept once. A session is any directory at the top of a root
-    // / that is not one of the folders this layout keeps, & it is moved by rename, which never
-    // / crosses a filesystem & never copies, so a large session moves in an instant & intact.
+    // / every additional root is swept once. A session is moved by rename, which never crosses a
+    // / filesystem & never copies, so a large session moves in an instant & intact.
+    if (function_exists('posix_getpwnam')) $webRecord = @posix_getpwnam((string)$webAccount);
+    if (is_array($webRecord) && isset($webRecord['uid'])) $webUid = (int)$webRecord['uid'];
     foreach (array_merge(array($DataRootLoc), $additionalRoots) as $rootToMigrate) {
       $sessionTarget = $rootToMigrate.$DirSep.'Sessions';
       $rootEntries = @scandir($rootToMigrate);
@@ -1471,12 +1619,22 @@ function provisionAndMigrateDataRoot($webAccount) {
       // / is never a session, which is how a staged installation an install left is passed over.
       // / A link is never followed into & is left exactly where it is, as is any plain file,
       // / which at the root is the Environment Manager's state or, from an older release, the
-      // / install secret or the capability cache. Only a real session directory is moved.
-      $sessionEntries = array();
+      // / install secret or the capability cache.
+      // / A SESSION IS A FOLDER THE WEB SERVER ACCOUNT MADE, named as the core names a day, with twelve
+      // / or eighteen hexadecimal digits. Until v4.0.6 any other folder was moved too, so a release
+      // / unpacked into a data root had its folders moved into Sessions as root's, where the sweep,
+      // / which runs as the web server account, could not remove them & failed every pass. Every
+      // / other folder is named & left where it is.
+      $sessionEntries = $foreignEntries = array();
       foreach ($rootEntries as $rootEntry) {
         if (in_array($rootEntry, $reservedNames, TRUE) or strpos((string)$rootEntry, '.') === 0) continue;
         $entryPath = $rootToMigrate.$DirSep.$rootEntry;
-        if (!is_link($entryPath) && is_dir($entryPath)) $sessionEntries[] = $rootEntry; }
+        clearstatcache(TRUE, $entryPath);
+        $entryStatus = @lstat($entryPath);
+        if (!is_array($entryStatus) or ((int)$entryStatus['mode'] & 0170000) !== 0040000) continue;
+        if ($webUid >= 0 && (int)$entryStatus['uid'] === $webUid && preg_match('/^([0-9a-f]{12}|[0-9a-f]{18})$/', (string)$rootEntry) === 1) $sessionEntries[] = $rootEntry;
+        else $foreignEntries[] = $rootEntry; }
+      if (count($foreignEntries) > 0) warningEntry(count($foreignEntries).' folder(s) at the top of '.$rootToMigrate.' are not sessions, so they were left where they are. '.namesToList($foreignEntries).' Move them out of the data location.');
       // / Sessions must be a real folder in a root only root can change, or nothing is moved. A
       // / primary root that could not be given back is never moved into, & applyDataRootRole has
       // / already said why.
@@ -1487,21 +1645,37 @@ function provisionAndMigrateDataRoot($webAccount) {
         $entryPath = $rootToMigrate.$DirSep.$rootEntry;
         if (@rename($entryPath, $sessionTarget.$DirSep.$rootEntry)) $MovedCount++;
         else warningEntry('A session directory at '.$entryPath.' could not be moved into '.$sessionTarget.'. It was left where it is.'); }
+      // / ANYTHING IN Sessions THE WEB SERVER ACCOUNT DOES NOT OWN is beyond the sweep, which runs as that
+      // / account & leaves it. So it is named here, where root sees it. An earlier release moved some.
+      // / Names are read & nothing is changed, because the folder is that account's.
+      $sessionNames = @scandir($sessionTarget);
+      $strangerEntries = array();
+      if (is_array($sessionNames) && $webUid >= 0) foreach ($sessionNames as $sessionName) {
+        if ($sessionName === '.' or $sessionName === '..') continue;
+        $entryStatus = @lstat($sessionTarget.$DirSep.$sessionName);
+        if (is_array($entryStatus) && (int)$entryStatus['uid'] !== $webUid) $strangerEntries[] = (string)$sessionName; }
+      if (count($strangerEntries) > 0) warningEntry(count($strangerEntries).' name(s) in '.$sessionTarget.' are not '.$webAccount.'\'s, so the sweep leaves them. '.namesToList($strangerEntries).' Remove them.');
       // / The capability cache an older release wrote at the root moves into the cache folder,
-      // / which is where this release reads & writes it. Only the primary root ever held one.
-      // / It moves only when it is a plain file & the cache folder is held, for the same reason.
-      if ($rootToMigrate === $DataRootLoc) {
-        $cacheSource = $rootToMigrate.$DirSep.'capability-cache.php';
-        $cacheTarget = $CacheLoc.$DirSep.'capability-cache.php';
-        clearstatcache(TRUE, $cacheSource);
-        $cacheStatus = @lstat($cacheSource);
-        if (is_array($cacheStatus) && ((int)$cacheStatus['mode'] & 0170000) === 0100000 && !file_exists($cacheTarget) && !is_link($cacheTarget)) {
+      // / which is where this release reads & writes it. It moves only when it is a plain file &
+      // / the cache folder is held, for the same reason. One at the top of any other root, or one
+      // / the cache folder already holds a cache for, is a copy nothing reads, & is removed. Until
+      // / v4.0.6 only the primary root's was looked at.
+      $cacheSource = $rootToMigrate.$DirSep.'capability-cache.php';
+      $cacheTarget = $CacheLoc.$DirSep.'capability-cache.php';
+      clearstatcache(TRUE, $cacheSource);
+      $cacheStatus = @lstat($cacheSource);
+      if (is_array($cacheStatus) && ((int)$cacheStatus['mode'] & 0170000) === 0100000) {
+        if ($rootToMigrate === $DataRootLoc && !file_exists($cacheTarget) && !is_link($cacheTarget)) {
           list ($cacheIsHeld, $holdNotice) = folderIsHeldForRoot($CacheLoc);
           if ($cacheIsHeld) @rename($cacheSource, $cacheTarget);
-          else warningEntry('The capability cache at '.$cacheSource.' was not moved into '.$CacheLoc.', because root moves nothing into a folder another account could replace. '.$holdNotice); } } }
+          else warningEntry('The capability cache at '.$cacheSource.' was not moved into '.$CacheLoc.', because root moves nothing into a folder another account could replace. '.$holdNotice); }
+        else {
+          list ($cacheWasRemoved, $removalNotice) = removeFileWithoutFollowing($cacheSource);
+          if ($cacheWasRemoved) logEntry('Removed the capability cache an older release left at '.$cacheSource.'. Nothing reads it.');
+          else warningEntry('The capability cache an older release left at '.$cacheSource.' could not be removed. '.$removalNotice); } } }
     if ($MovedCount > 0) logEntry($MovedCount.' session directory or directories were moved into a Sessions folder during the data root migration.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $primaryFolders, $additionalEntry, $additionalRoots, $rootEntries, $sessionEntries, $cacheStatus, $folderPath, $additionalRoot, $rootToMigrate, $sessionTarget, $rootEntry, $entryPath, $holdNotice, $cacheSource, $cacheTarget, $targetIsHeld, $cacheIsHeld, $rootWasTaken, $reservedNames, $webAccount);
+  purgeSensitiveMemory($EnableMemoryProtection, $primaryFolders, $additionalEntry, $additionalRoots, $rootEntries, $sessionEntries, $cacheStatus, $foreignEntries, $sessionNames, $strangerEntries, $entryStatus, $webRecord, $folderPath, $additionalRoot, $rootToMigrate, $sessionTarget, $rootEntry, $entryPath, $holdNotice, $cacheSource, $cacheTarget, $sessionName, $removalNotice, $targetIsHeld, $cacheIsHeld, $rootWasTaken, $cacheWasRemoved, $webUid, $reservedNames, $webAccount);
   return array($FoldersAreReady, $MovedCount); }
 // / -----------------------------------------------------------------------------------
 
@@ -1611,7 +1785,7 @@ function serviceEntryFolder() {
 // / Every path in the unit is read from this installation, never typed.
 // / systemd cannot read config.php, so a unit written by hand duplicates the data location,
 // / the installation path & the web server user, & nothing checks that the copies still
-// / agree. Generating it here means moving --Convert Location-- moves the unit with it.
+// / agree. Generating it here means moving the data location moves the unit with it.
 // / The application it runs is the installed copy, which serviceEntryFolder() names.
 function generateListenerService() {
   // / Set variables.
@@ -1630,7 +1804,7 @@ function generateListenerService() {
   if (locateDependency('apache2') === '' && locateDependency('httpd') !== '') $webServerUnit = 'httpd.service';
   $ServiceContents = '# / Written by '.engineApplicationName().' v'.ltrim(engineApplicationVersion(), 'vV').'. Do not edit by hand.'.PHP_EOL
     .'# / Every path here was read from this installation. Re-run the following to rewrite it'.PHP_EOL
-    .'# / after changing --Convert Location-- or moving the installation.'.PHP_EOL
+    .'# / after moving the data location or the installation.'.PHP_EOL
     .'# /   sudo php '.$corePath.' --setup --install-service'.PHP_EOL
     .'# /'.PHP_EOL
     .'# / --run-core-manager does NOT fork, so systemd watches the real Core Manager process,'.PHP_EOL
@@ -1798,14 +1972,14 @@ function installListenerService($enableService, $startIfStopped = FALSE) {
   if (!$RunningAsRoot) {
     $ServiceStatus = 'failed';
     errorEntry('A service unit can only be installed while running as root!', 32012, FALSE); }
-  else if (!$EnableResourceAwareness) print('  '.str_pad('Skipped', 12).'Resource awareness is disabled, so no listener service is needed.'.$Lol);
+  else if (!$EnableResourceAwareness) print('  '.str_pad('Skipped', 12).'Resource awareness is disabled.'.$Lol);
   // / A unit file written where systemd is not running is a file nothing reads, & worse,
   // / it makes the listener defer to a service manager that will never answer. Ask whether
   // / systemd is RUNNING rather than whether its tools happen to be installed.
   else if (!systemdIsUsable()[0]) {
     list ($serviceSystemdUsable, $serviceSystemdReason) = systemdIsUsable();
     print('  '.str_pad('Skipped', 12).$serviceSystemdReason.$Lol);
-    print('  '.str_pad('', 12).'The listener is started directly instead. Nothing else is needed.'.$Lol); }
+    print('  '.str_pad('', 12).'No unit is written. -l starts the listener without one.'.$Lol); }
   else if (!is_dir('/etc/systemd/system')) print('  '.str_pad('Skipped', 12).'/etc/systemd/system does not exist.'.$Lol);
   else {
     $unitContents = generateListenerService();
@@ -1842,7 +2016,7 @@ function installListenerService($enableService, $startIfStopped = FALSE) {
             // / one keeps the unit & the release it started with. It is not restarted here, because
             // / a listener started again within thirty seconds mints the startup keys it just spent
             // / & refuses them as replays, so the administrator is told instead.
-            if ($existingContents !== '') print('  '.str_pad('Note', 12).'A listener that was already running still runs the old unit. Restart it.'.$Lol.'  '.str_pad('', 12).'systemctl restart '.engineApplicationSlug().'-listener'.$Lol);
+            if ($existingContents !== '') print('  '.str_pad('Note', 12).'A listener already running keeps the old unit until restarted.'.$Lol.'  '.str_pad('', 12).'systemctl restart '.engineApplicationSlug().'-listener'.$Lol);
             logEntry('The listener service unit was installed & enabled.'); }
           else {
             $ServiceStatus = 'failed';
@@ -2035,13 +2209,13 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           logEntry('A complete installation finished '.$StagesCompleted.' of '.$stageTotal.' stages.');
           print($Lol.'Installation complete. '.$StagesCompleted.' of '.$stageTotal.' stages finished.'.$Lol);
           if (!$dependenciesReady) print($Lol.'One or more REQUIRED dependencies are still missing. Conversions using them will refuse.'.$Lol);
-          if ($optionalProblems > 0) print($Lol.$optionalProblems.' OPTIONAL dependenc(ies) are missing. Those subsystems will refuse until they are installed.'.$Lol);
+          if ($optionalProblems > 0) print($Lol.$optionalProblems.' OPTIONAL dependenc(ies) are missing. Their subsystems refuse until installed.'.$Lol);
           print($Lol.'  php '.$InstLoc.$DirSep.engineApplicationEntryPoint().' -v          Confirm every dependency & subsystem.'.$Lol);
           print('  php '.$InstLoc.$DirSep.engineApplicationEntryPoint().' --status    Confirm the listener.'.$Lol);
           print('  sudo php '.$InstLoc.$DirSep.engineApplicationEntryPoint().' --config    Change any setting.'.$Lol);
-          print($Lol.'Two things this cannot decide for you.'.$Lol);
-          print('  The public URL, if share links are to work. Set it with --config.'.$Lol);
-          print('  A web server virtual host, if the installation is not already served.'.$Lol.$Lol); } } } }
+          print($Lol.'Not set by the installer.'.$Lol);
+          print('  The public URL, for share links. Set it with --config.'.$Lol);
+          print('  A web server virtual host, if the installation is not served yet.'.$Lol.$Lol); } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $componentIsAvailable, $stageSucceeded, $permissionsWereFixed, $locationsAreReady, $serviceWasInstalled, $dependenciesReady, $stageCount, $pathsCorrected, $locationsCreated, $optionalProblems, $operatorChoice, $serviceStatus, $dependencyFindings, $authorizationToken, $operatorConfirmed, $stageTotal);
   return array($InstallCompleted, $StagesCompleted); }
@@ -2535,14 +2709,19 @@ function holdHostedFolder($folderPath, $mayRepair) {
 // / installs it. Nothing is removed unless the application holds the same bytes under the same
 // / name, so whatever else an administrator keeps there stays. With repair forbidden it only
 // / reports, which is what the listener & -v ask for.
+// / WHAT A RELEASE LEFT IN IT OR BESIDE IT IS NAMED, & never removed. A release unpacked or cloned
+// / into the hosted location brings .git & .github. Until v4.0.1 the updater moved the previous
+// / installation aside beside it as .old, with every PHP file it held, & an update that failed
+// / left it there. The Apache configuration refuses all three, & a location otherwise in step is
+// / kept, which is benign, with them named.
 function publishHostedLocation($hostedLoc, $applicationLoc, $mayRepair) {
   // / Set variables.
   global $EngineApplicationLayout, $RunningAsRoot, $EnableMemoryProtection;
   $PublishStatus = 'ok';
   $PublishDetail = '';
   $NamesWritten = $NamesRemoved = 0;
-  $hostedPath = $applicationPath = $entryName = $hostedEntry = $applicationEntry = $loaderContents = $plannedPath = $sourcePath = $plannedFolder = $holdNotice = $writeNotice = $readNotice = $wantedContents = $hostedContents = $layoutEntry = '';
-  $plannedFiles = $plannedFolders = $fileStatus = $layoutEntries = array();
+  $hostedPath = $applicationPath = $entryName = $hostedEntry = $applicationEntry = $loaderContents = $plannedPath = $sourcePath = $plannedFolder = $holdNotice = $writeNotice = $readNotice = $wantedContents = $hostedContents = $layoutEntry = $leftoverPath = '';
+  $plannedFiles = $plannedFolders = $fileStatus = $layoutEntries = $leftoverPaths = array();
   $repairIsAllowed = $locationsOverlap = $hostedIsHeld = $entryIsOurs = $folderIsHeld = $folderChanged = $fileWasWritten = $wantedWasRead = $hostedWasRead = FALSE;
   $namesDiffering = $namesLeft = $namesFailed = $entryRemoved = $entryLeft = $assetsRemoved = $assetsStale = 0;
   $hostedPath = rtrim((string)$hostedLoc, DIRECTORY_SEPARATOR);
@@ -2633,11 +2812,16 @@ function publishHostedLocation($hostedLoc, $applicationLoc, $mayRepair) {
         $PublishDetail = $namesLeft.' name(s) in '.$hostedPath.' are not part of the installation & differ from it, so they were left. Remove them by hand.'; }
       else if ($NamesWritten > 0 or $NamesRemoved > 0) {
         $PublishStatus = 'repaired';
-        $PublishDetail = 'Wrote '.$NamesWritten.' & removed '.$NamesRemoved.' name(s). '.$hostedPath.' serves the loader & '.(count($plannedFiles) - 1).' other file(s).'; }
+        $PublishDetail = 'Wrote '.$NamesWritten.' & removed '.$NamesRemoved.' name(s). Serves the loader & '.(count($plannedFiles) - 1).' other file(s).'; }
       else $PublishDetail = 'Serves the loader & '.(count($plannedFiles) - 1).' other file(s) from '.$applicationPath.'.'; } }
+  if ($PublishStatus === 'ok' or $PublishStatus === 'repaired') {
+    foreach (array($hostedPath.DIRECTORY_SEPARATOR.'.git', $hostedPath.DIRECTORY_SEPARATOR.'.github', $hostedPath.'.old') as $leftoverPath) if (file_exists($leftoverPath) or is_link($leftoverPath)) $leftoverPaths[] = $leftoverPath;
+    if (count($leftoverPaths) > 0) {
+      if ($PublishStatus === 'ok') $PublishStatus = 'kept';
+      $PublishDetail = $PublishDetail.' Move '.implode(' & ', $leftoverPaths).' out of the web root. The Apache configuration refuses '.(count($leftoverPaths) === 1 ? 'it' : 'them').'.'; } }
   if (in_array($PublishStatus, array('FAILED', 'REFUSED', 'UNINSTALLED', 'STRAY'), TRUE) && $repairIsAllowed) warningEntry('The hosted location reported '.$PublishStatus.'. '.$PublishDetail);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $hostedPath, $applicationPath, $entryName, $hostedEntry, $applicationEntry, $loaderContents, $plannedPath, $sourcePath, $plannedFolder, $holdNotice, $writeNotice, $readNotice, $wantedContents, $hostedContents, $layoutEntry, $plannedFiles, $plannedFolders, $fileStatus, $layoutEntries, $repairIsAllowed, $locationsOverlap, $hostedIsHeld, $entryIsOurs, $folderIsHeld, $folderChanged, $fileWasWritten, $wantedWasRead, $hostedWasRead, $namesDiffering, $namesLeft, $namesFailed, $entryRemoved, $entryLeft, $assetsRemoved, $assetsStale, $hostedLoc, $applicationLoc, $mayRepair);
+  purgeSensitiveMemory($EnableMemoryProtection, $hostedPath, $applicationPath, $entryName, $hostedEntry, $applicationEntry, $loaderContents, $plannedPath, $sourcePath, $plannedFolder, $holdNotice, $writeNotice, $readNotice, $wantedContents, $hostedContents, $layoutEntry, $leftoverPath, $leftoverPaths, $plannedFiles, $plannedFolders, $fileStatus, $layoutEntries, $repairIsAllowed, $locationsOverlap, $hostedIsHeld, $entryIsOurs, $folderIsHeld, $folderChanged, $fileWasWritten, $wantedWasRead, $hostedWasRead, $namesDiffering, $namesLeft, $namesFailed, $entryRemoved, $entryLeft, $assetsRemoved, $assetsStale, $hostedLoc, $applicationLoc, $mayRepair);
   return array($PublishStatus, $PublishDetail, $NamesWritten, $NamesRemoved); }
 // / -----------------------------------------------------------------------------------
 
@@ -2867,6 +3051,20 @@ function verifyApacheConfiguration($mayRepair) {
       .'    Require all granted'.PHP_EOL
       .'  </Files>'.PHP_EOL
       .'</Directory>'.PHP_EOL
+      .PHP_EOL
+      .'# / NOTHING A RELEASE LEFT IN OR BESIDE THE HOSTED LOCATION IS SERVED. A release unpacked or cloned'.PHP_EOL
+      .'# / there brings .git & .github. Until v4.0.1 the updater moved the previous installation'.PHP_EOL
+      .'# / aside beside it as .old, PHP files & all, & an update that failed left it there.'.PHP_EOL
+      .'# / -fp names each one it finds, & removes none of them.'.PHP_EOL
+      .'<Directory '.escapeApacheConfigPath(rtrim($hostedLocation, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'.git').'>'.PHP_EOL
+      .'  Require all denied'.PHP_EOL
+      .'</Directory>'.PHP_EOL
+      .'<Directory '.escapeApacheConfigPath(rtrim($hostedLocation, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'.github').'>'.PHP_EOL
+      .'  Require all denied'.PHP_EOL
+      .'</Directory>'.PHP_EOL
+      .'<Directory '.escapeApacheConfigPath(rtrim($hostedLocation, DIRECTORY_SEPARATOR).'.old').'>'.PHP_EOL
+      .'  Require all denied'.PHP_EOL
+      .'</Directory>'.PHP_EOL
       .$servedRules
       .($locationRules === '' ? '' : PHP_EOL
       .'# / THE DATA LOCATION IS NEVER SERVED, WHEREVER IT IS. Its sessions, caches & logs belong'.PHP_EOL
@@ -2885,7 +3083,7 @@ function verifyApacheConfiguration($mayRepair) {
     else {
       // / A data location that holds the application cannot be refused without refusing it too.
       foreach ($unrefusedRoots as $unrefusedRoot) {
-        print('  '.str_pad('Skipped', 12).$unrefusedRoot.' holds what the web server serves, so it is not refused.'.$Lol);
+        print('  '.str_pad('Skipped', 12).$unrefusedRoot.' holds what the web server serves. Not refused.'.$Lol);
         warningEntry('The data location '.$unrefusedRoot.' holds the hosted location, so the Apache configuration cannot refuse it without refusing '.engineApplicationName().' as well. Move the data location outside the web root.'); }
       // / The rules for a served location are Header directives, so the module they need is
       // / confirmed & enabled before the configuration that depends on it is written. Enabling it
@@ -2967,8 +3165,8 @@ function verifyApacheConfiguration($mayRepair) {
           // / administrator's problem & is reported as theirs.
           if (!$configTestPassed && !$baselineTestPassed) {
             warningEntry('The Apache configuration on this host did not parse BEFORE '.engineApplicationName().' wrote anything, so its file was kept & the pre-existing fault was left for the administrator. apachectl reported: '.trim($configTestOutput));
-            print('  '.str_pad('Note', 12).'This host\'s Apache configuration already did not parse before this ran.'.$Lol);
-            print('  '.str_pad('', 12).'The '.engineApplicationName().' file was kept. Fix the pre-existing fault & reload.'.$Lol); }
+            print('  '.str_pad('Note', 12).'The Apache configuration did not parse before this ran.'.$Lol);
+            print('  '.str_pad('', 12).'The '.engineApplicationName().' file was kept. Fix the existing fault & reload.'.$Lol); }
           else if (!$configTestPassed) {
             // / Put back exactly what was found. A file this run created is removed, a file it
             // / replaced is written back as it was, & the link goes only when this run made it.
@@ -2981,14 +3179,14 @@ function verifyApacheConfiguration($mayRepair) {
               if (!$restoreWorked) warningEntry('The link that enabled the '.engineApplicationName().' Apache configuration could not be removed. '.$restoreNotice); }
             $ConfigurationIsValid = FALSE;
             $ConfigurationsWritten = 0;
-            print('  '.str_pad('WITHDRAWN', 12).'The configuration did not pass a syntax test, & what was there before is back.'.$Lol);
+            print('  '.str_pad('WITHDRAWN', 12).'Failed the syntax test. The previous configuration is back.'.$Lol);
             print('  '.str_pad('', 12).trim($configTestOutput).$Lol);
             errorEntry('The Apache configuration '.engineApplicationName().' wrote did not pass apachectl configtest & was withdrawn. The test reported: '.trim($configTestOutput), 504, FALSE);
             // / The test passed before anything was written, so it must pass again now. It is run
             // / again to prove that rather than to assume it.
             $commandOutput = array();
             exec(escapeshellarg($controlBinary).' configtest 2>&1', $commandOutput, $commandExitCode);
-            if ($commandExitCode === 0) print('  '.str_pad('Tested', 12).'The configuration parses as it did before.'.$Lol);
+            if ($commandExitCode === 0) print('  '.str_pad('Tested', 12).'The previous configuration parses.'.$Lol);
             else {
               warningEntry('The Apache configuration still does not parse after '.engineApplicationName().' withdrew its file. Fix what apachectl configtest reports before the web server next starts. It reported: '.trim(implode(' ', $commandOutput)));
               print('  '.str_pad('Note', 12).'The configuration still does not parse. See the log.'.$Lol); } }
@@ -3372,9 +3570,12 @@ function cleanBuildEnvironment() {
   $removalTargets = array();
   $buildDirContents = FALSE;
   $buildDirEntry = $removalTarget = $removalNotice = $resolvedBuildDir = $trustNotice = '';
-  // / The installation this file belongs to. PHP resolves every link in __FILE__, so none of
-  // / the names below is reached through one.
-  $installDir = dirname(__FILE__);
+  // / The installation this file belongs to, three folders above it, as correctManagedLocations()
+  // / finds it. PHP resolves every link in __DIR__, so none of the names below is reached through
+  // / one. This read dirname(__FILE__) from v4.0.3, when it moved here from convertCore.php, which
+  // / is this file's own folder in the Engine. Nothing was ever found there, so nothing was ever
+  // / removed, & each was reported NOT PRESENT.
+  $installDir = dirname(__DIR__, 3);
   $dockerFile = $installDir.$DirSep.'Documentation'.$DirSep.'Build'.$DirSep.'Dockerfile';
   $changelogFile = $installDir.$DirSep.'Documentation'.$DirSep.'CHANGELOG.txt';
   $readmeFile = $installDir.$DirSep.'README.md';
@@ -3463,7 +3664,7 @@ function refreshEnvironmentTimer() {
       // / manager is its whole purpose. It takes no argument from anywhere.
       exec('systemctl daemon-reload 2>&1', $commandOutput, $commandExitCode);
       $TimerStatus = 'updated';
-      print('  '.str_pad('Updated', 12).$timerPath.', which runs '.serviceEntryFolder().' now. Whether it is enabled is unchanged.'.$Lol);
+      print('  '.str_pad('Updated', 12).$timerPath.'. Runs '.serviceEntryFolder().'. Enabled state unchanged.'.$Lol);
       logEntry('The Environment Manager timer was written again to '.$timerPath.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $servicePath, $timerPath, $serviceContents, $timerContents, $commandOutput, $commandExitCode);
@@ -3521,10 +3722,10 @@ function handOverToApplication($commandStatus) {
       // / prints the copy's line & warns where it is not ready, & the installed copy's -fp reports
       // / what that leaves, so the install goes on without it.
       if (function_exists('installSandboxBinary')) list ($binaryIsReady, $binaryStatus, $binaryDetail) = installSandboxBinary(12);
-      print('  '.str_pad('Running', 12).$ApplicationLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint().' -fp, which serves the installed copy.'.$Lol);
+      print('  '.str_pad('Running', 12).$ApplicationLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint().' -fp'.$Lol);
       passthru(escapeshellarg($phpBinary).' '.escapeshellarg($ApplicationLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint()).' -fp', $childStatus);
       $ExitStatus = (int)$childStatus;
-      if ($listenerWasRunning && (string)@file_get_contents($listenerUnitPath) === $listenerUnitBefore) print($Lol.'  '.str_pad('Note', 12).'The listener was running as this release was installed, & still runs the release it started with. Restart it.'.$Lol.'  '.str_pad('', 12).'systemctl restart '.engineApplicationSlug().'-listener'.$Lol); } }
+      if ($listenerWasRunning && (string)@file_get_contents($listenerUnitPath) === $listenerUnitBefore) print($Lol.'  '.str_pad('Note', 12).'The listener still runs the release it started with. Restart it.'.$Lol.'  '.str_pad('', 12).'systemctl restart '.engineApplicationSlug().'-listener'.$Lol); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $cliArguments, $commandOutput, $cliArgumentCount, $childStatus, $commandExitCode, $cliCommand, $cliTarget, $cliSecondTarget, $installNotice, $phpBinary, $listenerUnitPath, $listenerUnitBefore, $binaryStatus, $binaryDetail, $cliConfirmed, $cliVectorParsed, $commandInstalls, $treeWasInstalled, $listenerWasRunning, $binaryIsReady, $commandStatus);
   return $ExitStatus; }

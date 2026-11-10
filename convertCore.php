@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.5.
+// / v4.0.6.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -1294,9 +1294,9 @@ function verifyCodeIsTrustedByRoot($treePath) {
     if (!$CodeIsTrusted) {
       list ($cliArguments, $cliArgumentCount, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed, $cliVectorParsed) = parseArgumentVector(isset($_SERVER['argv']) ? $_SERVER['argv'] : array());
       $repairRequested = (in_array($cliCommand, array('-fp', '--fix-permissions', '--setup'), TRUE) or ($cliCommand === '--config' && $cliTarget === '--repair'));
-      if (!$repairRequested) quickDie('Root refused to run the installation at '.$treePath.', because an account other than root could have changed it. '.$trustNotice.' Run  sudo php convertCore.php -fp  to give it back to root. Any other account may still run -v in the meantime.', 28008);
+      if (!$repairRequested) quickDie('Root refused to run the installation at '.$treePath.', because an account other than root could have changed it. '.$trustNotice.' Run  sudo php convertCore.php -fp  to give it back to root. Where -fp says root still may not run it, remove or put right what it names. Any other account may still run -v in the meantime.', 28008);
       warningEntry('Root is running code an account other than root could have changed, because '.$cliCommand.' is what gives the installation at '.$treePath.' back to root. '.$trustNotice);
-      print(PHP_EOL.'WARNING. Root is running code an account other than root could have changed.'.PHP_EOL.'  '.$trustNotice.PHP_EOL.'  '.$cliCommand.' gives the installation back to root.'.PHP_EOL); } }
+      print(PHP_EOL.'WARNING. Root is running code another account could have changed.'.PHP_EOL.'  '.$trustNotice.PHP_EOL.'  '.$cliCommand.' gives the installation back to root.'.PHP_EOL); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $trustNotice, $cliCommand, $cliTarget, $cliSecondTarget, $cliArguments, $cliArgumentCount, $repairRequested, $cliConfirmed, $cliVectorParsed, $treePath);
   return $CodeIsTrusted; }
@@ -1407,7 +1407,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.0.5';
+  $HRConvertVersion = 'v4.0.6';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -1436,16 +1436,16 @@ function verifyInstallation() {
   // / Setup Core holds the configuration model, so this MUST be raised whenever
   // / $RequiredConfigVersion is raised. Forgetting does not break anything immediately.
   // / The utility reports a variable it does not know as unaccounted & carries on.
-  $RequiredSetupCoreVersion = 'v4.0.5';
+  $RequiredSetupCoreVersion = 'v4.0.6';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v4.0.5';
+  $RequiredDependencyCoreVersion = 'v4.0.6';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v3.9.3';
+  $RequiredDependsVersion = 'v4.0.6';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
   // / The Pipeline Core component version this core requires.
   // / This is an EXACT match. A component built for another core may declare an entry point
@@ -1454,7 +1454,7 @@ function verifyInstallation() {
   // / core as of v3.9.9, at Resources/Engine/Cores/pipelineCore.php. The pipelines this
   // / application accepts are listed in its contract, in app-engine-config.php, so adding a
   // / pipeline or moving one to a new version raises nothing here.
-  $RequiredPipelineCoreVersion = 'v3.9.9';
+  $RequiredPipelineCoreVersion = 'v4.0.6';
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
@@ -1463,7 +1463,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.0.5';
+  $RequiredEngineVersion = 'v4.0.6';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects. This is an EXACT match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -1534,9 +1534,9 @@ function verifyInstallation() {
     if ($bootstrapEngine === FALSE) quickDie('No configuration file & no Engine to write one!', 0);
     require_once($bootstrapEngine);
     require_once($bootstrapSetup);
-    print(PHP_EOL.'No configuration file was found. Writing a default one from the template.'.PHP_EOL);
+    print(PHP_EOL.'No config.php was found. Writing the defaults from the template.'.PHP_EOL);
     list ($bootstrapWritten, $bootstrapCount) = generateConfigFile(dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
-    if ($bootstrapWritten) print('Wrote '.$bootstrapCount.' setting(s). Every value is a default & is yours to change.'.PHP_EOL.PHP_EOL);
+    if ($bootstrapWritten) print('Wrote '.$bootstrapCount.' setting(s), all defaults. Change them with --config.'.PHP_EOL.PHP_EOL);
     else print('A configuration file could not be written. Check that Resources is writable by root.'.PHP_EOL.PHP_EOL);
     exit($bootstrapWritten ? 0 : 1); }
   else require_once ($configFile);
@@ -1893,7 +1893,11 @@ function verifyLogs() {
       while (file_exists($LogFile) && filesize($LogFile) > $MaxLogSize) {
         $LogInc++;
         $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogRole.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt'); }
-      if (!file_exists($LogFile)) $logWritten = file_put_contents($LogFile, 'Op-Act, '.$Time.': Logfile created using method 1.'.PHP_EOL, FILE_APPEND);
+      // / A logfile is made readable by its own account alone, as the folder it is in is. One made
+      // / before v4.0.6 was given whatever the process's umask allowed, & earlier releases 0755.
+      if (!file_exists($LogFile)) {
+        $logWritten = file_put_contents($LogFile, 'Op-Act, '.$Time.': Logfile created using method 1.'.PHP_EOL, FILE_APPEND);
+        if ($logWritten !== FALSE) @chmod($LogFile, 0600); }
       if (file_exists($LogFile)) $LogExists = TRUE; } }
   // / Anything logged before this point was held rather than written, so it is written now.
   // / An entry raised during boot used to reach the server error log, where it sat apart
@@ -1903,6 +1907,34 @@ function verifyLogs() {
   // / $logHandle is a second name for $LogHandle, so clearing it leaves the global open.
   purgeSensitiveMemory($EnableMemoryProtection, $logWritten, $logHashAppend, $roleArgument, $workerArgument, $openNotice, $logHandle);
   return array($LogExists, $LogFile); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to move a process that runs for days on to the logfile it should be writing now.
+// / Accepts nothing. Returns whether a logfile is in use & its path, as verifyLogs() does.
+// / The Engine calls this from every manager loop, through $EngineLogProvider, once a minute. A
+// / logfile is named for the date & moves on once it reaches --Maximum Log File Size--, & a
+// / request names its logfile as it starts. Until v4.0.6 a manager named one as it started & kept
+// / it, so a listener running for weeks wrote one file, past 38M on one host.
+// / Root runs nothing for days & writes through a handle it already holds, so root is left as it is.
+// / What PHP remembers of a file's size is forgotten first, because a process that has run for
+// / days would otherwise measure the logfile it opened.
+function refreshLogFile() {
+  // / Set variables.
+  global $RunningAsRoot, $LogFile, $EnableMemoryProtection;
+  $LogExists = FALSE;
+  $LogPath = (string)$LogFile;
+  $timeIsSet = FALSE;
+  $refreshedDate = $refreshedTime = '';
+  $refreshedEpoch = 0;
+  if ($RunningAsRoot) $LogExists = ($LogPath !== '');
+  else {
+    clearstatcache();
+    list ($timeIsSet, $refreshedDate, $refreshedTime, $refreshedEpoch) = verifyTime();
+    list ($LogExists, $LogPath) = verifyLogs(); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $timeIsSet, $refreshedDate, $refreshedTime, $refreshedEpoch);
+  return array($LogExists, $LogPath); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2615,6 +2647,10 @@ function coverResolvedImageMagickPolicy($sandboxProfile) {
 // / run under the host's own.
 // / A copy of this application's that kept no backup of what it replaced is left in place & called
 // / kept, because removing it would leave ImageMagick with no policy at all.
+// / EVERY ImageMagick ON THE HOST IS LOOKED AT, not only the one the conversions run. A host with a
+// / package & a build keeps a policy for each, & until v4.0.6 only the one the binary named was put
+// / back, so the package's kept this application's coders open for every program that ran it.
+// / Where several say different things, the status that most needs saying is the one reported.
 // / The result is cached for the request. The policy cannot change underneath a running request.
 function verifyImageMagickPolicy($mayRepair) {
   // / Set variables.
@@ -2624,8 +2660,10 @@ function verifyImageMagickPolicy($mayRepair) {
   static $cachedMayRepair = FALSE;
   $PolicyIsValid = FALSE;
   $PolicyStatus = 'unchecked';
-  $configDirectory = $retireStatus = $pipelineName = $pipelineFolder = '';
+  $configDirectory = $retireStatus = $pipelineName = $pipelineFolder = $policyPath = $copyStatus = '';
   $hostCopyIsRetired = $policyIsCarried = FALSE;
+  $policyPaths = $foundPaths = array();
+  $statusRanks = array('none' => 0, 'retired' => 1, 'kept' => 2, 'outdated' => 3, 'refused' => 4);
   // / A cached result answers every later call but one. A failure found without permission to
   // / repair is checked again when a repair is permitted, because an Environment Manager pass
   // / checks before it repairs, & the cached check would answer the repair with the failure it
@@ -2636,7 +2674,12 @@ function verifyImageMagickPolicy($mayRepair) {
   else {
     $configDirectory = resolveImageMagickConfigDir();
     $retireStatus = 'none';
-    if ($configDirectory !== '') list ($hostCopyIsRetired, $retireStatus) = retirePolicyFile('ImageMagick', $configDirectory.$DirSep.'policy.xml', $mayRepair, FALSE);
+    if ($configDirectory !== '') $policyPaths[] = $configDirectory.$DirSep.'policy.xml';
+    $foundPaths = array_merge((array)glob('/etc/ImageMagick-*/policy.xml'), (array)glob('/usr/local/etc/ImageMagick-*/policy.xml'));
+    foreach ($foundPaths as $policyPath) if (is_string($policyPath) && !in_array($policyPath, $policyPaths, TRUE)) $policyPaths[] = $policyPath;
+    foreach ($policyPaths as $policyPath) {
+      list ($hostCopyIsRetired, $copyStatus) = retirePolicyFile('ImageMagick', $policyPath, $mayRepair, FALSE);
+      if (isset($statusRanks[$copyStatus]) && $statusRanks[$copyStatus] > $statusRanks[$retireStatus]) $retireStatus = $copyStatus; }
     // / Every pipeline here that runs ImageMagick carries a policy, & is judged only if it is installed.
     $policyIsCarried = TRUE;
     foreach (array('Image', 'OCR') as $pipelineName) {
@@ -2653,7 +2696,7 @@ function verifyImageMagickPolicy($mayRepair) {
     $cachedStatus = $PolicyStatus;
     $cachedMayRepair = (bool)$mayRepair; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $configDirectory, $retireStatus, $pipelineName, $pipelineFolder, $hostCopyIsRetired, $policyIsCarried, $mayRepair);
+  purgeSensitiveMemory($EnableMemoryProtection, $configDirectory, $retireStatus, $pipelineName, $pipelineFolder, $policyPath, $copyStatus, $hostCopyIsRetired, $policyIsCarried, $policyPaths, $foundPaths, $statusRanks, $mayRepair);
   return array($PolicyIsValid, $PolicyStatus); }
 // / -----------------------------------------------------------------------------------
 
@@ -2788,13 +2831,13 @@ function toolRequirement($manifestName) {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $EngineActive, $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $SecretFile, $SecretLoc, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
+  global $EngineActive, $DependsManifest, $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $SecretFile, $SecretLoc, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
-  $listenerIsRunning = $bwrapBinary = FALSE;
-  $sandboxLauncher = '';
+  $listenerIsRunning = $bwrapBinary = $listenerIsAsked = FALSE;
+  $sandboxLauncher = $secretLabel = '';
   $listenerStatus = array();
   $installedGui = $installedLang = $installedEndonym = $checkDir = $checkFile = $foundVersion = $langLine = '';
   $guiMatches = $langMatches = array();
@@ -2813,7 +2856,9 @@ function showVersionInfo() {
   $secretShown = $olderSecretFile = $secretsState = $secretsMode = $secretsOwnership = $topCopyMode = '';
   $secretOwner = $topCopyOwner = $secretGroup = $topCopyGroup = $secretGroupExpected = $webAccountNumber = -1;
   $secretPasses = FALSE;
-  $pipelineKindCounts = $pipelineKindLabels = $pipelineRecord = $disabledFeatures = $disabledFeature = array();
+  $pipelineKindCounts = $pipelineKindLabels = $pipelineRecord = $disabledFeatures = $disabledFeature = $manifestEntry = $serviceEntry = array();
+  $servicePath = $choiceVersion = $choiceStatus = $choiceOutput = $choicePath = $choiceOrigin = '';
+  $choiceIsPresent = FALSE;
   $pipelineKindCount = 0;
   // / Run every dependency check so this reports what WORKS, not what is configured.
   $ffmpegBinary = toolPath('FFMPEG');
@@ -2934,7 +2979,17 @@ function showVersionInfo() {
     else {
       $failureCount++;
       print('  '.str_pad($dependencyName, 28).'FAILED, requires '.$dependencyState[1].' or later'.($dependencyState[2] ? '' : ', optional').$Lol); } }
-  print('  '.str_pad(($RunningInContainer ? 'Sandbox, Docker' : 'Sandbox, Bubblewrap'), 28).($bwrapBinary === FALSE ? 'FAILED, not functional' : 'OK'.((function_exists('privateBwrapPath') && $bwrapBinary === privateBwrapPath()) ? ', '.privateBwrapPath().', which the '.sandboxApparmorProfileName().' AppArmor profile is attached to' : '')).$Lol);
+  // / A program this application built for itself, because the package manager's falls short on this
+  // / host, is named with where it is, so it is never taken for the copy the host keeps current. The
+  // / manifest is the one verifiedToolPath() read for the checks above. It is named only while it is the
+  // / program a conversion runs, which resolveDependencyChoice() decides, & --setup --check-depends says
+  // / why one that is there is not.
+  if (function_exists('ownBuildInService') && function_exists('resolveDependencyChoice') && isset($DependsManifest) && is_array($DependsManifest)) {
+    foreach ($DependsManifest as $manifestEntry) {
+      list ($serviceEntry, $servicePath) = ownBuildInService($manifestEntry);
+      if ($servicePath !== '') list ($choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin) = resolveDependencyChoice($manifestEntry);
+      if ($servicePath !== '' && $choiceOrigin === 'own' && $choiceStatus === 'ok') print('  '.str_pad((string)$manifestEntry['Name'].', own build', 28).$servicePath.$Lol); } }
+  print('  '.str_pad(($RunningInContainer ? 'Sandbox, Docker' : 'Sandbox, Bubblewrap'), 28).($bwrapBinary === FALSE ? 'FAILED, not functional' : 'OK'.((function_exists('privateBwrapPath') && $bwrapBinary === privateBwrapPath()) ? ', '.privateBwrapPath().', AppArmor profile '.sandboxApparmorProfileName() : '')).$Lol);
   if ($bwrapBinary === FALSE) $failureCount++;
   print('  '.str_pad('PyMeshLab, models', 28).($UsePyMeshLab ? 'enabled, Meshlab not required' : 'disabled, Meshlab required').$Lol);
 
@@ -3051,12 +3106,15 @@ function showVersionInfo() {
   if (isset($ManagerSocketDir) && $ManagerSocketDir !== '' && is_dir($ManagerSocketDir)) $socketMode = substr(sprintf('%o', fileperms($ManagerSocketDir)), -4);
 
   // / The environment every conversion runs in.
+  // / The row is named for the secret it judges. An account that is neither root nor the web server's
+  // / holds a secret of its own, & until v4.0.6 the row called that the install secret.
+  $secretLabel = ($secretExpected === '0640') ? 'Install secret' : 'Per user secret';
   print($Lol.'Environment'.$Lol);
-  if ($secretMode === '') print('  '.str_pad('Install secret', 28).'NOT PRESENT, it is created by the first command run as root'.$Lol);
+  if ($secretMode === '') print('  '.str_pad($secretLabel, 28).'NOT PRESENT, '.($secretExpected === '0640' ? 'created by root\'s first command' : 'created by this account\'s first command').$Lol);
   else if (!$secretPasses) {
     $failureCount++;
-    print('  '.str_pad('Install secret', 28).'FAILED, '.($secretShown === $olderSecretFile ? 'the copy at the top of the data location, ' : '').'mode '.$secretMode.($secretOwner === 0 ? ', root' : ', not root').(($secretExpected === '0640' && $secretGroupExpected >= 0) ? ($secretGroup === $secretGroupExpected ? ', group '.$ApacheUser : ', group not '.$ApacheUser) : '').', expected '.$secretExpected.($secretExpected === '0640' ? ', root'.($secretGroupExpected >= 0 ? ' & group '.$ApacheUser : '') : '').'. Run -fp as root'.$Lol); }
-  else print('  '.str_pad('Install secret', 28).'OK, '.$secretExpected.($secretExpected === '0640' ? ', root' : '').($secretShown === $olderSecretFile ? ', at the top of the data location until -fp copies it into Secrets' : '').$Lol);
+    print('  '.str_pad($secretLabel, 28).'FAILED, '.($secretShown === $olderSecretFile ? 'the copy at the top of the data location, ' : '').'mode '.$secretMode.($secretOwner === 0 ? ', root' : ', not root').(($secretExpected === '0640' && $secretGroupExpected >= 0) ? ($secretGroup === $secretGroupExpected ? ', group '.$ApacheUser : ', group not '.$ApacheUser) : '').', expected '.$secretExpected.($secretExpected === '0640' ? ', root'.($secretGroupExpected >= 0 ? ' & group '.$ApacheUser : '') : '').'. Run -fp as root'.$Lol); }
+  else print('  '.str_pad($secretLabel, 28).'OK, '.$secretExpected.($secretExpected === '0640' ? ', root' : '').($secretShown === $olderSecretFile ? ', at the top of the data location until -fp copies it into Secrets' : '').$Lol);
   if ($secretsState === 'missing') print('  '.str_pad('Secrets folder', 28).'NOT PRESENT, -fp creates it'.$Lol);
   else if ($secretsState === 'not a folder') {
     $failureCount++;
@@ -3068,7 +3126,7 @@ function showVersionInfo() {
     $failureCount++;
     print('  '.str_pad('Secrets folder', 28).'FAILED, '.$secretsOwnership.' '.$secretsMode.', expected root:'.$ApacheUser.' 0750. Run -fp as root'.$Lol); }
   else print('  '.str_pad('Secrets folder', 28).'OK, 0750, root:'.$ApacheUser.$Lol);
-  if ($socketMode === '') print('  '.str_pad('Manager socket directory', 28).'NOT PRESENT, it is created with the listener'.$Lol);
+  if ($socketMode === '') print('  '.str_pad('Manager socket directory', 28).'NOT PRESENT, created with the listener'.$Lol);
   else if ($socketMode !== '0700') {
     $failureCount++;
     print('  '.str_pad('Manager socket directory', 28).'FAILED, mode '.$socketMode.', expected 0700. Run -fp as root'.$Lol); }
@@ -3092,8 +3150,9 @@ function showVersionInfo() {
     if ($setupIsAvailable && function_exists('publishHostedLocation')) list ($hostedStatus, $hostedDetail, $hostedWritten, $hostedRemoved) = publishHostedLocation($HostedLoc, $InstLoc, FALSE);
     else {
       $hostedStatus = 'UNKNOWN';
-      $hostedDetail = ((isset($EngineActive) && $EngineActive) ? 'The Setup Core is unavailable' : 'The Engine is unavailable').', so it could not be checked'; }
-    if ($hostedStatus !== 'ok') $failureCount++;
+      $hostedDetail = ((isset($EngineActive) && $EngineActive) ? 'The Setup Core is unavailable' : 'The Engine is unavailable').'.'; }
+    // / A location in step that names what a release left beside it is kept, which is not a failure.
+    if ($hostedStatus !== 'ok' && $hostedStatus !== 'kept') $failureCount++;
     print('  '.str_pad('Hosted location', 28).strtoupper($hostedStatus).', '.$HostedLoc.'. '.$hostedDetail.$Lol); }
   print('  '.str_pad('Current user', 28).$CurrentUser.($RunningAsRoot ? ', running as root' : '').$Lol);
   print('  '.str_pad('Container detected', 28).($RunningInContainer ? 'YES' : 'NO').$Lol);
@@ -3110,7 +3169,7 @@ function showVersionInfo() {
   if (function_exists('verifyDataExposure')) list ($dataIsProtected, $exposureStatus, $exposureDetail) = verifyDataExposure();
   else {
     $exposureStatus = 'unverified';
-    $exposureDetail = 'The Engine is unavailable, so the exposure of this installation was not established.'; }
+    $exposureDetail = 'The Engine is unavailable.'; }
   print($Lol.'Data directory'.$Lol);
   print('  '.str_pad('Location', 28).$ConvertTemp.$Lol);
   // / The data location itself is never served. Inside the document root its sessions, caches &
@@ -3119,9 +3178,9 @@ function showVersionInfo() {
     $misplacedRoots = misplacedDataRoots();
     if (count($misplacedRoots) > 0) $failureCount++;
     print('  '.str_pad('Data location', 28).(count($misplacedRoots) === 0 ? 'OK, outside the document root' : 'MISPLACED, '.implode(' & ', $misplacedRoots).' inside '.$ServerRootDir.'. Move '.(count($misplacedRoots) === 1 ? 'it' : 'them').' outside the document root').$Lol); }
-  else print('  '.str_pad('Data location', 28).'UNKNOWN, the Engine is unavailable, so it could not be checked'.$Lol);
+  else print('  '.str_pad('Data location', 28).'UNKNOWN, the Engine is unavailable'.$Lol);
   print('  '.str_pad('Maintain .htaccess', 28).($maintainHtaccess ? 'YES' : 'NO, disabled in config.php').$Lol);
-  print('  '.str_pad('Apache configuration', 28).($apacheConfigIsInstalled ? 'INSTALLED' : 'not installed, run -fp as root').$Lol);
+  print('  '.str_pad('Apache configuration', 28).($apacheConfigIsInstalled ? 'INSTALLED' : 'NOT INSTALLED, run -fp as root').$Lol);
   print('  '.str_pad('Live exposure', 28).strtoupper($exposureStatus).', '.$exposureDetail.$Lol);
 
   // / Resource awareness & the listener it depends on.
@@ -3132,7 +3191,10 @@ function showVersionInfo() {
     // / The listener lives in the Engine & reporting on it needs the Engine to ask. Root does not
     // / read the state the web server account writes, so root does not ask & names --status, which
     // / asks that account. Asking anyway read nothing & reported a running listener as STOPPED.
-    if ($RunningAsRoot or !function_exists('reportListenerStatus')) { $listenerIsRunning = FALSE; $listenerStatus = array(); }
+    // / Nor does any account but the web server's, which alone may read its socket folder. Until v4.0.6
+    // / such an account asked, read nothing, & called a running listener STOPPED.
+    $listenerIsAsked = (!$RunningAsRoot && (string)$CurrentUser === (string)$ApacheUser);
+    if (!$listenerIsAsked or !function_exists('reportListenerStatus')) { $listenerIsRunning = FALSE; $listenerStatus = array(); }
     else list ($listenerIsRunning, $listenerStatus) = reportListenerStatus();
     print('  '.str_pad('Component', 28).'OK, supplied by Engine '.ltrim((string)$EngineVersion, 'vV').$Lol);
     print('  '.str_pad('Enforced', 28).($RequireResourceAwareness ? 'YES' : 'NO').$Lol);
@@ -3140,7 +3202,8 @@ function showVersionInfo() {
     print('  '.str_pad('Reserved share', 28).(int)$ReserveResourcePercentage.'%'.$Lol);
     print('  '.str_pad('Concurrent worker limit', 28).((int)$MaxConcurrentWorkers < 1 ? 'NONE, the budget decides' : (int)$MaxConcurrentWorkers).$Lol);
     print('  '.str_pad('Maximum runtime', 28).(int)$MaxExpectedRuntime.'s'.$Lol);
-    if ($RunningAsRoot) print('  '.str_pad('Listener', 28).'NOT ASKED, root does not read what '.$ApacheUser.' writes. --status asks '.$ApacheUser.'.'.$Lol);
+    if ($RunningAsRoot) print('  '.str_pad('Listener', 28).'NOT ASKED, root does not read the listener state. --status asks '.$ApacheUser.'.'.$Lol);
+    else if (!$listenerIsAsked) print('  '.str_pad('Listener', 28).'NOT ASKED, only '.$ApacheUser.' may read the listener state. Run --status as root.'.$Lol);
     else if (!function_exists('reportListenerStatus')) print('  '.str_pad('Listener', 28).'UNKNOWN, the Engine is unavailable'.$Lol);
     else if (!$listenerIsRunning) print('  '.str_pad('Listener', 28).'STOPPED, start it with -l'.$Lol);
     else {
@@ -3160,7 +3223,7 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $sandboxLauncher, $treeIsServed, $secretShown, $olderSecretFile, $topCopyMode, $topCopyOwner, $secretGroup, $topCopyGroup, $secretGroupExpected, $webAccountNumber, $secretPasses, $secretsState, $secretsMode, $secretsOwnership, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $secretOwner, $secretExpected, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $listenerIsAsked, $secretLabel, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $secretShown, $olderSecretFile, $topCopyMode, $topCopyOwner, $secretGroup, $topCopyGroup, $secretGroupExpected, $webAccountNumber, $secretPasses, $secretsState, $secretsMode, $secretsOwnership, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $secretOwner, $secretExpected, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -3206,16 +3269,13 @@ function showHelpInfo() {
   print('  --kill-all-workers          End EVERY tracked conversion in progress.'.$Lol);
   print('                              Every user mid conversion loses their files.'.$Lol);
   print('  --kill-every-worker         End EVERY PHP process owned by the web server user.'.$Lol);
-  print('                              This reaches other applications on this host, such'.$Lol);
-  print('                              as WordPress or OwnCloud. They lose every session.'.$Lol);
+  print('                              Other applications on this host lose every session.'.$Lol);
   print('  -y, --yes                   Skip the confirmation prompt on the two above.'.$Lol);
   print($Lol);
   print('Listener notes'.$Lol);
   print('  Listener commands require root or the web server user.'.$Lol);
-  print('  A standard user holds a per user secret, which cannot derive a valid startup'.$Lol);
-  print('  key, so a listener started that way could never be reached by a worker.'.$Lol);
-  print('  Resource awareness must be enabled in config.php before -l will do anything.'.$Lol);
-  print('  With no listener running the core converts exactly as it did before, unchecked.'.$Lol);
+  print('  -l requires --Enable Resource Awareness-- in config.php.'.$Lol);
+  print('  Without a listener, conversions run without a resource budget.'.$Lol);
   print($Lol);
   print('Clean targets'.$Lol);
   print('  Root or the web server user may sweep. Root hands the sweep to that user.'.$Lol);
@@ -3228,19 +3288,15 @@ function showHelpInfo() {
   print('  -u                          Install the target set in config.php.'.$Lol);
   print('  -u=latest                   Install the newest tagged release.'.$Lol);
   print('  -u=edge                     Install the current state of the master branch.'.$Lol);
-  print('                              Edge is not a release. It carries whatever version'.$Lol);
-  print('                              stamp master holds & may match no release at all.'.$Lol);
-  print('  -u=v#.#.#                   Install exactly that tagged release, such as v3.6.8.'.$Lol);
-  print('                              Fails if it does not exist. A partial version such'.$Lol);
-  print('                              as v3.6 is refused.'.$Lol);
+  print('                              Not a release. Its version may match no release.'.$Lol);
+  print('  -u=v#.#.#                   Install that tagged release, such as v3.6.8.'.$Lol);
+  print('                              A partial version, such as v3.6, is refused.'.$Lol);
   print($Lol);
   print('Notes'.$Lol);
   print('  Command line & web requests are mutually exclusive.'.$Lol);
-  print('  An argument supplied on the command line prevents the web interface entirely.'.$Lol);
-  print('  No session is created & no user data is touched by a command line invocation.'.$Lol);
-  print('  Updates must be enabled in config.php before -u will do anything.'.$Lol);
-  print('  The previous installation is preserved & is restored automatically if the new'.$Lol);
-  print('  one cannot report its own version.'.$Lol);
+  print('  A command line run starts no session.'.$Lol);
+  print('  -u requires --Enable Automatic Updates-- in config.php.'.$Lol);
+  print('  -u keeps the previous installation & restores it if the new one fails validation.'.$Lol);
   print($Lol);
   print('Documentation'.$Lol);
   print('  Documentation/INSTALLATION_INSTRUCTIONS.txt  Installing & configuring a server.'.$Lol);
@@ -3250,6 +3306,7 @@ function showHelpInfo() {
   print('  Documentation/CODING_CONVENTIONS.txt         Conventions this codebase follows.'.$Lol);
   print('  Documentation/DOCKER_BUILD_INSTRUCTIONS.txt  Building the container image.'.$Lol);
   print('  Documentation/CHANGELOG.txt                  What changed & when.'.$Lol);
+  print('  Documentation/DEVELOPMENT_NOTES.txt          Why each subsystem is built the way it is.'.$Lol);
   print($Lol);
   print('  https://github.com/zelon88/HRConvert2'.$Lol);
   print($Lol);
@@ -3276,14 +3333,14 @@ function showHelpInfo() {
 // / interface, which is what a request with no arguments is.
 function parseCommandLine() {
   // / Set variables.
-  global $EngineActive, $Lol, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EngineApplicationArgumentHandler, $DirSep, $RequiredSetupCoreVersion;
+  global $EngineActive, $Lol, $RunningFromCLI, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EngineApplicationArgumentHandler, $DirSep, $RequiredSetupCoreVersion, $InstLoc, $ApplicationLoc;
   $CommandLineHandled = FALSE;
   $CommandLineStatus = 0;
   $UserType = 'web';
   $cliArgumentCount = 0;
   $cliArguments = $appArgumentParts = array();
   $cliCommand = $cliTarget = $cliSecondTarget = $cliWhoami = $applicationHandler = $appTarget = $appSecondTarget = '';
-  $cliConfirmed = $cliVectorParsed = $engineCommandHandled = $cliSetupIsAvailable = FALSE;
+  $cliConfirmed = $cliVectorParsed = $engineCommandHandled = $cliSetupIsAvailable = $cliEngineIsMissing = $cliIsElsewhere = FALSE;
   $engineCommandStatus = 0;
   $cliSetupVersion = '';
   // / A web request has no command line & must return immediately.
@@ -3319,16 +3376,25 @@ function parseCommandLine() {
     else if (!$EngineActive and $cliCommand !== '-v' and $cliCommand !== '--version' and $cliCommand !== '-h' and $cliCommand !== '--help' and strpos($cliCommand, '--app') !== 0) {
       warningEntry('The command '.$cliCommand.' was refused because the Engine is unavailable.');
       $CommandLineStatus = 1;
-      print($Lol.'This command needs the Engine & the Engine could not be loaded.'.$Lol);
-      print('Run  php convertCore.php -v  to see which component failed & what version it reports.'.$Lol);
-      // / The remedy is named because there is no command that applies it. Every repair path
-      // / reaches into the Engine as well, so an operator who goes looking for one is hunting
-      // / something that does not exist. Measured rather than assumed: with a mismatched Engine,
-      // / --config --repair, --setup --install-complete & --update all fail on an Engine call of
-      // / their own. Telling them to run -v & stopping there sent them in a circle.
-      print('An Engine reporting the wrong version is a partial update. Replace'.$Lol);
-      print('Resources/Engine/engine.php with the copy from the release this core came from.'.$Lol);
-      print('No command can do this for you, because every repair path needs the Engine too.'.$Lol.$Lol);
+      print($Lol.'This command needs the Engine, which could not be loaded.'.$Lol);
+      // / A DROP-IN UNPACKED BESIDE THE LOADER HOLDS NO ENGINE where its release left the Engine as
+      // / it was. A drop-in carries only the files that changed, & once the application is installed
+      // / the folder the web server serves holds the loader & little else. The remedy is to unpack it
+      // / where the installation is, & a new Engine would only lead to -fp saying so.
+      $cliEngineIsMissing = !is_file($InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'engine.php');
+      $cliIsElsewhere = ((string)@realpath($InstLoc) !== (string)@realpath((string)$ApplicationLoc) && is_file((string)$ApplicationLoc.$DirSep.'convertCore.php'));
+      if ($cliEngineIsMissing && $cliIsElsewhere) {
+        print('This folder holds no Engine. The installation is '.$ApplicationLoc.'.'.$Lol);
+        print('Unpack a drop-in into '.$ApplicationLoc.' & run -fp there.'.$Lol.$Lol); }
+      else {
+        print('Run  php convertCore.php -v  to see which component failed.'.$Lol);
+        // / The remedy is named because there is no command that applies it. Every repair path
+        // / reaches into the Engine as well, so an operator who goes looking for one is hunting
+        // / something that does not exist. Measured rather than assumed: with a mismatched Engine,
+        // / --config --repair, --setup --install-complete & --update all fail on an Engine call of
+        // / their own. Telling them to run -v & stopping there sent them in a circle.
+        print('A mismatched Engine is a partial update. Replace Resources/Engine/engine.php'.$Lol);
+        print('with the copy from this core\'s release. Every repair command needs the Engine.'.$Lol.$Lol); }
       $CommandLineHandled = TRUE;
       $UserType = 'cli'; }
     else {
@@ -3417,7 +3483,7 @@ function parseCommandLine() {
   // / Determine if the user is using the application via command line (CLI) or Apache+PHP through a web browser.
   if ($CommandLineHandled === TRUE) $UserType = 'cli';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliArgumentCount, $cliArguments, $appArgumentParts, $cliCommand, $cliTarget, $cliSecondTarget, $cliWhoami, $applicationHandler, $appTarget, $appSecondTarget, $cliConfirmed, $cliVectorParsed, $engineCommandHandled, $engineCommandStatus, $cliSetupIsAvailable, $cliSetupVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliArgumentCount, $cliArguments, $appArgumentParts, $cliCommand, $cliTarget, $cliSecondTarget, $cliWhoami, $applicationHandler, $appTarget, $appSecondTarget, $cliConfirmed, $cliVectorParsed, $engineCommandHandled, $engineCommandStatus, $cliSetupIsAvailable, $cliSetupVersion, $cliEngineIsMissing, $cliIsElsewhere);
   return array($CommandLineHandled, $UserType, $CommandLineStatus); }
 // / -----------------------------------------------------------------------------------
 
@@ -3756,7 +3822,7 @@ function applicationConfigModel() {
       'BackupLoc' => array('Type' => 'expression', 'Default' => '$ConvertLoc.\'/Last-Installed-Version\'', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Backup Location'),
       'AppendLogHashToLogFiles' => array('Type' => 'bool', 'Depends' => 'UniqueDailyLogHash', 'Description' => 'Append Log Hash To Log Files'),
       'UniqueDailyLogHash' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Unique Daily Log Hash Rotation'),
-      'AdditionalConvertLocs' => array('Type' => 'array', 'Default' => 'array( array(\'/DATA2/HRConvert2\', \'roundrobin\'), array(\'/DATA3/HRConvert2\', \'leastactive\'), array(\'/DATA4/HRConvert2\', \'redundant\'))', 'Depends' => '', 'Description' => 'Additional Data Locations'),
+      'AdditionalConvertLocs' => array('Type' => 'array', 'Default' => 'array()', 'Depends' => '', 'Description' => 'Additional Data Locations'),
       'StorageCleanupInterval' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Storage Cleanup Interval'))),
     'Security Informations' => array('Writable' => TRUE, 'Variables' => array(
       'MaintainHTAccess' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Maintain HTAccess'),
@@ -3854,7 +3920,7 @@ function applicationConfigModel() {
       'UserSubtitleOutputArray' => array('Type' => 'array', 'Default' => 'array(\'vtt\', \'ssa\', \'ass\', \'srt\')', 'Depends' => '', 'Description' => 'Supported Subtitle Output Formats'),
       'UserPDFWorkArr' => array('Type' => 'array', 'Default' => 'array(\'pdf\', \'jpg\', \'jpeg\', \'png\', \'bmp\', \'webp\', \'gif\')', 'Depends' => '', 'Description' => 'Supported OCR Formats'),
       'UserEbookInputArray' => array('Type' => 'array', 'Default' => 'array(\'epub\', \'mobi\', \'azw\', \'azw3\', \'azw4\', \'fb2\', \'fbz\', \'lit\', \'lrf\', \'pdb\', \'pml\', \'rb\', \'snb\', \'tcr\', \'txt\', \'txtz\', \'rtf\', \'odt\', \'docx\', \'pdf\', \'chm\', \'cbz\', \'cbr\', \'cbc\', \'prc\', \'opf\', \'recipe\')', 'Depends' => '', 'Description' => 'Supported Ebook Input Formats'),
-      'UserEbookOutputArray' => array('Type' => 'array', 'Default' => 'array(\'epub\', \'mobi\', \'azw3\', \'fb2\', \'lit\', \'lrf\', \'pdb\', \'pml\', \'rb\', \'snb\', \'tcr\', \'txt\', \'txtz\', \'rtf\', \'oeb\', \'docx\', \'pdf\')', 'Depends' => '', 'Description' => 'Supported Ebook Output Formats'))));
+      'UserEbookOutputArray' => array('Type' => 'array', 'Default' => 'array(\'epub\', \'mobi\', \'azw3\', \'fb2\', \'lit\', \'lrf\', \'pdb\', \'pmlz\', \'rb\', \'snb\', \'tcr\', \'txt\', \'txtz\', \'rtf\', \'docx\', \'pdf\')', 'Depends' => '', 'Description' => 'Supported Ebook Output Formats'))));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection);
   return $ConfigModel; }
@@ -4133,6 +4199,11 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
     // / Restoring a converter to this file is not the fix for this error.
     // / Repair the pipeline folder. Run with -v & read the warnings above this line, which
     // / name the folder that was refused & the reason.
+    // / A request for the format a file already has is refused for what it is. No pipeline claims
+    // / one today, & until v4.0.6 it was reported as a family with no pipeline installed.
+    else if (strtolower((string)$inputExtension) === strtolower((string)$extension)) {
+      $ConversionErrors = TRUE;
+      errorEntry('The file is already '.strtolower((string)$extension).', so there is nothing to convert!', 34009, FALSE); }
     else {
       $ConversionErrors = TRUE;
       errorEntry('The '.$type.' conversion family has no installed pipeline!', 34005, FALSE); }
@@ -4426,7 +4497,8 @@ function downloadFiles($Download) {
     // / Make sure the file is not in the list of dangerous formats.
     if (extensionIsDangerous($fileExtension) or in_array(strtolower($file), $DangerousFiles) or !in_array(strtolower($fileExtension), $Allowed)) {
       $DownloadErrors = TRUE;
-      errorEntry('Unsupported file format, '.$fileExtension.'!', 3004, FALSE);
+      // / A name with no extension is named as one, because a blank here read as a missing word.
+      errorEntry('Unsupported file format, '.($fileExtension === '' ? 'no extension' : $fileExtension).'!', 3004, FALSE);
       continue; }
     // / Past this point the file is one this function agreed to act on, so it counts.
     $filesAttempted++;
@@ -5150,15 +5222,18 @@ function fixManagedPermissions() {
     if ($setupIsAvailable) {
       list ($secretIsReady, $placedSecretKey) = resolveInstallSecretAsRoot($SecretFile, $RequiredSecretVersion, FALSE);
       if ($secretIsReady) $SecretKey = $placedSecretKey;
-      if ($secretIsReady && is_file($SecretFile)) print('  The install secret is in '.$SecretLoc.', & only the web server account\'s group may read it.'.$Lol);
-      else print('  The install secret is not in '.$SecretLoc.' yet. See the lines above & root\'s log.'.$Lol); }
+      if ($secretIsReady && is_file($SecretFile)) print('  Install secret in '.$SecretLoc.'. Group '.$ApacheUser.' may read it.'.$Lol);
+      else print('  Install secret NOT in '.$SecretLoc.' yet. See the lines above & root\'s log.'.$Lol); }
     // / Whether root may run the installation now, read exactly as every command run as root
     // / reads it before anything is loaded. A tree that still fails is named here, once.
+    // / -fp gives every name root's owner & mode, & leaves a link or a file with more than one
+    // / name where it is, so what fails now is something to remove. Until v4.0.6 this said only
+    // / what failed, & error 28008 on the next command said to run -fp, which had just run.
     list ($codeIsTrustedNow, $codeTrustNotice) = treeIsTrustedByRoot($InstLoc, array($InstLoc.$DirSep.'DATA'));
-    if ($codeIsTrustedNow) print('  The installation is root\'s, & root may run it.'.$Lol);
+    if ($codeIsTrustedNow) print('  Installation is root\'s. Root may run it.'.$Lol);
     else {
-      warningEntry('-fp did not leave the installation one root may run. '.$codeTrustNotice);
-      print('  Root may still not run the installation. '.$codeTrustNotice.$Lol); }
+      warningEntry('-fp did not leave the installation one root may run. '.$codeTrustNotice.' -fp leaves links, files with more than one name & other filesystems as they are. Remove or put right what is named & run -fp again.');
+      print('  Root may NOT run the installation yet. '.$codeTrustNotice.$Lol.'  -fp leaves links, hard links & other filesystems as they are.'.$Lol.'  Remove or correct what is named & run -fp again.'.$Lol); }
     // / The build environment & the development documentation go here, when config.php asks
     // / for them to go. Every web request removed them until v4.0.1, & now only root can,
     // / because the code is root's. Straight after the code was given to root is the moment.
@@ -5177,7 +5252,7 @@ function fixManagedPermissions() {
     // / account, which can no longer write to the installation.
     print($Lol.'Bootstrap script'.$Lol);
     if (!$codeIsTrustedNow) print('  Skipped     Root may not change the installation yet. See the lines above.'.$Lol);
-    else if (!function_exists('repairBootstrapScript')) print('  Skipped     The Engine is unavailable, so the bootstrap script was not checked.'.$Lol);
+    else if (!function_exists('repairBootstrapScript')) print('  Skipped     The Engine is unavailable.'.$Lol);
     else {
       list ($scriptIsValid, $scriptStatus) = repairBootstrapScript();
       list ($scriptDisplayStatus, $scriptDetail) = describeBootstrapStatus($scriptStatus);
@@ -5190,15 +5265,15 @@ function fixManagedPermissions() {
     // / does it too, as it keeps the DATA protection file.
     print($Lol.'Hosted location'.$Lol);
     if (!$codeIsTrustedNow) print('  Skipped     Root may not change the installation yet. See the lines above.'.$Lol);
-    else if (!function_exists('publishHostedLocation')) print('  Skipped     The Setup Core is unavailable, so the hosted location was not checked.'.$Lol);
-    else if ((string)@realpath($InstLoc) !== (string)@realpath($ApplicationLoc)) print('  '.str_pad('Not yet', 12).$InstLoc.' is not installed. -fp installs it into '.$ApplicationLoc.' as it ends.'.$Lol);
+    else if (!function_exists('publishHostedLocation')) print('  Skipped     The Setup Core is unavailable.'.$Lol);
+    else if ((string)@realpath($InstLoc) !== (string)@realpath($ApplicationLoc)) print('  '.str_pad('Not yet', 12).'Installed into '.$ApplicationLoc.' as -fp ends.'.$Lol);
     else {
       list ($hostedStatus, $hostedDetail, $hostedWritten, $hostedRemoved) = publishHostedLocation($HostedLoc, $InstLoc, TRUE);
       print('  '.str_pad(($hostedStatus === 'repaired' ? 'Published' : $hostedStatus), 12).$hostedDetail.$Lol);
       // / DATA is the one name in the hosted location the web server account owns. A hosted location
       // / made just now has none, & every role was given before it existed, so DATA is made & given
       // / its role here, before anything else writes into it as root.
-      if (!is_dir($ConvertTemp) && is_dir($HostedLoc) && function_exists('applyWebRole') && createHeldFolder($ConvertTemp) && applyWebRole($ConvertTemp, $ApacheUser)) print('  '.str_pad('Created', 12).$ConvertTemp.', the web server account\'s.'.$Lol); }
+      if (!is_dir($ConvertTemp) && is_dir($HostedLoc) && function_exists('applyWebRole') && createHeldFolder($ConvertTemp) && applyWebRole($ConvertTemp, $ApacheUser)) print('  '.str_pad('Created', 12).$ConvertTemp.', owned by '.$ApacheUser.'.'.$Lol); }
     // / Install or repair every policy file while we are still root. A conversion pipeline
     // / reports a broken policy on every request & can never fix one, because rewriting a
     // / system policy from a web request is not something this application should ever do.
@@ -5210,7 +5285,7 @@ function fixManagedPermissions() {
     print($Lol.'Apache configuration'.$Lol);
     // / The configuration is Setup Core's from v4.0.5, loaded at the top of this function.
     if ($setupIsAvailable && function_exists('verifyApacheConfiguration')) list ($apacheConfigIsValid, $apacheConfigsWritten) = verifyApacheConfiguration($configsMayChange);
-    else print('  Skipped     The Setup Core is unavailable, so the Apache configuration was not checked.'.$Lol);
+    else print('  Skipped     The Setup Core is unavailable.'.$Lol);
     print($Lol.'Sandbox kernel'.$Lol);
     list ($kernelIsReady, $kernelFindings) = verifySandboxKernel($configsMayChange);
     showEnvironmentFindings($kernelFindings, FALSE);
@@ -5266,7 +5341,7 @@ function fixManagedPermissions() {
     print($Lol.'Verifying the operating environment.'.$Lol);
     list ($environmentIsReady, $environmentFindings) = validateOperatingEnvironment();
     showEnvironmentFindings($environmentFindings, TRUE);
-    if (!$environmentIsReady) print($Lol.'The sandbox is still unavailable. A profile written now may need the AppArmor'.$Lol.'service reloaded, or a reboot, before the kernel honours it.'.$Lol);
+    if (!$environmentIsReady) print($Lol.'The sandbox is still unavailable. A new AppArmor profile may need an AppArmor'.$Lol.'reload or a reboot.'.$Lol);
     // / Writing the protection file above proved nothing, & the check that proves it is
     // / part of the environment report printed directly above this.
     // / A .htaccess is read only where AllowOverride is enabled, & where it is not, Apache
@@ -5276,24 +5351,20 @@ function fixManagedPermissions() {
     $exposureStatus = environmentFindingStatus($environmentFindings, 'DATA exposure');
     if ($exposureStatus === 'BROKEN') {
       print($Lol.'  THE DATA DIRECTORY IS RETURNING A SERVER ERROR.'.$Lol);
-      print('  No download & no share link works right now. This is an outage, not exposure.'.$Lol);
-      print('  The usual cause is a directive in DATA/.htaccess that this directory\'s'.$Lol);
-      print('  AllowOverride level does not permit. Apache refuses such a request rather than'.$Lol);
-      print('  ignoring the directive, & an <IfModule> guard does not prevent it.'.$Lol);
-      print('  The web server error log names the offending line. Deleting DATA/.htaccess'.$Lol);
-      print('  restores service immediately; put the rules in the server configuration instead.'.$Lol); }
+      print('  Downloads & share links are down. This is an outage, not exposure.'.$Lol);
+      print('  Likely cause: a directive in DATA/.htaccess that AllowOverride does not permit.'.$Lol);
+      print('  The web server error log names the line. Removing DATA/.htaccess restores'.$Lol);
+      print('  service. Put the rules in the server configuration instead.'.$Lol); }
     else if ($exposureStatus === 'EXPOSED') {
       print($Lol.'  THE DATA DIRECTORY IS EXPOSED.'.$Lol);
-      print('  A file a user uploads is served back as a document rather than as a download,'.$Lol);
-      print('  so an uploaded SVG runs its own script in this origin.'.$Lol);
-      print('  The .htaccess written above is being ignored. Apache reads one only where'.$Lol);
-      print('  AllowOverride is enabled for that directory.'.$Lol);
-      print('  Put the rules in the server configuration instead. See'.$Lol);
-      print('  Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.'.$Lol); }
+      print('  Uploads are served as documents, not downloads. An uploaded SVG runs script'.$Lol);
+      print('  in this origin. DATA/.htaccess is ignored where AllowOverride does not permit it.'.$Lol);
+      print('  Put the rules in the server configuration.'.$Lol);
+      print('  See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.'.$Lol); }
     else if ($exposureStatus === 'UNREACHABLE' or $exposureStatus === 'UNVERIFIED') {
       print($Lol.'  THE EXPOSURE OF THIS INSTALLATION WAS NOT ESTABLISHED.'.$Lol);
-      print('  This is not a pass. Open the DATA URL of any uploaded file in a browser &'.$Lol);
-      print('  confirm it downloads rather than renders.'.$Lol); }
+      print('  This is not a pass. Open the DATA URL of an uploaded file in a browser.'.$Lol);
+      print('  It must download, not render.'.$Lol); }
     // / A repair that leaves an installation root may not run has not finished its job, so it
     // / does not report success. Everything else above it still ran.
     $PermissionsWereFixed = $codeIsTrustedNow;
@@ -5342,7 +5413,7 @@ function askOperator($promptText) {
 // / kernel is never executed, the same guarantee a mismatched Engine gets.
 // / The build cannot write this pin or the Engine's, because it runs inside both. Move them
 // / by hand, with the version each file declares.
-$RequiredKernelVersion = 'v4.0.1';
+$RequiredKernelVersion = 'v4.0.6';
 $KernelFile = dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Kernel'.DIRECTORY_SEPARATOR.'kernel.php';
 $KernelVersionMatch = array();
 if (!is_readable($KernelFile)) {
@@ -5568,7 +5639,9 @@ if (!$CommandLineHandled && $UserType === 'web') {
     // / core error. The reply therefore matched the very marker the caller was searching
     // / for & every delete reported failure, no matter how well it had gone.
     // / A file operation returns a filename or an error. It does not return a page.
-    if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete'])) {
+    // / AN UPLOAD IS KNOWN BY ITS FILES. Dropzone sends the file & the two tokens & no upload field, so
+    // / until v4.0.6 every upload was answered with a whole rendered page.
+    if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete'])) {
 
       // / The following code sets the GUI for the session.
       list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
@@ -5595,11 +5668,14 @@ if (!$CommandLineHandled && $UserType === 'web') {
 
     // / Check if we're providing the user with tokens generated during this session.
     // / In no other code path do we generate a new token that gets provided to the user.
-    if (!$TokensAreValid && $Verbose) logEntry('Providing user with tokens: '.$Token1.' Token2: '.$Token2.'.');
+    // / THE TOKENS ARE THE SESSION, so neither is ever written to a log. Anybody who could read the
+    // / log could have taken the session over until v4.0.6, when both were logged with --Enhanced Logging Verbosity-- on.
+    // / The session's folder names it in every entry, as the session label.
+    if (!$TokensAreValid && $Verbose) logEntry('Providing the user with a new pair of tokens.');
 
     // / Only enable file related operations if valid tokens were supplied by the user.
     if ($TokensAreValid) {
-      if ($Verbose) logEntry('Verified supplied tokens. Token1: '.$Token1.' Token2: '.$Token2.'.');
+      if ($Verbose) logEntry('Verified supplied tokens.');
 
       // / The following code is performed when a user initiates a file upload.
       if (!empty($_FILES)) {

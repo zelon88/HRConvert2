@@ -7,7 +7,7 @@
 # / https://www.gnu.org/licenses/gpl-3.0.html
 # /
 # / FILE INFORMATION ...
-# / v3.8.6.
+# / v4.0.6.
 # / This file builds & publishes the HRConvert2 Docker image automatically.
 # / Place it at .github/workflows/docker-build.yml in the repository root.
 # /
@@ -81,6 +81,10 @@ jobs:
       # / with docker logs on the line below it. The step runs under bash -e, so a failing
       # / curl ended the script & the log line never executed. The one command that would
       # / have explained the failure was downstream of it.
+      # / A question asked of the container says whether it is running before it is asked, &
+      # / reports the answer's exit code. Until v4.0.6 any answer that did not end in 0, error
+      # / 28008 included, was followed by a line saying the container was not running, which the
+      # / container state above it showed was not so.
       - name: Smoke test
         run: |
           docker run -d --name hrc2test -p 8080:80 --cap-add SYS_ADMIN temp-test-image
@@ -104,11 +108,25 @@ jobs:
           echo "::group::Container logs"
           docker logs hrc2test 2>&1 || true
           echo "::endgroup::"
+          containerRuns=0
+          if [ -n "$(docker ps --filter name=hrc2test --filter status=running -q)" ]; then containerRuns=1; fi
           echo "::group::What the image reports about itself"
-          docker exec hrc2test php /var/www/html/HRProprietary/HRConvert2/convertCore.php -v 2>&1 || echo "The container is not running, so it could not be asked."
+          if [ "$containerRuns" -eq 1 ]; then
+            askExitCode=0
+            docker exec hrc2test php /var/www/html/HRProprietary/HRConvert2/convertCore.php -v 2>&1 || askExitCode=$?
+            echo "-v ended with exit code ${askExitCode}."
+          else
+            echo "The container is not running, so it could not be asked."
+          fi
           echo "::endgroup::"
           echo "::group::HRConvert2 log"
-          docker exec hrc2test sh -c 'find /DATA -name "*.log" -exec tail -n 100 {} +' 2>&1 || echo "The container is not running, so it could not be asked."
+          if [ "$containerRuns" -eq 1 ]; then
+            askExitCode=0
+            docker exec hrc2test sh -c 'find /DATA -name "*.log" -exec tail -n 100 {} +' 2>&1 || askExitCode=$?
+            echo "Reading the logs ended with exit code ${askExitCode}."
+          else
+            echo "The container is not running, so it could not be asked."
+          fi
           echo "::endgroup::"
           if [ "$testPassed" -ne 1 ]; then
             echo "::error::The smoke test failed. The groups above explain why."

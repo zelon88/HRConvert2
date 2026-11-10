@@ -12,7 +12,7 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v3.9.3.
+# / v4.0.6.
 # / This file is a SECOND OPINION on the source & is not the authoritative one.
 # / hrconvert2-check.py is authoritative. This exists so two implementations written in
 # / two languages can be asked the same question, & so a disagreement between them is a
@@ -214,15 +214,21 @@ check_duplicate() {
 # / A pin whose component is not installed is skipped rather than reported, for the reason
 # / the Python states at length. Config, the GUI, the language pack & the install secret
 # / are pinned here & none of them is a component with a version constant.
+# / Every file that declares the version is compared, & each one that differs is named, as the
+# / Python does. ScanCore is a program of its own & declares its own $ConfigVersion, so it is not
+# / read. Until v4.0.6 whichever file the filesystem listed first answered alone.
 check_pins() {
   grep -oE '\$Required[A-Za-z]+Version[[:space:]]*=[[:space:]]*.v?[0-9.]+.' convertCore.php 2>/dev/null \
   | sed -E "s/\\\$Required([A-Za-z]+)Version[[:space:]]*=[[:space:]]*.v?([0-9.]+)./\1 \2/" \
   | while read -r component pinned; do
-      declared=$(grep -rhoE "\\\$${component}Version[[:space:]]*=[[:space:]]*.v?[0-9.]+." Resources/ 2>/dev/null \
-                 | sed -E "s/.*v?([0-9]+\.[0-9]+\.[0-9]+)./\1/" | head -1)
-      if [ -n "$declared" ] && [ "$declared" != "$pinned" ]; then
-        report 'PIN' "$component is pinned at $pinned & Resources declares $declared"
-      fi
+      grep -rlE "\\\$${component}Version[[:space:]]*=[[:space:]]*.v?[0-9.]+." --include='*.php' --exclude-dir=ScanCore Resources/ 2>/dev/null | LC_ALL=C sort \
+      | while read -r declaringFile; do
+          declared=$(grep -hoE "\\\$${component}Version[[:space:]]*=[[:space:]]*.v?[0-9.]+." "$declaringFile" 2>/dev/null \
+                     | sed -E "s/.*v?([0-9]+\.[0-9]+\.[0-9]+)./\1/" | head -1)
+          if [ -n "$declared" ] && [ "$declared" != "$pinned" ]; then
+            report 'PIN' "$component is pinned at $pinned & $(basename "$declaringFile") declares $declared"
+          fi
+        done
     done
   # / A manager is pinned by the Engine rather than by the application.
   if [ -f Resources/Engine/engine.php ]; then

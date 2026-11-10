@@ -186,6 +186,17 @@ one it replaces as the backup. $EngineHostedAssetFolders & $EngineHostedAssetTyp
 static files a browser fetches. publishHostedLocation writes them, with a loader carrying the
 entry point's name, into the folder the web server serves, & removes only what is a copy of the
 installation. An application that names no layout installs nothing & runs where it is.
+WHAT NO RELEASE SHIPS IS TAKEN AWAY, FROM v4.0.6. $EngineRetiredPaths in the contract names paths
+inside an installation that no release of the application ships, each by its path below the
+installation. -fp leaves each out of the walk that gives the installation to root, then removes
+it as root with the Kernel's removeTreeWithoutFollowing, which follows nothing in it, makes every
+folder in it root's alone before anything in it is listed & never leaves the filesystem the
+installation is on. A path that is absolute, or has a part that is empty, . or .., could reach
+outside the installation & is refused with a warning. One in a folder that is not root's alone is
+left where it is & named, & the installation counts as incomplete. HRConvert2 names
+Documentation/Build/ffmpeg-build, the tree FFmpeg's build left in the installation until v4.0.6,
+which root refuses to run because it holds links. An application that names none has nothing
+removed. See ABOUT_MANAGED_LOCATIONS.txt.
 A DEPENDENCY INSTALL TURNS OFF WHAT IT TURNED ON, FROM v4.0.2. $EngineUnwantedApacheConfs in the
 contract names the Apache configurations a dependency's package turns on that the application
 never uses. Dependency Core's installDepends notes which are on before it installs anything, &
@@ -357,6 +368,16 @@ starts & enables no service & leaves the host's configuration alone unless the a
 setting allows it. Unset or FALSE means an administrator typed the command, which is the case
 for -fp & --setup. HRConvert2's fixManagedPermissions() honours it. See
 Documentation/ABOUT_ENVIRONMENT_MANAGER.txt.
+
+A MANAGER MOVES ON TO THE LOGFILE IT SHOULD BE WRITING, FROM v4.0.6.
+A manager runs for weeks, & the application names its logfiles by date & by size. Once a minute
+every manager loop calls the function the application names in $EngineLogProvider, which accepts
+nothing & returns whether a logfile is in use & its path, as verifyLogs() does. HRConvert2 names
+refreshLogFile(), which reads the date again & runs verifyLogs(), so a manager moves on when the
+day turns or its logfile passes --Maximum Log File Size--. A provider declared & not defined, or
+one that fails, is a warning once for the life of the process, & the manager keeps the logfile it
+has. An application that names none leaves a manager on the logfile it started with, which is
+what every manager did until v4.0.6.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

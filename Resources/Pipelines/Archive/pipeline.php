@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.6.
 // / This file is the converter for the Archive pipeline. It is loaded by pipelineCore.php
 // / ONLY when an Archive conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -287,14 +287,14 @@ function pruneEscapingLinks($stagingPath, $approvedRoot) {
 // / the image & isohybrid then rewrites its MBR in place.
 function convertArchives($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $ConvertDir, $Lol, $Lolol, $StopCounter, $SleepTimer, $PermissionLevels, $AllowBootableIsoImage, $BootableIsoArray, $EnableMemoryProtection;
+  global $Verbose, $ConvertDir, $DirSep, $Lol, $Lolol, $StopCounter, $SleepTimer, $PermissionLevels, $AllowBootableIsoImage, $BootableIsoArray, $EnableMemoryProtection;
   // / The six value pipeline contract. $UserFilename is this converter's fifth value,
   // / because an archive extraction renames what the user is given.
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $archiveToolsAreValid = $bootloadersAreValid = FALSE;
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
-  $returnData = $extractCommand = $archiveCommand = $hybridCommand = $UserFilename = '';
+  $returnData = $extractCommand = $extractTarget = $archiveCommand = $hybridCommand = $UserFilename = '';
   $stopper = 0;
   $linkWalkCompleted = TRUE;
   $linksRemoved = 0;
@@ -329,11 +329,18 @@ function convertArchives($pathname, $newPathname, $extension) {
     @mkdir($safedir2, $PermissionLevels);
     if (!is_dir($safedir2)) $ConversionErrors = TRUE;
     // / Extract the source archive into the staging folder.
+    // / The extractor is handed the staging folder's own entry, the folder followed by a dot, so its
+    // / sandbox mounts that folder writable & nothing else. sandboxCommand() mounts the folder an output
+    // / path is named in, & naming the staging folder itself mounted the whole conversion folder, where
+    // / an extractor a crafted archive had fooled could write files & plant links beside everything else
+    // / the session holds. The folder holding the archive is mounted read only, so everything the
+    // / extractor can write is inside the folder pruneEscapingLinks() walks next.
+    $extractTarget = $safedir2.$DirSep.'.';
     if ($Verbose) logEntry('Extracting file '.$pathname.' to '.$safedir2.'.');
-    if (in_array(strtolower($oldExtension), $array7zo2)) $extractCommand = escapeshellarg($sevenZipBinary).' x -y '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
-    else if (in_array(strtolower($oldExtension), $arrayzipo) or in_array(strtolower($oldExtension), $array7zo) or in_array(strtolower($oldExtension), $arrayraro) or in_array(strtolower($oldExtension), $arraytaro)) $extractCommand = escapeshellarg($sevenZipBinary).' x -aoa '.escapeshellarg($pathname).' -o'.escapeshellarg($safedir2);
+    if (in_array(strtolower($oldExtension), $array7zo2)) $extractCommand = escapeshellarg($sevenZipBinary).' x -y '.escapeshellarg($pathname).' -o'.escapeshellarg($extractTarget);
+    else if (in_array(strtolower($oldExtension), $arrayzipo) or in_array(strtolower($oldExtension), $array7zo) or in_array(strtolower($oldExtension), $arrayraro) or in_array(strtolower($oldExtension), $arraytaro)) $extractCommand = escapeshellarg($sevenZipBinary).' x -aoa '.escapeshellarg($pathname).' -o'.escapeshellarg($extractTarget);
     if ($extractCommand !== '') {
-      list ($commandMayRun, $extractCommand) = sandboxCommand($extractCommand, $pathname, $safedir2, FALSE, 'archive');
+      list ($commandMayRun, $extractCommand) = sandboxCommand($extractCommand, $pathname, $extractTarget, FALSE, 'archive');
       if (!$commandMayRun) {
         $ConversionErrors = TRUE;
         errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
@@ -410,18 +417,22 @@ function convertArchives($pathname, $newPathname, $extension) {
           $ConversionErrors = TRUE;
           errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
         else {
-          while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+          // / Attempt it as many times as --File Operation Retry Count-- allows, & stop at the first
+          // / attempt that leaves an archive.
+          while (pipelineAttemptIsDue($newPathname, $stopper)) {
             // / If the last attempt failed, wait a moment before trying again.
             if ($stopper !== 0) sleep($sleepTime++);
-            $returnData = shell_exec($archiveCommand);
+            $returnData = (string)shell_exec($archiveCommand.' 2>&1');
             // / Log the output of the archive operation to the logfile, if it is not blank.
             if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
             // / Count the number of attempts to avoid infinite loops.
-            $stopper++;
-            // / Stop attempting the archive operation after $StopCounter number of attempts.
-            if ($stopper === $StopCounter) {
-              $ConversionErrors = TRUE;
-              errorEntry('The archiver timed out!', $archiveError, FALSE); } }
+            $stopper++; }
+          // / Every attempt was made & none left an archive. What the archiver printed is logged above
+          // / this, with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the archiver had timed out, which no
+          // / time limit ever caused, & then made one more attempt.
+          if (!file_exists($newPathname)) {
+            $ConversionErrors = TRUE;
+            errorEntry('The archiver produced no archive after '.$stopper.' attempt(s)!', $archiveError, FALSE); }
           // / Post process a hybrid image so it also boots from a USB stick presenting an MBR.
           // / This is a SEPARATE sandboxed invocation rather than a compound statement joined
           // / to the mkisofs command with &&. Bwrap execs one command & does not run a shell,
@@ -440,9 +451,11 @@ function convertArchives($pathname, $newPathname, $extension) {
               // / Log the output of the operation to the logfile, if it is not blank.
               if ($Verbose && trim($returnData) !== '') logEntry('Isohybrid returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } } } } }
   // / The output file is the only verdict on whether the conversion produced anything.
+  // / An archiver that ran & left nothing has said so above, under its format's own number, so
+  // / this names only a failure nothing has named yet. Until v4.0.6 both were raised.
   if (!file_exists($newPathname)) {
     $ConversionErrors = TRUE;
-    errorEntry('The archiver failed to produce an archive!', 13000, FALSE); }
+    if ($stopper === 0) errorEntry('The archiver failed to produce an archive!', 13000, FALSE); }
   else $ConversionSuccess = TRUE;
   // / An ordinary archive keeps whatever filename the caller already worked out.
   // / Only a bootable image rewrites it, because only a bootable image renames the output.
@@ -451,7 +464,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   // / The second argument is the list of roots this call may clean under & is required.
   cleanFiles($safedir2, array($safedir2));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $linkWalkCompleted, $linksRemoved, $filename, $safedir2, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $archiveCommand, $hybridCommand, $archiveError, $commandMayRun, $archiveToolsAreValid, $bootloadersAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $linkWalkCompleted, $linksRemoved, $filename, $safedir2, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $extractTarget, $archiveCommand, $hybridCommand, $archiveError, $commandMayRun, $archiveToolsAreValid, $bootloadersAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $UserFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

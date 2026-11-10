@@ -192,6 +192,9 @@ first whether or not you asked for one.
    Reports every dependency, every component version & every subsystem, with what is
    required beside what was found. This is the diagnostic to read first when anything
    behaves unexpectedly.
+   The copy made in STEP 2 brought the repository's .git & .github folders into the hosted
+   location. The installation never uses either, & the Apache configuration refuses both. -v
+   reports the hosted location as KEPT & names them until they are moved out of the web root.
 
 2. Run  'php convertCore.php --status'
    Reports the resource listener, the budget & the data locations.
@@ -218,6 +221,20 @@ v4.0.4 OR EARLIER. From v4.0.5 every sandbox on a restricting kernel runs the ap
 copy of bubblewrap, & an update run by an earlier release cannot make it. An update from an
 unpacked release makes it as the release is installed.
 
+RUN  'sudo php convertCore.php --setup --install-depends --subsystem=Archives'  ONCE AFTER
+UPDATING TO v4.0.6 WHERE THE HOST'S 7-ZIP IS OLDER THAN 26.02, as Ubuntu 24.04's 23.01 is. Every
+7-Zip before 26.02 decodes XZ with a heap overflow, so archives refuse with error 13008 until it
+has run. It builds the application's own 7-Zip from the source 7-Zip publishes, checked against
+the checksum the manifest pins, & leaves the system's 7-Zip as it is. It installs a compiler where
+there is none, needs a route to GitHub or 7-zip.org, & takes about a minute. --setup
+--check-depends says when it is needed, & -v names the own build once it is in service.
+
+RUN  'sudo php convertCore.php -fp'  ONCE AFTER UPDATING TO v4.0.6 WHERE FFMPEG WAS BUILT FROM
+SOURCE. Until v4.0.6 that build left its whole tree, links included, in
+Documentation/Build/ffmpeg-build in the installation, & root refuses to run an installation
+holding a link, with error 28008. -fp takes that folder away. From v4.0.6 every source build
+works in a folder of its own under /var/tmp & removes it when it ends.
+
 DO NOT HAND THE INSTALLATION TO THE WEB SERVER USER WITH chown. Root runs that code. A
 command run as root no longer leaves a logfile or a secret the web server user cannot use.
 
@@ -232,8 +249,10 @@ command run as root no longer leaves a logfile or a secret the web server user c
 
   Root refuses to run anything & names error 28008.
     Something in the installation, or a folder above it, can be changed by an account other
-    than root, & the message names it. -fp corrects the installation. A folder above it,
-    such as /var/www/html, is not this application's & is corrected by hand.
+    than root, & the message names it. -fp corrects the installation, & takes away what an
+    earlier release's build left in it. A link or a file with more than one name it does not
+    know is named as -fp ends, & is removed by hand before -fp is run again. A folder above
+    it, such as /var/www/html, is not this application's & is corrected by hand.
     See ABOUT_MANAGED_LOCATIONS.txt.
 
   Nothing appears in the log at all.
@@ -280,6 +299,8 @@ clear & share links are guessable over plain HTTP.
 3. HRConvert2 does not update or patch dependencies automatically.
    Run  '--setup --update-depends'  to upgrade them, & '--setup --output-supply-chain'
    to produce an audit template of everything installed, with licences & sources.
+   It also builds again an own build of the application's that an update has moved, & takes
+   one away once the package manager's copy is new enough. See ABOUT_DEPENDENCIES.txt.
 4. A stream conversion holds a PHP worker & an FFMPEG worker for the whole stream.
    Consider raising pm.max_children if many concurrent streams are expected.
 5. rc.local is no longer used. The document conversion listener it started no longer

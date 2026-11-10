@@ -437,7 +437,7 @@ ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   This may be the result of incorrect file permission levels on the directory where Data is being stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
-  The www-data:www-data user:group needs read & write access to the Data directory, read access to the Installation directory & read & write access to its DATA directory.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, read access to the installation, & read & write access to DATA in the hosted location.
   The device where data is stored has an insufficient amount of storage space available.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -462,7 +462,7 @@ ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
   The supplied path is not a subdirectory of either the convert location or the temporary location.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -487,7 +487,7 @@ ERROR DESCRIPTION
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   The supplied path is not a subdirectory of either the convert location or the temporary location.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -593,7 +593,7 @@ ERROR DESCRIPTION
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   The device where data is stored has an insufficient amount of storage space available.
   The request contained character types or encoded data that are not supported.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -618,8 +618,8 @@ ERROR DESCRIPTION
   The user has requested to download a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
@@ -647,8 +647,8 @@ ERROR DESCRIPTION
   The user has requested to archive a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
@@ -671,18 +671,12 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
+  A conversion produced nothing, so the request was ended.
+  The entry above this one says why, under the number the pipeline raised, such as 7001 for a document, & its description says what to check.
+  A converter that failed on the file, one killed for going over the memory ceiling it was given, a file the session no longer holds because it outlived --File Deletion Age Threshold--, & a file that was never uploaded are the usual causes.
+  Sessions are kept in Sessions in the data location, which only the web server account may write. -fp gives each managed location its owner & mode. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
+  A data location with no space left fails every conversion this way.
+  Until v4.0.6 this described a layout no release has used since v4.0.1, in which the web server account owned the whole data location.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -705,8 +699,8 @@ ERROR DESCRIPTION
   The user has requested to OCR a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
@@ -733,7 +727,7 @@ ERROR DESCRIPTION
   A scanner that could not run, or that reached no verdict for a file, does not raise this error. The
   report says which files were not scanned, in every scan mode. Until v4.0.0 a scan with every scanner
   raised this error whenever one scanner reached no verdict, so the user received no report at all.
-  The www-data:www-data user:group needs to have read & write access to the data storage directory.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   This may be the result of incorrect file permission levels on the data storage directory.
   The device where data is stored has an insufficient amount of storage space available.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -756,7 +750,7 @@ ERROR DESCRIPTION
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   The request contained character types or encoded data that are not supported.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1154,7 +1148,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -1459,7 +1453,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3004, <SESSION_IDENTIFIER>: Unsupported file format!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3004, <SESSION_IDENTIFIER>: Unsupported file format, <ADDITIONAL_DATA>!
 
 FILE
   /convertCore.php
@@ -1472,8 +1466,8 @@ LOGGED
 
 ERROR DESCRIPTION
   The user is attempting to download a file format that is explicitly disallowed due to the threat it poses to the server.
+  The format is named at the end of the message, & a name with no extension reads no extension. Until v4.0.6 that was left blank.
   This error is non-fatal because it contained within a loop that still has to continue processing the rest of the files uploaded by the user.
-  The file that causes this error will be skipped.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1934,7 +1928,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7001, <SESSION_IDENTIFIER>: The document converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7001, <SESSION_IDENTIFIER>: The document converter produced no file after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Document/pipeline.php
@@ -1946,27 +1940,19 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  LibreOffice did not produce an output file.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  LibreOffice ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Until v4.0.6 this read The document converter timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what LibreOffice printed, which usually names the cause.
+  LibreOffice converts every document but an XPS file, which xpstopdf converts.
+  A document LibreOffice cannot open & a format it does not write are the usual causes.
+  From v4.0.6 a LibreOffice its ceiling killed is named in a warning above this, by the shared module.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8000, <SESSION_IDENTIFIER>: The image converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8000, <SESSION_IDENTIFIER>: The image converter produced no file after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Image/pipeline.php
@@ -1978,21 +1964,11 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  ImageMagick is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  ImageMagick ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Until v4.0.6 this read The image converter timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what ImageMagick printed, which usually names the cause.
+  A file ImageMagick cannot read, a format this build does not write & a coder the policy the pipeline carries refuses are the usual causes.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2065,7 +2041,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9000, <SESSION_IDENTIFIER>: The model converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9000, <SESSION_IDENTIFIER>: The model converter produced no file after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Model/pipeline.php
@@ -2077,21 +2053,12 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Meshlab is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  Assimp or MeshLab, by the route the pipeline chose, ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Until v4.0.6 this read The model converter timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Assimp or MeshLab, by the route the pipeline chose, printed, which usually names the cause.
+  A model neither can read is the usual cause.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
+  The warning below this names the command that was run, so it can be run again by hand.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2202,7 +2169,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10000, <SESSION_IDENTIFIER>: The drawing converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10000, <SESSION_IDENTIFIER>: The drawing converter produced no file after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Drawing/pipeline.php
@@ -2214,21 +2181,11 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Dia is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  Dia ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Until v4.0.6 this read The drawing converter timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Dia printed, which usually names the cause.
+  A drawing Dia cannot read & a format it does not write are the usual causes.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2292,7 +2249,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11000, <SESSION_IDENTIFIER>: The video converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-11000, <SESSION_IDENTIFIER>: The video converter produced no file after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Video/pipeline.php
@@ -2304,21 +2261,12 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Ffmpeg is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  FFMPEG ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Until v4.0.6 this read The video converter timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what FFMPEG printed, which usually names the cause.
+  A file FFMPEG cannot read & a codec this build does not carry are the usual causes.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
+  The warning below this names the command that was run, so it can be run again by hand.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2373,7 +2321,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12000, <SESSION_IDENTIFIER>: The audio converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12000, <SESSION_IDENTIFIER>: The audio converter produced no file after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Audio/pipeline.php
@@ -2385,21 +2333,11 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Ffmpeg is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  FFMPEG ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Until v4.0.6 this read The audio converter timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what FFMPEG printed, which usually names the cause.
+  A file FFMPEG cannot read & a codec this build does not carry are the usual causes.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2465,6 +2403,7 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
+  An archive no archiver was run for. One that ran & left nothing raises its format's own number, 13001 through 13005 or 13100, & from v4.0.6 not this one as well.
   One or more of the following dependencies are not responding: Rar, Unar, Tar, Zip, Unzip, or 7zipper.
   The conversion operation failed to produce an output file.
   The user submitted a request to convert a file that does not exist.
@@ -2472,8 +2411,8 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
@@ -2485,7 +2424,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13001, <SESSION_IDENTIFIER>: The archiver timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13001, <SESSION_IDENTIFIER>: The archiver produced no archive after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Archive/pipeline.php
@@ -2497,27 +2436,17 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Ffmpeg is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  7-Zip ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what 7-Zip printed, which usually names the cause.
+  Error 13000 follows it, because the operation produced nothing.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13002, <SESSION_IDENTIFIER>: The archiver timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13002, <SESSION_IDENTIFIER>: The archiver produced no archive after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Archive/pipeline.php
@@ -2529,27 +2458,17 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Ffmpeg is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  mkisofs ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what mkisofs printed, which usually names the cause.
+  Error 13000 follows it, because the operation produced nothing.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13003, <SESSION_IDENTIFIER>: The archiver timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13003, <SESSION_IDENTIFIER>: The archiver produced no archive after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Archive/pipeline.php
@@ -2561,27 +2480,17 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Ffmpeg is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  Zip ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Zip printed, which usually names the cause.
+  Error 13000 follows it, because the operation produced nothing.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13004, <SESSION_IDENTIFIER>: The archiver timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13004, <SESSION_IDENTIFIER>: The archiver produced no archive after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Archive/pipeline.php
@@ -2593,27 +2502,17 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Ffmpeg is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  Tar ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Tar printed, which usually names the cause.
+  Error 13000 follows it, because the operation produced nothing.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13005, <SESSION_IDENTIFIER>: The archiver timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13005, <SESSION_IDENTIFIER>: The archiver produced no archive after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Archive/pipeline.php
@@ -2625,22 +2524,11 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  One of the archive dependencies is not responding.
-  This is contained in the convertArchives() function.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  Rar ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Rar printed, which usually names the cause.
+  Error 13000 follows it, because the operation produced nothing.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2693,6 +2581,8 @@ ERROR DESCRIPTION
   Without it, 7-Zip reads the archive headers perfectly, reports Unsupported Method for every
   member, & extracts nothing. Install it with  sudo apt install p7zip-rar
   Confirm the codec is present by running  7z i  & looking for rar in the list.
+  HRConvert2's own 7-Zip, built where the package manager's is too old, carries the rar codec
+  itself & needs no package for it.
   The version check cannot detect a missing codec, because the version reported is correct.
   This check exists because an empty extraction used to be re-archived silently. The
   archiver packaged the empty staging folder, the output file existed, & the conversion
@@ -2726,11 +2616,19 @@ ERROR DESCRIPTION
   & 7-Zip for 7z, while a single file archive uses 7-Zip for both. This is a historical
   inconsistency rather than a deliberate design & is worth being aware of when diagnosing a
   format that works in one path & not the other.
-  Install it with  sudo apt install p7zip-full p7zip-rar
-  The minimum is set by --Minimum 7-Zip Version-- in config.php.
-  Check the installed version by running  7z  with no arguments in a terminal.
+  Install it with  sudo php convertCore.php --setup --install-depends --subsystem=Archives
+  The minimum is 26.02 & is set in Resources/Contract/depends.php. Every 7-Zip before it decodes
+  XZ with a heap overflow a crafted archive reaches. Where the package manager carries an older
+  one, as Ubuntu 24.04 carries 23.01, that command builds HRConvert2's own from the source 7-Zip
+  publishes into /usr/local/libexec/hrconvert2/builds/7-zip, & every part of HRConvert2 runs it.
+  See ABOUT_DEPENDENCIES.txt.
+  Check which 7-Zip is used, & its version, with
+  sudo php convertCore.php --setup --check-depends --subsystem=Archives
   A build that reports no parseable version is refused, because an unknown build cannot be
-  cleared against a minimum.
+  cleared against a minimum. An own build with any part an account other than root could change
+  is never run, & one the web server's account cannot run, because a folder above it is closed to
+  that account or its filesystem runs no programs, is not used. --check-depends run as root calls
+  either misconfigured & says why.
   NOTE. This check verifies the VERSION & cannot verify the CODECS. A correctly versioned
   7-Zip with no rar codec passes this check & then silently fails to extract rar archives.
   See error 13007 for that case.
@@ -2840,8 +2738,8 @@ ERROR DESCRIPTION
   The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
@@ -2912,9 +2810,32 @@ ERROR DESCRIPTION
   The walk fails when the staging folder cannot be resolved, or when a link that has to be
   removed cannot be unlinked. Both point at file permissions on the data location rather
   than at the archive that was uploaded.
-  The www-data:www-data user:group needs read & write access to the data location.
+  The web server account needs read & write access to Sessions in the data location, which -fp gives it.
   A link that is simply removed is not this error. That is a warning carrying a count, & the
   conversion continues normally.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13100, <SESSION_IDENTIFIER>: The archiver produced no archive after <ADDITIONAL_DATA> attempt(s)!
+
+FILE
+  Resources/Pipelines/Archive/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  mkisofs ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what mkisofs printed, which usually names the cause.
+  It is the bootable image, & ABOUT_CREATING_BOOTABLE_ISO_IMAGES.txt says what it needs.
+  Error 13000 follows it, because the operation produced nothing.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -3038,7 +2959,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3106,7 +3027,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3254,8 +3175,8 @@ ERROR DESCRIPTION
   The OCR operation failed when attempted using the 'Simple' method.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
@@ -3283,8 +3204,8 @@ ERROR DESCRIPTION
   The OCR operation failed when attempted using the 'Advanced' method.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
@@ -3312,8 +3233,8 @@ ERROR DESCRIPTION
   The OCR operation failed when attempted using the 'Advanced' method.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
@@ -3378,7 +3299,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
+  The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   This may be the result of incorrect file permission levels on the directory where Data is stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3553,7 +3474,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3575,7 +3496,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3597,7 +3518,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3619,7 +3540,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3730,7 +3651,7 @@ ERROR DESCRIPTION
   The installation has become corrupt.
   The ScanCore bundled dependency is missing.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3807,7 +3728,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3829,7 +3750,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
+  The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
@@ -3920,7 +3841,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22000, <SESSION_IDENTIFIER>: The subtitle converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-22000, <SESSION_IDENTIFIER>: The subtitle converter produced no file after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Subtitle/pipeline.php
@@ -3932,21 +3853,11 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Ffmpeg is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  FFMPEG ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Until v4.0.6 this read The subtitle converter timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what FFMPEG printed, which usually names the cause.
+  A subtitle file FFMPEG cannot read is the usual cause.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -4117,7 +4028,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25000, <SESSION_IDENTIFIER>: The SVG converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-25000, <SESSION_IDENTIFIER>: The SVG converter produced no file after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/SVG/pipeline.php
@@ -4129,21 +4040,11 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Inkscape is not responding.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
-  The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
-  The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
-  The www-data:www-data user:group needs read access to the Installation directory & read & write access to its DATA directory.
-  The www-data:www-data user:group needs to have read & write access to the Data directory.
-  This may be the result of incorrect file permission levels on the directory where the application is installed.
-  This may be the result of incorrect file permission levels on the directory where Data is stored.
-  This may be the result of incorrect user or group associations for the www-data user or group.
-  The device where data is stored has an insufficient amount of storage space available.
-  The request contained character types or encoded data that are not supported.
-  One of the $_POST or $_GET variables submitted was empty after sanitization.
+  Inkscape ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Until v4.0.6 this read The SVG converter timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Inkscape printed, which usually names the cause.
+  A drawing Inkscape cannot read & a format it does not write are the usual causes.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -4218,6 +4119,8 @@ ERROR DESCRIPTION
   The Build directory may contain subdirectories, which this routine does not remove.
   The build environment is removed directly and not through cleanFiles(), because it sits outside every approved cleanup root.
   Widening the cleanFiles() whitelist to include the application directory would make the recursive deleter far more dangerous.
+  From v4.0.3 until v4.0.6 the routine looked for both in Resources/Engine/Cores rather than in the installation, so it removed nothing,
+  printed NOT PRESENT & never raised this error. An installation that asked for the build environment to go keeps it until -fp of v4.0.6 runs.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -4239,6 +4142,8 @@ ERROR DESCRIPTION
   This work is controlled by --Delete Development Documentation-- in config.php & is done by root, from the -fp argument.
   Root only removes a file from a folder it trusts, & a WARNING entry just above this error names what was left & why.
   A file already removed by hand counts as removed & does not raise this error.
+  From v4.0.3 until v4.0.6 the routine looked for both in Resources/Engine/Cores rather than in the installation, so it removed nothing,
+  printed NOT PRESENT & never raised this error. An installation that asked for them to go keeps them until -fp of v4.0.6 runs.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -4713,7 +4618,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28008, <SESSION_IDENTIFIER>: Root refused to run the installation at <PATH>, because an account other than root could have changed it. <ADDITIONAL_DATA> Run  sudo php convertCore.php -fp  to give it back to root. Any other account may still run -v in the meantime.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28008, <SESSION_IDENTIFIER>: Root refused to run the installation at <PATH>, because an account other than root could have changed it. <ADDITIONAL_DATA> Run  sudo php convertCore.php -fp  to give it back to root. Where -fp says root still may not run it, remove or put right what it names. Any other account may still run -v in the meantime.
 
 FILE
   convertCore.php
@@ -4735,7 +4640,13 @@ ERROR DESCRIPTION
   once & it is root's. -fp, --setup & --config --repair run on such an installation after a warning,
   because they are what give it to root.
   A file someone made group writable or gave to another account is corrected by -fp as well.
-  A link inside the installation is not removed by -fp. Remove it by hand.
+  A link or a file with more than one name inside the installation is left where it is by -fp, &
+  -fp says so as it ends. Remove it by hand & run -fp again.
+  What an earlier release left in the installation & no release ships is the exception. The
+  contract names each such path, & -fp removes it once the rest of the installation is root's.
+  The FFmpeg build until v4.0.6 left its whole tree in Documentation/Build/ffmpeg-build, links
+  included, which is why the v4.0.5 image refused to run with this number. -fp from v4.0.6
+  removes it.
   A folder above the installation, such as /var/www/html, is not this application's & -fp leaves it
   alone. A web server account that owns it can swap the whole installation for its own. Confirm
   nothing else on the server relies on writing there, then give it to root.
@@ -5275,7 +5186,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-30000, <SESSION_IDENTIFIER>: The e-book converter timed out!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-30000, <SESSION_IDENTIFIER>: The e-book converter produced no file after <ADDITIONAL_DATA> attempt(s)!
 
 FILE
   Resources/Pipelines/Ebook/pipeline.php
@@ -5287,11 +5198,12 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Calibre was invoked repeatedly & no output file ever appeared.
-  A large book with many images legitimately takes minutes, so raise the retry count in
-  config.php before assuming a fault.
-  The entry immediately above this one carries whatever Calibre printed, which names the
-  actual cause when there is one.
+  Calibre ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Until v4.0.6 this read The e-book converter timed out! No time limit ever caused it, & one more attempt was made after it.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Calibre printed, which usually names the cause.
+  A book Calibre cannot read is the usual cause. A format it cannot write it names as No plugin to handle output format.
+  Until v4.0.6 pml & oeb were offered. Calibre writes PML only zipped, as pmlz, & OEB as a folder, so neither ever reached a user.
+  A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6057,6 +5969,41 @@ ERROR DESCRIPTION
   The folders above the hosted location & above each additional data location are named the
   same way when they fail, as a warning. Root goes on then & corrects nothing beneath them.
   Nothing was changed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31025, <SESSION_IDENTIFIER>: The web server account holds <IN_USE> of its <LIMIT> user namespaces! No conversion is granted until more than 1% are free.
+
+FILE
+  Resources/Engine/Managers/resourceManager.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Every sandbox is a user namespace. The kernel refuses a new one once the web server account
+  holds user.max_user_namespaces of them, & a conversion started then fails inside its sandbox.
+  The Resource Manager counts that account's user namespaces every --Resource Poll Interval--.
+  It warns when 10% of the limit or less is free. With 1% or less free it refuses every budget
+  request, & each refused conversion is logged with the reason. Conversions are granted again at
+  the first poll that finds more than 1% free. Nothing needs restarting.
+  The count is a floor. A namespace with no process of its own in it is not counted.
+  List what holds them. Each line is one namespace, its process count & its first process.
+    sudo lsns -t user | grep www-data
+  A conversion's sandbox ends with its conversion. A namespace another program of the web server
+  account holds is that program's. End what is stuck, or end every tracked conversion with
+    sudo php convertCore.php --kill-all-workers
+  Where the limit is too low for this host, raise it well above what lsns counts, & keep it at
+  boot. <NEW_LIMIT> is the number chosen.
+    sudo sysctl -w user.max_user_namespaces=<NEW_LIMIT>
+    echo 'user.max_user_namespaces = <NEW_LIMIT>' | sudo tee /etc/sysctl.d/60-user-namespaces.conf
+  This error only occurs if --Enable Resource Awareness-- is set to TRUE in config.php & the
+  listener is running.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6844,8 +6791,54 @@ ERROR DESCRIPTION
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34009, <SESSION_IDENTIFIER>: The file is already <FILE_TYPE>, so there is nothing to convert!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A conversion asked for the format the file already has, & no installed pipeline converts a format to itself.
+  Until v4.0.6 this was reported as 34005, a family with no installed pipeline, which sent an operator looking for a fault that was not there.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34010, <SESSION_IDENTIFIER>: The converter left <FILE_NAME> empty, so the conversion failed & the empty file was removed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34010, <SESSION_IDENTIFIER>: The converter left <FILE_NAME> as something other than a file, so the conversion failed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34010, <SESSION_IDENTIFIER>: The converter reported success & left nothing at <FILE_NAME>, so the conversion failed!
+
+FILE
+  Resources/Engine/Cores/pipelineCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A pipeline said it had converted a file, & what it left is not a result.
+  A converter that fails part way can leave an empty file, as ImageMagick does for an icon it cannot write, & Calibre writes a folder for OEB.
+  An empty file is removed. A folder or a link is left for the sweep, which removes the session it is in.
+  A pipeline that reports success & leaves nothing at all is named too, so the failure is never silent.
+  Where another installed pipeline could still convert the file, each of these is a warning instead, & that pipeline is tried next.
+  A plain text format may be empty, because a document or an image with no text in it converts to an empty one, so txt, csv, tsv, md & the subtitle formats are not held to this.
+  Until v4.0.6 every pipeline judged by whether anything was there, so each of these was offered to the user as the result.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR NUMBER RESERVATION
-  34009 through 34019 are reserved for the Pipeline Core and are currently unused.
+  34011 through 34019 are reserved for the Pipeline Core and are currently unused.
+  34009 is the core's, as 34005 is, & 34010 is the Pipeline Core's. Both are documented above.
   34007 & 34008 are its scanner errors & are documented above, with the rest of the block.
   A conversion pipeline carries its own error block and keeps the numbers it had before it became a component.
   A new community pipeline must reserve a block in this file before using one.

@@ -81,6 +81,7 @@ Navigate the complete documentation library using the directory structure below.
 * [ABOUT_CAPABILITY_DETECTION.txt](ABOUT_CAPABILITY_DETECTION.txt) — How the application decides what it can do on this host.
 * [ABOUT_COHESION_PASS.txt](ABOUT_COHESION_PASS.txt) — How a function is judged to belong where it lives.
 * [ABOUT_LOGGING.txt](ABOUT_LOGGING.txt) — The three logging tiers & which to use.
+* [DEVELOPMENT_NOTES.txt](DEVELOPMENT_NOTES.txt) — Why each subsystem is shaped the way it is. Engineering intent & the history behind it, by subsystem.
 
 ### 🌐 API, Meta, & Diagnostics
 * [ABOUT_DOCUMENTATION.md](ABOUT_DOCUMENTATION.md) / [.txt](ABOUT_DOCUMENTATION.txt) — Handbook standards.

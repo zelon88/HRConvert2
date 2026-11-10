@@ -13,8 +13,9 @@
 # on a server for users of any web browser without authentication.
 
 # FILE INFORMATION ...
-# v3.4.5.
+# v4.0.6.
 # This file builds FFMPEG from source to enable more advanced file operations.
+# ffmpeg-build.sh runs it in a folder of its own, which it removes when the build ends.
 
 # HARDWARE REQUIREMENTS ...
 # This application requires at least a Raspberry Pi Model B+ or greater.
@@ -1071,7 +1072,7 @@ if [ "$INSTALL_NOW" = 1 ]; then
       $SUDO mandb -q
     fi
   fi
-  echo "Done. FFmpeg is now installed to your system. Please run HRConvert2 with the --Delete Build Environment-- configuration variable set to TRUE at least once to clean up ffmpeg intallation files."
+  echo "Done. FFmpeg is now installed to your system."
 fi
 
 exit 0

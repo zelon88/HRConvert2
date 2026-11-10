@@ -1,0 +1,273 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 11/10/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v4.0.6.
+This plain text file records the reasoning & engineering intent behind each subsystem, & the history that explains it.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+None. This file is read by people.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About This File--
+
+CODE & OUTPUT SAY WHAT HAPPENS. THIS FILE SAYS WHY.
+Command line output & code comments state facts. The reasoning behind them, & the history
+that explains it, is recorded here by subsystem, so neither has to carry it.
+
+  This file                   Why a subsystem is shaped the way it is, & what came before.
+  ABOUT_ documents            How a subsystem works now.
+  CHANGELOG.txt               What changed in each release.
+  ERROR_DESCRIPTIONS.txt      Every numbered error, its cause & its fix.
+
+Each entry opens with the decision in capitals, followed by its reason.
+A release number is given where one is known.
+v4.0.6 moved the history out of the command line output.
+The history in code comments moves here next.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Command Line Output--
+
+ONE FACT OR ONE INSTRUCTION PER LINE.
+A report line is a label, a status word & a detail. A detail states what is true or what to
+run. It does not narrate, explain history, or say what an earlier release did.
+
+A STATUS WORD IN UPPER CASE NEEDS ATTENTION. ONE IN LOWER CASE NEEDS NOTHING.
+An operator reads the case before the words. A benign state such as carried, unconfined or
+unrestricted is shown as ok, because each of those reads like a fault & is not one.
+A state that changed the host, such as installed, repaired or kept, keeps its own word.
+
+STATUS WORDS & THE OPENING OF EVERY SUMMARY LINE ARE STABLE.
+Tests, documents & the administrators' own scripts match words such as OK, FAILED, KEPT,
+NOT ASKED & Corrected 0 path(s). The sentence after a status word may change, & so may the end
+of a summary line. The word & the opening may not.
+
+LOG ENTRIES ARE NOT COMMAND LINE OUTPUT.
+Root repeats its warnings & errors on a terminal, so they appear among the output. Their text
+is the log's & did not change in v4.0.6.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Listener & Resource Awareness--
+
+ONLY ROOT & THE WEB SERVER ACCOUNT MAY RUN LISTENER COMMANDS.
+A standard user holds a per user secret. A per user secret cannot derive a valid startup key,
+so a listener a standard user started could never be reached by a worker.
+
+WITHOUT A LISTENER, A CONVERSION RUNS WITHOUT A BUDGET.
+That is how every conversion ran before resource awareness existed, & a stopped listener must
+not stop a site. --Require Resource Awareness-- refuses work only when resource awareness is
+unavailable, which is a missing Engine or a missing install secret. A stopped listener is not.
+
+ROOT DOES NOT READ WHAT THE WEB SERVER ACCOUNT WRITES.
+The listener's state lives in that account's folder & reading it refuses root. --status run as
+root hands the question to that account & relays its answer, which is the truth about a
+listener that account runs. -v run as root reports the listener as NOT ASKED for that reason.
+
+WORK STOPS BEFORE THE KERNEL RUNS OUT OF USER NAMESPACES. v4.0.6.
+Every sandbox is a user namespace, & the kernel refuses a new one once the web server account
+holds user.max_user_namespaces of them. A conversion started then fails inside its sandbox, where
+the reason is hard to see. The Resource Manager counts the account's namespaces at each poll,
+warns at 10% free & refuses budget requests at 1% free, so a conversion is refused with a reason
+instead. The thresholds are fixed rather than configured. Each change of state is logged once,
+because a poll comes every few seconds & a state can last for hours.
+The count reads /proc. A process of another account cannot be read, & a namespace with no
+process of its own is not seen, so the count is a floor. That is the cheap answer, & it is
+enough to catch sandboxes that pile up or a limit set too low.
+
+SYSTEMD IS JUDGED RUNNING, NOT INSTALLED.
+A container can ship systemctl without systemd running. A unit written there is read by nothing,
+& makes the listener defer to a service manager that never answers. Without systemd no unit is
+written, & -l starts the listener as a plain process.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Environment Manager--
+
+THE TIMER IS WRITTEN & NOT ENABLED.
+The listener is enabled at installation because nothing works without it. The timer puts a root
+process on a schedule. That is a decision for an administrator who has read what one pass
+reports, & not one an installer makes on their behalf.
+
+A PASS REPORTS WHAT IT FOUND BEFORE IT REPAIRED ANYTHING.
+A finding that a repair then corrected is still worth seeing. Something changed the host.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Sandbox--
+
+THE HAND WRITTEN BUBBLEWRAP PROFILE IS REPORTED & LEFT ALONE.
+Install guides before v3.8.0 asked administrators to write /etc/apparmor.d/bwrap by hand. It
+lets any program on the host build a namespace through /usr/bin/bwrap, whatever the kernel
+restricts. HRConvert2 does not use it. No package owns it, so nothing says what else relies on
+it, & only the administrator can remove it.
+
+THE NAMESPACE RESTRICTION AN EARLIER RELEASE LIFTED IS KEPT LIFTED.
+Earlier releases lifted kernel.apparmor_restrict_unprivileged_userns for the whole host, & held
+it lifted at every boot with /etc/sysctl.d/99-hrconvert2-userns.conf. From v4.0.5 every sandbox
+runs HRConvert2's own copy of bubblewrap, which an AppArmor profile is attached to, & the
+restriction is lifted only where that copy cannot carry a sandbox. Other programs on the host
+may depend on a lift by now, so one HRConvert2 no longer needs is not undone automatically.
+--Allow Unprivileged Namespaces-- set to FALSE makes -fp switch the restriction back on. An
+administrator who switches it back on by hand runs -fp afterwards, which removes the drop in
+once a sandbox is built through the copy.
+
+ONLY ROOT CAN JUDGE THE SANDBOX FOR EVERY ACCOUNT.
+HRConvert2's own bubblewrap may be run by root & the web server account's group & nobody else.
+Any other account running -v cannot try it, so its sandbox lines read n/a & say to run -v as
+root.
+
+AN APPARMOR PROFILE WRITTEN NOW MAY NOT BE IN FORCE YET.
+The kernel honours a new profile once AppArmor reloads it, which can take a reload or a reboot.
+-fp says so when the sandbox is still unavailable after writing one.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Policies--
+
+FROM v4.0.5 A POLICY TRAVELS WITH ITS PIPELINE.
+The ImageMagick policy is carried into each conversion's sandbox, so nothing on the host is
+changed for it. Earlier releases wrote it into the host's own configuration. -fp retires every
+host policy an earlier release wrote by putting the host's own file back.
+
+A POLICY WRITTEN OVER THE HOST'S FILE WITH NO COPY IS KEPT.
+Removing it would leave the converter with no policy at all. It is reported as kept until the
+administrator restores the original from the package or the build that provided it.
+
+OPENSCAD NEEDS NO APPARMOR OVERRIDE.
+Nothing on the host confines it. The bubblewrap sandbox isolates it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Data Directory Protection--
+
+A PROTECTION FILE THAT EXISTS PROVES NOTHING.
+DATA/.htaccess is read only where AllowOverride permits it. Where it does not, Apache ignores the
+file in silence. -fp therefore asks the tree for a canary over HTTP rather than believing the
+file, & a canary it could not fetch is not a pass.
+
+AN UPLOAD SERVED AS A DOCUMENT IS EXPOSURE.
+An uploaded SVG served as a document rather than a download runs its own script in this
+application's origin.
+
+A SERVER ERROR FROM DATA IS AN OUTAGE, NOT EXPOSURE.
+The usual cause is a directive in DATA/.htaccess that the directory's AllowOverride level does
+not permit. Apache refuses such a request rather than ignoring the directive, & an <IfModule>
+guard does not prevent it. Removing the file restores service at once. The rules belong in the
+server configuration.
+
+AN APACHE CONFIGURATION THAT DID NOT PARSE BEFORE HRCONVERT2 WROTE ANYTHING IS LEFT ALONE.
+HRConvert2 tests the configuration before & after writing its own file. A fault that was already
+there is the administrator's, & HRConvert2's file is kept. A fault HRConvert2 caused is
+withdrawn, & what was there before is put back & tested again.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Installation & The Hosted Location--
+
+A RELEASE COPIED INTO THE WEB ROOT BRINGS .git & .github WITH IT.
+STEP 2 of the installation instructions copies the repository. The installation never uses
+either folder, & the Apache configuration refuses both. -v reports the hosted location as KEPT
+& names them until they are moved out of the web root. A .old folder is an earlier installation
+an update left beside it.
+
+-fp RUN FROM A TREE NOT YET INSTALLED INSTALLS IT AS IT ENDS.
+The tree is installed into the Application folder of the data location, & then the installed
+copy's own -fp runs, which publishes the hosted location.
+
+A LISTENER RUNNING DURING AN INSTALLATION KEEPS RUNNING THE RELEASE IT STARTED WITH.
+It is reported, & the administrator restarts it.
+
+A DROP-IN HOLDS ONLY THE FILES THAT CHANGED.
+Unpacked beside the loader, it finds no Engine, because the Engine lives in the installation.
+The remedy is to unpack it into the installation & run -fp there.
+
+A MISMATCHED ENGINE CAN ONLY BE REPLACED BY HAND.
+Every repair path reaches into the Engine. --config --repair, --setup --install-complete & -u
+were each measured failing on an Engine call of their own, so the output names the file to
+replace rather than a command.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Managed Locations & Trust--
+
+ROOT REFUSES TO RUN CODE ANOTHER ACCOUNT COULD HAVE CHANGED.
+Error 28008 refuses every command run as root on such a tree except the ones that give the tree
+back to root, which are -fp, --setup & --config --repair.
+
+-fp LEAVES LINKS, HARD LINKS & OTHER FILESYSTEMS AS THEY ARE.
+Changing one would reach outside the installation. What -fp names afterwards is for the
+administrator to remove or put right.
+
+A LOCATION ANOTHER ACCOUNT COULD REPLACE IS SKIPPED.
+Root keeps nothing there & changes nothing there, because the account that can replace the
+folder can replace it between root's check & root's write.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Install Secret--
+
+THE INSTALL SECRET LIVES IN SECRETS, & ONLY THE WEB SERVER ACCOUNT'S GROUP MAY READ IT.
+An older layout kept it at the top of the data location. -fp copies it into Secrets with its
+existing key, so no session ends because of the move.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Dependencies--
+
+AN OWN BUILD IS RETIRED ONCE THE PACKAGE MANAGER CATCHES UP.
+HRConvert2 builds its own copy of a dependency when the package manager's version is outside
+the window the manifest declares. When the package manager's version is inside the window
+again, --setup --update-depends takes the own build away.
+
+A LONG BUILD PRINTS A STATUS LINE EVERY MINUTE.
+A build from source takes several minutes, & an hour or more on an ARM board. pip downloads
+everything before it installs anything, so a slow connection makes it slow. The status line is
+how an administrator knows it has not hung.
+
+--setup --uninstall-depends REQUIRES A SUBSYSTEM.
+Every dependency together includes PHP, Apache & the package manager. Removing all of them
+would leave a host that cannot be recovered remotely.
+
+A DEPENDENCY THAT CANNOT ANSWER IS RECORDED AS UNKNOWN, NOT AS EMPTY.
+Unknown leaves its pipeline's declaration standing. Empty would read as a tool that converts
+nothing.
+
+AN APACHE CONFIGURATION A PACKAGE INSTALL ENABLED IS TURNED OFF WHEN NOTHING USES IT.
+Installing a package can enable configuration HRConvert2 never asked for.
+
+THE SUPPLY CHAIN TEMPLATE'S RIGHT HAND COLUMNS ARE BLANK ON PURPOSE.
+They are the audit, & a person fills them in.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Per Conversion Limits--
+
+A KERNEL THAT DELEGATES NO CGROUP CONTROLLERS CANNOT HOLD A PER CONVERSION LIMIT.
+That is the kernel's decision, & it is normal on a NAS or an appliance. Conversions there are
+still bounded by scheduling priority.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Updates--
+
+EDGE IS NOT A RELEASE.
+-u=edge installs the master branch as it stands. It carries whatever version master holds,
+which may match no release at all.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

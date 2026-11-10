@@ -26,7 +26,7 @@ This application provides a highly accessible, unauthenticated web interface ena
 
 Standalone HRConvert2 has no request rate limiting by default. A busy server will accept every conversion it is offered and can accept more work than the hardware can perform.
 
-Resource rate limiting adds a **budget mechanism** (configured in `config.php`) to place hard limits on resource-intensive operations. It is optional and disabled by default.
+Resource rate limiting adds a **budget mechanism** (configured in `config.php`) to place hard limits on resource-intensive operations. It is optional and enabled by default.
 
 - WHEN DISABLED (Default Mode)
   - HRConvert2 behaves as before: nothing is checked, nothing is refused, and no additional listener processes run.
@@ -119,7 +119,7 @@ CRITICAL SECURITY POLICY:
 
 ## 📊 About the Resource Budget
 
-System assets are measured in arbitrary cost units and updated every `--Resource Poll Interval--` seconds based on three pillars.
+System assets are measured in arbitrary cost units. The host is polled every `--Resource Poll Interval--` seconds, and the budget is worked out from that poll and the operations in flight each time one asks for it, based on three pillars. Until v4.0.6 it was worked out only at the poll.
 
 ### 🧩 The Budget Equation
 1. **Base Budget:** Set by `--Total Resource Budget--`. If 0, defaults to 100 units per CPU core.
@@ -128,6 +128,7 @@ System assets are measured in arbitrary cost units and updated every `--Resource
 
 - Idle server → no throttling (maximum performance)
 - Loaded server → rejects new work before crashing
+- Namespaces nearly spent → every sandbox is a user namespace, so the Resource Manager counts the web server account's at each poll. It warns at 10% free and refuses work at 1% free, with error 31025.
 
 ---
 
@@ -252,7 +253,12 @@ The resolution order is:
 3. The core's built-in for that type.
 4. `--Default Per Conversion Resources--`.
 
-These are **maxima**. With a listener running they are scaled down against current load and against the conversions already in flight, and never below `--Minimum Per Conversion Resources--`. With no listener they are used unchanged.
+These are **maxima**. With a listener running each is scaled down by what the host has free, and never below `--Minimum Per Conversion Resources--`. With no listener they are used unchanged.
+
+- The processor share shrinks with load, and is split between the conversions in flight and the new one.
+- The memory ceiling is what the host has available, less `--Reserve Resource Percentage--`, split the same way, and never more than the configured ceiling. A kernel that does not report available memory gives each conversion its split of the configured ceiling instead.
+
+A conversion counts only those already in flight. Until v4.0.6 the listener registered the new conversion before it scaled, so a conversion on its own counted itself and was given half, and both ceilings shrank again by whichever of load or memory in use was higher. LibreOffice was killed inside the 137M a 512M document ceiling had become.
 
 > ⚠️ **Scan's memory is never scaled.** Only its processor share is. A scanner needs the memory its loaded signature database takes, so a smaller ceiling does not slow a scan, it has the kernel kill it. The core carries its own Scan ceiling because a ClamAV database does not fit inside 512M, and anything an administrator sets always wins.
 

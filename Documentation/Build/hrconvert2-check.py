@@ -12,7 +12,7 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v3.9.3.
+# / v4.0.6.
 # / This file checks the source for faults a human reading it will not reliably see.
 # /
 # / Run it from the installation root, beside convertCore.php.
@@ -64,8 +64,9 @@
 # / than running it. Nothing here is secret & the project is open source, so that is untidy
 # / rather than dangerous, & it is still worth the index.html every other directory in this
 # / project carries. Copy one in from any neighbouring folder rather than writing a new one.
-# / This whole directory is removed by --Delete Build Environment-- in config.php, which is
-# / the correct answer for an installation that is not being developed on.
+# / --Delete Build Environment-- in config.php leaves this directory where it is, because the
+# / application reads other scripts in it as it runs. It removes the Dockerfile & a Build folder
+# / in the installation root.
 # /
 # / Dependency Requirements ...
 # / This file requires Python 3. The syntax check additionally requires the php binary &
@@ -837,24 +838,28 @@ def check_version_pins(root, report):
     for match in re.finditer(r"\$Required(\w+?)Version\s*=\s*'v?([0-9.]+)'", core):
         component = match.group(1)
         pinned = match.group(2)
-        declared = None
-        where = None
+        # / EVERY FILE THAT DECLARES THE VERSION IS COMPARED, & each one that differs is named, as the
+        # / shell does. ScanCore is a program of its own & its configuration declares its own
+        # / $ConfigVersion, so it is not read for this application's pins. Until v4.0.6 the last file
+        # / the filesystem listed answered alone, so the same tree passed on one disk & reported
+        # / ScanCore's version on another.
+        # / A pin with nothing to point at is not reported. Config, the GUI, the language
+        # / pack & the install secret are all pinned here & none of them lives in Resources
+        # / as a component with a version constant of its own.
         for base, dirs, files in os.walk(os.path.join(root, 'Resources')):
-            for name in files:
+            dirs.sort()
+            if (os.path.relpath(base, root) + os.sep).startswith(SCANCORE_FOLDER):
+                dirs[:] = []
+                continue
+            for name in sorted(files):
                 if not name.endswith('.php'):
                     continue
                 body = open(os.path.join(base, name), encoding='utf-8').read()
                 found = re.search(r"\$" + component + r"Version\s*=\s*'v?([0-9.]+)'", body)
-                if found:
-                    declared = found.group(1)
-                    where = name
-        # / A pin with nothing to point at is not reported. Config, the GUI, the language
-        # / pack & the install secret are all pinned here & none of them lives in Resources
-        # / as a component with a version constant of its own.
-        if declared is not None and declared != pinned:
-            report('PIN', component + ' is pinned at ' + pinned + ' & ' + where
-                   + ' declares ' + declared)
-            faults += 1
+                if found and found.group(1) != pinned:
+                    report('PIN', component + ' is pinned at ' + pinned + ' & ' + name
+                           + ' declares ' + found.group(1))
+                    faults += 1
     # / A manager is pinned by the Engine rather than by the application.
     engine_path = os.path.join(root, 'Resources', 'Engine', 'engine.php')
     if os.path.exists(engine_path):

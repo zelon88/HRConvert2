@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.6.
 // / This file is the Pipeline Core, one of the Engine's cores. It verifies, describes &
 // / dispatches the detachable pipelines under Resources/Pipelines, & checks each against
 // / the exact version the application pins it to.
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v3.9.9';
+$PipelineCoreVersion = 'v4.0.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -675,7 +675,7 @@ function verifiedToolPath($manifestName) {
   // / mistake.
   global $CoreLoaded, $DependsManifest, $InstLoc, $DirSep, $Verbose, $EnableMemoryProtection, $RequiredDependencyCoreVersion;
   $VerifiedPath = FALSE;
-  $manifestPath = $dependencyStatus = $detectedVersion = $rawOutput = '';
+  $manifestPath = $dependencyStatus = $detectedVersion = $rawOutput = $binaryPath = $binaryOrigin = '';
   $manifestEntry = array();
   $entryWasFound = $dependencyIsPresent = $dependencyCoreLoaded = $toolIsRequired = FALSE;
   $dependencyCoreVersion = '';
@@ -694,21 +694,22 @@ function verifiedToolPath($manifestName) {
   // / version pin, which a bare require would not.
   if (!function_exists('resolveDependencyState') && function_exists('verifyCoreComponent')) list ($dependencyCoreLoaded, $dependencyCoreVersion) = verifyCoreComponent('Dependency Core', 'Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion', (string)$RequiredDependencyCoreVersion);
   if (!isset($DependsManifest) or !is_array($DependsManifest)) warningEntry('The dependency manifest could not be read, so '.(string)$manifestName.' could not be verified.');
-  else if (!function_exists('resolveDependencyState')) warningEntry('The Dependency Core is unavailable, so '.(string)$manifestName.' could not be verified.');
+  else if (!function_exists('resolveDependencyChoice')) warningEntry('The Dependency Core is unavailable, so '.(string)$manifestName.' could not be verified.');
   else {
     foreach ($DependsManifest as $manifestEntry) {
       if ((string)$manifestEntry['Name'] !== (string)$manifestName) continue;
       $entryWasFound = TRUE;
-      // / FOUR values & the status is THIRD. Guessing the shape returned the presence flag
+      // / SIX values & the status is THIRD. Guessing the shape returned the presence flag
       // / as the status, so every tool reported as status 1 & was refused.
-      list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyState($manifestEntry);
+      // / The path is FIFTH & is the program that answered inside the window, which is this
+      // / application's own build where it has one, so the program verified is the program run.
+      list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput, $binaryPath, $binaryOrigin) = resolveDependencyChoice($manifestEntry);
       // / ok is the only status a pipeline may run on. absent, outdated, too-new,
       // / unsupported, misconfigured & refused all mean the same thing to a caller.
       if ($dependencyStatus === 'ok') {
-        $VerifiedPath = (string)$manifestEntry['Binary'];
-        if (strpos($VerifiedPath, $DirSep) === FALSE) $VerifiedPath = locateDependency($VerifiedPath);
+        $VerifiedPath = $binaryPath;
         if ($VerifiedPath === '') $VerifiedPath = FALSE;
-        else if ($Verbose) logEntry((string)$manifestName.' verified at '.$VerifiedPath.', version '.$detectedVersion.'.'); }
+        else if ($Verbose) logEntry((string)$manifestName.' verified at '.$VerifiedPath.', version '.$detectedVersion.($binaryOrigin === 'own' ? ', '.engineApplicationName().'\'s own build' : '').'.'); }
       // / A missing OPTIONAL tool is logged, not warned. RAR is optional to archiving & MeshLab to
       // / modelling under PyMeshLab, & a warning on every request for a tool nobody needs is noise.
       // / The old checks only logged these. A pipeline that truly needs a tool raises its own error
@@ -721,8 +722,62 @@ function verifiedToolPath($manifestName) {
       break; }
     if (!$entryWasFound) warningEntry('No manifest entry is named '.(string)$manifestName.', so it could not be verified.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $toolIsRequired, $dependencyCoreLoaded, $dependencyCoreVersion, $dependencyIsPresent, $dependencyStatus, $detectedVersion, $rawOutput, $manifestEntry, $entryWasFound, $manifestName);
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $toolIsRequired, $dependencyCoreLoaded, $dependencyCoreVersion, $dependencyIsPresent, $dependencyStatus, $detectedVersion, $rawOutput, $binaryPath, $binaryOrigin, $manifestEntry, $entryWasFound, $manifestName);
   return $VerifiedPath; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether a pipeline runs its converter once more.
+// / Accepts the path the converter writes & how many attempts were made, in that order.
+// / Returns TRUE while nothing is at that path & an attempt remains.
+// / --File Operation Retry Count-- is how many attempts are made, & one always is. Every pipeline
+// / that retries asks this, so they all count alike. Until v4.0.6 most made one attempt more than
+// / that, & raised their error after the attempt that used the count up, whether or not it worked.
+function pipelineAttemptIsDue($outputPath, $attemptsMade) {
+  // / Set variables.
+  global $StopCounter, $EnableMemoryProtection;
+  $AttemptIsDue = FALSE;
+  $attemptLimit = max(1, (int)$StopCounter);
+  clearstatcache(TRUE, (string)$outputPath);
+  $AttemptIsDue = ((int)$attemptsMade < $attemptLimit && !file_exists((string)$outputPath) && !is_link((string)$outputPath));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $attemptLimit, $outputPath, $attemptsMade);
+  return $AttemptIsDue; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether what a converter left is a result.
+// / Accepts the path the converter wrote. Returns whether a file is there that may be offered, & a
+// / sentence saying why not, in that order. The caller decides whether that is an error.
+// / A RESULT IS A FILE, & IT HAS SOMETHING IN IT. A converter that fails part way can leave an empty
+// / file, as ImageMagick does for an icon it cannot write, & Calibre writes a folder for oeb. Until
+// / v4.0.6 every pipeline judged by whether anything was there, so each was offered as a result. An
+// / empty file is removed, & a folder or a link is left for the sweep. A plain text format may hold
+// / nothing, because a document or an image with no text in it converts to an empty one.
+function pipelineOutputIsUsable($outputPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OutputIsUsable = FALSE;
+  $OutputNotice = '';
+  $outputStatus = array();
+  $outputType = 0;
+  $outputExtension = '';
+  $emptyIsUsable = array('txt', 'csv', 'tsv', 'md', 'srt', 'vtt', 'sub', 'sbv', 'lrc');
+  clearstatcache(TRUE, (string)$outputPath);
+  $outputStatus = @lstat((string)$outputPath);
+  $outputExtension = strtolower(pathinfo((string)$outputPath, PATHINFO_EXTENSION));
+  if (is_array($outputStatus)) $outputType = ((int)$outputStatus['mode'] & 0170000);
+  // / A converter that says it succeeded & left nothing at all is named too, because nothing else will.
+  if (!is_array($outputStatus)) $OutputNotice = 'The converter reported success & left nothing at '.basename((string)$outputPath).', so the conversion failed!';
+  else if ($outputType === 0100000 && ((int)$outputStatus['size'] > 0 or in_array($outputExtension, $emptyIsUsable, TRUE))) $OutputIsUsable = TRUE;
+  else if ($outputType === 0100000) {
+    @unlink((string)$outputPath);
+    $OutputNotice = 'The converter left '.basename((string)$outputPath).' empty, so the conversion failed & the empty file was removed!'; }
+  else $OutputNotice = 'The converter left '.basename((string)$outputPath).' as something other than a file, so the conversion failed!';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $OutputIsUsable & $OutputNotice are not purged, because they are the return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $outputStatus, $outputType, $outputExtension, $emptyIsUsable, $outputPath);
+  return array($OutputIsUsable, $OutputNotice); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -860,9 +915,9 @@ function runConversion($conversionFamily, $pathname, $newPathname, $extension, $
   $Extension = $extension;
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
-  $candidatesAreResolved = $pipelineIsReady = FALSE;
+  $candidatesAreResolved = $pipelineIsReady = $outputIsUsable = FALSE;
   $candidateFolders = array();
-  $entryPointName = $inputExtension = '';
+  $entryPointName = $inputExtension = $outputNotice = '';
   $attemptCount = 0;
   $inputExtension = getExtension($pathname);
   list ($candidatesAreResolved, $candidateFolders) = resolvePipelineCandidates($conversionFamily, $inputExtension, $extension);
@@ -879,6 +934,16 @@ function runConversion($conversionFamily, $pathname, $newPathname, $extension, $
       if ($attemptCount > 1 && file_exists($NewPathname)) @unlink($NewPathname);
       if ($Verbose) logEntry('Dispatching a '.$conversionFamily.' conversion to the '.$candidateFolder.' pipeline.');
       list ($ConversionSuccess, $ConversionErrors, $NewPathname, $Extension, $OutputFilename, $WorkerPID) = $entryPointName($pathname, $NewPathname, $Extension, $height, $width, $rotate, $bitrate);
+      // / A pipeline that says it succeeded is held to what it left. A stream is still being written
+      // / by the process it reports, so it is judged by that process instead. What it left is a
+      // / warning while another implementation is behind it, & error 34010 once none is.
+      if ($ConversionSuccess && (int)$WorkerPID === 0) {
+        list ($outputIsUsable, $outputNotice) = pipelineOutputIsUsable($NewPathname);
+        if (!$outputIsUsable) {
+          $ConversionSuccess = FALSE;
+          $ConversionErrors = TRUE;
+          if (count($candidateFolders) > $attemptCount) warningEntry($outputNotice);
+          else errorEntry($outputNotice, 34010, FALSE); } }
       if ($ConversionSuccess) break;
       // / A failure that has another candidate behind it is a warning, never an error.
       // / The candidate already logged why it failed under its own name.
@@ -906,7 +971,7 @@ function runConversion($conversionFamily, $pathname, $newPathname, $extension, $
   if (!is_string($OutputFilename) or $OutputFilename === '') $OutputFilename = basename($NewPathname);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / The six contract values are not purged, because they are return values.
-  purgeSensitiveMemory($EnableMemoryProtection, $candidateFolder, $candidatesAreResolved, $candidateFolders, $pipelineIsReady, $entryPointName, $inputExtension, $attemptCount, $conversionFamily, $pathname, $newPathname, $extension, $height, $width, $rotate, $bitrate);
+  purgeSensitiveMemory($EnableMemoryProtection, $candidateFolder, $candidatesAreResolved, $candidateFolders, $pipelineIsReady, $outputIsUsable, $outputNotice, $entryPointName, $inputExtension, $attemptCount, $conversionFamily, $pathname, $newPathname, $extension, $height, $width, $rotate, $bitrate);
   return array($ConversionSuccess, $ConversionErrors, $NewPathname, $Extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 ?>

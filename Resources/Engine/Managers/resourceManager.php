@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.5.
+// / v4.0.6.
 // / This file is the Resource Manager. It is a manager subcomponent of the Engine.
 // / The Resource Manager polls the host, calculates the budget every operation is granted from & sweeps anything that has outlived its welcome.
 // /
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.5';
+$ManagerVersion = 'v4.0.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -58,13 +58,16 @@ function runResourceManager() {
   $scaledLimits = array();
   $socketPath = $denialReason = $budgetToken = $sessionConvertLoc = $staleToken = '';
   $systemResources = $resourceBudget = $workerRegistry = $sessionLocations = array();
-  $managerMessages = $managerConnections = $replyPayload = $staleWorkers = $staleRecord = $workerRecord = $killReply = array();
-  $messagesReceived = $messageIndex = $allocatedBudget = $newExpectedRuntime = 0;
+  $managerMessages = $managerConnections = $replyPayload = $staleWorkers = $staleRecord = $killReply = array();
+  $messagesReceived = $messageIndex = $newExpectedRuntime = 0;
   $lastPollTime = $lastReapTime = $lastSweepTime = $locationsSwept = $entriesDropped = 0;
+  $lastLogRefresh = time();
   $environmentIsReady = $dataIsProtected = FALSE;
   $environmentFindings = $scriptFinding = array();
   $exposureStatus = $exposureDetail = $scriptStatus = $scriptDetail = $locationStatus = $hostedStatus = $hostedDetail = $locationName = $findingCheck = '';
   $locationFinding = array();
+  $namespaceState = $lastNamespaceState = 'unknown';
+  $namespacesInUse = $namespaceLimit = 0;
   $socketPath = buildManagerSocketPath('resource-manager');
   list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
   if (!$serverIsOpen) errorEntry('The Resource Manager could not open its socket!', 31002, TRUE);
@@ -73,14 +76,21 @@ function runResourceManager() {
     // / A session map entry is kept a little longer than a session can survive a sweep.
     $keepRunning = TRUE;
     while ($keepRunning) {
+      // / A manager runs for weeks, so it moves on to the logfile it should be writing now, once a minute.
+      $lastLogRefresh = refreshProcessLog($lastLogRefresh);
       // / Repoll the host on the configured interval & recompute from the live registry.
       if ((time() - $lastPollTime) >= (int)$ResourcePollInterval) {
-        $allocatedBudget = 0;
-        foreach ($workerRegistry as $workerRecord) $allocatedBudget = $allocatedBudget + (int)$workerRecord['ConversionCost'];
         list ($resourcesPolled, $systemResources) = pollSystemResources();
-        list ($budgetCalculated, $resourceBudget) = calculateResourceBudget($systemResources, $allocatedBudget);
+        list ($budgetCalculated, $resourceBudget) = calculateResourceBudget($systemResources, trackedWorkerCost($workerRegistry));
         if (!$resourcesPolled) warningEntry('The Resource Manager could not poll system resources. The budget was not adjusted.');
         if ($Verbose && $budgetCalculated) logEntry('Resource Manager recalculated the budget. Load '.$systemResources['LoadPercentage'].'%, memory '.$systemResources['MemoryUsedPercentage'].'%, remaining '.$resourceBudget['RemainingBudget'].' of '.$resourceBudget['TotalBudget'].', tracked '.count($workerRegistry).'.');
+        // / User namespaces are counted on the same interval. Each change of state is logged once.
+        list ($namespaceState, $namespacesInUse, $namespaceLimit) = measureNamespaceHeadroom();
+        if ($namespaceState !== $lastNamespaceState) {
+          if ($namespaceState === 'spent') errorEntry('The web server account holds '.$namespacesInUse.' of its '.$namespaceLimit.' user namespaces! No conversion is granted until more than 1% are free.', 31025, FALSE);
+          else if ($namespaceState === 'low') warningEntry('The web server account holds '.$namespacesInUse.' of its '.$namespaceLimit.' user namespaces. Conversions are refused once 1% or fewer are free.');
+          else if ($namespaceState === 'ok') logEntry('The web server account holds '.$namespacesInUse.' of its '.$namespaceLimit.' user namespaces.');
+          $lastNamespaceState = $namespaceState; }
         $lastPollTime = time(); }
       // / Find what has outlived its runtime & hand each one to the Worker Manager.
       if ((time() - $lastReapTime) >= (int)$WorkerReapInterval) {
@@ -171,14 +181,24 @@ function runResourceManager() {
             $sessionConvertLoc = resolveSessionLocation($sessionLocations, ($managerMessages[$messageIndex]['DailyHash'] ?? ''), ($managerMessages[$messageIndex]['SessionHash'] ?? ''));
             $replyPayload = array('Approved' => TRUE, 'Reason' => 'Resolved.', 'ConvertLoc' => $sessionConvertLoc); }
           // / A budget request. Approve, register & issue a token the worker returns later.
+          // / The budget is worked out again from the conversions tracked now, because the last poll
+          // / may be several requests old. Until v4.0.6 it was worked out only as the host was polled,
+          // / so every request between two polls was judged against the same remaining budget.
+          // / The limits are scaled before the conversion is registered, so they count only the
+          // / conversions already in flight. Until v4.0.6 the conversion was registered first, so it
+          // / was counted as in flight against itself & a conversion on its own was given half.
           else if ($managerMessages[$messageIndex]['RequestType'] === 'budget') {
-            list ($requestApproved, $denialReason) = evaluateBudgetRequest($resourceBudget, $workerRegistry, ($managerMessages[$messageIndex]['ConversionCost'] ?? 0), ($managerMessages[$messageIndex]['ExpectedRuntime'] ?? 0));
-            if (!$requestApproved) $replyPayload = array('Approved' => FALSE, 'Reason' => $denialReason);
+            list ($budgetCalculated, $resourceBudget) = calculateResourceBudget($systemResources, trackedWorkerCost($workerRegistry));
+            if ($budgetCalculated) list ($requestApproved, $denialReason) = evaluateBudgetRequest($resourceBudget, $workerRegistry, ($managerMessages[$messageIndex]['ConversionCost'] ?? 0), ($managerMessages[$messageIndex]['ExpectedRuntime'] ?? 0));
+            if (!$budgetCalculated) $replyPayload = array('Approved' => FALSE, 'Reason' => 'The resource budget is unavailable.');
+            else if (!$requestApproved) $replyPayload = array('Approved' => FALSE, 'Reason' => $denialReason);
+            // / A sandbox the kernel can give no namespace fails inside it, so it is refused here.
+            else if ($namespaceState === 'spent') $replyPayload = array('Approved' => FALSE, 'Reason' => '1% or fewer of the web server account\'s user namespaces are free.');
             else {
+              list ($limitsWereScaled, $scaledLimits) = scaleConversionLimits($systemResources, count($workerRegistry));
               list ($workerWasRegistered, $budgetToken) = registerTrackedWorker($workerRegistry, ($managerMessages[$messageIndex]['WorkerPid'] ?? 0), ($managerMessages[$messageIndex]['ConversionCost'] ?? 0), ($managerMessages[$messageIndex]['ExpectedRuntime'] ?? 0));
               if (!$workerWasRegistered) $replyPayload = array('Approved' => FALSE, 'Reason' => 'The worker registry could not be updated.');
               else {
-                list ($limitsWereScaled, $scaledLimits) = scaleConversionLimits($systemResources, count($workerRegistry));
                 $replyPayload = array('Approved' => TRUE, 'Reason' => 'Approved.', 'BudgetToken' => $budgetToken, 'Limits' => ($limitsWereScaled ? $scaledLimits : array()));
                 if ($Verbose) logEntry('Resource Manager approved worker '.(int)($managerMessages[$messageIndex]['WorkerPid'] ?? 0).' at cost '.(int)($managerMessages[$messageIndex]['ConversionCost'] ?? 0).'. Token '.$budgetToken.'.'); } } }
           // / A completion notice. The budget is reclaimed immediately.
@@ -191,7 +211,10 @@ function runResourceManager() {
             list ($extensionApproved, $newExpectedRuntime) = extendTrackedWorker($workerRegistry, ($managerMessages[$messageIndex]['BudgetToken'] ?? ''), ($managerMessages[$messageIndex]['RequestedSeconds'] ?? 0));
             $replyPayload = array('Approved' => $extensionApproved, 'Reason' => $extensionApproved ? 'Extended.' : 'The extension was refused.', 'ExpectedRuntime' => $newExpectedRuntime); }
           // / A command line request for live figures. Nothing on disk can answer this.
+          // / The budget is worked out from the conversions tracked now, as a budget request's is, &
+          // / the limits are what the next conversion would be given.
           else if ($managerMessages[$messageIndex]['RequestType'] === 'status') {
+            list ($budgetCalculated, $resourceBudget) = calculateResourceBudget($systemResources, trackedWorkerCost($workerRegistry));
             list ($limitsWereScaled, $scaledLimits) = scaleConversionLimits($systemResources, count($workerRegistry));
             $replyPayload = array('Approved' => TRUE, 'Reason' => 'Reported.', 'TrackedWorkers' => count($workerRegistry), 'SessionLocations' => count($sessionLocations), 'Budget' => $resourceBudget, 'Limits' => ($limitsWereScaled ? $scaledLimits : array())); }
           // / A command line request to end every tracked worker.
@@ -201,42 +224,53 @@ function runResourceManager() {
         $messageIndex++; } }
     $ResourceManagerExitedCleanly = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $workerRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $scriptFinding, $scriptStatus, $scriptDetail, $locationStatus, $hostedStatus, $hostedDetail, $dataIsProtected, $exposureStatus, $exposureDetail, $locationName, $findingCheck, $locationFinding, $messagesReceived, $messageIndex, $allocatedBudget, $newExpectedRuntime, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped);
+  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $resourcesPolled, $budgetCalculated, $requestApproved, $workerWasRegistered, $workerWasReleased, $extensionApproved, $sweepCompleted, $messageWasDelivered, $socketPath, $denialReason, $budgetToken, $sessionConvertLoc, $staleToken, $systemResources, $resourceBudget, $workerRegistry, $sessionLocations, $managerMessages, $managerConnections, $replyPayload, $staleWorkers, $staleRecord, $killReply, $scaledLimits, $limitsWereScaled, $environmentIsReady, $environmentFindings, $scriptFinding, $scriptStatus, $scriptDetail, $locationStatus, $hostedStatus, $hostedDetail, $dataIsProtected, $exposureStatus, $exposureDetail, $locationName, $findingCheck, $locationFinding, $messagesReceived, $messageIndex, $newExpectedRuntime, $lastLogRefresh, $lastPollTime, $lastReapTime, $lastSweepTime, $locationsSwept, $entriesDropped, $namespaceState, $lastNamespaceState, $namespacesInUse, $namespaceLimit);
   return $ResourceManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to scale the configured per conversion limits against current load.
-// / Accepts the polled resource array & the number of workers already tracked, in that order.
+// / A function to scale the configured per conversion limits against what the host has free.
+// / Accepts the polled resource array & the number of conversions already in flight, which the one
+// / these limits are for is not among, in that order.
 // / Returns a success boolean & a table of conversion type to limit string, in that order.
 // / A busy host hands out smaller ceilings, so twenty conversions cannot each claim the
 // / share that was safe for one. Nothing is ever scaled below the configured minimum.
 // / The table is handed to the worker with its budget approval & is used for every file in
 // / that request, so a conversion never has to ask again mid batch.
+// / EACH CEILING IS SCALED BY THE RESOURCE IT LIMITS. The processor share shrinks with load. The
+// / memory ceiling is a share of the memory the host has available, less the reserved share, split
+// / between the conversions in flight & this one, & never more than the configured ceiling.
+// / Until v4.0.6 both shrank by whichever of load or memory in use was higher, as a fraction of the
+// / configured ceiling. A desktop with half its memory in use halved every memory ceiling while
+// / gigabytes stood free, & LibreOffice was killed inside the 137M a document conversion was left.
 function scaleConversionLimits($systemResources, $trackedWorkers) {
   // / Set variables.
-  global $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $Verbose, $EnableMemoryProtection;
+  global $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $ReserveResourcePercentage, $Verbose, $EnableMemoryProtection;
   $LimitsWereScaled = FALSE;
   $ScaledLimits = array();
   $conversionType = $limitString = '';
   $limitIsValid = $minimumIsValid = FALSE;
   $cpuPercentage = $memoryMegabytes = $minimumCpu = $minimumMemory = 0;
-  $scaledCpu = $scaledMemory = $concurrentShare = 0;
-  $highestPressure = $pressureFactor = 0.0;
+  $scaledCpu = $scaledMemory = $concurrentShare = $memoryShare = $reserveShare = 0;
+  $loadPressure = $loadFactor = 0.0;
   $limitTable = array();
   list ($minimumIsValid, $minimumCpu, $minimumMemory) = parseConversionLimit((string)$MinimumPerConversionResources);
   if (!$minimumIsValid) {
     $minimumCpu = 10;
     $minimumMemory = 128;
     warningEntry('The configured minimum per conversion resources could not be read. Falling back to 10% and 128M.'); }
-  // / Whichever of load or memory is under more pressure governs the reduction.
-  $highestPressure = 0.0;
-  if (is_array($systemResources)) $highestPressure = max((float)$systemResources['LoadPercentage'], (float)$systemResources['MemoryUsedPercentage']);
-  if ($highestPressure > 95) $highestPressure = 95;
-  if ($highestPressure < 0) $highestPressure = 0;
-  // / A conversion already in flight has taken a share, so the next one is offered less.
+  // / Every conversion in flight has taken a share, & so does this one.
   $concurrentShare = max(1, (int)$trackedWorkers + 1);
-  $pressureFactor = (1 - ($highestPressure / 100)) / $concurrentShare;
+  // / The processor share shrinks with load alone.
+  if (is_array($systemResources) && isset($systemResources['LoadPercentage'])) $loadPressure = (float)$systemResources['LoadPercentage'];
+  if ($loadPressure > 95) $loadPressure = 95;
+  if ($loadPressure < 0) $loadPressure = 0;
+  $loadFactor = (1 - ($loadPressure / 100)) / $concurrentShare;
+  // / The memory share is what the host has available, less the reserved share, split between them.
+  // / A kernel that does not report available memory leaves no share to work out, & each conversion
+  // / is given its split of the configured ceiling instead.
+  $reserveShare = min(100, max(0, (int)$ReserveResourcePercentage));
+  if (is_array($systemResources) && isset($systemResources['MemoryAvailableKb']) && (int)$systemResources['MemoryAvailableKb'] > 0) $memoryShare = (int)floor(((int)$systemResources['MemoryAvailableKb'] / 1024) * (1 - ($reserveShare / 100)) / $concurrentShare);
   // / Build the table from the configured maxima, plus the default under its own key.
   $limitTable = is_array($MaximumPerConversionResources) ? $MaximumPerConversionResources : array();
   $limitTable['Default'] = (string)$DefaultPerConversionResources;
@@ -244,8 +278,8 @@ function scaleConversionLimits($systemResources, $trackedWorkers) {
     list ($limitIsValid, $cpuPercentage, $memoryMegabytes) = parseConversionLimit((string)$limitString);
     if (!$limitIsValid) warningEntry('The configured per conversion limit for '.$conversionType.' could not be read & was left out of the table.');
     else {
-      $scaledCpu = (int)floor($cpuPercentage * $pressureFactor);
-      $scaledMemory = (int)floor($memoryMegabytes * $pressureFactor);
+      $scaledCpu = (int)floor($cpuPercentage * $loadFactor);
+      $scaledMemory = ($memoryShare > 0) ? $memoryShare : (int)floor($memoryMegabytes / $concurrentShare);
       // / A scanner needs the memory its loaded signature database takes, & neither the file
       // / nor the load changes that, so Scan keeps its configured memory & only its processor
       // / share is scaled. config.php has always said to treat that figure as a floor. Until
@@ -262,11 +296,48 @@ function scaleConversionLimits($systemResources, $trackedWorkers) {
       if ($scaledMemory > $memoryMegabytes) $scaledMemory = $memoryMegabytes;
       $ScaledLimits[$conversionType] = $scaledCpu.','.$scaledMemory; } }
   if (!empty($ScaledLimits)) $LimitsWereScaled = TRUE;
-  if ($Verbose && $LimitsWereScaled) logEntry('Scaled per conversion limits for '.count($ScaledLimits).' type(s). Pressure '.round($highestPressure, 1).'%, in flight '.(int)$trackedWorkers.'.');
+  if ($Verbose && $LimitsWereScaled) logEntry('Scaled per conversion limits for '.count($ScaledLimits).' type(s). Load '.round($loadPressure, 1).'%, memory share '.($memoryShare > 0 ? $memoryShare.'M' : 'NOT REPORTED').', in flight '.(int)$trackedWorkers.'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $ScaledLimits is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $conversionType, $limitString, $limitIsValid, $minimumIsValid, $cpuPercentage, $memoryMegabytes, $minimumCpu, $minimumMemory, $scaledCpu, $scaledMemory, $concurrentShare, $highestPressure, $pressureFactor, $limitTable, $systemResources, $trackedWorkers);
+  purgeSensitiveMemory($EnableMemoryProtection, $conversionType, $limitString, $limitIsValid, $minimumIsValid, $cpuPercentage, $memoryMegabytes, $minimumCpu, $minimumMemory, $scaledCpu, $scaledMemory, $concurrentShare, $memoryShare, $reserveShare, $loadPressure, $loadFactor, $limitTable, $systemResources, $trackedWorkers);
   return array($LimitsWereScaled, $ScaledLimits); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to measure how many user namespaces the web server account has left.
+// / Accepts no arguments.
+// / Returns the state, the namespaces in use & the limit, in that order.
+// / The state is ok, low with 10% of the limit or less free, spent with 1% or less free, or
+// / unknown where the limit is unreadable or zero.
+// / Every sandbox is a user namespace, & the kernel refuses a new one once this account holds
+// / user.max_user_namespaces of them. Each distinct user namespace a process of this account is
+// / in, other than this process's own, is counted once. A process of another account cannot be
+// / read & is passed over. A namespace with no process of its own is not seen, so the count is a
+// / floor.
+function measureNamespaceHeadroom() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $NamespaceState = 'unknown';
+  $NamespacesInUse = $NamespaceLimit = $namespacesFree = 0;
+  $lowPercentage = 10;
+  $spentPercentage = 1;
+  $ownNamespace = $processNamespace = $processPath = '';
+  $namespacesSeen = $processPaths = array();
+  $NamespaceLimit = (int)trim((string)@file_get_contents('/proc/sys/user/max_user_namespaces'));
+  $ownNamespace = (string)@readlink('/proc/self/ns/user');
+  if ($NamespaceLimit > 0 && $ownNamespace !== '') {
+    $processPaths = glob('/proc/[0-9]*', GLOB_ONLYDIR | GLOB_NOSORT);
+    if (is_array($processPaths)) foreach ($processPaths as $processPath) {
+      $processNamespace = (string)@readlink($processPath.'/ns/user');
+      if ($processNamespace !== '' && $processNamespace !== $ownNamespace) $namespacesSeen[$processNamespace] = TRUE; }
+    $NamespacesInUse = count($namespacesSeen);
+    $namespacesFree = $NamespaceLimit - $NamespacesInUse;
+    if ($namespacesFree * 100 <= $NamespaceLimit * $spentPercentage) $NamespaceState = 'spent';
+    else if ($namespacesFree * 100 <= $NamespaceLimit * $lowPercentage) $NamespaceState = 'low';
+    else $NamespaceState = 'ok'; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $namespacesFree, $lowPercentage, $spentPercentage, $ownNamespace, $processNamespace, $processPath, $namespacesSeen, $processPaths);
+  return array($NamespaceState, $NamespacesInUse, $NamespaceLimit); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

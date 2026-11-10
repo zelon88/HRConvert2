@@ -351,13 +351,16 @@ $UsePyMeshLab = TRUE;
 // /  --Allow Unprivileged Namespaces--
 // /   Permits HRConvert2 to switch off kernel.apparmor_restrict_unprivileged_userns, as a last resort.
 // /   Ubuntu 23.10 & later turn that restriction on, & every sandbox is built in an unprivileged namespace.
-// /   HRConvert2 builds each sandbox through its own copy of bubblewrap, which only root & the web server's group may run.
+// /   Where the restriction is on, HRConvert2 builds each sandbox through its own copy of bubblewrap, which only root & the web server's group may run.
+// /   Where it is off, the system's bubblewrap builds them, because it needs no profile & stays up to date with the host.
 // /   Its own AppArmor profile is attached to that copy, as Ubuntu attaches its own to Steam, Flatpak & Chrome.
 // /   --setup --install-depends, --update-depends & --install-complete install the copy, & so does an update.
 // /   -fp only installs the profile.
 // /   Where the copy works, a restriction in force stays in force & this setting changes nothing.
 // /   The restriction is never switched off to cover a copy that is missing or that the web server's account cannot run.
 // /   One an earlier release switched off stays off until it is switched back on, & -fp then lets it go.
+// /   Other programs on the host may rely on it by then, so HRConvert2 never switches it back on itself.
+// /   Once the copy is in place, -fp & -v say so & name the command that switches it back on.
 // /   Where bubblewrap refuses a sandbox twice, the -fp argument switches the restriction off, & nothing else ever does.
 // /   An attempt a time limit or a signal cut short is never taken for a refusal.
 // /   The restriction protects a general purpose desktop from a hostile local user.
@@ -563,30 +566,34 @@ $HomeLoc = $ConvertLoc.'/Cache';
 // /   Default is $ConvertLoc.'/Last-Installed-Version'.
 $BackupLoc = $ConvertLoc.'/Last-Installed-Version';
 // /  --Append Log Hash To Log Files--
-// /   This setting is used to append a 12 digit unique identifier to log file names.
-// /   This randomizes log file names across multiple installations & servers.
-// /   Helps to obfuscate log filenames to protect from against blind filename probes.
-// /   If set to TRUE, HRConvert2 will add a random 12 digit number to the end of the log file name.
-// /   If set to FALSE, HRConvert2 will not add any random digits to the log file name.
+// /   This setting is used to append an 18 character identifier to the name of every log file.
+// /   The identifier is derived from the install secret with a keyed hash, so it differs between
+// /   installations & cannot be worked out by anybody who does not hold that secret.
+// /   It protects log files from requests that guess their names.
+// /   If set to TRUE, HRConvert2 will add the identifier to the end of every log file name.
+// /   If set to FALSE, a log file is named by the application, its role, its number & the date alone.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AppendLogHashToLogFiles = TRUE;
 // /  --Unique Daily Log Hash Rotation--
-// /   Log files are appended with t
-// /   Do not include a trailing slash.
-// /   Do not use a path with whitespace.
-// /   Default is $ConvertLoc.'/Logs'.
+// /   This setting decides whether the identifier from --Append Log Hash To Log Files-- changes daily.
+// /   If set to TRUE, a new identifier is derived every day, so one day's name says nothing of the next.
+// /   If set to FALSE, the identifier stays the same from day to day until the install secret changes.
+// /   A new log file is started every day either way, because the date is part of every log file name.
+// /   This setting has no effect if --Append Log Hash To Log Files-- is set to FALSE.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
 $UniqueDailyLogHash = TRUE;
 // /  --Additional Data Locations--
-// /   Extra locations are used to load balance sessions across multiple --Convert Location--.
+// /   Extra locations are used to load balance sessions across more than one data location.
 // /   Each entry is an array of a path & a type, in that order.
 // /   Leave this as an empty array to keep a single data location.
 // /   This setting only has any effect if --Enable Resource Awareness-- is also set.
-// /   If --Enable Resource Awareness-- is not set, HRConvert2 will fall back to the --Convert Data Location--.
-// /   If a resource listener is not running, HRConvert2 will fall back to the --Convert Data Location--. 
+// /   If --Enable Resource Awareness-- is not set, HRConvert2 will fall back to the --Data Storage Directory--.
+// /   If a resource listener is not running, HRConvert2 will fall back to the --Data Storage Directory--.
 // /   The listener decides. Every front end sharing the install secret gets the same answer.
-// /   With no listener running, --Convert Location-- is always used.
-// /   Every location must be readable & writable by the web server user.
+// /   Each location is a data root of its own, as the --Data Storage Directory-- is.
+// /   -fp gives it to root & gives the Sessions folder it makes inside it to the web server user.
 // /   Every location must be OUTSIDE the web root.
 // /   A location that does not exist is skipped rather than created.
 // /   Valid storage types.
@@ -603,17 +610,14 @@ $UniqueDailyLogHash = TRUE;
 // /   The second element of the array must be a string containing the storage type.
 // /   The first element of the array must be a string containing a valid directory path.
 // /   Default is an empty array.
-$AdditionalConvertLocs = array(
-  array('/DATA2/HRConvert2', 'roundrobin'),
-  array('/DATA3/HRConvert2', 'leastactive'),
-  array('/DATA4/HRConvert2', 'redundant'));
+$AdditionalConvertLocs = array();
 // /  --Storage Cleanup Interval--
 // /   How often the Resource Manager sweeps every configured data location, in seconds.
 // /   The sweep uses --Delete Threshold-- to decide what has expired.
 // /   Set to 0 to disable the scheduled sweep entirely.
-// /   Stanalone installations, or installs where no listener is available are unaffected by this setting.
-// /   Stanalone workers also sweep for stale files at runtime.
-// /   If a stanalone worker encounters stale files, the worker will also sweep them.
+// /   Standalone installations, or installs where no listener is available are unaffected by this setting.
+// /   Standalone workers also sweep for stale files at runtime.
+// /   If a standalone worker encounters stale files, the worker will also sweep them.
 // /   This setting ONLY sets the Manager cleanup CHECK interval.
 // /   Valid options are integers 0 and larger.
 // /   Default is 300.
@@ -639,7 +643,7 @@ $ApplicationTitle = 'Convert Anything!';
 // /   If set to TRUE, an administrator may run  php convertCore.php -u  to update.
 // /   If set to FALSE, that command refuses & the application may only be updated by hand.
 // /   Valid options are TRUE or FALSE.
-// /   Default is FALSE.
+// /   Default is TRUE.
 $EnableAutoUpdates = TRUE;
 // /  --Automatic Update Target Version--
 // /   Which release an update installs when no version is supplied on the command line.
@@ -940,7 +944,7 @@ $WarnOnCapabilityMismatch = TRUE;
 // /   A conversion that reaches its memory ceiling is killed by the kernel & is reported as
 // /   a failed conversion rather than as a memory error. Keep the ceilings generous.
 // /   Valid options are TRUE or FALSE.
-// /   Default is FALSE.
+// /   Default is TRUE.
 $EnablePerConversionLimits = TRUE;
 // /  --Maximum Per Conversion Resources--
 // /   The ceiling one conversion of each type may claim, as 'processor,memory'.
@@ -995,7 +999,7 @@ $MinimumPerConversionResources = '10,128';
 // /   Requires the coreManager.php component & a running listener.
 // /   When disabled, HRConvert2 behaves exactly as it did before this component existed.
 // /   Valid options are TRUE or FALSE.
-// /   Default is FALSE.
+// /   Default is TRUE.
 $EnableResourceAwareness = TRUE;
 // /  --Require Resource Awareness--
 // /   Refuses to run at all when resource awareness is unavailable.
@@ -1187,10 +1191,10 @@ $UserPDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
 $UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'odt', 'docx', 'pdf', 'chm', 'cbz', 'cbr', 'cbc', 'prc', 'opf', 'recipe');
 // /  --Supported Ebook Output Formats--
 // /   The e-book formats a user may convert TO.
-// /   PDF IS DELIBERATELY EXCLUDED. Calibre renders PDF output through Qt WebEngine, which
-// /   wants a browser engine & a display & is the one output path that commonly fails on a
-// /   headless server. Document to PDF is already handled properly by LibreOffice through
-// /   the document pipeline, so nothing is lost by leaving it out.
-// /   Add 'pdf' here only after confirming it actually works on your server.
-$UserEbookOutputArray = array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'oeb', 'docx', 'pdf');
+// /   Calibre writes PDF through Qt WebEngine, which needs more memory than any other output, so
+// /   PDF is the first to fail inside a small --Maximum Per Conversion Resources-- ceiling.
+// /   Calibre writes PML only zipped, as pmlz, & writes OEB as a folder, which cannot be handed
+// /   to a browser. Until v4.0.6 this offered pml & oeb, which never converted, & said PDF was
+// /   left out, which it never was.
+$UserEbookOutputArray = array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pmlz', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'docx', 'pdf');
 // / ------------------------------

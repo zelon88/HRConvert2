@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v3.9.6.
+// / v4.0.6.
 // / This file is the converter for the Video pipeline. It is loaded by pipelineManager.php
 // / ONLY when a Video conversion is about to be dispatched to it, so a request that
 // / converts something else never parses a line of it.
@@ -84,29 +84,30 @@ function convertVideos($pathname, $newPathname, $extension) {
       errorEntry('Bubblewrap is missing or non functional, so this video conversion cannot be isolated!', 11002, FALSE); }
     else {
       if ($Verbose) logEntry('Converting video.');
-      // / This code will attempt the conversion up to $StopCounter number of times.
-      while (!file_exists($newPathname) && $stopper <= $StopCounter) {
+      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
+      // / first attempt that leaves a file.
+      while (pipelineAttemptIsDue($newPathname, $stopper)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
-        $returnData = shell_exec($ffmpegCommand);
+        $returnData = (string)shell_exec($ffmpegCommand);
         // / Count the number of conversions to avoid infinite loops.
-        $stopper++;
-        // / Stop attempting the conversion after $StopCounter number of attempts.
-        // / The loop is left immediately, because an attempt already counted as the last
-        // / one must not run again after the timeout has been reported.
-        if ($stopper >= $StopCounter) {
-          $ConversionErrors = TRUE;
-          errorEntry('The video converter timed out!', 11000, FALSE);
-          // / A timeout on its own says only that something was tried repeatedly.
-          // / The command is what was tried & is the only way to reproduce the failure.
-          warningEntry('The command that timed out was: '.trim($ffmpegCommand));
-          break; } }
+        $stopper++; }
       // / A converter that produced nothing at all is worth a line of its own.
       // / Testing for output & staying silent when there is none meant the one case that
       // / needed explaining was the one case that explained nothing.
       if (!file_exists($newPathname) && trim($returnData) === '') warningEntry('FFMPEG produced no output at all. The command was found & run, & it printed nothing.');
       // / Log the output of the operation to the logfile, if it is not blank.
       if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+      // / Every attempt was made & none left a file. What the converter printed is logged above this,
+      // / with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the converter had timed out, which no time limit
+      // / ever caused, & then made one more attempt.
+      // / Until then it was raised after the attempt that used the count up, even one that worked.
+      if (!file_exists($newPathname)) {
+        $ConversionErrors = TRUE;
+        errorEntry('The video converter produced no file after '.$stopper.' attempt(s)!', 11000, FALSE);
+        // / The error on its own says only that something was tried repeatedly.
+        // / The command is what was tried & is the only way to reproduce the failure.
+        warningEntry('The command that produced no file was: '.trim($ffmpegCommand)); }
       // / The output file is the only verdict on whether the conversion produced anything.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.

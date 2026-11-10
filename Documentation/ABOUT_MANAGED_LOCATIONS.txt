@@ -86,7 +86,9 @@ the data location, & before the first -fp of v4.0.1 it is still the folder the w
 serves, as it was in every earlier release. A setting that names another tree is refused, so
 a wrong value cannot hand some other folder to root. Every name in it is given
 to root with chown -h, which never follows a link, through find -xdev -execdir. A location
-with a role of its own inside it, such as DATA, is left out of the walk. The web server
+with a role of its own inside it, such as DATA, is left out of the walk. So is a path the
+contract names in $EngineRetiredPaths, which no release ships, & from v4.0.6 -fp takes each such
+path away once the rest of the installation is root's. See --About The Gate--. The web server
 account reads the code & cannot change it.
 
 DATA-ROOT.
@@ -106,6 +108,15 @@ cache into Cache, & nothing is moved into either unless it is a real folder no o
 replace. Until v4.0.4 both were moved first, into whatever Sessions & Cache led to, so a web server
 account that owned the data location could swap either for a link & have root move a folder or file
 of its own wherever the link led. A move refused for that reason is named in root's log.
+ONLY A SESSION IS MOVED INTO Sessions, FROM v4.0.6. A session is a folder the web server account
+owns, named as the core names a day, with twelve or eighteen lowercase hexadecimal digits. Every
+other folder at the top of a data root is named in a warning & left where it is, & so is every name
+in Sessions the web server account does not own, because the sweep runs as that account & leaves
+whatever it does not own. Until v4.0.6 every folder that was not one of the layout's own was moved,
+so a release unpacked into a data root went into Sessions as root's & the sweep failed every pass.
+A capability cache an older release left at the top of any data root is moved into Cache when it is
+the primary root's & Cache holds none, & is otherwise removed, because nothing reads it. Until
+v4.0.6 only the primary root's was looked at.
 
 SECRET.
 Secrets in the data location, from v4.0.4. It belongs to root, its group is the web server
@@ -199,19 +210,31 @@ A name is removed from the hosted location only when the installation holds the 
 the same name, so whatever an administrator keeps there stays. A static file a release no longer
 ships is removed. Anything else that is not the loader's is reported as STRAY & left.
 
+WHAT A RELEASE LEFT IN THE HOSTED LOCATION OR BESIDE IT IS REFUSED & NAMED, FROM v4.0.6.
+A release unpacked or cloned there brings .git & .github, & until v4.0.1 the updater moved the
+previous installation aside beside it as <hosted location>.old, PHP files & all, where an update
+that failed left it. The Apache configuration -fp writes refuses all three, & -fp & -v name each
+one found & report the hosted location as kept, which is benign, & remove none of them. Move them
+out of the web root. Until v4.0.6 the configuration covered only the hosted location, so an old
+installation beside it was served, & a web server running PHP there would have run its PHP files.
+
 UPGRADING ONCE THE APPLICATION HAS MOVED.
   -u updates Application in place & keeps the installation it replaced, as it always has.
   A release unpacked over the hosted location is installed by  sudo php convertCore.php -fp  run
   there. Its config.php is installed with it, as unpacking over the installation has always
   replaced it, & the configuration it replaced is in Last-Installed-Version.
-  A drop in of changed files is unpacked into Application, followed by -fp.
-    sudo tar -xzf <drop in> -C <data location>/Application --exclude='./Resources/config.php'
+  A drop in of changed files is unpacked into Application, followed by -fp. The workflow it may
+  carry in .github belongs to the repository & not to an installation.
+    sudo tar -xzf <drop in> -C <data location>/Application --exclude='./Resources/config.php' --exclude='./.github'
     sudo php <data location>/Application/convertCore.php -fp
   A drop in unpacked over the hosted location is refused rather than installed, because it is
   not a whole release. -fp compares the tree it would install with Application, & a tree that
   lacks any PHP file Application holds in Resources or UI is not installed. It names the first
   file missing & where the drop in belongs, & Application is left as it was. A release that
-  removes code on purpose installs once Application has been moved aside by hand.
+  removes code on purpose installs once Application has been moved aside by hand. A drop in
+  whose release left the Engine as it was holds no Engine, so from v4.0.6 a command that needs
+  the Engine, run from it, says the folder is not a whole release & where Application is, before
+  anything is compared. Until then it said to replace the Engine.
 A Docker image keeps its release in the web root, & the entrypoint's -fp installs it into the
 data volume on every start, so a volume kept from an older container runs the new release.
 
@@ -427,8 +450,8 @@ A command that finds anything else stops with error 28008, & names the first thi
 
   Root refused to run the installation at /var/www/html/HRProprietary/HRConvert2, because an
   account other than root could have changed it. /var/www/html does not belong to root. Run
-  sudo php convertCore.php -fp  to give it back to root. Any other account may still run -v
-  in the meantime.
+  sudo php convertCore.php -fp  to give it back to root. Where -fp says root still may not run
+  it, remove or put right what it names. Any other account may still run -v in the meantime.
 
 Nothing is logged yet when the gate runs, so the line goes to the terminal & to PHP's own error
 log, which on the command line is usually the terminal too, so it can appear there twice.
@@ -444,6 +467,23 @@ Once its locations are corrected, -fp reads the tree again exactly as the gate d
 still may not run it, the first thing in the way is named straight after the location count,
 & -fp finishes its other repairs & exits 1. A link it does not remove, a file with more than one
 name & a folder above the installation it may not change are each things it leaves in the way.
+From v4.0.6 it says so, & says to remove or put right what it named & run -fp again, & error
+28008 says the same. Until then 28008 said only to run -fp, which had just run.
+
+WHAT NO RELEASE SHIPS IS TAKEN AWAY, FROM v4.0.6.
+The contract names, in $EngineRetiredPaths, the paths inside an installation that no release
+ships. -fp leaves each out of its walk, & once the rest of the installation is root's it removes
+each as root, following nothing in it & making every folder in it root's alone before anything in
+it is listed, & names each one it removed. One that leaves the installation is refused, & one in a
+folder the web server account owns is left where it is & named. It never leaves the filesystem the
+installation is on, so anything mounted in such a path is left as it is, & the path is named.
+HRConvert2 names one.
+
+  Documentation/Build/ffmpeg-build   FFmpeg's build ran here until v4.0.6 & left its whole tree,
+                                     links & files with more than one name included. Every
+                                     installation it ran in, the Docker image's web root among
+                                     them, was one root refused, & -fp started a chmod for every
+                                     name in it before refusing it.
 
 When config.php names an installation other than the one the command is in, as $InstLoc,
 that tree is read too, before anything is loaded from it.
@@ -546,14 +586,17 @@ one, & that command makes a new key, which ends every session.
                         arrives 0664 from GitHub & is extracted through umask 022. The
                         previous release is kept only where root's folder can hold it.
   -c                    Root hands the sweep to the web server account, which owns every
-                        name in a session & deletes them itself.
+                        name in a session & deletes them itself. A day or a session that
+                        account does not own is left, & -fp names it.
   The web server        Writes only inside its own folders, & reports anything it finds
   account               wrong rather than repairing it.
 
 -fp prints a REFUSED line for each location it would not touch, a SKIPPED line for a backup
 location root cannot hold & a WARNING for each location it could not finish, then a count of
 those it corrected & of those it refused or left incomplete. A skipped backup location is in
-neither count, so --setup carries on past it.
+neither count, so --setup carries on past it. A location counts as corrected only when its owner
+or mode differed from its role, or a retired path was still there, so a run straight after another
+corrects none. Until v4.0.6 every location a role was applied to was counted.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

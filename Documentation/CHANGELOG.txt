@@ -26,6 +26,100 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 
 --------------------
+COMMIT 11/9/2026
+v4.0.6 - Archive extraction is contained, HRConvert2 builds its own 7-Zip where the package manager's is behind, no build is left in the installation, & the listener stops counting a conversion against itself.
+
+-v4.0.6.
+-Thanks to Github user @Hacktivistuz for filing a security advisory regarding 7-Zip that led to the containment of archive extraction & HRConvert2's own 7-Zip.
+  -https://github.com/Hacktivistuz
+  -https://github.com/zelon88/HRConvert2/security/advisories/GHSA-4cmg-x3g6-p322
+  -GHSA-4cmg-x3g6-p322
+-FIX. Archive extraction mounted the whole session conversion folder writable, so an extractor a crafted archive fooled could write & plant links beside every other file the session held. Only the extraction folder is writable now, & the folder holding the archive is read only.
+-7-Zip's floor is 26.02. Every 7-Zip from 21.07 through 26.01 decodes XZ with a heap overflow, CVE-2026-14266. 25.01 & 26.01 fixed others.
+-New manifest field Fallback. An apt entry declaring one has HRConvert2 build its own copy where the package manager's is missing or outside the window, into /usr/local/libexec/hrconvert2/builds. The package manager's copy is left as it is.
+-An own build is asked first wherever its entry is used, & falls back to the package manager's where that one answers inside the window & it does not. One an account other than root could change is never run & reads misconfigured.
+-An own build is made beside the one in service, in a folder only root can open, & is put in service only once it reports the version pinned, inside the window. One that fails leaves the one in service as it was.
+-Only --setup --install-depends, --update-depends & --uninstall-depends make, refresh or take away an own build. --update-depends takes it away once the package manager catches up, & builds it again where an update moved the version pinned.
+-7-Zip declares a Fallback. Where the package manager's is older than 26.02, as Ubuntu 24.04's 23.01 is, --setup --install-depends builds 7-Zip 26.06 from the source 7-Zip publishes, checked against the checksum the manifest pins. New script Documentation/Build/build-7zip.sh. DEPENDENCY_SOURCE hands it the archive on a host that cannot fetch one.
+-After updating to v4.0.6 where 7-Zip is older than 26.02, run --setup --install-depends --subsystem=Archives once. Archives refuse with error 13008 until it has.
+-FIX. A package manager's install was reported installed whatever version it gave. It is FAILED where that is outside the window, with the version it got.
+-FIX. --update-depends named a dependency unavailable on this machine & then tried to upgrade it, which failed on arm for Syslinux Utils.
+-FIX. Capability detection called a tool the manifest names by path unavailable.
+-verifiedToolPath hands a pipeline the program that answered inside the window, so the program verified is the program run. -v, --check-depends & the supply chain audit name an own build & where it is.
+-A reason the dependency report gives itself is printed whole.
+-Every name in an own build must be root's alone, & the web server account must be able to run it, or it is not used. --check-depends says why.
+-Taking an own build away makes each folder in it root's alone before emptying it, so nothing in it can redirect root's removal.
+-Own builds change one run at a time under a lock. --install-depends, --update-depends & --uninstall-depends take away what an interrupted run or a renamed entry left.
+-A Fallback is honoured only where VersionCommand runs the program. Its build is always handed DEPENDENCY_VERSION & DEPENDENCY_SHA256, empty where unpinned.
+-An own build that is never run says --update-depends takes it away where the package manager's copy answers. One answering with no version reads misconfigured.
+-The dependency report says when the package manager has caught up with an own build in service. -v names an own build only while it is in service.
+-FIX. A source build failed where the installation path held a space. Every build command in the manifest quotes it.
+-build-7zip.sh needs curl only to fetch, & says when it installed build-essential.
+-FIX. FFmpeg's source build left its whole tree, links included, in Documentation/Build/ffmpeg-build. Root refuses an installation holding a link, so every installation it ran in refused root with error 28008, the v4.0.5 image included.
+-Every source build works in a new folder under /var/tmp, or TMPDIR, & removes it however it ends. ImageMagick's built in /tmp by fixed names until now.
+-The FFmpeg build command no longer changes into the installation. Every build command in the manifest is bash & a quoted script.
+-New contract setting $EngineRetiredPaths names paths no release ships. -fp removes each once the rest of the installation is root's, following nothing. HRConvert2 names Documentation/Build/ffmpeg-build.
+-A retired path that leaves the installation is refused. One in a folder the web server account owns is left & named, & the installation counts as incomplete.
+-Taking an own build away & removing a retired path are one Kernel walk, removeTreeWithoutFollowing, which never leaves the filesystem holding the tree.
+--fp & error 28008 say to remove or put right what -fp cannot. 28008 said only to run -fp until now.
+-After updating to v4.0.6 where FFmpeg was built from source, run -fp once.
+-FIX. From v4.0.3 --Delete Build Environment-- & --Delete Development Documentation-- looked in Resources/Engine/Cores, removed nothing & printed NOT PRESENT.
+-The build tools no longer say --Delete Build Environment-- removes Documentation/Build, which it never has.
+-FIX. The smoke test called the container stopped whenever -v failed. It prints -v's exit code.
+-A drop-in unpacked beside the loader with no Engine in it is told where the installation is, rather than to replace the Engine.
+-FIX. The listener registered a conversion before scaling its limits, so it counted itself as in flight & a conversion on its own was given half. LibreOffice was killed in every document conversion on a host with half its memory in use, & error 7001 said it had timed out.
+-A conversion's memory ceiling is a share of the memory the host has available, less --Reserve Resource Percentage--, split among the conversions in flight, & never more than configured. Its processor share shrinks with load alone. Both shrank by whichever of load or memory in use was higher.
+-The budget a request is judged by is worked out as it arrives, from the conversions tracked then. It was worked out as the host was polled.
+-A LibreOffice conversion that is killed says so.
+-FIX. The Core Manager ended without its managers when its service was stopped, & systemd killed them. It stops each & waits up to twenty seconds before it ends.
+-FIX. A manager wrote the logfile it started with for as long as it ran, past 38M on one host. Every manager moves on to the logfile it should be writing once a minute.
+-New contract setting $EngineLogProvider names the function a manager asks. HRConvert2 names refreshLogFile.
+-FIX. Both session tokens were logged with --Enhanced Logging Verbosity-- on, so anybody who could read the logs could take a session over. Neither is logged.
+-A new logfile is 0600.
+-FIX. An empty output was offered as a converted file. Pipeline Core removes one unless its format is plain text, refuses anything that is not a file, & raises 34010 once no other pipeline can try.
+-FIX. Most pipelines made one attempt more than --File Operation Retry Count-- & raised their error after the attempt that used it up, whether or not it worked. Every pipeline asks pipelineAttemptIsDue & raises its error once, after the last attempt.
+-Every retry error says the converter produced no file after so many attempts. Each said it had timed out, which no time limit decided.
+-An archive that the archiver ran for & never wrote raises one error, under its format's number. 13000 was raised beside it.
+-FIX. ImageMagick wrote an empty icon from an image larger than 256 pixels. An image converted to ico is scaled to fit 256 by 256.
+-FIX. Calibre cannot write pml & writes a folder for oeb. The Ebook pipeline offers pmlz in place of pml, & the default output list offers neither pml nor oeb.
+-FIX. The filename filter removed .js, .php, .html, .css & .phar wherever the letters appeared, & every --, so a model converted to json could never be fetched. It removes each only as a whole part of a name, in any case, with php5, phps & phtml, & leaves the dashes inside a name.
+-FIX. A crafted name could leave the filter beginning with a dash, which a program reads as an option. Every dash & dot comes off either end, & what that leaves is checked again.
+-A conversion to the format a file already has is refused with error 34009, which says so. It was said to have no pipeline installed.
+-FIX. Every upload drew the whole interface again. A request carrying files draws none.
+-Error 3004 names a file with no extension as such.
+-FIX. meshlabserver aborts where there is no display, so every request found no MeshLab & every Model conversion warned. Its version is asked through Qt's offscreen platform.
+-FIX. The example extra data locations were live values in config.php & in the configuration model. --Additional Data Locations-- is empty by default. An existing config.php keeps what it has.
+-FIX. The data root migration moved every folder at the top of a data root into Sessions, so a release unpacked there went in as root's & the sweep failed every pass. Only a folder the web server account owns, named as a session, is moved. Every other is named & left.
+-The sweep leaves a day or a session the account sweeping does not own. -fp names every name in Sessions the web server account does not own.
+-A capability cache an older release left at the top of an additional data root is removed. Only the primary root's was looked at.
+-The Apache configuration refuses .git & .github in the hosted location & the .old installation an update left beside it. -fp & -v name each one found & remove none.
+-FIX. --setup --install-service wrote no Environment Manager timer, so the manager never ran on a host installed that way. It writes the timer & leaves it off, as --install-complete does.
+-A restriction on unprivileged namespaces an earlier release lifted reads kept once HRConvert2's own bubblewrap carries every sandbox, & names the command that switches it back on. HRConvert2 leaves it lifted, because other programs on the host may rely on it.
+-Where config.php forbids lifting it, a restriction HRConvert2 lifted reads outdated until -fp or a permitted repair switches it back on. It read ok, so no Environment Manager pass repaired it.
+-A hand written /etc/apparmor.d/bwrap no package installed reads kept & is named. Install guides before v3.8.0 asked for it. Nothing changes it.
+-FIX. -fp put back only the policy of the ImageMagick the conversions run. It puts back every /etc/ImageMagick-* & /usr/local/etc/ImageMagick-* policy carrying HRConvert2's marker.
+-FIX. -fp counted every location it applied a role to as corrected. It counts one whose owner or mode differed.
+--fp leaves lingering on where it is already on.
+-FIX. -fp wrote its PHP drop in into the folder a removed PHP left behind. It writes only where that PHP is installed.
+--v & --status say NOT ASKED to an account that cannot read what the listener writes. Both said STOPPED.
+--v calls a per user secret Per user secret. It called it the install secret.
+-FIX. The checkers compared each pin with the first declaring file they read, which could be ScanCore's own config. Every declaring file outside Resources/ScanCore is compared.
+-ScanCore_Config.php refuses to be read from anywhere but ScanCore's command line.
+-config.php says what --Enable Automatic Updates--, --Append Log Hash To Log Files--, --Unique Daily Log Hash Rotation-- & --Additional Data Locations-- do & default to.
+-FIX. config.php said --Enable Per Conversion Limits-- & --Enable Resource Awareness-- default to FALSE, & four documents called resource awareness off by default. Both have shipped TRUE since they were added.
+-ERROR_DESCRIPTIONS no longer says the web server account must write the whole data location, which it has not since v4.0.1.
+-The listener unit & the Engine's comments name no setting of the application's.
+-The Model pipeline sets every local it purges before it uses it.
+-Command line output is concise. A line is a status & a fact or an instruction. The history it carried is in the new Documentation/DEVELOPMENT_NOTES.txt, by subsystem. -h & Documentation/README.md list it.
+-FIX. -v printed a missing Apache configuration in lower case, as if it needed nothing. It reads NOT INSTALLED.
+-Every other status word is unchanged, & every summary line begins as it did, so scripts matching them still match.
+-FIX. -h said a command line run touches no user data. -c removes sessions.
+-The Resource Manager counts the web server account's user namespaces at each poll. It warns with 10% free, & with 1% free raises ERROR 31025 & refuses work, rather than let a sandbox fail for want of one.
+-New functions dependencyWindowText, ownBuildsRoot, ownBuildFolder, ownBuildIsDeclared, ownBuildIsTrusted, ownBuildIsRunnable, ownBuildEntry, ownBuildInService, resolveDependencyChoice, removeOwnBuildTree, holdOwnBuildLock, releaseOwnBuildLock, buildOwnCopy, detachOwnCopy, sweepOwnBuilds, settleOwnBuild & believePackageInstall in Dependency Core, removeTreeWithoutFollowing in the Kernel, retiredPathsIn, removeRetiredPaths, namesToList & locationDiffersFromRole in Setup Core, trackedWorkerCost & refreshProcessLog in the Engine, noteCoreManagerStop & stopSubordinateManagers in the Core Manager, measureNamespaceHeadroom in the Resource Manager, pipelineAttemptIsDue & pipelineOutputIsUsable in Pipeline Core, phpConfigFolderIsLive & systemBwrapProfileFinding in Environment Core, & refreshLogFile in the core.
+-The core, the contract, the manifest, the Kernel, the Engine, engineConfig.php, the four managers, Environment Core, Setup Core, Dependency Core, Pipeline Core, the Archive, Audio, Document, Drawing, Ebook, Image, Model, SVG, Subtitle & Video pipelines, libreOffice.php, the build scripts & the workflow are v4.0.6, & the core requires the Kernel, the Engine, Setup Core, Dependency Core, Pipeline Core & the manifest at v4.0.6.
+-ABOUT_DEPENDENCIES.txt, ABOUT_ENGINE_CONTRACT.txt, ABOUT_ENVIRONMENT_MANAGER.txt, ABOUT_LOGGING.txt, ABOUT_MANAGED_LOCATIONS.txt, ABOUT_MANAGERS.txt, ABOUT_PIPELINE_COMPONENTS.txt, ABOUT_RESOURCE_RATE_LIMITING.txt & .md, ABOUT_COMMAND_LINE_ARGUMENTS.txt & .md, CODING_CONVENTIONS.txt, CREATING_CONVERSION_PIPELINES.txt, DOCKER_BUILD_INSTRUCTIONS.txt, ERROR_DESCRIPTIONS.txt, INSTALLATION_INSTRUCTIONS.txt & ENGINE_MIGRATION_STATUS.txt describe the above.
+
+--------------------
 COMMIT 11/7/2026
 v4.0.5 - What the web server serves & what every sandbox needs from the host move into the Engine.
 

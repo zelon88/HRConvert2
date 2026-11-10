@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.6.
 // / This file is the LibreOffice shared module. It is NOT a pipeline & it converts nothing
 // / on its own. It holds the code that the Document pipeline & the OCR pipeline both need.
 // /
@@ -49,7 +49,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v4.0.0';
+$SharedModuleVersion = 'v4.0.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -246,7 +246,8 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
   $ReturnData = '';
   $sofficeBinary = $sofficeFlags = $sofficeCommand = $sandboxedCommand = $producedPath = $cleanExtension = $profileFolder = '';
   $commandMayRun = $commandIsSandboxed = $documentIsSanitized = $profileIsReady = $profileIsRemoved = FALSE;
-  $referencesRemoved = 0;
+  $commandOutput = array();
+  $referencesRemoved = $commandExitCode = 0;
   // / A filter may be appended to a format with a colon, so a colon is permitted here.
   $cleanExtension = preg_replace('/[^A-Za-z0-9_:.\-]/', '', (string)$targetExtension);
   $sofficeBinary = locateDependency('soffice');
@@ -289,7 +290,12 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
         $commandMayRun = FALSE;
         errorEntry('A document conversion was refused because no private LibreOffice profile could be made!', 2006, FALSE); } }
     if ($commandMayRun) {
-      $ReturnData = (string)shell_exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 '.$sandboxedCommand.' 2>&1');
+      exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 '.$sandboxedCommand.' 2>&1', $commandOutput, $commandExitCode);
+      $ReturnData = implode(PHP_EOL, $commandOutput);
+      // / A LibreOffice that was killed exits 137, which is 128 & the number of the signal that kills.
+      // / Inside a per conversion ceiling that is almost always its memory. Until v4.0.6 a kill reached
+      // / the log only as the document converter timing out, once every retry had been killed the same way.
+      if ($commandExitCode === 137) warningEntry('LibreOffice was killed while it converted '.basename($inputPath).'. One killed inside a per conversion ceiling has almost always run out of the memory it was given. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.');
       // / LibreOffice derives the output name from the input, so rename when it differs.
       $producedPath = dirname($outputPath).$DirSep.pathinfo($inputPath, PATHINFO_FILENAME).'.'.$cleanExtension;
       if ($producedPath !== $outputPath && file_exists($producedPath) && !file_exists($outputPath)) @rename($producedPath, $outputPath);
@@ -301,7 +307,7 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
   if ($Verbose) logEntry('LibreOffice Conversion: '.basename($inputPath).' to '.$cleanExtension.', Sandboxed: '.($commandIsSandboxed ? 'YES' : 'NO').', Result: '.($ConversionCompleted ? 'OK' : 'FAILED').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $ReturnData is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $sofficeBinary, $sofficeCommand, $sandboxedCommand, $producedPath, $cleanExtension, $commandMayRun, $documentIsSanitized, $referencesRemoved, $inputPath, $outputPath, $targetExtension, $profileFolder, $profileIsReady, $profileIsRemoved, $sofficeFlags, $commandIsSandboxed);
+  purgeSensitiveMemory($EnableMemoryProtection, $sofficeBinary, $sofficeCommand, $sandboxedCommand, $producedPath, $cleanExtension, $commandMayRun, $documentIsSanitized, $referencesRemoved, $inputPath, $outputPath, $targetExtension, $profileFolder, $profileIsReady, $profileIsRemoved, $sofficeFlags, $commandIsSandboxed, $commandOutput, $commandExitCode);
   return array($ConversionCompleted, $ReturnData); }
 // / -----------------------------------------------------------------------------------
 

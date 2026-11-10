@@ -85,15 +85,18 @@ the current user does not have will fail rather than partially complete. The fil
 not left in a broken state. The version & help arguments work as any user.
 
 The install secret is root:www-data 0640, in a folder that is root:www-data 0750 & at the top of
-the data location, so a non root user who is also not the web server user can read neither copy,
-& cannot even list Secrets. This is deliberate. That file derives every session identifier in the
-application. Such a user is given a secret of its own, in a folder of its own.
+the data location, so a non root user who is not the web server user & is not in its group can
+read neither copy, & cannot even list Secrets. This is deliberate. That file derives every session
+identifier in the application. Any other account's command is given a secret of its own, in a
+folder of its own, even where that account is in the group, & so is the web server user's for
+anything but the listener's commands, -c & --status. -v names that row Per user secret.
 
 An administrator who modifies an HRConvert2 installation using external tools must leave
 every location the way -fp leaves it.
 
   The installation        root:root, folders 0755, files 0644
-  The DATA folder in it   www-data:www-data 0700
+  The DATA folder in the  www-data:www-data 0700
+  hosted location
   The data location       root:root 0755
   Its Sessions, Cache,    www-data:www-data 0700
   Logs & Sockets folders
@@ -244,7 +247,7 @@ configure & repair additionally require Setup Core.
   --setup --update-depends                 Upgrade everything already installed. Installs nothing new.
   --setup --uninstall-depends              Remove a subsystem. REQUIRES --subsystem.
   --setup --output-supply-chain[=path]     Write a supply chain audit template.
-  --setup --install-service                Install the listener service unit from this configuration.
+  --setup --install-service                Install the listener service & the Environment Manager timer.
   --setup --install-complete               Install HRConvert2 & every dependency. Seven stages.
   --setup --reinstall-existing             Reinstall this installation in place.
   --setup --subsystem=<Name>               Restrict the operation to one subsystem.
@@ -274,6 +277,18 @@ account other than root could put a program at that path. --install-complete doe
 it installs the dependencies first. A copy that already matches is left as it is, & a filter
 that does not cover the Sandbox subsystem leaves it alone. -fp never changes the copy, so run
 --update-depends after the system's bubblewrap is upgraded. -v says when it is.
+
+--install-depends & --update-depends ALSO BUILD WHAT A PACKAGE MANAGER CARRIES TOO OLD.
+An entry whose manifest declares a Fallback, as 7-Zip's does, is asked again once the package
+manager has run. Where the package manager's copy is missing or outside the window, the
+application builds its own from the source the Fallback pins, into
+/usr/local/libexec/hrconvert2/builds, & every part of the application runs that one. Ubuntu
+24.04 carries 7-Zip 23.01, & builds 26.06 this way. --update-depends takes an own build away once
+the package manager's copy answers inside the window, & builds it again where an update has moved
+the version pinned. --uninstall-depends takes it away with its package. Each of the three takes
+away what an interrupted run or a renamed entry left among the own builds. -fp never builds one.
+--check-depends & -v name an own build in service & where it is, & --check-depends says why one
+that is there is not used. See ABOUT_DEPENDENCIES.txt.
 
 --install-complete runs seven stages, in the order an installation actually depends on.
 
@@ -355,6 +370,12 @@ This argument works when run as any user. Where the kernel restricts unprivilege
 only root & the web server user's group may run the copy of bubblewrap every sandbox runs, so
 an account that is neither reads the sandbox & the copy as not judged, & is told to run -v as
 root.
+
+ONLY THE WEB SERVER USER ASKS THE LISTENER. Its state is in a folder only that account can read,
+so -v run as root or as any other account reports the listener as NOT ASKED & names --status,
+which root hands to that account. Until v4.0.6 another account reported a running listener as
+STOPPED. The secret row is named for the secret it judges, so an account with a secret of its own
+reads Per user secret, where until v4.0.6 it read Install secret.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -400,6 +421,11 @@ user, which can swap any of them for a link between the moment it is examined & 
 it is removed. Root running the sweep itself would follow that link. Root hands the whole
 argument to the web server user instead, & prints what it reports. Until v4.0.1 root swept
 as itself.
+
+THE SWEEP TAKES ONLY WHAT THE WEB SERVER USER OWNS. A day or a session folder another account
+put in a data location is left where it is, because that user could never remove it, & -fp
+names it. Until v4.0.6 the sweep tried, failed on every pass, & said only that it had not
+completed cleanly.
 
 The temporary location is the whole DATA folder, from v4.0.1. Until then this argument &
 every web request were handed the session folder of the request making them, so no expired
@@ -510,10 +536,11 @@ It reports the following.
   The number of sessions currently mapped to a data location.
   When the last Environment Manager pass ran, what it found & when it last repaired.
 
-A STANDARD USER CANNOT READ THE SOCKET DIRECTORY & WILL BE TOLD SO.
-The directory is 0700 & belongs to the web server user, so a standard user sees a listener that
-appears stopped whether it is running or not. The report says which case it is in rather than
-collapsing the two into one word. Run it as root for the true picture.
+A STANDARD USER CANNOT READ THE SOCKET DIRECTORY & IS NOT ASKED.
+The directory is 0700 & belongs to the web server user, so a standard user could only ever see a
+listener that appears stopped, whether it is running or not. The listener row says NOT ASKED to
+such a user & leaves the listener's own rows out. Until v4.0.6 it said STOPPED, with a note that
+STOPPED might be wrong. Run it as root for the true picture.
 
 ROOT DOES NOT READ THE STATE ITSELF. It hands --status to the web server user & relays what
 that user saw, because the state file belongs to that user & root reads none of it. The report
@@ -529,12 +556,27 @@ Corrects everything about an installation that root is required to correct.
 
 It performs the following.
 
-  Gives every managed location its role. The installation is root's, the data locations are
-  the web server user's & the backup is root's alone. See ABOUT_MANAGED_LOCATIONS.txt.
+  Gives every managed location its role. The installation is root's, each data root is root's
+  with its sessions, cache, logs & sockets the web server user's, & the backup is root's alone.
+  See ABOUT_MANAGED_LOCATIONS.txt. A location counts as corrected only when its owner or mode
+  differed from its role, so a run straight after another corrects none. Until v4.0.6 every
+  location a role was applied to was counted, whether anything about it changed or not.
+  Moves each session an older release kept at the top of a data root into that root's Sessions
+  folder. Only a folder the web server user owns, named as the core names a session, is moved.
+  Every other folder there, & every name in Sessions that user does not own, is named & left,
+  because the sweep runs as that user & could never remove it. Until v4.0.6 every folder was
+  moved, so a release unpacked into a data root went into Sessions as root's. The capability
+  cache an older release left at the top of a data root is moved into Cache or removed.
+  Removes from the installation what an earlier release left there & no release ships, such as
+  the tree FFmpeg's build left in Documentation/Build/ffmpeg-build until v4.0.6, without
+  following anything in it. A link or a file with more than one name it does not know is named,
+  to be removed by hand before -fp is run again.
   Installs the tree it runs from into Application in the data location, when that tree is not
   the installed one, & hands over to the installed copy as it ends.
   Writes the loader, the protection page & the static files into the hosted location, & removes
-  every copy of the application left there.
+  every copy of the application left there. Names a .git or .github folder a release left in it
+  & an .old installation an update left beside it, which the Apache configuration it writes
+  refuses, & removes none of them.
   Removes the build environment & the development documentation when config.php asks for it.
   Disables a bootstrap script that does not match this core, & enables one that matches again.
   Installs or repairs the AppArmor profile named for the application, where the kernel can
@@ -543,15 +585,24 @@ It performs the following.
   One attached where that is no longer so is taken out. The copy is made only by
   --setup --install-depends, --update-depends & --install-complete & as an update is installed,
   & never by -fp run from the installed copy.
+  Never builds or removes the application's own build of a dependency, which only
+  --setup --install-depends, --update-depends & --uninstall-depends do.
   Lifts that restriction only where bubblewrap refuses a sandbox twice & config.php permits it,
   & never for an attempt cut short or to cover a copy that is missing or cannot be run, & holds
   for the next boot only the kernel settings it changed. Where config.php forbids lifting it,
   switches back on a restriction this application lifted.
+  Names a restriction an earlier release lifted that the application's own copy of bubblewrap
+  no longer needs lifted, & says how to put it back, but leaves it lifted, because by now other
+  programs on the host may rely on it. Names /etc/apparmor.d/bwrap where no package installed
+  it, which install guides before v3.8.0 asked for, & leaves it as it is.
   Writes the listener's service unit, & the Environment Manager's where they are installed, for
   the installed copy.
   Puts back, as they were, the ImageMagick policy & the AppArmor additions an earlier release
   wrote into the host. Each pipeline now carries its own policy into its sandbox.
   Enables lingering & cgroup delegation for the web server user, when per conversion limits are on.
+  Lingering already on is left as it is.
+  Writes the PHP settings into the configuration folder of every PHP that is installed, & passes
+  over a folder a removed PHP left behind, which nothing reads.
 
 Every step is idempotent & is safe to run again.
 
@@ -575,7 +626,9 @@ This argument requires root.
 --About  --run-environment-manager--
 
 Runs one Environment Manager pass & exits. The timer --setup --install-service writes runs it
-hourly once an administrator enables that timer, & an administrator may run it by hand.
+hourly once an administrator enables that timer, & an administrator may run it by hand. Until
+v4.0.6 only --setup --install-complete wrote that timer, so a host that installed its listener
+with --install-service had no timer, & the manager never ran there.
 
   sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php --run-environment-manager
 
@@ -633,7 +686,7 @@ This argument requires root.
 Starts the resource listener, which is four processes that hold a resource budget, decide which
 data location each session uses & manage worker lifecycle.
 
-Resource awareness is entirely optional & is disabled by default. With no listener running,
+Resource awareness is optional & is enabled by default. With no listener running,
 HRConvert2 behaves exactly as it always has. Nothing is checked & nothing is refused.
 
 --Enable Resource Awareness-- must be TRUE in config.php before this will do anything.
@@ -648,6 +701,11 @@ never written to the log, so a failure points at the log rather than reproducing
 
 The listener runs until it is stopped. It is normally started at boot by the service unit that
 --setup --install-service writes, or from a container entrypoint, rather than by hand.
+
+A STOP SIGNAL STOPS EVERY MANAGER, NOT ONLY THE FIRST. When the service is stopped, the Core
+Manager signals each manager it started, waits up to twenty seconds for them all to end, ends
+any still running, & only then ends itself. The managers are not its children by then, so until
+v4.0.6 it ended alone & the service manager killed the three it left behind.
 
 Root or the web server user can start the listener by hand, & every other account is refused.
 Both hold the install secret for this argument, which is what the startup key is derived from.

@@ -66,6 +66,8 @@ Each entry carries these fields.
   License          The license it is distributed under.
   Source           Where it officially comes from.
   Purpose          Why this application needs it, in one sentence.
+  Fallback         For an apt entry, how this application builds its own copy where the
+                   package manager's falls short. See When The Package Manager Is Behind.
 
 THE MANIFEST OWNS EVERY MINIMUM VERSION & THERE IS NO OVERRIDE.
 Nineteen Minimum*Version settings were retired from config.php because they were a second
@@ -136,6 +138,108 @@ which arrives with the packages Calibre recommends, turns on an alias of /javasc
 names in $EngineUnwantedApacheConfs are on before it installs anything, & turns off with
 a2disconf each one the install turned on. One an administrator turned on is left as it is. A
 running web server keeps it until it is reloaded, which the install says.
+
+EVERY SOURCE BUILD WORKS IN A FOLDER OF ITS OWN, OUTSIDE THE INSTALLATION, FROM v4.0.6.
+Each build script the manifest names makes a new folder under /var/tmp with mktemp, which only
+root can open, builds there, & removes it however the build ends, so nothing a build leaves can
+reach the installation. /var/tmp is used rather than /tmp, which is often held in memory,
+because FFmpeg's build fills several gigabytes. Set TMPDIR to build somewhere else.
+
+  sudo TMPDIR=/srv/build php convertCore.php --setup --install-depends
+
+Until v4.0.6 FFmpeg's build ran in Documentation/Build/ffmpeg-build & left its whole tree there,
+links & files with more than one name included. Root refuses to run an installation holding a
+link, with error 28008, so every installation it ran in, the Docker image's web root among them,
+was one root refused, & -fp could not put that right. The contract names that folder among the
+paths no release ships, & -fp takes it away. See ABOUT_MANAGED_LOCATIONS.txt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--When The Package Manager Is Behind--
+
+A package manager installs the version its distribution carries, & a distribution can carry one
+with a hole in it long after the fix is published. Ubuntu 24.04 carries 7-Zip 23.01, & every
+7-Zip from 21.07 through 26.01 decodes XZ with a heap overflow a crafted archive reaches. Raising
+the floor alone would leave such a host with no archives at all.
+
+So an entry a package manager installs may declare a Fallback, which says how this application
+builds its OWN copy where the package manager's is missing or outside the window. 7-Zip's reads
+as follows.
+
+  'Fallback' => array('Version' => '26.06', 'Sha256' => '<the source archive's checksum>',
+    'BuildCommand' => 'bash '.escapeshellarg($InstLoc.'/Documentation/Build/build-7zip.sh'),
+    'Source' => 'https://github.com/ip7z/7zip', 'License' => 'LGPL-2.1'),
+
+  Version       The release the command builds. A build reporting any other is refused.
+  Sha256        The checksum of what the command downloads. It refuses anything else.
+  BuildCommand  The command that fetches, checks, builds & installs it.
+  Source        Where the own copy comes from, which the supply chain audit records.
+  License       Its licence, which the gates judge & the audit records.
+
+THE OWN COPY IS THIS APPLICATION'S ALONE.
+It lives in /usr/local/libexec/hrconvert2/builds/, beside the application's own copy of
+bubblewrap, in a folder named for the entry & laid out as a prefix, with the program at bin/.
+The package manager's copy is left exactly as it is, & nothing else on the host runs the own
+copy. Every name in its folder must be root's & not a link, in folders root alone can change, or
+it is never run. The account that runs conversions must be able to run it too, or it is not
+used. -v names it only while it is in service, & --check-depends says why one is not.
+
+A Fallback is honoured only for an entry naming its program by a plain name, whose VersionCommand
+runs that program, because the version asked must be the own copy's. --install-depends &
+--update-depends warn about one this release cannot use.
+
+THE OWN COPY IS ASKED FIRST & THE WINDOW DECIDES.
+Wherever the entry is used, by a pipeline, -v, --check-depends, capability detection or the
+supply chain audit, the own copy is the program used while it answers inside the window. One
+that does not falls back to the package manager's where that one does, & a warning says so. The
+program in service changes only when the dependency commands below change it, so a package
+manager that catches up meanwhile is not used until --update-depends takes the own copy away.
+--check-depends says when it has caught up.
+
+ONLY THE DEPENDENCY COMMANDS MAKE, KEEP OR TAKE AWAY AN OWN COPY.
+  --install-depends    Asks the package manager's copy again after the package manager has
+                       run, & builds the own copy where it is missing or outside the window,
+                       whether or not the package manager succeeded, because falling back
+                       comes before failing.
+  --update-depends     Takes the own copy away where the package manager's now answers inside
+                       the window, & builds it again where it is behind the Version pinned,
+                       which is how an update of this application moves it.
+  --uninstall-depends  Takes it away with the package it stands in for.
+Each of the three also takes away whatever an interrupted run, or an entry an update renamed or
+removed, left in the builds folder, & says what it took.
+-fp, the Environment Manager & a conversion never build or remove one.
+
+A BUILD IS PUT IN SERVICE ONLY ONCE IT HAS ANSWERED FOR ITSELF.
+The command is handed a new folder only root can open, as DEPENDENCY_PREFIX, with
+DEPENDENCY_VERSION & DEPENDENCY_SHA256, each set even where the Fallback pins nothing. What it
+built is asked its version exactly as the copy in service would be, & is renamed into place only
+when every name in it is root's alone, it answers inside the window & it is the Version pinned.
+A build that fails leaves the copy in service as it was. One run changes the builds folder at a
+time, & a run that has to wait says so.
+
+A BUILD TAKEN AWAY IS NEVER FOLLOWED OUT OF ITS FOLDER.
+Every name in it is examined without following anything, & each folder in it is made root's alone
+before anything in it is listed, so an account that could change part of a build cannot point
+root's removal anywhere else. A warning says when a folder had to be taken back. From v4.0.6 the
+Kernel's removeTreeWithoutFollowing does this, for -fp's retired paths too, & never leaves the
+filesystem the builds folder is on, so anything mounted inside a build is left as it is.
+
+7-Zip's build script installs build-essential & xz-utils where the host has no compiler, & leaves
+them installed, as every build this application runs does.
+
+A PACKAGE MANAGER IS BELIEVED ONLY INSIDE THE WINDOW.
+It reports success for whatever version it has, & until v4.0.6 that was printed as installed
+above a report refusing it. An entry with no Fallback is now reported FAILED where what the
+package manager installed does not answer inside the window, with the version it got.
+
+A host that cannot reach GitHub or 7-zip.org may hand the 7-Zip source archive over by its path,
+& it is checked exactly as a download is.
+
+  sudo DEPENDENCY_SOURCE=/root/7z2606-src.tar.xz php convertCore.php --setup --install-depends --subsystem=Archives
+
+A FALLBACK IS DETACHABLE. Once the distributions this application supports carry a version
+inside the window, the Fallback is taken out of the manifest, & the next --update-depends takes
+every own copy it built away. Nothing else changes.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

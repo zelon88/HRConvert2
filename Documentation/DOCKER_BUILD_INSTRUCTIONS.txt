@@ -129,6 +129,10 @@ or when you need an image the workflow will not produce.
       A -nonfree build cannot be redistributed, so the packaged FFMPEG cannot be used.
   6c. On a 16 core machine a clean single platform build takes roughly 25 minutes.
   6d. The arm64 half is emulated and takes considerably longer than the amd64 half.
+  6e. Every source build works in a folder of its own under /var/tmp & removes it, so
+      nothing it leaves reaches the image. Until v4.0.6 FFMPEG's build left its whole tree
+      in Documentation/Build/ffmpeg-build in the web root, & every container started from
+      that image refused to run anything as root, with error 28008.
 -----------------------------------------------------------------------------------
 
 
@@ -151,6 +155,11 @@ NOTE ON DIAGNOSING A FAILED SMOKE TEST.
   The workflow polls for sixty seconds, detects an exited container immediately rather than
   waiting out a fixed sleep, & always prints the container state, the logs, the -v report &
   the tail of the HRConvert2 log before it fails.
+  A container that is still running & never answered is one whose entrypoint has not handed
+  the foreground to the web server yet. Its logs show how far it got, which is usually -fp.
+  The -v report ends with -v's own exit code, & error 28008 there means root may not run the
+  installation. The -fp lines in the logs say why. Until v4.0.6 the workflow followed any -v
+  that failed with a line saying the container was not running, whatever its state.
 
 NOTE ON THE SYS_ADMIN CAPABILITY.
   Every conversion runs inside a bubblewrap sandbox, & a container cannot create the

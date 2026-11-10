@@ -13,7 +13,7 @@
 // / command line, finds executables & loads components, the Engine among them.
 // /
 // / File Information ...
-// / v4.0.1.
+// / v4.0.6.
 // / This file is the kernel. An application's entry point requires it directly as the first
 // / thing it does, & pins it EXACTLY via $RequiredKernelVersion.
 // / Error 35000 is the direct load guard every component shares.
@@ -67,7 +67,7 @@ if (count(get_included_files()) < 2) die('ERROR!!! Kernel-35000, The kernel cann
 // / The version of this kernel.
 // / The application reads it with a pattern BEFORE requiring this file, so a mismatched
 // / kernel is never executed. It cannot use readComponentVersion for that, which is below.
-$KernelVersion = 'v4.0.1';
+$KernelVersion = 'v4.0.6';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -125,24 +125,40 @@ function verifyTime() {
 // / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * & < " / ' ` chr(9) chr(10) chr(13) chr(0)
 // / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
 // / This function will replace whitespace with the underscore character.
-// / This function will remove leading and traling dashes.
+// / This function will remove leading and trailing dashes & dots.
 // / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
 function sanitizeString($Variable, $strict) {
   // / Set variables.
   global $EnableMemoryProtection;
-  // / Note that this function does not use the global $DangerousFiles. 
-  // / Instead this function defines & destroys it's own array every time it is called.
-  $dangerFiles = array('.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
-  // / Check for dangerous files or escape conditions.
-  foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
+  // / Note that this function does not use the global $DangerousFiles.
+  // / Instead this function defines & destroys its own pattern every time it is called.
+  // / A DANGEROUS EXTENSION IS REMOVED AS A WHOLE PART OF A NAME, wherever in the name it sits. A part
+  // / is what a dot begins & the next dot or the end ends, so .php goes from a.php & from a.php.txt,
+  // / & .json stays. Case is ignored, so a.PHP goes too. Until v4.0.6 the letters were removed
+  // / wherever they appeared, so a.json became aon, & no Model conversion to json could be fetched.
+  // / Every extension a web server may hand to PHP is one, php5, phps & phtml among them.
+  // / Dashes inside a name are left. A name that begins with one is what a program reads as an
+  // / option, & the dashes at each end are trimmed below. Until v4.0.6 any two in a row were removed.
+  $dangerParts = '/\.(?:js|php[0-9]*|phps|phtml|phar|html|css)(?=\.|$)/i';
+  $previousValue = '';
+  // / Check for dangerous files or escape conditions, until removing one leaves none behind.
+  do {
+    $previousValue = (string)$Variable;
+    $Variable = preg_replace($dangerParts, '', str_replace('..', '', (string)$Variable)); }
+  while ((string)$Variable !== $previousValue);
   if ($strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', str_replace('http://', '', str_replace('https://', '', $Variable))))))), '-');
   if (!$strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'`'.chr(9).chr(10).chr(13).chr(0)), '', str_replace('http://', '', str_replace('https://', '', $Variable))))))), '-');
-  // / Check for dangerous files or escape conditions one more time.
-  foreach ($dangerFiles as $danFile) $Variable = str_replace($danFile, '', $Variable);
-  // / Trim the variable one last time to avoid any crafted leading dashes or directory separators.
-  $Variable = trim(trim(trim(trim($Variable, '-'), '.'), '-'), '.');
+  // / Check for dangerous files or escape conditions one more time, because removing a character can
+  // / join one up, & take every dash & dot off either end. Trimming can join one up too, as a.php-.
+  // / becomes a.php, so both run until neither changes anything. A name then begins with neither a
+  // / dash, which a program reads as an option, nor a dot. Until v4.0.6 the ends were trimmed once,
+  // / after the last check, in a fixed order, so a name could still begin with a dash.
+  do {
+    $previousValue = (string)$Variable;
+    $Variable = trim((string)preg_replace($dangerParts, '', str_replace('..', '', (string)$Variable)), '-.'); }
+  while ((string)$Variable !== $previousValue);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $strict, $dangerFiles, $danFile);
+  purgeSensitiveMemory($EnableMemoryProtection, $strict, $dangerParts, $previousValue);
   return $Variable; }
 // / -----------------------------------------------------------------------------------
 
@@ -1275,4 +1291,84 @@ function changeOwnerWithoutFollowing($targetPath, $ownerAccount, $groupAccount) 
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $folderIsTrusted, $nameIsSafe, $folderIsHeld, $resolvedFolder, $trustNotice, $hardlinkSetting, $holdNotice, $targetFolder, $targetPath, $ownerAccount, $groupAccount);
   return array($OwnerWasChanged, $OwnerNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to remove a tree as root without following anything in it.
+// / Accepts the absolute path of the tree. Returns a removal boolean & the reason for a failure,
+// / in that order. A tree that is already absent counts as removed.
+// /
+// / THE FOLDER HOLDING THE TREE MUST BE ROOT'S ALONE, so nothing but root can put a link where
+// / the tree is. Every name in it is examined with lstat. A link or a file is removed as a name &
+// / never followed, so a file with another name keeps that one, & a folder is emptied before it
+// / is removed.
+// / EVERY FOLDER IS MADE ROOT'S ALONE BEFORE ANYTHING IN IT IS LISTED. A tree is often removed
+// / because another account could change part of it, & that account could swap a folder in it
+// / for a link between root listing the folder & emptying it, so root would remove whatever the
+// / link leads to. The folder holding each one is root's alone by the time it is reached, so
+// / nothing but root can swap the folder itself, & once it is root's alone too, nothing but root
+// / can change what is in it. A folder that cannot be made root's alone stops the removal, &
+// / whatever is left stays where it is. A warning says how many folders had to be taken back.
+// / IT NEVER LEAVES THE FILESYSTEM THE FOLDER HOLDING THE TREE IS ON, as the walk that gives an
+// / installation to root never does. A folder on another one is something mounted there, & what
+// / is in it is not the tree's to remove, so it is left as it is, & so is every folder holding it.
+// / A tree that is itself something mounted is left as it is too.
+function removeTreeWithoutFollowing($treePath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $TreeWasRemoved = $parentIsTrusted = $walkIsHeld = $ownerWasChanged = FALSE;
+  $RemovalNotice = $resolvedParent = $trustNotice = $currentPath = $folderEntry = $folderPath = $treeName = $ownerNotice = '';
+  $pendingPaths = $foldersToRemove = $entryStatus = $heldStatus = $parentStatus = $folderEntries = array();
+  $foldersTakenBack = $foldersElsewhere = 0;
+  $treeDevice = -1;
+  $treePath = rtrim((string)$treePath, DIRECTORY_SEPARATOR);
+  $treeName = basename($treePath);
+  clearstatcache(TRUE, $treePath);
+  if (!file_exists($treePath) && !is_link($treePath)) $TreeWasRemoved = TRUE;
+  else if ($treeName === '' or $treeName === '.' or $treeName === '..' or substr($treePath, 0, 1) !== DIRECTORY_SEPARATOR) $RemovalNotice = $treePath.' is not a tree that can be removed.';
+  else {
+    list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot(dirname($treePath));
+    if (!$parentIsTrusted or $resolvedParent !== dirname($treePath)) $RemovalNotice = $treePath.' was left as it is, because the folder holding it is not root\'s alone. '.($trustNotice !== '' ? $trustNotice : dirname($treePath).' leads to '.$resolvedParent.'.');
+    else {
+      $parentStatus = @lstat(dirname($treePath));
+      if (is_array($parentStatus)) $treeDevice = $parentStatus['dev'];
+      $walkIsHeld = TRUE;
+      $pendingPaths = array($treePath);
+      while ($walkIsHeld && !empty($pendingPaths)) {
+        $currentPath = (string)array_pop($pendingPaths);
+        clearstatcache(TRUE, $currentPath);
+        $entryStatus = @lstat($currentPath);
+        if (!is_array($entryStatus)) continue;
+        // / Anything but a folder, a link included, is removed.
+        if (((int)$entryStatus['mode'] & 0170000) !== 0040000) {
+          @unlink($currentPath);
+          continue; }
+        if ($entryStatus['dev'] !== $treeDevice) {
+          $foldersElsewhere++;
+          continue; }
+        // / A folder another account could change is given to root, & loses its group & other
+        // / write, before it is listed. The same folder must be found afterwards, root's alone.
+        if ((int)$entryStatus['uid'] !== 0 or ((int)$entryStatus['mode'] & 0022) !== 0) {
+          $foldersTakenBack++;
+          if ((int)$entryStatus['uid'] !== 0) list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($currentPath, 'root', '');
+          @chmod($currentPath, (int)$entryStatus['mode'] & 07755);
+          clearstatcache(TRUE, $currentPath);
+          $heldStatus = @lstat($currentPath);
+          $walkIsHeld = (is_array($heldStatus) && ((int)$heldStatus['mode'] & 0170000) === 0040000 && $heldStatus['dev'] === $entryStatus['dev'] && $heldStatus['ino'] === $entryStatus['ino'] && (int)$heldStatus['uid'] === 0 && ((int)$heldStatus['mode'] & 0022) === 0); }
+        // / A folder is listed only once it is root's alone, & removed once it is empty.
+        if ($walkIsHeld) {
+          $foldersToRemove[] = $currentPath;
+          $folderEntries = @scandir($currentPath);
+          foreach ((is_array($folderEntries) ? $folderEntries : array()) as $folderEntry) {
+            if ($folderEntry !== '.' && $folderEntry !== '..') $pendingPaths[] = $currentPath.DIRECTORY_SEPARATOR.$folderEntry; } } }
+      if ($walkIsHeld) foreach (array_reverse($foldersToRemove) as $folderPath) @rmdir($folderPath);
+      if (!$walkIsHeld) $RemovalNotice = $currentPath.' could not be made root\'s alone, so what is left of '.$treePath.' was not removed. '.$ownerNotice;
+      else if ($foldersElsewhere > 0) $RemovalNotice = $treePath.' holds '.$foldersElsewhere.' folder(s) on another filesystem, which were left as they are, & so was each folder holding one.';
+      if ($walkIsHeld && $foldersTakenBack > 0) warningEntry($treePath.' held '.$foldersTakenBack.' folder(s) an account other than root could change. Each was made root\'s alone before anything in it was removed.');
+      clearstatcache(TRUE, $treePath);
+      $TreeWasRemoved = (!file_exists($treePath) && !is_link($treePath));
+      if (!$TreeWasRemoved && $RemovalNotice === '') $RemovalNotice = $treePath.' could not be removed completely.'; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $parentIsTrusted, $walkIsHeld, $ownerWasChanged, $resolvedParent, $trustNotice, $currentPath, $folderEntry, $folderPath, $treeName, $ownerNotice, $pendingPaths, $foldersToRemove, $entryStatus, $heldStatus, $parentStatus, $folderEntries, $foldersTakenBack, $foldersElsewhere, $treeDevice, $treePath);
+  return array($TreeWasRemoved, $RemovalNotice); }
 // / -----------------------------------------------------------------------------------

@@ -307,9 +307,10 @@ than everything, because a missing mount fails loudly & a spare one fails silent
 
 -----SYSTEM CONFIGURATION-----
 
-HRConvert2 WRITES SYSTEM FILES. -fp WRITES ALL BUT ONE, & ONLY AN UPDATE WRITES THAT ONE.
+HRConvert2 WRITES SYSTEM FILES. -fp WRITES ALL BUT TWO, & ONLY AN UPDATE WRITES THOSE.
 
-  A PHP drop in at conf.d/99-hrconvert2.ini, for every SAPI present.
+  A PHP drop in at conf.d/99-hrconvert2.ini, for every SAPI whose program is installed. The
+  folder a removed PHP leaves behind is passed over, because nothing reads it.
   An AppArmor profile named for the application, where the kernel can restrict unprivileged
   namespaces. It is attached to the application's own copy of bubblewrap & to nothing else, &
   only where no account but root could put a program at that copy's path.
@@ -317,6 +318,11 @@ HRConvert2 WRITES SYSTEM FILES. -fp WRITES ALL BUT ONE, & ONLY AN UPDATE WRITES 
   user's group may run. --setup --install-depends, --update-depends & --install-complete write
   it, & so does an update of the application, & nothing else does, so the program every sandbox
   runs changes when the administrator updates something & at no other time.
+  Its own build of a dependency the package manager carries too old, in
+  /usr/local/libexec/<application>/builds, such as 7-Zip on Ubuntu 24.04. --setup
+  --install-depends & --update-depends build it, --update-depends & --uninstall-depends take it
+  away, all three take away what an interrupted run left, one run at a time, & nothing else
+  touches it. The package manager's copy is never changed for it.
   A sysctl drop in holding only the kernel settings -fp had to change, & none at all where it
   changed nothing.
   The listener's systemd service unit, & the Environment Manager's where they are installed,
@@ -364,6 +370,15 @@ binary & invisible to anything that only lists files. A profile replaced by one 
 name is replaced in the kernel by the load, which is how the profile attached to bubblewrap
 before v4.0.5 loses its attachment. Never sweep with aa-remove-unknown, which unloads every
 profile on the host that is not in /etc/apparmor.d, other applications' included.
+
+A BUILD WORKS IN A FOLDER OF ITS OWN, NEVER IN THE INSTALLATION & NEVER BY A FIXED NAME.
+A build script makes its folder with  mktemp -d "${TMPDIR:-/var/tmp}/<application>-<name>.XXXXXXXX"
+& removes it with  trap 'rm -rf "$WORK"' EXIT , so it is gone however the build ends. The manifest
+names it as bash & its quoted path, with no cd before it. A fixed name in a folder every account
+can write is one another account can make first, & a tree left in the installation is one root
+refuses to run once it holds a link. Until v4.0.6 FFmpeg's build left its tree in the installation
+& ImageMagick's built in /tmp by fixed names. A path an earlier release left in an installation is
+named in the contract's $EngineRetiredPaths, & -fp takes it away.
 -----------------------------------------------------------------------------------
 
 

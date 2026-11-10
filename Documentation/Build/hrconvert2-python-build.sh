@@ -8,7 +8,7 @@
 # / https://www.gnu.org/licenses/gpl-3.0.html
 # /
 # / File Information ...
-# / v3.9.3.
+# / v4.0.6.
 # / Builds a versioned CPython & installs it beside the system one.
 # /
 # / It lives here rather than inside depends.php because FFMPEG & ImageMagick already build
@@ -72,6 +72,13 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
 # / --enable-shared builds libpython so a compiled module can link against it.
 # / ldconfig then tells the loader about /usr/local/lib, which the sandbox reads from
 # / /etc/ld.so.cache rather than searching for itself.
+# /
+# / IT BUILDS IN A FOLDER OF ITS OWN, made new under /var/tmp or TMPDIR, that only root can
+# / open & that is removed however the build ends. Until v4.0.6 it unpacked into whatever
+# / folder it was started in, & left the source there when the build failed.
+WORK="$(mktemp -d "${TMPDIR:-/var/tmp}/hrconvert2-python.XXXXXXXX")"
+trap 'rm -rf "$WORK"' EXIT
+cd "$WORK"
 wget -q "https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz"
 tar -xf "Python-$PYTHON_VERSION.tgz"
 cd "Python-$PYTHON_VERSION"
@@ -79,8 +86,6 @@ cd "Python-$PYTHON_VERSION"
 make -j"$(nproc)"
 make altinstall
 ldconfig
-cd ..
-rm -rf "Python-$PYTHON_VERSION" "Python-$PYTHON_VERSION.tgz"
 
 echo "Python $PYTHON_VERSION installed as python${PYTHON_LINE}."
 # / -----------------------------------------------------------------------------------

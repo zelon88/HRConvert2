@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.6.
 // / This file is the Request Manager. It is a manager subcomponent of the Engine.
 // / The Request Manager owns the only socket a worker may address. It refuses a request a
 // / worker may not issue & forwards the rest, so a budget request reaches the Resource
@@ -40,7 +40,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.0';
+$ManagerVersion = 'v4.0.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -58,6 +58,7 @@ function runRequestManager() {
   $socketPath = $coreSocket = '';
   $managerMessages = $managerConnections = $forwardedReply = $replyPayload = array();
   $messagesReceived = $messageIndex = 0;
+  $lastLogRefresh = time();
   $socketPath = buildManagerSocketPath('request-manager');
   $coreSocket = buildManagerSocketPath('core-manager');
   list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
@@ -69,6 +70,8 @@ function runRequestManager() {
     $keepRunning = TRUE;
     if ($Verbose) logEntry('Request Manager is listening for worker requests on '.basename($socketPath).'.');
     while ($keepRunning) {
+      // / A manager runs for weeks, so it moves on to the logfile it should be writing now, once a minute.
+      $lastLogRefresh = refreshProcessLog($lastLogRefresh);
       list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'worker', (int)$ManagerMessageBatchSize, (int)$ManagerSocketTimeout);
       $messageIndex = 0;
       while ($messageIndex < $messagesReceived) {
@@ -85,7 +88,7 @@ function runRequestManager() {
         $messageIndex++; } }
     $RequestManagerExitedCleanly = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $forwardWasDelivered, $socketPath, $coreSocket, $managerMessages, $managerConnections, $forwardedReply, $replyPayload, $messagesReceived, $messageIndex);
+  purgeSensitiveMemory($EnableMemoryProtection, $socketServer, $serverIsOpen, $keepRunning, $forwardWasDelivered, $socketPath, $coreSocket, $managerMessages, $managerConnections, $forwardedReply, $replyPayload, $messagesReceived, $messageIndex, $lastLogRefresh);
   return $RequestManagerExitedCleanly; }
 // / -----------------------------------------------------------------------------------
 

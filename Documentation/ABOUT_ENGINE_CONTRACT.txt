@@ -208,6 +208,7 @@ in. applicationSetting in the kernel reads it, or the shared layer's own default
 application maps nothing. An operator's setting keeps its name, & no shared layer reads one
 application's settings by their names. The names read today are FormatDetectionType,
 WarnOnCapabilityMismatch, DefaultScanner, MaintainProtectionFile, LiftNamespaceRestriction,
+RequireResourceAwareness,
 HostedLocation, ServerURL & DocumentRoot. The last three name values the application works out
 as it starts, which the map reads the same way. LiftNamespaceRestriction, from v4.0.5, says
 whether -fp may lift the kernel's AppArmor restriction on unprivileged namespaces where

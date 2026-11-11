@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.6.
+// / v4.0.7.
 // / THIS APPLICATION'S ENGINE SETTINGS. It is loaded AFTER engineConfig.php & anything it
 // / sets wins.
 // /
@@ -212,6 +212,8 @@ $EngineUnwantedApacheConfs = array('javascript-common');
 // / LiftNamespaceRestriction says whether -fp may lift the kernel's AppArmor restriction on
 // / unprivileged namespaces where this application's own profile cannot carry a sandbox. An
 // / application that maps nothing permits it, as every release did until v4.0.5.
+// / RequireResourceAwareness says whether a conversion the listener gives no answer for is
+// / refused. An application that maps nothing lets it run.
 $EngineSettingNames = array(
   'FormatDetectionType' => 'SupportedFormatDetectionType',
   'WarnOnCapabilityMismatch' => 'WarnOnCapabilityMismatch',
@@ -220,6 +222,7 @@ $EngineSettingNames = array(
   'ServerURL' => 'FullURL',
   'DocumentRoot' => 'ServerRootDir',
   'MaintainProtectionFile' => 'MaintainHTAccess',
-  'LiftNamespaceRestriction' => 'AllowUnprivilegedNamespaces');
+  'LiftNamespaceRestriction' => 'AllowUnprivilegedNamespaces',
+  'RequireResourceAwareness' => 'RequireResourceAwareness');
 // / -----------------------------------------------------------------------------------
 ?>

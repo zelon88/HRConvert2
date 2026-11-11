@@ -98,7 +98,8 @@ control, because it also removes the reason to look.
                its own DATA path, & one refusing each data location, writes
                them to the Apache configuration directory this host uses, links the file
                into conf-enabled on a Debian layout, proves it parses with apachectl
-               configtest & gracefully reloads a server that is running.
+               configtest & gracefully reloads a server that is running. The hosted
+               location's block also caps a request body at the size PHP accepts.
                No override level applies to server configuration, so the whole rule set is
                reliable there & nothing is silently dropped.
   Fallback     DATA/.htaccess, written by -fp & --setup & kept current on every request by

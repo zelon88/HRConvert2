@@ -147,6 +147,21 @@ switched on for the one tool that fetches & the one that inspects, & recorded he
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About User Namespaces Inside A Sandbox--
+
+A SANDBOX MAY NOT MAKE A USER NAMESPACE.
+Every sandbox is a user namespace, & the web server account may hold only
+user.max_user_namespaces of them. A converter a crafted file took over could make more from
+inside its sandbox & hold them open until every other conversion failed for want of one.
+
+verifySandboxLauncher() builds its proving sandbox a second time with --unshare-user &
+--disable-userns. Where that sandbox is built too, every sandbox carries both flags, & a process
+inside cannot make a user namespace. Bubblewrap 0.8 & later supports the flag. Older bubblewrap,
+& bubblewrap installed setuid, builds sandboxes without it, & the Sandbox line of the environment
+check says so.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Where The Network Is Granted--
 
 As of v3.9.0 exactly two commands run with a network & both are named here.

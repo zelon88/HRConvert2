@@ -70,10 +70,13 @@ ONLY ROOT & THE WEB SERVER ACCOUNT MAY RUN LISTENER COMMANDS.
 A standard user holds a per user secret. A per user secret cannot derive a valid startup key,
 so a listener a standard user started could never be reached by a worker.
 
-WITHOUT A LISTENER, A CONVERSION RUNS WITHOUT A BUDGET.
+WITHOUT A LISTENER, A CONVERSION RUNS WITHOUT A BUDGET, UNLESS RESOURCE AWARENESS IS REQUIRED.
 That is how every conversion ran before resource awareness existed, & a stopped listener must
-not stop a site. --Require Resource Awareness-- refuses work only when resource awareness is
-unavailable, which is a missing Engine or a missing install secret. A stopped listener is not.
+not stop a site. --Require Resource Awareness-- is for a site that must never accept work it
+cannot account for. It halts on a missing Engine or install secret, & from v4.0.7 it refuses a
+conversion the listener gives no answer for. Until v4.0.7 that conversion ran, although the
+documents said it would not. Without the setting, a listener a flood has slowed still lets
+conversions through, which is the price of never stopping a site.
 
 ROOT DOES NOT READ WHAT THE WEB SERVER ACCOUNT WRITES.
 The listener's state lives in that account's folder & reading it refuses root. --status run as
@@ -128,6 +131,14 @@ may depend on a lift by now, so one HRConvert2 no longer needs is not undone aut
 administrator who switches it back on by hand runs -fp afterwards, which removes the drop in
 once a sandbox is built through the copy.
 
+A SANDBOX MAY NOT MAKE A USER NAMESPACE. v4.0.7.
+A converter a crafted file takes over runs as the web server account inside its sandbox. Until
+v4.0.7 it could make user namespaces from there, hold them open with file descriptors, & spend
+every one the account may hold, so every other conversion failed at bubblewrap until it was
+reaped. The Resource Manager cannot count a namespace held that way, because no process is in it.
+Bubblewrap's --disable-userns closes it at the source. It is proved on each host by building a
+sandbox with it rather than read from a version, so a host it does not work on keeps working.
+
 ONLY ROOT CAN JUDGE THE SANDBOX FOR EVERY ACCOUNT.
 HRConvert2's own bubblewrap may be run by root & the web server account's group & nobody else.
 Any other account running -v cannot try it, so its sandbox lines read n/a & say to run -v as
@@ -176,6 +187,20 @@ AN APACHE CONFIGURATION THAT DID NOT PARSE BEFORE HRCONVERT2 WROTE ANYTHING IS L
 HRConvert2 tests the configuration before & after writing its own file. A fault that was already
 there is the administrator's, & HRConvert2's file is kept. A fault HRConvert2 caused is
 withdrawn, & what was there before is put back & tested again.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Uploads--
+
+AN UPLOAD IS CAPPED IN PHP & IN APACHE AT ONE SIZE. v4.0.7.
+PHP's drop in accepts 5000M. Apache 2.4.54 & later refuse any request body over 1 GiB by default,
+so until v4.0.7 an upload between the two failed at Apache, with nothing in HRConvert2's log.
+uploadCeilingMegabytes() is the one number both read.
+
+HOW LONG AN UPLOAD MAY TAKE IS THE ADMINISTRATOR'S CALL.
+A slow upload holds an Apache worker for as long as it lasts, & 150 of them hold every worker.
+RequestReadTimeout bounds it & applies to every site on the server, so HRConvert2 documents it
+rather than writing it. See ABOUT_RESOURCE_RATE_LIMITING.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

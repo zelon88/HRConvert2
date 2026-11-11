@@ -4589,6 +4589,9 @@ ERROR DESCRIPTION
   The kernel is found beside convertCore.php rather than through the configured installation directory,
   because the configuration has not been read when it is needed.
   Restore Resources/Kernel/kernel.php from the release this core came from.
+  A drop-in carries only the files its release changed. Unpacked over the hosted location, it leaves a full
+  convertCore.php there with no kernel beside it. Unpack a drop-in into the installation, the Application
+  folder in the data location, & run the -fp argument from there. That -fp publishes the loader again.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

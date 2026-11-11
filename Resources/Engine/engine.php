@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.0.6.
+// / v4.0.7.
 // / This file is the Engine. It provides the environment an application runs in.
 // / It is pinned EXACTLY by the application via $RequiredEngineVersion.
 // / Error block 35000 through 35019 reserved. 35000 is the direct load guard every component
@@ -57,7 +57,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.0.6';
+$EngineVersion = 'v4.0.7';
 // / -----------------------------------------------------------------------------------
 
 
@@ -326,7 +326,7 @@ function validateOperatingEnvironment() {
   else if ($bwrapBinary === FALSE) {
     $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'FAILED', 'Detail' => 'Bubblewrap cannot build a namespace.'.($sandboxIsRequired ? ' Every conversion will be refused.' : ' Conversions will run unprotected.'));
     if ($sandboxIsRequired) $EnvironmentIsReady = FALSE; }
-  else $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'ok', 'Detail' => 'Bubblewrap can build a namespace'.($bwrapBinary === privateBwrapPath() ? ', through '.privateBwrapPath().' & AppArmor profile '.sandboxApparmorProfileName().'.' : '.'));
+  else $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'ok', 'Detail' => 'Bubblewrap can build a namespace'.($bwrapBinary === privateBwrapPath() ? ', through '.privateBwrapPath().' & AppArmor profile '.sandboxApparmorProfileName().'.' : '.').(strpos((string)$sandboxLauncher, '--disable-userns') !== FALSE ? ' A sandbox cannot make a user namespace.' : ' A sandbox can make user namespaces. Bubblewrap 0.8 or later stops that.'));
   // / The bootstrap script is another. The Engine pins it exactly, & one left by another
   // / release hands arguments to a core that may no longer accept them. It is reported here so
   // / -v, the listener & the Environment Manager all see it, & -fp changes it as root. It never
@@ -1557,14 +1557,17 @@ function giveBackOperationBudget($operationName) {
 // / Returns an approval boolean & the issued budget token, in that order.
 // / This FAILS OPEN. When resource awareness is unavailable the request is approved & the
 // / core behaves exactly as it did before this component existed.
+// / An application that requires resource awareness fails closed instead when the listener does
+// / not answer, because a conversion nothing accounted for is what that setting refuses.
 function requestConversionBudget($conversionCost, $expectedRuntime) {
   // / Set variables.
   global $ResourceAwarenessActive, $ManagerSocketTimeout, $EffectiveConversionLimits, $EnableMemoryProtection, $Verbose;
   $BudgetWasApproved = FALSE;
   $BudgetToken = '';
   $requestPayload = $replyPayload = array();
-  $messageWasDelivered = FALSE;
+  $messageWasDelivered = $awarenessIsRequired = FALSE;
   $requestSocket = '';
+  $awarenessIsRequired = (bool)applicationSetting('RequireResourceAwareness', FALSE);
   if (!$ResourceAwarenessActive) $BudgetWasApproved = TRUE;
   else {
     $requestSocket = buildManagerSocketPath('request-manager');
@@ -1577,16 +1580,17 @@ function requestConversionBudget($conversionCost, $expectedRuntime) {
     // / processes & each inner hop waits less than the one outside it, so a slow manager
     // / times out inside rather than leaving the worker with half an answer.
     list ($messageWasDelivered, $replyPayload) = sendManagerMessage($requestSocket, $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
-    // / A listener that cannot be reached must not stop a conversion that would have run.
+    // / A listener that cannot be reached must not stop a conversion that would have run, unless
+    // / the application requires resource awareness.
     if (!$messageWasDelivered) {
-      warningEntry('The Core Manager listener did not answer a budget request. Proceeding without resource awareness.');
-      $BudgetWasApproved = TRUE; }
+      warningEntry('The Core Manager listener did not answer a budget request. '.($awarenessIsRequired ? 'Resource awareness is required, so the conversion was refused.' : 'Proceeding without resource awareness.'));
+      $BudgetWasApproved = !$awarenessIsRequired; }
     // / A delivered message with no usable reply is a listener that is slow or broken rather
-    // / than a budget that declined. Refusing here would stop a conversion nothing refused.
-    // / Only an explicit answer is allowed to refuse a conversion.
+    // / than a budget that declined. Only an explicit answer refuses a conversion, unless the
+    // / application requires resource awareness.
     else if (!isset($replyPayload['Approved'])) {
-      warningEntry('The Core Manager listener returned no usable answer to a budget request. Proceeding without resource awareness.');
-      $BudgetWasApproved = TRUE; }
+      warningEntry('The Core Manager listener returned no usable answer to a budget request. '.($awarenessIsRequired ? 'Resource awareness is required, so the conversion was refused.' : 'Proceeding without resource awareness.'));
+      $BudgetWasApproved = !$awarenessIsRequired; }
     else if ($replyPayload['Approved'] === TRUE) {
       $BudgetWasApproved = TRUE;
       $BudgetToken = isset($replyPayload['BudgetToken']) ? (string)$replyPayload['BudgetToken'] : '';
@@ -1596,7 +1600,7 @@ function requestConversionBudget($conversionCost, $expectedRuntime) {
       if ($Verbose) logEntry('Worker '.getmypid().' was granted budget token '.$BudgetToken.'.'); }
     else logEntry('A conversion was refused by the resource budget. '.(isset($replyPayload['Reason']) && $replyPayload['Reason'] !== '' ? $replyPayload['Reason'] : 'No reason was supplied.')); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $requestSocket, $conversionCost, $expectedRuntime);
+  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $awarenessIsRequired, $requestSocket, $conversionCost, $expectedRuntime);
   return array($BudgetWasApproved, $BudgetToken); }
 // / -----------------------------------------------------------------------------------
 // / A function to request more runtime for a conversion that is still working.
@@ -4096,8 +4100,9 @@ function detectHostArchitecture() {
 // / A function to confirm this server can actually isolate a dependency invocation, & to say how.
 // / Accepts nothing.
 // / Returns the absolute path of a WORKING bubblewrap binary or FALSE, the launcher that built the
-// / sandbox, & whether an attempt was cut short, in that order. The launcher is escaped already &
-// / goes where the binary would have gone.
+// / sandbox, & whether an attempt was cut short, in that order. The launcher is escaped already,
+// / carries --unshare-user --disable-userns where they build a sandbox too, & goes where the binary
+// / would have gone.
 // / A path is returned ONLY when a real sandbox was launched successfully, so a caller
 // / holding a path may build a command with it without checking anything else.
 // / This is a CAPABILITY check rather than a version check & is the only one in the
@@ -4131,9 +4136,10 @@ function verifySandboxLauncher() {
   $BwrapBinary = FALSE;
   $SandboxLauncher = $commandHint = '';
   $ProbeWasInterrupted = FALSE;
-  $bwrapReasons = $candidateBinaries = $bwrapOutput = array();
-  $locatedBinary = $privateBinary = $candidateBinary = $bwrapCommand = $candidateLabel = '';
-  $bwrapExitCode = $copyExitCode = 1;
+  $bwrapReasons = $candidateBinaries = $bwrapOutput = $lockOutput = array();
+  $locatedBinary = $privateBinary = $candidateBinary = $bwrapCommand = $candidateLabel = $probeArguments = $lockCommand = '';
+  $userNamespaceLock = ' --unshare-user --disable-userns';
+  $bwrapExitCode = $copyExitCode = $lockExitCode = 1;
   $probeAsAccount = $copyIsTried = $privateIsSafe = $copyIsJudged = FALSE;
   $locatedBinary = locateDependency('bwrap');
   $privateBinary = privateBwrapPath();
@@ -4155,8 +4161,7 @@ function verifySandboxLauncher() {
       // / Launch the smallest possible sandbox & run a command that does nothing but exit.
       // / This proves the kernel will actually grant the namespaces a real render depends on.
       // / The ro-bind-try entries are optional & are skipped on systems that do not have them.
-      $bwrapCommand = 'timeout -k 5 10 '.escapeshellarg($candidateBinary)
-        .' --unshare-all'
+      $probeArguments = ' --unshare-all'
         .' --die-with-parent'
         .' --ro-bind /usr /usr'
         .' --ro-bind-try /lib /lib'
@@ -4166,6 +4171,7 @@ function verifySandboxLauncher() {
         .' --dev /dev'
         .' --tmpfs /tmp'
         .' /usr/bin/true 2>&1';
+      $bwrapCommand = 'timeout -k 5 10 '.escapeshellarg($candidateBinary).$probeArguments;
       // / A probe run as root proves nothing. Root can always create a namespace, so a check
       // / made by -fp would report a working sandbox while every web request still failed.
       // / When this is running as root the probe is re-run as the account that will actually
@@ -4181,7 +4187,16 @@ function verifySandboxLauncher() {
       if ($bwrapExitCode !== 0 && $bwrapExitCode !== 1) $ProbeWasInterrupted = TRUE;
       if ($bwrapExitCode === 0) {
         $BwrapBinary = $candidateBinary;
-        $SandboxLauncher = escapeshellarg($candidateBinary); }
+        $SandboxLauncher = escapeshellarg($candidateBinary);
+        // / A sandbox that can make user namespaces can spend every one the web server account has.
+        // / Bubblewrap 0.8 & later stops that with --disable-userns, which needs --unshare-user. The
+        // / same sandbox is built again with both, & the launcher carries them only where it was built.
+        $lockCommand = 'timeout -k 5 10 '.escapeshellarg($candidateBinary).$userNamespaceLock.$probeArguments;
+        $lockOutput = array();
+        if ($probeAsAccount) list ($lockOutput, $lockExitCode) = runAsAccount($lockCommand, $ApacheUser);
+        else exec($lockCommand, $lockOutput, $lockExitCode);
+        if ($lockExitCode === 0) $SandboxLauncher = $SandboxLauncher.$userNamespaceLock;
+        else if ($Verbose) logEntry('Bubblewrap could not stop a sandbox making user namespaces. '.trim((string)(isset($lockOutput[0]) ? $lockOutput[0] : 'No reason was reported.')).' Sandboxes run without --disable-userns.'); }
       else array_push($bwrapReasons, $candidateLabel.': '.trim((string)(isset($bwrapOutput[0]) ? $bwrapOutput[0] : 'no reason was reported'))); } }
   // / The warning names what answers the failure. A copy that is not there is installed with the
   // / dependencies & never by -fp, one that could not be started is explained by -v, & an account
@@ -4193,7 +4208,7 @@ function verifySandboxLauncher() {
   if ($BwrapBinary === FALSE && count($bwrapReasons) > 0) warningEntry('Bubblewrap could not build a sandbox'.($probeAsAccount ? ' as '.$ApacheUser : '').'. '.implode(' ', $bwrapReasons).$commandHint);
   if ($Verbose) logEntry('Bubblewrap Sandbox Check: '.($BwrapBinary === FALSE ? 'FAILED, Reason: '.implode(' ', $bwrapReasons) : 'PASSED, Using: '.$SandboxLauncher).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $commandHint, $bwrapReasons, $candidateBinaries, $bwrapOutput, $locatedBinary, $privateBinary, $candidateBinary, $bwrapCommand, $candidateLabel, $bwrapExitCode, $copyExitCode, $probeAsAccount, $copyIsTried, $privateIsSafe, $copyIsJudged);
+  purgeSensitiveMemory($EnableMemoryProtection, $commandHint, $bwrapReasons, $candidateBinaries, $bwrapOutput, $lockOutput, $locatedBinary, $privateBinary, $candidateBinary, $bwrapCommand, $candidateLabel, $probeArguments, $lockCommand, $userNamespaceLock, $bwrapExitCode, $copyExitCode, $lockExitCode, $probeAsAccount, $copyIsTried, $privateIsSafe, $copyIsJudged);
   return array($BwrapBinary, $SandboxLauncher, $ProbeWasInterrupted); }
 // / -----------------------------------------------------------------------------------
 

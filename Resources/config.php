@@ -1003,6 +1003,7 @@ $MinimumPerConversionResources = '10,128';
 $EnableResourceAwareness = TRUE;
 // /  --Require Resource Awareness--
 // /   Refuses to run at all when resource awareness is unavailable.
+// /   Refuses a conversion the listener does not answer for, rather than running it unbudgeted.
 // /   Set this on a server that must never accept work it cannot account for.
 // /   Leave this FALSE unless a missing component should take the whole site down.
 // /   Valid options are TRUE or FALSE.

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
+// / v4.0.7.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -1407,7 +1407,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.0.6';
+  $HRConvertVersion = 'v4.0.7';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -1436,7 +1436,7 @@ function verifyInstallation() {
   // / Setup Core holds the configuration model, so this MUST be raised whenever
   // / $RequiredConfigVersion is raised. Forgetting does not break anything immediately.
   // / The utility reports a variable it does not know as unaccounted & carries on.
-  $RequiredSetupCoreVersion = 'v4.0.6';
+  $RequiredSetupCoreVersion = 'v4.0.7';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
@@ -1463,7 +1463,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.0.6';
+  $RequiredEngineVersion = 'v4.0.7';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects. This is an EXACT match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -3276,6 +3276,7 @@ function showHelpInfo() {
   print('  Listener commands require root or the web server user.'.$Lol);
   print('  -l requires --Enable Resource Awareness-- in config.php.'.$Lol);
   print('  Without a listener, conversions run without a resource budget.'.$Lol);
+  print('  --Require Resource Awareness-- refuses them instead.'.$Lol);
   print($Lol);
   print('Clean targets'.$Lol);
   print('  Root or the web server user may sweep. Root hands the sweep to that user.'.$Lol);

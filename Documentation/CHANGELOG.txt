@@ -26,6 +26,22 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 
 --------------------
+COMMIT 11/10/2026
+v4.0.7 - A sandbox may not make a user namespace, a required listener is required, & an upload is capped at one size.
+
+-v4.0.7.
+-A sandbox may not make a user namespace where bubblewrap can stop it. verifySandboxLauncher builds its proving sandbox again with --unshare-user --disable-userns, & every sandbox carries both wherever that one was built. Bubblewrap 0.8 & later supports them.
+-The Sandbox line of the environment check says whether a sandbox can make a user namespace.
+-FIX. --Require Resource Awareness-- let a conversion the listener gave no answer for run without a budget, although the documents said it would be refused. It is refused, & -h says so.
+-New contract name RequireResourceAwareness in $EngineSettingNames.
+-FIX. Apache 2.4.54 & later refuse a request body over 1 GiB by default, so an upload between 1 GiB & the 5000M PHP accepts failed at Apache. The hosted location's Apache rules cap a body at the size PHP accepts.
+-New function uploadCeilingMegabytes in Environment Core. The PHP drop in & the Apache configuration both read it.
+-ABOUT_RESOURCE_RATE_LIMITING.txt & .md say how a slow upload holds an Apache worker, & what an administrator may set against it.
+-The core, the Engine, Environment Core, Setup Core & the contract are v4.0.7, & the core requires the Engine & Setup Core at v4.0.7.
+-ERROR_DESCRIPTIONS.txt names a drop-in unpacked over the hosted location as a cause of error 28006.
+-ABOUT_NETWORK_ISOLATION.txt, ABOUT_RESOURCE_RATE_LIMITING.txt & .md, ABOUT_ENGINE_CONTRACT.txt, ABOUT_DATA_DIRECTORY_PROTECTION.txt, DEVELOPMENT_NOTES.txt, config.php & config-template.php describe the above.
+
+--------------------
 COMMIT 11/9/2026
 v4.0.6 - Archive extraction is contained, HRConvert2 builds its own 7-Zip where the package manager's is behind, no build is left in the installation, & the listener stops counting a conversion against itself.
 

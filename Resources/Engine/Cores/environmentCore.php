@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.6.
+// / v4.0.7.
 // / The environment the Engine provides to every application built on it.
 // /
 // / THE ENGINE OWNS THESE. An application uses them & does not define them. That is the
@@ -666,6 +666,17 @@ function resolveUpdateTarget($requestedVersion) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to report the largest upload the web server & PHP accept.
+// / Accepts nothing. Returns the ceiling in megabytes.
+// / The PHP drop in & the Apache configuration both read it, so the two never disagree. Apache
+// / 2.4.54 & later refuse a request body over 1 GiB unless told otherwise.
+function uploadCeilingMegabytes() {
+  // / Set variables.
+  $UploadCeiling = 5000;
+  return $UploadCeiling; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to write the PHP settings HRConvert2 cannot run without.
 // / Accepts a boolean permitting a write.
 // / Returns a success boolean & the number of configurations written, in that order.
@@ -703,8 +714,8 @@ function verifyPhpConfiguration($mayRepair) {
     .'memory_limit = 512M'.PHP_EOL
     .PHP_EOL
     .'; / An upload larger than these is refused by PHP before '.engineApplicationName().' ever sees it.'.PHP_EOL
-    .'post_max_size = 5000M'.PHP_EOL
-    .'upload_max_filesize = 5000M'.PHP_EOL
+    .'post_max_size = '.uploadCeilingMegabytes().'M'.PHP_EOL
+    .'upload_max_filesize = '.uploadCeilingMegabytes().'M'.PHP_EOL
     .'max_file_uploads = 100'.PHP_EOL
     .PHP_EOL
     .'; / An error printed into a response corrupts the filename list the interface parses.'.PHP_EOL

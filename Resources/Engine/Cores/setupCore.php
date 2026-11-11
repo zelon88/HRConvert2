@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.0.6.
+// / v4.0.7.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.0.6';
+$SetupCoreVersion = 'v4.0.7';
 // / -----------------------------------------------------------------------------------
 
 
@@ -3050,6 +3050,8 @@ function verifyApacheConfiguration($mayRepair) {
       .'  <Files "'.engineApplicationEntryPoint().'">'.PHP_EOL
       .'    Require all granted'.PHP_EOL
       .'  </Files>'.PHP_EOL
+      .'  # / Uploads are capped here & in PHP at the same size. Apache 2.4.54 & later cap them at 1 GiB otherwise.'.PHP_EOL
+      .'  LimitRequestBody '.(uploadCeilingMegabytes() * 1048576).PHP_EOL
       .'</Directory>'.PHP_EOL
       .PHP_EOL
       .'# / NOTHING A RELEASE LEFT IN OR BESIDE THE HOSTED LOCATION IS SERVED. A release unpacked or cloned'.PHP_EOL

@@ -277,9 +277,21 @@ The web server user cannot create a system scope and must not be given permissio
 
 **Every failure in this subsystem fails open.** A conversion proceeds when the component is missing or mismatched, when no listener is running, when a socket cannot be reached, and when no usable reply comes back. Each is recorded as a warning. Only an explicit answer may refuse a conversion.
 
-`--Require Resource Awareness--` inverts this for an operator who would rather refuse work than accept work they cannot account for.
+`--Require Resource Awareness--` inverts this for an operator who would rather refuse work than accept work they cannot account for. With it set, a conversion the listener gives no answer for is refused.
 
 A resource ceiling is a courtesy to the host and is not a security control. The sandbox is the security control.
+
+---
+
+## 🐢 About Slow Uploads
+
+**The budget meters conversions, not the web server.** Apache holds a worker for as long as an upload takes. Ubuntu's `mod_reqtimeout` keeps reading while 500 bytes or more arrive each second, and prefork starts at most 150 workers by default, so about 75 KB/s of slow uploads can hold every worker without a conversion ever starting.
+
+HRConvert2 caps an upload at 5000M, in PHP and in its Apache configuration. How long an upload may take is server-wide, so it is the administrator's call. Replacing the body line in `/etc/apache2/mods-available/reqtimeout.conf` with this costs a slow client a hundred times as much, and fails any upload slower than about 400 Kbit/s:
+
+```
+RequestReadTimeout body=20,minrate=50000
+```
 
 ---
 

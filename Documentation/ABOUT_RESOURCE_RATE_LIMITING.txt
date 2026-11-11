@@ -405,10 +405,30 @@ not a budget that declined.
 
 --Require Resource Awareness-- inverts this for an operator who would rather refuse work than
 accept work they cannot account for. With it set, an unavailable component halts the application
-instead of degrading.
+instead of degrading, & a conversion the listener gives no answer for is refused.
 
 A resource ceiling is a courtesy to the host & is not a security control. The sandbox is the
 security control. Nothing in this subsystem is load bearing for safety.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Slow Uploads--
+
+THE BUDGET METERS CONVERSIONS. IT DOES NOT METER THE WEB SERVER.
+Apache holds a worker for as long as an upload takes. Ubuntu's mod_reqtimeout keeps reading a
+request body while 500 bytes or more arrive each second, & prefork starts at most 150 workers by
+default. A client sending 150 uploads that slowly holds every worker, & needs about 75 KB/s to do
+it. No conversion starts, so the budget never sees it.
+
+HRConvert2 caps an upload at 5000M, in PHP & in its Apache configuration. It does not limit how
+long an upload may take, because RequestReadTimeout applies to the whole server & every site on
+it. That is the administrator's call. A minimum rate of 50000 bytes a second costs a slow client
+a hundred times as much, & fails any upload slower than about 400 Kbit/s.
+
+  RequestReadTimeout body=20,minrate=50000
+
+It replaces the body line in /etc/apache2/mods-available/reqtimeout.conf, & applies once Apache
+reloads. MaxRequestWorkers raises the number of workers, & each one costs memory.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

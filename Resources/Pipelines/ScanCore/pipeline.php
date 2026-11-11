@@ -8,18 +8,14 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.8.
 // / This file scans files with ScanCore & reports what it found.
 // /
-// / IT CHANGES NOTHING. It does not delete an infected file, quarantine it, or write to a
-// / user facing log. It returns findings & the caller decides what they mean.
-// /
-// / ScanCore writes its own log files & that is not the same thing as writing to this
-// / application's logs. It is given a scratch log of its own, that log is read back for
-// / findings, & the caller decides what reaches the worker log & what reaches the user.
-// / An earlier version had ScanCore write straight into the user facing report, which meant
-// / the scanner decided what a user saw & the application could not filter, order or
-// / consolidate any of it.
+// / It changes nothing.
+// / It does not delete, quarantine or write to a user facing log.
+// / It returns findings, & the caller decides what they mean.
+// / ScanCore writes a scratch log of its own, which is read back for findings.
+// / The caller decides what reaches the worker log & what reaches the user.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -35,15 +31,11 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / A function to size ScanCore's memory for the ceiling it is about to run under.
 // / Accepts nothing. Returns the memory limit & the chunk size, in bytes, in that order.
 // /
-// / ScanCore sets its interpreter's memory limit to the figure it is given & reads a file
-// / larger than one chunk a chunk at a time to stay inside it. It holds about three chunks
-// / at once, the chunk it is searching, that chunk joined to the tail of the last one, &
-// / the next read, so a chunk over about a third of the limit exhausts it on the first file
-// / larger than one chunk. Until v3.9.9 the configuration shipped a 256M limit with a 128M
-// / chunk, & every file over 128M ended in a PHP fatal error rather than a verdict.
+// / ScanCore sets its interpreter's memory limit to the figure it is given.
+// / It reads a file larger than one chunk a chunk at a time, & holds about three chunks at once.
 // / The chunk is held to a quarter of the limit, which leaves room for the definitions.
-// / The limit is held inside the Scan ceiling, less 64M for the interpreter itself, so
-// / ScanCore stops at a limit it knows about rather than being killed by one it does not.
+// / The limit is held inside the Scan ceiling, less 64M for the interpreter.
+// / ScanCore therefore stops at a limit it knows about, rather than being killed by one it does not.
 // / A file smaller than a chunk is read whole & needs no more than its own size.
 function scanCoreFootprint() {
   // / Set variables.
@@ -73,10 +65,8 @@ function scanCoreFootprint() {
 // / Accepts a list of paths. Returns whether the scan completed, whether anything was
 // / found, & the findings, in that order.
 // /
-// / ScanCore ships inside this application rather than being installed on the host, so it
-// / is present wherever HRConvert2 is & needs no dependency check beyond the file existing.
-// / It is still run through the sandbox, because a scanner reading a file somebody else
-// / supplied is exactly the case a sandbox exists for.
+// / ScanCore ships inside this application, so it needs no dependency check beyond the file existing.
+// / It is still sandboxed, because it reads a file somebody else supplied.
 function scanWithScanCore($pathsToScan) {
   // / Set variables.
   global $InstLoc, $DirSep, $ConvertTempDir;
@@ -116,11 +106,9 @@ function scanWithScanCore($pathsToScan) {
       $scratchLog = rtrim((string)$ConvertTempDir, $DirSep).$DirSep.'scancore-'.bin2hex(random_bytes(6)).'.log';
       $commandOutput = array();
       $commandExitCode = 0;
-      // / ScanCore lives inside this application, which the sandbox does not bind, so its
-      // / directory is handed over as the read only resource. The escaped directory is what
-      // / sandboxCommand rewrites, so the file name is appended outside it & survives the
-      // / rewrite as /res/ScanCore.php. Until v3.9.9 the sandbox was given no such thing &
-      // / php inside it said Could not open input file.
+      // / ScanCore's directory is handed over as the read only resource, because the sandbox does not bind it.
+      // / The escaped directory is what sandboxCommand rewrites, so the file name is appended outside it.
+      // / It survives the rewrite as /res/ScanCore.php.
       $scanCommand = 'php '.escapeshellarg($scanCoreDir).$DirSep.'ScanCore.php'
         .' '.escapeshellarg($pathToScan)
         .' -m '.escapeshellarg((string)$memoryLimit)
@@ -129,9 +117,6 @@ function scanWithScanCore($pathsToScan) {
         .' -ml '.escapeshellarg((string)$MaxLogSize)
         .' -r'.$scanVerbose.$scanDebug;
       // / sandboxCommand returns whether the command may run & the command, in that order.
-      // / Until v3.9.9 the pair was taken as the command, so the shell was asked to run a
-      // / program called Array, said Array: not found, & the word found in that was read
-      // / as a detection. Every file was reported infected.
       list ($commandMayRun, $scanCommand) = sandboxCommand($scanCommand, $pathToScan, $scratchLog, FALSE, 'scancore', $scanCoreDir);
       if (!$commandMayRun) {
         $ScanCompleted = FALSE;
@@ -156,11 +141,9 @@ function scanWithScanCore($pathsToScan) {
       if (file_exists($scratchLog)) {
         $logLines = array_merge($logLines, (array)@file($scratchLog, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
         @unlink($scratchLog); }
-      // / ScanCore opens a line with Infected for an exact match & with Suspicious for a
-      // / heuristic, & a line in its log carries a timestamp first. Only Infected is a
-      // / threat, which is what ScanCore intends. Its summary, such as Found 0 infected
-      // / files, is neither. Until v3.9.9 any line containing found was a detection, which
-      // / would have flagged every file had the command ever run.
+      // / ScanCore opens a line with a timestamp, then Infected for an exact match or Suspicious for a heuristic.
+      // / Only Infected is a threat, as ScanCore intends.
+      // / Its summary, such as Found 0 infected files, is neither.
       foreach ($logLines as $logLine) {
         $logLine = trim((string)$logLine);
         $verdictAt = strpos($logLine, 'Infected: ');

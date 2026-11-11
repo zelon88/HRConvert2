@@ -79,11 +79,11 @@ The result comes back the same way, and expires on the schedule you set.
 
 ### 🧩 Install on Debian or Ubuntu
 ```bash
-git clone https://github.com/zelon88/HRConvert2
-sudo bash HRConvert2/Documentation/Build/hrconvert2-setup.sh
+sudo git clone https://github.com/zelon88/HRConvert2 /opt/HRConvert2
+sudo bash /opt/HRConvert2/Documentation/Build/hrconvert2-setup.sh
 ```
 
-Two commands. The installer pulls every dependency, creates the storage, sets up the AppArmor profile, PHP and the systemd units, installs HRConvert2 beside its storage, outside the web root, then tells you exactly what is working. Add `-y` to skip the confirmations.
+Two commands. Clone where only root can change it, such as `/opt`, because root will not install a tree another account could change. The installer pulls every dependency, creates the storage, sets up the AppArmor profile, PHP and the systemd units, installs HRConvert2 beside its storage, outside the web root, then tells you exactly what is working. Add `-y` to skip the confirmations.
 
 Then open `http://your-server/HRProprietary/HRConvert2/convertCore.php` and start converting.
 
@@ -92,10 +92,11 @@ Then open `http://your-server/HRProprietary/HRConvert2/convertCore.php` and star
 docker run -d -p 8080:80 --cap-add SYS_ADMIN zelon88/hrconvert2
 ```
 
-`SYS_ADMIN` lets the container build the sandbox every converter runs in. Leave it off and the container cannot build one. Run `php convertCore.php -v` inside the container to confirm the sandbox works.
+`SYS_ADMIN` lets the container build the sandbox every converter runs in. Leave it off and the container cannot build one. No process that converts or serves a user's file holds `SYS_ADMIN`, or any other capability. Run `php convertCore.php -v` inside the container to confirm the sandbox works.
 
 ### 🩺 When Something Is Wrong
 ```bash
+cd /var/www/html/HRProprietary/HRConvert2
 sudo php convertCore.php -v     # Check every component & say what is wrong
 sudo php convertCore.php -fp    # Repair permissions & the web server setup
 ```

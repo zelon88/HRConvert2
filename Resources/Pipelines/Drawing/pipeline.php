@@ -12,14 +12,10 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
-// / This file is the converter for the Drawing pipeline. It is loaded by pipelineCore.php
-// / ONLY when a Drawing conversion is about to be dispatched to it, so a request that
-// / converts something else never parses a line of it.
-// / Error block 10000 through 10002 belongs to this pipeline. Those numbers came with the code when it
-// / moved out of convertCore.php & they did not change, because operators have read them.
-// / This pipeline asks for Dia through verifiedToolPath(), which answers from the
-// / manifest, & calls sandboxCommand() & locateDependency(), which remain in convertCore.php.
+// / v4.0.8.
+// / The Drawing pipeline's converter. pipelineCore.php loads it only to dispatch a Drawing conversion.
+// / Error block 10000 through 10002 belongs to this pipeline.
+// / Dia comes from verifiedToolPath().
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -34,22 +30,17 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert 2D vector drawing formats.
-// / Dia handles diagram formats such as dxf, fig, vdx & wpg. SVG is handled by Inkscape in
-// / convertSVG() instead, because Dia exports SVG without truly rendering it.
-// / The binary is supplied by verifiedToolPath() rather than assumed, so the version
-// / that was verified is provably the version that runs.
-// / This function had NO version gate at all before this change. Dia was invoked blind, &
-// / a missing binary produced a timeout rather than naming the cause.
-// / Dia is a GTK application. If a conversion fails INSIDE a working sandbox rather than
-// / being refused by the sandbox gate, a missing display is the first thing to suspect,
-// / because the sandbox provides a private /tmp & an X socket outside it is not visible.
+// / Dia handles diagram formats such as dxf, fig, vdx & wpg.
+// / convertSVG() handles SVG with Inkscape, because Dia exports SVG without truly rendering it.
+// / The binary comes from verifiedToolPath(), so the version verified is the version that runs.
+// / Dia is a GTK application.
+// / A conversion that fails inside a working sandbox points first to a missing display.
+// / The sandbox's private /tmp hides any X socket outside it.
 function convertDrawings($pathname, $newPathname, $extension) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
-  // / This converter produces neither of the last two itself, so it declares the defaults.
-  // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
-  // / detached process must be supervised after the connection to the user is closed.
+  // / The last two keep their defaults, & $WorkerPID stays 0 unless a detached process is supervised.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
@@ -81,9 +72,8 @@ function convertDrawings($pathname, $newPathname, $extension) {
         $stopper++; }
       // / Log the output of the operation to the logfile, if it is not blank.
       if ($Verbose && trim($returnData) !== '') logEntry('Dia returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Every attempt was made & none left a file. What the converter printed is logged above this,
-      // / with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the converter had timed out, which no time limit
-      // / ever caused, & then made one more attempt.
+      // / Every attempt was made & none left a file.
+      // / What the converter printed is logged above, with --Enhanced Logging Verbosity-- on.
       if (!file_exists($newPathname)) {
         $ConversionErrors = TRUE;
         errorEntry('The drawing converter produced no file after '.$stopper.' attempt(s)!', 10000, FALSE); }

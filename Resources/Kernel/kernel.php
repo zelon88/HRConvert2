@@ -13,31 +13,15 @@
 // / command line, finds executables & loads components, the Engine among them.
 // /
 // / File Information ...
-// / v4.0.6.
-// / This file is the kernel. An application's entry point requires it directly as the first
-// / thing it does, & pins it EXACTLY via $RequiredKernelVersion.
+// / v4.0.8.
+// / The kernel. An application's entry point requires it first & pins it exactly via $RequiredKernelVersion.
 // / Error 35000 is the direct load guard every component shares.
-// /
-// / Why it is a file of its own.
-// / Until v3.9.9 the kernel lived inside convertCore.php, interleaved with sixty three
-// / application functions. Every application must run byte identical kernel code, & a
-// / second application could only have obtained it by copying functions out by hand. It now
-// / ships as Resources/Kernel beside Resources/Engine, so two applications trade it as a unit
-// / & compare it by version.
-// /
-// / Why it is not inside the Engine.
-// / verifyCoreComponent loads the Engine, so it cannot live in the Engine. Logging must survive
-// / an Engine that failed to load, because that is the moment most worth reporting. The kernel
-// / sits beside the Engine rather than in it, so the rule that the Engine cannot provide what
-// / is needed to load the Engine holds for the directories as well as for the files.
-// /
-// / The rules, enforced by check nineteen of Documentation/Build/hrconvert2-check.py.
+// / It is a file of its own, so every application runs identical kernel code & compares it by version.
+// / It sits beside the Engine, not inside it, because it loads the Engine & must log when the Engine fails.
+// / Check nineteen of Documentation/Build/hrconvert2-check.py enforces three rules.
 // /   The kernel calls nothing an application defines, so it is identical in every one.
-// /   The kernel calls nothing the Engine defines without a function_exists guard, because it
-// /   runs before the Engine loads & must keep running when the Engine cannot.
-// /   Nothing here is guarded against redefinition. This is the definition, & an application
-// /   that quietly replaced a kernel function would no longer be running the kernel.
-// /
+// /   The kernel calls nothing the Engine defines without a function_exists guard, because it runs first.
+// /   Nothing here is guarded against redefinition, because a replaced kernel function is no longer the kernel.
 // / What an application provides.
 // /   $EnableMemoryProtection  Whether variables are shredded at every return.
 // /   $Verbose                 Whether ordinary activity is logged.
@@ -67,20 +51,16 @@ if (count(get_included_files()) < 2) die('ERROR!!! Kernel-35000, The kernel cann
 // / The version of this kernel.
 // / The application reads it with a pattern BEFORE requiring this file, so a mismatched
 // / kernel is never executed. It cannot use readComponentVersion for that, which is below.
-$KernelVersion = 'v4.0.6';
+$KernelVersion = 'v4.0.8';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to give the absolute path of one file in the application's contract.
 // / Accepts the file's name. Returns its absolute path, whether or not it exists.
-// / The contract is what an application tells the shared layers about itself, which is its
-// / identity, its dependency manifest & its configuration template. It is the application's
-// / own data, so it lives beside the Kernel & the Engine at Resources/Contract rather than
-// / inside either. It lived inside the Engine until v3.9.9, so copying the Engine to another
-// / application copied this one's identity & dependency list with it.
-// / Every reader asks here, so the location is written once. The kernel is the one layer every
-// / reader can reach, -v with no Engine included. The name is reduced to its last part, so a
-// / caller cannot be talked into reading anything outside the contract.
+// / The contract is the application's identity, dependency manifest & configuration template.
+// / It lives at Resources/Contract, beside the Kernel & the Engine, because it is the application's own data.
+// / Every reader asks here, & the kernel is the one layer every reader can reach, -v with no Engine included.
+// / The name is reduced to its last part, so a caller cannot read anything outside the contract.
 function contractPath($contractFileName) {
   // / Set variables.
   global $InstLoc, $EnableMemoryProtection;
@@ -122,23 +102,19 @@ function verifyTime() {
 
 // / -----------------------------------------------------------------------------------
 // / A function to sanitize input strings with varying degrees of tolerance.
-// / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * & < " / ' ` chr(9) chr(10) chr(13) chr(0)
-// / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
-// / This function will replace whitespace with the underscore character.
-// / This function will remove leading and trailing dashes & dots.
-// / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
+// / It removes , | \ ~ # [ ] ( ) { } ; : $ ! ^ & % @ > * ? < " ' ` tabs, line breaks & NUL characters.
+// / It also removes http://, https://, // & .., & replaces each space with an underscore.
+// / Dashes & dots are trimmed from both ends.
+// / Set $strict to TRUE to remove forward slashes as well.
 function sanitizeString($Variable, $strict) {
   // / Set variables.
   global $EnableMemoryProtection;
-  // / Note that this function does not use the global $DangerousFiles.
-  // / Instead this function defines & destroys its own pattern every time it is called.
-  // / A DANGEROUS EXTENSION IS REMOVED AS A WHOLE PART OF A NAME, wherever in the name it sits. A part
-  // / is what a dot begins & the next dot or the end ends, so .php goes from a.php & from a.php.txt,
-  // / & .json stays. Case is ignored, so a.PHP goes too. Until v4.0.6 the letters were removed
-  // / wherever they appeared, so a.json became aon, & no Model conversion to json could be fetched.
+  // / It defines & destroys its own pattern on every call, rather than using the global $DangerousFiles.
+  // / A dangerous extension is removed as a whole part of a name, wherever in the name it sits.
+  // / A part begins with a dot & ends at the next dot or the end, so a.php.txt loses .php & a.json keeps .json.
+  // / Case is ignored, so a.PHP loses its extension too.
   // / Every extension a web server may hand to PHP is one, php5, phps & phtml among them.
-  // / Dashes inside a name are left. A name that begins with one is what a program reads as an
-  // / option, & the dashes at each end are trimmed below. Until v4.0.6 any two in a row were removed.
+  // / Dashes inside a name are left, & dashes at either end are trimmed below.
   $dangerParts = '/\.(?:js|php[0-9]*|phps|phtml|phar|html|css)(?=\.|$)/i';
   $previousValue = '';
   // / Check for dangerous files or escape conditions, until removing one leaves none behind.
@@ -148,11 +124,9 @@ function sanitizeString($Variable, $strict) {
   while ((string)$Variable !== $previousValue);
   if ($strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'/`'.chr(9).chr(10).chr(13).chr(0)), '', str_replace('http://', '', str_replace('https://', '', $Variable))))))), '-');
   if (!$strict) $Variable = trim(trim(str_replace(' ', '_', str_replace('..', '', str_replace('//', '', str_replace(str_split(',|\\~#[](){};:$!#^&%@>*?<"\'`'.chr(9).chr(10).chr(13).chr(0)), '', str_replace('http://', '', str_replace('https://', '', $Variable))))))), '-');
-  // / Check for dangerous files or escape conditions one more time, because removing a character can
-  // / join one up, & take every dash & dot off either end. Trimming can join one up too, as a.php-.
-  // / becomes a.php, so both run until neither changes anything. A name then begins with neither a
-  // / dash, which a program reads as an option, nor a dot. Until v4.0.6 the ends were trimmed once,
-  // / after the last check, in a fixed order, so a name could still begin with a dash.
+  // / Removing a character can join up a dangerous extension, & so can trimming, as a.php-. becomes a.php.
+  // / So the checks & the trimming of dashes & dots from both ends repeat until neither changes anything.
+  // / A name then begins with neither a dash, which a program reads as an option, nor a dot.
   do {
     $previousValue = (string)$Variable;
     $Variable = trim((string)preg_replace($dangerParts, '', str_replace('..', '', (string)$Variable)), '-.'); }
@@ -164,10 +138,8 @@ function sanitizeString($Variable, $strict) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to sanitize input strings or arrays with varying degrees of tolerance.
-// / Filters a given string of | \ ~ # [ ] ( ) { } ; : $ ! # ^ & % @ > * < " / ' ` chr(9) chr(10) chr(13) chr(0)
-// / This function will replace any of the above specified charcters with NOTHING. No character at all. An empty string.
-// / This function will replace whitespace with the underscore character.
-// / Set $strict to TRUE to also filter out backslash characters as well. Example:  /
+// / It hands each string, number or array element to sanitizeString(), which says what is removed.
+// / Set $strict to TRUE to remove forward slashes as well.
 function sanitize($Variable, $strict) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -178,10 +150,10 @@ function sanitize($Variable, $strict) {
   // / Only continue if the input variable is a type that we can properly sanitize.
   if (is_string($Variable) or is_numeric($Variable) or is_array($Variable)) {
     // / Sanitize array inputs.
-    // / Note that when $strict is TRUE this also filters out backslashes.
+    // / When $strict is TRUE this also removes forward slashes.
     if (is_array($Variable)) foreach ($Variable as $key => $var) $Variable[$key] = sanitizeString($Variable[$key], $strict);
     // / Sanitize string & numeric inputs.
-    // / Note that when $strict is TRUE this also filters out backslashes.
+    // / When $strict is TRUE this also removes forward slashes.
     if (is_string($Variable) or is_numeric($Variable)) $Variable = sanitizeString($Variable, $strict);
     // / Only set the Sanitized flag to TRUE if we have taken action on this variable.
     $VariableIsSanitized = TRUE; }
@@ -192,33 +164,23 @@ function sanitize($Variable, $strict) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to give a variable a second value without leaving the first one behind.
-// / Call this as redeclare($targetVariable, $newValue) & do not assign the result back.
-// / The target is taken by reference & is modified in place.
-// / A form such as $target = redeclare($target, $new) would overwrite the target with a boolean.
-// / The target is shredded before the new value is assigned, never after & never instead.
+// / Call this as redeclare($targetVariable, $newValue), & never assign the result back over the target.
+// / The target is taken by reference, shredded, & only then given the new value.
 // / Returns TRUE when the old value was destroyed before the new one landed, per convention 8.
 // / A FALSE return means the new value is in place but the old one may not be gone.
-// / This is a deliberate exception to convention 6 & is not a licence to ignore it.
-// / Convention 6 buys the shredding & the ability to read one name as holding one value.
-// / This function preserves the first of those & gives up the second.
-// / A loop body is the honest case for it, because a distinct name per value is impossible there.
-// / Straight line code is not, because a second variable name costs nothing & documents itself.
-// / An interned string cannot be shredded, so a value that came from a literal survives regardless.
-// / A value built at runtime is not interned & shreds correctly.
-// / A copy held by another variable cannot be reached, because PHP separates the buffer on write.
+// / It is a deliberate exception to convention 6, for a loop body, where a distinct name per value is impossible.
+// / Straight line code uses a second variable name instead, because that costs nothing & documents itself.
+// / An interned string, such as a literal, cannot be shredded, while a value built at runtime can.
+// / A copy held by another variable is not reached, because PHP separates the buffer on write.
 // / Each call costs one debug_backtrace() through the purge routine.
 function redeclare(&$targetVariable, $newValue) {
   // / Set variables.
   global $EnableMemoryProtection;
   $VariableIsRedeclared = FALSE;
   $oldValueWasPurged = FALSE;
-  // / Shred whatever the target holds before anything is allowed to overwrite it.
-  // / The target is a reference to the caller's register, so this writes into the real buffer.
-  // / The TARGET is shredded, never $newValue. $newValue is what the caller asked to store,
-  // / & purgeSensitiveMemory writes NULL through its reference, so purging it here assigns
-  // / nothing to the target & silently empties the variable this function was asked to set.
-  // / That happened. Every redeclare() in convertGui2.php wiped the URL it was building, &
-  // / the settings links rendered as convertCore.php with no path & no parameters.
+  // / Shred whatever the target holds before anything overwrites it.
+  // / The target is a reference to the caller's variable, so this writes into the real buffer.
+  // / The target is shredded, never $newValue, because purging $newValue would empty the variable being set.
   $oldValueWasPurged = purgeSensitiveMemory($EnableMemoryProtection, $targetVariable);
   // / Assign the new value only once the old one has been dealt with.
   $targetVariable = $newValue;
@@ -231,20 +193,12 @@ function redeclare(&$targetVariable, $newValue) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / THIS STAYS IN THE APPLICATION & the reason is worth reading before moving it again.
-// / purgeSensitiveMemory calls it, & purgeSensitiveMemory is called by EVERYTHING,
-// / including code that runs long before the Engine is loaded. It was moved to the
-// / Engine once & took the whole application down at line 57.
-// / The pre Engine check did not catch it because it looks for TOP LEVEL calls, & this
-// / is reached from inside a function that everything calls. A caller that ubiquitous
-// / has no single call site to find.
 // / A function to determine what function called the function that called this function.
-// / This function uses naieve memory cleanup routine deliberately out of neccesity.
-// / Only a human brain could have written that last comment. Just sit with it. I promise it makes sense.
+// / It belongs to the kernel, because purgeSensitiveMemory() calls it & runs before the Engine loads.
+// / It cleans up after itself by hand, because purgeSensitiveMemory() would call it again.
 // / Accepts no arguments & returns the name of the first caller that is not a memory routine.
 // / Frames belonging to the memory routines are skipped deliberately.
-// / A caller that reached the purge through redeclare() still owns the data & is still the culprit.
-// / Naming the wrapper would recreate the mystery this function exists to prevent.
+// / A caller that reached the purge through redeclare() still owns the data & is the one named.
 // / Returns 'main' when the call came from main or from no function at all.
 function getChildFunction() {
   // / Set variables.
@@ -340,14 +294,9 @@ function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
     // / Drop the reference. This is a permanent property of the type rather than an event,
     // / so it is recorded as normal activity & not as a warning.
     if (!$variableIsDestroyed) {
-      // / A RESOURCE is expected to be unshreddable & saying so is noise rather than news.
-      // / A socket handle holds no bytes this process can overwrite, so dropping the
-      // / reference is the only thing available & is exactly the right outcome.
-      // / Every manager pass closes several sockets & logging each one buried the entries
-      // / an operator actually needs to see.
-      // / Any OTHER type reaching here is still reported. An object that cannot be
-      // / shredded is worth knowing about, because it may hold a value in a property this
-      // / function never reached.
+      // / A resource cannot be shredded, so dropping the reference is the right outcome & is not reported.
+      // / A socket handle holds no bytes this process can overwrite, & every manager pass closes several.
+      // / Any other type reaching here is reported, because an object may hold a value in a property this never reached.
       if ($loggingIsReady && $Verbose && strpos(gettype($variable), 'resource') === FALSE) logEntry('Dropped unshreddable reference type '.gettype($variable).' for the '.$callerName.' function.');
       $variable = NULL;
       if (is_null($variable)) $variableIsDestroyed = TRUE; }
@@ -363,10 +312,7 @@ function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
         if ($loggingIsReady) warningEntry($failureText.' Continuing...');
         else error_log('WARNING!!! HRConvert2: '.$failureText.' Continuing...'); }
       // / Log a fatal failure where it can be logged, then always report it to the page.
-      // / errorEntry is given a FALSE die flag so control returns here for the print & the close.
-      // / Letting errorEntry die would drop the connection & would skip the print entirely.
-      // / errorEntry records it wherever it can & hands the halt to quickDie, so this
-      // / path no longer has to know whether a logfile exists.
+      // / errorEntry() is given a FALSE die flag, so control returns here for the print & the close.
       if ($FailureIsFatal) errorEntry($failureText.' Execution cannot continue!', 40000, TRUE); } }
   // / This function does not purge its own variables, because that would loop forever.
   // / It is deliberately careful about what memory it consumes instead.
@@ -382,12 +328,8 @@ function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
 // / -----------------------------------------------------------------------------------
 // / A function to close the web server connection to the client.
 // / Accepts nothing. Returns nothing, & it is exempt from the single exit rule for that reason.
-// / Named for what it does. It was called closeHRC2Connection until v3.9.9, which put one
-// / application's name inside the kernel, so a second application would have had to define a
-// / function named after this one for its own quickDie to halt.
-// / A buffer zlib.output_compression has begun to compress can be flushed but not removed, &
-// / ending it put a notice in the web server's log on every request until v4.0.1. Such a
-// / buffer is flushed instead, which passes on what it holds.
+// / It is named for what it does, so no application's name sits inside the kernel.
+// / A buffer zlib.output_compression has begun to compress can be flushed but not removed, so it is flushed.
 function closeClientConnection() {
   ignore_user_abort(TRUE);
   if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
@@ -478,9 +420,8 @@ function composeLogEntry($tierLabel, $entry, $errorLabel) {
 // / its logfile by name from either. Like emitLogEntry it does NOT call purgeSensitiveMemory,
 // / because purgeSensitiveMemory logs through this path.
 // / A logfile is locked & written at its end, because several processes append to one file.
-// / A handle that is not a plain file is written without a lock. Root's handle is standard
-// / error until it has a log folder of its own, & under systemd standard error is a socket,
-// / where a lock always fails & every line used to be dropped.
+// / A handle that is not a plain file is written without a lock, because a lock on a socket always fails.
+// / Root's handle is standard error until it has a log folder, & under systemd standard error is a socket.
 function appendLogText($logText) {
   // / Set variables.
   global $LogFile, $LogHandle;
@@ -529,22 +470,16 @@ function echoLogEntryToConsole($composedEntry) {
 // / -----------------------------------------------------------------------------------
 // / A function to record one finished line, or to hold it until a logfile exists.
 // / Accepts the finished line. Returns TRUE when it reached the logfile.
-// / An entry raised before verifyLogs has nowhere to go & used to reach the server error
-// / log, where it was separated from everything around it & usually never found.
-// / It is held in a buffer instead & written in order the moment a logfile exists.
+// / An entry raised before verifyLogs is held in a buffer & written in order the moment a logfile exists.
 // / Nothing before the logfile is therefore lost, & nothing is written out of order.
-// / LOCK_EX is used because several processes append to one file.
-// / An append under the pipe buffer size is atomic without it, & a stream inspection dump
-// / or a compiler log is not. Those are exactly the entries worth not corrupting.
-// / This function does NOT call purgeSensitiveMemory, for the reason given above.
+// / LOCK_EX is used, because several processes append to one file.
+// / An append under the pipe buffer size is atomic without it, but a stream inspection dump or a compiler log is not.
+// / This function does not call purgeSensitiveMemory, for the reason given above.
 // /
-// / A PROCESS HOLDING $LogHandle WRITES THROUGH IT & NEVER BY NAME. A logfile in a folder the
-// / web server account owns can be swapped for a link at any moment, & a write by name follows
-// / the link wherever it points. Debian's nginx package was rooted exactly that way in 2016, as
-// / CVE-2016-1247. So root writes nothing in that folder at all. Its handle is standard error
-// / until it has a log folder of its own, & its lines appear wherever its output goes. A handle
-// / to a logfile is locked & moved to the end before every entry, which is what an append by
-// / name did, so lines from several processes still land whole & in order.
+// / A process holding $LogHandle writes through it & never by name.
+// / A logfile in a folder the web server account owns can be swapped for a link, & a write by name follows it.
+// / Root therefore writes nothing in that folder, & its handle is standard error until it has a log folder.
+// / A handle to a logfile is locked & moved to the end before every entry, so lines land whole & in order.
 function emitLogEntry($composedEntry) {
   // / Set variables.
   global $LogFile, $LogHandle, $LogBuffer, $LogBufferOverflowed;
@@ -561,8 +496,7 @@ function emitLogEntry($composedEntry) {
     else $LogBufferOverflowed = TRUE; }
   else {
     // / Anything held before the logfile existed is written first & in order.
-    // / A full buffer keeps its earliest entries & drops what arrives after, so the notice says
-    // / later entries were discarded. It said older ones until v4.0.1, which was the reverse.
+    // / A full buffer keeps its earliest entries & drops later ones, so the notice says later entries were discarded.
     foreach ($LogBuffer as $bufferedEntry) $pendingText .= $bufferedEntry.PHP_EOL;
     if (isset($LogBufferOverflowed) && $LogBufferOverflowed) {
       $overflowNotice = 'WARNING!!! The log buffer filled before a logfile existed & later entries were discarded.';
@@ -608,13 +542,9 @@ function flushLogBuffer() {
 function quickDie($entry, $errorNumber) {
   // / Set variables.
   global $Time, $LogFile, $LogHandle, $SesHash3, $ApplicationName, $RunningFromCLI, $LogBuffer, $LogEchoToConsole;
-  // / The timestamp is recomputed HERE, at the moment the entry is written, rather than
-  // / taken from $Time. $Time is set once by verifyTime during boot, which is correct for a
-  // / web request that lives half a second & wrong for a manager process that runs for
-  // / weeks. A listener started at three in the morning stamped every entry it ever wrote
-  // / with three in the morning, which reads as a clock fault in one process & is not.
-  // / $Time itself is left alone, because a session directory is named from it & must not
-  // / change underneath a request.
+  // / The timestamp is recomputed here, at the moment the entry is written, rather than taken from $Time.
+  // / verifyTime sets $Time once, which suits a short request & not a manager that runs for weeks.
+  // / $Time itself is left alone, because a session directory is named from it & must not change underneath a request.
   // / An empty $Time means verifyTime has not run, so no timezone is set & no time is known.
   $timeLabel = (isset($Time) && $Time !== '') ? date('F j, Y, g:i a') : 'Unknown Time';
   $sessionLabel = (isset($SesHash3) && $SesHash3 !== '') ? (string)$SesHash3 : 'No Session';
@@ -624,8 +554,6 @@ function quickDie($entry, $errorNumber) {
   // / A halt is numbered like everything else, so the sequence has no hole at the end.
   $formattedEntry = composeLogEntry('ERROR!!! ', $entry, $errorLabel);
   // / A log is usable on the terms emitLogEntry uses, a held handle or a logfile that exists.
-  // / A name alone counted until v4.0.1, so a halt raised because the logfile could not be
-  // / created was appended to a file that was not there & reached no log at all.
   $logIsWritable = ((isset($LogHandle) && is_resource($LogHandle)) or (isset($LogFile) && is_string($LogFile) && $LogFile !== '' && file_exists($LogFile)));
   // / Root's log on the command line is the console itself, so whatever reaches that log has
   // / already reached the terminal. Printed as well, every line here appeared twice.
@@ -633,9 +561,8 @@ function quickDie($entry, $errorNumber) {
   // / Root's logfile repeats its warnings & errors on the terminal of an administrator running it
   // / by hand, so a halt is repeated there once rather than printed beside the repeat.
   $logIsEchoed = (isset($LogEchoToConsole) && $LogEchoToConsole === TRUE);
-  // / On the command line PHP's own error log is standard error unless php.ini names somewhere
-  // / else, so an entry sent there reached the terminal beside the copy printed below. It is
-  // / printed once instead. Until v4.0.1 every halt before a logfile existed appeared twice.
+  // / On the command line PHP's own error log is standard error unless php.ini names somewhere else.
+  // / An entry sent there would reach the terminal beside the copy printed below, so it is printed once instead.
   $errorLogIsConsole = ($RunningFromCLI && in_array(trim((string)ini_get('error_log')), array('', 'php://stderr', '/dev/stderr'), TRUE));
   // / Everything held before a logfile existed is reported here rather than discarded.
   // / A halt during boot is exactly the case where the entries leading up to it explain the
@@ -648,10 +575,8 @@ function quickDie($entry, $errorNumber) {
       else if ($logIsEchoed) echoLogEntryToConsole($bufferedEntry);
       else if (!$logIsConsole) print($bufferedEntry.PHP_EOL); }
     $LogBuffer = array(); }
-  // / Record the halt wherever it can be recorded. A halt with no record is a support ticket
-  // / that can never be answered. errorEntry leaves a fatal error to this function, so this is
-  // / the one place a halt is recorded. Until v4.0.1 a halt raised here directly once a logfile
-  // / existed was shown & never recorded.
+  // / Record the halt wherever it can be recorded, because a halt with no record cannot be diagnosed.
+  // / errorEntry leaves a fatal error to this function, so this is the one place a halt is recorded.
   if ($logIsWritable) appendLogText($formattedEntry.PHP_EOL);
   else if (!$errorLogIsConsole) error_log($formattedEntry);
   // / A browser needs a line break to render the message. A terminal does not & would
@@ -662,12 +587,9 @@ function quickDie($entry, $errorNumber) {
   // / Close the connection deliberately rather than dropping it, so the message is
   // / delivered before the process ends. There is nothing to close on the command line.
   if (!$RunningFromCLI && function_exists('closeClientConnection')) closeClientConnection();
-  // / A halt is a failure, so the process says so. This was a bare die until v3.9.9, which
-  // / exits with status zero, & every fatal error this application has ever raised reported
-  // / success to whatever was watching it. systemd runs the listener with Restart=on-failure,
-  // / so a listener that died here was never restarted. The Dockerfile follows its setup step
-  // / with a fallback for a failure that could not happen. A web request is unaffected,
-  // / because nothing sees the status & shutdown functions run either way.
+  // / A halt is a failure, so the process exits with status one.
+  // / systemd restarts the listener only on a failure, & a die with a message exits with status zero.
+  // / A web request is unaffected, because nothing sees the status & shutdown functions run either way.
   exit(1); }
 // / -----------------------------------------------------------------------------------
 
@@ -677,11 +599,10 @@ function quickDie($entry, $errorNumber) {
 // / Returns TRUE when the entry was recorded.
 // / Suppressed by the caller when $Verbose is FALSE. This function does not test $Verbose,
 // / because a caller that wants an entry recorded regardless must be able to say so.
-// / An entry raised before verifyLogs() has no logfile to reach & goes to the server error
-// / log instead. Writing to an unset path produces a raw PHP warning on the page.
+// / An entry raised before verifyLogs() is held until a logfile exists.
 function logEntry($entry) {
   // / Set variables.
-  // / The formatting & the writing both live elsewhere now, so this function holds nothing.
+  // / The formatting & the writing live elsewhere, so this function holds nothing.
   $LogWritten = FALSE;
   $LogWritten = emitLogEntry(composeLogEntry('Op-Act, ', $entry, ''));
   // / This cleanup is manual, because purgeSensitiveMemory() calls this function.
@@ -695,10 +616,10 @@ function logEntry($entry) {
 // / Accepts the message.
 // / Returns TRUE when the entry was recorded.
 // / A warning is always written & carries no error number. It can never halt execution.
-// / An entry raised before verifyLogs() goes to the server error log instead.
+// / An entry raised before verifyLogs() is held until a logfile exists.
 function warningEntry($entry) {
   // / Set variables.
-  // / The formatting & the writing both live elsewhere now, so this function holds nothing.
+  // / The formatting & the writing live elsewhere, so this function holds nothing.
   $LogWritten = FALSE;
   $LogWritten = emitLogEntry(composeLogEntry('WARNING!!! ', $entry, ''));
   // / This cleanup is manual, because purgeSensitiveMemory() may call this function.
@@ -711,7 +632,7 @@ function warningEntry($entry) {
 // / A function to write a numbered error to the logfile & optionally halt.
 // / Accepts the message, the documented error number & a fatality boolean, in that order.
 // / Returns TRUE when the entry was recorded. Returns nothing at all when it halts.
-// / An entry raised before verifyLogs() goes to the server error log instead.
+// / An entry raised before verifyLogs() is held until a logfile exists.
 // / A fatal error hands off to quickDie so every halt in the core is identical.
 function errorEntry($entry, $errorNumber, $die) {
   // / Set variables.
@@ -720,9 +641,7 @@ function errorEntry($entry, $errorNumber, $die) {
   $applicationLabel = $errorLabel = '';
   $applicationLabel = (isset($ApplicationName) && is_string($ApplicationName) && $ApplicationName !== '') ? $ApplicationName : 'HRConvert2';
   $errorLabel = is_numeric($errorNumber) ? $applicationLabel.'-'.$errorNumber : $applicationLabel.'-###';
-  // / A fatal error is recorded, numbered & shown by quickDie, once, so it is not written here.
-  // / Written here as well until v4.0.1, a halt before the logfile existed was held, then shown
-  // / twice, & a halt after it was recorded under one number & shown under the next.
+  // / A fatal error is recorded, numbered & shown once, by quickDie, so it is not written here.
   if (!$die) $LogWritten = emitLogEntry(composeLogEntry('ERROR!!! ', $entry, $errorLabel));
   // / A fatal error halts here.
   // / quickDie records it, reports to the page or the console, empties the log buffer & closes
@@ -756,45 +675,15 @@ function extractCliOption($cliArguments, $optionName) {
 // / -----------------------------------------------------------------------------------
 // / A function to read a command line argument vector into the parts a dispatcher needs.
 // / Accepts the raw argument vector exactly as the interpreter supplied it, script name first.
-// / Returns the argument list with the script name removed, the argument count, the command,
-// / the first target, the second target, a pre confirmed boolean & a sanity check, in that
-// / order.
-// /
-// / This parses & it does not dispatch. It holds no list of commands & no opinion about
-// / what any of them mean, which is why it can live here. The vocabulary belongs to whatever
-// / calls it & every application has a different one.
-// /
-// / The script name is discarded & the count is taken afterwards. A count taken before the
-// / shift reports one argument for an invocation that supplied none, & the caller's no
-// / argument help path then never runs.
-// /
-// / A target may arrive two ways & both are accepted. A command of the form --config=/path
-// / & one of the form --config /path mean the same thing. The equal sign form is resolved
-// / first because the value is part of the same token, & the following argument is read only
-// / when that token carried no value of its own.
-// /
+// / Returns seven values in order: the arguments, their count, the command, two targets, a pre confirmed boolean & a sanity check.
+// / The arguments are returned without the script name, & the count is taken after it is removed.
+// / It parses & does not dispatch, so it holds no list of commands, which is why it can live here.
+// / A target may follow an equal sign or arrive as the next argument, & both mean the same thing.
 // / Every argument is lowercased, so a command line is case insensitive throughout.
-// / An earlier version lowercased a target that arrived after an equal sign & left one that
-// / arrived as a separate argument alone, so --update=NOW & --update NOW were two different
-// / strings. Both are now the same.
-// /
-// / A target is not a path & that is why this is safe. Every path & every section name
-// / reaches its consumer through extractCliOption, which lowercases nothing & says so. What
-// / arrives here is a sub command, a role name, a version, a count, the word now, or a
-// / startup key, & a startup key is a sha256 HMAC, which is lowercase hexadecimal already.
-// / Adding a target that IS case sensitive means reading it with extractCliOption instead.
-// / THAT LIST MISSED TWO, & both were found by running the commands rather than by this
-// / argument. A pipeline name is a target, so its consumer matches it without regard to
-// / case. An --app argument's values belong to another application & may be paths, so its
-// / caller reads them again from the raw vector, which this returns first & unchanged.
-// / A consumer of a target that is a name compares without regard to case. One that may
-// / receive a path reads the raw vector.
-// /
-// / A -y or --yes anywhere in the vector pre confirms, rather than only in last position.
-// / An operator who types it before the target means what one who types it after means.
-// / It is matched case insensitively like everything else here, so -Y confirms too. An
-// / earlier version lowercased the command & compared the confirmation flag exactly, so
-// / --clean now -Y asked the operator a question they had already answered.
+// / A target is never a path, because every path & section name is read with extractCliOption, which lowercases nothing.
+// / A consumer of a target that is a name compares without regard to case.
+// / A consumer that may receive a path reads the raw vector, which this returns first & unchanged.
+// / A -y or --yes anywhere in the vector pre confirms, & it is matched without regard to case.
 function parseArgumentVector($argumentVector) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -938,14 +827,10 @@ function verifyCoreComponent($componentName, $componentRelativePath, $versionVar
 // / Accepts the path. Returns a trust boolean, the resolved path & the reason it is not
 // / trusted, in that order.
 // /
-// / ROOT MUST NOT RUN, READ OR WRITE THROUGH anything another account can change. A file is
-// / only as trustworthy as the folders above it, because an account that can write a
-// / folder can rename anything in it & put something else in its place. That includes a
-// / folder root owns. Moving a folder to another parent needs write permission on the folder
-// / itself, but renaming it within the same parent does not, & that was measured. So every
-// / folder from the filesystem root down must belong to root & must not be writable by its
-// / group or by anybody else, & so must the path itself. There is no exception for a data
-// / folder, because a root owned folder inside one can be renamed aside & its name taken.
+// / Root must not run, read or write through anything another account can change.
+// / An account that can write a folder can rename anything in it, a folder root owns included, & put something else in its place.
+// / So every folder from the filesystem root down, & the path itself, must belong to root & be writable by nobody else.
+// / There is no exception for a data folder, because a root owned folder inside one can be renamed aside & its name taken.
 // /
 // / The path is resolved first & the resolved path is the one judged & returned. A caller
 // / uses the returned path rather than the one it supplied, so a link that changes after the
@@ -985,14 +870,11 @@ function pathIsTrustedByRoot($candidatePath) {
 // / Accepts the tree & the folders inside it that hold no code, which are never entered.
 // / Returns a trust boolean & the reason it is not trusted, in that order.
 // /
-// / A TREE IS ONLY AS TRUSTWORTHY AS THE WEAKEST NAME IN IT. Root does not only load the
-// / files a request names. It loads cores & pipelines on demand & runs build scripts from
-// / the same tree, so one name another account can change is enough to run that account's
-// / code as root. Every folder from the filesystem root down to the tree must pass
-// / pathIsTrustedByRoot, & the tree must be the folder named rather than where a link leads.
-// / Every name inside it must belong to root & be writable by nobody else. No name may be a
-// / link, because a link can lead out of the tree to something another account owns. The
-// / walk uses lstat & never follows anything.
+// / A tree is only as trustworthy as the weakest name in it.
+// / Root loads cores & pipelines on demand & runs build scripts from the tree, so one name another account can change runs its code.
+// / Every folder from the filesystem root down to the tree must pass pathIsTrustedByRoot, & the tree must not be a link's target.
+// / Every name inside it must belong to root & be writable by nobody else.
+// / No name may be a link, because a link can lead out of the tree, & the walk uses lstat & never follows anything.
 function treeIsTrustedByRoot($treePath, $excludedPaths) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -1030,17 +912,12 @@ function treeIsTrustedByRoot($treePath, $excludedPaths) {
 // / A function to decide whether only root could replace the folder a name is in.
 // / Accepts the folder. Returns whether it is held & the reason it is not, in that order.
 // /
-// / A FOLDER IS ONLY AS STILL AS THE FOLDER ABOVE IT. The functions below guard the name they
-// / are given & never follow a link planted at it. They reach that name through the folder it
-// / is in, though, & the folder is looked up again every time. An account that can write the
-// / folder above can rename this one aside & put a link in its place, & root would then create,
-// / open or re-own a file wherever the link leads. Nothing checked until v4.0.1, & Logs &
-// / Sockets both sit inside the data location, which the web server account owns.
+// / A folder is only as still as the folder above it.
+// / The functions below guard the name they are given, but reach it through its folder, which is looked up every time.
+// / An account that can write the folder above can rename this one aside & put a link in its place.
 // / So the folder must not be a link, & every folder above it must pass pathIsTrustedByRoot.
-// / The folder itself may belong to another account. Only what is inside it can then change,
-// / & the name inside it is what each of those functions already guards.
-// / Only root is judged. Another account reaches nothing through a link that it could not
-// / reach without one, so it is answered TRUE.
+// / The folder itself may belong to another account, because the functions below guard every name inside it.
+// / Only root is judged, because another account reaches nothing through a link it could not reach without one.
 function folderIsHeldForRoot($folderPath) {
   // / Set variables.
   global $RunningAsRoot, $EnableMemoryProtection;
@@ -1077,21 +954,13 @@ function folderIsHeldForRoot($folderPath) {
 // / Accepts the destination path, the contents & the mode the file is created with.
 // / Returns a success boolean & the reason for a failure, in that order.
 // /
-// / A PLAIN WRITE FOLLOWS A LINK, & SO DOES A CHMOD BY PATH. Root writing into a folder the
-// / web server account can change writes wherever a link it planted points, & root changing
-// / the mode afterwards changes whatever the link points at. Both were measured in v4.0.0. A
-// / link planted where the DATA protection file belongs made one -fp copy the link's target
-// / into a backup the web server account could read, overwrite it & leave it world readable.
-// /
-// / So the contents go into a new file that did not exist a moment before. Opening with x
-// / fails on any name that already exists, a link included, so it never opens something
-// / planted. The mode is set by the umask as the file is created, so nothing is changed by
-// / path afterwards. The new file is then renamed over the destination. A rename replaces
-// / the name & never follows what was there, so a link at the destination is replaced rather
-// / than written through, & a reader sees the whole old file or the whole new one.
+// / A plain write follows a link, & so does a chmod by path.
+// / So the contents go into a new file opened with x, which fails on any name that already exists, a link included.
+// / The mode is set by the umask as the file is created, so nothing is changed by path afterwards.
+// / The new file is then renamed over the destination, which replaces a link rather than writing through it.
+// / A reader sees the whole old file or the whole new one.
 // / The temporary name is random, so it cannot be predicted & occupied first.
-// / Root writes only in a folder folderIsHeldForRoot holds, because all of this guards the name
-// / & none of it guards the folder the name is reached through.
+// / Root writes only in a folder folderIsHeldForRoot holds, because all of this guards the name & not the folder.
 function writeFileWithoutFollowing($targetPath, $fileContents, $fileMode) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -1130,14 +999,11 @@ function writeFileWithoutFollowing($targetPath, $fileContents, $fileMode) {
 // / Returns the open handle or FALSE, whether the file was created, & the reason for a
 // / failure, in that order.
 // /
-// / A NEW FILE IS CREATED WITH x, WHICH REFUSES EVERY NAME THAT ALREADY EXISTS, A LINK INCLUDED.
-// / An existing file is opened only when it is a plain file with exactly one name, & it is
-// / opened with r+ rather than a, because a creates a file wherever a link points & r+ creates
-// / nothing. The open handle is then compared with what was examined, by device & inode. A
-// / link swapped in between the look & the open opens something else, which the comparison
-// / catches, & the handle is closed before anything is written to it.
-// / The caller writes through the handle for as long as it runs, so the name is never
-// / resolved again & cannot be pointed somewhere else halfway through.
+// / A new file is created with x, which refuses every name that already exists, a link included.
+// / An existing file is opened only when it is a plain file with exactly one name.
+// / It is opened with r+ rather than a, because a creates a file wherever a link points & r+ creates nothing.
+// / The open handle is compared with what was examined, by device & inode, so a link swapped in between is caught.
+// / The caller writes through the handle for as long as it runs, so the name is never resolved again.
 // / Root opens only in a folder folderIsHeldForRoot holds, for the reason given there.
 function openFileWithoutFollowing($filePath, $fileMode) {
   // / Set variables.
@@ -1179,15 +1045,12 @@ function openFileWithoutFollowing($filePath, $fileMode) {
 // / Accepts the path & the most bytes to read. Returns whether it was read, the contents & the
 // / reason it was not, in that order.
 // /
-// / A READ BY NAME FOLLOWS A LINK, & OPENING A FIFO WAITS FOREVER. Root reads the install secret
-// / & the DATA protection file in folders the web server account owns, & a name there can be
-// / swapped for a link, or for a FIFO that would hold every command run as root at its first
-// / read, -fp included, with no way to recover from inside the application. Until v4.0.1 both
-// / were read with file_get_contents.
-// / So the name must be a plain file with one name. It is opened without blocking, which a FIFO
-// / swapped in cannot hold, & the open handle is compared with what was examined, by device &
-// / inode, so a name swapped in between the look & the open is refused unread. No more than the
-// / bytes asked for are read, so a file that never ends cannot fill memory.
+// / A read by name follows a link, & opening a FIFO waits forever.
+// / Root reads files in folders the web server account may write, such as a PID file & the DATA protection file.
+// / A FIFO swapped in there would hold every command root runs, -fp included, at its first read.
+// / So the name must be a plain file with one name, & it is opened without blocking.
+// / The open handle is compared with what was examined, by device & inode, so a name swapped in between is refused unread.
+// / No more than the bytes asked for are read, so a file that never ends cannot fill memory.
 // / Root reads only in a folder folderIsHeldForRoot holds, for the reason given there.
 function readFileWithoutFollowing($filePath, $maximumBytes) {
   // / Set variables.
@@ -1225,13 +1088,12 @@ function readFileWithoutFollowing($filePath, $maximumBytes) {
 // / Returns a removal boolean & the reason for a failure, in that order. A file that is
 // / already absent counts as removed.
 // /
-// / REMOVING A NAME NEVER FOLLOWS A LINK AT THAT NAME. Every folder above it is looked up
-// / again, though. A folder that can be swapped for a link to /etc between a check & the
-// / removal would have root remove a file from /etc. So the folder holding the file must be
-// / one folderIsHeldForRoot holds, which nothing but root can replace. The folder itself may
-// / be another account's, because a name that account swaps in there is only ever one of its
-// / own. A link at the name itself is removed as a link. A folder is never removed, because
-// / nothing inside it has been examined.
+// / Removing a name never follows a link at that name, but every folder above it is looked up again.
+// / A folder swapped for a link to /etc between a check & the removal would have root remove a file from /etc.
+// / So the folder holding the file must be one folderIsHeldForRoot holds, which nothing but root can replace.
+// / The folder itself may be another account's, because a name that account swaps in is only ever its own.
+// / A link at the name itself is removed as a link.
+// / A folder is never removed, because nothing inside it has been examined.
 function removeFileWithoutFollowing($targetPath) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -1258,17 +1120,13 @@ function removeFileWithoutFollowing($targetPath) {
 // / Accepts the path, the owning account & the group, by name. An empty owner or group is
 // / left as it is. Returns a success boolean & the reason for a failure, in that order.
 // /
-// / PHP HAS NO fchown, SO ROOT CAN ONLY CHANGE AN OWNER BY NAME. lchown & lchgrp change the
-// / name itself & never what a link points at, which closes a symbolic link. A hard link is
-// / the other way to put a different file behind a name. In a folder the web server account
-// / can write, the name can be swapped for a hard link to a root file between the moment root
-// / looks & the moment it acts, & root would then hand that file to the web server account.
-// / So a name is changed only when nothing can swap it, because root trusts the folder it is
-// / in, or when fs.protected_hardlinks is on. With that on, an account can only link a file it
-// / already owns or can already read & write, so a swap gains it nothing. systemd turns it on
-// / at boot, so it is on almost everywhere. A host that turned it off is told, & the name is left.
-// / Neither of those helps when the folder itself can be swapped, because lchown follows every
-// / folder on the way to the name. So the folder must be one folderIsHeldForRoot holds as well.
+// / PHP has no fchown, so root can only change an owner by name.
+// / lchown & lchgrp change the name itself & never what a link points at, which closes a symbolic link.
+// / A hard link swapped in between the look & the act would have root hand a root file to another account.
+// / So a name is changed only in a folder root trusts, or when fs.protected_hardlinks is on.
+// / With that on, an account can only link a file it already owns or can already read & write, so a swap gains nothing.
+// / systemd turns it on at boot, & a host that turned it off is told & the name is left.
+// / lchown follows every folder on the way to the name, so the folder must be one folderIsHeldForRoot holds as well.
 function changeOwnerWithoutFollowing($targetPath, $ownerAccount, $groupAccount) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -1298,21 +1156,14 @@ function changeOwnerWithoutFollowing($targetPath, $ownerAccount, $groupAccount) 
 // / Accepts the absolute path of the tree. Returns a removal boolean & the reason for a failure,
 // / in that order. A tree that is already absent counts as removed.
 // /
-// / THE FOLDER HOLDING THE TREE MUST BE ROOT'S ALONE, so nothing but root can put a link where
-// / the tree is. Every name in it is examined with lstat. A link or a file is removed as a name &
-// / never followed, so a file with another name keeps that one, & a folder is emptied before it
-// / is removed.
-// / EVERY FOLDER IS MADE ROOT'S ALONE BEFORE ANYTHING IN IT IS LISTED. A tree is often removed
-// / because another account could change part of it, & that account could swap a folder in it
-// / for a link between root listing the folder & emptying it, so root would remove whatever the
-// / link leads to. The folder holding each one is root's alone by the time it is reached, so
-// / nothing but root can swap the folder itself, & once it is root's alone too, nothing but root
-// / can change what is in it. A folder that cannot be made root's alone stops the removal, &
-// / whatever is left stays where it is. A warning says how many folders had to be taken back.
-// / IT NEVER LEAVES THE FILESYSTEM THE FOLDER HOLDING THE TREE IS ON, as the walk that gives an
-// / installation to root never does. A folder on another one is something mounted there, & what
-// / is in it is not the tree's to remove, so it is left as it is, & so is every folder holding it.
-// / A tree that is itself something mounted is left as it is too.
+// / The folder holding the tree must be root's alone, so nothing but root can put a link where the tree is.
+// / Every name in it is examined with lstat, & a link or a file is removed as a name & never followed.
+// / A folder is emptied before it is removed.
+// / Every folder is made root's alone before anything in it is listed.
+// / Otherwise another account could swap a folder for a link between the listing & the emptying.
+// / A folder that cannot be made root's alone stops the removal, & a warning counts the folders taken back.
+// / It never leaves the filesystem the folder holding the tree is on, because something mounted is not the tree's.
+// / A tree that is itself something mounted is left as it is.
 function removeTreeWithoutFollowing($treePath) {
   // / Set variables.
   global $EnableMemoryProtection;

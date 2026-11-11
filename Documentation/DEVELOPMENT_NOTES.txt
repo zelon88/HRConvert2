@@ -37,8 +37,7 @@ that explains it, is recorded here by subsystem, so neither has to carry it.
 
 Each entry opens with the decision in capitals, followed by its reason.
 A release number is given where one is known.
-v4.0.6 moved the history out of the command line output.
-The history in code comments moves here next.
+v4.0.6 moved the history out of the command line output, & v4.0.8 moved it out of the code comments.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -207,10 +206,15 @@ rather than writing it. See ABOUT_RESOURCE_RATE_LIMITING.txt.
 --Installation & The Hosted Location--
 
 A RELEASE COPIED INTO THE WEB ROOT BRINGS .git & .github WITH IT.
-STEP 2 of the installation instructions copies the repository. The installation never uses
-either folder, & the Apache configuration refuses both. -v reports the hosted location as KEPT
-& names them until they are moved out of the web root. A .old folder is an earlier installation
-an update left beside it.
+STEP 2 of the installation instructions copied the repository there until v4.0.9. The installation
+never uses either folder, & the Apache configuration refuses both. -v reports the hosted location
+as KEPT & names them until they are moved out of the web root. A .old folder is an earlier
+installation an update left beside it.
+
+THE REPOSITORY IS CLONED WHERE ONLY ROOT CAN CHANGE IT.
+Root installs only a tree no other account could change, so a clone in a home folder is refused &
+-fp exits with status one. Until v4.0.9 the README & the installation instructions cloned into the
+current folder, which was refused wherever that was a home folder.
 
 -fp RUN FROM A TREE NOT YET INSTALLED INSTALLS IT AS IT ENDS.
 The tree is installed into the Application folder of the data location, & then the installed
@@ -279,6 +283,862 @@ Installing a package can enable configuration HRConvert2 never asked for.
 
 THE SUPPLY CHAIN TEMPLATE'S RIGHT HAND COLUMNS ARE BLANK ON PURPOSE.
 They are the audit, & a person fills them in.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Pipelines--
+
+A PIPELINE'S ERROR NUMBERS DID NOT CHANGE WHEN ITS CODE LEFT convertCore.php.
+Operators had already read them. A number a block no longer raises is retired, not reused, as
+13001 through 13005 are.
+
+NO PIPELINE CARRIES ITS OWN VERSION CHECK.
+Every pipeline asks verifiedToolPath(), so the manifest alone owns each tool's minimum. Two
+checks eventually disagree. Stream once had its own, higher FFMPEG minimum, & the manifest's
+6.1 now covers it.
+
+A CONVERTER THAT LEAVES NO FILE AFTER EVERY ATTEMPT SAYS SO.
+Until v4.0.6 that was reported as a time out, which no time limit caused, & one more attempt
+was made after it. It was also raised after the attempt that used the count up, even one that
+worked. An archiver that left nothing was reported twice, under its format's number & the
+Archive pipeline's.
+
+sandboxCommand() RETURNS A PAIR.
+Until v3.9.9 ClamAV, ScanCore & Stream took the pair as the command, so the shell ran a program
+called Array. ClamAV reported every file clean. ScanCore read Array: not found as a detection &
+reported every file infected. No stream converted.
+
+A SCANNER CHANGES NOTHING & WRITES NOTHING A USER SEES.
+An earlier ScanCore wrote straight into the user facing report, so the scanner decided what a
+user saw, & the application could not filter, order or consolidate any of it.
+
+CLAMAV'S LIMITS ARE SIZED TO THE FILE, & IT UNPACKS TO DISK.
+Until v3.9.9 an upload over ClamAV's 100M default was reported clean without being read.
+ClamAV unpacked into the sandbox's /tmp, which is memory, so a large archive was killed by the
+Scan ceiling. Its writable mount was the session's temporary location, which the web server
+serves.
+
+SCANCORE'S CHUNK IS A QUARTER OF ITS MEMORY LIMIT.
+Until v3.9.9 the configuration shipped a 256M limit with a 128M chunk, & every file over 128M
+ended in a PHP fatal error rather than a verdict. The sandbox was not handed ScanCore's own
+directory, so php inside it said Could not open input file. Any line containing found counted as
+a detection.
+
+THE IMAGE & OCR PIPELINES CARRY THEIR OWN IMAGEMAGICK POLICY.
+Until v4.0.5 -fp rewrote the host's policy.xml, for every program on the host. The OCR page split,
+whose sandbox shows no ImageMagick configuration, ran under no policy at all.
+
+AN ICON IS SHRUNK TO 256 PIXELS A SIDE.
+ImageMagick refuses a larger icon & leaves an empty file. Until v4.0.6 a screenshot converted to
+an empty icon.
+
+THE VIDEO CODEC FOLLOWS THE CONTAINER.
+An earlier version asked for libx264 whatever the target was. WebM & Ogg reject H.264, so neither
+could ever have converted. FFMPEG's standard error was not captured either, so a failed conversion
+produced a time out & no explanation.
+
+DIA & THE SUBTITLE CONVERTER ARE VERSION GATED.
+Each once invoked its tool blind, & a missing binary produced a time out rather than naming the
+cause.
+
+CALIBRE WRITES PML ONLY ZIPPED.
+Until v4.0.6 pml & oeb were offered as Ebook outputs, & every conversion to either failed.
+
+THE MODEL PIPELINE NAMES THE FORMAT IT ASKS ASSIMP FOR.
+A guessed format failed an obj to off conversion with a message naming neither. Asking for json
+produced no output format specified and I failed to guess it, & the retry loop ran the same
+impossible command four more times. obj wrote a material library as a second file, which the
+session counted & never showed.
+The route was once chosen by what a utility could read, so obj to off went to Assimp, which has no
+OFF exporter.
+3mf, x, ctm, dxf & wrl became outputs at v3.9.0. u3d was left out.
+The binary check once tested the $UsePyMeshLab setting rather than whether PyMeshLab loaded, so
+buildMeshLabCommand() assembled xvfb-run with an empty program path. The route log tested the
+setting too, so a failed import left no record of which utility did the work. A host without a
+matching interpreter once failed the whole conversion, though meshlabserver worked on it.
+
+A PyMeshLab IMPORT IS PROVEN, NOT ASSUMED FROM ITS INTERPRETER.
+An earlier version stopped at finding an interpreter. It found python3.14, reported PyMeshLab in
+use, built a command that raised ImportError, & left nothing to fall back to. Installing the
+interpreter to clear a warning broke the conversion path that had worked. A directory that could
+not be imported was once reported as success, & a bundle directory that did not exist was still
+put on the Python path.
+
+meshlabserver RUNS UNDER xvfb-run INSIDE ITS SANDBOX.
+It only ever worked unsandboxed, where /tmp/.X11-unix is the host's & root's. It failed from the
+day its profile began sandboxing, & nobody saw it, because the normalize route fell through to
+Assimp, so every model conversion skipped normalization. A fallback that works too well turns a
+hard failure into a silent regression.
+xvfb-run discards the X server's output by default, so several rounds of diagnosis read Qt's guess
+at a cause. A server that could not bind TCP in the sandbox made xvfb-run retry the next display,
+so a failure named display 109 rather than 99.
+MeshLab removed meshlabserver from its releases in 2022, so PyMeshLab is the only route on a
+current distribution.
+
+SANITIZATION IS NOT THE SCAD BOUNDARY. THE SANDBOX IS.
+Four bypasses were reported against the line oriented SCAD scanner, & a fifth against the stateful
+rewrite that replaced it. One applied the main loop's comment rule in the lookahead, which missed
+surface/**/("file"). Another defeated rectifySCAD() while it commented out the whole line a call
+started on, because a block comment closing part way along that line swallowed the marker. It has
+edited by position since.
+Until v4.0.5 convertSCAD() ran the system's bubblewrap, relying on a profile an earlier release
+attached to it or on the restriction being lifted. Its render once ran under a fixed nice -n 19
+rather than its resource ceiling, which walked around the limiter as well as the sandbox builder.
+
+THE STREAM COMMAND IS SANDBOXED.
+An earlier version did not sandbox it, believing a backgrounded sandbox would hand back bwrap's
+process ID rather than FFMPEG's. bwrap is PID 1 in its namespace & lives exactly as long as its
+child, so its ID is the right handle.
+An identical log block once sat above the walk loop as well, so every refused walk logged ALLOWED
+with zeroes, then DENIED with the real numbers.
+
+NETWORK EGRESS & SSRF JUDGEMENT STAY OUT OF EVERY PIPELINE, WHATEVER THE CALLER COUNT.
+When the pipelines left convertCore.php, a helper with no other caller moved with its pipeline.
+The eight stream network helpers had no other caller & stayed, so a pipeline that fetches something
+gets the protection & cannot opt out of it by accident. They were renamed off the word Stream.
+
+LIBREOFFICE RUNS ONCE PER CONVERSION, INSIDE A SANDBOX.
+Documents were once converted through a persistent unoconv listener, which parsed hostile documents
+in a long lived process with full network access, so sandboxing the client protected nothing.
+Until v4.0.0 an unsandboxed conversion used a profile path shared by every conversion & by any
+account that made it first. Until v4.0.6 a LibreOffice its ceiling killed reached the log only as
+a time out, once every retry had been killed the same way. Its log line once compared two commands
+to say whether a conversion was sandboxed, & said YES for every unsandboxed one.
+
+A PDF IS OPENED IN WRITER ONLY FOR A WORD PROCESSING TARGET.
+LibreOffice opens a PDF in Draw, which has no export filter for a word processing format, so until
+v4.0.9 a PDF to doc, docx, odt, ott, fodt, rtf or xml failed. Writer's PDF import keeps the text for
+those. On LibreOffice 24.2 it leaves plain text & EPUB empty & HTML as pictures, so those stay with
+Draw, which writes plain text.
+
+THE LIBREOFFICE MODULE IS SHARED, NOT OWNED.
+Document & OCR both call it. Leaving it in convertCore.php kept document logic in the file the
+pipeline work set out to empty. Putting it in the Document pipeline would have made OCR depend on
+another pipeline being installed.
+
+A PIPELINE NEVER PRINTS.
+The OCR pipeline once printed each filename straight into the AJAX response, which was safe only
+while it lived in convertCore.php. In a component, one PHP warning in a reply the interface parses
+line by line becomes a phantom output filename.
+
+EVERY BOOTABLE FORMAT'S BOOTLOADER IS PINNED.
+An earlier verifyIsoBootloaders() skipped iso_mbr-boot & returned TRUE without looking.
+The hybrid image once read its assets from the top of the bootloaders folder, & its isohybrid step
+was tested after the extension had been normalized to iso, so it never ran.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Kernel--
+
+THE KERNEL IS A FILE OF ITS OWN, BESIDE THE ENGINE.
+Until v3.9.9 it lived inside convertCore.php among sixty three application functions, so a second
+application could only have obtained it by copying functions out by hand.
+
+THE CONTRACT LIVES OUTSIDE THE ENGINE.
+Until v3.9.9 it lived inside the Engine, so copying the Engine to another application copied this
+one's identity & dependency list with it.
+
+getChildFunction() BELONGS TO THE KERNEL.
+It was moved to the Engine once & took the whole application down at line 57. The check for calls
+made before the Engine loads looks for top level calls, & purgeSensitiveMemory() reaches this from
+inside a function everything calls.
+
+redeclare() SHREDS THE TARGET, NEVER THE NEW VALUE.
+It once purged $newValue, which wrote NULL through its reference, so every redeclare() in
+convertGui2.php wiped the URL it was building & the settings links rendered with no path.
+
+A DANGEROUS EXTENSION IS REMOVED AS A WHOLE PART OF A NAME.
+Until v4.0.6 sanitizeString() removed its letters wherever they appeared, so a.json became aon & no
+Model conversion to json could be fetched. It also removed any two dashes in a row, & trimmed the
+ends once, after the last check, so a name could still begin with a dash.
+The header of both sanitizers said $strict removes backslashes. Both remove backslashes always, &
+$strict removes forward slashes.
+
+closeClientConnection() IS NAMED FOR WHAT IT DOES.
+It was closeHRC2Connection until v3.9.9, which put one application's name inside the kernel. Until
+v4.0.1 it ended a compressed output buffer, which put a notice in the web server's log on every
+request.
+
+AN ENTRY RAISED BEFORE THE LOGFILE EXISTS IS HELD.
+It once reached the server error log, separated from everything around it & usually never found.
+Until v4.0.1 a full buffer's notice said older entries were discarded, the reverse of what it did.
+Under systemd every line root wrote to standard error was once dropped, because a lock on a socket
+always fails.
+
+A PROCESS HOLDING $LogHandle NEVER WRITES ITS LOGFILE BY NAME.
+A write by name follows a link planted in a folder another account owns. Debian's nginx package was
+rooted exactly that way in 2016, as CVE-2016-1247.
+
+A LOG LINE'S TIME IS TAKEN WHEN IT IS WRITTEN.
+$Time is set once during boot. A listener started at three in the morning once stamped every entry
+it ever wrote with three in the morning, which read as a clock fault & was not.
+
+quickDie() RECORDS EVERY HALT ONCE, & EXITS WITH STATUS ONE.
+Until v4.0.1 a logfile's name alone counted as usable, so a halt raised because the logfile could
+not be created reached no log. Every halt before a logfile existed appeared twice on the command
+line. A halt raised there once a logfile existed was shown & never recorded. errorEntry() wrote a
+fatal error as well, so it was held & shown twice, or recorded under one number & shown under the
+next.
+It was a bare die until v3.9.9, which exits with status zero, so every fatal error reported success.
+systemd never restarted a listener that died there, & the Dockerfile carried a fallback for a
+failure that could not happen.
+
+parseCommandLine() LOWERCASES EVERY ARGUMENT, & NO TARGET IS A PATH.
+An earlier version lowercased a target after an equal sign & left one that arrived separately alone,
+so --update=NOW & --update NOW differed. Another lowercased the command & compared the confirmation
+flag exactly, so --clean now -Y asked a question already answered. The list of targets that are
+case sensitive missed a pipeline name & the values of --app, & running the commands found both.
+
+ROOT JUDGES EVERY FOLDER ABOVE A NAME, NOT ONLY THE NAME.
+Renaming a folder within its parent needs no write permission on the folder itself, which was
+measured. Nothing checked the folder above a name until v4.0.1.
+In v4.0.0 a link planted where the DATA protection file belongs made one -fp copy the link's target
+into a backup the web server account could read, overwrite it & leave it world readable. Until
+v4.0.1 root read the install secret & the DATA protection file with file_get_contents.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Managers--
+
+THE CORE MANAGER ANSWERS A STOP SIGNAL & WAITS FOR ITS SUBORDINATES.
+Until v4.0.6 nothing answered it, so the Core Manager died at once & the service manager killed the
+three subordinates, which are not its children, on every stop. Each subordinate was signalled once
+& none was waited for.
+
+THE LISTENER NEVER REPAIRS THE BOOTSTRAP SCRIPT. -fp DOES, AS ROOT.
+Until v4.0.1 the listener rewrote the script itself, which stopped working once the installation
+became root's.
+
+THE DATA PROTECTION IS RE-PROVED ON A SCHEDULE, BY ASKING THE SERVER.
+Web server configuration is edited by people & replaced by package upgrades long after installation.
+Turning AllowOverride off, moving the vhost, adding a reverse proxy that drops response headers, or
+moving to nginx each re-open the DATA tree silently. There is no error & nothing in any log, & the
+only sign is an uploaded SVG executing again.
+Until v4.0.5 only the DATA line was read, so a served location it did not name was never re-proved.
+
+A BUDGET IS WORKED OUT PER REQUEST, & A CONVERSION IS NOT COUNTED AGAINST ITSELF.
+Until v4.0.6 the budget was worked out only as the host was polled, so every request between two
+polls was judged against the same remaining budget. The conversion was registered before its limits
+were scaled, so it was counted as in flight against itself, & a conversion on its own was given half.
+
+EACH CEILING IS SCALED BY THE RESOURCE IT LIMITS.
+Until v4.0.6 both ceilings shrank by whichever of load or memory in use was higher. A desktop with
+half its memory in use halved every memory ceiling while gigabytes stood free, & LibreOffice was
+killed inside the 137M a document conversion was left.
+
+THE SCAN MEMORY CEILING IS A FLOOR & IS NEVER SCALED.
+Until v3.9.9 it was scaled with the rest, & a quiet server with one scan in flight handed ClamAV
+740M of a configured 2048M, so the kernel killed it while it loaded.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Engine--
+
+THE ENGINE HOLDS WHAT EVERY APPLICATION NEEDS & NONE OF ONE APPLICATION'S WORK.
+Its commands were branches in HRConvert2's parseCommandLine until v3.9.9, so a second application
+would have rewritten every one. The data location client, the budget clients & the version compare
+moved from the application at v3.9.2 & v3.9.3. The budget clients were tried in a manager first,
+which a request never loads, so a command line kill could not reach them there.
+The kernel namespace settings, three AppArmor policies & the DATA exposure test were once called
+from the Engine by name, so the Engine could not load without an application defining those six
+functions. What the web server serves, the kernel settings & the sandbox profile came back at
+v4.0.5 as the Engine's own. Until v4.0.5 the application answered the data exposure question
+through $EngineDataPolicyProvider, which is retired.
+-fp called fixManagedPermissions by name until v3.9.9. updateApplication & its helpers moved into
+Setup Core at v4.0.3, & -u is to move into dispatchEngineCommand when the application's other
+commands do.
+
+SYSTEMD IS PRESENT ONLY WHEN /run/systemd/system EXISTS.
+An earlier release decided systemd was available because loginctl was on the PATH. In an official
+PHP container every check passed, a unit file was written, lingering was attempted, & the listener
+was handed to a service manager that was never going to answer.
+
+A STARTUP KEY TRAVELS IN THE ENVIRONMENT & IS SPENT ONCE.
+It once travelled on the command line, so every local account could read it from ps for the life
+of a listener that runs for days.
+
+A SESSION'S DATA LOCATION IS DISCOVERED BEFORE IT IS CHOSEN.
+An earlier release fell back to whatever config.php named when the listener did not answer, so a
+session already holding files in a second location was sent to the first, found an empty
+directory, & reported that the user had uploaded nothing.
+enumerateDataLocations() once blanked $primaryPath before reading it, so the configured primary was
+absent from every pool it built, was never swept & never received a session.
+cleanDataLocation() once matched a name against a short list it knew, which tied a generic cleaner
+to one application's vocabulary, & cleanFiles() once built its approved roots from the
+application's own paths.
+
+ONLY WHAT THE SWEEPING ACCOUNT OWNS IS SWEPT, & ROOT NEVER SWEEPS.
+Until v4.0.6 the sweep tried to remove another account's folder, failed on every pass, & said only
+that it had not completed cleanly.
+Until v4.0.1 root swept sessions as itself. The sweep resolves each name, makes it 0777 & removes
+it, so a link swapped in at the right moment sent all three wherever it pointed. -c was root only.
+This & every web request were handed the session folder of the request making them rather than the
+DATA folder, so no expired session in DATA was ever removed.
+
+EVERY EXPENSIVE OPERATION TAKES A BUDGET, & EVERY FAILURE RETURNS IT.
+Only convertFiles() once asked permission. Archiving, OCR & the user virus scan ran unmetered, so
+a host saturated by them reported itself idle & kept approving conversions.
+A failed conversion once held its budget until the reaper's next sweep, & every ordinary failure
+was announced as a worker that had to be reaped. Until v4.0.1 the release left by three returns.
+
+ROOT NEVER RUNS THE LISTENER, & NEVER WRITES THE SOCKET FOLDER.
+Until v4.0.1 root was allowed through -l with a warning, so a unit with no User line, or an
+administrator typing it by hand, ran every manager as root, which reported them as the web server
+account. startListener returned TRUE for a unit whatever systemctl said. Root wrote the Environment
+Manager's state & the manager list -k empties into the web server account's socket folder.
+The Environment Manager was required from a function that did not declare $CoreLoaded global, so
+its guard never saw it, every pass halted with Engine-35000 & exit status 0, & a timer read every
+pass as a success.
+stopListener returned FALSE for a listener nobody started until v3.9.9. Until v4.0.6 an account
+that could not read the socket folder reported a running listener as STOPPED.
+Until v4.0.6 every manager wrote to the logfile it started with for its whole life.
+A confirmed --kill-all-workers was a fatal error every time until v3.9.9. It called
+killTrackedWorkers() with no argument, & a later version passed the timeout where the channel
+purpose belongs.
+
+runAsAccount() REPLACED su, & THREE THINGS WERE WRONG UNTIL v4.0.1, EACH MEASURED.
+The supplementary groups were never replaced, so a child of a root shell kept root & adm & could
+read auth.log. The output file was created by root, 0600, before the child dropped, so the child
+could never write it. Every command returned 0 & no output, & the sandbox probe -v & -fp run as
+root reported a working sandbox whatever the web server account could build. A drop that did not
+take was never checked.
+Until v4.0.5 the output file was given to the account so the child could write it, so any process
+running as that account could rewrite it before root read the exit code. The child also kept
+root's terminal, its session & every handle root held, a lock among them.
+
+THE SANDBOX USES THIS APPLICATION'S OWN BUBBLEWRAP ON A RESTRICTING KERNEL.
+Until v4.0.5 -fp switched the AppArmor user namespace restriction off for the whole host. Any
+failed attempt counted as a refusal, & the account the probe runs as could end one on purpose.
+sandboxCommand() binds a sixth directory for PyMeshLab, whose bundled module directory was never
+bound, so every MeshLab route failed once --Use PyMeshLab Python Bindings-- was on with sandboxing
+on, & it looked like a broken conversion. A NAME=value prefix fails with
+execvp QT_QPA_PLATFORM=offscreen: No such file or directory. Until v4.0.5 an unsandboxed command
+took its variables as a shell prefix, which nice or systemd-run tried to run, so every unsandboxed
+conversion given a variable failed wherever per conversion limits were on.
+Until v3.9.9 the Engine's download took sandboxCommand()'s pair as the command, so every stream
+download failed.
+
+THE NETWORK SETTINGS KEEP THEIR STREAM NAMES.
+They are named for streaming because streaming was their only caller when they were written. A
+rename would silently reset an administrator's config.php at the next update.
+An earlier gatherRemoteHostInfo() declared its policy values global, which left the last stream's
+settings in the global scope between requests.
+Until v3.9.9 the test for runVirusScan sat in the condition that placed a fetched file, so a
+missing Pipeline Core skipped the scan & placed the file unscanned.
+
+A RECURSIVE OPERATION IS GUARDED BY THE RESOLVED PATH.
+The guard once checked only that the path was not empty & was a directory. A data location set to
+/ or /usr would have been chowned to the web server account on the next -fp.
+
+THE COMMANDS SAY WHAT THEY DID.
+An exact pipeline lookup once refused Image, IMAGE & image alike. Until v3.9.9 --pipeline read
+Capabilities, which the record does not carry, so every pipeline read every file & wrote nothing,
+& --pipeline was refused to every account but root. A mistyped subsystem once acted on nothing &
+exited 0. --check-depends once ended with its verdict twice. --detect-capabilities once probed
+every dependency as a standard user & failed on the last line. Until v4.0.6 the Environment
+Manager's timer was written only by --install-complete, while the documentation said --setup wrote
+it too. depends.php once warned of undefined variables because the move into dispatchEngineCommand
+lost $InstLoc & $CoreLoaded.
+
+THE ENGINE'S DEFAULTS & THE APPLICATION'S OVERRIDE ARE SEPARATE FILES.
+Until v3.9.9 the override lived inside the Engine, so every copy of the Engine carried one
+application's identity, & engineConfig.php's guard named HRConvert2. Before the split an upgrade
+meant reading engineConfig.php line by line to find the application's values. The accepted pipeline
+list was written into Pipeline Core, so the Engine carried one application's pipelines & accepting
+one meant a new Pipeline Core. Pipeline Core read HRConvert2's three settings by their own names.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Cores--
+
+PIPELINE CORE IS AN ENGINE CORE.
+It moved from Resources/PipelineCore into the Engine at v3.9.9, because it calls no application code
+& the Engine already relied on it to scan a fetched file. Its guard printed HRConvert2-34000 until
+then. The accepted pipelines were code inside it, which needed no checking, & it read HRConvert2's
+settings by their own names. runOperationPipeline() was runOcrOperation & found the OCR family by
+name.
+
+A PIPELINE ASKS verifiedToolPath() FOR EVERY TOOL.
+Thirteen pipelines once carried their own version check, each calling a verify<Tool>Version function
+in convertCore.php, so a pipeline copied into another application failed on its first run.
+
+THE DECLARED FORMAT LISTS ARE INFORMATIONAL UNDER hardcoded-only.
+An incomplete $Capabilities list once deleted txt to rtf, a conversion the installation had always
+performed.
+
+A RESULT IS A FILE WITH SOMETHING IN IT.
+Until v4.0.6 every pipeline judged a result by whether anything was at the path, so an empty file or
+a folder was offered as a result, & most pipelines made one attempt more than the retry count.
+
+ERROR 34003 IS FOR A PIPELINE THAT FAILED SILENTLY.
+It once fired whenever every implementation failed, so a refused stream, already reported by the
+Stream pipeline with its reason, gained a louder line claiming every pipeline had failed.
+
+A DEPENDENCY COMMAND RUNS FROM A SCRATCH FOLDER ONLY ITS ACCOUNT CONTROLS.
+Until v3.9.9 the folder was <temp>/<Application>-probe for every account & was used whoever had made
+it, so an unprivileged account that made it first ran code as root at the next --setup
+--check-depends. NAME=value prefixes were once used, & HOME=x ( ... ) is what --install-depends
+printed as a syntax error on the first source build it attempted.
+
+A MANIFEST PATH IS VERIFIED WHERE THE OPERATOR PUT IT.
+A path named in the manifest was once handed to locateDependency, whose refusal of a path read as
+absence, so a developer's own ffmpeg build was reported ABSENT while it sat there working.
+
+A DEPENDENCY CAN BE TOO NEW.
+Every entry once declared only a floor, so a dependency past what HRConvert2 supports reported ok &
+then failed at the point of use.
+
+A PACKAGE MANAGER'S SUCCESS IS NOT BELIEVED UNTIL THE VERSION ANSWERS INSIDE THE WINDOW.
+Until v4.0.6 an install was reported as installed above a report refusing its version, as Ubuntu
+24.04's 7-Zip 23.01 was. An unsupported dependency was named & then attempted anyway, which failed on
+arm for Syslinux Utils.
+
+DEPENDENCY REPORTS SAY WHAT WAS CHECKED.
+Until v3.9.9 a missing manifest printed an empty table & then said every required dependency was
+present. Install output was once held back until the install finished, so a download at 75 kbit/s
+looked like a hang. Source builds were refused outright until v3.8.9, so anything outside a package
+repository needed a hand written script kept in step by hand.
+A single detection state once let a working Assimp listext report Assimp as detected while its write
+set sat empty because listexport never answered.
+
+ROOT NEVER REQUIRES THE CAPABILITY CACHE, & WRITES IT WITHOUT FOLLOWING ANYTHING.
+Until v4.0.1 every root command that asked a pipeline about a format required the cache from the
+data location, so the web server account could run code as root by editing it. Root wrote the cache
+by name & chowned it to the web server account, so a planted link made one --setup
+--detect-capabilities overwrite the link's target & give it away, which was demonstrated with a root
+owned stand in. The cache sat at the top of the data location, & root wrote the supply chain report
+beside the logs & fell back to the data location, which it did not yet own.
+
+ENVIRONMENT CORE HOLDS WHAT AN INSTALLATION'S HOST NEEDS, FOR ANY APPLICATION.
+Its utilities moved from the application at v3.9.3 & v3.9.6. apparmorProfileIsLoaded,
+generateInstallSecret, reloadApparmorProfile & closeHRC2Connection were moved too & went back at
+v3.9.5, because each was reached before the Engine loaded. extractCliOption went back to the kernel
+at v3.9.9. It passed questions one, two & four of ABOUT_ENGINE_CONTRACT.txt & failed question
+three, because every recovery command reads its own sub option first, so a missing or mismatched
+Engine could not run --config --repair or --setup --install-complete. locateDependency went out &
+came back for the same reason. Generic is not the test. Needed before the Engine exists is, & check
+nineteen of hrconvert2-check.py enforces it.
+What the web server serves, the AppArmor profile functions & the sandbox kernel check moved from the
+application at v4.0.5. Until v3.9.9 the Engine wrote the startup key's variable name by hand, so every
+application used HRCONVERT2_STARTUP_KEY.
+As the boot sequence moves behind the Engine, the function_exists guards stop mattering one at a
+time. Removing one before the boot no longer needs it makes every installation fatal at load.
+
+AN UPDATE IS PROVED BY THE FIRST LINE OF -v.
+Until v4.0.1 the update check recognized the words Core version, which -v stopped printing at v3.9.9,
+so every update from then on failed the check & rolled itself back, whatever it had installed. v4.0.1
+prints the words again, so an older updater can install a newer release.
+
+A PROTECTION FILE IS NEVER THE REASON THE SERVER STOPS.
+An earlier release wrote Options & php_flag into the DATA protection file. Both need AllowOverride
+Options, so where that was not granted the whole tree returned 500, & an upgraded installation stayed
+broken until an administrator happened to run -fp. On the upgrade path from v3.8.6 an outdated
+protection file returned 500 for every download.
+Until v4.0.1 a link planted where a served location's protection file belongs made one -fp copy the
+link's target into a backup the web server account could read, overwrite the target & leave it world
+readable, which was demonstrated with a stand in for /etc/shadow. A foreign file there was replaced
+without a backup, the name as given was used rather than the resolved path, & a backup that failed
+still replaced the file. A drop in that differed was reported as missing. Nothing checked where the
+data location was. Until v4.0.5 only DATA Directory was recognised as a protection file. Until
+v4.0.6 -fp wrote a PHP drop in into the configuration a removed PHP left behind.
+
+THE SANDBOX LEAVES THE HOST'S AppArmor RESTRICTION IN FORCE.
+Until v4.0.5 a profile that confined nothing attached to /usr/bin/bwrap, which gave every user of
+bubblewrap on the host a namespace with every capability in it. Where a distribution shipped a
+profile for bubblewrap, HRConvert2 extended it through local/bwrap. Install guides before v3.8.0 had an
+administrator write /etc/apparmor.d/bwrap by hand. Ubuntu 24.04's own bwrap-userns-restrict lacked
+mediate_deleted, refused linking a nameless file into place, broke Flatpak, & was taken back out of
+24.04 (Launchpad bug 2072811).
+Until v4.0.5 every restricted host was lifted, which is now the fallback. The restriction was checked
+twice, & the first check called it blocked while the second lifted it, so a corrected host read as
+unready & one that forbade lifting read as unable to build a sandbox while its profile built every
+one. A permitted Environment Manager repair could lift it on one probe that failed under load. A
+lifted restriction stayed off until the next boot. The web server's account, which every probe made
+as root runs as, could end an attempt & have the restriction lifted for the whole host. Every -fp
+wrote all three namespace settings whatever the kernel read, so the next boot lowered
+user.max_user_namespaces to 15000 on a host that allowed more & lifted the restriction where it was
+forbidden. Any loaded profile whose name merely contained the one asked about was taken for it. A
+profile file went whatever the parser did, so a profile left in the kernel was reported gone. The hand
+over said the profile was exposed after the copy it had just made was root's.
+Until v4.0.6 a lift config.php forbids was reported ok, so a pass never repaired it, & a lift an
+earlier release made was called ok. A profile an install guide had written by hand was called the
+distribution's.
+Until v4.0.1 the Environment Manager counted every status but ok as a problem, which would have read
+a repaired policy as drift.
+
+AN ENGINE KEEPS A USEFUL COMPONENT NOBODY CALLS YET.
+getFilesize & symlinkmtime were nearly deleted for being uncalled, which is the wrong test for a
+component library. A file operation pipeline that hands back a listing wants a size.
+
+A MODULE A RULE NEEDS IS CHECKED, NEVER ASSUMED.
+Measured on a host with mod_headers disabled, -fp printed four green lines while the DATA tree served
+executable SVGs, because the <IfModule> guard skipped every rule in silence.
+
+THE DOCUMENT ROOT PROTECTION PAGE IS GENERATED.
+The one place this application copied it, it copied from the working directory, which was whatever
+the web server happened to be in.
+
+SETUP CORE HOLDS HOST SETUP, & THE APPLICATION DECIDES WHETHER TO ASK FOR IT.
+enableConversionLimits moved from the application at v3.9.3, & despite its name knows nothing about
+a conversion. updateApplication & its helpers moved in at v4.0.3. The Apache configuration moved
+from the application at v4.0.5, & HRConvert2's file, loader & printed words stayed exactly what they
+were. Until v4.0.5 the application produced the served location rows through a data policy provider,
+Setup Core printed them without understanding any of it, & the data locations were prepared by
+naming $ConvertTemp rather than by asking the contract.
+
+ROOT RUNS NOTHING THE WEB SERVER ACCOUNT CAN CHANGE.
+Until v4.0.1 -fp ran chown -R to the web server account & chmod -R 0755 over the installation, the
+data location, every session in it & the HRProprietary folder. Root then ran code that account owned
+on its next command, & every application in the HRProprietary folder was handed to it & made world
+readable & executable, whether it was this one or not. A configuration root wrote, & every backup
+root took of one, was handed to that account too, so it could edit what root required next. The
+backup of the previous installation went to it as well, so a restore could reinstall its edits, & it
+was written into the data location whoever owned that. cleanBuildEnvironment ran on every web
+request as the web server account, which only worked while that account could write the
+installation. The updater unpacked a release inside a session folder that account owns, & handed the
+staged copy to it with chown -R before root ran it to validate it.
+
+ROOT NEVER WORKS BY NAME INSIDE A FOLDER ANOTHER ACCOUNT CAN CHANGE.
+Until v4.0.1 each managed location was resolved & its role applied to the resolved path, so a link
+sent the role to whatever folder it pointed at. Each data location was changed by name with chown &
+chmod, which follow a link, & the backup & log folders were handed to the web server account. The
+code role's commands were batched & ran after the walk had moved on. The shared folder's chmod went
+unchecked, & the folder was announced as root's even when it was not. v4.0.0 & an old chown -R leave
+a data location the web server account owns. Until v4.0.4 the installation came first, so -fp over
+such a data location refused the installation & had to be run a second time. The primary data root
+was given back only by correctManagedLocations, after the session move, & Sessions & Cache were
+judged with is_dir, which follows a link, so that account could swap either for a link & root moved
+a folder or file of that account's wherever the link led.
+
+A RUN THAT CHANGES NOTHING SAYS SO.
+Until v4.0.6 every -fp enabled lingering again & counted every location it gave a role, so every run
+said it had corrected all of them. Until v4.0.5 the delegation drop in was written on every -fp,
+systemd reloaded every unit on the host for it, & the operator was told every time to restart a user
+manager that already had the delegation.
+
+A CONFIGURATION REPAIR ADDS WHAT IS MISSING, ONCE, INSIDE THE PHP BLOCK.
+An earlier version appended past the closing tag & produced a file that looked repaired & was not.
+Both of the lines that queue a setting once skipped during a repair, one for a setting that was
+there & one for a setting that was not, so a repair queued nothing & reported success. A repair once
+asked whether a setting was in the section the model puts it in, so a setting an administrator moved
+looked absent & a second copy was appended.
+
+A DATA ROOT HOLDS ONLY WHAT BELONGS THERE.
+Until v4.0.6 any folder at a data root was moved into Sessions, so a release unpacked into a data
+root had its folders moved there as root's, where the sweep, which runs as the web server account,
+could not remove them & failed every pass. Until v4.0.6 only the primary root's capability cache was
+looked at, & nothing took a retired path away, so an installation holding one stayed refused.
+
+AN UPDATE IS PROVED, & A SUCCESSFUL ONE LOSES NOTHING.
+A wget based updater was attempted & was defeated by GitHub's two redirects, first to
+codeload.github.com & then to object storage. updateApplication returned FALSE for a version already
+installed until v3.9.9, which read as a failure to anything checking. Until v4.0.1 the rename of
+DATA over the release's own DATA folder failed in silence, the live DATA left with the old
+installation & was deleted with it, so a successful update deleted every session. Until v4.0.1 the
+repair after an update was the old release's, which could not load the new release's Setup Core &
+corrected nothing. Until v4.0.1 the updater moved the previous installation aside beside the hosted
+location as .old, with every PHP file it held, & an update that failed left it there. An update run
+by a release older than v4.0.5 has no copy of bubblewrap to bring up to date, & leaves that to the
+dependency update once the update is done.
+
+A DROP-IN IS NEVER INSTALLED IN PLACE OF A RELEASE.
+Every release before v4.0.1 was unpacked into the web root & runs from a tree outside Application in
+the data location. -fp run from a drop-in unpacked there would install it in place of the whole
+application.
+
+THE BUILD FOLDER IS FOUND FROM THE INSTALLATION.
+Until v4.0.0 the Build folder was read from dirname(__DIR__), the folder above the installation, so
+it never found its own Build folder & would have emptied a neighbour's. From v4.0.3, when
+cleanBuildEnvironment moved to Setup Core, it read dirname(__FILE__), which is Setup Core's own
+folder, so nothing was ever found or removed & each was reported NOT PRESENT.
+
+A SERVICE UNIT NAMES THE INSTALLED COPY.
+Until v4.0.5 a unit written from a release unpacked to be installed ran that copy until the
+installed copy's own -fp wrote the unit again. A copy unpacked in a folder the web server account
+cannot enter left the listener failing in between, & one removed afterwards left the units naming
+nothing. The Environment Manager's units named that copy for as long as they were installed. A tree
+with no installed copy is the first -fp of a release older than v4.0.1.
+
+A RELOAD NEVER STARTS A STOPPED SERVER.
+Measured, apachectl -k graceful says httpd not running, trying to start, & starts it. Until v4.0.1
+-fp reported that as a reload, & an unattended Environment Manager pass permitted to rewrite
+configuration would have started a web server somebody had stopped, after saying it starts nothing.
+
+SERVER CONFIGURATION IS TESTED BEFORE IT TAKES EFFECT.
+This application once shipped a protection file that returned 500 for an entire directory tree.
+Until v4.0.1 a configuration file the Apache writer replaced was deleted rather than put back, & a
+link an administrator had made was removed with it.
+
+THE CONFIGURATION TEMPLATE IS COPIED, NOT GENERATED.
+generateConfigFile once rebuilt config.php from the model, writing each expression setting as
+source. Rebuilding a real config.php from a description of itself was a translation between two
+representations of the same thing, & a translation is a place the two can disagree.
+
+THE CONFIGURATION PARSER RESOLVES ITS AMBIGUOUS MARKER AGAINST THE MODEL.
+config.php once used two dashes indented by one space both for the Supported File Format Information
+header & for two mistyped labels. The file header's lines, such as COPYRIGHT INFORMATION ..., were
+once matched as headers, which put every real section behind a fictional one & reported all of them
+missing.
+
+A BACKUP AN EARLIER RELEASE LEFT IS NOT ROOT'S TO WALK.
+The backup sat in the data location by default, which the web server account owned, & every release
+before v4.0.1 left one there that the account owns too.
+
+THE PIPELINE CORE LOADS THE DEPENDENCY CORE A CONVERSION NEEDS.
+Every pipeline asking for a tool once got FALSE & reported its tool as missing even with the tool
+installed, because nothing loaded the Dependency Core on a conversion. It went unnoticed because the
+test that proved the loader loaded the Dependency Core by hand, which made the function work by
+construction & skipped the one thing broken. Every family was migrated out of convertCore.php one at
+a time, with its entry point defined elsewhere, & a pipeline's converter was once named
+pipelineCore.php.
+
+A COMPLETE INSTALL STATES ITS STAGE COUNT ONCE.
+The second permissions pass of runCompleteInstall was added without its summary line, which went on
+saying six stages while every stage heading said seven.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Convert Core--
+
+THE APPLICATION KEEPS ONLY WHAT IS REACHED BEFORE THE ENGINE LOADS.
+generateInstallSecret, apparmorProfileIsLoaded, reloadApparmorProfile & closeClientConnection were
+moved to the Engine at v3.9.3 & it went unnoticed, because each is only reached on a first run, an
+error exit or a sandbox check. An existing install has a secret, so generateInstallSecret was never
+called & nothing failed. A fresh install has none, so every fresh install & every fresh container
+fatally errored on its first boot. The check that would have caught it was written after the move &
+was only ever run against functions still in convertCore.php. Re-run a corrected check against
+everything it passed before, not just what is left. closeClientConnection moved to the kernel at
+v3.9.9, & the AppArmor functions went into Environment Core at v4.0.5. applicationConfigModel moved
+out of the Engine at v3.9.2 & was renamed. It was 1272 lines of this application written as data,
+inside a component meant to serve any application.
+
+A SETTING NOTHING READS IS NOT REQUIRED.
+DocumentEngineSleepTimer was required & read nowhere, & was removed from the required list rather
+than added to the configuration. UsePatchedDocumentEngine chose a bundled unoconv that no longer
+exists, & was removed once LibreOffice converted every document itself. An earlier version read the
+Model lists with a fallback & left them out of the required list, so an installation would keep
+starting on an old config. The SCAD output list was once $UserSCADArray with scad removed, which
+needed scad first & every other entry an output, a convention held in a comment. The same array was
+the interface's upload list, so scad was the only one of the six a user could upload.
+
+ROOT NEVER RUNS THE INSTALL SECRET.
+Until v4.0.1 every command line run as root required the install secret, which lived in a data
+location the web server account owned. That account could add a line to the file, & the next sudo
+php convertCore.php -v ran it as root, which was demonstrated. The secret was the web server
+account's & 0600, which let that account rewrite a file root required. Until v4.0.4 the web server
+account required it too, so whoever could write the file, through a folder somebody had made
+writable, ran code as that account on the next request, & a file that vanished between the look &
+the require ended the request with a fatal error naming its path.
+
+TWO COPIES OF THE INSTALL SECRET CARRY ONE KEY.
+Every release before v4.0.4 kept the secret at the top of the data location alone. From v4.0.4 the
+same key is kept there & in Secrets. The copy at the top is to be removed once no release that reads
+only it can still be running. Until v4.0.4 the secret's group was given after the copy took the
+name, so a request in between found a copy it could not read. A key written counted as in use
+whether the web server account could read it or not, & a root:root 0640 copy passed the -v row. The
+web server account read a copy root had refused, in a folder somebody had opened up, & used its key.
+resolveSecretFile's chmod changed a copy the web server account owned, as every release before
+v4.0.1 & an old chown -R left it. The -v row's expectation followed the account, so -v run as the
+web server account always failed it on a correct installation. Until v4.0.6 that row called a per
+user secret the install secret.
+
+A PER USER SECRET IS ITS OWN ACCOUNT'S.
+Until v3.9.9 every command line account but root shared one secret folder, /tmp/.HRConvert2, &
+whichever ran first created it 0700 & locked every other account out with error 5, -v included.
+Until v4.0.1 the rule that stopped root creating a secret also caught the web server account's own
+per user secret, so -v run as that account stopped with error 5 on any host where it had not made
+one before, & a standard user's undeletable secret sent that user to -fp, which changed nothing.
+Until v3.9.9 only the three manager entry points were granted the install secret on the command
+line, so -l run as the web server user started a Core Manager that refused its key with error 31006,
+& the status command could not ask a running listener anything. Leaving the core manager command out
+once sent the service unit down the per user secret path, so the listener ran & answered nobody. The
+sweep was granted the install secret at v4.0.1.
+
+THE DATA LOCATION IS ROOT'S.
+The installer was documented as creating the data location & never could, because the install secret
+is written into it at boot & a missing location stopped every root command with error 5 before the
+installer ran. A fresh install that followed INSTALLATION_INSTRUCTIONS.txt to the letter failed on
+its first command, measured on v4.0.0. Until v4.0.1 the data location was the web server account's,
+because sessions were kept directly in it, & every folder that account created was 0755, so every
+upload & every conversion was readable by every local account. A v4.0.0 installation belongs to the
+web server account until -fp or the setup command gives it to root. Root takes the data location
+back from another account from v4.0.4. Releases before v4.0.1 asked for the very state
+foldersRootCannotTrust fails, because v3.4.1 had /var/www given to the web server account & earlier
+guides gave it /DATA. Until v4.0.4 the install secret sat at the top of the data location. Until
+v4.0.1 the temporary cleanup was handed the session folder of the request making it, so no expired
+session in DATA was ever removed, & verifyRequiredDirs carried a branch for root that chmodded &
+chowned each folder by name, from a time when a root command line run reached it.
+
+ROOT KEEPS ITS OWN HOME & ITS OWN LOGS.
+$HomeLoc was the data location by default, which the web server account owned. Until v4.0.1 every
+other account's HOME was set before config.php was loaded, so it was empty for the whole process.
+Until v4.0.1 root created its logfile in the web server account's folder by name & then chowned it
+to that account, so a link at that name handed any file on the host over. Until v4.0.0 verifyLogs
+named & rotated a ClamAV log as well, which nothing had written since ClamAV moved into its
+pipeline. A logfile made before v4.0.6 was given whatever the process's umask allowed, & earlier
+releases made them 0755. Until v4.0.6 a manager named its logfile as it started & kept it, so a
+listener running for weeks wrote one file, past 38M on one host. An entry raised during boot once
+reached the server error log, where it sat apart from everything around it & was almost never found.
+
+THE CONTAINER CHECK ACCEPTS ANY ONE SIGNAL.
+An earlier release demanded that the cgroup signal & /.dockerenv both agree, which every modern
+Docker host fails, so a container was never once detected & Require Sandbox On Docker never applied.
+
+THE APPLICATION IS INSTALLED OUTSIDE THE WEB ROOT.
+Since v4.0.1 the application is installed in Application in the data location, & every earlier
+release ran from the folder the web server serves. Until v4.0.1 a configured tree other than the
+running one was read before boot, because components could be loaded from it. Until v4.0.1
+str_replace removed the document root from anywhere in the URL path & left an installation outside
+it a leading slash, so sanitizeString deleted the separator between the host & the path, & the
+exposure check & every share link asked a host named like localhostopt for the file. Until v4.0.5
+every copy not installed was said to be served, & -v loaded Setup Core without an Engine & died with
+a fatal error, on the one installation an operator runs -v on to find out why. Until v4.0.1 -v did
+not check whether the data location is served, & did not report the bootstrap script.
+
+THE ENGINE LOADS BEFORE verifyGlobals.
+An earlier version loaded the Engine after verifyGlobals, & an audit of the call sites missed it,
+because the audit attributed a call to the line its enclosing function was defined on rather than to
+the moment that function runs. Resource awareness once depended on a Core Manager component
+verifyInstallation resolved, & every manager role now lives inside the Engine. Until v4.0.5 the
+AppArmor profile was validated inside verifyInstallation(), before the Engine loads, & every root
+command but an Environment Manager pass repaired it as it started, so one run only to report, -v
+among them, wrote & loaded an AppArmor profile. convert() once had a built in dispatcher behind the
+Pipeline Core, which stopped being true when the last family left convertCore.php, &
+$builtInDispatcherFamilies listed the families still converted there while the migration was under
+way. loadPipelineCore once ran only when a conversion dispatched, so an upload landed & the file
+list came back empty because the pipeline that lists it had never been loaded.
+
+THE COMMAND LINE EXITS WITH THE STATUS ITS COMMAND EARNED.
+Until v3.9.9 the application ended with a bare die, so every command reported success whatever it
+had done, & every command was a branch in parseCommandLine. The -v branch was a separate if, so an
+application argument also reached the unrecognized argument branch, printed the whole help text
+under its own answer & exited 2. The application argument handler was read from a global named
+$ApplicationArgumentHandler that nothing sets, so a declared handler was never called & every
+application argument was refused. A branch for application arguments once sat at the end of a chain
+an earlier branch had already answered, & it linted, ran & never fired. An earlier build put the
+argument parser in the Engine & kept a duplicate in convertCore.php for when the Engine was missing,
+& the duplicate was the evidence that the parser was in the wrong place. The updater in every
+release from v3.9.9 to v4.0.0 accepts a new installation only when its -v prints the words Core
+version, which -v stopped printing at v3.9.9. $RequiredConfigScript said v3.8.0 from v3.9.3 onward
+until it was corrected, so every sweep tried to disable the shipped script. Until v4.0.6 -fp said
+only what failed in the code trust check, & error 28008 on the next command said to run -fp, which
+had just run. Until v4.0.1 Setup Core was loaded sixty lines further into -fp, so -fp run on its own
+never corrected a single location. It logged that Setup Core was unavailable & printed Corrected 1
+path(s), which was the secret, & only the setup command, which loads it first, worked. Until v4.0.1
+the listener disabled & enabled the bootstrap script as the web server account, which can no longer
+write to the installation.
+
+THE HOST'S POLICIES ARE THE HOST'S.
+Guessing ImageMagick's configuration directory wrote a version 7 policy into a version 6 directory
+that a source built version 7 never reads, so the policy did nothing & the stock policy being read
+went on refusing every document coder. Until v4.0.5 -fp wrote this application's policy over the
+host's policy.xml, a file the package owns, & every program on the host ran under it. Until v4.0.6
+only the policy the binary named was put back, so on a host with a package & a build the package's
+kept this application's coders open for every program that ran it. Until v4.0.5 -fp wrote a local
+override into a distribution's OpenSCAD profile, granting the session area by its path on the host,
+which never reached a render & changed a profile every program on the host runs under.
+
+A SCAN TELLS THE USER A VERDICT & NOTHING ELSE.
+virusScan once shelled out to ClamAV directly, so the two scanner pipelines were pinned, installed,
+verified & never used by the application that shipped them. Until v3.9.9 this application ran
+clamscan & ScanCore itself, in about two hundred lines beside a dispatcher that did the same job.
+The verdict returned was the last file's alone, a ScanCore report that already held one detection
+made every later file in the same scan read as infected, & a scan with every scanner reset neither
+log, so its report carried every earlier scan's lines. ScanCore's own report was once written where
+the user downloads it, naming the installation's paths, the account it ran as & the signature that
+matched. Until v4.0.0 one scanner that did not run made a scan with every scanner fatal with error
+23, so the user received no report. The scanners once sat inside a loop over the files while handing
+each scanner the whole list, so twenty files meant four hundred file scans. Both scanners once wrote
+into the same $UserVirusFound, so a file ClamAV found infected was reported clean whenever ScanCore
+did not also recognise it. Neither the ClamAV database nor its certificates were bound into the
+sandbox until v3.9.9, & nothing noticed, because the ClamAV pipeline had never managed to run its
+command in the sandbox at all.
+
+A FILE OPERATION ANSWERS WITH A FILENAME OR AN ERROR.
+filesToDelete was once missing from the operations that suppress the interface, so a delete was
+answered with a whole rendered page, whose script held the very marker the caller searched for, &
+every delete reported failure. Until v4.0.6 every upload was answered with a whole rendered page.
+The upload's temporary name was once read unindexed inside the loop, so a multiple file upload
+handed copy() an array & landed nothing, while a single file upload, which the interface sends,
+worked & hid it. A download's flags once carried over from the previous file, so one log file in a
+list left every later file flagged to skip. The OCR pipeline once printed its output filenames
+itself, which was safe while it lived in convertCore.php.
+
+THE SESSION IS THE TOKEN PAIR.
+Before v3.5 the IP was used to derive the session identifier, which broke sessions on mobile
+networks. Until v4.0.6 both tokens were logged with Enhanced Logging Verbosity on, so anybody who
+could read the log could have taken the session over.
+
+AN INTERFACE FALLS BACK RATHER THAN FAILING.
+verifyLanguage once answered a missing pack with FALSE, which the caller turns into fatal error 16,
+so adding a language to config.php broke every GUI that did not carry it the moment a user selected
+it. Language packs once loaded the other way round. The selected pack loaded, its version was
+tested, & on a mismatch the default was loaded over it, which threw the user's language away
+wholesale & could not help an incomplete pack. A language pack whose version did not match was once
+refused. A style file that omitted a colour once copied nothing into the global for it, which
+produced a warning & then a button with no styling at all. The Wide interface was removed at v3.9.1.
+
+A WORKER THAT OUTLIVES ITS REQUEST IS SUPERVISED.
+The detached worker variables were the stream variables, & streaming was the first pipeline to
+outlive a request. An earlier version set the worker output path outside its branch, & so overwrote
+it on every conversion of every other type.
+
+A SECRET ROTATION RESTARTS THE LISTENER THROUGH WHAT OWNS IT.
+Until v4.0.1 the restart after a rotation was always handed to the web server account, which cannot
+start a unit, & a failed stop was rotated past.
+
+THE MODEL KNOWS EVERY SETTING A REPAIR MAY ADD.
+The Environment Manager settings were added to config.php alone at first, & --config --repair then
+reported that it would add nothing while the file was demonstrably short of them.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Contract--
+
+THE APPLICATION'S ENGINE SETTINGS LIVE BESIDE THE ENGINE'S.
+Before app-engine-config.php, an Engine upgrade meant reading engineConfig.php line by line to find
+which values were this application's, & merging by hand. Until v3.9.9 the accepted pipeline list was
+written into the Pipeline Core, which belongs to the Engine, so each change to it was a new Pipeline
+Core.
+
+THE ENGINE LEARNS ABOUT AN APPLICATION THROUGH ITS PROVIDERS & NOTHING ELSE.
+The log provider joined the providers at v4.0.6, & the data policy provider was retired at v4.0.5,
+because the Engine knows what it serves. HomeLoc was a managed location until the cache folder
+became the web server account's home. The install secret moved into Secrets at v4.0.4.
+
+A PATH NO RELEASE SHIPS IS TAKEN AWAY.
+FFmpeg's build left its whole tree in Documentation/Build/ffmpeg-build until v4.0.6, links & files
+with more than one name included, because the build command changed into Documentation/Build first.
+Root refuses an installation holding a link from v4.0.1 on, & -fp could not take that tree away, so
+the installation stayed one root refused, which is why the v4.0.5 image never answered.
+
+THE MANIFEST DECIDES HOW EVERY DEPENDENCY IS INSTALLED.
+Until v3.8.9 a source Type was declared in depends.php & refused by Dependency Core, so anything
+outside a package repository had to be installed by a hand written script kept in step with the
+manifest by hand. The FFMPEG build script was called by hand from the Dockerfile until v3.8.9, so
+the manifest did not know this dependency was built & the audit did not record it. PyMeshLab was a
+bundled x86_64 binary until v3.9.2, when it became a pip wheel, & the architecture limit its entry
+carried went with it. Until v4.0.6 a request found no MeshLab while -v run from a desktop found it,
+because meshlabserver aborts without a display, & every Model request warned. An earlier release
+routed Model conversions on the input extension alone, sent an obj to off conversion to Assimp, &
+retried a command that could never succeed until it timed out.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Interfaces--
+
+AN INTERFACE READS WHAT THE CORE HANDS IT.
+The file list button once assembled its own query string out of $_GET, & one test asked whether a
+language was set & then printed the gui parameter. A user who chose a language but not an interface
+got an Undefined array key warning printed into the page & an empty gui parameter, & watched their
+interface change to the default.
+
+EVERY BUTTON DECLARES ITS TYPE.
+The settings toggle once opened a PHP tag inside its own style attribute that assigned
+$oppositeAlignment & echoed nothing, leaving a text-align with no value, so a browser discarded the
+whole declaration & the display:block after it, & the automatic margins beside the button never
+centred anything. The session buttons in convertGui2.php carried no type until they were inside a
+form.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

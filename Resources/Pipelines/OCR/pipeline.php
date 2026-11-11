@@ -12,27 +12,19 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.5.
-// / This file is the converter for the OCR pipeline. It is loaded by pipelineCore.php
-// / ONLY when an OCR operation is about to be dispatched to it, so a request that does
-// / something else never parses a line of it.
-// / Error block 15000 through 15014 belongs to this pipeline. Those numbers came with the code when it
-// / moved out of convertCore.php & they did not change, because operators have read them.
-// / OCR is an operation pipeline rather than a conversion pipeline.
-// / It takes a SELECTION of files, decides a route per file, & returns three values rather
-// / than the six a conversion pipeline returns. The third is the list of filenames it
-// / produced, which the CORE prints once this function has returned. A pipeline never
-// / prints. See contract 6. It is dispatched by runOperationPipeline('OCR') from
-// / the point in the core where an OCR request arrives, never through convert().
-// / This pipeline declares the LibreOffice shared module, which the Document pipeline also
-// / declares. Both in one request load it once between them.
-// / This pipeline asks for Tesseract, Poppler Utils & ImageMagick through verifiedToolPath(),
-// / & scans through runVirusScan(), both in the Pipeline Core. sandboxCommand() is the Engine's, &
-// / verifyFile() remains in convertCore.php.
-// / THIS PIPELINE CARRIES ITS OWN IMAGEMAGICK POLICY, in Policy/policy.xml beside this file, for
-// / the page split that hands Tesseract an image. Nothing is written into the host. Until v4.0.5
-// / -fp rewrote the host's policy.xml, & the page split, whose sandbox shows no ImageMagick
-// / configuration, ran under no policy at all.
+// / v4.0.9.
+// / The OCR pipeline. pipelineCore.php loads it only to dispatch an OCR operation.
+// / Error block 15000 through 15014 belongs to this pipeline.
+// / It also raises 8001 for ImageMagick.
+// / OCR is an operation pipeline, which takes a selection of files & decides a route per file.
+// / It returns three values, the third being the filenames it produced, which the core prints.
+// / A pipeline never prints. See contract 6.
+// / It is dispatched by runOperationPipeline('OCR'), never through convert().
+// / It declares the LibreOffice shared module, as the Document pipeline does, & one request loads it once.
+// / Tesseract, Poppler Utils & ImageMagick come from verifiedToolPath().
+// / Files are scanned through runVirusScan(), & verifyFile() is the core's.
+// / This pipeline carries its own ImageMagick policy, in Policy/policy.xml beside this file.
+// / It covers the page split that hands Tesseract an image, & nothing is written into the host.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -47,18 +39,13 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / A function to OCR a selection of files.
-// / Three input families are handled & each takes a different route.
 // / A PDF is read directly by pdftotext, or rasterized & read page by page by Tesseract.
-// / A document is converted to PDF by the document conversion engine.
+// / A document is converted to PDF by LibreOffice, through the shared module.
 // / An image is read directly by Tesseract, or converted to PDF & read by pdftotext.
-// / Every route produces a text file which is then converted to the requested output.
-// / Every binary is located & verified rather than assumed, so the version that was
-// / verified is provably the version that runs.
-// / Tesseract, pdftotext & ImageMagick are sandboxed. The document conversion engine is
-// / not, because it is a persistent listener rather than a process launched per conversion.
-// / An operation that cannot be isolated is refused, except for the ImageMagick page split,
-// / which has policy.xml as a native control & is therefore only downgraded rather than
-// / left with no boundary at all.
+// / Every route produces a text file, which is then converted to the requested output.
+// / Every binary comes from verifiedToolPath(), so the version verified is the version that runs.
+// / Every tool is sandboxed, & an operation that cannot be isolated is refused.
+// / The ImageMagick page split is the exception, because policy.xml is a native control it keeps.
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
   global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $Append, $DirSep, $EnableMemoryProtection;
@@ -110,12 +97,9 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       continue; }
     else if ($Verbose) logEntry('Verified file '.$newPathname.'.');
     $pathnameTEMP = str_replace('..', '', str_replace('.'.$oldExtension, '.txt', $pathname));
-      // / The file is scanned before any OCR tool reads it, if $VirusScan is set in config.php.
-      // / It asks runVirusScan() in the Pipeline Core rather than the application's virusScan(),
-      // / so this pipeline no longer reaches into convertCore.php for anything.
-      // / It still refuses an infected file before processing it, which is what matters here. What
-      // / it does not do is delete the file on the spot. Deleting is the application's policy, set
-      // / by $AllowUserVirusScan, & a portable pipeline cannot read the application's settings.
+      // / The file is scanned through runVirusScan() before any OCR tool reads it, when $VirusScan is set.
+      // / An infected file is refused here, not deleted.
+      // / Deleting is the application's policy, set by $AllowUserVirusScan, which a pipeline cannot read.
       // / Every file is also scanned when it lands, which is where the application deletes one.
     if ($VirusScan) {
       if ($Verbose) logEntry('Starting virus scan.');
@@ -244,15 +228,13 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       // / Code to convert a document to a PDF.
       if (in_array(strtolower($oldExtension), $doc1array)) {
         if (in_array($UserExtension, $pdf1array)) {
-          // / The following code verifies that the Document Conversion Engine is installed & running.
+          // / The following code verifies that the Document Conversion Engine is installed & usable.
           list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
           if (!$documentEngineStarted) {
             $OperationErrors = TRUE;
             errorEntry('Could not verify the Document Conversion Engine!', 15007, FALSE); }
           else {
             // / Perform the conversion with LibreOffice, sandboxed, one process per file.
-            // / The document conversion engine is a persistent listener rather than a process
-            // / launched per conversion, so it cannot be sandboxed the way the others are.
             list ($documentConverted, $returnData) = convertWithLibreOffice($pathname, $newPathname, 'pdf');
             // / Log the output of the operation to the logfile, if it is not blank.
             if ($Verbose && trim($returnData) !== '') logEntry('The converter (U-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } }
@@ -276,7 +258,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
         // / An image Tesseract could not read is converted to PDF & read by pdftotext instead.
         if (!file_exists($pathnameTEMP)) {
           $pathnameTEMP3 = str_replace('..', '', str_replace('.'.$oldExtension, '.pdf', $pathname));
-          // / The following code verifies that the Document Conversion Engine is installed & running.
+          // / The following code verifies that the Document Conversion Engine is installed & usable.
           list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
           if (!$documentEngineStarted) {
             $OperationErrors = TRUE;
@@ -310,7 +292,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
           if ($Verbose) logEntry('Renamed file '.$pathnameTEMP.' to '.$newPathname.'.'); } }
       // / If the output file is not a txt file we convert it with LibreOffice.
       else {
-        // / The following code verifies that the Document Conversion Engine is installed & running.
+        // / The following code verifies that the Document Conversion Engine is installed & usable.
         list ($documentEngineStarted, $documentEnginePID) = verifyDocumentConversionEngine();
         if (!$documentEngineStarted) {
           $OperationErrors = TRUE;
@@ -323,12 +305,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       // / Error handler for if the output file does not exist.
       if (file_exists($newPathname)) {
         $loopCheck = TRUE;
-        // / A pipeline never prints. It collects & returns, & the core decides.
-        // / This line used to print the filename straight into the AJAX response, which it
-        // / could do safely while it lived in convertCore.php. It is a component now, & a
-        // / component writing into a reply the interface parses line by line is the exact
-        // / failure contract 6 exists to prevent. One undefined variable in here would
-        // / become a PHP warning that the interface reads as another output filename.
+        // / A pipeline never prints, because the core decides what the interface receives.
+        // / A stray warning printed here would be read by the interface as another output filename.
         array_push($OutputFilenames, $UserFilename); }
       else errorEntry('Could not create a file at '.$newPathname.'!', 15011, FALSE); }
     // / Record that at least one file in this request succeeded.

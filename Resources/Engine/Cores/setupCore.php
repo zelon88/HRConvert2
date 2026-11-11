@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.0.7.
+// / v4.0.9.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.0.7';
+$SetupCoreVersion = 'v4.0.9';
 // / -----------------------------------------------------------------------------------
 
 
@@ -54,16 +54,11 @@ $SetupCoreVersion = 'v4.0.7';
 // /   // /  --Application Name--
 // / Those two are unambiguous & are the only forms this relies on.
 // /
-// / A third form is ambiguous & is resolved against the model.
-// / Two dashes indented by ONE space appears in config.php as both. It is the section
-// / header for Supported File Format Information, & it is also how two variable labels
-// / were typed by mistake. A name the model recognizes is a section. Anything else is a
-// / label, which folds those two mistakes into the section they belong to rather than
-// / fragmenting the parse around them.
+// / A third form, two dashes indented by one space, is ambiguous & is resolved against the model.
+// / An older config.php uses it both for the Supported File Format Information header & for two mistyped labels.
+// / A name the model recognizes is a section, & anything else is a label, which folds a mistyped label into the section it belongs to.
 // /
-// / THE FILE HEADER IS NOT A SECTION. Lines such as COPYRIGHT INFORMATION ... end in an
-// / ellipsis & were once matched as headers, which put every real section behind a
-// / fictional one & reported all of them missing.
+// / The file header is not a section, & its lines, such as COPYRIGHT INFORMATION ..., match neither form.
 // /
 // / A variable assignment may span several lines. Reading continues until a line ends with
 // / a semicolon, so a multi line array is captured whole rather than truncated.
@@ -146,12 +141,9 @@ function parseConfigFile($configPath) {
 // / A function to decide whether a parsed configuration file can be trusted.
 // / Accepts the model & the detected sections, in that order.
 // / Returns a trust boolean & an array of findings, in that order.
-// / A section holding fewer than half, or more than one and a half times, the variables
-// / this utility expects is treated as a parse failure rather than as a configuration
-// / problem. The tolerance is deliberately wide, so a release that adds a few settings
-// / does not stop the utility working before anybody updates the model.
-// / NOTHING IS WRITTEN ANYWHERE IF ANY SECTION FAILS. A file that cannot be read
-// / correctly cannot be edited safely, & a partial edit is worse than no edit.
+// / A section holding fewer than half, or more than one & a half times, the variables this utility expects is treated as a parse failure.
+// / The tolerance is wide, so a release that adds a few settings does not stop the utility before the model is updated.
+// / Nothing is written anywhere if any section fails, because a file that cannot be read correctly cannot be edited safely.
 function validateConfigSections($configModel, $detectedSections) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -232,8 +224,7 @@ function backupConfigFile($configPath, $backupPath) {
   else if (file_exists($backupPath)) errorEntry('A configuration backup was requested but '.$backupPath.' already exists. Nothing was overwritten!', 32002, FALSE);
   else {
     @copy($configPath, $backupPath);
-    // / A backup keeps the owner of whoever took it, & one root takes is root's. Until v4.0.1
-    // / it was handed to the web server account, as config.php itself was.
+    // / A backup keeps the owner of whoever took it, & one root takes is root's.
     if (file_exists($backupPath)) @chmod($backupPath, 0640);
     if (file_exists($backupPath) && filesize($backupPath) === filesize($configPath)) {
       $BackupSucceeded = TRUE;
@@ -248,11 +239,10 @@ function backupConfigFile($configPath, $backupPath) {
 // / A function to write a configuration file safely.
 // / Accepts the destination path & the complete new contents, in that order.
 // / Returns TRUE when the file was replaced & the replacement parses as PHP.
-// / The new contents are written beside the original, checked, & only then moved into
-// / place. A configuration that does not parse is never allowed to reach the installation.
-// / config.php is code root runs, so the file is root's & 0644. The web server account reads
-// / it & cannot change it. Until v4.0.1 a configuration written as root was handed to the web
-// / server account, which could then edit what root required on its next command.
+// / The new contents are written beside the original, checked, & only then moved into place.
+// / A configuration that does not parse never reaches the installation.
+// / config.php is code root runs, so the file is root's & 0644.
+// / The web server account reads it & cannot change it.
 function writeConfigFile($configPath, $configContents) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -322,10 +312,8 @@ function appendConfigAssignment(&$configLines, $variableName, $newValue, $sectio
     // / The end of the section is the last line of its last setting.
     foreach ($detectedSections[$sectionName]['Variables'] as $variableRecord) {
       if (isset($variableRecord['EndLine']) && (int)$variableRecord['EndLine'] > $insertIndex) $insertIndex = (int)$variableRecord['EndLine']; } }
-  // / A section with no settings, or no section at all, means the end of the file. The end
-  // / of the FILE is not the end of the php block, & a setting written after the closing
-  // / tag is text the interpreter never reads.
-  // / An earlier version appended past it & produced a file that looked repaired & was not.
+  // / A section with no settings, or no section at all, means the end of the file.
+  // / The end of the file is not the end of the php block, & a setting written after the closing tag is text the interpreter never reads.
   if ($insertIndex === 0) {
     $insertIndex = count($configLines) - 1;
     for ($lineIndex = count($configLines) - 1; $lineIndex >= 0; $lineIndex--) {
@@ -671,18 +659,13 @@ function verifyConfigAuthenticity($detectedSections) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / MOVED FROM THE APPLICATION AT v3.9.3. Despite the name it knows nothing about a
-// / conversion. It writes a systemd drop in & reloads the daemon, which is host setup &
-// / is what Setup Core is for. The application decides WHETHER to ask for it.
 // / A function to give the web server user its own systemd manager & cgroup controllers.
 // / Accepts no arguments & must be run as root.
 // / Returns a success boolean & the number of steps that succeeded, in that order.
-// / This is the safe way to let an unprivileged account set resource limits. A user manager
-// / governs only the cgroup subtree systemd delegated to it & cannot start a unit as any
-// / other account, so nothing granted here can be turned into privilege.
-// / The alternative, granting the web server user manage-units on the system bus, would let
-// / that account start a transient service with User=root. Never do that on the account
-// / which parses uploaded files.
+// / It writes a systemd drop in & reloads the daemon, which is host setup, & the application decides whether to ask for it.
+// / A user manager governs only the cgroup subtree systemd delegated to it & cannot start a unit as any other account.
+// / So nothing granted here can be turned into privilege.
+// / Granting the web server user manage-units on the system bus instead would let that account start a service with User=root.
 // / Every step is idempotent & is safe to run again.
 function enableConversionLimits() {
   // / Set variables.
@@ -706,7 +689,6 @@ function enableConversionLimits() {
     // / Lingering starts a user manager for the account at boot, with no login session.
     // / Without it there is no user bus for systemd-run --user to reach.
     // / systemd keeps a file for each account that lingers, so one that already does is left as it is.
-    // / Until v4.0.6 every -fp enabled it again.
     if (is_file('/var/lib/systemd/linger/'.$ApacheUser)) {
       $StepsCompleted++;
       print('  Present    Lingering for '.$ApacheUser.$Lol); }
@@ -733,9 +715,7 @@ function enableConversionLimits() {
     $dropInContents = '[Service]'.PHP_EOL.'Delegate=cpu cpuset io memory pids'.PHP_EOL;
     if (!is_dir($dropInDirectory)) @mkdir($dropInDirectory, 0755, TRUE);
     if (!is_dir($dropInDirectory)) print('  FAILED     Could not create '.$dropInDirectory.'.'.$Lol);
-    // / A drop in that already says this is left alone, as the listener unit is. Until v4.0.5 it
-    // / was written on every -fp, systemd reloaded every unit on the host for it, & the operator was
-    // / told every time to restart a user manager that already had the delegation.
+    // / A drop in that already says this is left alone, as the listener unit is.
     else if (is_file($dropInFile) && !is_link($dropInFile) && (string)@file_get_contents($dropInFile) === $dropInContents) {
       $StepsCompleted++;
       $dropInIsUnchanged = TRUE;
@@ -767,22 +747,17 @@ function enableConversionLimits() {
 // / -----------------------------------------------------------------------------------
 // / A function to give one installation tree to root, with folders 0755 & files 0644.
 // / Accepts the tree & the paths inside it that hold another role. Returns a success boolean.
-// / The tree is walked by GNU find, which never follows a link, never leaves the filesystem
-// / it started on, & with -execdir hands each command a name relative to a folder it already
-// / holds open, so a folder renamed during the walk cannot redirect a change. Root's group
-// / is used, so the web server account reads the installation as everybody else does & can
-// / write none of it. Nothing in an installation needs an execute bit, because every script
-// / it ships is run through its interpreter.
+// / The tree is walked by GNU find, which never follows a link & never leaves the filesystem it started on.
+// / -execdir hands each command a name relative to a folder find already holds open, so a folder renamed during the walk cannot redirect a change.
+// / Root's group is used, so the web server account reads the installation as everybody else does & can write none of it.
+// / Nothing in an installation needs an execute bit, because every script it ships is run through its interpreter.
 // / The caller has already refused a tree that another account could replace.
 // /
-// / THE MODES ARE SET TOP DOWN, ONE NAME AT A TIME. The owner pass leaves every folder root's,
-// / but a folder another account made writable to everybody stays writable until its mode is
-// / set, & chmod follows a link. With one command per name, find sets a folder's mode before
-// / it reads what is inside, so every name is reached through a folder only root can change.
-// / Until v4.0.1 the commands were batched & ran after the walk had moved on.
-// / A FILE WITH MORE THAN ONE NAME IS LEFT ALONE. Its other name may be anywhere on the same
-// / filesystem, & changing the owner or the mode of one name changes every other. It is named
-// / in a warning, & the trust check that ends -fp refuses the tree until it is removed.
+// / The modes are set top down, one name at a time.
+// / The owner pass leaves every folder root's, but a folder another account made writable to everybody stays writable until its mode is set, & chmod follows a link.
+// / With one command per name, find sets a folder's mode before it reads what is inside, so every name is reached through a folder only root can change.
+// / A file with more than one name is left alone, because changing the owner or the mode of one name changes every other.
+// / It is named in a warning, & the trust check that ends -fp refuses the tree until it is removed.
 function applyCodeRole($treePath, $prunedPaths) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -895,13 +870,12 @@ function applyRootOnlyRole($treePath) {
 // / -----------------------------------------------------------------------------------
 // / A function to give one folder to the web server account, & only the folder.
 // / Accepts the folder & the account. Returns a success boolean.
-// / ROOT DOES NOT WALK IT & DOES NOT CHANGE ITS MODE BY NAME. The folder & everything in it is
-// / the web server account's, which can swap any name in it at any moment. The owner is changed
-// / by changeOwnerWithoutFollowing, which changes the name itself, never what a link points at,
-// / & only when a hard link to a root file cannot be swapped in. The mode is set by the web
-// / server account, through runAsAccount, so a link swapped in can only send the change to a
-// / file that account could already change. Every session, upload & log inside is left exactly
-// / as it is, which is what ABOUT_ENVIRONMENT_MANAGER.txt has always said a repair does.
+// / Root does not walk it & does not change its mode by name.
+// / The folder & everything in it is the web server account's, which can swap any name in it at any moment.
+// / The owner is changed by changeOwnerWithoutFollowing, which changes the name itself & never what a link points at.
+// / It does so only when a hard link to a root file cannot be swapped in.
+// / The mode is set by the web server account through runAsAccount, so a swapped in link can only send the change to a file that account could already change.
+// / Every session, upload & log inside is left as it is, as ABOUT_ENVIRONMENT_MANAGER.txt says a repair does.
 function applyWebRole($folderPath, $ownerAccount) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -927,13 +901,10 @@ function applyWebRole($folderPath, $ownerAccount) {
 // / -----------------------------------------------------------------------------------
 // / A function to check a folder other software shares, & correct only the folder itself.
 // / Accepts the folder & the web server account. Returns TRUE when nothing else can change it.
-// / The HRProprietary folder holds every HRProprietary application & whatever else an operator
-// / keeps there. Until v4.0.1 -fp walked it, so every application in it was handed to the web
-// / server account & made world readable & executable, whether it was this one or not.
-// / It is never walked now. It is corrected only when the web server account could change it,
-// / which only an earlier release or a hand made mistake causes, & which lets that account
-// / rename this installation aside & put its own in its place. Only the folder's own owner &
-// / write bits change, & only when the folder above it is one only root can change.
+// / The HRProprietary folder holds every HRProprietary application & whatever else an operator keeps there.
+// / It is never walked.
+// / It is corrected only when the web server account could change it, which would let that account rename this installation aside & put its own in its place.
+// / Only the folder's own owner & write bits change, & only when the folder above it is one only root can change.
 function applySharedRole($folderPath, $webAccount) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -949,9 +920,8 @@ function applySharedRole($folderPath, $webAccount) {
     $webCanWrite = ((is_array($webRecord) && (int)$folderStatus['uid'] === (int)$webRecord['uid']) or ((int)$folderStatus['mode'] & 0022) !== 0);
     list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot(dirname($folderPath));
     if ($webCanWrite && !$parentIsTrusted) warningEntry('The shared folder at '.$folderPath.' can be changed by another account & the folder above it cannot be trusted, so it was left alone. '.$trustNotice);
-    // / The mode is changed only once the folder is root's, & only root can rename it, because
-    // / the folder above it is root's. Each step is reported as it actually went. Until v4.0.1
-    // / the chmod went unchecked & the folder was announced as root's even when it was not.
+    // / The mode is changed only once the folder is root's, & only root can rename it, because the folder above it is root's.
+    // / Each step is reported as it actually went.
     else if ($webCanWrite) {
       list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($folderPath, 'root', '');
       if (!$ownerWasChanged) warningEntry($ownerNotice);
@@ -969,13 +939,12 @@ function applySharedRole($folderPath, $webAccount) {
 // / -----------------------------------------------------------------------------------
 // / A function to give the data root to root, as the folder every other data location hangs
 // / off. Accepts the folder. Returns TRUE when it belongs to root & nothing else can write it.
-// / ROOT OWNS IT & DOES NOT WALK IT. The data root is root:root & 0755, so every account may
-// / traverse it to reach a folder of its own below, & none but root may change what is in it.
-// / The session, cache, log & socket folders below are the web server account's, root's secret
-// / & backup folders below are root's, & each is corrected by its own role. This corrects only
-// / the root itself. The owner is changed by changeOwnerWithoutFollowing, which never follows a
-// / link & refuses unless the folder above the root is one only root can change, so a v4.0.0
-// / data location the web server account still owns is taken only where root could hold it.
+// / Root owns it & does not walk it.
+// / The data root is root:root & 0755, so every account may traverse it to a folder of its own below, & none but root may change what is in it.
+// / The session, cache, log & socket folders below are the web server account's, root's secret & backup folders below are root's, & each is corrected by its own role.
+// / This corrects only the root itself.
+// / The owner is changed by changeOwnerWithoutFollowing, which never follows a link & refuses unless the folder above the root is one only root can change.
+// / So a data location the web server account still owns is taken only where root could hold it.
 function applyDataRootRole($folderPath) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -1008,16 +977,14 @@ function applyDataRootRole($folderPath) {
 // / A function to give the folder an application keeps its secrets in to root, so that only the
 // / web server account's group may read what is in it.
 // / Accepts the folder & the web server account. Returns TRUE when the folder has its role.
-// / ROOT OWNS IT & DOES NOT WALK IT. The folder is root's, its group is the web server account's
-// / & it is 0750, so that account may read what root keeps there & can change none of it, & no
-// / other account may even list it. Root writes each secret in it through the kernel, as a new
-// / file with the mode that secret needs, so only the folder itself is corrected here. The owner
-// / & group are changed by changeOwnerWithoutFollowing, which never follows a link. The mode is
-// / set by name, which is safe because the folder above it must be one only root can change, as
-// / the data root is, so the folder cannot be renamed aside between the owner change & this.
-// / A folder whose owner & group cannot both be given is left without its role & its mode is not
-// / touched, & the application never reads a secret first from a folder without its role, so a
-// / secret that account cannot read is never the one it relies on.
+// / Root owns it & does not walk it.
+// / The folder is root's, its group is the web server account's & it is 0750, so that account may read what root keeps there & change none of it.
+// / No other account may list it.
+// / Root writes each secret in it through the kernel, as a new file with the mode that secret needs, so only the folder itself is corrected here.
+// / The owner & group are changed by changeOwnerWithoutFollowing, which never follows a link.
+// / The mode is set by name, which is safe because the folder above it must be one only root can change, so it cannot be renamed aside in between.
+// / A folder whose owner & group cannot both be given is left without its role, & its mode is not touched.
+// / The application never reads a secret first from a folder without its role, so a secret that account cannot read is never the one it relies on.
 function applySecretRole($folderPath, $webAccount) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -1048,8 +1015,7 @@ function applySecretRole($folderPath, $webAccount) {
 // / A function to say whether a location differs from what its role makes it.
 // / Accepts the location, its role, the web server account & the paths a walk leaves out, in that
 // / order. Returns TRUE when anything the role would change is not so already.
-// / -fp counts the locations it changed by this, so a run that changes nothing says so. Until v4.0.6
-// / it counted every location it gave a role, & every run said it had corrected all of them.
+// / -fp counts the locations it changed by this, so a run that changes nothing says so.
 // / A tree a role walks is read by GNU find, which changes nothing, never follows a link & never
 // / leaves the filesystem it started on, & stops at the first name that differs. A folder a role
 // / does not walk is judged by itself. A role this does not know is taken to differ.
@@ -1094,13 +1060,12 @@ function locationDiffersFromRole($locationPath, $roleName, $webAccount, $prunedP
 // / -----------------------------------------------------------------------------------
 // / A function to give every location the application declares the owner & mode its role needs.
 // / Accepts the web server account. Must be run as root.
-// / Returns whether the pass ran, how many locations it changed & how many were refused. A location
-// / that already had what its role gives it is not counted. Until v4.0.6 every one given a role was.
+// / Returns whether the pass ran, how many locations it changed & how many were refused.
+// / A location that already had what its role gives it is not counted.
 // /
-// / THE CONTRACT SAYS WHAT A LOCATION IS, & this decides what that means.
-// / An application names each location by the setting that holds it & gives it a role in
-// / $EngineManagedLocations. Every owner & mode is fixed here & nowhere else, so an
-// / application cannot ask for one that undoes the rest of this.
+// / The contract says what a location is, & this decides what that means.
+// / An application names each location by the setting that holds it & gives it a role in $EngineManagedLocations.
+// / Every owner & mode is fixed here & nowhere else, so an application cannot ask for one that undoes the rest of this.
 // /   code       The installation. root, 0755 & 0644. The web server account reads it.
 // /   data-root  The data location itself. root, 0755, & never walked.
 // /   secret     The folder secrets are kept in. root, the web server account's group,
@@ -1112,22 +1077,17 @@ function locationDiffersFromRole($locationPath, $roleName, $webAccount, $prunedP
 // /              hosted location is refused.
 // /   root-only  root alone, 0700 & 0600. The previous installation kept for an operator.
 // /   shared     A folder other software shares. Checked, never walked.
-// / The data root comes before the installation, which sits inside it as Application, & before
-// / the secret role, because the folder above each must be root's before root walks it or sets
-// / its mode by name. Until v4.0.4 the installation came first, so -fp over a data location an
-// / old chown -R had given away refused the installation, & had to be run a second time.
+// / The data root comes before the installation, which sits inside it as Application, & before the secret role.
+// / The folder above each must be root's before root walks it or sets its mode by name.
 // /
-// / THE TWO RULES IT KEEPS. Root runs nothing the web server account can change, & root never
-// / works by name inside a folder the web server account can change. Until v4.0.1 this was
-// / chown -R to the web server account & chmod -R 0755 over the installation, the data
-// / location, every session in it & the HRProprietary folder, so root then ran code the web
-// / server account owned on its next command. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
+// / It keeps two rules.
+// / Root runs nothing the web server account can change, & root never works by name inside a folder the web server account can change.
+// / See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
 // /
-// / THE INSTALLATION IS THE ONE THAT IS RUNNING. A code location is accepted only when it is
-// / the folder this Engine is running from, so a wrong setting cannot hand some other tree
-// / to root. It is never the filesystem root, a system folder, a shared folder or the folder
-// / above one. A location with another role inside it is left out of the walk, & so is a path
-// / the contract names in $EngineRetiredPaths, which is taken away once the rest is root's.
+// / The installation is the one that is running.
+// / A code location is accepted only when it is the folder this Engine is running from, so a wrong setting cannot hand some other tree to root.
+// / It is never the filesystem root, a system folder, a shared folder or the folder above one.
+// / A location with another role inside it is left out of the walk, & so is a path the contract names in $EngineRetiredPaths, which is taken away once the rest is root's.
 function correctManagedLocations($webAccount) {
   // / Set variables.
   global $EngineManagedLocations, $RunningAsRoot, $Lol, $EnableMemoryProtection;
@@ -1146,11 +1106,8 @@ function correctManagedLocations($webAccount) {
     $servedPaths = servedLocations();
     // / Every declared location is resolved once. A setting that is empty or names nothing
     // / that exists is skipped in silence, because a location may not be created yet.
-    // / A LOCATION IS ACTED ON BY THE PATH CONFIGURED, NEVER BY WHERE A LINK LEADS. Several of
-    // / them sit inside the data location, which the web server account owns, so it can put a
-    // / link where one of them was. Until v4.0.1 each was resolved & its role applied to the
-    // / resolved path, so a link sent the role to whatever folder it pointed at. A location whose
-    // / path leads anywhere but itself is refused now, & named.
+    // / A location is acted on by the path configured, never by where a link leads.
+    // / The web server account can put a link where a location inside one of its folders was, so a location whose path leads anywhere but itself is refused & named.
     foreach ($EngineManagedLocations as $settingName => $locationRole) {
       if (!in_array($locationRole, $roleOrder, TRUE)) {
         warningEntry('The managed location '.$settingName.' declares the role '.$locationRole.', which the Engine does not have. It was left alone.');
@@ -1194,15 +1151,11 @@ function correctManagedLocations($webAccount) {
           warningEntry('The managed location '.$locationRoles[2].' is '.$locationPath.', which is not the installation that is running, '.$runningInstall.'. It was refused.');
           $LocationsRefused++;
           continue; }
-        // / Root walks a code or root-only tree, so the tree itself must be one nothing else can
-        // / replace partway through, which means every folder above it is root's. The shared &
-        // / data-root roles run first, so an installation an earlier release or an old chown -R gave
-        // / away has its folder back by now.
+        // / Root walks a code or root-only tree, so the tree must be one nothing else can replace partway through, which means every folder above it is root's.
+        // / The shared & data-root roles run first, so an installation whose folder was given away has it back by now.
         if ($roleName === 'code' or $roleName === 'root-only') list ($treeIsHeld, $holdNotice) = folderIsHeldForRoot($locationPath);
-        // / The backup sits in the data location by default, which the web server account owns, &
-        // / every release before v4.0.1 left one there that the account owns too. Root keeps
-        // / nothing there & walks nothing there, so it is skipped & left exactly as it is. That is
-        // / not a fault in any location, so --setup goes on, & the updater keeps no backup there.
+        // / A root-only tree that is not held is skipped & left as it is, because root keeps nothing & walks nothing where another account could replace it.
+        // / That is not a fault in any location, so --setup goes on, & the updater keeps no backup there.
         if ($roleName === 'root-only' && !$treeIsHeld) {
           print('  '.str_pad('SKIPPED', 12).$locationPath.' could be replaced by another account. Left as it is. '.$holdNotice.$Lol);
           warningEntry('The managed location '.$locationRoles[2].' at '.$locationPath.' could be replaced by another account, so root did not walk it & keeps nothing there. '.$holdNotice);
@@ -1222,10 +1175,8 @@ function correctManagedLocations($webAccount) {
           $prunedPaths = array();
           foreach ($resolvedLocations as $otherLocation) {
             if ($otherLocation[0] !== $locationPath && strpos($otherLocation[0].DIRECTORY_SEPARATOR, $locationPath.DIRECTORY_SEPARATOR) === 0) $prunedPaths[] = $otherLocation[0]; }
-          // / WHAT NO RELEASE SHIPS IS LEFT OUT OF THE WALK. It is taken away once the rest is root's.
-          // / Walking it first would spend the time on a tree about to go, & a tree an earlier build
-          // / left can hold links & files with more than one name, which the walk cannot put right.
-          // / Until v4.0.6 nothing took one away, so an installation holding one stayed refused.
+          // / What no release ships is left out of the walk, & is taken away once the rest is root's.
+          // / Walking it first would spend the time on a tree about to go, & a tree an earlier build left can hold links & files with more than one name.
           $retiredPaths = retiredPathsIn($locationPath);
           foreach ($retiredPaths as $retiredPath) $prunedPaths[] = $retiredPath;
           // / A path no release ships is about to be taken away, which is a change too.
@@ -1250,20 +1201,10 @@ function correctManagedLocations($webAccount) {
 // / A function to write a complete configuration file from the model.
 // / Accepts the path to write. Returns whether it was written & how many settings it holds.
 // /
-// / THE MODEL IS THE CONFIGURATION & THIS WRITES IT OUT. An installation that has lost its
-// / config.php, or has never had one, gets a working default here rather than a download.
-// /
-// / It is deliberately php rather than a build script in another language. A configuration
-// / that can only be produced by a tool an operator does not have is a configuration they
-// / cannot recover. Deleting config.php & running --config --repair has to be enough.
-// /
-// / IT WRITES DEFAULTS & KNOWS NOTHING OF ANY EXISTING FILE. Merging what an administrator
-// / had set is the caller's job & is what repair already does for a file that exists. This
-// / is only reached when there is nothing to merge with.
-// /
-// / A setting of type expression is emitted as SOURCE rather than as a value, because
-// / $LogDir is $ConvertLoc with a suffix & flattening that into a fixed path would silently
-// / decouple two settings an administrator expects to move together.
+// / An installation that has lost its config.php, or never had one, gets a working default here rather than a download.
+// / It is PHP rather than a build script in another language, so deleting config.php & running --config --repair is enough.
+// / It writes defaults & knows nothing of any existing file, because merging what an administrator set is what repair does for a file that exists.
+// / The template keeps every expression as source, so $LogDir stays $ConvertLoc with a suffix & the two still move together.
 function generateConfigFile($configPath) {
   // / Set variables.
   global $EngineConfigTemplate, $InstLoc, $DirSep, $EnableMemoryProtection;
@@ -1272,14 +1213,9 @@ function generateConfigFile($configPath) {
   $templatePath = $templateText = '';
   $markerPosition = FALSE;
   $matchedSettings = array();
-  // / THE TEMPLATE IS COPIED, not rebuilt from a description of itself.
-  // / It is already a real config.php at defaults, with every section, every setting & every
-  // / line of prose in the shape a live configuration has. Rebuilding that from a model was
-  // / a translation between two representations of the same thing, & a translation is a
-  // / place the two can disagree.
-  // / The application names the file in $EngineConfigTemplate. An application that names
-  // / none cannot have a configuration written for it, which is reported rather than
-  // / guessed at.
+  // / The template is copied, not rebuilt from a description of itself.
+  // / It is already a real config.php at defaults, & rebuilding it from a model would be a translation where the two can disagree.
+  // / The application names the file in $EngineConfigTemplate, & one that names none cannot have a configuration written for it, which is reported.
   $templatePath = (isset($EngineConfigTemplate) && trim((string)$EngineConfigTemplate) !== '') ? trim((string)$EngineConfigTemplate) : '';
   if ($templatePath === '') {
     errorEntry('This application names no configuration template, so none can be written!', 28003, FALSE);
@@ -1313,10 +1249,9 @@ function generateConfigFile($configPath) {
 // / Accepts the supplied path, the mode, the target of that mode & a confirmation boolean.
 // / Returns TRUE when the utility completed without refusing.
 // / Modes are interactive, view, reset-all, reset-section, reset-variable, repair & backup.
-// / EVERY MODE EXCEPT BACKUP REQUIRES ROOT. A backup is permitted to any account whose
-// / destination it can write, because taking a copy damages nothing.
-// / NOTHING IS WRITTEN IF ANY SECTION FAILED VALIDATION. A file that cannot be parsed
-// / correctly cannot be edited safely.
+// / Every mode except backup requires root.
+// / A backup is permitted to any account whose destination it can write, because taking a copy damages nothing.
+// / Nothing is written if any section failed validation, because a file that cannot be parsed correctly cannot be edited safely.
 function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorConfirmed) {
   // / Set variables.
   global $RunningAsRoot, $CurrentUser, $Lol, $RequiredConfigVersion, $EnableMemoryProtection, $InstLoc, $DirSep;
@@ -1331,12 +1266,9 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
   $formattedValue = '';
   $changesApplied = 0;
   list ($targetWasResolved, $configTarget) = resolveConfigTarget($suppliedPath);
-  // / A MISSING FILE IS EVERY SETTING MISSING, so repair is the mode that answers it.
-  // / An installation that has lost its configuration, or has never had one, gets a
-  // / working default here. Any other mode has nothing to work on & says so.
-  // / This is why the generator is php beside the model rather than a build script. An
-  // / operator who has deleted config.php has to be able to get it back with the tool
-  // / they already have.
+  // / A missing file is every setting missing, so repair is the mode that answers it, with a working default.
+  // / Any other mode has nothing to work on & says so.
+  // / So an operator who deleted config.php gets it back with the tool they already have.
   if (!$targetWasResolved && $utilityMode === 'repair' && $RunningAsRoot) {
     print($Lol.'No config.php was found. Writing the defaults from the template.'.$Lol);
     list ($generatedOk, $generatedCount) = generateConfigFile($suppliedPath !== '' ? $suppliedPath : $InstLoc.$DirSep.'Resources'.$DirSep.'config.php');
@@ -1396,20 +1328,10 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
               if ($utilityMode === 'reset-section' && strtolower($sectionName) !== strtolower((string)$modeTarget)) continue;
               foreach ($sectionModel['Variables'] as $variableName => $variableModel) {
                 if ((string)$variableModel['Default'] === '') continue;
-                // / A repair only touches what is absent or unreadable. A reset touches everything.
-                // / A REPAIR takes what is ABSENT. A RESET takes what is PRESENT.
-                // / Both lines below used to skip during a repair, one for a setting that
-                // / was there & one for a setting that was not. A repair therefore queued
-                // / nothing & reported success, & a self healing configuration healed
-                // / nothing at all.
-                // / Adding what is missing is the whole point of the mode. It is what lets
-                // / an operator or an automated tool normalize a coherent file across a
-                // / release that added a required setting, without touching one existing
-                // / value.
-                // / Presence is looked for across the WHOLE FILE rather than in the section
-                // / the model happens to name. A setting an administrator moved, or one filed
-                // / under a different heading by an earlier release, is present either way &
-                // / appending a second copy of it is not a repair.
+                // / A repair touches only what is absent or unreadable, & a reset touches everything.
+                // / Adding what is missing is the point of a repair, so a coherent file crosses a release that added a required setting without one existing value changing.
+                // / Presence is looked for across the whole file, so a setting an administrator moved, or one filed under another heading, is present either way.
+                // / Appending a second copy of such a setting is not a repair.
                 list ($foundSection, $foundRecord) = findConfigVariable($detectedSections, $variableName);
                 if ($utilityMode === 'repair' && $foundSection !== '') continue;
                 if ($utilityMode !== 'repair' && $foundSection === '') continue;
@@ -1464,12 +1386,9 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
 // / Accepts the detected sections & the setting name. Returns the section it was found in
 // / & its record, in that order. The section is an empty string when it is not there.
 // /
-// / Presence is a property of the FILE rather than of a section.
-// / A repair used to ask whether a setting was in the section the MODEL puts it in. An
-// / administrator who moved a setting, or a release that filed one under a different
-// / heading, therefore looked absent & a second copy was appended.
-// / A duplicate assignment is not harmless. PHP takes the last one, so the file says one
-// / thing at the top & another at the bottom & the reader has to know which wins.
+// / Presence is a property of the file rather than of a section.
+// / A setting an administrator moved, or one a release filed under another heading, would otherwise look absent & be appended twice.
+// / A duplicate assignment is not harmless, because PHP takes the last one & the file then says two things.
 function findConfigVariable($detectedSections, $variableName) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -1494,11 +1413,10 @@ function findConfigVariable($detectedSections, $variableName) {
 // / first existing ancestor must be one nothing but root can change before a folder is created
 // / below it. The folders above a missing one are created 0755 so every account may traverse
 // / them, & the folder itself 0700. correctManagedLocations gives it its owner & final mode.
-// / MORE THAN ONE FOLDER IS MADE ONLY IN A FOLDER ROOT ALONE CAN WRITE. The ancestor may belong to
-// / another account, which is safe for the one name made in it, but the folders between are made
-// / one after another, & that account could swap each for a link before the next is made in it.
-// / A deeper folder below one another account can write, as /var/log is for syslog on Ubuntu, is
-// / made by hand. Only root is judged, as folderIsHeldForRoot() judges only root.
+// / More than one folder is made only in a folder root alone can write.
+// / An ancestor another account owns is safe for the one name made in it, but that account could swap each folder made between for a link before the next is made in it.
+// / A deeper folder below one another account can write, as /var/log is for syslog on Ubuntu, is made by hand.
+// / Only root is judged, as folderIsHeldForRoot() judges only root.
 function createHeldFolder($folderPath) {
   // / Set variables.
   global $DirSep, $RunningAsRoot, $EnableMemoryProtection;
@@ -1549,29 +1467,19 @@ function namesToList($entryNames) {
 // / A function to create the data root's folders & move an older layout's sessions into them.
 // / Accepts the web server account. Must run as root. Returns whether the primary folders are
 // / present & how many session directories were moved, in that order.
-// / THE DATA ROOT IS A ROOT ROOT OWNS, & each kind of file lives in a folder of its own below.
-// / This creates the primary folders — Sessions, Cache, Logs, Engine, Secrets & the socket
-// / folder — & their roles are set by correctManagedLocations, which runs straight after this
-// / in both --setup & -fp. Each additional data location is a root of its own the contract does
-// / not name, so its root & its Sessions folder are created & given their roles here.
-// / Secrets is created here, given its role by correctManagedLocations, & nothing is put in it.
-// / The application keeps its own secrets there, & copies an older release's key in from the top
-// / of the root itself, because only the application knows what one is & how to read it back.
-// / AN OLDER RELEASE KEPT EACH SESSION DIRECTLY IN A DATA LOCATION. Every session directory
-// / found at the top of a data root is moved into that root's Sessions folder, so no open
-// / session is lost, which is why -fp after an upgrade keeps visitors signed in. Each moved
-// / directory keeps the web server account's ownership it already had. Only a folder that is a
-// / session is moved, & every other is named, as is anything in Sessions the sweep cannot remove.
-// / The capability cache an older release left at the primary root is moved into the cache
-// / folder with it, & one left anywhere else is removed.
-// / EACH ROOT IS GIVEN BACK TO ROOT BEFORE ANYTHING IS MOVED BELOW IT. A rename follows a link
-// / in the folder it moves into, & until v4.0.4 the primary root was given back only by
-// / correctManagedLocations, after this, & Sessions & Cache were judged with is_dir, which follows
-// / a link. In a data location the web server account still owned, as v4.0.0 & an old chown -R
-// / leave one, that account could swap either for a link, & root moved a folder or file of that
-// / account's wherever the link led. Nothing is moved through a link now. A move is made only into
-// / a folder folderIsHeldForRoot holds, which is a real folder in a root no other account can
-// / change, & one that is not is named & nothing is moved into it.
+// / The data root is owned by root, & each kind of file lives in a folder of its own below it.
+// / This creates the primary folders, which are Sessions, Cache, Logs, Engine, Secrets & the socket folder.
+// / correctManagedLocations gives them their roles, & runs straight after this in both --setup & -fp.
+// / Each additional data location is a root of its own the contract does not name, so its root & its Sessions folder are created & given their roles here.
+// / Nothing is put in Secrets here.
+// / The application keeps its own secrets there, & copies an older release's key in from the top of the root, because only the application knows how to read one.
+// / A session directory at the top of a data root, where an older release kept it, is moved into that root's Sessions folder, so no open session is lost.
+// / Each moved directory keeps the web server account's ownership it already had.
+// / Only a folder that is a session is moved, & every other is named, as is anything in Sessions the sweep cannot remove.
+// / A capability cache at the primary root is moved into the cache folder, & one left anywhere else is removed.
+// / Each root is given back to root before anything is moved below it, because a rename follows a link in the folder it moves into.
+// / A move is made only into a folder folderIsHeldForRoot holds, which is a real folder in a root no other account can change.
+// / A folder that is not held is named, & nothing is moved into it.
 function provisionAndMigrateDataRoot($webAccount) {
   // / Set variables.
   global $DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $ManagerSocketDir, $AdditionalConvertLocs, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
@@ -1615,16 +1523,11 @@ function provisionAndMigrateDataRoot($webAccount) {
       $sessionTarget = $rootToMigrate.$DirSep.'Sessions';
       $rootEntries = @scandir($rootToMigrate);
       if (!is_array($rootEntries)) continue;
-      // / The installation is a folder at the root since v4.0.1, & a name beginning with a dot
-      // / is never a session, which is how a staged installation an install left is passed over.
-      // / A link is never followed into & is left exactly where it is, as is any plain file,
-      // / which at the root is the Environment Manager's state or, from an older release, the
-      // / install secret or the capability cache.
-      // / A SESSION IS A FOLDER THE WEB SERVER ACCOUNT MADE, named as the core names a day, with twelve
-      // / or eighteen hexadecimal digits. Until v4.0.6 any other folder was moved too, so a release
-      // / unpacked into a data root had its folders moved into Sessions as root's, where the sweep,
-      // / which runs as the web server account, could not remove them & failed every pass. Every
-      // / other folder is named & left where it is.
+      // / The installation is a folder at the root, & a name beginning with a dot is never a session, so a staged installation an install left is passed over.
+      // / A link is never followed into & is left where it is, as is any plain file.
+      // / A plain file at the root is the Environment Manager's state, or an older release's install secret or capability cache.
+      // / A session is a folder the web server account made, named as the core names a day, with twelve or eighteen hexadecimal digits.
+      // / Every other folder is named & left where it is.
       $sessionEntries = $foreignEntries = array();
       foreach ($rootEntries as $rootEntry) {
         if (in_array($rootEntry, $reservedNames, TRUE) or strpos((string)$rootEntry, '.') === 0) continue;
@@ -1645,8 +1548,7 @@ function provisionAndMigrateDataRoot($webAccount) {
         $entryPath = $rootToMigrate.$DirSep.$rootEntry;
         if (@rename($entryPath, $sessionTarget.$DirSep.$rootEntry)) $MovedCount++;
         else warningEntry('A session directory at '.$entryPath.' could not be moved into '.$sessionTarget.'. It was left where it is.'); }
-      // / ANYTHING IN Sessions THE WEB SERVER ACCOUNT DOES NOT OWN is beyond the sweep, which runs as that
-      // / account & leaves it. So it is named here, where root sees it. An earlier release moved some.
+      // / Anything in Sessions the web server account does not own is beyond the sweep, which runs as that account, so it is named here where root sees it.
       // / Names are read & nothing is changed, because the folder is that account's.
       $sessionNames = @scandir($sessionTarget);
       $strangerEntries = array();
@@ -1655,11 +1557,9 @@ function provisionAndMigrateDataRoot($webAccount) {
         $entryStatus = @lstat($sessionTarget.$DirSep.$sessionName);
         if (is_array($entryStatus) && (int)$entryStatus['uid'] !== $webUid) $strangerEntries[] = (string)$sessionName; }
       if (count($strangerEntries) > 0) warningEntry(count($strangerEntries).' name(s) in '.$sessionTarget.' are not '.$webAccount.'\'s, so the sweep leaves them. '.namesToList($strangerEntries).' Remove them.');
-      // / The capability cache an older release wrote at the root moves into the cache folder,
-      // / which is where this release reads & writes it. It moves only when it is a plain file &
-      // / the cache folder is held, for the same reason. One at the top of any other root, or one
-      // / the cache folder already holds a cache for, is a copy nothing reads, & is removed. Until
-      // / v4.0.6 only the primary root's was looked at.
+      // / A capability cache an older release wrote at the root moves into the cache folder, where this release reads & writes it.
+      // / It moves only when it is a plain file & the cache folder is held.
+      // / One at the top of any other root, or one the cache folder already holds a cache for, is a copy nothing reads, & is removed.
       $cacheSource = $rootToMigrate.$DirSep.'capability-cache.php';
       $cacheTarget = $CacheLoc.$DirSep.'capability-cache.php';
       clearstatcache(TRUE, $cacheSource);
@@ -1683,16 +1583,11 @@ function provisionAndMigrateDataRoot($webAccount) {
 // / A function to create the data locations an installation cannot start without.
 // / Accepts no arguments & must be run as root.
 // / Returns a success boolean & the number of directories created, in that order.
-// / verifyRequiredDirs REFUSES to create the data location itself & raises error 1000 when
-// / it is absent. That is correct at runtime, because a data location that vanished is a
-// / mount that failed & creating an empty one on top of it would hide the fault. At
-// / install time there is nothing to hide, so this creates it once & then gets out of the
-// / way. Everything below the data location is created by verifyRequiredDirs as normal.
-// / A location is only CREATED here. Its owner & mode come from its role, through
-// / correctManagedLocations at the end, which is the one place a location gets either. A
-// / created folder is 0700 & the folders created above it are 0755, so the web server account
-// / can reach it. Until v4.0.1 each location was changed here by name with chown & chmod,
-// / which follow a link, & the backup & log folders were handed to the web server account.
+// / verifyRequiredDirs refuses to create the data location itself & raises error 1000 when it is absent.
+// / That is correct at runtime, because a data location that vanished is a mount that failed, & an empty one on top would hide the fault.
+// / At install time there is nothing to hide, so this creates it once, & verifyRequiredDirs creates everything below it as normal.
+// / A location is only created here, & correctManagedLocations gives it its owner & mode at the end.
+// / A created folder is 0700 & the folders created above it are 0755, so the web server account can reach it.
 function prepareDataLocations() {
   // / Set variables.
   global $ApacheUser, $RunningAsRoot, $Lol, $EnableMemoryProtection;
@@ -1717,12 +1612,10 @@ function prepareDataLocations() {
       errorEntry('A required data location could not be created!', 32011, FALSE); }
     $LocationsCreated = $locationsCreated;
     // / A served location is the one kind that lives inside the web root.
-    // / Every location above is outside it & is reachable only by this application. A served
-    // / location is served straight to browsers, because that is how a user fetches a file. It
-    // / therefore needs a protection file that none of the others do, & it has to exist before
-    // / the first upload rather than after somebody notices. HRConvert2 serves one, DATA in its
-    // / hosted location. Until v4.0.5 this named $ConvertTemp rather than asking the contract.
-    // / Root makes one only beneath a folder no other account can change. createHeldFolder says why.
+    // / Every other location is outside it & is reachable only by this application.
+    // / A served location is served straight to browsers, so it needs a protection file before the first upload.
+    // / HRConvert2 serves one, DATA in its hosted location.
+    // / Root makes one only beneath a folder no other account can change, & createHeldFolder says why.
     $servedPaths = servedLocations();
     foreach ($servedPaths as $servedPath) {
       if (!is_dir($servedPath)) {
@@ -1740,9 +1633,7 @@ function prepareDataLocations() {
       // / that serves nothing still has its other locations given their roles here.
       list ($locationPassRan, $locationsCorrected, $locationsRefused) = correctManagedLocations($ApacheUser);
       if (!$locationPassRan or $locationsRefused > 0) $LocationsAreReady = FALSE;
-      // / The protection file & the live exposure of each served location. The Engine has known
-      // / what it serves since v4.0.5. Until then the application produced these rows through a
-      // / data policy provider & this printed them without understanding any of it.
+      // / The protection file & the live exposure of each served location.
       if (count($servedPaths) > 0) {
         print($Lol.servedLocationNames().' directory protection.'.$Lol);
         $policyFindings = collectDataPolicyFindings();
@@ -1759,14 +1650,9 @@ function prepareDataLocations() {
 // / A function to name the copy of the application a service unit runs.
 // / Accepts nothing. Returns the folder of the installed copy when there is one, & the folder this
 // / command runs from when there is not.
-// / A UNIT NAMES THE INSTALLED COPY, NOT WHEREVER -fp HAPPENED TO BE RUN FROM. A release unpacked
-// / somewhere to be installed is a copy -fp installs & leaves behind, & until v4.0.5 a unit written
-// / from one ran that copy until the installed copy's own -fp wrote the unit again. A copy unpacked
-// / in a folder the web server account cannot enter left the listener failing in between, & one
-// / removed afterwards left the units naming nothing. The installed copy is what every later run
-// / uses, so it is what each unit names from the start. A tree with no installed copy yet, which
-// / is the first -fp of a release older than v4.0.1, is named itself, & the copy -fp installs as it
-// / ends writes the units again.
+// / A unit names the installed copy, not wherever -fp happened to be run from.
+// / A release unpacked somewhere to be installed is a copy -fp installs & leaves behind, & every later run uses the installed copy.
+// / A tree with no installed copy yet is named itself, & the copy -fp installs as it ends writes the units again.
 function serviceEntryFolder() {
   // / Set variables.
   global $InstLoc, $ApplicationLoc, $DirSep, $EnableMemoryProtection;
@@ -1944,20 +1830,14 @@ function generateEnvironmentTimer() {
 
 // / -----------------------------------------------------------------------------------
 // / A function to install the listener service unit.
-// / Accepts a boolean permitting the unit to be enabled & started.
+// / Accepts a boolean permitting the unit to be enabled & a boolean permitting a stopped listener to be started, in that order.
 // / Returns a success boolean & a status word, in that order.
 // / The status is 'installed', 'unchanged', 'skipped' or 'failed'.
-// / A unit that already matches what would be written is left completely alone, so this is
-// / safe to run on every update & will not restart a healthy listener for no reason.
-// / NOTHING IS INSTALLED WHEN RESOURCE AWARENESS IS DISABLED. A unit that starts a listener
-// / the configuration does not want is a process running for no reason.
-// / $startIfStopped decides whether a listener that is DOWN gets started.
-// / It is separate from $enableService because those are two different questions.
-// / Enabling writes the boot state. Starting it now overrides whatever state an
-// / administrator has the service in RIGHT NOW, & one who stopped it has a reason.
-// / Setup & -fp pass TRUE, because an installation with no listener running is not
-// / installed. The Environment Manager passes FALSE, so a stopped listener stays stopped &
-// / is reported rather than restarted underneath somebody who is looking at it.
+// / A unit that already matches what would be written is left alone, so this is safe on every update & never restarts a healthy listener.
+// / Nothing is installed when resource awareness is disabled, because a listener the configuration does not want runs for no reason.
+// / Enabling writes the boot state, while starting overrides the state an administrator has the service in now.
+// / Setup & -fp start a stopped listener, because an installation with no listener running is not installed.
+// / The Environment Manager does not, so a stopped listener is reported rather than restarted underneath somebody who is looking at it.
 function installListenerService($enableService, $startIfStopped = FALSE) {
   // / Set variables.
   global $EnableResourceAwareness, $RunningAsRoot, $Lol, $EnableMemoryProtection;
@@ -2112,8 +1992,6 @@ function installEnvironmentTimer($enableTimer) {
 // /   6  Permissions again. Stages four & five both write files.
 // /   7  Verification. Report what actually works rather than what was attempted.
 // / The total is one local, $stageTotal, & every line that states it reads that local.
-// / The second permissions pass was added without its summary line, which went on saying
-// / six while every stage heading said seven.
 // / A stage that fails stops the ones after it. Continuing past a failed dependency install
 // / produces an installation that looks finished & is not.
 // / WITH -y NOTHING PROMPTS. Stage four keeps whatever config.php already declares, which
@@ -2125,8 +2003,7 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
   $StagesCompleted = 0;
   $stageSucceeded = $permissionsWereFixed = $locationsAreReady = $serviceWasInstalled = FALSE;
   $dependenciesReady = FALSE;
-  // / A missing Dependency Core used to leave this function through an early return.
-  // / Every other function in this component has one exit & this one now does too.
+  // / A missing Dependency Core is recorded rather than returned from, so this function keeps one exit.
   $componentIsAvailable = TRUE;
   $stageCount = $pathsCorrected = $locationsCreated = $optionalProblems = 0;
   $stageTotal = 7;
@@ -2225,7 +2102,7 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
 // / A function to install or repair the dependencies HRConvert2 converts with.
 // / Accepts a confirmation boolean.
 // / Returns TRUE when every dependency was installed.
-// / NOT YET IMPLEMENTED. Declared now so the argument exists & refuses cleanly.
+// / It is not yet implemented, & is declared so the argument exists & refuses cleanly.
 function runDependencyInstall($operatorConfirmed) {
   // / Set variables.
   global $Lol, $EnableMemoryProtection;
@@ -2242,8 +2119,7 @@ function runDependencyInstall($operatorConfirmed) {
 // / A function to reinstall an existing installation in place.
 // / Accepts the target version & a confirmation boolean, in that order.
 // / Returns TRUE when the reinstallation completed.
-// / NOT YET IMPLEMENTED. updateApplication & its helpers are in this core from v4.0.3, & this
-// / still waits, because updateApplication refuses the version that is already installed.
+// / It is not yet implemented, because updateApplication refuses the version that is already installed.
 function runReinstallExisting($targetVersion, $operatorConfirmed) {
   // / Set variables.
   global $Lol, $EnableMemoryProtection;
@@ -2261,14 +2137,13 @@ function runReinstallExisting($targetVersion, $operatorConfirmed) {
 // / Accepts the path of the application's entry point in its installed folder.
 // / Returns the contents of the loader.
 // /
-// / THE APPLICATION LIVES OUTSIDE THE WEB ROOT & THIS IS THE ONLY CODE LEFT INSIDE IT. It carries
-// / the entry point's name, so every URL, form, bookmark & command an operator knows reaches the
-// / same file, & it does one thing, which is hand the request to the installed application. The
-// / path in it is written from the installation, never typed. Root refuses to go on when the
-// / entry point or its folder could have been changed by another account, because the entry point
-// / runs before anything in it can check the tree it is in. A missing application is refused with
-// / a plain message & exit status one. A browser is told only that the application is
-// / unavailable, because the path would tell a stranger where the data location is.
+// / The application lives outside the web root, & this is the only code left inside it.
+// / It carries the entry point's name, so every URL, form, bookmark & command an operator knows reaches the same file.
+// / It does one thing, which is hand the request to the installed application.
+// / The path in it is written from the installation, never typed.
+// / Root refuses to go on when the entry point or its folder could have been changed by another account, because the entry point runs before anything can check its tree.
+// / A missing application is refused with a plain message & exit status one.
+// / A browser is told only that the application is unavailable, because the path would tell a stranger where the data location is.
 function applicationLoaderContents($applicationEntry) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -2321,11 +2196,10 @@ function fileIsApplicationLoader($filePath) {
 // / A function to copy one entry of an application tree, & everything inside it.
 // / Accepts the source & the destination. Returns whether it was copied, how many files were
 // / copied & the reason it was not, in that order.
-// / THE DESTINATION IS INSIDE A FOLDER ONLY ROOT CAN ENTER, which installApplicationTree creates
-// / 0700 beside the installation, so nothing can be swapped in while this writes, & the source
-// / is a tree root already trusts. A link anywhere in it stops the copy, because an installation
-// / that leads somewhere else is not one tree. Folders are 0755 & files 0644, as the code role
-// / leaves them, because nothing in an installation is run except through its interpreter.
+// / The destination is inside a folder only root can enter, which installApplicationTree creates 0700 beside the installation, so nothing can be swapped in while this writes.
+// / The source is a tree root already trusts.
+// / A link anywhere in it stops the copy, because an installation that leads somewhere else is not one tree.
+// / Folders are 0755 & files 0644, as the code role leaves them, because nothing in an installation is run except through its interpreter.
 function copyApplicationEntry($sourcePath, $targetPath) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -2402,12 +2276,11 @@ function retireApplicationTree($applicationPath, $backupLoc) {
 // / Returns whether the installed tree was read whole & the paths the other tree lacks, each
 // / relative to the tree, in that order.
 // /
-// / A DROP-IN IS NOT A RELEASE. An update that carries only the files that changed is a tree
-// / that runs nothing on its own, & unpacked into the web root, where every release before
-// / v4.0.1 was unpacked, -fp would install it in place of the whole application. So every PHP
-// / file the installation holds in Resources & UI must be in the tree that replaces it.
-// / Documentation is not compared, because a release may drop a document. A release that drops
-// / code on purpose installs once the installation it replaces has been moved aside by hand.
+// / A drop-in is not a release.
+// / An update that carries only the files that changed runs nothing on its own, & unpacked where older releases went, -fp would install it in place of the whole application.
+// / So every PHP file the installation holds in Resources & UI must be in the tree that replaces it.
+// / Documentation is not compared, because a release may drop a document.
+// / A release that drops code on purpose installs once the installation it replaces has been moved aside by hand.
 // / The installed tree is root's & is walked with lstat, so no link is followed.
 function codeMissingFromTree($installedTree, $candidateTree) {
   // / Set variables.
@@ -2446,14 +2319,12 @@ function codeMissingFromTree($installedTree, $candidateTree) {
 // / Accepts the running tree, the application folder & the backup location, in that order.
 // / Returns whether it was installed & a sentence saying what happened, in that order.
 // /
-// / THE APPLICATION LIVES IN THE DATA LOCATION, OUTSIDE THE WEB ROOT, & IS ROOT'S. Only the
-// / entries the contract names in $EngineApplicationLayout are copied, so whatever else shares
-// / the folder a release was unpacked into is never taken along, & the DATA tree stays where the
-// / web server serves it. The copy is made in a folder only root can enter, beside the
-// / application folder, & renamed into place, so the application folder holds the whole old
-// / installation or the whole new one. The one it replaces is kept as the backup, as an update
-// / keeps one. The running tree must be one root trusts, & the folder the application lives in
-// / must be one only root can change, or nothing is copied at all.
+// / The application lives in the data location, outside the web root, & is root's.
+// / Only the entries the contract names in $EngineApplicationLayout are copied, so nothing else in the folder a release was unpacked into is taken along.
+// / The DATA tree stays where the web server serves it.
+// / The copy is made in a folder only root can enter, beside the application folder, & renamed into place, so the application folder holds the whole old installation or the whole new one.
+// / The one it replaces is kept as the backup, as an update keeps one.
+// / The running tree must be one root trusts, & the folder the application lives in must be one only root can change, or nothing is copied.
 function installApplicationTree($sourceTree, $applicationLoc, $backupLoc) {
   // / Set variables.
   global $EngineApplicationLayout, $RunningAsRoot, $EnableMemoryProtection;
@@ -2475,8 +2346,7 @@ function installApplicationTree($sourceTree, $applicationLoc, $backupLoc) {
     list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot($applicationParent);
     if ($parentIsTrusted && $resolvedParent !== $applicationParent) $trustNotice = $applicationParent.' leads to '.$resolvedParent.'.';
     list ($treeIsTrusted, $treeNotice) = treeIsTrustedByRoot($sourcePath, array($sourcePath.DIRECTORY_SEPARATOR.'DATA'));
-    // / A tree that lacks code the installation holds is not installed in its place, so a drop-in
-    // / unpacked where a release used to go cannot replace the whole application.
+    // / A tree that lacks code the installation holds is not installed in its place, so a drop-in cannot replace the whole application.
     if ($parentIsTrusted && $treeIsTrusted && is_dir($applicationPath) && !is_link($applicationPath)) {
       list ($installedWasRead, $missingCode) = codeMissingFromTree($applicationPath, $sourcePath);
       if (!$installedWasRead) warningEntry('Part of the installation at '.$applicationPath.' could not be read, so the tree at '.$sourcePath.' was compared with the rest of it.'); }
@@ -2587,11 +2457,10 @@ function filesAreIdentical($firstPath, $secondPath) {
 // / location, the files the hosted location keeps & a boolean permitting removal, in that order.
 // / Returns how many names were removed, & how many were left because they differ, in that order.
 // /
-// / A NAME IS REMOVED ONLY WHEN THE APPLICATION HOLDS THE SAME BYTES UNDER THE SAME NAME. What an
-// / administrator keeps there, & a release that was unpacked there & is not installed, is never
-// / removed, because neither has a copy anywhere else. A folder is entered only when root alone
-// / can change it, so nothing can be swapped in while this removes, & is removed only once it is
-// / empty. The hosted location's own files are kept.
+// / A name is removed only when the application holds the same bytes under the same name.
+// / What an administrator keeps there, & a release unpacked there & not installed, is never removed, because neither has a copy anywhere else.
+// / A folder is entered only when root alone can change it, & is removed only once it is empty.
+// / The hosted location's own files are kept.
 function removeHostedCopies($hostedPath, $applicationPath, $relativePath, $keptFiles, $mayRepair) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -2698,22 +2567,17 @@ function holdHostedFolder($folderPath, $mayRepair) {
 // / Returns the status word, a sentence explaining it, & how many names were written & removed,
 // / in that order.
 // /
-// / THE HOSTED LOCATION IS WHAT THE WEB SERVER SERVES, & IT HOLDS NOTHING BUT WHAT IT MUST. That
-// / is the loader in place of the entry point, the protection page, the static files a browser
-// / fetches, & DATA, which is the web server account's & is never entered here. Every file is
-// / written by root through the kernel, so each is root's & 0644, & every folder the files need
-// / is root's & 0755. IT IS CHANGED ONLY WHEN IT IS RECOGNIZABLY THIS APPLICATION'S. Its entry
-// / point must be the loader, or the installed application's own entry point, as it is straight
-// / after an install, or absent. Any other entry point is a release unpacked there & not
-// / installed yet, & it is reported & left exactly as it is, because running -fp from it is what
-// / installs it. Nothing is removed unless the application holds the same bytes under the same
-// / name, so whatever else an administrator keeps there stays. With repair forbidden it only
-// / reports, which is what the listener & -v ask for.
-// / WHAT A RELEASE LEFT IN IT OR BESIDE IT IS NAMED, & never removed. A release unpacked or cloned
-// / into the hosted location brings .git & .github. Until v4.0.1 the updater moved the previous
-// / installation aside beside it as .old, with every PHP file it held, & an update that failed
-// / left it there. The Apache configuration refuses all three, & a location otherwise in step is
-// / kept, which is benign, with them named.
+// / The hosted location is what the web server serves, & it holds nothing but what it must.
+// / That is the loader in place of the entry point, the protection page, the static files a browser fetches, & DATA, which is the web server account's & is never entered here.
+// / Every file is written by root through the kernel, so each is root's & 0644, & every folder the files need is root's & 0755.
+// / It is changed only when it is recognizably this application's.
+// / Its entry point must be the loader, the installed application's own entry point as it is straight after an install, or absent.
+// / Any other entry point is a release unpacked there & not installed yet, & it is reported & left as it is, because running -fp from it is what installs it.
+// / Nothing is removed unless the application holds the same bytes under the same name, so whatever else an administrator keeps there stays.
+// / With repair forbidden it only reports, which is what the listener & -v ask for.
+// / What a release left in it or beside it is named, & never removed.
+// / A release unpacked or cloned there brings .git & .github, & a failed update of an older release can leave .old beside it.
+// / The Apache configuration refuses all three, & a location otherwise in step is kept, which is benign, with them named.
 function publishHostedLocation($hostedLoc, $applicationLoc, $mayRepair) {
   // / Set variables.
   global $EngineApplicationLayout, $RunningAsRoot, $EnableMemoryProtection;
@@ -2826,13 +2690,10 @@ function publishHostedLocation($hostedLoc, $applicationLoc, $mayRepair) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / MOVED FROM THE APPLICATION AT v4.0.5. The Apache configuration that makes the hosted
-// / location run only the loader, every served location hand out inert downloads, & every data
-// / location refuse every request. Only root writes it, so it lives here beside the rest of
-// / the repair. The rules come from what the contract says each location IS, the same way the
-// / owners & modes do, & from the hosted location the contract maps, so the contract can name a
-// / served location & can never write a rule. Rules are written only for a served location inside
-// / the hosted location, & classifyServedLocations() says why.
+// / The Apache configuration that makes the hosted location run only the loader, every served location hand out inert downloads, & every data location refuse every request.
+// / Only root writes it, so it lives here beside the rest of the repair.
+// / The rules come from what the contract says each location is & from the hosted location it maps, so the contract can name a served location & can never write a rule.
+// / Rules are written only for a served location inside the hosted location, & classifyServedLocations() says why.
 // / The checks that prove the rules are in force are in Environment Core, which every request loads.
 // / -----------------------------------------------------------------------------------
 
@@ -2840,18 +2701,13 @@ function publishHostedLocation($hostedLoc, $applicationLoc, $mayRepair) {
 // / A function to build the rules that refuse every data location outright.
 // / Accepts nothing. Returns the rules & the data locations that could not be refused, in that order.
 // /
-// / THE DATA LOCATION IS NEVER SERVED. Its sessions, caches & logs belong to the web server
-// / account, which is the account that serves files, so a data location inside the document
-// / root hands them to anybody who guesses a name. One outside it is still granted wherever the
-// / host grants a folder above it, as Debian grants all of /var/www, & is one Alias or one wider
-// / document root away from being served. So each one is refused outright, as it is written &
-// / as it resolves, & no .htaccess inside it is read.
-// / A data location that holds the hosted location is not refused, because refusing it would
-// / refuse the application as well. It is returned, so the caller can say so. Every other one is
-// / refused, because a data location is never served. A served location below one keeps the grant
-// / its own deeper block gives it, & one that is a data location is refused with it, which the data
-// / location's own MISPLACED line explains. The installation itself is inside the data location
-// / since v4.0.1, & is refused with it, because nothing in it is ever meant to be fetched.
+// / A data location is never served.
+// / Its sessions, caches & logs belong to the web server account, which is the account that serves files, so one inside the document root hands them to anybody who guesses a name.
+// / One outside it is still granted wherever the host grants a folder above it, as Debian grants all of /var/www, & is one Alias or one wider document root away from being served.
+// / So each one is refused outright, as it is written & as it resolves, & no .htaccess inside it is read.
+// / A data location that holds the hosted location is not refused, because that would refuse the application, & it is returned so the caller can say so.
+// / A served location below one keeps the grant its own deeper block gives it, & one that is a data location is refused with it, as the data location's MISPLACED line explains.
+// / The installation is inside the data location & is refused with it, because nothing in it is ever meant to be fetched.
 function apacheDataLocationRules() {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -2877,13 +2733,10 @@ function apacheDataLocationRules() {
 // / A function to say whether the web server is running.
 // / Accepts the Apache control program. Returns running, stopped or unknown.
 // /
-// / apachectl -k graceful STARTS A SERVER THAT IS NOT RUNNING. Measured; it says httpd not
-// / running, trying to start, & starts it. Until v4.0.1 -fp reported that as a reload, & an
-// / unattended Environment Manager pass permitted to rewrite configuration would have started
-// / a web server somebody had stopped, after saying it starts nothing. So a reload is asked for
-// / only while the server is running, & a stopped one reads the configuration when it starts.
-// / The server names its own pid file in its run configuration. The process that file names
-// / must still be a web server, because a pid file outlives a crash & its number is used again.
+// / apachectl -k graceful starts a server that is not running.
+// / So a reload is asked for only while the server is running, & a stopped one reads the configuration when it starts.
+// / The server names its own pid file in its run configuration.
+// / The process that file names must still be a web server, because a pid file outlives a crash & its number is used again.
 function apacheIsRunning($controlBinary) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -2921,35 +2774,24 @@ function apacheIsRunning($controlBinary) {
 // / Accepts a boolean permitting repair.
 // / Returns a validity boolean & the number of locations written, in that order.
 // /
-// / THIS IS WHERE THE SERVED LOCATION RULES BELONG. THE .htaccess IS THE FALLBACK, NOT THE
-// / ANSWER. A .htaccess is read only where AllowOverride permits it, & Debian, Ubuntu & the
-// / standard php:*-apache container all ship AllowOverride None for /var/www. It is also
-// / constrained; a directive the override level does not allow is not ignored, it is a hard 500
-// / for the whole tree. Server configuration has neither problem. Nothing is silently dropped &
-// / nothing is refused, so the full rule set can live here & be relied upon.
+// / The served location rules belong here, & the .htaccess is the fallback.
+// / A .htaccess is read only where AllowOverride permits it, & Debian, Ubuntu & the php apache container ship AllowOverride None for /var/www.
+// / A directive the override level does not allow makes the whole tree return 500, while server configuration drops & refuses nothing.
 // /
-// / Every path in this block is read from this installation, never typed.
-// / The same reasoning as generateListenerService(). An administrator who moves the
-// / installation moves this with it, & a block naming a directory that no longer exists
-// / protects nothing while looking like it does.
+// / Every path in this block is read from this installation, never typed, for the reason generateListenerService() gives.
+// / A block naming a folder that no longer exists protects nothing while looking like it does.
 // /
-// / The data locations are refused in the same file. apacheDataLocationRules() says why.
+// / The data locations are refused in the same file, & apacheDataLocationRules() says why.
 // /
-// / The configuration is tested before it is allowed to take effect.
-// / This application has already shipped one protection file that returned 500 for an entire
-// / directory tree, so writing web server configuration & walking away is not something it
-// / gets to do twice. The file is written, apachectl configtest is run, & a configuration
-// / that does not pass is WITHDRAWN before anything reloads. What was there before is put back
-// / exactly, & the test is run again to prove it. Until v4.0.1 a file this replaced was deleted
-// / rather than put back, & a link an administrator had made was removed with it.
+// / The configuration is tested before it takes effect.
+// / apachectl configtest runs on the written file, & a configuration that does not pass is withdrawn before anything reloads.
+// / What was there before is put back exactly, & the test runs again to prove it.
 // /
 // / Root reads & writes this file through the kernel, as it does every other file it writes.
-// / The write is atomic, so the web server never starts against half a file, & nothing is
-// / written through a link at the name. A name the kernel cannot read as a plain file is left
-// / as it is & reported, because a file that was never examined cannot be put back.
-// / Only a running server is reloaded. apacheIsRunning() says why.
-// / It moved from the application at v4.0.5. The file, the loader it lets run & the words it
-// / prints are named for the application, so HRConvert2's are exactly what they were.
+// / The write is atomic, so the web server never starts against half a file, & nothing is written through a link at the name.
+// / A name the kernel cannot read as a plain file is left as it is & reported, because a file never examined cannot be put back.
+// / Only a running server is reloaded, & apacheIsRunning() says why.
+// / The file, the loader it lets run & the words it prints are named for the application.
 function verifyApacheConfiguration($mayRepair) {
   // / Set variables.
   global $RunningAsRoot, $Lol, $Verbose, $EnableMemoryProtection, $DirSep;
@@ -3219,11 +3061,8 @@ function verifyApacheConfiguration($mayRepair) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to download an update package to a temporary location.
-// / curl is used rather than wget because GitHub redirects a tarball request twice, first
-// / to codeload.github.com & then to object storage. curl -L follows the chain. A wget
-// / based updater was attempted previously & was defeated by exactly this.
-// / The download is bounded by size & by time so a hostile or broken source cannot fill
-// / the disk or hold the process open indefinitely.
+// / curl is used rather than wget, because GitHub redirects a tarball request twice & curl -L follows the chain.
+// / The download is bounded by size & by time, so a hostile or broken source cannot fill the disk or hold the process open.
 function downloadUpdatePackage($targetURL, $downloadPath) {
   // / Set variables.
   global $Verbose, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $EnableMemoryProtection;
@@ -3263,12 +3102,9 @@ function downloadUpdatePackage($targetURL, $downloadPath) {
 // / A setting whose name was corrected is treated as a removal & an addition. No attempt
 // / is made to guess that two differently spelled names mean the same thing.
 // /
-// / ARRAYS ARE NOT MERGED. The new default is kept & the difference is reported.
-// / A scalar can be substituted into the new file safely. An array cannot be rewritten
-// / without reformatting it, which would destroy the alignment & comments in the new file,
-// / & a partial merge of a two hundred element format list is worse than either version.
-// / The administrator is told which arrays differed so an intentional change can be
-// / reapplied by hand.
+// / Arrays are not merged, so the new default is kept & the difference is reported.
+// / An array cannot be rewritten without reformatting it, which would destroy the alignment & comments in the new file.
+// / The administrator is told which arrays differed, so an intentional change can be reapplied by hand.
 function mergeConfigFile($oldConfigPath, $newConfigPath) {
   // / Set variables.
   global $Verbose, $EnableMemoryProtection;
@@ -3318,22 +3154,17 @@ function mergeConfigFile($oldConfigPath, $newConfigPath) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to update the application in place.
-// / Called by the -u & --update command line arguments. NEVER reachable from the web.
-// / Replacing application code requires write access to the installation directory, which
-// / is the correct authorization for this operation & is what shell access already implies.
+// / Called by the -u & --update command line arguments, & never reachable from the web.
+// / Replacing application code needs write access to the installation, which shell access already implies.
 // / An HTTP endpoint protected by a secret would turn that into one guessable string.
 // /
-// / The sequence is stage, swap, validate, rollback on failure.
+// / The sequence is stage, swap, validate, & roll back on failure.
 // / Nothing touches the live installation until a complete & correct replacement exists.
-// / The previous installation is retained until the NEXT update runs, so an administrator
-// / who discovers a problem an hour later still has something to restore by hand.
+// / The previous installation is kept until the next update runs, so an administrator who finds a problem later still has something to restore by hand.
 // /
-// / NOTHING THE UPDATE TOUCHES IS EVER THE WEB SERVER ACCOUNT'S. Until v4.0.1 the release was
-// / downloaded & unpacked inside a session folder that account owns, & the staged copy was
-// / handed to it with chown -R before root ran it to validate it, so the web server account
-// / could edit code root was about to run. The work now happens beside the installation, in a
-// / folder only root can change, & the update refuses to start when that folder is not one.
-// / The staged copy is root's & is 0700 until it is in place, so nothing serves it early.
+// / Nothing the update touches is ever the web server account's.
+// / The work happens beside the installation, in a folder only root can change, & the update refuses to start when that folder is not one.
+// / The staged copy is root's & 0700 until it is in place, so nothing serves it early.
 // / The archive's own owners are ignored, so a release cannot hand a file to another account.
 function updateApplication($requestedVersion) {
   // / Set variables.
@@ -3364,9 +3195,7 @@ function updateApplication($requestedVersion) {
       print($Lol.'Version '.$targetVersion.' is already installed. Nothing to do.'.$Lol.$Lol);
       logEntry('Update requested but '.$targetVersion.' is already installed.');
       // / The requested version is installed when this returns, which is what success means.
-      // / It returned FALSE here until v3.9.9, which read as a failure to anything checking.
-      // / NOTHING WAS INSTALLED, SO NOTHING BELOW MAY RUN. Every step after this one is gated
-      // / on success & assumes a new release arrived, so each is gated on this as well.
+      // / Nothing was installed, so every step below, which assumes a new release arrived, is gated on this as well.
       // / Without it a no-op would repair permissions, report an update & name a backup.
       $UpdateSucceeded = $alreadyInstalled = TRUE; } }
   // / The folder the swap happens in must be one only root can change, or the web server
@@ -3426,15 +3255,11 @@ function updateApplication($requestedVersion) {
     else {
       // / Nothing serves the staged copy before it is in place.
       @chmod($stagedDir, 0700);
-      // / DATA holds live user sessions & is moved rather than copied. It stays the web server
-      // / account's. Everything else in the new release is root's, & its own -fp sets its modes.
-      // / THE RELEASE SHIPS A DATA FOLDER OF ITS OWN, holding only its placeholder page, & a
-      // / folder cannot be renamed over one that is not empty. Until v4.0.1 that rename failed
-      // / in silence, the live DATA left with the old installation, & was deleted with it, so a
-      // / successful update deleted every session. The release's own copy is removed first, &
-      // / an update whose DATA cannot be moved stops here rather than going on without it.
-      // / An installation in Application holds no DATA, because DATA stays in the hosted location,
-      // / so from v4.0.1 on there is nothing to move & only the release's own copy is removed.
+      // / DATA holds live user sessions & is moved rather than copied, & it stays the web server account's.
+      // / Everything else in the new release is root's, & its own -fp sets its modes.
+      // / The release ships a DATA folder of its own holding only its placeholder page, & a folder cannot be renamed over one that is not empty.
+      // / So the release's own copy is removed first, & an update whose DATA cannot be moved stops here rather than going on without it.
+      // / An installation in Application holds no DATA, because DATA stays in the hosted location, so there only the release's own copy is removed.
       if (is_dir($stagedDir.$DirSep.'DATA')) exec('rm -rf '.escapeshellarg($stagedDir.$DirSep.'DATA').' 2>&1');
       if (is_dir($InstLoc.$DirSep.'DATA') && !@rename($InstLoc.$DirSep.'DATA', $stagedDir.$DirSep.'DATA')) errorEntry('Could not move the DATA folder into the update, so the update was stopped & nothing was changed!', 29019, FALSE);
       else print('Swapping installation ...'.$Lol);
@@ -3478,19 +3303,16 @@ function updateApplication($requestedVersion) {
         errorEntry('The updated installation failed validation & was rolled back!', 29017, FALSE); }
       else errorEntry('The updated installation failed validation & COULD NOT be rolled back!', 29018, TRUE); }
     else $UpdateSucceeded = TRUE; }
-  // / Preserve the previous installation outside the web root, then remove it from inside it.
-  // / .old sits in $ProprietaryLoc because rename() is only atomic within one filesystem,
-  // / & $ProprietaryLoc is served by Apache. A stale convertCore.php left there would be
-  // / a second, older copy of the application answering requests over HTTP.
-  // / The backup location is inside the non hosted data location & is never served.
-  // / DATA is excluded. It holds live user sessions, it has already been moved into the
-  // / new installation, & a copy of it would be swept on the delete threshold anyway.
+  // / Preserve the previous installation in the backup location, then remove it from beside the installation.
+  // / .old sits beside the installation, because rename() is only atomic within one filesystem.
+  // / Beside an installation in Application that is the data location, which is never served.
+  // / Beside one still in the hosted location it is a folder Apache serves, where a stale convertCore.php would answer requests over HTTP.
+  // / The backup location is inside the data location & is never served.
+  // / DATA is excluded, because it holds live user sessions & a copy of it would be swept on the delete threshold anyway.
   if ($UpdateSucceeded && !$alreadyInstalled && is_dir($oldDir)) {
-    // / ROOT KEEPS A BACKUP ONLY WHERE NOTHING ELSE CAN REPLACE IT. Emptying, copying into &
-    // / pruning the backup all work by name, so every folder above it must be root's & the
-    // / backup itself must not be a link. It sits in the data location by default, which the
-    // / web server account owns, so by default it is skipped & a WARNING says so. Until v4.0.1
-    // / it was written there regardless. A later release gives it a folder of its own.
+    // / Root keeps a backup only where nothing else can replace it.
+    // / Emptying, copying into & pruning the backup all work by name, so every folder above it must be root's & the backup itself must not be a link.
+    // / A backup whose folder is not held is skipped, & a warning says so.
     list ($backupIsHeld, $resolvedBackupParent, $backupNotice) = pathIsTrustedByRoot(dirname((string)$BackupLoc));
     if ($backupIsHeld && $resolvedBackupParent !== dirname((string)$BackupLoc)) $backupIsHeld = FALSE;
     clearstatcache(TRUE, (string)$BackupLoc);
@@ -3507,28 +3329,20 @@ function updateApplication($requestedVersion) {
       exec('cp -a '.escapeshellarg($oldDir).' '.escapeshellarg($BackupLoc).' 2>&1', $backupOutput, $backupExitCode);
       if ($backupExitCode === 0 && is_dir($BackupLoc)) {
         if (is_dir($BackupLoc.$DirSep.'DATA')) exec('rm -rf '.escapeshellarg($BackupLoc.$DirSep.'DATA').' 2>&1');
-        // / The backup is root's alone. -fp below gives it its role, root-only, & until v4.0.1
-        // / it was handed to the web server account, so a restore could reinstall its edits.
+        // / The backup is root's alone, & -fp below gives it its root-only role.
         logEntry('Previous installation preserved at '.$BackupLoc.'.'); }
       else warningEntry('Could not preserve the previous installation at '.$BackupLoc.'. It will be discarded.'); }
-    // / The previous installation must not remain inside the web root under any outcome.
+    // / The previous installation is not left beside the installation under any outcome.
     exec('rm -rf '.escapeshellarg($oldDir).' 2>&1'); }
-  // / Correct everything the new files arrived with. An update ships a fresh tree owned by
-  // / whoever unpacked it, & a release that changes a policy, a service unit or a required
-  // / version leaves the installed copies behind. Running the repair here is the difference
-  // / between an update that works & one that needs an operator to know to run -fp next.
-  // / THE NEW RELEASE REPAIRS ITSELF, as its own process. This process is the old release, &
-  // / its exact pins refuse the new release's Setup Core, so until v4.0.1 the repair here was
-  // / the old one, could not load Setup Core, & corrected nothing. The new release knows its
-  // / own locations & roles, which is also the only way a release can change them.
+  // / Everything the new files arrived with is corrected here.
+  // / An update ships a fresh tree owned by whoever unpacked it, & a release that changes a policy, a service unit or a required version leaves the installed copies behind.
+  // / The new release repairs itself, as its own process, because this process is the old release & its exact pins refuse the new Setup Core.
+  // / The new release knows its own locations & roles, which is also the only way a release can change them.
   if ($UpdateSucceeded && !$alreadyInstalled) {
     print($Lol.'Correcting permissions, policies & the service unit for the new release.'.$Lol);
-    // / AN UPDATE IS ONE OF THE TWO TIMES THIS APPLICATION'S OWN COPY OF BUBBLEWRAP CHANGES, so it is
-    // / brought up to date before the new release's -fp, which installs only the profile it carries.
-    // / This process is the old release, so an update from a release older than v4.0.5, which has
-    // / no copy to bring up to date, leaves it to --setup --update-depends once the update is done.
-    // / The answer is not acted on. installSandboxBinary() prints the copy's line & warns where it
-    // / is not ready, & the -fp that follows reports what that leaves.
+    // / An update is one of the two times this application's own copy of bubblewrap changes, so it is brought up to date before the new release's -fp.
+    // / That -fp installs only the profile it carries.
+    // / The answer is not acted on, because installSandboxBinary() prints the copy's line & warns where it is not ready, & the -fp that follows reports what that leaves.
     if (function_exists('installSandboxBinary')) list ($binaryIsReady, $binaryStatus, $binaryDetail) = installSandboxBinary(12);
     passthru('php '.escapeshellarg($InstLoc.$DirSep.engineApplicationEntryPoint()).' -fp', $updateRepairExitCode);
     $updatePermissionsFixed = ($updateRepairExitCode === 0);
@@ -3559,11 +3373,8 @@ function updateApplication($requestedVersion) {
 // / documentation are gone, in that order. Gone means gone, whoever removed them.
 // / These paths live under the application directory, not part of the regular cleanup routine.
 // /
-// / UNTIL v4.0.1 EVERY WEB REQUEST RAN THIS AS THE WEB SERVER ACCOUNT. That only worked while
-// / the account could write to the installation, & it no longer can, because the code is
-// / root's. Root removes by name here, so every name goes through removeFileWithoutFollowing()
-// / & the Build folder is not entered until root trusts it. Before -fp first gives the code to
-// / root, the web server account can put a link to /etc where the Build folder belongs.
+// / Root removes by name here, so every name goes through removeFileWithoutFollowing(), & the Build folder is not entered until root trusts it.
+// / Before -fp first gives the code to root, the web server account can put a link to /etc where the Build folder belongs.
 function cleanBuildEnvironment() {
   // / Set variables.
   global $Verbose, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $DirSep, $EnableMemoryProtection, $RunningAsRoot;
@@ -3572,18 +3383,13 @@ function cleanBuildEnvironment() {
   $removalTargets = array();
   $buildDirContents = FALSE;
   $buildDirEntry = $removalTarget = $removalNotice = $resolvedBuildDir = $trustNotice = '';
-  // / The installation this file belongs to, three folders above it, as correctManagedLocations()
-  // / finds it. PHP resolves every link in __DIR__, so none of the names below is reached through
-  // / one. This read dirname(__FILE__) from v4.0.3, when it moved here from convertCore.php, which
-  // / is this file's own folder in the Engine. Nothing was ever found there, so nothing was ever
-  // / removed, & each was reported NOT PRESENT.
+  // / The installation this file belongs to is three folders above it, as correctManagedLocations() finds it.
+  // / PHP resolves every link in __DIR__, so none of the names below is reached through one.
   $installDir = dirname(__DIR__, 3);
   $dockerFile = $installDir.$DirSep.'Documentation'.$DirSep.'Build'.$DirSep.'Dockerfile';
   $changelogFile = $installDir.$DirSep.'Documentation'.$DirSep.'CHANGELOG.txt';
   $readmeFile = $installDir.$DirSep.'README.md';
-  // / The Build folder in the installation directory, as config.php describes it. This read
-  // / dirname(__DIR__) until v4.0.0, which is the folder ABOVE the installation, so it never
-  // / found its own Build folder & would have emptied a Build folder belonging to a neighbour.
+  // / The Build folder in the installation directory, as config.php describes it.
   $buildDir = $installDir.$DirSep.'Build';
   clearstatcache();
   $buildDirStatus = @lstat($buildDir);
@@ -3636,11 +3442,10 @@ function cleanBuildEnvironment() {
 // / -----------------------------------------------------------------------------------
 // / A function to write the Environment Manager's units again, wherever they are installed.
 // / Accepts nothing. Returns 'not installed', 'unchanged', 'updated' or 'failed'.
-// / --setup --install-complete installs them, & may run from a copy it then installs, so until
-// / v4.0.5 they named that copy for as long as they were installed. -fp calls this, so the installed
-// / copy's own -fp writes them for the installed copy, as it writes the listener's. Units that are
-// / not installed are not installed here, & nothing is enabled, started or said to be disabled,
-// / because whether the timer runs is the administrator's & is left exactly as it was.
+// / --setup --install-complete installs them, & may run from a copy it then installs.
+// / -fp calls this, so the installed copy's own -fp writes them for the installed copy, as it writes the listener's.
+// / Units that are not installed are not installed here.
+// / Nothing is enabled, started or said to be disabled, because whether the timer runs is the administrator's & is left as it was.
 function refreshEnvironmentTimer() {
   // / Set variables.
   global $RunningAsRoot, $Lol, $EnableMemoryProtection;
@@ -3677,20 +3482,15 @@ function refreshEnvironmentTimer() {
 // / A function to install the tree a root command ran from, & hand the rest to the installed copy.
 // / Accepts the exit status the command earned. Returns the exit status to leave with.
 // /
-// / -fp & --setup --install-complete install the application when they run from a tree that is
-// / not the one in Application in the data location, which is how every release before v4.0.1
-// / runs & how a release unpacked anywhere runs. It happens as the command ENDS & never part way
-// / through, because the hosted location the command may have started from is about to hold only
-// / the loader, & nothing may still be running from it when it does. By then the command has
-// / given the tree to root & made the data location root's, which installing needs.
-// / The installed copy then runs -fp, which serves it from the hosted location & does every other
-// / repair again from the installed tree, & its exit status is the one this leaves with. A tree
-// / that cannot be installed leaves with status one, because what -fp is for is not done, & the
-// / application goes on running from where it is.
-// / A LISTENER RUNNING AS THE TREE IS INSTALLED STILL RUNS THE RELEASE IT STARTED WITH, & is said to.
-// / The installed copy's -fp says so only when it changes the unit, & the unit names the installed
-// / copy either way, so it is said here when the unit did not change. It is not restarted, for the
-// / reason installListenerService() gives.
+// / -fp & --setup --install-complete install the application when they run from a tree that is not the one in Application in the data location, as a release unpacked anywhere runs.
+// / It happens as the command ends & never part way through, because the hosted location may be about to hold only the loader, & nothing may still run from it.
+// / By then the command has given the tree to root & made the data location root's, which installing needs.
+// / The installed copy then runs -fp, which serves it from the hosted location & repeats every other repair from the installed tree.
+// / Its exit status is the one this leaves with.
+// / A tree that cannot be installed leaves with status one, because what -fp is for is not done, & the application goes on running from where it is.
+// / A listener running as the tree is installed still runs the release it started with, & is said to.
+// / The installed copy's -fp says so only when it changes the unit, & the unit names the installed copy either way, so it is said here when the unit did not change.
+// / It is not restarted, for the reason installListenerService() gives.
 function handOverToApplication($commandStatus) {
   // / Set variables.
   global $RunningAsRoot, $RunningFromCLI, $InstLoc, $ApplicationLoc, $BackupLoc, $Lol, $EnableMemoryProtection;
@@ -3717,12 +3517,9 @@ function handOverToApplication($commandStatus) {
       if ($listenerUnitBefore !== '' && systemdIsUsable()[0]) {
         exec('systemctl is-active --quiet '.escapeshellarg(engineApplicationSlug().'-listener').' 2>&1', $commandOutput, $commandExitCode);
         $listenerWasRunning = ($commandExitCode === 0); }
-      // / INSTALLING THIS TREE IS AN APPLICATION UPDATE, which is one of the two times this
-      // / application's own copy of bubblewrap changes, & a dependency update is the other. So the
-      // / copy is brought up to date here, by this release, before the installed copy's -fp, which
-      // / installs only the profile it carries. The answer is not acted on. installSandboxBinary()
-      // / prints the copy's line & warns where it is not ready, & the installed copy's -fp reports
-      // / what that leaves, so the install goes on without it.
+      // / Installing this tree is an application update, one of the two times this application's own copy of bubblewrap changes, with a dependency update the other.
+      // / So the copy is brought up to date here, by this release, before the installed copy's -fp, which installs only the profile it carries.
+      // / The answer is not acted on, because installSandboxBinary() prints the copy's line & warns where it is not ready, & the installed copy's -fp reports what that leaves.
       if (function_exists('installSandboxBinary')) list ($binaryIsReady, $binaryStatus, $binaryDetail) = installSandboxBinary(12);
       print('  '.str_pad('Running', 12).$ApplicationLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint().' -fp'.$Lol);
       passthru(escapeshellarg($phpBinary).' '.escapeshellarg($ApplicationLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint()).' -fp', $childStatus);

@@ -12,13 +12,11 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.5.
+// / v4.0.8.
 // / This file declares what the Scad conversion pipeline is & what it can do.
-// / It is read by pipelineCore.php on EVERY request & it must stay cheap.
-// / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
-// / Error block 27000 through 27008 belongs to this pipeline.
-// / Those numbers came with the code when it moved out of convertCore.php.
-// / They did not change, because operators have already read them.
+// / It is read by pipelineCore.php on every request & it must stay cheap.
+// / It assigns variables & does nothing else, with no functions, no logic & no output.
+// / Error block 27000 through 27009 belongs to this pipeline.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for what each declaration means.
 // /
 // / <3 Open-Source
@@ -32,10 +30,10 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 
 // / -----------------------------------------------------------------------------------
-// / The version of this pipeline folder. Read WITHOUT executing this file, then matched
-// / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
+// / The version of this pipeline folder. Read without executing this file, then matched
+// / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.0.5';
+$PipelineVersion = 'v4.0.8';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -55,16 +53,15 @@ $PipelineDisplayName = 'OpenSCAD';
 // / a document to reflow.
 $PipelinePriority = 150;
 
-// / The function dispatch calls. THIS NAME MUST BE UNIQUE ACROSS EVERY INSTALLED PIPELINE.
-// / It lives in pipeline.php beside this file & no longer exists in convertCore.php.
+// / The function dispatch calls, whose name must be unique across every installed pipeline.
+// / It is defined in pipeline.php beside this file.
 $PipelineEntryPoint = 'convertSCAD';
 
 // / The depends.php subsystem this pipeline needs. Dependency Core owns installation.
 // / This string must match a Subsystem name in depends.php exactly.
 // / Naming the subsystem rather than the package keeps one source of truth for the version.
-// / OpenSCAD EXECUTES ITS INPUT. That is what the source is for & it is why this pipeline
-// / carries a sanitizer no other pipeline needs. rectifySCAD() & sanitizeAllSCADUploads()
-// / moved here with the converter, because convertCore.php had no other caller for either.
+// / OpenSCAD executes its input, because that is what the source is for.
+// / That is why this pipeline carries a sanitizer no other pipeline needs.
 $PipelineSubsystem = 'SCAD';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.
@@ -76,7 +73,7 @@ $PipelineSharedModules = array();
 $PipelineRequestFields = array('Extension');
 
 // / What this pipeline can read & what it can write.
-// / THESE LISTS ARE INFORMATIONAL WHILE $SupportedFormatDetectionType IS hardcoded-only.
+// / These lists are informational while $SupportedFormatDetectionType is hardcoded-only.
 // / config.php is authoritative in that mode, so an omission here cannot delete a
 // / conversion. They become authoritative in the detected modes.
 // / scad is the only input. Everything here is a render target rather than a conversion

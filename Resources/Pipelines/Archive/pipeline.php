@@ -12,21 +12,14 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
-// / This file is the converter for the Archive pipeline. It is loaded by pipelineCore.php
-// / ONLY when an Archive conversion is about to be dispatched to it, so a request that
-// / converts something else never parses a line of it.
-// / Error blocks 13000 through 13014 & 13105 through 13107 belong to this pipeline, except
-// / 13012, which archiveFiles() raises. Those numbers came with the code when it
-// / moved out of convertCore.php & they did not change, because operators have read them.
-// / verifyIsoBootloaders() & generateBootableIsoCommand() MOVED HERE WITH THE CONVERTER,
-// / because convertCore.php had no other caller for either of them.
-// / Its tools are asked of the manifest through verifiedToolPath(), which is the same answer
-// / archiveFiles() & showVersionInfo() get, so the core & this pipeline cannot disagree.
-// / This is the only pipeline that rewrites its own output name.
-// / An extraction hands the user something named differently from what they asked for, which
-// / is what the fifth value of the six value contract exists for. Every other pipeline
-// / returns the filename it was given.
+// / v4.0.8.
+// / The Archive pipeline's converter. pipelineCore.php loads it only to dispatch an Archive conversion.
+// / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13107 belongs to this pipeline.
+// / archiveFiles() in the core raises 13012.
+// / verifyIsoBootloaders() & generateBootableIsoCommand() live here, because only this converter calls them.
+// / Its tools come from verifiedToolPath(), as the core's archiveFiles() & showVersionInfo() do.
+// / This is the only pipeline that renames its own output.
+// / An extraction is named differently from what was asked for, which the fifth value of the contract carries.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -43,24 +36,13 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / A function to cryptographically validate the integrity of the bundled boot assets.
 // / Accepts the requested bootable extension & the staging folder the image is built from.
 // / Returns TRUE when every asset this image needs is present & matches its pinned hash.
-// / Returns TRUE without checking anything when the user supplied their own boot files,
-// / because a user supplied bootloader is the users own business & is not ours to pin.
-// / Returns FALSE when a bundled asset is missing, corrupt, or when the requested extension
-// / is not one this function knows how to validate.
-// /
-// / Every bootable format is validated, including the legacy MBR image.
-// / An earlier version skipped iso_mbr-boot entirely & returned TRUE for it without looking
-// / at anything. Isolinux.bin is a bootloader copied into a user facing image, so it is
-// / exactly as worth pinning as the UEFI images are & is now checked the same way.
-// /
-// / A hybrid image needs two assets rather than one.
-// / It carries both an isolinux record & an EFI record, so isolinux.bin & the blank EFI
-// / image are BOTH validated & both must pass. Every other format needs exactly one.
-// / ldlinux.c32 is deliberately NOT pinned. It is optional, its absence is handled by the
-// / builder, & a missing optional file must not fail a validation that would otherwise pass.
-// /
-// / A hash of all zeroes in the map means the asset has not been pinned yet & the image
-// / cannot be built. That is deliberate. An unpinned bootloader is worse than no bootloader.
+// / Returns TRUE without checking when the user supplied their own boot files, which are not ours to pin.
+// / Returns FALSE when a bundled asset is missing or corrupt, or the extension is not one this validates.
+// / Every bootable format is validated, the legacy MBR image included.
+// / A hybrid image carries an isolinux record & an EFI record, so both assets must pass.
+// / ldlinux.c32 is not pinned, because it is optional & the builder handles its absence.
+// / A hash of all zeroes means the asset is not pinned yet, & the image is refused.
+// / An unpinned bootloader is worse than none.
 function verifyIsoBootloaders($extension, $safedir2) {
   // / Set variables.
   global $DirSep, $BootloadersDir, $EnableMemoryProtection;
@@ -115,23 +97,14 @@ function verifyIsoBootloaders($extension, $safedir2) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to generate a bootable ISO image configuration command.
-// / Accepts the requested bootable extension, the intended output path, the staging folder
-// / & the two binaries the operation may need.
-// / Returns the mkisofs command, the normalized extension, the corrected output path & a
-// / SEPARATE isohybrid command which is an empty string for every image that does not need one.
+// / Accepts the bootable extension, the output path, the staging folder & the two binaries it may need.
+// / Returns the mkisofs command, the normalized extension, the corrected output path & an isohybrid command.
+// / The isohybrid command is empty for every image that does not need one.
 // / Returns FALSE as the first value when no usable boot configuration could be assembled.
-// /
-// / The two commands are returned separately & must not be joined with &&.
-// / shell_exec() runs its argument through a shell, but bwrap execs a single command & does
-// / not. A compound statement handed to the sandbox therefore has its && parsed by the
-// / OUTER shell, which would run isohybrid outside the namespace against a path that only
-// / exists inside it. Each command is sandboxed on its own by the caller.
-// /
-// / The required boot files are injected into the staging folder in place, so the image is
-// / built from a directory that already contains everything it needs.
-// / A user who supplied their own boot files keeps them. Nothing bundled overwrites them.
-// / The intent suffix is stripped from the returned path, so everything downstream sees an
-// / ordinary iso rather than an architecture flag it does not understand.
+// / The two commands must not be joined with &&, because bwrap execs one command without a shell.
+// / The outer shell would run isohybrid outside the namespace, so the caller sandboxes each command alone.
+// / The required boot files are injected into the staging folder, & boot files the user supplied are kept.
+// / The intent suffix is stripped from the returned path, so everything downstream sees an ordinary iso.
 function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisofsBinary, $isoHybridBinary) {
   // / Set variables.
   global $DirSep, $BootloadersDir, $EnableMemoryProtection;
@@ -160,8 +133,7 @@ function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisof
           if (file_exists($bundledC32)) @copy($bundledC32, $targetIsoLinuxDir.$DirSep.'ldlinux.c32');
           $bootFlags = '-b '.escapeshellarg('isolinux/isolinux.bin').' -c '.escapeshellarg('isolinux/boot.cat').' -no-emul-boot -boot-load-size 4 -boot-info-table'; } } }
     // / Handle the Universal Multi-Boot Hybrid ISO implementation.
-    // / The bundled assets live in the isolinux subdirectory, exactly as the MBR branch
-    // / expects them. An earlier version read them from the top of $BootloadersDir.
+    // / The bundled assets live in the isolinux subdirectory, as the MBR branch expects them.
     else if ($extension === 'iso_gpt-boot') {
       $targetIsoLinuxDir = $safedir2.$DirSep.'isolinux';
       if (!is_dir($targetIsoLinuxDir)) @mkdir($targetIsoLinuxDir, 0755, TRUE);
@@ -200,12 +172,9 @@ function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisof
       $command = escapeshellarg($mkisofsBinary).' '.$baseFlags.' '.$bootFlags.' -o '.escapeshellarg($CleanNewPathname).' '.escapeshellarg($safedir2);
       $bootData = $command;
       // / Only the generic hybrid image is post processed.
-      // / It carries BOTH an isolinux record & an EFI record, & isohybrid writes the MBR
-      // / that points at the first of those. An architecture specific UEFI image has no
-      // / isolinux record to point at, so it is never passed through isohybrid.
-      // / This is tested BEFORE the extension is normalized below. An earlier version
-      // / tested it afterwards, by which point the extension was always iso & the isohybrid
-      // / step could never fire at all.
+      // / It carries both an isolinux record & an EFI record, & isohybrid writes the MBR that points at the first.
+      // / An architecture specific UEFI image has no isolinux record, so it never passes through isohybrid.
+      // / This is tested before the extension is normalized below, which leaves every extension as iso.
       if ($extension === 'iso_gpt-boot' && $isoHybridBinary !== FALSE) $HybridCommand = escapeshellarg($isoHybridBinary).' --uefi '.escapeshellarg($CleanNewPathname); } }
   // / Reset the extension to iso without the bootable architecture flag so the rest of the
   // / core will use the correct filename.
@@ -217,23 +186,14 @@ function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisof
 
 // / -----------------------------------------------------------------------------------
 // / A function to remove every link in an extracted archive that does not resolve inside it.
-// / Accepts the folder to walk & the approved root that a link must resolve inside.
+// / Accepts the folder to walk & the approved root a link must resolve inside.
 // / Returns whether the walk finished & how many links it removed.
-// / An archive member may be a link, & the extractor restores it exactly as it was written.
-// / A link that resolves to a file inside the extracted folder is ordinary archive content
-// / & is kept. Every other link is removed, which settles four problems with one rule.
-// / A link reaching outside is followed by the archiver, so an archive carrying a link to
-// / /etc/passwd would otherwise copy that file into the archive the user downloads.
-// / A link that resolves nowhere is neither a file nor a directory, so it would otherwise
-// / survive cleanup & leave behind a directory that cannot be removed.
-// / A link to a directory is removed even when it resolves inside, because every archiver
-// / used here follows one. A link to its own folder or to one above it makes a cycle that the
-// / archiver walks until the path is too long, & any link to a folder repeats that folder's
-// / files under a second name. Zip abandons the whole archive in both cases, & neither adds
-// / anything the output does not already hold.
-// / The walk tests for a link before descending, so it never follows one itself. realpath
-// / resolves a whole chain, so a link to a link to an outside target resolves outside & is
-// / removed, & a chain that cannot be resolved at all returns FALSE & is removed.
+// / A link to a file inside the folder is kept, & every other link is removed.
+// / An archiver follows a link reaching outside, so /etc/passwd would be copied into the output.
+// / A link resolving nowhere survives cleanup & leaves a directory that cannot be removed.
+// / Every archiver here follows a link to a directory, which can cycle or repeat files until Zip gives up.
+// / The walk tests for a link before descending, so it never follows one.
+// / realpath resolves a whole chain, & a chain it cannot resolve returns FALSE & is removed.
 function pruneEscapingLinks($stagingPath, $approvedRoot) {
   // / Set variables.
   global $DirSep, $EnableMemoryProtection;
@@ -274,17 +234,13 @@ function pruneEscapingLinks($stagingPath, $approvedRoot) {
 // / -----------------------------------------------------------------------------------
 // / A function to convert archive & disk image formats.
 // / The source is extracted into a staging folder & the staging folder is re-archived.
-// / 7-Zip is the only extractor, so every INPUT format depends on it & nothing works
-// / without it. Each OUTPUT format has its own creator & gates on that creator alone, so a
-// / missing mkisofs does not prevent a zip conversion.
-// / An extraction that produces nothing is refused rather than re-archived, because the
-// / archiver would package the empty staging folder & the result would exist, which is the
-// / only test the success path performs.
-// / A bootable ISO carries its target architecture in the requested extension, such as
-// / iso_gpt-boot-x86-64. generateBootableIsoCommand() normalizes that back to iso & returns
-// / a corrected output path, so both are reassigned from what it hands back.
-// / A generic hybrid image is built in TWO sandboxed steps rather than one. Mkisofs writes
-// / the image & isohybrid then rewrites its MBR in place.
+// / 7-Zip is the only extractor, so every input format depends on it.
+// / Each output format gates on its own creator alone, so a missing mkisofs does not stop a zip conversion.
+// / An extraction that produces nothing is refused, because an empty folder would re-archive & pass.
+// / A bootable ISO carries its architecture in the extension, such as iso_gpt-boot-x86-64.
+// / generateBootableIsoCommand() normalizes it to iso & corrects the output path.
+// / A generic hybrid image takes two sandboxed steps.
+// / Mkisofs writes the image & isohybrid then rewrites its MBR in place.
 function convertArchives($pathname, $newPathname, $extension) {
   // / Set variables.
   global $Verbose, $ConvertDir, $DirSep, $Lol, $Lolol, $StopCounter, $SleepTimer, $PermissionLevels, $AllowBootableIsoImage, $BootableIsoArray, $EnableMemoryProtection;
@@ -427,9 +383,8 @@ function convertArchives($pathname, $newPathname, $extension) {
             if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
             // / Count the number of attempts to avoid infinite loops.
             $stopper++; }
-          // / Every attempt was made & none left an archive. What the archiver printed is logged above
-          // / this, with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the archiver had timed out, which no
-          // / time limit ever caused, & then made one more attempt.
+          // / Every attempt was made & none left an archive.
+          // / What the archiver printed is logged above, with --Enhanced Logging Verbosity-- on.
           if (!file_exists($newPathname)) {
             $ConversionErrors = TRUE;
             errorEntry('The archiver produced no archive after '.$stopper.' attempt(s)!', $archiveError, FALSE); }
@@ -451,8 +406,8 @@ function convertArchives($pathname, $newPathname, $extension) {
               // / Log the output of the operation to the logfile, if it is not blank.
               if ($Verbose && trim($returnData) !== '') logEntry('Isohybrid returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } } } } }
   // / The output file is the only verdict on whether the conversion produced anything.
-  // / An archiver that ran & left nothing has said so above, under its format's own number, so
-  // / this names only a failure nothing has named yet. Until v4.0.6 both were raised.
+  // / An archiver that ran & left nothing has said so above, under its format's own number.
+  // / This names only a failure nothing has named yet.
   if (!file_exists($newPathname)) {
     $ConversionErrors = TRUE;
     if ($stopper === 0) errorEntry('The archiver failed to produce an archive!', 13000, FALSE); }

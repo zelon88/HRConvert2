@@ -12,20 +12,12 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
-// / This file is the converter for the Video pipeline. It is loaded by pipelineManager.php
-// / ONLY when a Video conversion is about to be dispatched to it, so a request that
-// / converts something else never parses a line of it.
+// / v4.0.8.
+// / The Video pipeline's converter. pipelineCore.php loads it only to dispatch a Video conversion.
 // / Error block 11000 through 11002 belongs to this pipeline.
-// / Those numbers came with the code when it moved out of convertCore.php.
-// / They did not change, because operators have already read them.
-// /
-// / This is one of four pipelines sharing the FFMPEG subsystem: Audio, Video, Subtitle &
-// / Stream. That is safe because all four ask the manifest for FFMPEG through
-// / verifiedToolPath(), so there is one minimum & one answer. A pipeline that carried its own
-// / version check would be the bug, because two checks eventually disagree about the minimum.
-// / This pipeline also calls sandboxCommand() & locateDependency(), which remain in
-// / convertCore.php.
+// / Audio, Video, Subtitle & Stream share the FFMPEG subsystem.
+// / Each asks verifiedToolPath(), so one minimum governs all four.
+// / No pipeline carries its own version check, because two checks eventually disagree.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -40,15 +32,11 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert video formats.
-// / The general minimum is enforced rather than the stream minimum, because a video
-// / conversion reads a local file & never fetches anything remote.
 function convertVideos($pathname, $newPathname, $extension) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
-  // / This converter produces neither of the last two itself, so it declares the defaults.
-  // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
-  // / detached process must be supervised after the connection to the user is closed.
+  // / The last two keep their defaults, & $WorkerPID stays 0 unless a detached process is supervised.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
@@ -62,21 +50,14 @@ function convertVideos($pathname, $newPathname, $extension) {
     $ConversionErrors = TRUE;
     errorEntry('The installed FFMPEG version is missing, unidentifiable, or too old!', 11001, FALSE); }
   else {
-    // / The codec follows the container rather than being the same one every time.
-    // / An earlier version asked for libx264 whatever the target was.
-    // / A WebM container holds VP8, VP9 or AV1 & rejects H.264 outright.
-    // / An Ogg container expects Theora & rejects it for the same reason.
-    // / Both formats are offered by this pipeline & neither could ever have worked.
-    // / An empty codec lets FFMPEG choose the default encoder for the container it is
-    // / writing, which is correct for every other format this pipeline offers.
+    // / The codec follows the container.
+    // / WebM takes VP9 & Opus, Ogg takes Theora & Vorbis, & neither takes H.264.
+    // / Every other format is written with libx264.
     $outputExtension = strtolower(trim((string)$extension, '.'));
     if ($outputExtension === 'webm') $videoCodec = ' -c:v libvpx-vp9 -c:a libopus';
     else if ($outputExtension === 'ogv') $videoCodec = ' -c:v libtheora -c:a libvorbis';
     else $videoCodec = ' -c:v libx264';
-    // / Standard error is captured, & for FFMPEG that is not a detail.
-    // / FFMPEG writes everything it has to say to standard error, including its failures.
-    // / Without this the return data was always empty, the log line that reports it never
-    // / fired, & a failed conversion produced a timeout & no explanation whatsoever.
+    // / Standard error is captured, because FFMPEG reports everything there, failures included.
     $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -i '.escapeshellarg($pathname).$videoCodec.' '.escapeshellarg($newPathname).' 2>&1';
     list ($commandMayRun, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE, 'ffmpeg');
     if (!$commandMayRun) {
@@ -98,10 +79,8 @@ function convertVideos($pathname, $newPathname, $extension) {
       if (!file_exists($newPathname) && trim($returnData) === '') warningEntry('FFMPEG produced no output at all. The command was found & run, & it printed nothing.');
       // / Log the output of the operation to the logfile, if it is not blank.
       if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Every attempt was made & none left a file. What the converter printed is logged above this,
-      // / with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the converter had timed out, which no time limit
-      // / ever caused, & then made one more attempt.
-      // / Until then it was raised after the attempt that used the count up, even one that worked.
+      // / Every attempt was made & none left a file.
+      // / What the converter printed is logged above, with --Enhanced Logging Verbosity-- on.
       if (!file_exists($newPathname)) {
         $ConversionErrors = TRUE;
         errorEntry('The video converter produced no file after '.$stopper.' attempt(s)!', 11000, FALSE);

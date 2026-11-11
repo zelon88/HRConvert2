@@ -43,7 +43,7 @@ $selectorSwatches = array(
 // / -----------------------------------------------------------------------------------
 // / Carry the page state so a selection returns to the page the user was already on.
 // /
-// / $ShowFiles, $FileListOnly & $NoGui ARRIVE FROM THE CORE. THEY ARE NOT READ HERE.
+// / $ShowFiles, $FileListOnly & $NoGui arrive from the core & are not read here.
 // / verifyGlobals reads every superglobal this application accepts & buildGUI hands the
 // / result to an interface as an ordinary variable. An interface that read $_GET for
 // / itself would be defining API surface, which is not an interface's to define, & a
@@ -155,11 +155,9 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
     <div id='compressAll' name='compressAll' style='max-width:<?php echo $GuiWidth; ?>; margin-left:auto; margin-right:auto; text-align:center;'>
       <?php // / The form action is the refresh destination, so the refresh button needs no
             // / formaction of its own. The back button overrides it with one.
-            // / EVERY BUTTON IN HERE DECLARES ITS TYPE. A button inside a form defaults to
+            // / Every button in here declares its type, because a button inside a form defaults to
             // / submit, so the settings toggle would submit the form & reload the page
-            // / instead of opening the panel underneath it. These three buttons carried no
-            // / type at all before, which was harmless only because they were not in a
-            // / form. They are now.
+            // / instead of opening the panel underneath it.
             // / The submit buttons carry no name, so nothing they are called reaches the
             // / core as POST input. The core reads specific keys & a stray one is noise. ?>
       <form id='sessionForm' name='sessionForm' method='post' style='display:inline;' action='<?php echo htmlspecialchars($refreshURL, ENT_QUOTES, 'UTF-8'); ?>'>

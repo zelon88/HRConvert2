@@ -8,14 +8,12 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.0.
+// / v4.0.8.
 // / The Files pipeline. Operations on a file that do not care what is inside it.
 // /
-// / EVERY PATH ARRIVES AS AN ARGUMENT. Nothing here reads a session global, which is what
-// / makes it a component rather than a piece of one application.
-// / The version in convertCore.php reads $ConvertDir & $ConvertTempDir directly, so it can
-// / only ever serve HRConvert2. This one is handed the directory it is allowed to touch &
-// / refuses everything outside it.
+// / Every path arrives as an argument.
+// / Nothing here reads a session global, so any application can use it.
+// / Each function is handed the directory it may touch & refuses everything outside it.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -29,18 +27,11 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / A function to list the files in one directory.
-// / Accepts the directory. Returns whether it could be read & the plain file names found.
-// /
-// / NAMES ONLY, never paths. A caller that receives a path is a caller that can be handed
-// / one from somewhere else, & every guard downstream then has to re-derive which directory
-// / it was supposed to be in.
-// /
-// / DIRECTORIES ARE OMITTED & so are the dot entries. A file operation lists files. A
-// / caller wanting to walk a tree can ask for each directory it chooses to descend into,
-// / which keeps the decision to recurse with whoever is allowed to make it.
-// /
-// / IT FILTERS NOTHING ELSE. Which formats an application refuses is that application's
-// / policy & it does not belong in a component that any application can drop in.
+// / Accepts the directory.
+// / Returns whether it could be read & the plain file names found.
+// / It returns names only, never paths, so no caller can be handed a path from somewhere else.
+// / Directories & dot entries are omitted, & a caller walking a tree asks for each directory it enters.
+// / It filters nothing else, because which formats an application refuses is that application's policy.
 function listFilesInDirectory($permittedDirectory) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -64,20 +55,12 @@ function listFilesInDirectory($permittedDirectory) {
   return array($DirectoryWasRead, $FileNames); }
 // / -----------------------------------------------------------------------------------
 // / A function to place a file into one directory.
-// / Accepts the directory that may be written, the source path, the name to give it & the
-// / permissions to set. Returns whether it landed & the name it was given.
-// /
-// / THE NAME IS SANITIZED HERE & THE DESTINATION IS RESOLVED, exactly as a removal is.
-// / A placement is a removal in reverse & is the more dangerous of the two, because a
-// / caller controls the name AND the content. A name that traverses would write into a
-// / directory nobody permitted rather than merely reading one.
-// /
-// / THE SOURCE IS NOT SANITIZED & is not meant to be. It is an uploaded temporary file or
-// / a converted output whose path this application already knows. Sanitizing it would
-// / mangle a legitimate path.
-// /
-// / An existing file of the same name is replaced, because a caller placing a name has
-// / decided that name should hold this content.
+// / Accepts the directory that may be written, the source path, the name to give it & the permissions to set.
+// / Returns whether it landed & the name it was given.
+// / The name is sanitized here & the destination is resolved, as for a removal.
+// / The caller controls the name & the content, so a name that traverses would write where nobody permitted.
+// / The source is not sanitized, because it is a file this application already knows the path of.
+// / An existing file of the same name is replaced.
 function placeFileInDirectory($permittedDirectory, $sourcePath, $destinationName, $permissionLevel) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -111,16 +94,11 @@ function placeFileInDirectory($permittedDirectory, $sourcePath, $destinationName
 
 // / -----------------------------------------------------------------------------------
 // / A function to remove files from one directory.
-// / Accepts the directory that may be touched & the names to remove. Returns whether every
-// / removal succeeded, how many were attempted & how many went.
-// /
-// / THE DIRECTORY IS AN ARGUMENT & THAT IS THE WHOLE POINT. A caller says which directory
-// / this may operate in, & a name that resolves outside it is refused rather than followed.
-// / A pipeline that read a session global could serve exactly one application.
-// /
-// / Every name is sanitized & then resolved, & the resolved path is compared against the
-// / resolved directory. Sanitizing alone is not enough, because a name that survives
-// / sanitizing can still traverse if the directory itself is a symlink.
+// / Accepts the directory that may be touched & the names to remove.
+// / Returns whether every removal succeeded, how many were attempted & how many went.
+// / A name that resolves outside the directory is refused rather than followed.
+// / Every name is sanitized & resolved, & the resolved path is compared against the resolved directory.
+// / A sanitized name can still traverse when the directory itself is a symlink.
 function removeFilesFromDirectory($permittedDirectory, $namesToRemove) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -144,7 +122,7 @@ function removeFilesFromDirectory($permittedDirectory, $namesToRemove) {
         continue; }
       $candidatePath = $resolvedDirectory.DIRECTORY_SEPARATOR.$candidateName;
       $resolvedPath = (string)@realpath($candidatePath);
-      // / RESOLVED, & COMPARED AGAINST THE RESOLVED DIRECTORY. A path that does not sit
+      // / The path is resolved & compared against the resolved directory. A path that does not sit
       // / inside what the caller permitted is refused whatever it looks like.
       if ($resolvedPath === '' or strpos($resolvedPath, $resolvedDirectory.DIRECTORY_SEPARATOR) !== 0) {
         warningEntry('A file removal resolved outside the directory it was permitted. It was refused.');

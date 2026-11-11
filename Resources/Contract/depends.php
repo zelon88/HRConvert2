@@ -11,8 +11,8 @@
 // / This application is designed to provide a web-interface for converting file formats
 // / on a server for users of any web browser without authentication.
 // /
-// / Fileinformation ...
-// / v4.0.6.
+// / File information ...
+// / v4.0.8.
 // / HRConvert2 Dependency Manifest.
 // / This file is data. It defines nothing & does nothing.
 // / dependencyCore.php reads it. Nothing else may.
@@ -20,10 +20,9 @@
 // / $InstLoc is in scope while this file is read, because verifyDependsManifest declares it
 // / global before the require. A bundled dependency uses it rather than a hardcoded path.
 // /
-// / THE ARRAY ORDER IS THE INSTALL ORDER. Read it top to bottom.
+// / The array order is the install order, read top to bottom.
 // / A dependency also declares what it Requires, which is checked before it is installed.
-// / The order & the chain say the same thing twice on purpose. The order is what runs, the
-// / chain is what catches an order somebody has broken.
+// / The order is what runs, & the chain is what catches an order somebody has broken.
 // /
 // / Each entry carries the following.
 // /   Name             Human readable name, used in every report.
@@ -65,10 +64,6 @@
 // / anything needing it can name it in its own Requires list.
 // / PyMeshLab & ScanCore are both bundled.
 // /
-// / A source Type was declared here & refused by Dependency Core until v3.8.9.
-// / Anything outside a package repository therefore had to be installed by a hand written
-// / script kept in step with this manifest by hand, which is the arrangement this file
-// / exists to replace.
 // / A build command runs as root, takes minutes & prints a great deal while it works.
 // / Only the tail of its output is kept, because a compiler log helps nobody in a report.
 // / A build that reports success is still only believed once VersionCommand answers.
@@ -90,16 +85,13 @@
 // / A command that runs & returns nothing is a parse failure rather than a report of no
 // / capability, & it resolves to unknown for the same reason.
 // /
-// / Reading a format is not writing it & the two are stored separately.
-// / Assimp reads OFF & has no OFF exporter. An earlier release routed on the input
-// / extension alone, sent an obj to off conversion to Assimp, & retried a command that
-// / could never succeed until it timed out. ImageMagick & FFMPEG each report both
-// / directions in one line. Assimp reports them from two separate commands.
+// / Reading a format is not writing it, & the two are stored separately.
+// / Assimp reads OFF & has no OFF exporter, so routing on the input extension alone would send an obj to off conversion to it.
+// / ImageMagick & FFMPEG each report both directions in one line, & Assimp reports them from two separate commands.
 // /
-// / A capability list is a FILTER & is never a source of new formats.
-// / magick -list format offers MSL, a scripting language ImageMagick executes, & http,
-// / https & file, which fetch a URL without passing through any guard this application
-// / owns. Detection narrows what a pipeline already declared. It never adds to it.
+// / A capability list is a filter & is never a source of new formats.
+// / magick -list format offers MSL, a scripting language ImageMagick executes, & http, https & file, which fetch a URL past every guard this application owns.
+// / Detection narrows what a pipeline already declared, & never adds to it.
 // /
 // / Hardware requirements ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
@@ -122,7 +114,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v4.0.6';
+$DependsVersion = 'v4.0.8';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -215,15 +207,9 @@ $DependsManifest = array(
 
   // / ---- Media. ----
   // / FFMPEG is built from source rather than installed from a repository.
-  // / The packaged build cannot carry --enable-nonfree & this application needs it.
-  // / A nonfree build may not be redistributed, so it is built where it is used.
-  // / The build script was called by hand from the Dockerfile until v3.8.9, which meant
-  // / the manifest did not know this dependency was built & the audit did not record it.
-  // / The script still does the work. The manifest now decides when it runs & whether it
-  // / worked, which is the arrangement every other dependency already had.
-  // / The script builds in a folder of its own under /var/tmp & removes it. Until v4.0.6 this
-  // / command changed into Documentation/Build first, so the whole build, links & all, was left
-  // / in the installation, & root refuses an installation holding a link from v4.0.1 on.
+  // / The packaged build cannot carry --enable-nonfree, which this application needs, & a nonfree build may not be redistributed, so it is built where it is used.
+  // / The manifest decides when the build script runs & whether it worked, as it does for every other dependency.
+  // / The script builds in a folder of its own under /var/tmp & removes it.
   array('Name' => 'FFMPEG', 'Binary' => 'ffmpeg', 'Type' => 'source', 'Package' => '',
     'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'ffmpeg-build.sh'),
     'MinimumVersion' => '6.1', 'VersionCommand' => 'ffmpeg -version', 'VersionPattern' => '/ffmpeg version n?(\d+\.\d+)/',
@@ -386,14 +372,10 @@ $DependsManifest = array(
     'MinimumVersion' => '', 'VersionCommand' => 'python3.14 -c \'import numpy; print(numpy.__version__)\'', 'VersionPattern' => '/([0-9]+\\.[0-9]+)/',
     'BuildCommand' => 'python3.14 -m ensurepip --upgrade; python3.14 -m pip install --upgrade numpy',
     'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Python 3.14', 'pip 3.14'),
-    // / pip installs a prebuilt wheel where one exists & COMPILES FROM SOURCE where none
-    // / does. Which of those happens depends on the architecture & on how new the Python is,
-    // / & the command is identical either way, so there is nothing in the output to warn an
-    // / operator which one they are about to wait through.
-    // / On arm with a freshly built Python 3.14 there is frequently no wheel, & a numpy
-    // / compile on a small board runs for a long time. The override says so.
-    // / --prefer-binary asks for a wheel first without forbidding a source build, so a host
-    // / with no wheel still succeeds rather than being refused something it can do slowly.
+    // / pip installs a prebuilt wheel where one exists & compiles from source where none does.
+    // / Which happens depends on the architecture & on how new the Python is, & nothing in the output warns an operator which one they are about to wait through.
+    // / On arm with a freshly built Python 3.14 there is frequently no wheel, & a numpy compile on a small board runs for a long time, which the override says.
+    // / --prefer-binary asks for a wheel first without forbidding a source build, so a host with no wheel still succeeds slowly rather than being refused.
     'ArchitectureOverrides' => array(
       'arm64' => array('BuildCommand' => 'python3.14 -m ensurepip --upgrade; python3.14 -m pip install --prefer-binary --upgrade numpy',
         'Purpose' => 'Imported by PyMeshLab. On arm pip often has no wheel & compiles it, which takes a long time on a small board.'),
@@ -405,61 +387,34 @@ $DependsManifest = array(
   // / or newer, which means Ubuntu 22.04, Debian 12 or later. On an older host pip finds nothing it
   // / can install & this entry fails. The Model pipeline then falls back to the MeshLab binary.
   array('Name' => 'PyMeshLab', 'Binary' => '', 'Type' => 'source', 'Package' => '',
-    // / INSTALLED WITH pip AS OF v3.9.2. It was a bundled x86_64 binary & is now a wheel.
-    // / PyMeshLab 2025.07 publishes native arm64 linux wheels, so the architecture limit
-    // / that entry used to carry is gone. A Raspberry Pi & a NAS get the same PyMeshLab a
-    // / desktop does, from the same command.
-    // / The wheel places its own Qt libraries where python looks for them, so none of the
-    // / QT_PLUGIN_PATH & LD_LIBRARY_PATH handling the bundle needed applies to it.
-    // / A BUNDLED COPY STILL WORKS. resolvePyMeshLabInterpreter tries an installed one
-    // / first & falls back to Resources/PyMeshLab, so an installation carrying the old
-    // / bundle keeps converting without being touched.
-    // / libGL.so.1 is required at RUNTIME & is not in the wheel. A slim container needs
-    // / libgl1 installed or the import fails with a message that names a library rather
-    // / than a cause.
+    // / It is installed with pip, as a wheel.
+    // / PyMeshLab 2025.07 publishes native arm64 linux wheels, so a Raspberry Pi & a NAS get the same PyMeshLab a desktop does, from the same command.
+    // / The wheel places its own Qt libraries where python looks for them, so none of the QT_PLUGIN_PATH & LD_LIBRARY_PATH handling a bundle needs applies to it.
+    // / A bundled copy still works, because resolvePyMeshLabInterpreter tries an installed one first & falls back to Resources/PyMeshLab.
+    // / libGL.so.1 is required at runtime & is not in the wheel, so a slim container needs libgl1, or the import fails with a message that names a library rather than a cause.
     'BuildCommand' => 'python3.14 -m pip install --prefer-binary --upgrade pymeshlab',
-  // / The probe names the bundled shared objects on the loader path.
-  // / The compiled module links libraries that ship inside the bundle rather than system
-  // / ones, & the loader has no reason to look there.
+  // / The probe names the bundled shared objects on the loader path, because the compiled module links libraries inside the bundle that the loader has no reason to look for.
   // / Without this the module is found & then fails to load, which reports as absent.
-  // / A prefix works here because this command is run through a shell.
-  // / It would not work inside the sandbox, where bwrap execs without one.
-  // / Qt is given a platform plugin & rendering is forced through Mesa software.
-  // / The compiled module links Qt, & Qt refuses to start without a platform plugin.
-  // / A probe with no display reported ImportError: initialization failed, which reads
-  // / as a broken bundle & is Qt declining to start rather than the module being absent.
-  // / The same three variables are what the meshlab sandbox profile sets, & the reasons
-  // / are recorded there. This probe runs unsandboxed, so it sets them as a prefix.
-  // / Three things have to be true before this import works & each one hid the others.
+  // / A prefix works here because this command is run through a shell, & would not work inside the sandbox, where bwrap execs without one.
+  // / Qt is given a platform plugin & rendering is forced through Mesa software, because Qt refuses to start without a platform plugin.
+  // / The meshlab sandbox profile sets the same three variables & records the reasons, & this probe runs unsandboxed, so it sets them as a prefix.
+  // / Three things must be true before this import works, & PyMeshLab reports each as ImportError: initialization failed, which names none of them.
   // / An interpreter matching the cpython tag on the bundled object must be installed.
-  // / NumPy must be installed against THAT interpreter, because PyMeshLab imports it first.
-  // / Qt must be told where its platform plugin is, because the bundle carries Qt5 & the
-  // / plugins directory beside it holds MeshLab's filters rather than Qt's.
-  // / PyMeshLab reports all three as ImportError: initialization failed, which names none
-  // / of them. Import pmeshlab directly to see the exception that was actually raised.
-  // / QT_PLUGIN_PATH points Qt at the plugins beside the bundled Qt5 libraries.
-  // / QT_QPA_PLATFORM names which plugin to load & says nothing about where to find it,
-  // / so without this Qt searches the system path, finds nothing it can use & reports
-  // / ImportError: initialization failed, which names neither the plugin nor the path.
+  // / NumPy must be installed against that interpreter, because PyMeshLab imports it first.
+  // / Qt must be told where its platform plugin is, because the bundle's plugins directory holds MeshLab's filters rather than Qt's.
+  // / Import pmeshlab directly to see the exception that was actually raised.
+  // / QT_PLUGIN_PATH points Qt at the plugins beside the bundled Qt5 libraries, & QT_QPA_PLATFORM names which plugin to load.
   // /
-  // / The platforms directory in that bundle was ADDED BY HAND & is not in the wheel.
-  // / No PyMeshLab wheel ships a Qt platform plugin. The wheel carries Qt5 libraries & a
-  // / plugins directory holding MeshLab's own filters & format handlers, & expects the
-  // / platform plugin to come from the host.
-  // / It was copied from /usr/lib/x86_64-linux-gnu/qt5/plugins/platforms on this machine.
-  // / A bundle refresh will drop it again & PyMeshLab will report absent with exactly the
-  // / message above, which names nothing that would lead anybody back to this note.
-  // / Copy the directory back after replacing the bundle.
+  // / The platforms directory in the bundle was added by hand, because no PyMeshLab wheel ships a Qt platform plugin.
+  // / It was copied from /usr/lib/x86_64-linux-gnu/qt5/plugins/platforms, & a bundle refresh drops it again.
+  // / Copy the directory back after replacing the bundle, or PyMeshLab reports absent with the message above.
   // /
-  // / The plugin & the bundled libQt5Core must be the same Qt minor version. Qt refuses a
-  // / plugin built against a different one & says so, which is the readable failure.
+  // / The plugin & the bundled libQt5Core must be the same Qt minor version, & Qt refuses a plugin built against another & says so.
   // / Run the probe with QT_DEBUG_PLUGINS=1 to see every path searched & every rejection.
     'MinimumVersion' => '', 'VersionCommand' => 'QT_QPA_PLATFORM=offscreen QT_PLUGIN_PATH='.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab'.DIRECTORY_SEPARATOR.'pymeshlab'.DIRECTORY_SEPARATOR.'lib'.DIRECTORY_SEPARATOR.'plugins'.' LIBGL_ALWAYS_SOFTWARE=1 __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json LD_LIBRARY_PATH='.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab'.DIRECTORY_SEPARATOR.'pymeshlab'.DIRECTORY_SEPARATOR.'lib'.' python3.14 -c "import sys; sys.path.insert(0, \''.$InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'PyMeshLab\'); import pymeshlab; print(\'bundled\')"', 'VersionPattern' => '',
     'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Assimp', 'Python 3.14', 'pip 3.14', 'NumPy 3.14'),
     'License' => 'GPL-3.0', 'Source' => 'Bundled at Resources/PyMeshLab', 'Purpose' => 'Repairs & simplifies meshes. Replaces MeshLab. Ships with HRConvert2.'),
-  // / meshlabserver is a Qt program & aborts where there is no display, which is every web request &
-  // / every listener, so its version is asked through Qt's offscreen platform. Until v4.0.6 a request
-  // / found no MeshLab while -v run from a desktop found it, & every Model request warned.
+  // / meshlabserver is a Qt program & aborts where there is no display, which is every web request & every listener, so its version is asked through Qt's offscreen platform.
   array('Name' => 'MeshLab', 'Binary' => 'meshlabserver', 'Type' => 'apt', 'Package' => 'meshlab',
     'MinimumVersion' => '2020.09', 'VersionCommand' => 'QT_QPA_PLATFORM=offscreen meshlabserver --version', 'VersionPattern' => '/(\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Assimp'),

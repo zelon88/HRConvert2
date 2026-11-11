@@ -12,18 +12,11 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
-// / This file is the converter for the Document pipeline. It is loaded by pipelineCore.php
-// / ONLY when a Document operation is about to be dispatched to it, so a request that does
-// / something else never parses a line of it.
-// / Error block 7000 through 7001, plus 2005 belongs to this pipeline. Those numbers came with the code when it
-// / moved out of convertCore.php & they did not change, because operators have read them.
-// / This pipeline declares the LibreOffice shared module & the manager loads it first.
-// / convertWithLibreOffice(), sanitizeDocumentLinks() & verifyDocumentConversionEngine()
-// / are all available by the time this file runs. It also calls sandboxCommand(),
-// / locateDependency() & getExtension(), which remain in convertCore.php.
-// / The XPS branch invokes xpstopdf by name rather than through a located binary, which is
-// / how it arrived from convertCore.php & is not something this move changed.
+// / v4.0.8.
+// / The Document pipeline's converter. pipelineCore.php loads it only to dispatch a Document conversion.
+// / Error block 2005, 7000 through 7001 belongs to this pipeline.
+// / It declares the LibreOffice shared module, which Pipeline Core loads before it.
+// / The XPS branch runs xpstopdf by name, not through a located binary.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -42,9 +35,7 @@ function convertDocuments($pathname, $newPathname, $extension) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
-  // / This converter produces neither of the last two itself, so it declares the defaults.
-  // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
-  // / detached process must be supervised after the connection to the user is closed.
+  // / The last two keep their defaults, & $WorkerPID stays 0 unless a detached process is supervised.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $documentEngineStarted = $conversionCompleted = $commandMayRun = FALSE;
@@ -80,9 +71,8 @@ function convertDocuments($pathname, $newPathname, $extension) {
       $stopper++; }
     // / Log the output of the operation to the logfile, if it is not blank.
     if ($Verbose && trim((string)$returnData) !== '') logEntry('The document converter returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim((string)$returnData)))));
-    // / Every attempt was made & none left a file. What the converter printed is logged above this,
-    // / with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the converter had timed out, which no time limit
-    // / ever caused, & then made one more attempt.
+    // / Every attempt was made & none left a file.
+    // / What the converter printed is logged above, with --Enhanced Logging Verbosity-- on.
     // / A LibreOffice its ceiling killed is named in a warning above, by the shared module.
     if (!file_exists($newPathname)) {
       $ConversionErrors = TRUE;

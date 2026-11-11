@@ -12,13 +12,11 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.5.
+// / v4.0.9.
 // / This file declares what the OCR pipeline is & what it can do.
-// / It is read by pipelineCore.php on EVERY request & it must stay cheap.
-// / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
+// / It is read by pipelineCore.php on every request & it must stay cheap.
+// / It assigns variables & does nothing else, with no functions, no logic & no output.
 // / Error block 8001, 15000 through 15014 belongs to this pipeline.
-// / Those numbers came with the code when it moved out of convertCore.php.
-// / They did not change, because operators have already read them.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for what each declaration means.
 // /
 // / <3 Open-Source
@@ -32,10 +30,10 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 
 // / -----------------------------------------------------------------------------------
-// / The version of this pipeline folder. Read WITHOUT executing this file, then matched
-// / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
+// / The version of this pipeline folder. Read without executing this file, then matched
+// / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.0.5';
+$PipelineVersion = 'v4.0.9';
 
 // / This is an operation pipeline & it is the first one.
 // / A conversion pipeline takes one file, returns the six value contract, & is dispatched
@@ -60,8 +58,8 @@ $PipelineDisplayName = 'Optical Character Recognition';
 // / user can see & already consumed budget.
 $PipelinePriority = 100;
 
-// / The function dispatch calls. THIS NAME MUST BE UNIQUE ACROSS EVERY INSTALLED PIPELINE.
-// / It lives in pipeline.php beside this file & no longer exists in convertCore.php.
+// / The function dispatch calls, whose name must be unique across every installed pipeline.
+// / It is defined in pipeline.php beside this file.
 $PipelineEntryPoint = 'ocrFiles';
 
 // / The depends.php subsystem this pipeline needs. Dependency Core owns installation.
@@ -88,7 +86,7 @@ $PipelineSharedModules = array('libreOffice.php');
 $PipelineRequestFields = array('Extension', 'Filename', 'Method');
 
 // / What this pipeline can read & what it can write.
-// / THESE LISTS ARE INFORMATIONAL WHILE $SupportedFormatDetectionType IS hardcoded-only.
+// / These lists are informational while $SupportedFormatDetectionType is hardcoded-only.
 // / They mirror the allowed input list inside the converter itself, which is the gate that
 // / actually runs today.
 // / Every route ends at a text file which is then converted to the requested output.
@@ -98,7 +96,7 @@ $Capabilities = array(
   'Output' => array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf'));
 
 // / Pairs removed from the cross product above, written as 'input>output'.
-// / NOTHING IS EXCLUDED HERE & txt>txt IS DELIBERATELY ALLOWED.
+// / Nothing is excluded here, & txt>txt is allowed.
 // / Everywhere else in this application, converting a format into itself is nonsense. OCR
 // / is the exception. A scanned page inside a PDF that already contains a text layer, or a
 // / text file produced by a previous OCR run, are both legitimate things to read again.

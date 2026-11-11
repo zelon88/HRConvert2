@@ -11,20 +11,17 @@
 // / This application is designed to provide a web-interface for converting file formats
 // / on a server for users of any web browser without authentication.
 // /
-// / Fileinformation ...
-// / v4.0.6.
+// / File Information ...
+// / v4.0.8.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
-// / CALL METHOD. This component is required into the running process, the same way
-// / coreManager.php & setupCore.php are. It is NOT invoked over the command line & is NOT
-// / shelled out to. A separate process needs a startup key to prove who launched it. A
-// / component required into this one inherits the authorization the caller already has.
-// /
-// / A KEY IS STILL REQUIRED TO CHANGE ANYTHING. checkDepends reads the machine & needs
-// / nothing. installDepends, updateDepends & uninstallDepends rewrite it & refuse without
-// / a token convertCore.php derived from the install secret. A component that can be
-// / reached some way nobody anticipated still cannot install a package.
+// / It is required into the running process, as coreManager.php & setupCore.php are, & never run as a separate process.
+// / A separate process would need a startup key to prove who launched it, & a required component inherits the caller's authorization.
+// / A key is still required to change anything.
+// / checkDepends reads the machine & needs nothing.
+// / installDepends, updateDepends & uninstallDepends refuse without a token convertCore.php derived from the install secret.
+// / A component reached some way nobody anticipated still cannot install a package.
 // /
 // / Hardware requirements ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
@@ -47,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v4.0.6';
+$DependencyCoreVersion = 'v4.0.8';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -75,17 +72,12 @@ function folderIsPrivateToAccount($folderPath, $accountId) {
 // / A function to find a scratch folder for dependency commands that only this account controls.
 // / Accepts nothing. Returns a readiness boolean & the folder, in that order. A failure
 // / returns FALSE & an empty string, & the caller must then run nothing at all.
-// / A dependency command runs with HOME, its working directory & every XDG location pointed
-// / at this folder, & tools read configuration & code from all of them. python imports a
-// / usercustomize module from HOME, & pip & git read their configuration from it. So a folder
-// / another account can write is a way to run code as whoever runs the command, & --setup
-// / runs them as root.
-// / Until v3.9.9 the folder was <temp>/<Application>-probe for every account, & it was used
-// / whoever had made it. An unprivileged account that made it first ran code as root the
-// / next time root ran --setup --check-depends.
+// / A dependency command runs with HOME, its working directory & every XDG location pointed at this folder.
+// / Tools read configuration & code from all of them, as python imports usercustomize from HOME & pip & git read configuration there.
+// / So a folder another account can write would run its code as whoever runs the command, & --setup runs them as root.
 // / The folder is named for the account & is used only when folderIsPrivateToAccount agrees.
-// / A name another account has taken is warned about, & a folder with a name nobody can
-// / predict is made instead. mkdir fails rather than follow anything placed there first.
+// / A name another account has taken is warned about, & a folder with an unpredictable name is made instead.
+// / mkdir fails rather than follow anything placed there first.
 function resolveProbeScratchFolder() {
   // / Set variables.
   global $CurrentUser, $EnableMemoryProtection;
@@ -128,29 +120,15 @@ function resolveProbeScratchFolder() {
 // / Accepts nothing. Returns a run of exports to place in front of a command, ending in a
 // / semicolon & a space.
 // /
-// / A dependency command runs OUTSIDE the sandbox & that is the whole reason this exists.
-// / sandboxCommand() already points every writable location a tool reaches for at a tmpfs
-// / inside the namespace, so a conversion creates no state anywhere it should not.
-// / A version probe & a capability probe get no such treatment. They run as the web server
-// / account, with the working directory set to the installation root, & with HOME unset,
-// / because a web server does not set it.
-// / A library that reads HOME, finds nothing & falls back to the working directory then
-// / writes into the installation itself. A .cache directory appearing beside convertCore.php
-// / is fontconfig, or a shader cache, or a LibreOffice profile, doing exactly that.
-// /
-// / Every variable below is one a tool actually reaches for. They are pointed at a folder
-// / under the system temporary location that belongs to the running account & nobody else,
-// / which resolveProbeScratchFolder finds or makes. With none, the prefix ends the shell
-// / before the command can run, because a command run without it writes into the
-// / installation, & one run with a folder somebody else controls runs their code.
-// /
-// / A prefix is correct here & would NOT be correct inside the sandbox. exec() runs the
-// / command through a shell, which reads NAME=value as an assignment. bwrap execs directly
-// / & would read the same text as the name of a program to run.
-// /
-// / A package manager command is deliberately not given this. apt has its own cache in its
-// / own place & redirecting it would be a change to the machine rather than to this
-// / application.
+// / A dependency command runs outside the sandbox, which is why this exists.
+// / sandboxCommand() points every writable location a tool reaches for at a tmpfs, so a conversion creates no stray state.
+// / A version or capability probe runs as the web server account, in the installation root, with HOME unset.
+// / A library that finds no HOME falls back to the working directory & writes into the installation itself.
+// / A .cache directory beside convertCore.php is fontconfig, a shader cache or a LibreOffice profile doing exactly that.
+// / Every variable below is pointed at a folder resolveProbeScratchFolder finds or makes for the running account alone.
+// / With no such folder the prefix ends the shell before the command runs, because either other outcome is worse.
+// / A prefix is correct here & would not be inside the sandbox, because exec() runs a shell & bwrap does not.
+// / A package manager command is not given this, because redirecting apt's cache would change the machine.
 function dependencyEnvironmentPrefix() {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -161,17 +139,10 @@ function dependencyEnvironmentPrefix() {
   // / falls back to somewhere else & the point of this is to stop that happening.
   list ($scratchIsReady, $scratchRoot) = resolveProbeScratchFolder();
   // / These are exports followed by a semicolon rather than NAME=value prefixes.
-  // / A prefix applies only to a simple command. A source build is wrapped in a subshell
-  // / so its exit code can be read, & HOME=x ( ... ) is a syntax error in sh, which is what
-  // / --install-depends printed on the first source build it attempted.
-  // / An export applies to everything that follows it in the same shell, including a
-  // / subshell & every command inside one, & the shell is discarded when the call returns.
-  // / The working directory moves too, & that is a separate protection from the variables.
-  // / A tool that ignores HOME & writes to a relative path writes wherever the process
-  // / happens to be standing, & for a probe that is the installation root. cd puts it
-  // / somewhere disposable instead, so both kinds of tool land in the same scratch space.
-  // / cd is first, so a failure to enter the directory stops the command rather than
-  // / running it in the installation root anyway.
+  // / A prefix applies only to a simple command, & a source build runs in a subshell, where HOME=x ( ... ) is a syntax error.
+  // / An export applies to everything after it in the same shell, subshells included, & the shell is discarded afterwards.
+  // / The working directory moves too, because a tool that ignores HOME writes to a relative path wherever the process stands.
+  // / cd is first, so a failure to enter the directory stops the command rather than running it in the installation root.
   if (!$scratchIsReady) $EnvironmentPrefix = 'exit 1; ';
   else $EnvironmentPrefix = 'cd '.escapeshellarg($scratchRoot).' || exit 1; export HOME='.escapeshellarg($scratchRoot)
     .'; export XDG_CACHE_HOME='.escapeshellarg($scratchRoot.DIRECTORY_SEPARATOR.'.cache')
@@ -288,20 +259,12 @@ function detectPackageManager() {
 // / Accepts a manifest entry & the architecture name. Returns the entry with any override
 // / applied, whether this architecture is supported, & a reason when it is not.
 // /
-// / A MANIFEST ENTRY MAY DIFFER BY ARCHITECTURE & most do not. An entry with no
-// / architecture keys is unchanged, which is why every existing entry keeps working.
-// /
-// / Two keys, & they answer different questions.
-// /   'Architectures' names every architecture the entry works on. An entry naming some &
-// /     running on another is UNSUPPORTED, which is reported as its own state rather than
-// /     as a failure. A bundled x86 binary on a Raspberry Pi is not broken, it was never
-// /     going to work there, & telling an operator their installation has failed when one
-// /     optional tool is simply unavailable is how a good installation looks broken.
-// /   'ArchitectureOverrides' replaces individual fields for one architecture. A package
-// /     with a different name, a different build command, a different source. Only the
-// /     named fields change & everything else is inherited.
-// /
-// / An entry may use either, both, or neither.
+// / A manifest entry may differ by architecture, & most do not, so an entry with no architecture keys is unchanged.
+// / 'Architectures' names every architecture the entry works on.
+// / An entry running on another is UNSUPPORTED, its own state rather than a failure, because the tool was never going to work there.
+// / 'ArchitectureOverrides' replaces individual fields for one architecture, such as a package name, a build command or a source.
+// / Only the named fields change, & everything else is inherited.
+// / An entry may use either, both or neither.
 function applyArchitectureRules($dependencyEntry, $architectureName) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -328,25 +291,13 @@ function applyArchitectureRules($dependencyEntry, $architectureName) {
 // / A function to choose which version of a dependency to install.
 // / Accepts a manifest entry. Returns the chosen version & a reason, in that order.
 // /
-// / A build command that names a version can only ever install that one. It cannot pick up
-// / a security patch & it cannot be told to stop before a release that would break things.
-// / So an entry may declare a VersionSource, a command listing what is AVAILABLE, & this
-// / picks the highest one inside the window MinimumVersion & MaximumVersion describe.
-// /
-// / The window is INCLUSIVE at the floor & EXCLUSIVE at the ceiling. A Minimum of 3.14 with
-// / a Maximum of 3.15 accepts every 3.14 patch & no part of 3.15. That is the shape a
-// / dependency with a breaking minor release needs, & naming the first REFUSED version is
-// / easier to get right than naming the last accepted one.
-// /
-// / The sort is NUMERIC PER FIELD. A lexical sort ranks 3.14.10 below 3.14.2 & would
-// / install an older release than the one already present, which reads as an update having
-// / silently done nothing.
-// /
-// / An entry with no VersionSource is unchanged. Its build command names whatever it names
-// / & nothing here interferes.
-// / A source that returns nothing usable is NOT an error. The build proceeds with whatever
-// / it would have used anyway, because a host with no route to an index should still be
-// / able to install from a pinned version.
+// / A build command that names a version installs only that one, & can neither take a patch nor stop before a breaking release.
+// / So an entry may declare a VersionSource, a command listing what is available, & this picks the highest inside the window.
+// / The window is inclusive at MinimumVersion & exclusive at MaximumVersion, so 3.14 to 3.15 accepts every 3.14 patch & no 3.15.
+// / Naming the first refused version is easier to get right than naming the last accepted one.
+// / The sort is numeric per field, because a lexical sort ranks 3.14.10 below 3.14.2 & would install an older release.
+// / An entry with no VersionSource is unchanged.
+// / A source that returns nothing usable is not an error, because a host with no route to an index should still install a pinned version.
 function resolveTargetVersion($dependencyEntry) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -380,17 +331,12 @@ function resolveTargetVersion($dependencyEntry) {
 // / Accepts the entry. Returns whether it is complete, whether its license is clear & the
 // / reason it was refused, in that order.
 // /
-// / Provenance & mechanism are different things. An entry with no License & no Source can
-// / still name a working binary & a version command that answers. It tells the application
-// / everything needed to USE the tool & nothing about where the tool came from.
-// / Whether that is acceptable is an installation's decision rather than this function's,
-// / which is why both gates are settings & both default to what already happened.
-// /
-// / GPL compatibility is checked BY NAME against a list, & the list is deliberately short.
-// / A license this does not recognize is treated as unclear rather than as incompatible,
-// / because a wrong refusal & a wrong acceptance are both bad & only one of them is loud.
-// / GPL-2.0 only is absent on purpose. It is not compatible with GPLv3 & listing it would
-// / be the wrong kind of convenient.
+// / Provenance & mechanism are different things.
+// / An entry with no License & no Source can still name a working binary, so it says how to use a tool & not where it came from.
+// / Whether that is acceptable is an installation's decision, so both gates are settings.
+// / GPL compatibility is checked by name against a deliberately short list.
+// / A license it does not recognize is treated as unclear rather than incompatible, because only a wrong refusal is loud.
+// / GPL-2.0 only is absent on purpose, because it is not compatible with GPLv3.
 function judgeDependencyEntry($dependencyEntry) {
   // / Set variables.
   global $EngineEnforceGPLCompliantDeps, $EngineAllowIncompleteDeps, $EnableMemoryProtection;
@@ -477,19 +423,11 @@ function resolveDependencyState($dependencyEntry) {
   else {
   // / A dependency with no binary is a library. Its version command is the only evidence.
   if ((string)$dependencyEntry['Binary'] !== '') {
-      // / A PATH & A NAME ARE DIFFERENT QUESTIONS & asking the wrong one refuses a working
-      // / tool.
-      // / locateDependency finds a binary BY NAME. It refuses anything containing a path
-      // / separator, & its own comment says why: a caller supplying a path has already
-      // / decided where the thing is. That contract is reasonable & was never the problem.
-      // / The problem was handing it a path anyway & reading its refusal as absence. A
-      // / developer who builds their own ffmpeg, puts it somewhere deliberate & names that
-      // / path in the manifest was told the tool was ABSENT while it sat there working.
-      // /
-      // / So the kind of value decides the question. A separator means the operator CHOSE
-      // / this file & it is verified where they put it. A bare name means find it, & the
-      // / search order & the command -v fallback are unchanged.
-      // / Nothing about locateDependency changed. It was never wrong.
+      // / A path & a name are different questions, & asking the wrong one refuses a working tool.
+      // / locateDependency finds a binary by name & refuses anything containing a path separator.
+      // / So the kind of value decides the question.
+      // / A separator means the operator chose this file, & it is verified where they put it.
+      // / A bare name means find it, by the search order & the command -v fallback.
       if (strpos((string)$dependencyEntry['Binary'], DIRECTORY_SEPARATOR) !== FALSE) {
         $binaryPath = (string)$dependencyEntry['Binary'];
         if (is_file($binaryPath) && is_executable($binaryPath)) $DependencyIsPresent = TRUE;
@@ -536,15 +474,11 @@ function resolveDependencyState($dependencyEntry) {
       else if (preg_match((string)$dependencyEntry['VersionPattern'], $versionOutput, $versionMatches) && isset($versionMatches[1])) {
         $DetectedVersion = $versionMatches[1];
         if ((string)$dependencyEntry['MinimumVersion'] === '') $DependencyStatus = 'ok';
-        // / TOO NEW IS A STATE OF ITS OWN & is not the same as outdated or as ok.
-        // / Every entry declared a floor & nothing declared a ceiling, so a dependency that
-        // / had moved past what this application supports reported ok & then failed at the
-        // / point of use with an error about a flag or a symbol rather than about a version.
-        // / ImageMagick 6 to 7 changed the command line. FFMPEG 4 to 5 changed flags. Python
-        // / 3.14 to 3.15 stops every compiled module in this application from loading.
-        // / MaximumVersion is the first version NOT accepted, so 3.15 excludes the whole 3.15
-        // / line while leaving every 3.14 patch usable.
-        // / An entry that declares no ceiling behaves exactly as it did before.
+        // / Too new is a state of its own, not outdated & not ok.
+        // / A dependency past what this application supports fails at the point of use, with an error about a flag or a symbol.
+        // / ImageMagick 6 to 7 changed the command line, FFMPEG 4 to 5 changed flags, & Python 3.15 stops every compiled module loading.
+        // / MaximumVersion is the first version not accepted, so 3.15 excludes the whole 3.15 line & leaves every 3.14 patch usable.
+        // / An entry that declares no ceiling has no upper bound.
         else if (!compareVersionMinimum($DetectedVersion, (string)$dependencyEntry['MinimumVersion'])) $DependencyStatus = 'outdated';
         else if (isset($dependencyEntry['MaximumVersion']) && trim((string)$dependencyEntry['MaximumVersion']) !== '' && compareVersionMinimum($DetectedVersion, (string)$dependencyEntry['MaximumVersion'])) $DependencyStatus = 'too-new';
         else $DependencyStatus = 'ok'; } } }
@@ -577,7 +511,7 @@ function dependencyWindowText($dependencyEntry) {
 // / -----------------------------------------------------------------------------------
 // / A function to name the folder every dependency this application builds for itself lives under.
 // / Accepts nothing. Returns the absolute path.
-// / IT IS THIS APPLICATION'S ALONE. It sits under /usr/local/libexec beside this application's own
+// / It is this application's alone. It sits under /usr/local/libexec beside this application's own
 // / copy of bubblewrap, in the folder named for the application, so two applications on one host
 // / never share a build & neither touches the copy a package manager keeps.
 function ownBuildsRoot() {
@@ -609,13 +543,11 @@ function ownBuildFolder($dependencyEntry) {
 // / Accepts the entry, with its architecture rules applied. Returns TRUE when a package manager
 // / installs it, it declares a Fallback carrying a build command, it names its program by a plain
 // / name, & its VersionCommand runs that program.
-// / AN OWN BUILD IS FOUND BY ITS PROGRAM, so an entry with none, or one naming a path an operator
-// / chose, has nowhere to put one. Every other Type already says how it is made, so only a package
-// / manager's entry falls back.
-// / THE VERSION ASKED IS THE PROGRAM'S OWN. The build's folder is put first on the PATH of the
-// / version command, which finds the own build only where the command runs the program by its name.
-// / A command running some other program would be answered by the package manager's copy of that one,
-// / & the own build would be judged by a version it never gave.
+// / An own build is found by its program, so an entry with none, or one naming a path an operator chose, has nowhere to put one.
+// / Every other Type already says how it is made, so only a package manager entry falls back.
+// / The version asked is the program's own, because the build's folder is put first on the PATH of the version command.
+// / That finds the own build only where the command runs the program by its name.
+// / A command running some other program would be answered by the package manager's copy, & misjudge the own build.
 function ownBuildIsDeclared($dependencyEntry) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -638,13 +570,12 @@ function ownBuildIsDeclared($dependencyEntry) {
 // / be run.
 // / Accepts the build's folder & the path of its program. Returns whether it may & why it may not,
 // / in that order.
-// / ROOT RUNS IT TO ASK ITS VERSION, so it must be a plain file root owns, that no other account can
-// / change, in folders root alone can change, exactly as this application's own copy of bubblewrap
-// / must be. A path where nothing is has no reason, because there is simply no build. A program that
-// / is there & fails is never run, & the reason says why.
-// / THE WHOLE BUILD IS JUDGED, not only the path to its program. A program may read what was installed
-// / beside it, & a folder in the build another account could change is one root later empties to
-// / take the build away, so every name in it must be root's alone, & none may be a link.
+// / Root runs it to ask its version, so it must be a plain file root owns, which no other account can change.
+// / Its folders must be ones root alone can change, exactly as for this application's copy of bubblewrap.
+// / A path where nothing is has no reason, because there is simply no build.
+// / A program that is there & fails is never run, & the reason says why.
+// / The whole build is judged, because a program may read what was installed beside it.
+// / A folder another account could change is one root later empties, so every name must be root's alone, & none a link.
 // / treeIsTrustedByRoot() judges every folder above the build as well.
 function ownBuildIsTrusted($buildFolder, $binaryPath) {
   // / Set variables.
@@ -669,7 +600,7 @@ function ownBuildIsTrusted($buildFolder, $binaryPath) {
 // / build of a dependency.
 // / Accepts the path of the program. Returns whether that account can & the account it is, in that
 // / order.
-// / A BUILD ROOT TRUSTS CAN STILL BE ONE THE WEB SERVER'S ACCOUNT CANNOT RUN. A folder above it closed
+// / A build root trusts can still be one the web server's account cannot run. A folder above it closed
 // / to that account, or a filesystem that runs no programs, stops it, & root's own checks see neither.
 // / So root asks as that account whether the program may be read & run, which runs nothing, as the copy
 // / of bubblewrap is asked. Any other account is the one asking, & its own version probe has just run
@@ -757,18 +688,16 @@ function ownBuildInService($dependencyEntry) {
 // / are exactly what resolveDependencyState() returns. Where it came from is 'own' for this
 // / application's own build & 'system' for anything else, & the path is empty where there is no
 // / program to name.
-// / THE OWN BUILD IS ASKED FIRST & THE WINDOW DECIDES. One that answers inside the window is the
-// / program used. One that does not falls back to the package manager's, which is used where it
-// / answers inside the window, & a warning says so. Where neither does, the own build's state is the
-// / one returned, because an install builds it again, & one answering with no version this release
-// / can read is misconfigured, because a build this application made always reports its version.
-// / An own build that is not root's alone is never run. One root asks about must be one the account
-// / that runs conversions can run, or it is not used, because root's answer would describe a program
-// / no conversion reaches. Where the package manager's answers inside the window, it is used, & the
-// / warning says --update-depends takes the own build away. Where it does not, the entry is
-// / misconfigured & says why.
-// / resolveDependencyState() still reads the package manager's alone, because whether the own build
-// / is needed at all is a question about that copy.
+// / The own build is asked first, & the window decides.
+// / One that answers inside the window is the program used.
+// / One that does not falls back to the package manager's copy where that answers inside the window, & a warning says so.
+// / Where neither does, the own build's state is returned, because an install builds it again.
+// / An own build answering with no readable version is misconfigured, because a build this application made always reports one.
+// / An own build that is not root's alone is never run.
+// / One root asks about must be one the conversion account can run, or root's answer would describe a program no conversion reaches.
+// / Then the package manager's copy is used where it answers inside the window, & the warning says --update-depends removes the build.
+// / Where it does not, the entry is misconfigured & says why.
+// / resolveDependencyState() still reads the package manager's copy alone, because whether an own build is needed is about that copy.
 function resolveDependencyChoice($dependencyEntry) {
   // / Set variables.
   global $HostArchitecture, $EnableMemoryProtection;
@@ -826,7 +755,7 @@ function resolveDependencyChoice($dependencyEntry) {
 // / A function to remove a folder this application built, & everything in it, without following
 // / anything.
 // / Accepts the folder's path. Returns whether nothing is left of it.
-// / IT REMOVES ONLY A FOLDER DIRECTLY IN THE BUILDS FOLDER, & only while that folder is root's alone,
+// / It removes only a folder directly in the builds folder, & only while that folder is root's alone,
 // / so no account but root could have put a name in the way. removeTreeWithoutFollowing() in the
 // / Kernel does the removal. It examines every name with lstat, removes a link as a link, & makes
 // / every folder root's alone before anything in it is listed, which matters here because a build
@@ -853,7 +782,7 @@ function removeOwnBuildTree($treePath) {
 // / -----------------------------------------------------------------------------------
 // / A function to hold the lock every change to this application's own builds is made under.
 // / Accepts nothing. Returns the open handle holding the lock, or FALSE where none could be held.
-// / ONE CHANGE AT A TIME. A build, a removal & a sweep each hold it while they change the builds
+// / It allows one change at a time. A build, a removal & a sweep each hold it while they change the builds
 // / folder, so a sweep never takes away a folder another run is building in. The lock file sits in the
 // / builds folder, which root alone can change, & is opened without following anything. The kernel
 // / lets go of it when a process ends, however it ends, so an interrupted run never leaves it held.
@@ -901,21 +830,19 @@ function releaseOwnBuildLock($lockHandle) {
 // / Returns a sanity boolean, a status word & a sentence, in that order. The boolean is TRUE when a
 // / build answering inside the entry's window is in service. The status is 'installed', 'updated'
 // / or 'FAILED'.
-// / IT IS BUILT BESIDE THE ONE IN SERVICE & ONLY THEN PUT IN ITS PLACE. The Fallback's command is
-// / handed a new folder only root can open as DEPENDENCY_PREFIX, with the Version & Sha256 the
-// / Fallback pins as DEPENDENCY_VERSION & DEPENDENCY_SHA256. Both are set, empty where nothing is
-// / pinned, so a value left in root's environment never stands in for one. What it built is asked
-// / its version exactly as the one in service would be, & is renamed into place only when it is
-// / root's alone throughout, answers inside the window & is the version pinned. A sandbox therefore
-// / runs the old build or the new one & never part of either. The one in service is renamed aside
-// / first, because a folder cannot be renamed over another, so a conversion starting in the instant
-// / between the two renames finds neither, & runs the package manager's copy where that answers
-// / inside the window or is refused where it does not. A build that fails leaves the one in service
-// / as it was. Each folder is made only where nothing is & only beneath one root alone can change, as
-// / the copy of bubblewrap's folders are, & this application's own folders are opened to every
-// / account, because the account that runs conversions must reach the build through them.
-// / The whole build is made under holdOwnBuildLock(), & is ready only once the account that runs
-// / conversions can run what was put in service.
+// / It is built beside the one in service & only then put in its place.
+// / The Fallback's command gets a new folder only root can open as DEPENDENCY_PREFIX.
+// / DEPENDENCY_VERSION & DEPENDENCY_SHA256 carry the Version & Sha256 the Fallback pins, empty where nothing is pinned.
+// / Both are always set, so a value left in root's environment never stands in for one.
+// / What it built is asked its version as the one in service would be.
+// / It is renamed into place only when it is root's alone throughout, answers inside the window & is the version pinned.
+// / A sandbox therefore runs the old build or the new one & never part of either.
+// / The one in service is renamed aside first, because a folder cannot be renamed over another.
+// / A conversion starting between the two renames runs the package manager's copy where that answers inside the window, or is refused.
+// / A build that fails leaves the one in service as it was.
+// / Each folder is made only where nothing is, & only beneath one root alone can change.
+// / This application's own folders are opened to every account, because the conversion account must reach the build through them.
+// / The whole build is made under holdOwnBuildLock(), & is ready only once the conversion account can run what was put in service.
 function buildOwnCopy($dependencyEntry, $buildReason) {
   // / Set variables.
   global $RunningAsRoot, $HostArchitecture, $Lol, $EnableMemoryProtection;
@@ -1043,7 +970,7 @@ function detachOwnCopy($dependencyEntry) {
 // / A function to take away whatever is in the builds folder & is not a build the manifest declares.
 // / Accepts the whole manifest. Returns a sanity boolean & the number taken away, in that order. The
 // / boolean is TRUE when nothing is left that should not be.
-// / A RUN THAT STOPS PART WAY LEAVES ITS WORK BEHIND. A build interrupted while it runs leaves the
+// / A run that stops part way leaves its work behind. A build interrupted while it runs leaves the
 // / folder it was building in, & one interrupted between its two renames leaves the build it took out
 // / of service. An entry an update renamed or took out of the manifest leaves its build. Each is taken
 // / away under holdOwnBuildLock(), so nothing another run is building is touched. Only a folder named
@@ -1096,14 +1023,13 @@ function sweepOwnBuilds($dependsManifest) {
 // / own build left behind. The status is 'none' where there was nothing to do, 'removed' where an own
 // / build was taken away, 'unchanged' where the own build in service answers & is the version
 // / pinned, & otherwise 'installed', 'updated' or 'FAILED'. Each but 'none' & 'unchanged' is printed.
-// / IT RUNS ONLY WHEN DEPENDENCIES ARE INSTALLED OR UPDATED, always after the package manager has.
-// / The package manager's copy is asked first. One answering inside the window is used & any own
-// / build is taken away, so a host whose package manager has caught up goes back to the copy it keeps
-// / current. Otherwise the own build is built, or built again where it is missing, is not root's
-// / alone, does not answer inside the window, is older than the version the Fallback pins or cannot
-// / be run by the account that runs conversions. An own build an entry no longer declares is taken
-// / away, so dropping a Fallback detaches it everywhere, & a Fallback this release cannot use is
-// / warned about, because nothing else would say why it was never built.
+// / It runs only when dependencies are installed or updated, always after the package manager has.
+// / The package manager's copy is asked first, & one answering inside the window is used & any own build is taken away.
+// / A host whose package manager has caught up therefore goes back to the copy it keeps current.
+// / Otherwise the own build is built, or built again.
+// / A rebuild follows when it is missing, not root's alone, outside the window, older than pinned, or not runnable by the conversion account.
+// / An own build an entry no longer declares is taken away, so dropping a Fallback detaches it everywhere.
+// / A Fallback this release cannot use is warned about, because nothing else would say why it was never built.
 function settleOwnBuild($dependencyEntry) {
   // / Set variables.
   global $HostArchitecture, $Lol, $EnableMemoryProtection;
@@ -1156,12 +1082,10 @@ function settleOwnBuild($dependencyEntry) {
 // / A function to decide whether a package manager's install gave a dependency this release accepts.
 // / Accepts the entry, whether the package manager reported success & what it printed, in that order.
 // / Returns whether the entry now answers inside its window & what to report, in that order.
-// / A PACKAGE MANAGER REPORTS SUCCESS FOR WHATEVER VERSION IT HAS. Ubuntu 24.04 installs 7-Zip 23.01 &
-// / says so, & until v4.0.6 that was reported as installed above a report refusing it. So an install
-// / is believed once the entry answers inside its window. An entry declaring a Fallback is believed
-// / once settleOwnBuild() has settled it, which builds this application's own copy where the package
-// / manager's falls short, whether or not the package manager succeeded, because falling back comes
-// / before failing.
+// / A package manager reports success for whatever version it has, as Ubuntu 24.04 does for 7-Zip 23.01.
+// / So an install is believed once the entry answers inside its window.
+// / An entry declaring a Fallback is believed once settleOwnBuild() has settled it, whether or not the package manager succeeded.
+// / settleOwnBuild() builds this application's own copy where the package manager's falls short, because falling back comes before failing.
 function believePackageInstall($dependencyEntry, $packageWasInstalled, $packageOutput) {
   // / Set variables.
   global $HostArchitecture, $EnableMemoryProtection;
@@ -1191,7 +1115,7 @@ function believePackageInstall($dependencyEntry, $packageWasInstalled, $packageO
 // / in that order.
 // / Readiness is FALSE only when something marked Required is missing or too old. An
 // / optional dependency that is absent downgrades a subsystem & does not fail the check.
-// / THIS CHANGES NOTHING & NEEDS NO AUTHORIZATION. It is safe to run from anywhere.
+// / This changes nothing & needs no authorization. It is safe to run from anywhere.
 function checkDepends($subsystemFilter) {
   // / Set variables.
   global $RequiredDependsVersion, $Verbose, $HostArchitecture, $EnableMemoryProtection;
@@ -1307,12 +1231,8 @@ function showDependencyFindings($dependencyFindings) {
       if ($finding['Required']) $requiredProblems++;
       else $optionalProblems++; }
     $LinesPrinted++; }
-  // / Report both counts. Saying only that every REQUIRED dependency is fine, while the
-  // / table above shows two optional ones broken, reads as a contradiction.
-  // / AN EMPTY TABLE IS NOT A CLEAN BILL OF HEALTH. It means nothing was checked. Until v3.9.9
-  // / a missing manifest printed an empty table & then said every required dependency was
-  // / present, while the check itself had failed. The manifest moved at v3.9.9, which made
-  // / an installation without one more likely, so the sentence that covered for it went.
+  // / Report both counts, because saying only that every required dependency is fine contradicts two broken optional ones.
+  // / An empty table is not a clean bill of health, because it means nothing was checked.
   if ($LinesPrinted === 0) print($Lol.'No dependency was checked. Either no entry matches the subsystem named, or the manifest at '.contractPath('depends.php').' could not be loaded. Run -v to see which.'.$Lol);
   else print($Lol.($requiredProblems === 0 ? 'Every required dependency is present & current.' : $requiredProblems.' REQUIRED dependenc(ies) are missing or too old. Their subsystems refuse.').$Lol);
   if ($optionalProblems > 0) print($optionalProblems.' optional dependenc(ies) are missing or unverified. Their subsystems are unavailable.'.$Lol);
@@ -1342,9 +1262,7 @@ function describeElapsedTime($elapsedSeconds) {
 // / A function to run a long install command while showing the operator that it is alive.
 // / Accepts the command text & the name to show.
 // / Returns whether the command started, its output lines & its exit code.
-// / An install can run for hours on a slow connection. Its output used to be held back until
-// / it finished, so a download at 75 kbit/s looked exactly like a hang. This prints a status
-// / line every minute, with the elapsed time & the last thing the command said.
+// / An install can run for hours on a slow connection, so a status line prints every minute with the elapsed time & the last output.
 // / Standard input comes from /dev/null, so a command that asks a question gets an immediate
 // / end of input & fails, rather than waiting invisibly for an answer that cannot come.
 // / pip is told never to ask, to skip its own version check, & to resume a download that
@@ -1447,11 +1365,7 @@ function installOneDependency($dependencyEntry, $packageManager) {
     $ReturnData = 'This dependency ships with '.engineApplicationName().' & needs no installation.'; }
   else if ((string)$dependencyEntry['Type'] === 'manual') $ReturnData = 'This dependency is never installed automatically. Install it by hand from '.(string)$dependencyEntry['Source'].'.';
   // / A source built dependency runs the command its manifest entry carries.
-  // / This was refused outright until v3.8.9, which meant anything not in a package
-  // / repository had to be installed by a hand written script kept in step by hand.
-  // / A build takes minutes rather than seconds & prints a great deal while it works.
-  // / Only the tail of that output is kept, because a full compiler log in a report helps
-  // / nobody & the log already records that the build ran.
+  // / A build takes minutes & prints a great deal, so only the tail of its output is kept, & the log records that it ran.
   // / A build with no command is a manifest that has not said how, & says so.
   else if ((string)$dependencyEntry['Type'] === 'source') {
     if (!isset($dependencyEntry['BuildCommand']) or trim((string)$dependencyEntry['BuildCommand']) === '') $ReturnData = 'This dependency is built from source & its manifest entry names no build command.';
@@ -1619,7 +1533,7 @@ function enabledApacheConfs($confNames) {
 // / A function to turn off the Apache configurations a dependency install turned on.
 // / Accepts the names enabled before the install & the names the contract does not want.
 // / Returns the names turned off.
-// / A PACKAGE CAN PUBLISH SOMETHING ON EVERY SITE AS IT INSTALLS. javascript-common, which the
+// / A package can publish something on every site as it installs. javascript-common, which the
 // / packages Calibre recommends pull in, turns on an alias of /javascript for every site the host
 // / serves, & this application uses none of it. Only a configuration this install turned on is
 // / turned off, so one an administrator enabled stays. a2disconf records the choice as the
@@ -1654,7 +1568,7 @@ function turnOffApacheConfsInstallEnabled($enabledBefore, $unwantedConfs) {
 // / Accepts the manifest & the subsystem filter the command was given, in that order.
 // / Returns TRUE when nothing is left to do for the copy, as installSandboxBinary() decides, or
 // / where the filter does not cover it.
-// / A DEPENDENCY INSTALL OR UPDATE IS ONE OF THE TWO TIMES THE COPY CHANGES, & an application
+// / A dependency install or update is one of the two times the copy changes, & an application
 // / update is the other. It runs when the filter covers the subsystem bubblewrap is listed in, &
 // / installSandboxBinary() says what it did on a line of the dependency list.
 function refreshSandboxBinary($dependsManifest, $subsystemFilter) {
@@ -1825,10 +1739,7 @@ function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed
           if ((string)$dependencyEntry['Type'] !== 'apt' && (string)$dependencyEntry['Type'] !== 'pip') continue;
           list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyChoice($dependencyEntry);
           // / An unsupported dependency is named & skipped rather than attempted.
-          // / Installing a package that does not exist for this architecture produces a
-          // / package manager error that reads like a broken mirror, & an operator then goes
-          // / looking for a network fault that is not there. Until v4.0.6 it was named & then
-          // / attempted anyway, which failed on arm for Syslinux Utils.
+          // / A package that does not exist for this architecture fails like a broken mirror, & sends an operator after a network fault.
           if ($dependencyStatus === 'unsupported') { print('  '.str_pad((string)$dependencyEntry['Name'], 20).'not available on this machine. '.(string)$rawOutput.$Lol); continue; }
           if ($dependencyStatus === 'absent') { print('  '.str_pad((string)$dependencyEntry['Name'], 20).'not installed, skipped'.$Lol); continue; }
           $commandOutput = array();
@@ -1869,7 +1780,7 @@ function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed
 // / A function to remove dependencies from this host.
 // / Accepts the authorization token, a subsystem filter & a confirmation boolean.
 // / Returns a success boolean & the number removed, in that order.
-// / A SUBSYSTEM FILTER IS MANDATORY. Removing everything in the manifest would take PHP,
+// / A subsystem filter is mandatory. Removing everything in the manifest would take PHP,
 // / Apache & the package manager with it & leave a machine that cannot be recovered
 // / without physical access. This function refuses to run without a filter, whatever the
 // / operator has confirmed.
@@ -2058,13 +1969,10 @@ function runCapabilityCommand($capabilityCommand, $capabilityStyle, $capabilityP
 // / That is the floor. A parse failure & an honest answer of nothing look identical from
 // / here, so the safe reading is the one that changes nothing.
 // /
-// / The two directions carry their OWN state & an earlier version did not.
-// / Assimp answers with two commands. listext reports what it imports & listexport reports
-// / what it exports, & one of them can fail while the other succeeds. A single state made
-// / a successful listext report the whole dependency as detected, while the write set sat
-// / empty because listexport never answered. A narrowing pass reading that would conclude
-// / Assimp can write nothing at all & would refuse every model conversion on the machine.
-// / That is the exact failure this design exists to prevent, one level further in.
+// / The two directions carry their own state, because one command can fail while the other succeeds.
+// / Assimp's listext reports what it imports & listexport what it exports.
+// / One state would let a working listext mark Assimp detected while listexport never answered.
+// / A narrowing pass reading that would refuse every model conversion on the machine.
 function detectDependencyCapability($dependencyEntry) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -2134,13 +2042,8 @@ function detectDependencyCapability($dependencyEntry) {
 // / served, it refuses to execute without the core, & require_once is the only parser it
 // / needs. A JSON or an ini file would need a parser & would be readable as text.
 // /
-// / ROOT WRITES IT WITHOUT FOLLOWING ANYTHING & never hands it to the web server account.
-// / The file lives in the data location, which belongs to the web server account. Until
-// / v4.0.1 root wrote it by name & then chowned it to that account. A link planted at its
-// / name made one --setup --detect-capabilities overwrite the link's target & give it to the
-// / web server account, which was demonstrated with a root owned stand in. Root now writes a
-// / new file, renames it into place & leaves it root's & 0644, so the web server reads it &
-// / cannot edit it.
+// / Root writes it without following anything & never hands it to the web server account.
+// / Root writes a new file, renames it into place & leaves it root's & 0644, so the web server reads it & cannot edit it.
 function buildCapabilityCache() {
   // / Set variables.
   // / The pin the core sets is $RequiredDependsVersion. $DependsVersion is what the
@@ -2182,10 +2085,9 @@ function buildCapabilityCache() {
       .'$CapabilityCacheBuilt = '.var_export(time(), TRUE).';'.PHP_EOL
       .'$CapabilityCache = '.var_export($cacheRecords, TRUE).';'.PHP_EOL
       .'?>'.PHP_EOL;
-    // / The cache lives in the cache folder, which the web server account owns & root provisions
-    // / inside the data root it owns. Root writes it through the kernel, which the root owned
-    // / data root lets it do without following anything, & the web server account writes its own.
-    // / Until v4.0.1 it sat at the top of the data location, which the web server account owned.
+    // / The cache lives in the cache folder, which the web server account owns & root provisions inside the data root it owns.
+    // / Root writes it through the kernel, which the root owned data root lets it do without following anything.
+    // / The web server account writes its own.
     $cachePath = rtrim((string)$CacheLoc, $DirSep).$DirSep.'capability-cache.php';
     if ($RunningAsRoot) list ($cacheWasWritten, $writeNotice) = writeFileWithoutFollowing($cachePath, $cacheContents, 0644);
     else $cacheWasWritten = (@file_put_contents($cachePath, $cacheContents, LOCK_EX) !== FALSE);
@@ -2209,12 +2111,9 @@ function buildCapabilityCache() {
 // / The caller receives no records & must read that as every dependency being unknown,
 // / which leaves every pipeline declaration standing. Reading it as no capability would
 // / take the whole application down on a missing file.
-// / ROOT NEVER REQUIRES IT. The file is in the data location, which the web server account
-// / owns & can put any file into under this name. Until v4.0.1 every root command that asked
-// / a pipeline about a format required it, so the web server account could run code as root
-// / by editing it. Root now answers as if there were no cache, which leaves every declared
-// / format standing. Nothing root does depends on the cache, because conversions run as the
-// / web server account, & that account still reads it exactly as before.
+// / Root never requires it, because the web server account can put any file into the cache folder under this name.
+// / Root answers as if there were no cache, which leaves every declared format standing.
+// / Nothing root does depends on the cache, because conversions run as the web server account, which still reads it.
 function readCapabilityCache() {
   // / Set variables.
   // / $CoreLoaded is declared so the guard at the top of the generated file can see it.
@@ -2313,13 +2212,10 @@ function outputSupplyChain($outputPath) {
         (string)$dependencyEntry['Purpose'],
         '', '', '', '', '', '', '', ''); }
     $reportContents = buildCsvContents($reportRows);
-    // / Root writes its report in Engine/, the folder it owns inside the data root, through the
-    // / kernel, which sets the mode as the file is created & follows nothing. Beside the logs is
-    // / the web server account's folder, which root does not write. Engine/ does not exist until
-    // / -fp has run after an upgrade, so a write that fails there is reported rather than retried
-    // / somewhere root cannot safely hold. Every other account owns its log folder & writes the
-    // / report there with a plain call. Until v4.0.1 root tried beside the logs & fell back to
-    // / the data location, which it did not yet own.
+    // / Root writes its report in Engine/, the folder it owns inside the data root, through the kernel, which follows nothing.
+    // / Beside the logs is the web server account's folder, which root does not write.
+    // / Engine/ does not exist until -fp has run after an upgrade, so a write that fails there is reported rather than retried elsewhere.
+    // / Every other account owns its log folder & writes the report there with a plain call.
     if ($RunningAsRoot) {
       $ReportPath = rtrim((string)$EngineDir, $DirSep).$DirSep.$reportName;
       list ($reportWasWritten, $writeNotice) = writeFileWithoutFollowing($ReportPath, $reportContents, 0644);

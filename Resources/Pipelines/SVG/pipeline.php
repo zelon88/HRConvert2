@@ -12,14 +12,10 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
-// / This file is the converter for the SVG pipeline. It is loaded by pipelineCore.php
-// / ONLY when a SVG conversion is about to be dispatched to it, so a request that
-// / converts something else never parses a line of it.
-// / Error block 25000 through 25002 belongs to this pipeline. Those numbers came with the code when it
-// / moved out of convertCore.php & they did not change, because operators have read them.
-// / This pipeline asks for Inkscape through verifiedToolPath(), which answers from the
-// / manifest, & calls sandboxCommand() & locateDependency(), which remain in convertCore.php.
+// / v4.0.8.
+// / The SVG pipeline's converter. pipelineCore.php loads it only to dispatch an SVG conversion.
+// / Error block 25000 through 25002 belongs to this pipeline.
+// / Inkscape comes from verifiedToolPath().
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -41,9 +37,7 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
-  // / This converter produces neither of the last two itself, so it declares the defaults.
-  // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
-  // / detached process must be supervised after the connection to the user is closed.
+  // / The last two keep their defaults, & $WorkerPID stays 0 unless a detached process is supervised.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
@@ -79,9 +73,8 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
         $stopper++; }
       // / Log the output of the operation to the logfile, if it is not blank.
       if ($Verbose && trim($returnData) !== '') logEntry('Inkscape returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Every attempt was made & none left a file. What the converter printed is logged above this,
-      // / with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the converter had timed out, which no time limit
-      // / ever caused, & then made one more attempt.
+      // / Every attempt was made & none left a file.
+      // / What the converter printed is logged above, with --Enhanced Logging Verbosity-- on.
       if (!file_exists($newPathname)) {
         $ConversionErrors = TRUE;
         errorEntry('The SVG converter produced no file after '.$stopper.' attempt(s)!', 25000, FALSE); }

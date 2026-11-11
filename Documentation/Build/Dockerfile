@@ -31,9 +31,10 @@
 #
 # SYS_ADMIN IS REQUIRED FOR THE SANDBOX.
 # Every conversion runs inside a bubblewrap namespace with no network. A container cannot
-# create that namespace without the capability. Without it the sandbox is unavailable &
-# every conversion is refused, unless --Require Sandbox On Docker-- is FALSE in config.php,
-# which runs conversions unprotected & is not recommended for anything public facing.
+# create that namespace without the capability. Without it the sandbox is unavailable, &
+# conversions run unprotected with a warning, which is not recommended for anything public
+# facing. --Require Sandbox On Docker-- set to TRUE in config.php refuses them instead.
+# No process that converts or serves a user's file holds SYS_ADMIN, or any other capability.
 # An alternative to the capability is  --security-opt seccomp=unconfined  on some hosts.
 # A container makes no copy of bubblewrap & writes no AppArmor profile. The host's kernel
 # decides both, so a restricting host is corrected on the host.

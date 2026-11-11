@@ -12,18 +12,14 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
-// / This file is the converter for the Image pipeline. It is loaded by pipelineCore.php
-// / ONLY when an Image conversion is about to be dispatched to it, so a request that
-// / converts something else never parses a line of it.
-// / Error block 8000 through 8002 belongs to this pipeline, & the OCR pipeline raises 8001 for
-// / the same ImageMagick. Those numbers came with the code when it
-// / moved out of convertCore.php & they did not change, because operators have read them.
-// / This pipeline asks for ImageMagick through verifiedToolPath(), which answers from the
-// / manifest, & calls sandboxCommand(), which is the Engine's.
-// / THIS PIPELINE CARRIES ITS OWN IMAGEMAGICK POLICY, in Policy/policy.xml beside this file. Each
-// / conversion takes it into its sandbox, where it covers the host's, & nothing is written into the
-// / host. Until v4.0.5 -fp rewrote the host's policy.xml, for every program on the host.
+// / v4.0.8.
+// / The Image pipeline's converter. pipelineCore.php loads it only to dispatch an Image conversion.
+// / Error block 8000 through 8002 belongs to this pipeline.
+// / The OCR pipeline raises 8001 for the same ImageMagick.
+// / ImageMagick comes from verifiedToolPath().
+// / This pipeline carries its own ImageMagick policy, in Policy/policy.xml beside this file.
+// / Each conversion takes it into its sandbox, where it covers the host's.
+// / Nothing is written into the host.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -48,9 +44,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $DirSep, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
-  // / This converter produces neither of the last two itself, so it declares the defaults.
-  // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
-  // / detached process must be supervised after the connection to the user is closed.
+  // / The last two keep their defaults, & $WorkerPID stays 0 unless a detached process is supervised.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
@@ -83,9 +77,9 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
     // / Without this a transparent PNG becomes a black JPEG rather than a white one.
     if ($outputExt === 'jpg' or $outputExt === 'jpeg') $bgSwitch = '-background white -alpha remove ';
     else $bgSwitch = '-background none ';
-    // / An icon holds nothing larger than 256 pixels a side, & ImageMagick refuses a larger one & leaves
-    // / an empty file. So a larger image is shrunk to fit, after any size the user asked for, & a
-    // / smaller one is left as it is. Until v4.0.6 a screenshot converted to an empty icon.
+    // / An icon holds nothing over 256 pixels a side, & ImageMagick leaves an empty file for a larger one.
+    // / A larger image is shrunk to fit, after any size the user asked for.
+    // / A smaller one is left as it is.
     if ($outputExt === 'ico') $iconLimit = '-resize '.escapeshellarg('256x256>').' ';
     // / Build & sandbox the command once. It does not change between retries.
     // / The input comes FIRST. -alpha remove is an operation & needs an image already
@@ -118,9 +112,8 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
         $stopper++; }
       // / Log the output of the operation to the logfile, if it is not blank.
       if ($Verbose && trim($returnData) !== '') logEntry('ImageMagick returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Every attempt was made & none left a file. What the converter printed is logged above this,
-      // / with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the converter had timed out, which no time limit
-      // / ever caused, & then made one more attempt.
+      // / Every attempt was made & none left a file.
+      // / What the converter printed is logged above, with --Enhanced Logging Verbosity-- on.
       if (!file_exists($newPathname)) {
         $ConversionErrors = TRUE;
         errorEntry('The image converter produced no file after '.$stopper.' attempt(s)!', 8000, FALSE); }

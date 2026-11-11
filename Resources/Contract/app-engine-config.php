@@ -8,22 +8,12 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.7.
-// / THIS APPLICATION'S ENGINE SETTINGS. It is loaded AFTER engineConfig.php & anything it
-// / sets wins.
-// /
-// / The arrangement is the one Apache & php use. A package ships a configuration with
-// / working defaults, & the thing being configured drops a file beside it that overrides
-// / what it needs & leaves the rest alone. Neither file has to know what the other says.
-// /
-// / WHY IT MATTERS HERE. engineConfig.php belongs to the ENGINE & is replaced wholesale
-// / when a newer Engine arrives. This file belongs to the APPLICATION & survives that.
-// / Before this split an Engine upgrade meant reading engineConfig.php line by line to find
-// / which values were this application's, & merging by hand. Now it is a directory copy.
-// /
-// / SET ONLY WHAT DIFFERS. A setting repeated here at the same value the Engine already
-// / uses is a value that will silently stop tracking the Engine's default when that default
-// / changes for a good reason.
+// / v4.0.9.
+// / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
+// / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
+// / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
+// / So an Engine upgrade is a directory copy.
+// / Set only what differs, because a setting repeated here at the Engine's value silently stops tracking the Engine's default when that default changes.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -48,11 +38,8 @@ $EngineApplicationSlug = 'hrconvert2';
 
 
 // / -----------------------------------------------------------------------------------
-// / THE PROVIDERS. Every one names a function this application defines, & the Engine calls
-// / what it is given without knowing anything else about it.
-// / This is the whole of how the Engine learns about an application. Six names. The log provider
-// / joined them at v4.0.6, & the data policy provider was retired at v4.0.5, because the Engine
-// / knows what it serves now.
+// / The providers. Every one names a function this application defines, & the Engine calls what it is given without knowing anything else about it.
+// / This is the whole of how the Engine learns about an application, through six names.
 // /
 // / An Engine with none of them still runs & does less, which is the correct degradation
 // / rather than a failure. See ABOUT_ENGINE_CONTRACT.txt.
@@ -88,34 +75,32 @@ $EngineApplicationArgumentHandler = '';
 // / Every family this application converts is listed, & convertCore.php converts nothing on
 // / its own. A family removed from this list becomes unavailable rather than falling back.
 // / Comment one out only to test that.
-// / Accepting a pipeline, or moving one to a new version, is one line here. The Engine is not
-// / touched, so no Engine version moves for it. Until v3.9.9 this list was written into the
-// / Pipeline Core, which belongs to the Engine, & each change to it was a new Pipeline Core.
+// / Accepting a pipeline, or moving one to a new version, is one line here, & no Engine version moves for it.
 // / The order is the order pipelines are enumerated & listed in.
 $EngineAcceptedPipelines = array(
-  'Stream' => 'v4.0.0',
-  'Scad' => 'v4.0.5',
-  'OCR' => 'v4.0.5',
-  'Document' => 'v4.0.6',
-  'Subtitle' => 'v4.0.6',
-  'SVG' => 'v4.0.6',
-  'Drawing' => 'v4.0.6',
-  'Image' => 'v4.0.6',
-  'Model' => 'v4.0.6',
-  'Video' => 'v4.0.6',
-  'Ebook' => 'v4.0.6',
-  'Audio' => 'v4.0.6',
-  'Archive' => 'v4.0.6',
+  'Stream' => 'v4.0.8',
+  'Scad' => 'v4.0.8',
+  'OCR' => 'v4.0.9',
+  'Document' => 'v4.0.8',
+  'Subtitle' => 'v4.0.8',
+  'SVG' => 'v4.0.8',
+  'Drawing' => 'v4.0.8',
+  'Image' => 'v4.0.8',
+  'Model' => 'v4.0.8',
+  'Video' => 'v4.0.8',
+  'Ebook' => 'v4.0.8',
+  'Audio' => 'v4.0.8',
+  'Archive' => 'v4.0.8',
   // / Scanner pipelines. They declare no formats & are chosen by name.
-  'ClamAV' => 'v3.9.9',
+  'ClamAV' => 'v4.0.8',
   // / The first pipeline of kind file. Operations that do not care what is in a file.
-  'Files' => 'v4.0.0',
-  'ScanCore' => 'v3.9.9');
+  'Files' => 'v4.0.8',
+  'ScanCore' => 'v4.0.8');
 
 // / The shared modules a pipeline may load & the exact version each must report.
 // / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.
 $EngineAcceptedSharedModules = array(
-  'libreOffice.php' => 'v4.0.6');
+  'libreOffice.php' => 'v4.0.9');
 
 // / Where each of this application's own pins reads its version from.
 // / php convertCore.php --build --pins --write writes every pin from the files named here,
@@ -148,13 +133,12 @@ $EnginePinSources = array(
 // /   shared     A folder other software shares. Checked & never walked.
 // / A location inside another keeps its own role, so DATA stays the web server account's
 // / inside an installation that is root's. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
-// / The data location is a root root owns. A folder for each kind of file hangs off it, & each
-// / has its own role. Sessions & the web server account's cache are that account's, root's log
-// / folder & the previous installation are root's. The data location itself is never walked &
-// / only its own owner & mode are corrected, which is what the data-root role means. HomeLoc is
-// / no longer listed, because the cache folder is the web server account's home now.
-// / SecretLoc is Secrets, where this application keeps its install secret from v4.0.4. Root
-// / writes it & the web server account's group reads it, & no other account can list the folder.
+// / The data location is owned by root, & a folder for each kind of file hangs off it with its own role.
+// / Sessions & the web server account's cache are that account's, & root's log folder & the previous installation are root's.
+// / The data location itself is never walked & only its own owner & mode are corrected, which is what the data-root role means.
+// / HomeLoc is not listed, because the cache folder is the web server account's home.
+// / SecretLoc is Secrets, where this application keeps its install secret.
+// / Root writes it & the web server account's group reads it, & no other account can list the folder.
 // / The data location is named by $DataRootLoc here, not $ConvertLoc. $ConvertLoc is narrowed to
 // / the session area a request uses, so it is not the root on the command line where this is
 // / applied. $DataRootLoc always holds the configured root. SessionLoc is the session area below
@@ -180,14 +164,11 @@ $EngineManagedLocations = array(
 // / See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
 $EngineApplicationLayout = array('convertCore.php', 'index.html', 'README.md', 'LICENSE', 'Documentation', 'Resources', 'UI');
 
-// / Paths inside an installation that no release of this application ships, by their path below
-// / it. -fp takes each one away as root, without following anything in it, once it has given the
-// / rest of the installation to root, so an installation an earlier release left one in is one
-// / root may run again. Each must stay inside the installation, & one that names . or .. is refused.
-// / FFmpeg's build left its whole tree in Documentation/Build/ffmpeg-build until v4.0.6, links &
-// / files with more than one name included, & root refuses an installation holding a link from
-// / v4.0.1 on. -fp could not take it away, so the installation stayed one root refused, which is
-// / why the v4.0.5 image never answered.
+// / Paths inside an installation that no release of this application ships, by their path below it.
+// / -fp takes each one away as root, without following anything in it, once it has given the rest of the installation to root.
+// / So an installation an earlier release left one in is one root may run again.
+// / Each must stay inside the installation, & one that names . or .. is refused.
+// / Documentation/Build/ffmpeg-build is FFmpeg's whole build tree, links & files with more than one name included, which root refuses an installation for.
 // / See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
 $EngineRetiredPaths = array('Documentation/Build/ffmpeg-build');
 
@@ -209,9 +190,8 @@ $EngineUnwantedApacheConfs = array('javascript-common');
 // / HostedLocation is the folder the web server serves this application from, ServerURL is the
 // / address of that folder, & DocumentRoot is the web server's document root. An application
 // / that maps no hosted location serves nothing.
-// / LiftNamespaceRestriction says whether -fp may lift the kernel's AppArmor restriction on
-// / unprivileged namespaces where this application's own profile cannot carry a sandbox. An
-// / application that maps nothing permits it, as every release did until v4.0.5.
+// / LiftNamespaceRestriction says whether -fp may lift the kernel's AppArmor restriction on unprivileged namespaces where this application's own profile cannot carry a sandbox.
+// / An application that maps nothing permits it.
 // / RequireResourceAwareness says whether a conversion the listener gives no answer for is
 // / refused. An application that maps nothing lets it run.
 $EngineSettingNames = array(

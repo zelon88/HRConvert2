@@ -8,29 +8,17 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.1.
+// / v4.0.8.
 // / This file is the Environment Manager. It watches the host & repairs it only when told.
 // /
-// / It is not a manager in the sense the other four are, & that is the whole point.
-// / It is not dispatched by the listener, it is not in getAcceptedManagers(), it opens no
-// / socket & it appears in no socket directory. The listener could not start it if
-// / something convinced the listener to try, because the listener is the web server
-// / account & this refuses to run as anything but root. It is pinned by
-// / getAcceptedRootManagers() & loaded only by loadEngineRootManager(), for a root command.
-// / A systemd timer starts it, or an administrator runs it by hand. Those are the only
-// / two ways in.
-// /
-// / Information leaves it & nothing enters it.
-// / A socket is a door, & a door on a root process is worth more to an attacker than
-// / everything else in this application together. A worker that could ask a root process
-// / to repair a policy could ask it to repair a policy into something else. So it accepts
-// / no requests, reads the environment for itself, & writes what it found where the web
-// / server account may read it & only root may write it.
-// /
-// / It watches by default & repairs only when an administrator says so.
-// / A root process that silently rewrites /etc on a timer is a liability even when every
-// / write it makes is correct.
-// /
+// / It is not a manager in the sense the other four are.
+// / The listener does not dispatch it, getAcceptedManagers() does not list it, & it opens no socket.
+// / It refuses to run as anything but root, so the listener, which is the web server account, cannot start it.
+// / getAcceptedRootManagers() pins it & loadEngineRootManager() loads it, for a root command.
+// / A systemd timer starts it, or an administrator runs it by hand.
+// / It accepts no requests, because a root process that took requests could be asked to repair a policy into something else.
+// / It reads the environment itself & writes what it found where the web server account may read it & only root may write it.
+// / It watches by default & repairs only when an administrator allows it, because silent writes to /etc on a timer are a liability.
 // / See Documentation/ABOUT_ENVIRONMENT_MANAGER.txt for the reasoning behind all of it.
 // /
 // / <3 Open-Source
@@ -45,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.1';
+$ManagerVersion = 'v4.0.8';
 // / -----------------------------------------------------------------------------------
 
 
@@ -61,10 +49,9 @@ $ManagerVersion = 'v4.0.1';
 // / account would report every policy as unreadable & log a page of failures that mean
 // / nothing, which is worse than not running.
 // /
-// / ONE PASS RUNS AT A TIME. A timer & an administrator can both start one, & two repairs at
-// / once would each correct what the other was correcting. The lock is a file in Engine, root's
-// / own folder, opened through the kernel & held for the whole pass. A pass that finds it held
-// / checks nothing, changes nothing & says so.
+// / One pass runs at a time, because two repairs at once would each correct what the other was correcting.
+// / The lock is a file in Engine, root's own folder, opened through the kernel & held for the whole pass.
+// / A pass that finds it held checks nothing, changes nothing & says so.
 function runEnvironmentManager() {
   // / Set variables.
   global $RunningAsRoot, $CurrentUser, $EnvironmentManagerMayRepair, $EngineRepairIsUnattended, $EngineDir, $Verbose, $EnableMemoryProtection;
@@ -99,15 +86,10 @@ function runEnvironmentManager() {
         // / A drift is a warning every pass, not a log entry. An installation drifting is not
         // / normal activity & an operator scanning for warnings should find it.
         warningEntry('Environment Manager found '.(isset($findingEntry['Check']) ? $findingEntry['Check'] : 'an unnamed check').' reporting '.(string)$findingEntry['Status'].'. '.(isset($findingEntry['Detail']) ? $findingEntry['Detail'] : '')); }
-      // / IT REPAIRS ONCE A DAY & LOOKS EVERY HOUR. That is the whole difference between this
-      // / & a command an administrator typed.
-      // / A repair walks the data tree, rewrites configuration & touches services. Doing that
-      // / hourly on an appliance costs real work for nothing, because a drift that survived one
-      // / repair will survive the next one an hour later. What it needs is an operator, & the
-      // / warnings below are how one is fetched.
-      // / So the first pass of a day that finds a problem repairs it. Every later pass that day
-      // / reports the same problem & changes nothing. The next day it tries once more.
-      // / A state it cannot read counts as no repair today, which allows one & says why.
+      // / It repairs once a day & looks every hour.
+      // / A repair walks the data tree, rewrites configuration & touches services, & a drift that survived one repair survives the next.
+      // / So the first pass of a day that finds a problem repairs it, & every later pass that day only reports it.
+      // / The next day it tries once more, & a state it cannot read counts as no repair today.
       $todayStamp = date('Y-m-d');
       list ($stateWasRead, $previousState, $stateStatus) = readEnvironmentState();
       if ($stateStatus === 'unreadable' or $stateStatus === 'corrupt') warningEntry('The Environment Manager could not read what its last pass recorded, so it cannot tell whether it has already repaired today. The state file is '.$stateStatus.' & is rewritten by this pass.');
@@ -145,7 +127,7 @@ function runEnvironmentManager() {
         'LastRepairDay' => $lastRepairDay,
         'Findings' => $PassFindings);
       $stateWasWritten = writeEnvironmentState($stateData);
-      // / ROOT'S OWN LOGFILES OLDER THAN THIRTY DAYS GO, EVERY PASS, WATCHING OR REPAIRING. Root's
+      // / Root's own logfiles older than thirty days go, every pass, watching or repairing. Root's
       // / log folder is no other account's to clean, so nothing else ever would. Removing root's
       // / own files from root's own folder changes nothing about the host. Thirty days is fixed
       // / rather than configured, & pruneRootLogs has already said anything that went wrong.

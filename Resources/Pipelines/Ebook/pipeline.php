@@ -12,14 +12,10 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
-// / This file is the converter for the Ebook pipeline. It is loaded by pipelineCore.php
-// / ONLY when an Ebook conversion is about to be dispatched to it, so a request that
-// / converts something else never parses a line of it.
-// / Error block 30000 through 30002 belongs to this pipeline. Those numbers came with the code when it
-// / moved out of convertCore.php & they did not change, because operators have read them.
-// / This pipeline asks for Calibre through verifiedToolPath(), which answers from the
-// / manifest, & calls sandboxCommand() & locateDependency(), which remain in convertCore.php.
+// / v4.0.8.
+// / The Ebook pipeline's converter. pipelineCore.php loads it only to dispatch an Ebook conversion.
+// / Error block 30000 through 30002 belongs to this pipeline.
+// / Calibre comes from verifiedToolPath().
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -34,26 +30,17 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert e-book formats.
-// / Calibre is one utility covering every e-book format in both directions, so this is a
-// / single stage pipeline with no intermediate file & no second dependency.
-// / ebook-convert INFERS THE OUTPUT FORMAT FROM THE OUTPUT FILE EXTENSION rather than from
-// / a flag. The extension therefore has to survive the trip into the sandbox, & it does,
-// / because sandboxCommand() rewrites the directory & keeps the basename intact.
-// / Calibre insists on a writable HOME & builds a configuration directory on first run.
-// / The sandbox sets HOME to a tmpfs, so that directory is built fresh inside the namespace
-// / on every conversion & is discarded with it. That costs a little time per conversion &
-// / buys a guarantee that nothing a hostile book does to Calibre's configuration survives.
-// / Calibre also reaches the network for metadata & update checks when it is allowed to.
-// / The sandbox unshares the network, which closes that off without needing a flag.
-// / --no-default-epub-cover is deliberately NOT passed. A generated cover is expected
-// / behaviour & suppressing it surprises users who converted a book that had no cover.
+// / Calibre covers every e-book format in both directions, so this is one stage with one dependency.
+// / ebook-convert infers the output format from the output file extension, which sandboxCommand() keeps.
+// / Calibre builds its configuration under HOME, which the sandbox makes a tmpfs.
+// / Nothing a book does to that configuration survives the conversion.
+// / The sandbox unshares the network, which stops Calibre's metadata & update checks.
+// / --no-default-epub-cover is not passed, because a generated cover is expected behaviour.
 function convertEbooks($pathname, $newPathname, $extension) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
-  // / This converter produces neither of the last two itself, so it declares the defaults.
-  // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
-  // / detached process must be supervised after the connection to the user is closed.
+  // / The last two keep their defaults, & $WorkerPID stays 0 unless a detached process is supervised.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
@@ -88,9 +75,8 @@ function convertEbooks($pathname, $newPathname, $extension) {
       // / Calibre is verbose by default & reports its whole conversion pipeline, which is
       // / genuinely useful when a book converts but comes out wrong.
       if ($Verbose && trim($returnData) !== '') logEntry('Calibre returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Every attempt was made & none left a file. What the converter printed is logged above this,
-      // / with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the converter had timed out, which no time limit
-      // / ever caused, & then made one more attempt.
+      // / Every attempt was made & none left a file.
+      // / What the converter printed is logged above, with --Enhanced Logging Verbosity-- on.
       if (!file_exists($newPathname)) {
         $ConversionErrors = TRUE;
         errorEntry('The e-book converter produced no file after '.$stopper.' attempt(s)!', 30000, FALSE); }

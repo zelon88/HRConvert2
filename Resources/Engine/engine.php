@@ -13,35 +13,19 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.0.7.
-// / This file is the Engine. It provides the environment an application runs in.
-// / It is pinned EXACTLY by the application via $RequiredEngineVersion.
-// / Error block 35000 through 35019 reserved. 35000 is the direct load guard every component
-// / shares, the kernel's included.
+// / v4.0.8.
+// / The Engine. It provides the environment an application runs in.
+// / The application pins it exactly via $RequiredEngineVersion.
+// / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
 // / See Documentation/ABOUT_ENGINE_CONTRACT.txt for what an application must supply.
 // /
-// / What the Engine is for.
-// / An application that converts files, an application that scans them for malware & an
-// / application that dispatches work to either of those all need the same environment.
-// / They need to know where they are, whether they are running as root, whether there is a
-// / terminal on the other end, how to find a binary, how to write a log, how to shred a
-// / variable & how to prove that a process they started is one of theirs.
-// / None of that is about converting a file. All of it was written inside an application
-// / that converts files, & this is where it goes instead.
+// / It answers where an application is, whether it runs as root & whether a terminal is attached.
+// / It finds binaries, writes logs, shreds variables & proves that a process it started is its own.
+// / It is not a framework. The application is the entry point, & it boots, verifies its components, loads this file & calls into it.
+// / The Engine never calls application code, because an Engine that did would only work for one application.
 // /
-// / What the Engine is NOT.
-// / It is not a framework & it does not build the application. The application is the
-// / entry point. It boots, it verifies its components, it loads this file & then it calls
-// / into it. The Engine never calls application code, & an Engine that needed to would be
-// / an Engine that only works for one application.
-// /
-// / Three tiers exist & the boundaries are not arbitrary.
-// /   The kernel   Resources/Kernel/kernel.php, beside this directory & never inside it.
-// /                Logging, halting, memory shredding, sanitizing, the command line,
-// /                dependency location & component loading. It cannot live here, because
-// /                it is what loads this file & it must be able to report that loading
-// /                failed. Until v3.9.9 it lived inside the application entry file, so a
-// /                second application could only copy it out by hand.
+// / Three tiers exist.
+// /   The kernel   Resources/Kernel/kernel.php, beside this directory, because it loads this file & reports when that fails.
 // /   The Engine   This file. The environment every application needs.
 // /   The app      Everything that makes one application different from another.
 // /
@@ -57,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.0.7';
+$EngineVersion = 'v4.0.8';
 // / -----------------------------------------------------------------------------------
 
 
@@ -78,18 +62,10 @@ else warningEntry('The Engine environment at '.$engineEnvironmentFile.' is missi
 // / Accepts no arguments.
 // / Returns a usability boolean & the reason, in that order.
 // /
-// / The binary being present proves nothing. This is the mistake this function exists for.
-// / An earlier release decided systemd was available because loginctl was on the PATH.
-// / Every official PHP container image ships the systemd client tools & does not run
-// / systemd, so every check passed, a unit file was written, lingering was attempted, & the
-// / listener was then handed to a service manager that was never going to answer. The
-// / error that finally surfaced came from systemctl itself, which is the proof the binary
-// / was there all along.
-// /
-// / /run/systemd/system EXISTS ONLY WHEN SYSTEMD IS PID 1.
-// / This is the test the systemd documentation gives for exactly this question & is what
-// / sd_booted does. It is a directory test, it costs nothing, & it is correct inside a
-// / container, inside a chroot, & on a host running any other init.
+// / The binary being present proves nothing, because official PHP container images ship the systemd client tools without systemd.
+// / /run/systemd/system exists only when systemd is PID 1.
+// / That is the test the systemd documentation gives & what sd_booted does.
+// / It is correct in a container, in a chroot & under any other init.
 function systemdIsUsable() {
   // / Set variables.
   global $Verbose, $EnableMemoryProtection;
@@ -161,13 +137,9 @@ function parseConversionLimit($limitString) {
 // / -----------------------------------------------------------------------------------
 // / A function to read a startup key out of the environment & clear it immediately.
 // / Accepts no arguments. Returns the key, or an empty string when none was supplied.
-// / A startup key used to travel on the command line, & /proc/PID/cmdline is world
-// / readable, so every local account could read it out of ps for the whole life of the
-// / process. A manager listener runs for days, so the key sat in plain view long after the
-// / ten second window that made it useful had closed. Anybody watching ps during a spawn
-// / had the key. /proc/PID/environ is readable only by the owner of the process.
-// / The variable is cleared the moment it is read, so it is not inherited by a converter
-// / the manager launches later.
+// / A startup key travels in the environment, because /proc/PID/environ is readable only by the process owner.
+// / /proc/PID/cmdline is world readable, so a key on the command line could be read from ps for the life of the process.
+// / The variable is cleared the moment it is read, so a converter the manager launches later does not inherit it.
 function readTransportedStartupKey() {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -187,24 +159,15 @@ function readTransportedStartupKey() {
 // / -----------------------------------------------------------------------------------
 // / A function to spend a startup key so it can never be presented a second time.
 // / Accepts the purpose & the key. Returns TRUE when the key had not been spent before.
-// / Time alone cannot make a leaked key dead. The holder of a copy validates it against
-// / the same clock we do, so the window only decides how long they have, never whether
-// / they succeed. Spending the key is a property this application controls.
-// / The ledger lives in the manager socket directory, which is already 0700, & it holds
-// / hashes rather than keys so reading it grants nothing. Entries older than three windows
-// / are dropped, because a key that old cannot validate anyway.
+// / Time alone cannot make a leaked key dead, because its holder validates it against the same clock.
+// / Spending the key is a property this application controls.
+// / The ledger holds hashes rather than keys, so reading it grants nothing.
+// / Entries older than three windows are dropped, because a key that old cannot validate anyway.
 // /
-// / What this defends against, & what it does not.
-// / It defends against a key that leaked. Somebody who obtained one copy of a key cannot
-// / spend it twice, & cannot spend it at all once the process it was minted for has used it.
-// / It does NOT defend against an account that holds the install secret. Deleting this
-// / ledger un-spends a captured key, & the two accounts that can delete it are root & the
-// / web server user, both of which can already read the secret, root:www-data 0640, & mint a
-// / valid key for any purpose in any window. That is a shorter route to the same place, so
-// / losing the ledger to either of them costs nothing that was not already lost.
-// / The ledger sits in the socket folder inside the data location, 0700 & owned by the web
-// / server user, so an unprivileged local account cannot reach it at all. That is the account
-// / this control exists for, & the property that has to keep holding.
+// / It defends against a key that leaked, which cannot be spent twice, or at all once its process has used it.
+// / It does not defend against an account holding the install secret, which can mint a valid key directly.
+// / Root & the web server user can delete the ledger, & both can already read the secret, so deleting it gains them nothing.
+// / The ledger sits in the socket folder, 0700 & the web server user's, so an unprivileged local account cannot reach it.
 function consumeStartupKey($keyPurpose, $suppliedKey) {
   // / Set variables.
   global $ManagerSocketDir, $DirSep, $StartupKeyWindow, $EnableMemoryProtection;
@@ -297,7 +260,7 @@ function validateStartupKey($keyPurpose, $suppliedKey, $singleUse = FALSE) {
 // / A function to check that this host can actually do the work, without changing it.
 // / Accepts no arguments.
 // / Returns a readiness boolean & an array of findings, in that order.
-// / THIS NEVER REPAIRS ANYTHING. Repair needs root & the listener does not have it, so a
+// / This never repairs anything. Repair needs root & the listener does not have it, so a
 // / validator that tried would fail confusingly on every pass. It reports, & -fp fixes.
 // / Readiness is FALSE only for a condition that stops conversions outright. A policy that
 // / has drifted is reported & does not fail the check, because conversions still run.
@@ -334,47 +297,33 @@ function validateOperatingEnvironment() {
   list ($scriptIsValid, $scriptStatus) = verifyBootstrapScript();
   list ($scriptDisplayStatus, $scriptDetail) = describeBootstrapStatus($scriptStatus);
   $EnvironmentFindings[] = array('Check' => 'Bootstrap script', 'Status' => $scriptDisplayStatus, 'Detail' => $scriptDetail);
-  // / WHAT EVERY SANDBOX NEEDS FROM THE HOST IS THE ENGINE'S FROM v4.0.5. The kernel settings & the
-  // / AppArmor profile every sandbox runs under were reported by the application until then, first among
-  // / its findings, which is where they still appear. A kernel that refuses every namespace stops
-  // / every conversion, so it makes the environment unready, & a drifted profile is reported.
+  // / What every sandbox needs from the host is the Engine's, & is reported first among the findings.
+  // / A kernel that refuses every namespace stops every conversion, so it makes the environment unready.
+  // / A drifted AppArmor profile is reported.
   list ($kernelIsReady, $kernelFindings) = verifySandboxKernel(FALSE);
   foreach ($kernelFindings as $kernelFinding) $EnvironmentFindings[] = $kernelFinding;
   if (!$kernelIsReady) $EnvironmentIsReady = FALSE;
   list ($policyIsValid, $policyStatus) = verifySandboxPolicy(FALSE);
   $EnvironmentFindings[] = array('Check' => 'Sandbox AppArmor', 'Status' => policyDisplayStatus($policyStatus), 'Detail' => describePolicyStatus('Sandbox AppArmor', $policyStatus));
-  // / What the application keeps on this host is the APPLICATION'S to check.
-  // / The kernel namespace settings, three AppArmor policies & the DATA exposure test all
-  // / used to be called from here by name, which meant the Engine could not load without an
-  // / application that happened to define those six functions. That is not a shared Engine.
-  // / What the web server serves came back at v4.0.5, as the Engine's own, & is checked below
-  // / from the roles the contract gives each location rather than from any function's name.
-  // / So did the kernel settings & the sandbox profile, above, because every sandbox needs them.
-  // / The policies a tool's own conversions carry are still the application's.
-  // / The application names one provider in engineConfig.php & the Engine calls whatever it
-  // / was told, exactly as it reads $EngineSandboxProfiles rather than knowing any profile.
-  // / A provider returns a readiness boolean & a list of findings, same shape as this
-  // / function returns, & the two lists are concatenated.
-  // / An installation that declares none gets the Engine's own checks & nothing else, which is
-  // / correct rather than degraded. Another application using this Engine has no AppArmor
-  // / policy for ImageMagick & should not be asked about one.
+  // / What the application keeps on this host is the application's to check.
+  // / The application names one provider in engineConfig.php & the Engine calls it, as it reads $EngineSandboxProfiles.
+  // / A provider returns a readiness boolean & a list of findings, the shape this function returns, & the two lists are joined.
+  // / An installation that declares none gets the Engine's own checks & nothing else, which is correct rather than degraded.
+  // / The policies a tool's own conversions carry are the application's, so no other application is asked about ImageMagick.
   $environmentProvider = (isset($EngineEnvironmentProvider) && is_string($EngineEnvironmentProvider)) ? trim($EngineEnvironmentProvider) : '';
   if ($environmentProvider !== '' && function_exists($environmentProvider)) {
     list ($providerIsReady, $providerFindings) = $environmentProvider();
     if (is_array($providerFindings)) foreach ($providerFindings as $providerFinding) $EnvironmentFindings[] = $providerFinding;
     if ($providerIsReady === FALSE) $EnvironmentIsReady = FALSE; }
   else if ($environmentProvider !== '') warningEntry('An environment provider named '.$environmentProvider.' was declared & is not defined. Only the Engine checks ran.');
-  // / WHAT THE WEB SERVER SERVES, FROM v4.0.5. Each served location is asked whether it hands its
-  // / files over inert, the data location is placed outside the document root, & the hosted
-  // / location is compared with the installation. An application without a hosted location
-  // / serves nothing, so it is asked none of this, & a served location it declares is named as
-  // / misplaced. These come after the application's own findings, which is where they always
-  // / appeared, so a report reads as it always did.
-  // / An exposed or broken tree does not stop a conversion, so it does not make the
-  // / environment unready. It is reported loudly & the operator decides. Neither does a data
-  // / location in the document root, nor a hosted location that is not in step.
-  // / The hosted location & the document root are the application's, read through the map as
-  // / HostedLocation & DocumentRoot.
+  // / What the web server serves.
+  // / Each served location is asked whether it hands its files over inert.
+  // / The data location must sit outside the document root, & the hosted location is compared with the installation.
+  // / An application without a hosted location serves nothing, so it is asked none of this.
+  // / A served location such an application declares is named as misplaced.
+  // / These come after the application's own findings.
+  // / None of these stops a conversion, so none makes the environment unready, & each is reported loudly.
+  // / The hosted location & the document root are the application's, read through the map as HostedLocation & DocumentRoot.
   $hostedLocation = (string)applicationSetting('HostedLocation', '');
   $documentRoot = (string)applicationSetting('DocumentRoot', '');
   foreach (servedLocations() as $servedPath) {
@@ -391,11 +340,10 @@ function validateOperatingEnvironment() {
     $misplacedRoots = misplacedDataRoots();
     if (count($misplacedRoots) === 0) $EnvironmentFindings[] = array('Check' => 'Data location', 'Status' => 'ok', 'Detail' => 'Outside the document root.');
     else $EnvironmentFindings[] = array('Check' => 'Data location', 'Status' => 'MISPLACED', 'Detail' => implode(' & ', $misplacedRoots).' '.(count($misplacedRoots) === 1 ? 'is' : 'are').' inside the document root '.$documentRoot.', so sessions, caches & logs could be fetched. Move '.(count($misplacedRoots) === 1 ? 'it' : 'them').' outside it.');
-    // / The application runs from Application in the data location & the web server serves only
-    // / the hosted location, which holds the loader. Both are reported & neither is repaired here.
+    // / The application runs from Application in the data location, & the web server serves only the hosted location.
+    // / The hosted location holds the loader. Both are reported & neither is repaired here.
     // / An application still running from inside the web root is NOT MOVED, & -fp moves it.
-    // / A copy running from anywhere else is NOT INSTALLED. That is a release unpacked to be
-    // / installed, which -fp installs as it ends. Until v4.0.5 it was said to be served as well.
+    // / A copy running from anywhere else is NOT INSTALLED, a release unpacked to be installed, which -fp installs as it ends.
     if ((string)@realpath($InstLoc) !== (string)@realpath($ApplicationLoc)) {
       if (pathHoldsPath($hostedLocation, $InstLoc) or ($documentRoot !== '' && pathHoldsPath($documentRoot, $InstLoc))) $EnvironmentFindings[] = array('Check' => 'Hosted location', 'Status' => 'NOT MOVED', 'Detail' => 'The application runs from '.$InstLoc.', which the web server serves. Run -fp as root to install it into '.$ApplicationLoc.'.');
       else $EnvironmentFindings[] = array('Check' => 'Hosted location', 'Status' => 'NOT INSTALLED', 'Detail' => 'The application runs from '.$InstLoc.', which is not the installed copy. Run -fp as root to install it into '.$ApplicationLoc.'.'); }
@@ -441,10 +389,8 @@ function bootstrapScriptPath() {
 // /   unreadable   It could not be read.
 // / A script that reports no parseable version is judged as not matching, because an unknown
 // / build cannot be cleared.
-// / IT NEVER WRITES. Until v4.0.1 this rewrote the script itself, from the Resource Manager,
-// / which runs as the web server account & can no longer write to an installation root owns.
-// / repairBootstrapScript() writes it, as root, from -fp. It moved from the Resource Manager to
-// / the Engine at v4.0.1 so that -v, -fp & the Environment Manager can all ask it.
+// / It never writes. repairBootstrapScript() writes the script, as root, from -fp.
+// / It is the Engine's, so -v, -fp & the Environment Manager can all ask it.
 function verifyBootstrapScript() {
   // / Set variables.
   global $RequiredConfigScript, $Verbose, $EnableMemoryProtection;
@@ -594,10 +540,10 @@ function getAcceptedManagers() {
   global $EnableMemoryProtection;
   $AcceptedManagers = array();
   $AcceptedManagers = array(
-    'coreManager.php' => 'v4.0.6',
-    'resourceManager.php' => 'v4.0.6',
-    'workerManager.php' => 'v4.0.6',
-    'requestManager.php' => 'v4.0.6');
+    'coreManager.php' => 'v4.0.8',
+    'resourceManager.php' => 'v4.0.8',
+    'workerManager.php' => 'v4.0.8',
+    'requestManager.php' => 'v4.0.8');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $AcceptedManagers is not purged, because it is the return value.
   purgeSensitiveMemory($EnableMemoryProtection);
@@ -617,7 +563,7 @@ function getAcceptedRootManagers() {
   global $EnableMemoryProtection;
   $AcceptedRootManagers = array();
   $AcceptedRootManagers = array(
-    'environmentManager.php' => 'v4.0.1');
+    'environmentManager.php' => 'v4.0.8');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $AcceptedRootManagers is not purged, because it is the return value.
   purgeSensitiveMemory($EnableMemoryProtection);
@@ -662,10 +608,7 @@ function loadEngineManager($managerFileName) {
 // / Accepts the file name. Returns an availability boolean & the detected version.
 // / It judges a manager the way loadEngineManager() does, before it is loaded, against
 // / getAcceptedRootManagers() rather than the list the listener dispatches from.
-// / $CoreLoaded is declared global because the manager is required inside this function &
-// / its guard reads $CoreLoaded at file scope. Until v4.0.1 the Environment Manager was
-// / required from a function that did not declare it, so its guard never saw it & every pass
-// / halted with Engine-35000 & exit status 0.
+// / $CoreLoaded is declared global, because the manager is required inside this function & its guard reads $CoreLoaded at file scope.
 function loadEngineRootManager($managerFileName) {
   // / Set variables.
   global $InstLoc, $DirSep, $CoreLoaded, $RunningAsRoot, $EnableMemoryProtection;
@@ -695,8 +638,7 @@ function loadEngineRootManager($managerFileName) {
 // / -----------------------------------------------------------------------------------
 // / Filesystem helpers the data location functions depend on.
 // / None of these know what the files they are looking at are for.
-// / They moved with cleanDataLocation, because a function that moves without the helpers
-// / it quietly depends on is a function that only appears to have moved.
+// / They sit beside cleanDataLocation(), which depends on them.
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -782,17 +724,11 @@ function is_dir_empty($dir) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to clean a selection of files.
-// / Recursively deletes files.
-// / This function is extremely dangerous! Please handle with care.
-// / This function refuses to operate on anything outside a root the caller named. Both sides of the comparison are passed
-// / through realpath() first, so a path containing .. cannot walk out of an approved root
-// / while still matching it as a string prefix. If a future edit ever hands this function
-// / the wrong variable, the result is a no-op & a FALSE return, not an incident.
-// / The second argument is the list of roots this caller may clean under.
-// / It used to be built here from the application's own paths, which meant a generic
-// / cleaner knew the name of one application's directories.
-// / The caller supplies the list instead & an arbitrary path is still refused for not
-// / being under one of them, which is the guard that mattered.
+// / Recursively deletes files, & is dangerous enough to handle with care.
+// / It refuses anything outside a root the caller named.
+// / Both sides of the comparison pass through realpath() first, so a path containing .. cannot walk out of an approved root.
+// / A wrong variable handed to it therefore does nothing & returns FALSE.
+// / The second argument is the list of roots this caller may clean under, so the cleaner knows no application's directories.
 function cleanFiles($path, $allowedRoots) {
   // / Set variables.
   // / Every filesystem lists these two & neither is ever a file somebody uploaded.
@@ -909,8 +845,6 @@ function countDataLocationSessions($locationPath, $protectedRootDirs) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / MOVED FROM THE APPLICATION AT v3.9.3. It asks the listener for a data location &
-// / resolves one, which is the Engine on both counts.
 // / A function to ask the listener which data location this session must use.
 // / Accepts the daily hash & the session hash, in that order.
 // / Returns an absolute path as a string, ALWAYS.
@@ -927,14 +861,8 @@ function requestConvertLoc($dailyHash, $sessionHash) {
   $messageWasDelivered = FALSE;
   $answerSource = 'config.php';
   // / The fallback is discovery, not the configured location.
-  // / An earlier release fell back to whatever config.php named, which is correct for a
-  // / session that does not exist yet & CATASTROPHIC for one that does. A session already
-  // / holding files in a second data location was sent to the first, found an empty
-  // / directory, & reported that the user had uploaded nothing. The files were never lost.
-  // / They were simply no longer where anything was looking.
-  // / resolveConvertLoc reads the pool from disk & returns the location that actually holds
-  // / this session before it distributes anything, so an unanswered request degrades to the
-  // / correct answer rather than to a plausible one.
+  // / resolveConvertLoc reads the pool from disk & returns the location holding this session before it distributes anything.
+  // / An unanswered request therefore degrades to the correct answer rather than to a plausible one.
   $ResolvedConvertLoc = rtrim(resolveDataLocation($dailyHash, $sessionHash, $PrimaryConvertLoc, $ConvertLoc, $AdditionalConvertLocs, $ProtectedRootDirs), $DirSep);
   if (!$ResourceAwarenessActive) $answerSource = 'discovery, no listener component';
   else if ($RunningFromCLI) $answerSource = 'discovery, command line context';
@@ -957,8 +885,6 @@ function requestConvertLoc($dailyHash, $sessionHash) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / MOVED FROM THE APPLICATION AT v3.9.3. It asks whether a data location was actually
-// / configured, which is a question about the locations the Engine already enumerates.
 // / A function to report whether a path is one of the configured data locations.
 // / Accepts the absolute path to test.
 // / Returns TRUE only when the path appears in the configured set.
@@ -991,18 +917,10 @@ function enumerateDataLocations($primaryPath, $activePath, $additionalLocations)
   $DataLocationPool = array();
   $additionalEntry = $seenPaths = array();
   $entryPath = $entryType = '';
-  // / $primaryPath is a PARAMETER & is deliberately not initialized here. Blanking it on
-  // / this line discarded the configured primary location before the line below could read
-  // / it, so the fallback to $activePath always fired. $activePath is $ConvertLoc, which a
-  // / web request has already reassigned to whichever pool location the listener handed out.
-  // / The configured primary was therefore absent from every pool this function built, so it
-  // / was never swept & never received a session, & the type declared on whichever location
-  // / did occupy the primary slot was dropped as a duplicate.
-  // / $primaryPath holds the configured value & is set once, before $activePath is
-  // / narrowed to the location this session actually uses.
+  // / $primaryPath is a parameter & is deliberately not initialized here, because blanking it would discard the configured primary.
+  // / $activePath is $ConvertLoc, which a web request has already reassigned to the pool location the listener handed out.
   // / The caller passes the configured primary & the location this session settled on.
-  // / The configured one wins, because the active one has already been narrowed & would
-  // / otherwise nominate itself as the primary of a pool it is only a member of.
+  // / The configured one wins, because the active one would otherwise nominate itself as the primary of a pool it only belongs to.
   if (!is_string($primaryPath) or $primaryPath === '') $primaryPath = (string)$activePath;
   $primaryPath = rtrim($primaryPath, $DirSep);
   $DataLocationPool[] = array('Path' => $primaryPath, 'Type' => 'primary');
@@ -1034,15 +952,13 @@ function enumerateDataLocations($primaryPath, $activePath, $additionalLocations)
 // / Accepts the daily hash & the session hash, in that order.
 // / Returns an absolute path as a string, ALWAYS. Every failure falls back to the location
 // / config.php declares, so a caller never has to test the result before using it.
-// / AN ESTABLISHED SESSION IS DISCOVERED, NOT CHOSEN. A session that already holds a
-// / directory somewhere keeps that location for its whole life. Choosing again on a later
-// / request would send the worker looking for the user's files where they are not.
+// / An established session is discovered, not chosen.
+// / A session that already holds a directory somewhere keeps that location for its whole life.
+// / Choosing again on a later request would send the worker looking for the user's files where they are not.
 // / Only a session with no directory anywhere is distributed, & only then does type matter.
 // / A location marked leastactive puts the whole pool into least active selection.
-// / Otherwise the pool is distributed by session identifier, which needs no shared counter
-// / & therefore works with several front ends that never speak to each other.
-// / A location marked redundant is a standby. It takes a session only when every other
-// / location is unusable.
+// / Otherwise the pool is distributed by session identifier, which needs no shared counter between front ends.
+// / A location marked redundant is a standby, which takes a session only when every other location is unusable.
 function resolveDataLocation($dailyHash, $sessionHash, $primaryPath, $activePath, $additionalLocations, $protectedRootDirs) {
   // / Set variables.
   global $DirSep, $Verbose, $EnableMemoryProtection;
@@ -1108,10 +1024,9 @@ function resolveDataLocation($dailyHash, $sessionHash, $primaryPath, $activePath
 // / read. The name must be one this function recognizes, & the path must be the one that
 // / name refers to. A caller that supplies a valid name with any other path is refused,
 // / which is what stops a mistake elsewhere in the core from sweeping the wrong tree.
-// / ONLY WHAT THE SWEEPING ACCOUNT OWNS IS SWEPT. The sweep runs as the web server account, which
-// / made every session, & cannot remove what another account put there. Such a folder is left &
-// / is not a failure, & -fp names it. Until v4.0.6 the sweep tried, failed on every pass, & said
-// / only that it had not completed cleanly.
+// / Only what the sweeping account owns is swept.
+// / The sweep runs as the web server account, which made every session & cannot remove what another account put there.
+// / Such a folder is left, is not a failure, & -fp names it.
 function cleanDataLocation($dataLoc, $locationName, $deleteThreshold, $protectedRootDirs, $authorizedPaths) {
   // / Set variables.
   global $DirSep, $Verbose, $EnableMemoryProtection;
@@ -1124,13 +1039,8 @@ function cleanDataLocation($dataLoc, $locationName, $deleteThreshold, $protected
   $now = time();
   $sweeperUid = function_exists('posix_geteuid') ? (int)posix_geteuid() : -1;
   // / Determine whether this clean operation is being requested on a valid target.
-  // / The caller supplies the paths it is permitted to clean & the target must be one.
-  // / An earlier version matched a NAME against a short list this function knew, then
-  // / checked the path that name referred to. That worked & tied a generic cleaner to one
-  // / application's vocabulary, & a caller passing the wrong label was silently refused.
-  // / A list of paths says the same thing without either problem, & is no weaker, because
-  // / an arbitrary path is still refused for not being in it.
-  // / $locationName is now only a label for the messages below.
+  // / The caller supplies the paths it may clean, & the target must be one of them, so an arbitrary path is refused.
+  // / $locationName is only a label for the messages below.
   if (is_array($authorizedPaths) && in_array($dataLoc, $authorizedPaths, TRUE)) $cleanAuthorized = TRUE;
   // / An unauthorized target is a failure of the caller & must be reported as one.
   // / Reporting success here would let the core log that a location was cleaned when it was
@@ -1453,23 +1363,11 @@ function replyToManagerMessage($socketConnection, $replyPayload, $keyPurpose) {
 // / Returns TRUE when the operation may proceed.
 // /
 // / Every expensive operation takes a budget, not only conversion.
-// / Resource awareness existed to stop a machine from accepting more expensive work than it
-// / can carry, but only convertFiles() ever asked permission. Archiving, OCR & the user
-// / virus scan ran unmetered. That is not a small gap. Tesseract on a large PDF, 7-Zip on a
-// / multi-gigabyte folder & a ClamAV scan are each as heavy as the conversions the budget
-// / was written to hold back, & because they took nothing they also counted for nothing.
-// / A machine saturated by them still reported itself idle & kept approving conversions on
-// / top. The limiter was measuring a fraction of the load & guarding against a fraction of
-// / the problem.
-// /
+// / Tesseract on a large PDF, 7-Zip on a large folder & a ClamAV scan are each as heavy as a conversion.
+// / An operation that takes nothing also counts for nothing, & a saturated host would report itself idle.
 // / All four operations take the same $DefaultConversionCost & $DefaultExpectedRuntime.
-// / Weighting them separately would be more precise, but precision here would be invented;
-// / there are no measurements behind a number that says an archive costs half of an OCR.
-// / One unit of expensive work is a claim this code can actually support, & an administrator
-// / who needs finer control has the per-conversion limit table already.
-// /
-// / This FAILS OPEN exactly as requestConversionBudget() does. When resource awareness is
-// / unavailable the operation is approved & the core behaves as it did before.
+// / No measurement supports weighting them separately, & the per conversion limit table already gives finer control.
+// / It fails open exactly as requestConversionBudget() does, which refuses instead when resource awareness is required.
 function takeOperationBudget($operationName) {
   // / Set variables.
   global $BudgetToken, $BudgetTokenIsReleased, $DefaultConversionCost, $DefaultExpectedRuntime, $Verbose, $EnableMemoryProtection;
@@ -1495,32 +1393,19 @@ function takeOperationBudget($operationName) {
 // / directly on the normal completion path. The guard makes it safe to run twice.
 // /
 // / A conversion has three fatal exits between taking a budget & returning it.
-// / Error 21 when the conversion itself fails, & errors 5002 & 5003 when the virus scan of
-// / the result cannot run or finds something. Each calls errorEntry with a fatal flag,
-// / which reaches quickDie & then die(), so the release that sits AFTER the conversion in
-// / the request handler was simply never reached.
-// / Nothing was lost permanently, because findStaleWorkers() tests whether the process is
-// / still alive & reclaims a token whose worker has exited. But that happens on the next
-// / sweep, so a failed conversion held its share of the budget for up to one
-// / $WorkerReapInterval, & on a small machine that is enough to refuse the next
-// / conversion that arrives. It also announced every ordinary failure as a warning about
-// / a worker that had to be reaped, which is not what happened & not what an
-// / administrator reading that warning should go looking for.
-// / A conversion that fails is a normal outcome. It returns what it borrowed on the way
-// / out, & the reaper goes back to being the fallback it was written to be.
-// /
-// / PHP runs a registered shutdown function after die(), so this is reached from a fatal
-// / exit as well as from a clean one. It writes to the log & to the manager socket only.
-// / Nothing here prints, because the connection to the user is already closed by then.
+// / They are error 21, & errors 5002 & 5003 from the scan of the result.
+// / Each halts through quickDie, so a release placed after the conversion would never be reached.
+// / An unreturned token waits for findStaleWorkers(), which on a small host refuses the next conversion meanwhile.
+// / A failed conversion is a normal outcome, so it returns what it borrowed on the way out, & the reaper stays a fallback.
+// / PHP runs a registered shutdown function after die(), so this is reached from a fatal exit as well as a clean one.
+// / It writes to the log & to the manager socket only, because the connection to the user is already closed.
 function releaseBudgetOnShutdown() {
   // / Set variables.
   global $BudgetToken, $BudgetTokenIsReleased;
   $BudgetWasReleased = TRUE;
   // / Nothing is done when the token was already returned, or there was never one to return.
-  // / The flag is set BEFORE the attempt, not after. A release that fails has already
-  // / warned & handed the token to the reaper, & a second attempt from the other caller
-  // / would warn about the same token all over again.
-  // / Until v4.0.1 this left by three returns, where every function here has one exit.
+  // / The flag is set before the attempt, not after.
+  // / A release that fails has already warned & handed the token to the reaper, so a second attempt would warn again.
   if (empty($BudgetTokenIsReleased) && isset($BudgetToken) && (string)$BudgetToken !== '') {
     $BudgetTokenIsReleased = TRUE;
     $BudgetWasReleased = releaseConversionBudget($BudgetToken); }
@@ -1542,13 +1427,10 @@ function giveBackOperationBudget($operationName) {
   purgeSensitiveMemory($EnableMemoryProtection, $operationName);
   return $BudgetWasReleased; }
 // / -----------------------------------------------------------------------------------
-// / THE CONVERSION BUDGET CLIENTS, moved from the application at v3.9.3.
-// / Asking the listener for a budget, extending one & handing it back are three halves of
-// / one conversation & they belong with the protocol they speak, not with the thing that
-// / happens to be spending the budget.
-// / They were tried in a manager first with killTargetedWorker & that was wrong for the
-// / same reason: a manager runs as its own process & is never loaded in request.
-// / Nothing in them knows what a conversion IS. They send a message & read a reply.
+// / The conversion budget clients.
+// / Asking for a budget, extending one & handing it back are one conversation, so they sit with the protocol they speak.
+// / A manager runs as its own process & is never loaded in a request, so they cannot live in one.
+// / Nothing in them knows what a conversion is. They send a message & read a reply.
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1644,14 +1526,10 @@ function releaseConversionBudget($budgetToken) {
   purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $budgetToken);
   return $BudgetWasReleased; }
 // / -----------------------------------------------------------------------------------
-// / MOVED FROM THE APPLICATION AT v3.9.3. It sits beside the protocol it speaks.
-// / It was tried in workerManager.php first & that was wrong: a manager runs as its OWN
-// / PROCESS & is never loaded in request, so a CLI kill could not reach it there.
-// / readManagerState, sendManagerMessage & buildManagerSocketPath are all here, & this is
-// / a client of them rather than part of the manager it talks to.
 // / A function to ask the listener to terminate one tracked worker.
 // / Accepts the budget token or the process identifier of the worker.
 // / Returns TRUE when the worker was terminated.
+// / It is a client of readManagerState, sendManagerMessage & buildManagerSocketPath, so it sits beside them.
 function killTargetedWorker($workerTarget) {
   // / Set variables.
   global $ResourceAwarenessActive, $ManagerSocketTimeout, $Lol, $EnableMemoryProtection;
@@ -1716,11 +1594,9 @@ function readManagerState($stateName) {
 // / Accepts the short state name & the array to store.
 // / Returns TRUE when the file was written completely.
 // /
-// / Root writes none of it. The socket folder is the web server account's, so root could not
-// / write there safely even through the kernel. Until v4.0.1 root wrote the Environment Manager's
-// / state & the manager list -k empties into that folder. -k is now handed to the web server
-// / account, & the Environment Manager keeps its state at the top of the data root, which root
-// / owns, through writeEnvironmentState().
+// / Root writes none of it, because the socket folder is the web server account's & root could not write there safely.
+// / -k is handed to the web server account.
+// / The Environment Manager keeps its state at the top of the data root, which root owns, through writeEnvironmentState().
 function writeManagerState($stateName, $stateData) {
   // / Set variables.
   global $ManagerSocketDir, $DirSep, $RunningAsRoot, $EnableMemoryProtection;
@@ -1747,9 +1623,9 @@ function writeManagerState($stateName, $stateData) {
 // / It sits at the top of the data root, root owned & readable by the web server account's
 // / group. Root owns that folder, so no other account can replace a name in it, & the web
 // / server account can read what a pass found, which is how --status reports the last one.
-// / Engine would hide it from every reader the state exists for, because no account but root
-// / can read anything inside it. It is not a secret, & Secrets holds nothing else. The install
-// / secret sat beside it alone until v4.0.4, & is kept in Secrets now, with a copy beside it.
+// / The Engine folder would hide it from every account the state is for, because only root can read inside it.
+// / It is not a secret, & Secrets holds secrets alone.
+// / The install secret is kept in Secrets, with a copy beside this file.
 function environmentStatePath() {
   // / Set variables.
   global $DataRootLoc, $EnableMemoryProtection;
@@ -2209,7 +2085,7 @@ function killTrackedWorkers(&$workerRegistry) {
 // / A function to run the Core Manager in the FOREGROUND, for a supervisor to own.
 // / Accepts no arguments & does not return until the listener is stopped.
 // / Returns TRUE when the loop exited on a stop instruction rather than a failure.
-// / THIS IS THE ENTRY POINT A SERVICE MANAGER USES. It does not fork & does not return, so
+// / This is the entry point a service manager uses. It does not fork & does not return, so
 // / systemd can watch the actual process, restart it when it dies & report its true state.
 // / startCoreManagerListener spawns & returns instead, which leaves nothing watching Core
 // / Manager itself. Core Manager supervises its three subordinates either way.
@@ -2223,11 +2099,9 @@ function runCoreManagerForeground() {
   $startupKey = '';
   $callerIsAuthorized = FALSE;
   $environmentFindings = array();
-  // / ROOT DOES NOT RUN THE LISTENER, & IS REFUSED HERE RATHER THAN WARNED. The listener sweeps
-  // / the web server account's folders & keeps its state there, & root never works by name in
-  // / those. Until v4.0.1 root was allowed through with a warning, so a unit with no User line,
-  // / or an administrator typing this by hand, ran every manager as root. The unit runs it as
-  // / the web server account, & -l starts it by hand as that account.
+  // / Root does not run the listener, & is refused here rather than warned.
+  // / The listener sweeps the web server account's folders & keeps its state there, & root never works by name in those.
+  // / The unit runs it as the web server account, & -l starts it by hand as that account.
   if ($CurrentUser === $ApacheUser && !$RunningAsRoot) $callerIsAuthorized = TRUE;
   if (!$callerIsAuthorized) errorEntry('The foreground listener was started by an account that may not operate it!', 31014, TRUE);
   else {
@@ -2282,11 +2156,8 @@ function listenerUnitIsInstalled() {
 // / A listener that is already running is not started twice.
 // / A service unit that owns this listener is started through the service manager instead.
 // /
-// / ROOT NEVER RUNS THE LISTENER ITSELF. Until v4.0.1 root started every manager as root & then
-// / reported them running as the web server account. Those managers sweep the web server
-// / account's folders by name, which root must never do, & bind sockets no web worker can
-// / reach. Root now hands the whole start to the web server account through runAsAccount,
-// / which is what ABOUT_COMMAND_LINE_ARGUMENTS.txt has always said happens.
+// / Root never runs the listener itself, & hands the whole start to the web server account through runAsAccount.
+// / The managers sweep that account's folders by name, which root must never do, & bind sockets its web workers must reach.
 function startCoreManagerListener() {
   // / Set variables.
   global $InstLoc, $ManagerSocketDir, $ApacheUser, $CurrentUser, $RunningAsRoot, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $Verbose, $Lol, $EnableMemoryProtection;
@@ -2316,18 +2187,14 @@ function startCoreManagerListener() {
   else $directoryIsReady = prepareManagerSocketDir();
   // / Hand the socket directory to the web server user before anything binds inside it.
   // / A root owned directory is unreachable to the workers that must connect.
-  // / The socket directory is not chowned here & that is deliberate.
-  // / Ownership of every path this application manages belongs to -fp, which runs as
-  // / root once & exits. Doing it here meant the listener had to be root to start, &
-  // / a listener that starts as root then has to give that up somehow.
-  // / The wrong owner is reported rather than corrected, because correcting it needs a
-  // / privilege this process should not be holding.
+  // / The socket directory is not chowned here, because ownership of every path this application manages belongs to -fp, which runs as root once & exits.
+  // / Doing it here would mean the listener had to be root to start, & then had to give that up.
+  // / The wrong owner is reported rather than corrected, because correcting it needs a privilege this process should not be holding.
   if ($directoryIsReady && !is_writable($ManagerSocketDir)) warningEntry('The manager socket directory at '.$ManagerSocketDir.' is not writable by this account. Run -fp as root to correct it.');
   // / Only the account that runs the listener reads its state. Root handed the start over
   // / above, & a unit that owns the listener is asked through systemctl instead.
   if (!$unitOwnsListener && !$handedToAccount) list ($stateWasRead, $managerState) = readManagerState('managers');
-  // / A unit that failed to start, or an account that reported failure, is a failure. This
-  // / returned TRUE for a unit whatever systemctl said until v4.0.1.
+  // / A unit that failed to start, or an account that reported failure, is a failure.
   if ($unitOwnsListener) $ListenerWasStarted = ($unitExitCode === 0);
   else if ($handedToAccount) $ListenerWasStarted = ($accountExitCode === 0);
   else if ($stateWasRead && isset($managerState['CoreManagerPid']) && managerProcessIsAlive((int)$managerState['CoreManagerPid'])) {
@@ -2407,10 +2274,8 @@ function stopCoreManagerListener() {
   list ($stateWasRead, $managerState) = readManagerState('managers');
   if (!$stateWasRead or !isset($managerState['CoreManagerPid'])) {
     print($Lol.'No listener is recorded as running.'.$Lol.$Lol);
-    // / A listener nobody started is stopped, which is what was asked for, so this is success.
-    // / It returned FALSE here until v3.9.9 & that only mattered once a command line exit status
-    // / did. systemctl stop on an inactive unit succeeds for the same reason. Processes that
-    // / survive termination, further down, are still a failure & still return FALSE.
+    // / A listener nobody started is stopped, which is what was asked for, so this is success, as systemctl stop finds it.
+    // / Processes that survive termination, further down, are still a failure & still return FALSE.
     $ListenerWasStopped = TRUE; }
   else {
     // / Collect every recorded process. The Core Manager is stopped last so it does not
@@ -2479,10 +2344,9 @@ function managerProcessIsAlive($processId) {
 // / -----------------------------------------------------------------------------------
 // / A function to keep a manager writing to the logfile it should be writing now.
 // / Accepts the time it last did so. Returns the time it last did so, which is now once a minute.
-// / A manager runs for weeks & names its logfile as it starts. The application names its logfiles
-// / by date & by size, & says how to move on to the next one through $EngineLogProvider, which is
-// / asked here once a minute. An application that names none leaves a manager on the logfile it
-// / started with, which is what every manager did until v4.0.6.
+// / A manager runs for weeks & names its logfile as it starts.
+// / The application names its logfiles by date & by size, & says how to move on through $EngineLogProvider.
+// / That provider is asked here once a minute, & an application that names none leaves a manager on its first logfile.
 function refreshProcessLog($lastRefreshTime) {
   // / Set variables.
   global $EngineLogProvider, $EnableMemoryProtection;
@@ -2633,16 +2497,10 @@ function reportListenerStatus() {
 // / An Engine that reaches a remote address needs a policy & the policy is per
 // / installation rather than per Engine, so it comes from configuration.
 // /
-// / Each setting is read from an Engine name first & from the application's own name
-// / second. That fallback is deliberate & is not clutter.
-// / HRConvert2 named these for streams because streaming was the first thing that fetched
-// / a URL. They govern every remote fetch now, & renaming a setting in config.php would
-// / silently reset it to a default on every installation in the world at the next update.
-// / A timeout quietly changing length is not a surprise worth handing anybody.
+// / Each setting is read from an Engine name first & from the application's own name second, deliberately.
+// / HRConvert2's names mention streams, & renaming a setting in config.php would silently reset it at the next update.
 // / A new application sets the Engine names & has no stream shaped settings at all.
-// /
-// / Every fallback ends in a literal that configuration cannot overwrite, so a policy
-// / exists even when neither name is set & a fetch is never left deciding for itself.
+// / Every fallback ends in a literal configuration cannot overwrite, so a fetch is never left deciding for itself.
 function networkPolicy() {
   // / Set variables.
   global $EngineAllowPlainHTTP, $EngineMaxInspectionBytes, $EngineConnectionTimeout, $EngineWatchTimeout, $EngineFetchTemp, $AllowStreamOverHTTP, $MaxStreamInspectionFileSize, $StreamConnectionTimeout, $StreamWatchTimeout, $StreamTemp, $EnableMemoryProtection;
@@ -2665,23 +2523,13 @@ function networkPolicy() {
 // / Accepts the address. Returns whether it may be reached & whether it was allowed only
 // / because a range permitted it, in that order.
 // /
-// / isPubliclyRoutableIP() is unchanged & still answers exactly what it always did. This
-// / wraps it. A publicly routable address is permitted because it is publicly routable, & a
-// / private one is permitted only when an administrator has named the range it sits in.
-// /
-// / THREE RANGES ARE REFUSED WHATEVER IS CONFIGURED, & they are refused HERE rather than
-// / left to documentation, because a setting that can be misconfigured into a serious hole
-// / is a setting that should not accept the misconfiguration.
-// /   127.0.0.0/8 & ::1     This host. A service bound to localhost was bound there so that
-// /                         nothing off the machine could reach it. A fetcher that reaches
-// /                         it hands that decision to whoever can type a URL.
-// /   169.254.0.0/16        Link local, & where cloud metadata answers. 169.254.169.254 on
-// /                         a cloud host returns credentials to anything that asks.
-// / The address is judged AFTER any IPv4 in IPv6 unwrapping that isPubliclyRoutableIP
-// / already performs, so ::ffff:7f00:1 is loopback here as well.
-// /
-// / An administrator who genuinely needs this host to fetch from itself has a different
-// / problem & a local path solves it without a network.
+// / It wraps isPubliclyRoutableIP().
+// / A publicly routable address is permitted, & a private one only when an administrator named the range it sits in.
+// / Three ranges are refused whatever is configured, because a setting that can open a serious hole should refuse it.
+// /   127.0.0.0/8 & ::1     This host. A service bound to localhost was bound there so nothing off the machine could reach it.
+// /   169.254.0.0/16        Link local, where cloud metadata answers. 169.254.169.254 returns credentials to anything that asks.
+// / The address is judged after the IPv4 in IPv6 unwrapping isPubliclyRoutableIP performs, so ::ffff:7f00:1 is loopback here.
+// / A host that needs to fetch from itself has a local path, which needs no network.
 function addressMayBeReached($ipAddress) {
   // / Set variables.
   global $PermittedPrivateRanges, $EnableMemoryProtection;
@@ -2732,7 +2580,7 @@ function addressMayBeReached($ipAddress) {
 // /   255.255.255.255   Broadcast.
 // /   ::/128, ::1/128   Unspecified & loopback.
 // /   fe80::/10         Link local. The PHP flags miss it.
-// /   ::ffff:0:0/96     IPv4 MAPPED IN IPv6. ::ffff:127.0.0.1 is the loopback address
+// /   ::ffff:0:0/96     IPv4 mapped in IPv6. ::ffff:127.0.0.1 is the loopback address
 // /                     written in a form the IPv4 flags never see. This one is the
 // /                     classic bypass & is refused by unwrapping it & testing the IPv4.
 // /   64:ff9b::/96      NAT64. An IPv4 address reached through an IPv6 prefix, tested the
@@ -2776,19 +2624,10 @@ function isPubliclyRoutableIP($ipAddress) {
 // / A function to decide whether a path may be handed to a RECURSIVE operation.
 // / Accepts the path. Returns TRUE only when a recursive change to it cannot wreck the host.
 // /
-// / chown -R & chmod -R are the two most destructive things this application can do, & they
-// / run as root. A path that is empty, or missing, or is a system directory, would take the
-// / operating system with it & no backup short of a full image would bring it back.
-// /
-// / The only guard used to be that the path was not an empty string & was a directory.
-// / An administrator who set a data location to / or to /usr, or who left a trailing
-// / variable unset in a way that resolved to one, would have chowned the entire host to the
-// / web server account on the next --fix-permissions. There is no undo for that.
-// /
-// / Symbolic links & .. are resolved before judging, because /srv/data/../../ is / & a
-// / comparison against the text would not have noticed.
-// / A path this refuses is REPORTED rather than skipped silently. An installation pointed
-// / at a refused path is misconfigured & the operator needs to know which one.
+// / chown -R & chmod -R are the two most destructive things this application can do, & they run as root.
+// / A path that is empty, missing or a system directory would take the operating system with it.
+// / Links & .. are resolved before judging, because /srv/data/../../ is / & a comparison of the text would miss it.
+// / A refused path is reported rather than skipped silently, because an installation pointing at it is misconfigured.
 function pathIsSafeToModifyRecursively($candidatePath) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -2924,21 +2763,14 @@ function countSessionURLDownloads($sessionDirectory, $recordOne = FALSE) {
 // / Accepts the raw URL & the directory to write into. Returns whether it worked, the path
 // / it wrote & a reason.
 // /
-// / THIS IS THE ONE PLACE AN OPERATOR CAN MAKE THIS SERVER REACH OUT ON THEIR BEHALF, so
-// / every existing protection is used & none of it is re-implemented here.
-// / normalizeStreamBaseURL rebuilds the text into a URL, because sanitize() would return a
-// / filename rather than an address.
-// / gatherRemoteHostInfo resolves the name & refuses anything that is not publicly routable,
-// / which is the same check a URL found inside a playlist receives.
-// / downloadRemoteFileForInspection performs the fetch. It pins the address it was given
-// / with curl --resolve, follows no redirect, runs inside a namespace with a network & no
-// / resolver, & stops at the configured byte ceiling.
-// / The file is then MOVED into the session, so a fetch that failed leaves nothing behind.
-// /
-// / The name is taken from the URL path & is passed through sanitize(), which is correct
-// / here because a file name is exactly what sanitize() is for.
-// / A URL naming no file gets one, because a session file with no name cannot be listed,
-// / converted or deleted by the interface that has to show it.
+// / This is the one place an operator can make this server reach out on their behalf, so every existing protection is used.
+// / normalizeStreamBaseURL rebuilds the text into a URL, because sanitize() would return a filename rather than an address.
+// / gatherRemoteHostInfo resolves the name & refuses anything not publicly routable, as for a URL inside a playlist.
+// / downloadRemoteFileForInspection pins the address with curl --resolve, follows no redirect & stops at the byte ceiling.
+// / It runs inside a namespace with a network & no resolver.
+// / The file is then moved into the session, so a fetch that failed leaves nothing behind.
+// / The name is taken from the URL path & passed through sanitize(), which is what sanitize() is for.
+// / A URL naming no file gets one, because a session file with no name cannot be listed, converted or deleted.
 function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
   // / Set variables.
   global $DirSep, $EnableMemoryProtection, $URLDownloadMaximumBytes, $ScanURLDownloads, $Allowed;
@@ -2963,19 +2795,10 @@ function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
       list ($downloadFailed, $temporaryPath, $wasTruncated) = downloadRemoteFileForInspection($cleanURL, $urlHost, $urlPort, $urlIP, $urlScheme, 'user-'.bin2hex(random_bytes(8)), (isset($URLDownloadMaximumBytes) ? (int)$URLDownloadMaximumBytes : 0));
       if ($downloadFailed or $temporaryPath === '') $FetchReason = 'The address was accepted & nothing could be fetched from it.';
       else {
-        // / A FETCHED FILE IS SCANNED BEFORE IT IS PLACED, & an upload always was.
-        // / Without this the easiest way to get an unscanned file onto this server was to
-        // / ask the server to fetch one, which made the scanner optional in exactly the case
-        // / it was least optional.
-        // / A file that fails is not placed & the temporary copy is removed, so nothing
-        // / infected reaches anywhere a user can convert or download it from.
-        // / A scanner that could not RUN is not the same as a file that failed. The first is
-        // / reported & the fetch is refused, because placing an unscanned file when scanning
-        // / was asked for is the thing this setting exists to prevent.
-        // / A Pipeline Core that did not load is a scanner that could not run, & it is refused
-        // / the same way. Until v3.9.9 the test for runVirusScan sat in the condition below, so
-        // / a missing Pipeline Core skipped the scan & placed the file unscanned. That is the one
-        // / outcome the paragraph above exists to forbid.
+        // / A fetched file is scanned before it is placed, as an upload is, so fetching is not a way around the scanner.
+        // / A file that fails is not placed & the temporary copy is removed.
+        // / A scanner that could not run is not a file that failed, & the fetch is refused, because a scan was asked for.
+        // / A Pipeline Core that did not load is a scanner that could not run, & is refused the same way.
         if (isset($ScanURLDownloads) && $ScanURLDownloads === TRUE) {
           if (!function_exists('runVirusScan')) $scanFindings = array('No scanner could run, because the Pipeline Core is not loaded.');
           else list ($scanCompleted, $threatWasFound, $scanFindings, $scannerUsed) = runVirusScan(array($temporaryPath), '');
@@ -2990,9 +2813,8 @@ function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
         else {
         $urlParts = @parse_url($cleanURL);
         $suggestedName = isset($urlParts['path']) ? basename((string)$urlParts['path']) : '';
-        // / A FETCHED FILE MUST BE A FORMAT THIS INSTALLATION ACCEPTS, & an upload always
-        // / had to be. Without this, asking the server to fetch a file was the way around
-        // / whatever an administrator had decided this installation would handle.
+        // / A fetched file must be a format this installation accepts, as an upload must.
+        // / Otherwise fetching a file would be the way around what an administrator decided this installation handles.
         // / $Allowed is every extension any enabled subsystem reads or writes, which is the
         // / same list an upload is judged against. A format nobody enabled is refused here
         // / for the same reason it is refused there.
@@ -3031,11 +2853,8 @@ function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
 function gatherRemoteHostInfo($StreamURL) {
   // / Set variables.
   global $Verbose, $EnableMemoryProtection;
-  // / The resolved policy values are LOCALS & are deliberately not declared global.
-  // / Each is lowercase, so convention three forbids it transcending this function, & an
-  // / earlier version declared them global anyway. That achieved nothing, because every
-  // / caller assigns them from networkPolicy() before reading them, & it left the last
-  // / stream's settings sitting in the global scope between requests.
+  // / The resolved policy values are locals & are deliberately not declared global.
+  // / Each is lowercase, so convention three keeps it inside this function, & every caller assigns them from networkPolicy().
   // / The network policy is resolved once & every setting below comes from it.
   $permittedByRange = $hostIsPublic = FALSE;
   $networkPolicy = networkPolicy();
@@ -3112,29 +2931,15 @@ function gatherRemoteHostInfo($StreamURL) {
 // / A function to make an operator supplied base URL safe to resolve stream URIs against.
 // / Accepts the raw text. Returns whether it is usable, the rebuilt URL & a reason.
 // /
-// / sanitize() CANNOT be used on a URL, & that is not a shortcoming of sanitize().
-// / It removes the characters a filename must never contain, which are the same characters
-// / a URL is built from. https://example.com/hls/master.m3u8 comes back as
-// / example.comhlsmaster.m3u8, which is a filename & is not an address.
-// /
-// / So this REBUILDS rather than filters. The text is parsed, each component is judged on
-// / its own terms, & a new URL is assembled from the parts that passed. Nothing typed by an
-// / operator is carried through unexamined, which is the guarantee sanitize() gives by a
-// / different route.
-// /
-// / The scheme must be http or https. file, gopher & dict are how an SSRF reaches something
-// / an ordinary fetch never could.
-// / The host goes through sanitize(), because a host IS filename shaped & the ban hammer is
-// / exactly right for it. gatherRemoteHostInfo() treats a parsed host the same way.
-// / The path keeps only what a path may contain. A traversal segment is REMOVED rather than
-// / resolved, because a base address has no business holding one & guessing what was meant
-// / by it is worse than refusing.
-// / A query string & a fragment are discarded. A base is a directory to resolve against &
-// / neither contributes to that.
-// /
-// / Nothing here decides whether an address may be reached. Every URL this produces still
-// / goes through gatherRemoteHostInfo() & isPubliclyRoutableIP(), exactly as one read out of
-// / a playlist does. This makes the text into a URL. That decides whether it may be used.
+// / sanitize() cannot be used on a URL, because it removes the characters a URL is built from.
+// / https://example.com/hls/master.m3u8 would come back as example.comhlsmaster.m3u8, a filename & not an address.
+// / So this rebuilds rather than filters, judging each component & assembling a new URL from the parts that passed.
+// / The scheme must be http or https, because file, gopher & dict are how an SSRF reaches what a fetch never could.
+// / The host goes through sanitize(), because a host is filename shaped, as gatherRemoteHostInfo() treats it.
+// / The path keeps only what a path may contain, & a traversal segment is removed rather than resolved.
+// / A query string & a fragment are discarded, because a base is a directory to resolve against.
+// / Nothing here decides whether an address may be reached.
+// / Every URL this produces still goes through gatherRemoteHostInfo() & isPubliclyRoutableIP(), as one from a playlist does.
 function normalizeStreamBaseURL($suppliedBaseURL) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -3217,15 +3022,10 @@ function resolveRemoteURI($StreamURI, $ParentURL) {
 // / -----------------------------------------------------------------------------------
 // / A function to gather & validate IPv4 & IPv6 addresses from ANY block of content.
 // / Does not perform DNS or any remote validation.
-// / This function only validates the syntactical form of IP addresses, and ensures they are not in a reserved range.
-// /
-// / This is SSRF machinery & it lives in the core on purpose.
-// / It knows nothing about streams, playlists or any other format. It is handed bytes &
-// / reports which addresses in them are safe to contact. A pipeline that needs to decide
-// / whether a reference is safe to follow calls this rather than writing its own.
-// / A PIPELINE MUST NEVER OWN SSRF PROTECTION. A community author writing a pipeline that
-// / fetches something should get this for free & must not be able to opt out of it by
-// / accident. That is the same reason verifyFile() & virusScan() stayed in the core.
+// / It validates only the syntax of each address & whether it sits in a reserved range.
+// / This is SSRF machinery, & it knows nothing about streams, playlists or any other format.
+// / A pipeline that must decide whether a reference is safe to follow calls this rather than writing its own.
+// / A pipeline must never own SSRF protection, so one that fetches something gets it & cannot opt out by accident.
 function inspectContentForIPs($streamFileContents) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -3273,7 +3073,7 @@ function inspectContentForIPs($streamFileContents) {
 // / This function only validates the syntactical form of domain names.
 // / Preserves http:// and https:// as the only allowed protocols.
 // /
-// / THIS IS SSRF MACHINERY & IT LIVES IN THE CORE ON PURPOSE. See inspectContentForIPs().
+// / This is SSRF machinery & it lives in the core on purpose. See inspectContentForIPs().
 function inspectContentForDomains($streamFileContents) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -3300,32 +3100,18 @@ function inspectContentForDomains($streamFileContents) {
 // / -----------------------------------------------------------------------------------
 // / A function to download a single remote file to local disk for inspection.
 // /
-// / This is the only place in the application that fetches a remote file for a pipeline.
-// / It pins the resolved IP, refuses redirects, refuses DNS rebinding, & reads a bounded
-// / number of bytes. Every one of those is a thing a pipeline author writing their own curl
-// / call would forget. It stays in the core so that they cannot.
-// / A config note worth knowing before a second pipeline uses this.
-// / $engineAllowPlainHTTP, $engineConnectionTimeout, $engineMaxInspectionBytes &
-// / $engineFetchTemp are all named for streaming because streaming was the only caller when they
-// / were written. They govern EVERY caller of this function, not only the Stream pipeline.
-// / They were not renamed because an administrator's config.php names them & a rename would
-// / silently reset those settings on every installation. If a second pipeline starts
-// / fetching remote files, that shared governance should be a deliberate decision rather
-// / than something discovered afterwards.
-// / Files are saved with a numeric name & no extension so nothing downstream is fooled by a filename.
-// / The original URI is preserved in the stream record, not on disk.
-// / This function does NOT follow redirects.
-// / This function does NOT let CURL perform its own DNS lookup.
-// / Only the first $engineMaxInspectionBytes bytes are fetched.
-// / We are classifying files here, not streaming them.
-// / $engineConnectionTimeout is documented in seconds & is used directly.
-// / $engineWatchTimeout is documented in minutes & is converted once here.
-// / $ByteCeiling overrides the inspection ceiling for a caller that is fetching a FILE
-// / rather than reading a playlist. Zero or absent keeps the inspection ceiling.
-// / The two are different sizes for different reasons. An inspection reads enough of a
-// / playlist to understand it & should stop early. A file a user asked for is only useful
-// / whole, so its ceiling is about what this server is willing to spend rather than about
-// / how much is worth reading.
+// / This is the only place the application fetches a remote file for a pipeline.
+// / It pins the resolved address, refuses redirects & DNS rebinding, & reads a bounded number of bytes.
+// / Every one of those is something a pipeline author writing their own curl call would forget.
+// / $engineAllowPlainHTTP, $engineConnectionTimeout, $engineMaxInspectionBytes & $engineFetchTemp govern every caller.
+// / A second pipeline that fetches remote files therefore shares them, which should be a deliberate decision.
+// / Files are saved with a numeric name & no extension, so nothing downstream is fooled by a filename.
+// / The original URI is kept in the stream record, not on disk.
+// / Only the first $engineMaxInspectionBytes bytes are fetched, because this classifies files rather than streaming them.
+// / $engineConnectionTimeout is in seconds & used directly, & $engineWatchTimeout is in minutes & converted once here.
+// / $ByteCeiling overrides the inspection ceiling for a caller fetching a file rather than reading a playlist.
+// / Zero or absent keeps the inspection ceiling.
+// / An inspection reads enough of a playlist to understand it, while a fetched file is only useful whole.
 function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, $FileNumber, $ByteCeiling = 0) {
   // / Set variables.
   global $Verbose, $DirSep, $EnableMemoryProtection;
@@ -3373,17 +3159,12 @@ function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP,
       .' -m '.((int)$engineWatchTimeout * 60)
       .' -sS -o '.escapeshellarg($LocalStreamPath)
       .' -- '.escapeshellarg($StreamURL).' 2>&1';
-    // / The fetch runs INSIDE the sandbox, with a network & without a resolver.
-    // / curl needs no resolver, because --resolve above hands it the one address the
-    // / application already inspected. A namespace with no resolver is the enforcement of
-    // / that. If the pin were ever malformed, curl would have nothing to fall back on &
-    // / would fail rather than quietly resolving for itself, which is the failure wanted.
+    // / The fetch runs inside the sandbox, with a network & without a resolver.
+    // / curl needs no resolver, because --resolve above hands it the one address the application inspected.
+    // / A malformed pin therefore fails rather than letting curl resolve for itself.
     // / The generic profile is used, because curl needs nothing beyond the base sandbox.
-    // / The output path is also given as the input path. There is no input file & the
-    // / sandbox requires a directory to bind; the one it binds is the one being written.
+    // / The output path is also given as the input path, because the sandbox requires a directory to bind.
     // / sandboxCommand returns whether the command may run & the command, in that order.
-    // / Until v3.9.9 the pair was taken as the command, so the shell was asked to run a
-    // / program called Array & every stream download failed.
     list ($commandMayRun, $curlCommand) = sandboxCommand($curlCommand, $LocalStreamPath, $LocalStreamPath, TRUE, 'generic');
     // / A command that may not run is not run, & the download counts as failed.
     if ($commandMayRun) exec($curlCommand, $curlOutput, $curlExitCode);
@@ -3454,41 +3235,15 @@ function waitForStream($StreamPID, $newPathname) {
 // / Accepts the command & the account name. Returns the output & the exit code, in order.
 // / A caller that is not root runs the command as itself & nothing is dropped.
 // /
-// / This replaces  su -s /bin/sh <account> -c <command>  & the difference matters.
-// / su requires this process to still BE root at the moment it spawns, so the privilege
-// / this call exists to give up is held for the whole life of the call. It also puts a
-// / shell in the chain, with an environment & a PATH somebody may be able to influence.
-// / A fork drops privilege inside the child & never regains it. posix_setuid called as
-// / root sets the real, the effective & the saved identity together, so there is nothing
-// / left to climb back to. The parent keeps root & the child cannot reach it.
-// /
-// / The group is dropped BEFORE the account & that order is not interchangeable.
-// / Changing the account first removes the ability to change the group, so a process that
-// / did it the other way round would keep running in root's group & nothing would say so.
-// /
-// / A host without the pcntl or posix extension cannot do this safely, so it refuses
-// / rather than falling back to running the command as root. A command that was meant to
-// / run unprivileged is worse than a command that did not run.
-// /
-// / THREE THINGS WERE WRONG UNTIL v4.0.1, & each was measured.
-// / The supplementary groups were never replaced. setgid changes the primary group only, so
-// / a child of a root shell kept root & adm & could read whatever those groups can, auth.log
-// / among it. posix_initgroups now gives the child the account's own groups & nothing else.
-// / The output file was created by root, 0600, before the child dropped to the account, so
-// / the child could never write it. Every command returned exit code 0 & no output, & the
-// / one caller, the sandbox probe -v & -fp run as root, reported a working sandbox whatever
-// / the web server account could actually build. The file now belongs to the account first.
-// / A drop that did not take was never checked, so a failed setuid would have run the command
-// / as root. The child now confirms who it is before it runs anything, & a child that cannot
-// / report back is a failure rather than a silent success.
-// / THE ACCOUNT COULD CHANGE WHAT ROOT READ BACK UNTIL v4.0.5. The output file was given to the
-// / account so the child could write it, so any process running as that account could rewrite it
-// / before root read the exit code from it, & root acted on what it said. The file now stays root's,
-// / the child opens it while it is still root & writes through that handle, & the exit code is the
-// / child's own exit status, which no account can write. A child a signal ended did not finish.
-// / The child also kept root's terminal, its session & every handle root held, a lock among them.
-// / It now closes every handle it was given, reads & writes /dev/null in their place, & leaves
-// / root's session before it drops, so nothing it starts holds anything of root's.
+// / It forks, & the child drops privilege & never regains it, unlike su, which holds root for the whole call.
+// / posix_setuid called as root sets the real, effective & saved identity together, so nothing is left to climb back to.
+// / posix_initgroups gives the child the account's own groups & nothing else, so it keeps none of root's.
+// / The group is dropped before the account, because changing the account first removes the ability to change the group.
+// / The child confirms who it is before it runs anything, & a child that cannot report back is a failure.
+// / The output file stays root's, & the child opens it while still root & writes through that handle.
+// / The exit code is the child's own exit status, which no account can write, & a child a signal ended did not finish.
+// / The child closes every handle it was given, uses /dev/null in their place & leaves root's session before it drops.
+// / A host without the pcntl or posix extension is refused, because running a command as root that was meant not to is worse.
 function runAsAccount($command, $accountName) {
   // / Set variables.
   global $RunningAsRoot, $EnableMemoryProtection;
@@ -3556,8 +3311,7 @@ function runAsAccount($command, $accountName) {
 // / Resource limits.
 // / A limit is a share of the host granted to one operation & is expressed as a percentage
 // / of a processor & a quantity of memory.
-// / limitCommand depends on both of these, so they moved with it. A function that moves
-// / without what it depends on has not moved, it has only appeared to.
+// / limitCommand depends on both of these, so they sit beside it.
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -3584,16 +3338,10 @@ function resolveConversionLimit($sandboxProfile) {
   // / A ceiling this core knows a type cannot run below, consulted only when the
   // / administrator has named no ceiling for that type at all. Anything they DO set wins.
   // /
-  // / THIS EXISTS BECAUSE A CORE CAN BE UPDATED WITHOUT config.php BEING UPDATED.
-  // / config.php is accepted at or above a minimum version, so an installation that takes a
-  // / newer core keeps whatever configuration file it already had. A type this core has
-  // / learned about since that file was written is therefore a type the file does not name,
-  // / & the general default is what it would fall to.
-  // / For Scan that default is fatal rather than merely tight. A ClamAV signature database
-  // / is well over a gigabyte once it is loaded, so handing a scan the 512M general default
-  // / does not slow it down, it has the kernel kill it, & every virus scan on that server
-  // / fails from the moment the core is updated. A local fallback the configuration cannot
-  // / lower by omission is what stops a version skew from turning a working scanner off.
+  // / It exists because a core can be updated without config.php, which is accepted at or above a minimum version.
+  // / A type this core learned about since that file was written would otherwise fall to the general default.
+  // / For Scan that default is fatal, because a loaded ClamAV signature database is over a gigabyte & 512M gets it killed.
+  // / A local fallback the configuration cannot lower by omission stops a version skew from turning a working scanner off.
   $builtInLimits = array('Scan' => '50,2048');
   $conversionType = conversionTypeForProfile($sandboxProfile);
   // / A table supplied by the listener wins, because it reflects the host right now.
@@ -3870,15 +3618,12 @@ function limitCommand($command, $sandboxProfile) {
 // / A function to ask the operator a question, through whatever the application provides.
 // / Accepts the question. Returns their answer, or an empty string when nobody can be asked.
 // /
-// / THE ENGINE HAS NO IDEA HOW THIS APPLICATION TALKS TO ANYBODY. A command line reads a
-// / line from the terminal. A web request has no operator at all & must not block waiting
-// / for one that will never arrive.
+// / The Engine does not know how the application talks to anybody.
+// / A command line reads a line from the terminal, & a web request has no operator & must not block waiting for one.
 // / So the application names a function in $EngineOperatorPrompt & this calls it.
-// /
-// / AN EMPTY ANSWER IS A REFUSAL & every caller must treat it as one. That is deliberate.
-// / A question nobody could be asked has not been answered yes, & the destructive branch
-// / that was waiting on a yes does not run. An application that declares no prompt gets a
-// / tool that reports & never destroys, which is a reasonable tool.
+// / An empty answer is a refusal, & every caller must treat it as one.
+// / A question nobody could be asked has not been answered yes, so the destructive branch waiting on a yes does not run.
+// / An application that declares no prompt gets a tool that reports & never destroys.
 function promptOperator($operatorQuestion) {
   // / Set variables.
   global $EngineOperatorPrompt, $EnableMemoryProtection;
@@ -3936,20 +3681,13 @@ function collectConfigModel() {
   if ($modelFunction !== '' && function_exists($modelFunction)) $ConfigModel = (array)$modelFunction();
   else if ($modelFunction !== '') warningEntry('A configuration model provider named '.$modelFunction.' was declared & does not exist. Nothing can be repaired or generated.');
   else warningEntry('This application declares no configuration model. The utility can view & back up & nothing else.');
-  // / THE DEFAULTS COME FROM THE TEMPLATE & are not in the model at all.
-  // / The template is a real configuration at default values, so every default is already
-  // / written there in the exact form it will be written back. Holding it twice was how a
-  // / model & a config file drifted apart in the first place.
-  // / The model keeps what a config file CANNOT say about itself. A type, because a path & a
-  // / string are both quoted & validate differently. A dependency between two settings. A
-  // / section an operator owns & the utility must not write.
-  // / A template that cannot be read leaves the model exactly as the application gave it,
-  // / so an application that supplies its own defaults still works.
-  // / The template is read with a plain match rather than with parseConfigFile.
-  // / parseConfigFile asks for the model, & the model is what this function returns, so
-  // / calling it here is a loop that ends in exhausted memory rather than in an error.
-  // / A name & its value is all that is needed, & a setting name is unique across the file,
-  // / so the section it sits in does not have to be worked out again.
+  // / The defaults come from the template & are not in the model at all.
+  // / The template is a real configuration at default values, so every default is already in the form it is written back.
+  // / Holding the defaults twice would let a model & a config file drift apart.
+  // / The model keeps what a config file cannot say about itself: a type, a dependency between settings & an operator owned section.
+  // / A template that cannot be read leaves the model as the application gave it, so its own defaults still work.
+  // / The template is read with a plain match, because parseConfigFile asks for the model this function returns & would loop.
+  // / A setting name is unique across the file, so the section it sits in does not have to be worked out again.
   $templatePath = (isset($EngineConfigTemplate) && trim((string)$EngineConfigTemplate) !== '') ? trim((string)$EngineConfigTemplate) : '';
   if ($templatePath !== '' && !empty($ConfigModel)) {
     if (strpos($templatePath, $DirSep) !== 0) $templatePath = $InstLoc.$DirSep.'Resources'.$DirSep.$templatePath;
@@ -3973,14 +3711,11 @@ function collectConfigModel() {
 // / Accepts nothing. Returns display rows, which are empty when the application serves nothing.
 // / A row with a Label is a status line. A row with only Text is a paragraph.
 // /
-// / Whether a data tree is reachable by a web server is a question about an application
-// / that HAS a web server. An application that serves nothing has nothing to answer & the
-// / section is simply not shown, rather than shown empty or shown as a failure.
-// / THE ENGINE ANSWERS IT ITSELF FROM v4.0.5, for each location the contract gives the served
-// / role. Until then the application answered through $EngineDataPolicyProvider, which is
-// / retired. A contract that still names one is not read, because the Engine knows the answer.
-// / The protection file is repaired as it is checked, because only --setup asks for these rows,
-// / as root, while it prepares the locations the protection is written into.
+// / Whether a data tree is reachable by a web server is a question only an application with a web server has.
+// / An application that serves nothing has nothing to answer, so the section is not shown at all.
+// / The Engine answers it for each location the contract gives the served role.
+// / A contract that still names $EngineDataPolicyProvider is not read, because that provider is retired.
+// / The protection file is repaired as it is checked, because only --setup asks for these rows, as root, while preparing the locations.
 function collectDataPolicyFindings() {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -4014,8 +3749,6 @@ function collectDataPolicyFindings() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / MOVED FROM THE APPLICATION AT v3.9.2. Comparing versions is not something one
-// / application does differently from another, & the Engine compares them too.
 // / A function to compare two version numbers numerically & report a minimum match.
 // / Accepts the detected version & the minimum version required, in that order.
 // / Returns TRUE when the detected version is the same as, or newer than, the required one.
@@ -4103,33 +3836,21 @@ function detectHostArchitecture() {
 // / sandbox, & whether an attempt was cut short, in that order. The launcher is escaped already,
 // / carries --unshare-user --disable-userns where they build a sandbox too, & goes where the binary
 // / would have gone.
-// / A path is returned ONLY when a real sandbox was launched successfully, so a caller
-// / holding a path may build a command with it without checking anything else.
-// / This is a CAPABILITY check rather than a version check & is the only one in the
-// / application. Bubblewrap may be installed & still be non functional.
-// / Unprivileged user namespaces can be disabled at the kernel level, restricted by an
-// / AppArmor profile, or blocked by a container runtime. Testing that the binary exists
-// / proves nothing at all, so a real minimal sandbox is launched here instead.
-// / A dependency that cannot be isolated must be refused rather than run unprotected, so a
-// / FALSE from this function is the strongest signal the application produces.
+// / A path is returned only when a real sandbox was launched, so a caller holding one may build a command with it directly.
+// / This is a capability check, because bubblewrap may be installed & still be unable to build a namespace.
+// / The kernel, an AppArmor profile or a container runtime can each refuse unprivileged user namespaces.
+// / A dependency that cannot be isolated is refused rather than run unprotected, so FALSE here is the strongest signal there is.
 // /
-// / EVERY SANDBOX ON A RESTRICTING KERNEL RUNS THIS APPLICATION'S OWN COPY of bubblewrap.
-// / Ubuntu 23.10 & later permit an unprivileged namespace only to a program running under an
-// / AppArmor profile that grants userns, & Ubuntu grants it through a profile attached to the
-// / program's own binary, as its profiles for Steam, Flatpak & Chrome are. This application's
-// / profile is attached to its own copy, which root alone can change & only root & the web
-// / server's account can run, so a host keeps the restriction every other program on it relies on
-// / & bubblewrap stays as it was for each of them. The copy is tried first wherever the restriction
-// / is in force & never anywhere else, & the system's bubblewrap after it, because a host whose
-// / own profile or a setuid bubblewrap already permits the namespace needs nothing more. A copy
-// / that is not root's alone is never tried. Until v4.0.5 -fp switched the restriction off for the
-// / whole host.
-// / Each attempt is a real sandbox, so the launcher returned is one that has just built one.
-// / IT ALSO SAYS WHETHER AN ATTEMPT WAS CUT SHORT RATHER THAN REFUSED, as its third answer.
-// / Bubblewrap that refuses a sandbox exits 1. A time limit, a signal or a program that could not be
-// / started ends it otherwise, & says nothing about whether the kernel would have built one, so the
-// / kernel check never lifts the restriction on an attempt that ended that way. Until v4.0.5 any
-// / failure counted, & the account the probe runs as could end one on purpose.
+// / On a restricting kernel every sandbox runs this application's own copy of bubblewrap.
+// / Ubuntu 23.10 & later permit an unprivileged namespace only to a program under an AppArmor profile that grants userns.
+// / This application's profile is attached to its own copy, which root alone can change & only root & the web server's account can run.
+// / The host keeps the restriction every other program relies on, & bubblewrap stays as it was for each of them.
+// / The copy is tried first wherever the restriction is in force, & the system's bubblewrap after it.
+// / A copy that is not root's alone is never tried.
+// /
+// / The third answer says whether an attempt was cut short rather than refused.
+// / Bubblewrap that refuses a sandbox exits 1, while a time limit, a signal or a program that could not start ends it otherwise.
+// / The kernel check never lifts the restriction on an attempt that ended that way, because it says nothing about the kernel.
 function verifySandboxLauncher() {
   // / Set variables.
   global $Verbose, $RunningAsRoot, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
@@ -4216,10 +3937,9 @@ function verifySandboxLauncher() {
 // / A function to confirm this server can actually isolate a dependency invocation.
 // / Returns the absolute path of a WORKING bubblewrap binary, or FALSE.
 // / A path is returned ONLY when a real sandbox was launched successfully.
-// / It asks verifySandboxLauncher(), which says how the sandbox was built as well. A caller that
-// / builds a command asks that function instead, because the launcher is what the command runs.
-// / Nothing in this application calls it from v4.0.5. It is kept for anything built on the Engine
-// / that still does, & answers exactly as it did.
+// / It asks verifySandboxLauncher(), which also says how the sandbox was built.
+// / A caller that builds a command asks that function instead, because the launcher is what the command runs.
+// / Nothing in this application calls it, & it is kept for anything built on the Engine that does.
 function verifyBwrap() {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -4289,29 +4009,15 @@ function sandboxOverlayFlags($sandboxProfile, $readOnlyResourcePath) {
 // / The mounts are derived from the supplied paths, so the caller never names one.
 // / Network access is unshared unless requested, which closes every URL handler at once.
 // / OpenSCAD does NOT use this. It needs a whole directory visible to resolve includes.
-// / The sixth argument is a directory the command needs that is neither its input nor its
-// / output. A converter loading a module, a template or a profile from inside the
-// / installation cannot reach it otherwise, because the namespace binds the input directory
-// / & the output directory & nothing else at all.
-// / PyMeshLab is why this exists. Its command inserts the bundled module directory onto the
-// / Python path, that directory was never bound, & every MeshLab route therefore failed the
-// / moment --Use PyMeshLab Python Bindings-- was enabled with sandboxing on. It looked like
-// / a broken conversion rather than like a missing bind.
+// / The sixth argument is a directory the command needs that is neither its input nor its output, bound read only.
+// / A converter loading a module, a template or a profile from the installation reaches it only this way.
 // / A caller with nothing to bind passes nothing & is unaffected.
-// / A profile's Overlays are found in this directory, so a pipeline that carries its own policy
-// / passes the folder holding it, & that policy covers the host's inside the namespace.
-// / The seventh argument is a set of environment variables the command needs, keyed by
-// / name. A caller must never prefix them onto the command itself.
-// / bwrap execs the command with execvp & never through a shell.
-// / A NAME=value prefix is therefore read as the name of a binary rather than as an
-// / assignment, & the failure looks like a missing program.
-// / The message is  execvp QT_QPA_PLATFORM=offscreen: No such file or directory  which
-// / names a shell feature that was never involved.
+// / A profile's Overlays are found in this directory, so a pipeline that carries its own policy passes the folder holding it.
+// / The seventh argument is a set of environment variables the command needs, keyed by name.
+// / A caller must never prefix them onto the command, because bwrap execs it without a shell.
+// / A NAME=value prefix would be read as the name of a binary, & the failure would look like a missing program.
 // / A value naming the read only resource is rewritten to its path inside the namespace.
-// / An unsandboxed command takes the same variables through env, because limitCommand() may put
-// / nice or systemd-run in front of it, & each of those runs its first word as a program. Until
-// / v4.0.5 they were a shell prefix there, which either one tried to run, so every unsandboxed
-// / conversion given a variable failed wherever per conversion limits were on.
+// / An unsandboxed command takes the same variables through env, because nice or systemd-run in front of it runs its first word.
 // / The eighth argument is a hosts file the application wrote, bound at /etc/hosts.
 // / It is the ONLY name resolution a networked command is permitted. The application
 // / resolves every name itself, inspects the address, & writes the approved pairs here.
@@ -4470,18 +4176,13 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / The Engine's own commands, moved here from the application at v3.9.9.
-// / Every application of this shape needs the listener, the managers, setup, configuration,
-// / the pipelines, repair & cleaning, & an operator needs all of them to run one at all. Until v3.9.9 each was a branch in
-// / HRConvert2's parseCommandLine, so a second application would have rewritten every one.
-// / An application serves -v, -h & anything beginning --app itself, offers every other
-// / command to dispatchEngineCommand, & handles only what comes back unhandled, which is its
-// / own commands or a mistake.
-// / Every branch was lifted unchanged except where it named HRConvert2 or its entry point
-// / by hand, which it now reads from the contract, & -fp, which reaches the application's
-// / repair through the provider the contract declares.
-// / It passes question three of ABOUT_ENGINE_CONTRACT.txt. Every command here needs the
-// / Engine, & the application refuses all of them before calling here when there is none.
+// / The Engine's own commands.
+// / Every application of this shape needs the listener, the managers, setup, configuration, the pipelines, repair & cleaning.
+// / An application serves -v, -h & anything beginning --app itself, & offers every other command to dispatchEngineCommand.
+// / It handles only what comes back unhandled, which is its own commands or a mistake.
+// / A branch reads the application's name & entry point from the contract, & -fp reaches the repair through the declared provider.
+// / It passes question three of ABOUT_ENGINE_CONTRACT.txt, because every command here needs the Engine.
+// / The application refuses all of them before calling here when there is no Engine.
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -4603,8 +4304,7 @@ function showEngineStatus($cliWhoami, $cliListenerAuthorized) {
     print($Lol.'Running as          '.$cliWhoami.$Lol);
     print('Listener commands   '.($cliListenerAuthorized ? 'AVAILABLE' : 'NOT AVAILABLE to this user').$Lol);
     if (!$ResourceAwarenessActive) print('Resource awareness  UNAVAILABLE, the Core Manager component is missing or does not match this core.'.$Lol);
-    // / An account that cannot read the socket folder cannot ask, so it is not asked. Until v4.0.6 it
-    // / asked, read nothing, & reported a running listener as STOPPED, with a note that it might be wrong.
+    // / An account that cannot read the socket folder cannot ask, so it is not asked.
     else if (!$cliListenerAuthorized) print('Listener            NOT ASKED, only '.$ApacheUser.' may read the listener state. Run --status as root.'.$Lol);
     else {
       list ($cliListenerRunning, $cliStatus) = reportListenerStatus();
@@ -4639,9 +4339,8 @@ function showEngineStatus($cliWhoami, $cliListenerAuthorized) {
 // / Accepts the action & the pipeline it names, in that order. Returns the exit status.
 function runEnginePipelineCommand($cliTarget, $cliSecondTarget) {
   // / Set variables.
-  // / $InstLoc & $CoreLoaded are declared because --check-depends requires depends.php inside
-  // / this function, & that file reads both at file scope. Without them every entry it builds
-  // / warns of an undefined variable. The move into this function lost them once already.
+  // / $InstLoc & $CoreLoaded are declared, because --check-depends requires depends.php inside this function.
+  // / That file reads both at file scope, & without them every entry it builds warns of an undefined variable.
   global $Lol, $Pipelines, $DependsManifest, $CoreLoaded, $InstLoc, $EnableMemoryProtection;
   $CommandStatus = 0;
   $pipelineAction = $pipelineWanted = $pipelineName = $pinnedVersion = $manifestPath = '';
@@ -4658,9 +4357,8 @@ function runEnginePipelineCommand($cliTarget, $cliSecondTarget) {
     print($Lol); }
   else if ($pipelineAction === '--describe') {
     $pipelineWanted = ($cliSecondTarget !== '') ? $cliSecondTarget : '';
-    // / A pipeline is named without regard to case. Every target has been lowercased
-    // / since early v3.9.9 & a pipeline is keyed by its declared name, so an exact
-    // / lookup refused Image, IMAGE & image alike. The declared name is printed.
+    // / A pipeline is named without regard to case, because every target is lowercased & a pipeline is keyed by its declared name.
+    // / The declared name is printed.
     foreach (array_keys($Pipelines) as $pipelineName) {
       if (strcasecmp((string)$pipelineName, $pipelineWanted) === 0) $pipelineWanted = (string)$pipelineName; }
     if ($pipelineWanted === '') print($Lol.'Name a pipeline to describe. --pipeline --describe Image'.$Lol.$Lol);
@@ -4675,14 +4373,12 @@ function runEnginePipelineCommand($cliTarget, $cliSecondTarget) {
       printf('  %-16s %s'.$Lol, 'Version', $pipelineRecord['Version']);
       printf('  %-16s %s'.$Lol, 'Entry point', $pipelineRecord['EntryPoint']);
       printf('  %-16s %s'.$Lol, 'Subsystem', isset($pipelineRecord['Subsystem']) ? $pipelineRecord['Subsystem'] : 'none');
-      // / The record keeps the declared formats as Input & Output. This read
-      // / Capabilities, which the record does not carry, so every pipeline was described
-      // / as reading every file & writing nothing until v3.9.9.
+      // / The record keeps the declared formats as Input & Output.
       printf('  %-16s %s'.$Lol, 'Reads', empty($pipelineRecord['Input']) ? 'every file' : implode(' ', $pipelineRecord['Input']));
       printf('  %-16s %s'.$Lol, 'Writes', empty($pipelineRecord['Output']) ? 'nothing' : implode(' ', $pipelineRecord['Output']));
       print($Lol); } }
   else if ($pipelineAction === '--verify') {
-    // / PINNED AGAINST LOADED. The one comparison nothing else makes.
+    // / Pinned against loaded, which is the one comparison nothing else makes.
     $pinnedPipelines = getAcceptedPipelines();
     $pipelineFailures = 0;
     print($Lol.'Pinned against loaded'.$Lol.$Lol);
@@ -4800,11 +4496,8 @@ function runEngineSetupCommand($cliArguments, $cliTarget, $cliConfirmed) {
   list ($cliDependencyIsAvailable, $cliDependencyVersion) = verifyCoreComponent('Dependency Core', 'Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion', $RequiredDependencyCoreVersion);
   $cliSubsystem = extractCliOption($cliArguments, '--subsystem');
   // / A subsystem is checked against the manifest before anything acts on it.
-  // / Every --setup option that takes one matches it loosely & acts on whatever matched.
-  // / A name that matched nothing used to check, install, update or remove nothing &
-  // / exit 0, so a mistyped subsystem looked exactly like a clean one.
-  // / It is only judged when the manifest loads. A manifest that does not is reported by
-  // / the command itself, which already says why.
+  // / Every --setup option that takes one matches it loosely, so a name that matched nothing would act on nothing & exit 0.
+  // / It is only judged when the manifest loads, because a manifest that does not is reported by the command itself.
   if ($cliDependencyIsAvailable && $cliSubsystem !== '' && file_exists(contractPath('depends.php')) && function_exists('verifyDependsManifest')) {
     list ($cliManifestIsAvailable, $cliManifestEntries, $cliManifestVersion) = verifyDependsManifest($RequiredDependsVersion);
     if ($cliManifestIsAvailable && is_array($cliManifestEntries)) {
@@ -4839,10 +4532,7 @@ function runEngineSetupCommand($cliArguments, $cliTarget, $cliConfirmed) {
     // / An optional dependency that is missing costs a feature & does not fail the check.
     if (!$cliDependenciesReady) $CommandStatus = 1;
     showDependencyFindings($cliDependencyFindings);
-    // / The verdict is NOT printed here. showDependencyFindings() prints it, & this
-    // / block used to print its own immediately underneath, so --check-depends ended
-    // / with the same sentence twice in slightly different words.
-    // / The component that owns the table owns the summary of the table.
+    // / The verdict is printed by showDependencyFindings(), because the component that owns the table owns its summary.
     print($Lol); }
   else if (in_array('--output-supply-chain', $cliArguments, TRUE) or extractCliOption($cliArguments, '--output-supply-chain') !== '') {
     logEntry('Command line invocation. Writing a supply chain report.');
@@ -4881,9 +4571,7 @@ function runEngineSetupCommand($cliArguments, $cliTarget, $cliConfirmed) {
     $cliDependencyToken = deriveStartupKey('dependency-write');
     list ($cliSetupSucceeded, $cliSetupCount) = uninstallDepends($cliDependencyToken, $cliSubsystem, $cliConfirmed);
     if (!$cliSetupSucceeded) $CommandStatus = 1; }
-  // / The listener service unit, generated from the live configuration, & the Environment Manager's
-  // / timer, which is written & never enabled here. Until v4.0.6 the timer was written only by
-  // / --install-complete, & the documentation said this wrote it too.
+  // / The listener service unit, generated from the live configuration, & the Environment Manager's timer, never enabled here.
   // / Setup Core owns both. Dependency Core is already loaded by the time we get here.
   else if (in_array('--install-service', $cliArguments, TRUE)) {
     list ($cliSetupIsAvailable, $cliSetupVersion) = verifyCoreComponent('Setup Core', 'Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion', $RequiredSetupCoreVersion);
@@ -4970,15 +4658,12 @@ function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWh
   else if (!$ResourceAwarenessActive) {
     $CommandStatus = 1;
     print($Lol.'Resource awareness is unavailable. The Core Manager component is missing or does not match this core.'.$Lol.$Lol); }
-  // / Root operates none of the running listener. -k reads the manager list the web server
-  // / account wrote & signals the process identifiers in it, & --kill-all & --kill-every reach
-  // / the same processes. All of them live in that account's folders & belong to that account's
-  // / processes, so root reading that list & running kill on a number from it is root doing what
-  // / the account chose. Root confirms a destructive one itself, because an administrator is at
-  // / the terminal, then hands the command to the account exactly as -l is handed over, with the
-  // / answer already given. The account signals only what it could already signal. -l is not here
-  // / because startCoreManagerListener already hands it over, & -k with no target stops through
-  // / that same account below once it is no longer root.
+  // / Root operates none of the running listener, because the manager list & the processes it names are the web server account's.
+  // / Root confirms a destructive command itself, because an administrator is at the terminal.
+  // / It then hands the command to that account, as -l is handed over, with the answer already given.
+  // / The account signals only what it could already signal.
+  // / -l is not here, because startCoreManagerListener already hands it over.
+  // / -k with no target stops through that same account below, once it is no longer root.
   else if ($RunningAsRoot && ($cliCommand === '-k' or $cliCommand === '--kill' or $cliCommand === '--kill-all-workers' or $cliCommand === '--kill-every-worker')) {
     if ($cliCommand === '--kill-all-workers') $cliActionConfirmed = confirmDestructiveAction('This ends every tracked conversion in progress. Users will lose work.', $cliConfirmed);
     else if ($cliCommand === '--kill-every-worker') $cliActionConfirmed = confirmDestructiveAction('This ends EVERY PHP process owned by '.$ApacheUser.' on this host. Other applications sharing this server, such as WordPress or OwnCloud, will lose every session in progress.', $cliConfirmed);
@@ -5014,17 +4699,9 @@ function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWh
     if (!$cliActionConfirmed) $CommandStatus = 1;
     if ($cliActionConfirmed) {
       warningEntry('Command line invocation. Terminating every tracked worker.');
-      // / The Resource Manager is ASKED to do this rather than the registry being walked
-      // / from here. It owns the registry & this process does not have one.
-      // / An earlier version called killTrackedWorkers() with no argument at all. That
-      // / function takes the registry by reference & has no default, so the command was a
-      // / fatal every time somebody confirmed it, which is the worst moment to fail.
-      // / kill-tracked is a request type the Resource Manager already answers, & it is
-      // / what the Worker Manager sends for the same purpose.
-      // / The channel purpose is the third argument & was missing, so the timeout arrived
-      // / where the purpose belongs & the call was one argument short. A confirmed
-      // / --kill-all-workers was an ArgumentCountError every time until v3.9.9. The Resource
-      // / Manager listens on the internal channel, which is what the Worker Manager uses.
+      // / The Resource Manager is asked to do this rather than the registry being walked from here, because it owns the registry.
+      // / kill-tracked is a request type the Resource Manager already answers, & the Worker Manager sends it for the same purpose.
+      // / The Resource Manager listens on the internal channel, which is what the Worker Manager uses.
       list ($cliMessageDelivered, $cliMessageReply) = sendManagerMessage(buildManagerSocketPath('resource-manager'), array('RequestType' => 'kill-tracked'), 'internal', (int)$ManagerSocketTimeout);
       if ($cliMessageDelivered && isset($cliMessageReply['Reason'])) print($Lol.$cliMessageReply['Reason'].$Lol);
       else if ($cliMessageDelivered) print($Lol.'The Resource Manager accepted the request & said nothing about it.'.$Lol);
@@ -5058,9 +4735,7 @@ function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWh
 // / A function to run one of the Engine's root only commands.
 // / Accepts the command & its target, in that order. Returns the exit status.
 // / The caller has already refused these to anybody but root.
-// / -u is root only too & is still dispatched by the application, which loads Setup Core for
-// / it. updateApplication & its helpers moved into Setup Core at v4.0.3, & the command itself
-// / follows when the rest of the application's commands do.
+// / -u is root only too, & the application dispatches it, because it loads Setup Core for it.
 function runEngineRootCommand($cliCommand, $cliTarget) {
   // / Set variables.
   global $Lol, $EnableMemoryProtection;
@@ -5069,14 +4744,10 @@ function runEngineRootCommand($cliCommand, $cliTarget) {
   $cliPathsCorrected = 0;
   $cliManagerVersion = '';
   $cliPassFindings = array();
-  // / THE ENVIRONMENT MANAGER IS LOADED HERE BY NAME, through loadEngineRootManager(), & never
-  // / through loadEngineManager() or getAcceptedManagers(). That list is what the listener
-  // / dispatches from, & a root role the listener could reach is exactly what its design refuses.
-  // / A pass that could not complete exits 1, so a timer reports it as failed. A pass that found
-  // / drift has completed & exits 0. What it found is in root's log, its state file & --status.
-  // / Until v4.0.1 it was required here without $CoreLoaded in scope, so every pass halted with
-  // / Engine-35000 & exit status 0 & a timer read every pass as a success. It also kept its state
-  // / in the web server account's socket folder, where root writes nothing.
+  // / The Environment Manager is loaded here by name, through loadEngineRootManager(), & never through loadEngineManager().
+  // / getAcceptedManagers() is what the listener dispatches from, & a root role the listener could reach is what its design refuses.
+  // / A pass that could not complete exits 1, so a timer reports it as failed.
+  // / A pass that found drift has completed & exits 0, & what it found is in root's log, its state file & --status.
   // / See Documentation/ABOUT_ENVIRONMENT_MANAGER.txt.
   if ($cliCommand === '--run-environment-manager') {
     list ($cliManagerAvailable, $cliManagerVersion) = loadEngineRootManager('environmentManager.php');
@@ -5095,9 +4766,8 @@ function runEngineRootCommand($cliCommand, $cliTarget) {
         showEnvironmentFindings($cliPassFindings, FALSE);
         print($Lol); } } }
   // / Handle the -fp or --fix-permissions arguments.
-  // / The repair is the application's & is reached through the provider it declares,
-  // / $EngineRepairProvider. HRConvert2 declares fixManagedPermissions, which this called
-  // / by name until v3.9.9.
+  // / The repair is the application's & is reached through the provider it declares, $EngineRepairProvider.
+  // / HRConvert2 declares fixManagedPermissions.
   else if ($cliCommand === '-fp' or $cliCommand === '--fix-permissions') {
     logEntry('Command line invocation. Correcting managed permissions.');
     print($Lol.'Correcting permissions on managed paths.'.$Lol);
@@ -5114,16 +4784,10 @@ function runEngineRootCommand($cliCommand, $cliTarget) {
 // / Accepts the threshold the operator supplied, if any. Returns the exit status.
 // / The caller has already refused this to anybody but root & the web server account.
 // /
-// / ROOT DOES NOT SWEEP, & hands the sweep to the web server account instead. Every name in a
-// / session folder belongs to that account, which can swap any of them for a link between the
-// / moment it is examined & the moment it is removed. Until v4.0.1 root swept as itself, & the
-// / sweep resolves each name, makes it 0777 & removes it, so a link swapped in at the right
-// / moment sent all three to wherever it pointed. Run through runAsAccount, the same sweep can
-// / only remove what that account could already remove.
-// /
-// / THE TEMPORARY LOCATION IS SWEPT WHOLE. Until v4.0.1 this & every web request were handed
-// / the session folder of the request making them, rather than the DATA folder holding every
-// / session, so no expired session in DATA was ever removed by either.
+// / Root does not sweep, & hands the sweep to the web server account instead.
+// / Every name in a session folder belongs to that account, which could swap it for a link between examination & removal.
+// / Run through runAsAccount, the sweep can only remove what that account could already remove.
+// / The temporary location is swept whole, not one request's session folder.
 function runEngineCleanCommand($cliTarget) {
   // / Set variables.
   global $Lol, $InstLoc, $DirSep, $DeleteThreshold, $ConvertTemp, $ConvertLoc, $ProtectedRootDirs, $RunningAsRoot, $ApacheUser, $EnableMemoryProtection;
@@ -5401,8 +5065,7 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
   $setupCommands = array('--config', '--setup', '--pipeline');
   // / Every Engine command that needs root & nothing less.
   $rootCommands = array('-fp', '--fix-permissions', '--run-environment-manager');
-  // / The sweep removes the web server account's own files, so root & that account may ask for
-  // / it, & root hands it to that account. Until v4.0.1 it was root only & root swept itself.
+  // / The sweep removes the web server account's own files, so root & that account may ask for it, & root hands it over.
   $cleanCommands = array('-c', '--clean');
   // / The developer's build commands. They rewrite source files, so they need write access to
   // / the tree & nothing more. An operator never has a reason to run one.
@@ -5423,12 +5086,9 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
   else if (in_array($cliCommand, $buildCommands, TRUE)) {
     list ($CommandStatus, $cliPinsMatch) = runEngineBuildCommand($cliTarget, $cliSecondTarget);
     if (!$cliPinsMatch && $CommandStatus === 0) $CommandStatus = 1; }
-  // / Every setup & config command is root only, & is refused here rather than partway
-  // / through its own work. --detect-capabilities used to probe every installed dependency
-  // / as a standard user & then fail on the last line when it could not write the cache.
-  // / --config writes to config.php, which a standard user cannot write either.
-  // / --pipeline is exempt. It only reads, & ABOUT_COMMAND_LINE_ARGUMENTS.txt has always said
-  // / any user may run it. It was refused with the rest until v3.9.9.
+  // / Every setup & config command is root only, & is refused here rather than partway through its own work.
+  // / --detect-capabilities writes a cache & --config writes config.php, & a standard user can write neither.
+  // / --pipeline is exempt, because it only reads, & any user may run it.
   else if (in_array($cliCommand, $setupCommands, TRUE) && $cliCommand !== '--pipeline' && !$RunningAsRoot) $CommandStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A setup command was refused for an unauthorized user.');
   else if ($cliCommand === '--pipeline') $CommandStatus = runEnginePipelineCommand($cliTarget, $cliSecondTarget);
   else if ($cliCommand === '--config') $CommandStatus = runEngineConfigCommand($cliArguments, $cliConfirmed);

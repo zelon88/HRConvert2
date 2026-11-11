@@ -1223,7 +1223,7 @@ ERROR DESCRIPTION
   Some distributions ship only the soffice binary, & HRConvert2 tries that name when libreoffice is absent.
   HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
   Check the installed version by running 'libreoffice --version' as the web server user.
-  The listener is only started once both the installation check & the version check have passed.
+  Nothing is started. Each conversion runs LibreOffice as its own sandboxed process.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -3376,8 +3376,8 @@ ERROR DESCRIPTION
   to a weaker control rather than to no control, & that step continues with a warning instead.
   Outside a sandbox that policy is read before the host's own, whose rules still decide any
   coder they name.
-  NOTE. The document conversion engine is not sandboxed at all & is unaffected by this.
-  It is a persistent listener rather than a process launched per conversion.
+  NOTE. A document is turned into a PDF first by LibreOffice, in a sandbox of its own, & a
+  refusal there is error 2004.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 

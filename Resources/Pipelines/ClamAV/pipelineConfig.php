@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.8.
 // / This file declares the ClamAV scanner pipeline.
 // /
 // / A SCANNER declares no input or output formats & that is not an omission.
@@ -27,9 +27,9 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 
 // / -----------------------------------------------------------------------------------
-// / The version of this pipeline folder. Read WITHOUT executing this file, then matched
-// / EXACTLY against the pin in getAcceptedPipelines().
-$PipelineVersion = 'v3.9.9';
+// / The version of this pipeline folder. Read without executing this file, then matched
+// / exactly against the pin in getAcceptedPipelines().
+$PipelineVersion = 'v4.0.8';
 
 // / A scanner inspects a file & reports on it. It changes nothing.
 $PipelineKind = 'scanner';
@@ -56,10 +56,10 @@ $Capabilities = array(
 // / The subsystem this belongs to, for the readiness report.
 $PipelineSubsystem = 'Security';
 
-// / WHERE THIS PIPELINE MAY BE REACHED FROM. A scanner is useful from a terminal & from
+// / This says where the pipeline may be reached from. A scanner is useful from a terminal & from
 // / a schedule, not only from a browser, so it declares cli as well.
-// / Declaring nothing means web & gui, which is what every pipeline written before this
-// / field existed gets. A pipeline that wants a command line must say so.
+// / Declaring nothing means web & gui.
+// / A pipeline that wants a command line must say so.
 $PipelineUsage = array('cli', 'web', 'gui');
 
 // / A scanner takes no request fields. It is handed paths by the caller & nothing else.

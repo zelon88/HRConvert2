@@ -12,16 +12,11 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
-// / This file is the converter for the Audio pipeline. It is loaded by pipelineCore.php
-// / ONLY when an Audio conversion is about to be dispatched to it, so a request that
-// / converts something else never parses a line of it.
-// / Error block 12000 through 12002 belongs to this pipeline. Those numbers came with the code when it
-// / moved out of convertCore.php & they did not change, because operators have read them.
-// / This pipeline asks for FFMPEG through verifiedToolPath() & calls sandboxCommand(), which
-// / remains in convertCore.php. Four pipelines name the FFMPEG subsystem: Audio, Video,
-// / Subtitle & Stream. That is safe because all four ask the manifest, so there is one
-// / minimum & one answer to whether the installed FFMPEG is good enough.
+// / v4.0.8.
+// / The Audio pipeline's converter. pipelineCore.php loads it only to dispatch an Audio conversion.
+// / Error block 12000 through 12002 belongs to this pipeline.
+// / Audio, Video, Subtitle & Stream share the FFMPEG subsystem.
+// / Each asks verifiedToolPath(), so one minimum governs all four.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -36,15 +31,11 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert audio formats.
-// / The general minimum is enforced rather than the stream minimum, because an audio
-// / conversion reads a local file & never fetches anything remote.
 function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
-  // / This converter produces neither of the last two itself, so it declares the defaults.
-  // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
-  // / detached process must be supervised after the connection to the user is closed.
+  // / The last two keep their defaults, & $WorkerPID stays 0 unless a detached process is supervised.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
@@ -81,9 +72,8 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
         $stopper++; }
       // / Log the output of the operation to the logfile, if it is not blank.
       if ($Verbose && trim($returnData) !== '') logEntry('Ffmpeg returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-      // / Every attempt was made & none left a file. What the converter printed is logged above this,
-      // / with --Enhanced Logging Verbosity-- on. Until v4.0.6 this said the converter had timed out, which no time limit
-      // / ever caused, & then made one more attempt.
+      // / Every attempt was made & none left a file.
+      // / What the converter printed is logged above, with --Enhanced Logging Verbosity-- on.
       if (!file_exists($newPathname)) {
         $ConversionErrors = TRUE;
         errorEntry('The audio converter produced no file after '.$stopper.' attempt(s)!', 12000, FALSE); }

@@ -12,29 +12,19 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.5.
-// / This file is the converter for the Scad pipeline. It is loaded by pipelineCore.php
-// / ONLY when a Scad conversion is about to be dispatched to it, so a request that
-// / converts something else never parses a line of it.
-// / Error block 27000 through 27009 belongs to this pipeline. Those numbers came with the code when it
-// / moved out of convertCore.php & they did not change, because operators have read them.
-// / FOUR HELPERS MOVED HERE WITH THE CONVERTER, because convertCore.php had no other
-// / caller for any of them. A helper only stays behind when something outside this pipeline
-// / still needs it.
-// /   sanitizeSCAD          reads OpenSCAD source & reports every call it finds
-// /   resolveSCADInclude    resolves an include against what the same user uploaded
-// /   rectifySCAD           rewrites the source using what the Sanitizer found
+// / v4.0.8.
+// / The Scad pipeline's converter. pipelineCore.php loads it only to dispatch a Scad conversion.
+// / Error block 27000 through 27009 belongs to this pipeline.
+// / It holds what OpenSCAD source means.
+// /   sanitizeSCAD            reads OpenSCAD source & reports every call it finds
+// /   resolveSCADInclude      resolves an include against what the same user uploaded
+// /   rectifySCAD             rewrites the source using what the Sanitizer found
 // /   sanitizeAllSCADUploads  applies that to every file in the session
-// / All four are knowledge about what OpenSCAD source MEANS, which is this pipeline's job.
-// / The policy check did not move & must not. verifyOpenScadPolicy() stays in convertCore.php,
-// / where fixManagedPermissions() & validateOperatingEnvironment() reach it whether or not this
-// / pipeline is installed at all. From v4.0.5 it writes nothing. It takes back the override an
-// / earlier release added to a profile confining OpenSCAD, which a render in its sandbox never
-// / reached, & reports such a profile, because that profile is what governs a render.
-// / This pipeline asks for OpenSCAD through verifiedToolPath(), which answers from the
-// / manifest, & calls limitCommand(), verifySandboxLauncher(), cleanFiles() & is_dir_empty(), which
-// / are the Engine's. It builds its own sandbox rather than calling sandboxCommand(), as
-// / convertSCAD() says.
+// / verifyOpenScadPolicy() is the core's, so -fp & the environment check reach it without this pipeline.
+// / It writes nothing, & reports a profile confining OpenSCAD, because that profile governs a render.
+// / It removes the override an earlier release added to such a profile.
+// / OpenSCAD comes from verifiedToolPath().
+// / convertSCAD() builds its own sandbox with the Engine's verifySandboxLauncher() & limitCommand().
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -48,14 +38,12 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 
 // / -----------------------------------------------------------------------------------
-// / A function to resolve a single OpenSCAD file reference against the users uploaded files.
-// / OpenSCAD references frequently carry a directory structure that does not exist here.
-// / A reference like <../lib/threads.scad> is matched on its basename alone, threads.scad.
-// / Only files the user actually uploaded to this session are eligible for a match.
-// / The path returned points at the SANITIZED copy in ScadTemp, never at the users original.
+// / A function to resolve a single OpenSCAD file reference against the user's uploaded files.
+// / A reference is matched on its basename alone, so <../lib/threads.scad> matches threads.scad.
+// / Only files the user uploaded to this session are eligible.
+// / The path returned points at the sanitized copy in ScadTemp, never at the user's original.
 // / OpenSCAD resolves a relative include against the directory of the file it is reading.
-// / The sanitized copy lives in ScadTemp, so every reference it holds must point there too.
-// / Returns an empty string when nothing matched, & the caller must comment the reference out.
+// / Returns an empty string when nothing matched, & the caller removes the reference.
 function resolveSCADInclude($scadReference, $sessionFiles) {
   // / Set variables.
   global $ScadTemp, $DirSep, $EnableMemoryProtection;
@@ -77,29 +65,14 @@ function resolveSCADInclude($scadReference, $sessionFiles) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to find every file reading call in a block of OpenSCAD source.
-// / The source is walked once, character by character, carrying comment & string state.
-// / One pass is required rather than two, because whichever delimiter appears first wins.
-// / A line comment containing the characters that open a block comment does NOT open one.
-// / A block comment containing the characters that open a line comment does NOT open one.
-// / Stripping one kind before the other gets both of those backwards & swallows real code.
-// / Comments & strings are removed because a keyword inside either is not a call.
-// / An angle bracket path is removed for the same reason. A directory name is not a call.
-// / A keyword is only counted as a call when BOTH of the following hold.
-// / The character before it must not be a letter, a digit or an underscore.
-// / That is what stops house_width & diffuser_height from counting as a use.
-// / The next meaningful character must be an opening bracket or an angle bracket.
-// / That is what stops include_lid from counting as an include.
-// / A comment is a token separator in OpenSCAD. Not a terminator.
-// / The main loop below treats a comment as the end of live code, which is correct there.
-// / The lookahead treats a comment as whitespace, which is correct there & is NOT the same rule.
-// / An earlier version applied the main loop rule in the lookahead & concluded that
-// / surface/**/("file") was not a call. OpenSCAD reads that file. It was reported as a bypass.
-// / Whitespace & comments are therefore both skipped while looking for the bracket, & again
-// / while reading the reference, because a comment may also sit between the bracket & the quote.
-// / The boundary is the operating system sandbox in convertSCAD().
-// / This function exists so ordinary files render predictably.
-// / Returns one record per call found, carrying the keyword, the line it started on & the
-// / raw text of the reference where one could be read.
+// / The source is walked once, carrying comment & string state, because whichever delimiter appears first wins.
+// / Comments, strings & angle bracket paths are removed, because a keyword inside any of them is not a call.
+// / A keyword counts only when the character before it is not a letter, digit or underscore, as in house_width.
+// / A keyword counts only when the next meaningful character opens a bracket, as include_lid does not.
+// / The lookahead skips comments as whitespace, because a comment separates tokens in OpenSCAD.
+// / It does so between the keyword & the bracket, & between the bracket & the quote.
+// / The boundary is the operating system sandbox in convertSCAD(), & this makes ordinary files render predictably.
+// / Returns one record per call, carrying the keyword, its first line & the raw reference where one could be read.
 function sanitizeSCAD($scadContents) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -284,31 +257,16 @@ function sanitizeSCAD($scadContents) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to rewrite OpenSCAD source using what the Sanitizer found.
-// / The Sanitizer reports the exact characters each call occupies. This function replaces
-// / those characters & never works on whole lines.
-// /
-// / An earlier version commented out the line a call started on. A line is the wrong unit.
-// / A block comment opened on an earlier line may close part way along the line holding the
-// / call, & a comment marker written at the start of such a line is swallowed by that
-// / comment while the call sitting after the closing sequence stays live. That was reported
-// / as a working bypass & is the reason this function now edits by position.
-// /
-// / A removed call is overwritten with whitespace of exactly the same length. Every newline
-// / inside the span is kept, so every line below a removal keeps the number it had & the
-// / renderer reports a position the user can still find in their own file.
-// / A resolved include is replaced by a reference to the staged copy, written in place.
-// / Nothing is commented out, because writing a comment is what went wrong before.
-// /
-// / Replacements are applied from the end of the source backwards, so an earlier offset is
-// / still correct after a later replacement has changed the length of the text.
-// /
-// / The result is handed back to the Sanitizer before it is returned. Anything the Sanitizer
-// / can still see is a call that survived, & the caller refuses to render rather than trust
-// / this function to have been thorough. A rewrite that cannot prove itself is a failure.
-// /
-// / An include or use may instead be rewritten to point at another source the same user
-// / uploaded, when config.php enables that. Everything else is always removed.
-// / Geometry & heightmap reads are never resolved & never rewritten.
+// / It replaces the exact characters each call occupies & never works on whole lines.
+// / A block comment closing part way along a line would swallow a marker written at its start.
+// / A removed call is overwritten with whitespace of the same length, newlines kept.
+// / Every line keeps its number, so the renderer reports positions the user can find.
+// / A resolved include is replaced in place by a reference to the staged copy, & nothing is commented out.
+// / Replacements run from the end backwards, so earlier offsets stay correct.
+// / The result is handed back to the Sanitizer, & anything it still sees stops the render.
+// / A rewrite that cannot prove itself is a failure.
+// / An include or use may point at another source the same user uploaded, when config.php enables that.
+// / Everything else is removed, & geometry & heightmap reads are never resolved or rewritten.
 function rectifySCAD($scadContents, $sessionFiles, $resolveIncludes) {
   // / Set variables.
   global $Verbose, $EnableMemoryProtection;
@@ -358,15 +316,10 @@ function rectifySCAD($scadContents, $sessionFiles, $resolveIncludes) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to sanitize EVERY OpenSCAD source the user uploaded, in one flat pass.
-// / Nothing here follows a reference from one file to another.
-// / Following references would require cycle detection, because a.scad may include b.scad
-// / while b.scad includes a.scad, & both are legitimate files the user uploaded.
-// / Sanitizing the whole upload set instead means every file OpenSCAD can possibly reach
-// / has already been through the filter, & no traversal is ever performed.
-// / The set is closed & bounded by whatever the user was willing to upload, so no depth
-// / or width budget is required the way the stream inspector needs one.
-// / Every sanitized copy is written to ScadTemp & the users originals are never modified.
+// / A function to sanitize every OpenSCAD source the user uploaded, in one flat pass.
+// / Nothing follows a reference from one file to another, so no cycle detection or depth budget is needed.
+// / Every file OpenSCAD can reach has been filtered, because the whole upload set has.
+// / Every sanitized copy is written to ScadTemp, & the user's originals are never modified.
 function sanitizeAllSCADUploads() {
   // / Set variables.
   global $Verbose, $ConvertDir, $ScadTemp, $DirSep, $AllowSCADIncludeResolution, $EnableMemoryProtection;
@@ -415,36 +368,20 @@ function sanitizeAllSCADUploads() {
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert OpenSCAD source files into a supported export format.
-// / The users uploaded .scad is never modified & never replaced.
-// / Every uploaded source is sanitized into ScadTemp before OpenSCAD is allowed to run.
-// / The whole upload set is sanitized rather than just the requested file, because a
-// / resolved include would otherwise hand OpenSCAD a source that was never filtered.
-// / Sanitized copies are never retained. If they are needed again they are regenerated.
-// /
+// / Every uploaded source is sanitized into ScadTemp first, so a resolved include is never unfiltered.
+// / The user's .scad is never modified, & sanitized copies are not retained.
 // / Sanitization is not the security boundary & must never be treated as one.
-// / A filter over a closed character set can be a boundary, because that question has a
-// / complete answer. A filter that must interpret a grammar cannot be, because it can only
-// / approximate another program's parser & every disagreement is a bypass.
-// / The SCAD scanner is the second kind. Four bypasses were reported against the line
-// / oriented version, & a fifth against the stateful rewrite that replaced it.
-// / The boundary is the operating system sandbox below & nothing else.
-// /
-// / This function does NOT use sandboxCommand(). It needs a WHOLE DIRECTORY visible so that
-// / include statements resolve, where every other converter needs exactly one input file.
-// / Both binaries are located rather than assumed, so the OpenSCAD whose version was
-// / verified & the bubblewrap that was proven functional are the ones that actually run.
-// /
-// / OpenSCAD does NOT fail on a missing include. It warns & renders what it can, so a model
-// / can come out geometrically incomplete while reporting success. The COUNT of such
-// / warnings is logged & the text is never written, because a parse warning quotes the
-// / offending source line & that would turn the log into an exfiltration channel.
+// / A filter that must interpret a grammar only approximates another program's parser.
+// / Every disagreement between them is a bypass, so the boundary is the operating system sandbox below.
+// / This does not use sandboxCommand(), because includes need a whole directory visible.
+// / Both binaries are located, so the OpenSCAD verified & the bubblewrap proven are the ones that run.
+// / OpenSCAD renders what it can past a missing include & reports success.
+// / The count of such warnings is logged, never the text, because a parse warning quotes the source.
 function convertSCAD($pathname, $newPathname, $extension) {
   // / Set variables.
   global $Verbose, $DirSep, $SCADConversionTimeout, $ScadTemp, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
-  // / This converter produces neither of the last two itself, so it declares the defaults.
-  // / $OutputFilename is the name the user is shown. $WorkerPID stays zero unless a
-  // / detached process must be supervised after the connection to the user is closed.
+  // / The last two keep their defaults, & $WorkerPID stays 0 unless a detached process is supervised.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = FALSE;
@@ -457,10 +394,8 @@ function convertSCAD($pathname, $newPathname, $extension) {
   $openscadOutput = array();
   // / Confirm this server can isolate a render before anything else happens.
   // / A server that cannot isolate a render must refuse to render at all.
-  // / The launcher is what built the proving sandbox, so it is what builds this one. On a kernel
-  // / that restricts unprivileged namespaces it is the application's own copy of bubblewrap, which
-  // / its AppArmor profile is attached to, & until v4.0.5 this ran the system's bubblewrap, which
-  // / relied on the profile an earlier release attached to it, or on the restriction being lifted.
+  // / The launcher built the proving sandbox, so it builds this one.
+  // / On a kernel restricting unprivileged namespaces it is the application's bubblewrap, with its AppArmor profile.
   list ($bwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
   if ($bwrapBinary === FALSE) {
     $ConversionErrors = TRUE;
@@ -489,16 +424,13 @@ function convertSCAD($pathname, $newPathname, $extension) {
     // / The finished model is moved out afterwards, from outside the namespace.
     $sandboxOutputName = basename($newPathname);
     $sandboxOutputPath = $ScadTemp.$DirSep.$sandboxOutputName;
-    // / --unshare-all removes every namespace this render has no business holding.
-    // / That includes the network, which closes any OpenSCAD build whose import() takes a URL.
+    // / --unshare-all removes every namespace this render does not need, so no import() can fetch a URL.
     // / --die-with-parent guarantees the render cannot outlive the PHP process that started it.
     // / --new-session prevents the render from injecting into the controlling terminal.
-    // / /work is the ONLY writable path & the ONLY path from the data location that exists.
-    // / --chdir /work is what makes a resolved include work. rectifySCAD() rewrites an
-    // / include to a bare filename, & every sanitized copy lives in this one directory.
-    // / timeout enforces a wall clock limit because OpenSCAD will not stop on its own.
-    // / The render is wrapped in its resource ceiling below, in place of the fixed
-    // / nice -n 19 this used to carry. See the note under the command.
+    // / /work is the only writable path, & the only path from the data location that exists.
+    // / --chdir /work makes a resolved include work, because rectifySCAD() rewrites one to a bare filename.
+    // / timeout enforces a wall clock limit, because OpenSCAD will not stop on its own.
+    // / The render is wrapped in its resource ceiling below.
     $openscadCommand = 'timeout '.(int)$SCADConversionTimeout
       .' '.$sandboxLauncher
       .' --unshare-all'
@@ -537,19 +469,10 @@ function convertSCAD($pathname, $newPathname, $extension) {
       .' '.escapeshellarg($scadBinary).' -o '.escapeshellarg('/work/'.$sandboxOutputName)
       .' '.escapeshellarg('/work/'.basename($sanitizedPath))
       .' 2>&1';
-    // / Wrap the render in the ceiling configured for its type, exactly as every pipeline
-    // / that goes through sandboxCommand() is wrapped. This one builds its own sandbox
-    // / because it needs a whole directory visible for includes to resolve, & in doing so
-    // / it had walked around the limiter as well as around the sandbox builder.
-    // /
-    // / THIS REPLACES A FIXED nice -n 19 & IS NOT STRICTLY STRONGER ON EVERY HOST.
-    // / Where a scope can be created the ceiling is far stronger; a CPUQuota is enforced
-    // / against a cgroup rather than requested from the scheduler. Where no scope can be
-    // / created limitCommand() falls back to niceness derived from the configured share.
-    // / The stock 'Scad' => '75,1024' yields less than the old hardcoded 19 did. That is the
-    // / configured policy being honoured rather than overridden, which is the point, but an
-    // / administrator running without systemd who wants the old behaviour back sets a
-    // / smaller processor share for Scad & gets a larger niceness from it.
+    // / Wrap the render in the ceiling configured for its type, as sandboxCommand() wraps every other pipeline.
+    // / Where a scope can be created the ceiling is enforced against a cgroup.
+    // / Where none can, limitCommand() falls back to a niceness derived from the processor share.
+    // / The stock 'Scad' => '75,1024' yields a niceness below 19, & a smaller share gives a larger one.
     $openscadCommand = limitCommand($openscadCommand, 'openscad');
     exec($openscadCommand, $openscadOutput, $openscadExitCode);
     // / An exit code of 124 is the timeout command reporting that it killed the render.

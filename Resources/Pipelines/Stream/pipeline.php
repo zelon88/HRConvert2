@@ -12,33 +12,21 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.0.
-// / This file is the converter for the Stream pipeline. It is loaded by pipelineCore.php
-// / ONLY when a Stream conversion is about to be dispatched to it.
-// / Error block 21000 through 21002 belongs to this pipeline. Those numbers came with the
-// / code when it moved out of convertCore.php & they did not change.
-// /
+// / v4.0.8.
+// / The Stream pipeline's converter. pipelineCore.php loads it only to dispatch a Stream conversion.
+// / Error block 21000 through 21002 belongs to this pipeline.
 // / This is the reference implementation of a detached worker pipeline.
-// / It does not produce an output file before it returns. It launches FFMPEG in the
-// / background, hands back the process ID, & the core supervises that process after the
-// / connection to the user has closed.
-// / READ CONTRACT 5 IN Documentation/ABOUT_PIPELINE_COMPONENTS.txt BEFORE COPYING THIS.
-// / The passthrough is four small pieces & getting any one of them wrong orphans a process
-// / on the server. It is written down precisely so that nobody has to invent it again.
-// /
-// / What moved here & what stayed in the core, & the rule that decided it.
-// / The core owns the network. A pipeline owns its format.
-// / Anything that decides whether an address is safe to contact, or that actually contacts
-// / it, is core owned. Anything that knows what bytes MEAN belongs to the pipeline that
-// / understands that format.
-// /
-// / MOVED HERE, because each is knowledge about a format & nothing else
+// / It launches FFMPEG in the background & hands back the process ID.
+// / The core supervises that process after the connection to the user closes.
+// / Read contract 5 in Documentation/ABOUT_PIPELINE_COMPONENTS.txt before copying this.
+// / Getting any one of its four pieces wrong orphans a process on the server.
+// / The core owns the network, & a pipeline owns its format.
+// / Here, because each is knowledge about a format:
 // /   inspectTSFile           MPEG-TS is 188 byte packets each starting with 0x47
 // /   classifyStreamContent   an #EXTM3U header, or else ask inspectTSFile
 // /   inspectStreamFile       what a playlist may reference & what it may not
 // /   streamFileWalker        how deep to follow a playlist & when to stop
-// /
-// / STAYED IN THE CORE, because a pipeline must never own SSRF protection
+// / In the Engine, because a pipeline must never own SSRF protection:
 // /   isPubliclyRoutableIP            is this address safe to contact
 // /   dnsLookup                       resolve a host & judge the result
 // /   gatherRemoteHostInfo            parse & resolve a URL into its parts
@@ -47,14 +35,7 @@
 // /   inspectContentForDomains        find domain references in bytes
 // /   downloadRemoteFileForInspection pinned, redirect refusing, size bounded fetch
 // /   waitForStream                   supervise a detached worker of any kind
-// /
-// / Those eight have no caller outside this pipeline today & they still stay.
-// / Everywhere else in this migration, a helper with no other caller moved with its
-// / pipeline. This is the deliberate exception. Network egress & SSRF judgement are core
-// / owned by POLICY rather than by caller count, so that a community author writing a
-// / pipeline which fetches something gets the protection for free & cannot opt out of it by
-// / accident. The same reasoning kept verifyFile() & virusScan() in convertFiles().
-// / They were renamed off the word Stream so that the next pipeline can find them.
+// / A pipeline that fetches something gets that protection & cannot opt out of it by accident.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -364,14 +345,10 @@ function streamFileWalker($StreamFile) {
     if ($HaltReason === '') $HaltReason = 'Layer budget exhausted with '.count($currentLayerFiles).' file(s) still uninspected'; }
   // / Apply the configured forfeit action to any incomplete inspection.
   if ($StreamBudgetExhausted && $DefaultStreamInspectionForfeitAction === 'DENY') $InspectionFailed = TRUE;
-  // / Log the outcome of the entire walk. THIS IS THE ONLY PLACE THAT REPORTS IT.
-  // / An identical block used to sit ABOVE the loop as well, where every counter was still
-  // / zero & $InspectionFailed was still FALSE, so every refused walk logged ALLOWED with
-  // / all zeroes & then DENIED with the real numbers. An operator reading that saw a walk
-  // / succeed & then fail. Only the second line was ever real.
-  // / A denied walk is always visible. A clean walk is only visible under verbose logging.
-  // / An operator needs to know a stream file was refused without turning verbose logging on.
-  // / The refusal is not a failure of HRConvert2 & may be an ordinary file with relative URIs.
+  // / Log the outcome of the entire walk, which is reported here & nowhere else.
+  // / A denied walk is always logged, because an operator needs to know a stream file was refused.
+  // / A clean walk is logged only under verbose logging.
+  // / A refusal is not a failure of HRConvert2, & may be an ordinary file with relative URIs.
   if ($InspectionFailed) warningEntry('Stream Walk Result: DENIED, Layers Walked: '.$currentLayer.', Files Downloaded: '.$FileNumber.', URIs Examined: '.count($AllStreamURIs).', Unique URLs Seen: '.count($SeenURLs).', Budget Exhausted: '.($StreamBudgetExhausted ? 'TRUE' : 'FALSE').', Reason: '.($HaltReason === '' ? 'NONE' : $HaltReason).'.');
   else if ($Verbose) logEntry('Stream Walk Result: ALLOWED, Layers Walked: '.$currentLayer.', Files Downloaded: '.$FileNumber.', URIs Examined: '.count($AllStreamURIs).', Unique URLs Seen: '.count($SeenURLs).', Budget Exhausted: '.($StreamBudgetExhausted ? 'TRUE' : 'FALSE').', Reason: '.($HaltReason === '' ? 'NONE' : $HaltReason).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -384,9 +361,8 @@ function streamFileWalker($StreamFile) {
 // / A function to convert stream formats.
 // / The stream file is fully inspected before FFMPEG is allowed anywhere near it.
 // / FFMPEG is launched in the background so the user can be served immediately.
-// / The installed FFMPEG is verified against the stream minimum, not the general minimum.
-// / Builds from v2.0 through v6.0 apply their own protocol whitelist to nested playlist segments.
-// / Stream inspection cannot protect an affected build, so those builds are refused outright.
+// / The manifest's FFMPEG minimum is 6.1.
+// / Builds from 2.0 through 6.0 whitelist nested playlist segments themselves, which inspection cannot protect.
 function convertStreams($pathname, $newPathname) {
   // / Set variables.
   global $Verbose, $StreamConnectionTimeout, $AllowStreamOverHTTP, $EnableMemoryProtection, $DirSep;
@@ -426,25 +402,18 @@ function convertStreams($pathname, $newPathname) {
         .' -rw_timeout '.((int)$StreamConnectionTimeout * 1000000)
         .' -i '.escapeshellarg($pathname)
         .' -c copy '.escapeshellarg($newPathname);
-      // / This command IS sandboxed & an earlier version said it could not be.
-      // / The objection was that backgrounding the command & capturing its identifier would
-      // / capture bwrap's identifier rather than FFMPEG's, so every later signal would miss.
-      // / That is wrong, & the reason is the PID namespace --unshare-all creates.
-      // / bwrap is PID 1 inside it, & when PID 1 dies the kernel kills every process in the
-      // / namespace. bwrap also stays alive exactly as long as its child does. Its identifier
-      // / is therefore the correct handle for both liveness & termination, & waitForStream
-      // / & terminateWorkerProcess work unchanged.
-      // / The network is granted, because a stream is fetched from a remote address, & the
-      // / namespace binds the resolver configuration only when it is.
-      // / The playlist was resolved & refused if it was not publicly routable, fetched &
-      // / inspected for addresses of its own, & the protocol whitelist permits nothing this
-      // / application did not name. Those guards remain & the sandbox is added to them.
-      // / Every name the walker inspected & approved is pinned to the address it resolved to.
-      // / FFMPEG is given no resolver at all, so this file is the only lookup it can make.
-      // / A name it did not see cannot resolve, which is what stops a redirect the walker
-      // / never inspected. The real name is still used on the wire, so TLS validates.
-      // / Only the walker's own answers are written, & only for URIs it did not refuse.
-      // / A lookup that failed or an address that was not public never reaches this file.
+      // / This command is sandboxed, & bwrap is PID 1 in the PID namespace --unshare-all creates.
+      // / When bwrap dies the kernel kills every process inside, & it lives exactly as long as its child.
+      // / Its identifier is the right handle, so waitForStream & terminateWorkerProcess work unchanged.
+      // / The network is granted, because a stream is fetched from a remote address.
+      // / The namespace binds the resolver configuration only when the network is granted.
+      // / The playlist was resolved & refused unless publicly routable, then fetched & inspected for addresses.
+      // / The protocol whitelist permits nothing this application did not name, & the sandbox adds to those guards.
+      // / Every name the walker approved is pinned to the address it resolved to.
+      // / FFMPEG is given no resolver, so this file is the only lookup it can make.
+      // / A name the walker did not see cannot resolve, which stops a redirect it never inspected.
+      // / The real name is still used on the wire, so TLS validates.
+      // / Only the walker's own answers for URIs it did not refuse are written here.
       $pinnedHosts = '';
       foreach ($allStreamURIs as $streamRecord) {
         if (!isset($streamRecord['URLHost'], $streamRecord['URLIP'])) continue;
@@ -461,11 +430,9 @@ function convertStreams($pathname, $newPathname) {
         $pinnedHosts = $pinnedHosts.(string)$streamRecord['URLIP'].' '.(string)$streamRecord['URLHost'].PHP_EOL; }
       $pinnedHostsFile = dirname($newPathname).$DirSep.'pinned.hosts';
       @file_put_contents($pinnedHostsFile, $pinnedHosts);
-      // / The playlist is the input & is bound read only. The segments it names are fetched
-      // / over the network the sandbox was granted, by the addresses pinned above.
+      // / The playlist is the input & is bound read only.
+      // / The segments it names are fetched over the granted network, by the addresses pinned above.
       // / sandboxCommand returns whether the command may run & the command, in that order.
-      // / Until v3.9.9 the pair was taken as the command, so the shell was asked to run a
-      // / program called Array & no stream was ever converted.
       list ($commandMayRun, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, TRUE, 'ffmpeg', '', array(), $pinnedHostsFile);
       // / The command is backgrounded OUTSIDE the sandbox, so the identifier captured is the
       // / one the shell started, which is bwrap.
@@ -486,7 +453,7 @@ function convertStreams($pathname, $newPathname) {
         $ConversionErrors = TRUE;
         errorEntry('The stream converter failed to launch!', 21000, FALSE); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $newPathname is no longer purged here, because it is now a return value.
+  // / $newPathname is not purged, because it is a return value.
   purgeSensitiveMemory($EnableMemoryProtection, $pinnedHosts, $pinnedHostsFile, $streamRecord, $returnData, $ffmpegCommand, $commandMayRun, $httpString, $allStreamURIs, $seenURLs, $haltReason, $streamBudgetExhausted, $inspectionFailed, $ffmpegVersionIsValid, $pathname);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $Extension, $OutputFilename, $StreamPID); }
 // / -----------------------------------------------------------------------------------

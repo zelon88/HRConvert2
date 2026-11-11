@@ -12,20 +12,14 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
-// / This file is the Pipeline Core, one of the Engine's cores. It verifies, describes &
-// / dispatches the detachable pipelines under Resources/Pipelines, & checks each against
-// / the exact version the application pins it to.
-// / Which pipelines are accepted is the application's decision & is read from its contract.
-// / This file names none of them, so it is the same in every application.
-// / It moved here from Resources/PipelineCore at v3.9.9. It calls no application code, &
-// / every application of this shape declares, loads, versions & dispatches a pipeline the
-// / same way. The Engine already relied on it to scan a fetched file.
-// / It is pinned EXACTLY by the application via $RequiredPipelineCoreVersion, & it is
-// / loaded by the application on its own rather than by engine.php, so a missing or
-// / mismatched engine.php does not take the pipeline list down with it.
-// / Error block 34000 through 34019 reserved. 34001 through 34008 are used here. 34000 is
-// / the direct load guard of every pipeline file, which stay outside the Engine.
+// / v4.0.8.
+// / The Pipeline Core, one of the Engine's cores.
+// / It verifies, describes & dispatches the pipelines under Resources/Pipelines, each at the exact version the application pins.
+// / Which pipelines are accepted is the application's decision, read from its contract, so this file names none of them.
+// / The application pins it exactly via $RequiredPipelineCoreVersion & loads it on its own, not through engine.php.
+// / A missing or mismatched engine.php therefore does not take the pipeline list down with it.
+// / Error block 34000 through 34019 is reserved, & 34001 through 34008 are used here.
+// / 34000 is the direct load guard of every pipeline file, which stay outside the Engine.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file enforces.
 // /
 // / <3 Open-Source
@@ -36,15 +30,14 @@
 // / A component may only be loaded by an application.
 // / quickDie is not available here, because a component loaded directly has no core to
 // / provide it. This is the one documented exception to quickDie being the only halt.
-// / It printed HRConvert2-34000 until v3.9.9. It is an Engine core now & says so the way
-// / every other Engine core does.
+// / It names the Engine, as every other Engine core does.
 if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A core component cannot be loaded directly!'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v4.0.6';
+$PipelineCoreVersion = 'v4.0.8';
 // / -----------------------------------------------------------------------------------
 
 
@@ -52,9 +45,8 @@ $PipelineCoreVersion = 'v4.0.6';
 // / A function to keep the well formed entries of one of the application's allowlists.
 // / Accepts the list, the pattern a name must match & what the list is called, in order.
 // / Returns the accepted entries, keyed by name & valued by exact version.
-// / The lists were code inside this file until v3.9.9 & needed no checking. They are the
-// / application's data now, & a name becomes a path, so a name that is not plain is
-// / refused before it can reach one. A bad entry costs that entry & nothing else.
+// / The lists are the application's data, & a name becomes a path, so a name that is not plain is refused first.
+// / A bad entry costs that entry & nothing else.
 function filterAllowlist($allowlistEntries, $namePattern, $allowlistName) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -94,16 +86,10 @@ function getAcceptedPipelines() {
 // / -----------------------------------------------------------------------------------
 // / A function to report which shared modules this application accepts & at what version.
 // / Accepts no arguments. Returns an array keyed by file name, valued by exact version.
-// / A SHARED MODULE IS NOT A PIPELINE. It converts nothing & is never dispatched to.
-// / It exists for code that two or more pipelines both need & that neither can own.
-// / convertWithLibreOffice() is the case that created this. It has callers in both the
-// / Document pipeline & the OCR pipeline. Leaving it in convertCore.php would have kept
-// / document conversion logic in the file this work exists to get it out of, & putting it
-// / in the Document pipeline would have made OCR depend on another pipeline being
-// / installed, verified & loaded first.
-// / This is an allowlist for the same reason getAcceptedPipelines() is one. A file that is
-// / not named here is never read & never required. It is read from
-// / $EngineAcceptedSharedModules, which the application's contract sets.
+// / A shared module is not a pipeline. It converts nothing & is never dispatched to.
+// / It holds code two or more pipelines need & neither can own, such as convertWithLibreOffice() for Document & OCR.
+// / This is an allowlist for the same reason getAcceptedPipelines() is one, so a file not named here is never read.
+// / It is read from $EngineAcceptedSharedModules, which the application's contract sets.
 function getAcceptedSharedModules() {
   // / Set variables.
   global $EngineAcceptedSharedModules;
@@ -254,36 +240,20 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
     $PipelineRecord['Input'] = $inputExtensions;
     $PipelineRecord['Output'] = $outputExtensions;
     $PipelineRecord['Exclude'] = $cleanExclusions;
-    // / A conversion pipeline & an operation pipeline are verified identically & dispatched
-    // / DIFFERENTLY. A conversion pipeline takes one file & returns the six value contract,
-    // / & convert() dispatches to it. An operation pipeline takes a selection of files,
-    // / decides its own route, returns its own shape, & is dispatched from wherever the
-    // / core handles that operation. OCR is the first of these. Forcing it into the
-    // / conversion contract would have meant describing a batch as a single file.
-    // / An undeclared kind is a conversion pipeline, so every pipeline written before this
-    // / declaration existed keeps working without being edited.
-    // / THREE KINDS, & the difference is what a pipeline is asked to do.
-    // / A CONVERSION reads one format & writes another. It is chosen by the extensions it
-    // / declares & every one is interchangeable with any other that claims the same pair.
-    // / An OPERATION does something to a file that is not a format change. OCR is one.
-    // / A SCANNER inspects a file & reports on it without changing it. It is chosen by
-    // / NAME rather than by extension, because an administrator picks a scanner & every
-    // / scanner claims every file.
-    // / A scanner returns findings rather than an output path, so it cannot be dispatched
-    // / through the conversion path & is not offered as one.
-      // / WHERE THIS PIPELINE IS APPROVED TO RUN, & it is a separate question from KIND.
-      // / Kind says what a pipeline does. Usage says which doors it may be reached through.
-      // / A conversion that is safe to offer a browser is not automatically safe to offer a
-      // / command line running as root, & a maintenance operation nobody should reach over
-      // / http may be exactly right from a terminal.
-      // / Declaring nothing means web & gui, which is every pipeline that existed before
-      // / this field did. An existing pipeline keeps behaving exactly as it did.
-      // / A pipeline that wants a command line must SAY SO. That is the safe direction for
-      // / a default to fail in.
-      // / WHAT THIS PIPELINE NEEDS INSTALLED, declared rather than discovered.
-      // / A pipeline knows which binaries it shells out to & the manifest does not know
-      // / which pipeline wanted a thing. Declaring it here is how a component becomes
-      // / portable: dropping it into another application brings its requirements with it.
+    // / A conversion pipeline & an operation pipeline are verified identically & dispatched differently.
+    // / A conversion pipeline takes one file, returns the six value contract & is dispatched by convert().
+    // / An operation pipeline takes a selection of files, decides its own route, returns its own shape & is dispatched by the core.
+    // / An undeclared kind is a conversion pipeline.
+    // / There are three kinds, & the difference is what a pipeline is asked to do.
+    // / A conversion reads one format & writes another, & is chosen by the extensions it declares.
+    // / An operation does something to a file that is not a format change, as OCR does.
+    // / A scanner inspects a file & reports on it, & is chosen by name, because every scanner claims every file.
+    // / A scanner returns findings rather than an output path, so it is never offered as a conversion.
+      // / Where a pipeline may run is a separate question from its kind.
+      // / Kind says what a pipeline does, & usage says which doors it may be reached through.
+      // / A conversion safe to offer a browser is not automatically safe for a command line running as root.
+      // / Declaring nothing means web & gui, & a pipeline that wants a command line must say so.
+      // / What a pipeline needs installed is declared rather than discovered, so a pipeline brings its requirements with it.
       // / Names must match the manifest exactly, because that is what a comparison is.
       $PipelineRecord['Dependencies'] = array();
       if (is_array($declaredDependencies)) foreach ($declaredDependencies as $dependencyEntry) {
@@ -296,12 +266,8 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
         else warningEntry('The '.$pipelineFolderName.' pipeline declared a usage naming nothing recognized. It was left at web & gui.'); }
     $PipelineRecord['Kind'] = (is_string($declaredKind) && in_array(trim((string)$declaredKind), array('operation', 'scanner', 'file'), TRUE)) ? trim((string)$declaredKind) : 'conversion';
     $PipelineRecord['SharedModules'] = is_array($declaredSharedModules) ? $declaredSharedModules : array();
-    // / A pipeline with no converter beside it is one whose entry point is defined
-    // / elsewhere. That was how every family was migrated out of convertCore.php one at a
-    // / time & it is still a supported arrangement rather than a fault.
-    // / A folder that HAS a converter under the old pipelineCore.php name reads as having
-    // / none, so the entry point check below reports it rather than the file being loaded
-    // / from a name this release stopped using.
+    // / A pipeline with no converter beside it is one whose entry point is defined elsewhere, which is a supported arrangement rather than a fault.
+    // / A folder holding a converter under the pipelineCore.php name reads as having none, so the entry point check below reports it rather than loading a file by a name this release does not use.
     $PipelineRecord['HasConverter'] = file_exists($pipelineConverterPath);
     $DeclarationsAreValid = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -313,7 +279,7 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
 // / -----------------------------------------------------------------------------------
 // / A function to verify & read every pipeline this manager accepts.
 // / Accepts no arguments. Returns a completion boolean, the pipeline records & the count.
-// / NO PIPELINE CODE IS EXECUTED HERE. Only declarations are read.
+// / No pipeline code is executed here. Only declarations are read.
 // / This runs once per request & the result is carried forward. Rebuilding it for the
 // / interface & again for dispatch would double the file reads for nothing.
 // / An entry point name claimed twice is refused on the second claim, because loading both
@@ -409,29 +375,18 @@ function pipelineClaimsConversion($pipelineRecord, $inputExtension, $outputExten
   // / gets the behaviour the application has always had rather than a refused conversion.
   $detectionType = 'hardcoded-only';
   // / Both settings are the application's, read by the names the Pipeline Core knows them by.
-  // / Until v3.9.9 this read HRConvert2's own setting names, which a second application would
-  // / have had to copy.
   $configuredDetection = (string)applicationSetting('FormatDetectionType', '');
   $warnOnMismatch = (bool)applicationSetting('WarnOnCapabilityMismatch', FALSE);
   if (in_array($configuredDetection, array('hardcoded-only', 'detected-advisory', 'detected-restrictive', 'detected-additive'), TRUE)) $detectionType = $configuredDetection;
   // / Under hardcoded-only, config.php is authoritative & a pipeline may not narrow it.
-  // / convertFiles() has already tested this pair against the administrator's format arrays
-  // / before anything reached the manager, so the pair is approved by the time it arrives.
-  // / Testing it a second time against a declaration written by a pipeline author would let
-  // / an incomplete $Capabilities list quietly delete a conversion the installation has
-  // / always performed, which is precisely what happened to txt to rtf.
-  // / So the declared lists are informational here & only the exclusions are enforced. An
-  // / exclusion is the pipeline stating outright that it cannot do something, & honouring
-  // / that is safe in any mode because it only ever removes a pair that would have failed.
-  // / The declared lists become authoritative in the narrowing modes, which is what they
-  // / are for & is why they are still required, validated & carried in the record.
+  // / convertFiles() has already tested this pair against the administrator's format arrays, so it is approved by now.
+  // / Testing it again against a declaration would let an incomplete $Capabilities list delete a working conversion.
+  // / So the declared lists are informational here, & only the exclusions are enforced, because those only remove a failing pair.
+  // / The declared lists become authoritative in the narrowing modes, which is why they are still required, validated & carried.
   // /
-  // / detected-advisory decides exactly what hardcoded-only decides & that is the point.
-  // / It exists so that detection can be run, & every disagreement between a declaration,
-  // / a tool & the arrays reported, without any of it costing somebody a conversion while
-  // / the alias tables in depends.php are still being filled in from real output.
-  // / A mode that reported problems & also acted on them would give an administrator no
-  // / safe way to find out what turning detection on is going to do to their machine.
+  // / detected-advisory decides exactly what hardcoded-only decides.
+  // / It lets detection run & report every disagreement without costing anybody a conversion while the alias tables fill in.
+  // / A mode that reported problems & also acted on them would give an administrator no safe way to try detection.
   if (!in_array($excludedPair, $pipelineRecord['Exclude'], TRUE)) {
     if ($detectionType === 'hardcoded-only') $PipelineClaimsIt = TRUE;
     else {
@@ -525,7 +480,7 @@ function buildPipelineFormatArrays() {
 // / A function to rank every implementation that can serve one conversion.
 // / Accepts the family, the input extension & the output extension, in that order.
 // / Returns a resolution boolean & the ordered candidate folder names, in that order.
-// / THIS IS FOR DISPATCH & IT DOES RESOLVE, unlike describePipelineCapabilities().
+// / This is for dispatch & it does resolve, unlike describePipelineCapabilities().
 // / By the time a conversion arrives the user has already chosen an output format from one
 // / specific menu, so the family, input & output together usually name one implementation.
 // / More than one candidate means an alternative implementation of the same family is
@@ -650,23 +605,11 @@ function loadPipelineCore($pipelineFolderName) {
 // / Accepts the name as the dependency manifest spells it. Returns the path to the binary,
 // / or FALSE when it is missing, too old or unusable.
 // /
-// / THIRTEEN PIPELINES EACH CARRIED THEIR OWN VERSION OF THIS & every one of them called a
-// / verify<Tool>Version function living in convertCore.php. A pipeline copied into another
-// / application fatals on its first run, because that function is not there.
-// / That is the whole product promise broken: a component that only works inside one
-// / application is not a component.
-// /
-// / The manifest ALREADY carries everything the check needs. VersionCommand, VersionPattern
-// / & MinimumVersion, for every tool any pipeline uses. Thirteen near identical probes were
-// / re deriving what one file already states.
-// /
-// / IT ASKS THE DEPENDENCY CORE rather than probing. That means a pipeline gets the same
-// / answer --setup --check-depends gives, including the architecture rules, the version
-// / window & the policy gates. A tool refused by a licence gate is refused here too, which
-// / would not have been true of thirteen separate probes.
-// /
-// / FALSE MEANS DO NOT RUN. Every caller must treat it that way. Returning a path that has
-// / not been verified would be worse than returning nothing.
+// / A pipeline asks this rather than carrying its own check, so a pipeline copied into another application still runs.
+// / The manifest already carries VersionCommand, VersionPattern & MinimumVersion for every tool a pipeline uses.
+// / It asks the Dependency Core rather than probing, so a pipeline gets the answer --setup --check-depends gives.
+// / That includes the architecture rules, the version window & the policy gates, so a gated tool is refused here too.
+// / FALSE means do not run, & every caller must treat it that way.
 function verifiedToolPath($manifestName) {
   // / Set variables.
   // / $CoreLoaded is declared because the manifest is required INSIDE this function, & every
@@ -684,14 +627,9 @@ function verifiedToolPath($manifestName) {
   if (!isset($DependsManifest) or !is_array($DependsManifest)) {
     $manifestPath = contractPath('depends.php');
     if (file_exists($manifestPath)) require_once($manifestPath); }
-  // / THE DEPENDENCY CORE IS LOADED HERE because nothing else loads it on a conversion.
-  // / It loads for --setup & for nothing else, so a real conversion request does not have
-  // / resolveDependencyState. Without this, every pipeline asking for a tool got FALSE & reported
-  // / its tool as missing, even with the tool installed.
-  // / This went unnoticed because the test that proved this function loaded the Dependency Core
-  // / by hand, which made the function work by construction & skipped the one thing broken.
-  // / verifyCoreComponent requires once, so asking on every call costs nothing, & it honours the
-  // / version pin, which a bare require would not.
+  // / The Dependency Core is loaded here, because nothing else loads it on a conversion.
+  // / It loads for --setup & for nothing else, so without this a conversion request has no resolveDependencyState, & every pipeline reports its tool missing.
+  // / verifyCoreComponent requires once, so asking on every call costs nothing, & it honours the version pin, which a bare require would not.
   if (!function_exists('resolveDependencyState') && function_exists('verifyCoreComponent')) list ($dependencyCoreLoaded, $dependencyCoreVersion) = verifyCoreComponent('Dependency Core', 'Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion', (string)$RequiredDependencyCoreVersion);
   if (!isset($DependsManifest) or !is_array($DependsManifest)) warningEntry('The dependency manifest could not be read, so '.(string)$manifestName.' could not be verified.');
   else if (!function_exists('resolveDependencyChoice')) warningEntry('The Dependency Core is unavailable, so '.(string)$manifestName.' could not be verified.');
@@ -730,9 +668,8 @@ function verifiedToolPath($manifestName) {
 // / A function to decide whether a pipeline runs its converter once more.
 // / Accepts the path the converter writes & how many attempts were made, in that order.
 // / Returns TRUE while nothing is at that path & an attempt remains.
-// / --File Operation Retry Count-- is how many attempts are made, & one always is. Every pipeline
-// / that retries asks this, so they all count alike. Until v4.0.6 most made one attempt more than
-// / that, & raised their error after the attempt that used the count up, whether or not it worked.
+// / --File Operation Retry Count-- is how many attempts are made, & one always is.
+// / Every pipeline that retries asks this, so they all count alike.
 function pipelineAttemptIsDue($outputPath, $attemptsMade) {
   // / Set variables.
   global $StopCounter, $EnableMemoryProtection;
@@ -749,11 +686,10 @@ function pipelineAttemptIsDue($outputPath, $attemptsMade) {
 // / A function to decide whether what a converter left is a result.
 // / Accepts the path the converter wrote. Returns whether a file is there that may be offered, & a
 // / sentence saying why not, in that order. The caller decides whether that is an error.
-// / A RESULT IS A FILE, & IT HAS SOMETHING IN IT. A converter that fails part way can leave an empty
-// / file, as ImageMagick does for an icon it cannot write, & Calibre writes a folder for oeb. Until
-// / v4.0.6 every pipeline judged by whether anything was there, so each was offered as a result. An
-// / empty file is removed, & a folder or a link is left for the sweep. A plain text format may hold
-// / nothing, because a document or an image with no text in it converts to an empty one.
+// / A result is a file, & it has something in it.
+// / A converter that fails part way can leave an empty file, as ImageMagick does for an icon, or a folder, as Calibre does for oeb.
+// / An empty file is removed, & a folder or a link is left for the sweep.
+// / A plain text format may hold nothing, because a document or an image with no text in it converts to an empty one.
 function pipelineOutputIsUsable($outputPath) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -786,21 +722,12 @@ function pipelineOutputIsUsable($outputPath) {
 // / default. Returns whether the scan completed, whether anything was found, the findings
 // / & the name of the scanner that ran, in that order.
 // /
-// / A SCANNER IS CHOSEN BY NAME & NOT BY EXTENSION. Every scanner claims every file, so
-// / there is nothing for an extension to decide. An administrator picks one, & a user may
-// / pick another if the interface offers it.
-// / That is the whole reason scanner is a kind of its own rather than an operation. An
-// / operation is selected by what it does to a file. A scanner is selected by which scanner
-// / you want, & the two cannot share a lookup.
-// /
-// / A scanner NEVER changes the file it was given. It reports. What happens to an infected
-// / file afterwards is the application's decision & is made by the caller, because deleting
-// / a user's upload is not a thing a pipeline should decide on its own.
-// /
-// / The findings come back as a list of strings, one per line a scanner produced that an
-// / operator should read. They are written to the worker log by the caller & consolidated
-// / into the user facing log there too, so a scanner never writes to a log itself & no
-// / scanner has to know how this application presents anything.
+// / A scanner is chosen by name & not by extension, because every scanner claims every file.
+// / An administrator picks one, & a user may pick another if the interface offers it.
+// / An operation is selected by what it does & a scanner by which one is wanted, so scanner is a kind of its own.
+// / A scanner never changes the file it was given, because what happens to an infected file is the application's decision.
+// / The findings come back as a list of strings, one per line an operator should read.
+// / The caller writes them to the worker log & the user facing log, so a scanner never writes to a log itself.
 function runVirusScan($pathsToScan, $requestedScanner) {
   // / Set variables.
   global $Pipelines, $Verbose, $EnableMemoryProtection;
@@ -812,8 +739,7 @@ function runVirusScan($pathsToScan, $requestedScanner) {
   $folderName = '';
   $pipelineRecord = array();
   $pipelineIsReady = FALSE;
-  // / With no scanner named, the application's default is read by the name the Pipeline Core
-  // / knows it by, rather than by HRConvert2's own setting name as it was until v3.9.9.
+  // / With no scanner named, the application's default is read by the name the Pipeline Core knows it by.
   $chosenScanner = (is_string($requestedScanner) && trim($requestedScanner) !== '') ? strtolower(trim($requestedScanner)) : strtolower(trim((string)applicationSetting('DefaultScanner', '')));
   if ($chosenScanner === '') {
     errorEntry('A virus scan was requested & no scanner was named or configured!', 34007, FALSE);
@@ -846,18 +772,11 @@ function runVirusScan($pathsToScan, $requestedScanner) {
 // / Accepts the family, the selected files, the requested filename, the requested extension
 // / & the method, in that order. Returns an operation boolean, an errors boolean & the list of
 // / filenames the operation produced, in that order.
-// / THE FILENAME LIST IS RETURNED RATHER THAN PRINTED. A pipeline never prints & neither
-// / does this manager. The core prints the list once it has it. See contract 6.
-// / THIS IS NOT runConversion() & THE DIFFERENCE IS NOT COSMETIC.
-// / OCR takes a SELECTION of files rather than one, chooses a different route per file
-// / depending on whether it is a PDF, a document or an image, & reports one verdict for the
-// / whole batch. The six value conversion contract has nowhere to put any of that.
-// / Fallback across implementations is deliberately NOT attempted here. A half completed
-// / OCR batch has already written output files & already consumed budget, so re-running it
-// / against a second implementation would duplicate work the user can see. The first
-// / installed OCR pipeline is the one that runs.
-// / Until v3.9.9 this was runOcrOperation & found the OCR family by name, so the Pipeline
-// / Core knew one application's one operation. The family is the caller's to name now.
+// / The filename list is returned rather than printed, because neither a pipeline nor this function prints. See contract 6.
+// / This is not runConversion().
+// / OCR takes a selection of files, chooses a route per file & reports one verdict for the batch, which six values cannot hold.
+// / Fallback across implementations is not attempted, because a half completed batch has already written files & spent budget.
+// / The first installed pipeline of the family is the one that runs, & the family is the caller's to name.
 function runOperationPipeline($operationFamily, $selectedFiles, $userFilename, $userExtension, $operationMethod) {
   // / Set variables.
   global $Pipelines, $Verbose, $EnableMemoryProtection;
@@ -949,16 +868,9 @@ function runConversion($conversionFamily, $pathname, $newPathname, $extension, $
       // / The candidate already logged why it failed under its own name.
       if (count($candidateFolders) > $attemptCount) warningEntry('The '.$candidateFolder.' pipeline could not complete a '.$inputExtension.' to '.$Extension.' conversion. Falling back to the next implementation.'); }
     // / Every implementation has now been tried & none of them produced anything.
-    // / A pipeline that reported a reason has already been heard. Do not restate it.
-    // / Calling code need not log a failure the callee has already logged, & duplicating
-    // / the entry misreports the origin & doubles the log volume.
-    // / This matters most where it is least obvious. A refused stream is not a broken
-    // / pipeline. Stream inspection denying a playlist is HRConvert2 working correctly, &
-    // / the Stream pipeline has already said so under its own error number with the actual
-    // / reason attached. A second, louder line claiming every pipeline failed sits
-    // / underneath that & tells an operator to go looking for a fault that is not there.
-    // / So 34003 now fires ONLY when a pipeline failed & said NOTHING AT ALL about why.
-    // / That is a genuine defect in the pipeline & is worth its own number. A refusal is not.
+    // / A pipeline that reported a reason has already been heard, & a duplicate would misreport the origin.
+    // / A refused stream is HRConvert2 working correctly, & the Stream pipeline has already said so under its own number.
+    // / So 34003 fires only when a pipeline failed & said nothing at all about why, which is a defect worth its own number.
     if (!$ConversionSuccess) {
       if ($ConversionErrors) {
         if ($Verbose) logEntry('The '.$conversionFamily.' conversion of '.$inputExtension.' to '.$Extension.' did not complete. The reason is logged above under the pipeline that reported it.'); }

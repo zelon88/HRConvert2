@@ -514,7 +514,7 @@ $EnvironmentManagerMayRewriteConfigs = TRUE;
 // / 
 // /  --Installation Directory--
 // /   The directory the web server serves HRConvert2 from.
-// /   Since v4.0.1 HRConvert2 itself is installed in Application inside the --Data Storage Directory--,
+// /   HRConvert2 itself is installed in Application inside the --Data Storage Directory--,
 // /   outside the web root, & this directory holds only its loader, the static files a browser
 // /   fetches & DATA, which -fp writes. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
 // /   Do not include a trailing slash.
@@ -560,16 +560,13 @@ $LogDir = $ConvertLoc.'/Logs';
 $HomeLoc = $ConvertLoc.'/Cache';
 // /  --Backup Location--
 // /   Where the previous installation is preserved after a successful update.
-// /   The update process moves the old installation aside inside the installation
-// /   directory first, because rename() is only atomic within one filesystem & that is
-// /   what makes a rollback instant. That location is served by Apache, so the old
-// /   installation is copied here & removed from there as soon as the update succeeds.
-// /   A stale convertCore.php left inside the web root would be a second, older copy of
-// /   the application answering requests over HTTP.
+// /   The update first moves the old installation aside in the folder that holds it, because
+// /   rename() is only atomic within one filesystem & that is what makes a rollback instant.
+// /   It is copied here & removed from that folder as soon as the update succeeds.
+// /   An install that replaces an installation keeps the one it replaced here too.
 // /   This location must NOT be inside the web root & must NOT be inside the installation
 // /   directory. It holds exactly one previous version & is replaced on every update.
-// /   The DATA directory is excluded from the backup, because it holds live user sessions
-// /   that have already been carried into the new installation.
+// /   The DATA directory is never part of the backup, because it holds live user sessions.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Default is $ConvertLoc.'/Last-Installed-Version'.
@@ -1204,7 +1201,6 @@ $UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz'
 // /   Calibre writes PDF through Qt WebEngine, which needs more memory than any other output, so
 // /   PDF is the first to fail inside a small --Maximum Per Conversion Resources-- ceiling.
 // /   Calibre writes PML only zipped, as pmlz, & writes OEB as a folder, which cannot be handed
-// /   to a browser. Until v4.0.6 this offered pml & oeb, which never converted, & said PDF was
-// /   left out, which it never was.
+// /   to a browser, so neither pml nor oeb is offered.
 $UserEbookOutputArray = array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pmlz', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'docx', 'pdf');
 // / ------------------------------

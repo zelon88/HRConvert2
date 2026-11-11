@@ -8,14 +8,12 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v3.9.9.
+// / v4.0.8.
 // / This file scans files with ClamAV & reports what it found.
 // /
-// / IT CHANGES NOTHING. It does not delete an infected file, quarantine it, or write to any
-// / log. It returns findings & the caller decides what they mean.
-// / That division matters. Deleting somebody's upload is an application policy & two
-// / installations can reasonably disagree about it, so a scanner that deleted files would
-// / be making a decision that was never its to make.
+// / It changes nothing.
+// / It does not delete, quarantine or log, & returns findings for the caller to judge.
+// / Deleting an upload is application policy, so it is never the scanner's decision.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -29,25 +27,19 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / A function to size ClamAV's limits for one path.
-// / Accepts the path & the processor share the scan runs under, as a percentage of one
-// / processor. Returns the size limit in megabytes, the most files one archive may hold &
-// / the time limit in milliseconds, in that order.
-// /
-// / ClamAV's own defaults are 100M for one file, 400M for everything one file unpacks to,
-// / 10000 files & 120 seconds. A file past any of them is skipped & reported clean, so
-// / until v3.9.9 an upload over 100M was reported clean without ever being read.
-// / The size limit is four times the file, because an archive expands, never below the
-// / 400M default & never above 2047M, the largest file ClamAV can scan. It bounds one file &
-// / everything unpacked from it alike. The file count & the time limit grow by the same
-// / factor, so a file of 100M or less keeps the 400M, 10000 file & 120 second defaults, &
-// / only the limit on one file inside it rises, from 100M to 400M.
-// / The time limit also stretches by however far the processor share falls short of one
-// / whole processor, because ClamAV's default assumes one, & a scan given 18% of one takes
-// / more than five times as long. A share above one processor shortens nothing, because
-// / ClamAV scans one file on one thread.
-// / None of this decides how much memory ClamAV takes. Its signature database does, & the
-// / Scan ceiling covers that. A large file adds little, because ClamAV reads it through a
-// / mapping the kernel can reclaim & writes what it unpacks to the conversion location.
+// / Accepts the path & the processor share the scan runs under, as a percentage of one processor.
+// / Returns the size limit in megabytes, the most files one archive may hold & the time limit in milliseconds.
+// / ClamAV skips a file past any limit & reports it clean, so the limits are sized to the file.
+// / Its defaults are 100M for one file, 400M for everything one file unpacks to, 10000 files & 120 seconds.
+// / The size limit is four times the file, because an archive expands.
+// / It is never below 400M, & never above 2047M, the largest file ClamAV can scan.
+// / It bounds one file & everything unpacked from it alike.
+// / The file count & the time limit grow by the same factor.
+// / A file of 100M or less keeps the defaults, except the limit on one file inside it, which rises to 400M.
+// / The time limit also stretches by however far the share falls short of one processor.
+// / ClamAV scans on one thread, & its defaults assume a whole processor.
+// / Memory is not sized here, because the signature database decides it & the Scan ceiling covers it.
+// / A large file adds little, because ClamAV maps it & unpacks to the conversion location.
 function clamAVLimitsFor($pathToScan, $processorShare) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -72,16 +64,13 @@ function clamAVLimitsFor($pathToScan, $processorShare) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to read ClamAV's verdict from what it printed.
-// / Accepts the lines ClamAV printed. Returns whether it found a threat, the limit it
-// / reached, & the lines naming each threat, in that order.
-// / The limit is ClamAV's own name for it, such as MaxScanSize, or empty when none was.
-// /
-// / A verdict is the text after the LAST colon & space on a line ending in FOUND.
-// / Everything before it is the path, & the path is named by whoever uploaded the file.
-// / Matching the whole line would let an upload called Heuristics.Limits.Exceeded.exe turn
-// / its own detection into a limit, & a limit is not a verdict, so the file would survive.
-// / A threat outranks a limit. In a scan of a folder one file can reach a limit while
-// / another is infected, & that folder is infected.
+// / Accepts the lines ClamAV printed.
+// / Returns whether it found a threat, the limit it reached & the lines naming each threat, in that order.
+// / The limit is ClamAV's own name for it, such as MaxScanSize, or empty.
+// / A verdict is the text after the last colon & space on a line ending in FOUND.
+// / Everything before it is the path, which the uploader names.
+// / An upload called Heuristics.Limits.Exceeded.exe therefore cannot turn a detection into a limit.
+// / A threat outranks a limit, so a folder holding one of each is infected.
 function readClamAVVerdict($commandOutput) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -110,21 +99,14 @@ function readClamAVVerdict($commandOutput) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to scan paths with ClamAV.
-// / Accepts a list of paths. Returns whether the scan completed, whether anything was
-// / found, & the findings, in that order.
-// /
-// / The findings are one string per line an operator should read. The caller writes them
-// / to the worker log & consolidates them for the user, so nothing here knows or cares how
-// / this application presents anything.
-// /
-// / ClamAV is given the path, limits sized for it & a private folder for what it unpacks.
-// / It is sandboxed like every other dependency, with the scanned path bound read only,
-// / because a scanner reads & a namespace that cannot write is one less thing to reason
-// / about. The only writable place it has is that folder.
-// /
-// / A FILE CLAMAV COULD NOT FINISH HAS NO VERDICT. It is never reported clean.
-// / Without --alert-exceeds-max a file past any limit prints OK & exits 0, the same as a
-// / clean file. With it ClamAV names the limit, & the scan is reported as incomplete.
+// / Accepts a list of paths.
+// / Returns whether the scan completed, whether anything was found & the findings, in that order.
+// / The findings are one string per line an operator should read.
+// / ClamAV is sandboxed with the scanned path bound read only.
+// / Its only writable place is a private folder for what it unpacks.
+// / A file ClamAV could not finish has no verdict, & is never reported clean.
+// / Without --alert-exceeds-max a file past any limit prints OK & exits 0, like a clean file.
+// / With it ClamAV names the limit, & the scan is reported as incomplete.
 function scanWithClamAV($pathsToScan) {
   // / Set variables.
   global $Verbose, $ConvertDir, $DirSep, $EnablePerConversionLimits, $EnableMemoryProtection;
@@ -168,12 +150,9 @@ function scanWithClamAV($pathsToScan) {
       if (is_file($pathToScan) && (int)@filesize($pathToScan) > 2047 * 1048576) {
         $skipReason = 'ClamAV cannot scan a file as large as '.basename($pathToScan).'.';
         warningEntry('ClamAV cannot scan a file larger than 2047M, so '.basename($pathToScan).' was not scanned & has no verdict.'); }
-      // / What ClamAV unpacks goes to a folder of its own in the session's conversion
-      // / location, which is outside the web root & on whatever storage the administrator
-      // / chose for conversions. Until v3.9.9 it went to the sandbox's /tmp, which is always
-      // / memory, so a large archive was unpacked into the Scan ceiling & killed by it.
-      // / The folder is also the sandbox's only writable mount. Until v3.9.9 that mount was
-      // / the session's temporary location, which the web server serves to the browser.
+      // / What ClamAV unpacks goes to a folder of its own in the session's conversion location.
+      // / That folder is outside the web root, on the storage chosen for conversions, & not in memory.
+      // / It is the sandbox's only writable mount.
       else if (!is_dir((string)$ConvertDir)) $skipReason = 'ClamAV had no temporary location, so '.basename($pathToScan).' was not scanned.';
       else {
         $scratchDir = rtrim((string)$ConvertDir, $DirSep).$DirSep.'clamav-'.bin2hex(random_bytes(6));
@@ -193,8 +172,6 @@ function scanWithClamAV($pathsToScan) {
           .' '.escapeshellarg($pathToScan);
         if ($Verbose) logEntry('ClamAV Limits: '.basename($pathToScan).', '.$sizeLimit.'M per file & unpacked, '.$fileLimit.' files, '.(int)ceil($timeLimit / 1000).' seconds'.(((int)$processorShare > 0 && (int)$processorShare < 100) ? ' at '.(int)$processorShare.'% of a processor' : '').'.');
         // / sandboxCommand returns whether the command may run & the command, in that order.
-        // / Until v3.9.9 the pair was taken as the command, so the shell was asked to run a
-        // / program called Array. It exited 127 & every file was reported clean.
         list ($commandMayRun, $scanCommand) = sandboxCommand($scanCommand, $pathToScan, $scratchTemp, FALSE, 'clamav');
         if (!$commandMayRun) $skipReason = 'ClamAV could not be sandboxed, so '.basename($pathToScan).' was not scanned.'; }
       if ($skipReason !== '') {

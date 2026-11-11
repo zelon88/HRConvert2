@@ -12,13 +12,11 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
+// / v4.0.8.
 // / This file declares what the Model conversion pipeline is & what it can do.
-// / It is read by pipelineCore.php on EVERY request & it must stay cheap.
-// / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
+// / It is read by pipelineCore.php on every request & it must stay cheap.
+// / It assigns variables & does nothing else, with no functions, no logic & no output.
 // / Error block 9000 through 9004 belongs to this pipeline.
-// / Those numbers came with the code when it moved out of convertCore.php.
-// / They did not change, because operators have already read them.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for what each declaration means.
 // /
 // / <3 Open-Source
@@ -32,10 +30,10 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 
 // / -----------------------------------------------------------------------------------
-// / The version of this pipeline folder. Read WITHOUT executing this file, then matched
-// / EXACTLY against the pin in getAcceptedPipelines(). This version covers the whole
+// / The version of this pipeline folder. Read without executing this file, then matched
+// / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.0.6';
+$PipelineVersion = 'v4.0.8';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -52,8 +50,8 @@ $PipelineDisplayName = '3D Model';
 // / No other family currently claims a mesh format, so this number only has to be stable.
 $PipelinePriority = 450;
 
-// / The function dispatch calls. THIS NAME MUST BE UNIQUE ACROSS EVERY INSTALLED PIPELINE.
-// / It lives in pipeline.php beside this file & no longer exists in convertCore.php.
+// / The function dispatch calls, whose name must be unique across every installed pipeline.
+// / It is defined in pipeline.php beside this file.
 $PipelineEntryPoint = 'convertModels';
 
 // / The depends.php subsystem this pipeline needs. Dependency Core owns installation.
@@ -75,7 +73,7 @@ $PipelineSharedModules = array();
 $PipelineRequestFields = array('Extension');
 
 // / What this pipeline can read & what it can write.
-// / THESE LISTS ARE INFORMATIONAL WHILE $SupportedFormatDetectionType IS hardcoded-only.
+// / These lists are informational while $SupportedFormatDetectionType is hardcoded-only.
 // / config.php is authoritative in that mode, so an omission here cannot delete a
 // / conversion. They become authoritative in the detected modes.
 // / Assimp & MeshLab between them read more than this. These are the formats worth
@@ -88,19 +86,11 @@ $Capabilities = array(
     // / before this line existed, so every 3mf upload was refused by a pipeline that never
     // / claimed it, which reads as a broken conversion rather than as a missing declaration.
     '3mf', 'x', 'ctm'),
-  // / A format here that neither Assimp nor MeshLab can WRITE is refused at conversion time
-  // / with error 9004. Reading a format is not the same as writing it, & Assimp reads
-  // / several it cannot produce. The writer lists live in pipeline.php beside the route
-  // / selection that consults them.
-  // / Five formats were added at v3.9.0 & each is written by a utility already installed.
-  // / 3mf & x are in the output of assimp listexport on this installation.
-  // / ctm, dxf & wrl are written by the MeshLab route. ctm has a plugin of its own in the
-  // / bundle & dxf & wrl come from the base input output plugin.
-  // / u3d was considered & LEFT OUT. MeshLab writes it only by handing the mesh to a
-  // / separate IDTF converter, which is a second process with its own failure modes, & the
-  // / bundle carries those libraries without carrying the converter that drives them.
-  // / A format that works most of the time is worse than one this pipeline never offered,
-  // / because the failure arrives after a user has already waited for it.
+  // / A format here that neither Assimp nor MeshLab can write is refused at conversion time with error 9004.
+  // / The writer lists live in pipeline.php beside the route selection that consults them.
+  // / 3mf & x are written by Assimp, & ctm, dxf & wrl by the MeshLab route.
+  // / u3d is left out, because MeshLab writes it only through an IDTF converter the bundle does not carry.
+  // / A format that works most of the time is worse than one never offered.
   'Output' => array(
     'obj', 'stl', 'ply', 'dae', 'fbx', 'gltf', 'glb', 'x3d', 'off', '3ds', 'assbin', 'json',
     '3mf', 'x', 'ctm', 'dxf', 'wrl'));
@@ -110,9 +100,8 @@ $Capabilities = array(
 $PipelineExclude = array(
     'obj>obj', 'stl>stl', 'ply>ply', 'dae>dae', 'fbx>fbx', 'gltf>gltf', 'glb>glb', 'x3d>x3d',
     'off>off', '3ds>3ds',
-    // / dxf became an output at v3.9.0 & was already an input, so the pair exists now.
-    // / Every other format added at the same time is an output only & cannot pair with
-    // / itself. Adding one of them as an input means adding a line here at the same time.
+    // / dxf is an input & an output, so the pair exists.
+    // / A format that is only an output cannot pair with itself, so adding one as an input adds a line here.
     'dxf>dxf', 'x>x', 'ctm>ctm', '3mf>3mf');
 // / -----------------------------------------------------------------------------------
 ?>

@@ -30,12 +30,13 @@ Run  php convertCore.php --setup --check-depends  to see the current list & its 
 -----------------------------------------------------------------------------------
 -----THE SHORT VERSION-----
 
-Three commands. This is the whole installation.
+Two commands. This is the whole installation.
 
-  git clone https://github.com/zelon88/HRConvert2
-  cd HRConvert2
-  sudo bash Documentation/Build/hrconvert2-setup.sh
+  sudo git clone https://github.com/zelon88/HRConvert2 /opt/HRConvert2
+  sudo bash /opt/HRConvert2/Documentation/Build/hrconvert2-setup.sh
 
+Clone it where only root can change it, as /opt is. Root will not install a tree another
+account could change, so a clone in a home folder is refused.
 The script installs PHP if it is missing, then hands over to convertCore.php, which does
 everything else. Answer YES once, or pass -y to answer it in advance.
 
@@ -104,7 +105,10 @@ after it, because continuing produces an installation that looks finished & is n
   7  VERIFICATION
      Reports what actually works rather than what was attempted.
 
-Every stage is idempotent. Run the installer again whenever anything looks wrong.
+Then it installs. The tree it ran from is copied into Application in the data location, &
+that copy's own -fp publishes the hosted location. The clone is not used again.
+
+Every stage is idempotent. When anything looks wrong, run -fp as WHEN SOMETHING IS WRONG says.
 -----------------------------------------------------------------------------------
 
 
@@ -116,46 +120,55 @@ There are three ways to obtain HRConvert2.
   Option 1. The Docker image.
     a. Visit  'https://hub.docker.com/r/zelon88/hrconvert2'
     b. Run  'docker run -d -p 8080:80 --cap-add SYS_ADMIN zelon88/hrconvert2'
-    c. SYS_ADMIN is required. Without it a container cannot create the namespace every
-       conversion is sandboxed in, & every conversion is refused.
+    c. SYS_ADMIN lets a container create the namespace every conversion is sandboxed in.
+       Without it conversions run unprotected with a warning, or are refused where
+       --Require Sandbox On Docker-- is TRUE. No process that converts or serves a user's
+       file holds SYS_ADMIN, or any other capability.
     d. This guide does not otherwise apply to that option.
 
   Option 2. Clone the repository. This is the supported route & the rest of this guide.
-    a. Run  'git clone https://github.com/zelon88/HRConvert2'
+    a. Run  'sudo git clone https://github.com/zelon88/HRConvert2 /opt/HRConvert2'
 
   Option 3. Download a release archive & extract it.
     a. Visit  'https://github.com/zelon88/HRConvert2'
-    b. Everything below applies unchanged.
+    b. Extract it as root into a folder only root can change, such as /opt/HRConvert2.
+    c. Everything below applies unchanged.
 -----------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------
------STEP 2 - PLACE IT WHERE THE WEB SERVER WILL SERVE IT-----
+-----STEP 2 - KNOW WHERE IT WILL LIVE-----
 
-The installer does not choose this for you, because only you know how this host serves.
+Nothing is copied by hand. The installer installs HRConvert2 outside the web root, & puts in
+the web root only what a browser needs.
 
-1. Run  'sudo mkdir -p /var/www/html/HRProprietary'
-2. Run  'sudo cp -a HRConvert2 /var/www/html/HRProprietary/'
+  /DATA/HRConvert2                        The data location, root's.
+    Application                           HRConvert2, root's. The web server user only reads it.
+    Sessions, Cache, Logs & Sockets       The web server user's.
+    Secrets                               The install secret. Its group is the web server user's.
+    Engine                                Root's own logs, root's alone.
+    Last-Installed-Version                The installation replaced last, root's alone.
+  /var/www/html/HRProprietary/HRConvert2  The hosted location, root's.
+    convertCore.php                       The loader. It hands every request to Application.
+    index.html & UI                       The protection page & what a browser fetches.
+    DATA                                  The files users convert, handed out only as downloads.
 
-That path is the default every setting in config.php expects. Installing elsewhere is
-supported, but --Installation Directory-- must be corrected afterwards with --config.
+Each path is a default in config.php. --Data Storage Directory-- moves the first, &
+--Installation Directory-- the second. The installer creates the hosted location when it is
+missing. Do not place the data location inside the web root.
 
-Every folder above the installation must belong to root & be writable by nobody else. Root
-refuses to run an installation another account could swap out. /var/www/html is root's on a
-fresh Debian or Ubuntu. Do not hand it to the web server user.
-
-Do not place the data location inside the web root. The installer creates it at
-/DATA/HRConvert2 by default, which is outside anything Apache serves.
+Every folder above both must belong to root & be writable by nobody else. Root refuses to work
+beneath a folder another account can change. /var/www/html & /opt are root's on a fresh Debian
+or Ubuntu. Do not hand either to the web server user.
 -----------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------
 -----STEP 3 - RUN THE INSTALLER-----
 
-1. Run  'cd /var/www/html/HRProprietary/HRConvert2'
-2. Run  'sudo bash Documentation/Build/hrconvert2-setup.sh'
-3. Answer YES when asked, or pass -y to answer in advance.
-4. Read the verification table it prints at the end.
+1. Run  'sudo bash /opt/HRConvert2/Documentation/Build/hrconvert2-setup.sh'
+2. Answer YES when asked, or pass -y to answer in advance.
+3. Read the verification table it prints at the end.
 
 A dependency reported as absent & optional means that subsystem is unavailable & the rest
 of the application works. A REQUIRED dependency reported absent means conversions using it
@@ -163,14 +176,18 @@ will refuse, & the table names which.
 
 To install without any prompt at all, for a scripted deployment.
 
-  sudo bash Documentation/Build/hrconvert2-setup.sh -y
+  sudo bash /opt/HRConvert2/Documentation/Build/hrconvert2-setup.sh -y
 -----------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------
 -----STEP 4 - CONFIGURE-----
 
-1. Run  'sudo php convertCore.php --config'
+1. Run  'cd /var/www/html/HRProprietary/HRConvert2'
+2. Run  'sudo php convertCore.php --config'
+
+Every command from here on is run from the hosted location. Its convertCore.php is the loader,
+so each command reaches the installation, & --config edits the config.php it uses.
 
 Walk each section & set what matters for this deployment. The two settings the installer
 cannot decide for you are the public URL, which share links need, & the data location, if
@@ -192,9 +209,6 @@ first whether or not you asked for one.
    Reports every dependency, every component version & every subsystem, with what is
    required beside what was found. This is the diagnostic to read first when anything
    behaves unexpectedly.
-   The copy made in STEP 2 brought the repository's .git & .github folders into the hosted
-   location. The installation never uses either, & the Apache configuration refuses both. -v
-   reports the hosted location as KEPT & names them until they are moved out of the web root.
 
 2. Run  'php convertCore.php --status'
    Reports the resource listener, the budget & the data locations.
@@ -209,8 +223,8 @@ first whether or not you asked for one.
 -----------------------------------------------------------------------------------
 -----WHEN SOMETHING IS WRONG-----
 
-RUN  'sudo php convertCore.php -fp'  FIRST. It is idempotent, it repairs everything the
-installer set up, & it verifies the result rather than assuming it worked.
+RUN  'sudo php convertCore.php -fp'  FIRST, from the hosted location. It is idempotent, it
+repairs everything the installer set up, & it verifies the result rather than assuming it worked.
 
 RUN IT ONCE AFTER UPDATING FROM v4.0.0. Until v4.0.1 the installer & -fp handed the whole
 installation to the web server user, & an installation v4.0.0 left behind keeps that
@@ -270,6 +284,10 @@ command run as root no longer leaves a logfile or a secret the web server user c
   An upload larger than a few megabytes fails.
     PHP refuses it before HRConvert2 sees it. -fp writes the drop in that permits it, &
     the web server must be restarted afterwards.
+
+  -v reports the hosted location KEPT & names .git or .github.
+    This guide copied the repository into the web root until v4.0.9. The installation uses
+    neither, & the Apache configuration refuses both. Move them out of the web root.
 -----------------------------------------------------------------------------------
 
 
@@ -287,6 +305,27 @@ HRConvert2 is only reachable on the local network until a router is configured.
 
 DO NOT EXPOSE AN UNENCRYPTED INSTALLATION TO THE INTERNET. Files are uploaded in the
 clear & share links are guessable over plain HTTP.
+-----------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------
+-----UPDATING-----
+
+1. Run  'cd /var/www/html/HRProprietary/HRConvert2'
+2. Run  'sudo php convertCore.php -u'
+
+An update carries every setting over, except an array that differs from the new default. That
+takes the new default & is named, so a deliberate change can be made again. The installation
+the update replaced is kept in Last-Installed-Version, & the new release runs its own -fp.
+
+A drop in holds only the files that changed. Unpack it into Application, keeping the config.php
+in use, & run -fp there.
+
+  sudo tar -xzf <drop in> -C /DATA/HRConvert2/Application --exclude='./Resources/config.php' --exclude='./.github'
+  sudo php /DATA/HRConvert2/Application/convertCore.php -fp
+
+Do not update by running the installer again from a new clone. It installs that clone's
+config.php in place of the one in use, which is then kept only in Last-Installed-Version.
 -----------------------------------------------------------------------------------
 
 

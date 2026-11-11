@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.6.
+// / v4.0.8.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -28,12 +28,12 @@
 // / installation with no config.php writes one from its template before anything else is
 // / trusted, & reads no Engine configuration while it does.
 // / So a setting here with the same name as one in config.php would win over the
-// / administrator, silently. NO NAME IS SET IN BOTH. Every name this file & the contract
+// / administrator, silently. No name is set in both. Every name this file & the contract
 // / set begins with Engine, & an application's own checks are where that is enforced.
 // / A value an administrator may change belongs in config.php & nowhere else.
 // / A value the application must NOT be able to override does not belong in a variable.
 // /
-// / It ASSIGNS VARIABLES & DOES NOTHING ELSE. No functions, no logic, no output.
+// / It assigns variables & does nothing else. No functions, no logic, no output.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -41,8 +41,7 @@
 
 // / -----------------------------------------------------------------------------------
 // / A component may only be loaded by an application.
-// / This file is the Engine's, so its guard names the Engine. It named HRConvert2 until v3.9.9,
-// / which was left over from when this file held one application's values.
+// / This file is the Engine's, so its guard names the Engine.
 if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The Engine configuration cannot be loaded directly!'.PHP_EOL);
 // / -----------------------------------------------------------------------------------
 
@@ -51,7 +50,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 // / The version of this configuration. Matched as a MINIMUM by the Engine, the same way
 // / an application matches its own configuration. A newer file carrying every required
 // / setting is fine, because a setting this Engine does not know is simply not read.
-$EngineConfigVersion = 'v4.0.6';
+$EngineConfigVersion = 'v4.0.8';
 // / -----------------------------------------------------------------------------------
 
 
@@ -224,9 +223,8 @@ $EnginePerWorkerLogFiles = FALSE;
 // / -----------------------------------------------------------------------------------
 // /  --Engine Environment Provider--
 // /   The name of an application function that reports on THIS application's environment.
-// /   The Engine checks what the Engine provides, which is Bubblewrap, the bootstrap script &,
-// /   from v4.0.5, what the web server serves. Every other check an installation wants belongs
-// /   to the application that wants it.
+// /   The Engine checks what the Engine provides, which is Bubblewrap, the bootstrap script & what the web server serves.
+// /   Every other check an installation wants belongs to the application that wants it.
 // /   The named function accepts nothing & returns a readiness boolean & a list of findings,
 // /   each finding an array of Check, Status & Detail. The Engine appends them to its own.
 // /   Leave it empty & only the Engine's own checks run, which is correct rather than
@@ -244,13 +242,13 @@ $EngineEnvironmentProvider = '';
 // /   the safe answer. Nothing destructive happens because nobody could be asked.
 $EngineOperatorPrompt = '';
 
-// /  --Engine Data Policy Provider-- WAS RETIRED AT v4.0.5.
-// /   The Engine reports the exposure of every location the contract gives the served role
-// /   itself, so it no longer asks the application. A contract that still names one is not read.
+// /  --Engine Data Policy Provider-- is retired.
+// /   The Engine reports the exposure of every location the contract gives the served role itself.
+// /   A contract that still names one is not read.
 
 // /  --Engine Config Model Provider--
 // /   The name of a function returning this application's configuration model.
-// /   THE MODEL IS THE CONFIGURATION & IT BELONGS TO THE APPLICATION. It names every
+// /   The model is the configuration & it belongs to the application. It names every
 // /   section, setting, type, default & the prose explaining each one. An engine that
 // /   carried it would be an engine that knows this application has a
 // /   --Supported File Format Information-- section, which is exactly the knowledge that
@@ -258,7 +256,7 @@ $EngineOperatorPrompt = '';
 // /   An application that names nothing gets a config utility that can still back up,
 // /   view & verify a file, & cannot repair, reset or generate one. That degradation is
 // /   correct. Repairing a setting means knowing what it should be.
-// /   THERE IS NO FALLBACK MODEL & there must never be. A wrong model would rewrite an
+// /   There is no fallback model & there must never be. A wrong model would rewrite an
 // /   installation's settings to another application's defaults, which is worse than
 // /   refusing to do anything at all.
 $EngineConfigModelProvider = '';
@@ -269,7 +267,7 @@ $EngineConfigModelProvider = '';
 // /   Engine reads it with the same parser it reads a live configuration with.
 // /   A path with no leading separator is taken as relative to Resources.
 // /   A missing config.php is written from it. A repair adds whatever it holds that a
-// /   live configuration lacks. AN OPERATOR VALUE IS NEVER REPLACED by a default in it.
+// /   live configuration lacks. An operator value is never replaced by a default in it.
 // /   An application naming none cannot have a configuration written for it, & is told so
 // /   rather than being given somebody else's defaults.
 $EngineConfigTemplate = '';
@@ -277,9 +275,9 @@ $EngineConfigTemplate = '';
 // /  --Application Argument Handler--
 // /   The name of a function that handles this application's own command line
 // /   arguments. Every argument beginning --app is handed to it untouched.
-// /   THE ENGINE OWNS EVERY OTHER ARGUMENT. Setup, configuration, the managers, the
+// /   The Engine owns every other argument. Setup, configuration, the managers, the
 // /   listener, cleanup & self update are true of any application of this shape.
-// /   A PREFIX RATHER THAN A REGISTRY OF NAMES. A registry means the Engine must ask
+// /   It is a prefix rather than a registry of names. A registry means the Engine must ask
 // /   the application what it accepts before it can report an unknown argument, & an
 // /   application that answers badly makes the Engine report nonsense. A prefix needs
 // /   no negotiation. Everything --app is the application's & everything else is not.
@@ -324,17 +322,10 @@ $EngineAllowIncompleteDepsUpdate = FALSE;
 // /  --Engine Protect Hosted Locations--
 // /   Whether every location this application declares as HOSTED is given a document root
 // /   protection page.
-// /   A directory a web server can reach & that has no index will LIST ITSELF on most
-// /   default configurations. Every file in it, to anybody who asks for the directory.
-// /   That is one misconfigured AllowOverride away on any installation & is not something
-// /   to leave to a server directive nobody checked.
-// /   The page is generated rather than copied, so it exists even on an installation
-// /   missing whatever file used to be copied from.
-// /   IT IS A SECOND LAYER & NOT THE FIRST. The first is the server refusing to serve the
-// /   directory at all. This is what stands when that refusal is not in place, which is
-// /   the case worth planning for because it is the case nobody notices.
-// /   Default TRUE. Writing an index file into a directory this application already
-// /   created costs nothing & the failure it prevents is a directory listing of user data.
+// /   A directory a web server can reach that has no index lists every file in it on most default configurations.
+// /   The page is generated rather than copied, so it exists on every installation.
+// /   It is a second layer. The first is the server refusing to serve the directory at all.
+// /   Default TRUE, because an index file costs nothing & the failure it prevents is a listing of user data.
 $EngineProtectHostedLocations = TRUE;
 
 // /  --Engine Active Surface--
@@ -342,7 +333,7 @@ $EngineProtectHostedLocations = TRUE;
 // /   A pipeline declares which surfaces it may be reached from & this is what that is
 // /   compared against. A pipeline that permits only web is refused from a terminal, & one
 // /   that permits only cli is refused from a browser.
-// /   AN EMPTY VALUE ENFORCES NOTHING, which is what an application that has not wired
+// /   An empty value enforces nothing, which is what an application that has not wired
 // /   this up gets. It is set by the application at boot once it knows how it was reached,
 // /   because the Engine cannot know that. A CLI invocation & an HTTP request reach the
 // /   same file.
@@ -357,8 +348,7 @@ $EngineRepairProvider = '';
 // /  --Engine Log Provider--
 // /   The name of a function that moves a process on to the logfile it should be writing now.
 // /   The application names its logfiles, by date & by size, & a request names one as it starts.
-// /   A manager runs for weeks, so every manager loop asks this once a minute, & until v4.0.6
-// /   one wrote to the file it started with, whatever its size & whatever the date.
+// /   A manager runs for weeks, so every manager loop asks this once a minute.
 // /   The named function accepts nothing & returns whether a logfile is in use & its path.
 // /   Leave it empty & a manager keeps the logfile it started with.
 $EngineLogProvider = '';
@@ -366,12 +356,9 @@ $EngineLogProvider = '';
 // /  --Engine Accepted Pipelines--
 // /   Which pipeline folders under Resources/Pipelines this application accepts, each
 // /   pinned to the exact version its pipelineConfig.php must report.
-// /   THIS IS AN ALLOWLIST & NOT A CONVENIENCE. A folder that is not named here is never
-// /   read, never required & never enumerated. A directory scan would hand code execution
-// /   to anybody able to write a folder, & this list is what keeps an unexpected one inert.
-// /   It is the application's data, so the Engine's default accepts nothing. Until v3.9.9
-// /   the list was written into the Pipeline Core, so the Engine carried one application's
-// /   pipelines & accepting a new one meant a new Pipeline Core version.
+// /   This is an allowlist. A folder that is not named here is never read, never required & never enumerated.
+// /   A directory scan would hand code execution to anybody able to write a folder, & this list keeps one inert.
+// /   It is the application's data, so the Engine's default accepts nothing.
 // /   A key must be a plain folder name & a value a version such as v3.9.6. An entry that
 // /   is neither is refused with a warning & the others are still accepted.
 $EngineAcceptedPipelines = array();
@@ -386,8 +373,7 @@ $EngineAcceptedSharedModules = array();
 // /   Which of the application's own settings each shared name reads, so the Engine & the
 // /   Pipeline Core never name one application's settings. A shared name the application
 // /   does not map reads the default the shared layer chose for it.
-// /   FormatDetectionType, WarnOnCapabilityMismatch & DefaultScanner are read today.
-// /   Until v3.9.9 the Pipeline Core read HRConvert2's three settings by their own names.
+// /   FormatDetectionType, WarnOnCapabilityMismatch, DefaultScanner & RequireResourceAwareness are read.
 $EngineSettingNames = array();
 
 
@@ -404,8 +390,8 @@ $EngineSettingNames = array();
 // /
 // /   Set this to 'work-downward' for an application where a privileged process hands
 // /   tasks to less privileged workers. A scanner dispatching workers is this shape.
-// /   Nothing untrusted ever needs to talk to anything privileged, so NO LISTENING SOCKET
-// /   IS OPENED AT ALL. A worker takes its instructions from how it was started, does the
+// /   Nothing untrusted ever needs to talk to anything privileged, so no listening socket
+// /   is opened at all. A worker takes its instructions from how it was started, does the
 // /   work & exits, & the result is an exit code & a file the parent already owns.
 // /
 // /   The second shape is strictly safer & is safer because it is one way.
@@ -443,15 +429,11 @@ $EngineStrictContract = FALSE;
 // / sets what it needs & leaves the rest alone, the way a package ships a configuration &
 // / the thing being configured drops one beside it.
 // /
-// / This file belongs to the ENGINE & is replaced wholesale when a newer Engine arrives.
-// / The override belongs to the APPLICATION & survives that. Before the split an upgrade
-// / meant reading this file line by line to find which values were the application's.
+// / This file belongs to the Engine & is replaced wholesale when a newer Engine arrives.
+// / The override belongs to the application & survives that.
 // /
-// / An application with no override runs on these defaults, names no providers, & does
-// / less. That is the correct degradation rather than a failure.
-// / The override is found in the application's contract at Resources/Contract, beside this
-// / directory & not inside it. It was inside it until v3.9.9, so every copy of the Engine carried
-// / one application's identity.
+// / An application with no override runs on these defaults, names no providers, & does less, which is the correct degradation.
+// / The override is found in the application's contract at Resources/Contract, beside this directory & not inside it.
 $engineApplicationOverride = contractPath('app-engine-config.php');
 if (file_exists($engineApplicationOverride)) require_once($engineApplicationOverride);
 // / -----------------------------------------------------------------------------------

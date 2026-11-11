@@ -27,6 +27,33 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 --------------------
 COMMIT 11/10/2026
+v4.0.9 - A PDF converts to a word processing format, & the installation instructions follow the install.
+
+-v4.0.9.
+-FIX. A PDF to doc, docx, odt, ott, fodt, rtf or xml failed, because LibreOffice opened the PDF in Draw, which writes none of them. Those targets open it with Writer's PDF import. Plain text, EPUB & HTML stay with Draw.
+-The README & INSTALLATION_INSTRUCTIONS.txt clone into /opt as root, because root refuses to install a clone in a home folder.
+-INSTALLATION_INSTRUCTIONS.txt shows where the installer puts everything instead of copying the repository into the web root, & says how to update. It & the README run their commands from the hosted location.
+-The README, the Dockerfile, INSTALLATION_INSTRUCTIONS.txt & DOCKER_BUILD_INSTRUCTIONS.txt say that no process that converts or serves a user's file holds SYS_ADMIN, or any other capability.
+-The Dockerfile & DOCKER_BUILD_INSTRUCTIONS.txt no longer say a container without SYS_ADMIN refuses every conversion. At the default it runs them unprotected & logs a warning.
+-config.php, config-template.php & Setup Core no longer say an update moves the old installation aside inside the web root. Both configuration files keep their versions.
+-The OCR pipeline, the shared LibreOffice module & ERROR_DESCRIPTIONS.txt no longer say LibreOffice runs as a listener, or outside the sandbox.
+-DEVELOPMENT_NOTES.txt records the PDF import & where the repository is cloned.
+-The core, Setup Core, the OCR pipeline, the shared LibreOffice module & the contract are v4.0.9, & every pin to them requires v4.0.9.
+
+--------------------
+COMMIT 11/10/2026
+v4.0.8 - Code comments state what the code does & why, & their history moves to DEVELOPMENT_NOTES.txt.
+
+-v4.0.8.
+-Code comments state current facts, one sentence to a line, without capitals for emphasis.
+-The history in code comments moved to DEVELOPMENT_NOTES.txt, in new sections for the pipelines, the kernel, the managers, the Engine, its cores, the core, the contract & the interfaces.
+-Comments that no longer matched the code were corrected. Among them, strict sanitizing removes forward slashes, the AppArmor functions are Environment Core's, generateConfigFile copies the template, HOME is the cache folder, Audio & Stream are pipelines, & installListenerService takes two arguments.
+-No code changed. Only comments & version literals differ from v4.0.7.
+-The core, the kernel, the Engine, every Engine core & manager, every pipeline, the shared LibreOffice module, the manifest & the contract are v4.0.8, & every pin to them requires v4.0.8.
+-config.php, config-template.php & the interfaces lose the version history in their comments & keep their versions.
+
+--------------------
+COMMIT 11/10/2026
 v4.0.7 - A sandbox may not make a user namespace, a required listener is required, & an upload is capped at one size.
 
 -v4.0.7.

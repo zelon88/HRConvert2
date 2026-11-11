@@ -12,28 +12,14 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.6.
-// / This file is the LibreOffice shared module. It is NOT a pipeline & it converts nothing
-// / on its own. It holds the code that the Document pipeline & the OCR pipeline both need.
-// /
-// / A shared module exists because two pipelines needed the same code & neither could own it.
-// / convertWithLibreOffice() has callers in both. Leaving it in convertCore.php would have
-// / kept document conversion logic in the file this work exists to get it out of. Putting
-// / it in the Document pipeline would have made OCR depend on another pipeline being
-// / installed, verified & loaded first, which is a coupling no pipeline author should have
-// / to reason about. So it lives here, is version pinned exactly as a pipeline is, by the
-// / table in Resources/Contract/app-engine-config.php, & is loaded once for whichever
-// / pipelines declare they need it.
-// /
-// / A module is loaded once per request, before the pipeline that declared it.
-// / Document & OCR in the same request load this file once between them.
-// /
-// / Error block 2000 through 2004 belongs to this module, & so does 2006. Those numbers came
-// / with the code when it moved out of convertCore.php & they did not change. 2005 stayed
-// / with the Document pipeline, because the XPS branch that raises it never moved here.
-// / The LibreOffice version check asks the manifest through verifiedToolPath, as every tool
-// / does. The manifest is the only owner of a tool's minimum, so there is no second check here
-// / to disagree with it.
+// / v4.0.9.
+// / The LibreOffice shared module, which is not a pipeline & converts nothing on its own.
+// / It holds the code the Document & OCR pipelines both need, so neither depends on the other.
+// / It is version pinned exactly as a pipeline is, by the table in Resources/Contract/app-engine-config.php.
+// / It is loaded once per request, before the first pipeline that declared it.
+// / Error block 2000 through 2004 & 2006 belongs to this module.
+// / 2005 belongs to the Document pipeline's XPS branch.
+// / LibreOffice comes from verifiedToolPath(), so the manifest alone owns its minimum.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -49,7 +35,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v4.0.6';
+$SharedModuleVersion = 'v4.0.9';
 // / -----------------------------------------------------------------------------------
 
 
@@ -153,10 +139,9 @@ function neutralizeDocumentReferences($partContents, &$replacementCount) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to verify that the Document Conversion Engine is installed & running.
+// / A function to verify that the Document Conversion Engine is installed & usable.
 // / LibreOffice is version checked here, because every document conversion depends on it.
-// / LibreOffice itself is version checked here, because every document conversion depends on it.
-// / The listener is only started once the installation & the version have both been cleared.
+// / Nothing is started, because each conversion is its own sandboxed LibreOffice process.
 function verifyDocumentConversionEngine() {
   // / Set variables.
   global $Verbose, $EnableMemoryProtection;
@@ -231,22 +216,20 @@ function removeLibreOfficeProfile($profileFolder) {
 // / A function to convert one document with LibreOffice inside a sandbox.
 // / Accepts the input path, the intended output path & the target extension, in that order.
 // / Returns a completion boolean & whatever the converter printed, in that order.
-// / This replaces the persistent unoconv listener for every document conversion.
-// / The listener parsed hostile documents in a long lived process with full network access,
-// / so sandboxing the client that talked to it protected nothing. A per conversion process
-// / inside sandboxCommand has no network at all, which closes every URL handler at once.
-// / LibreOffice names its own output from the input basename, so the result is renamed when
-// / the caller asked for something else.
-// / The output directory is a bare dot, because sandboxCommand changes into the writable
-// / mount before running. When no sandbox could be built the directory is named outright.
+// / Each conversion is its own LibreOffice process inside sandboxCommand, with no network.
+// / That closes every URL handler a hostile document could reach.
+// / LibreOffice names its output from the input basename, so the result is renamed when that differs.
+// / The output directory is a bare dot, because sandboxCommand changes into the writable mount first.
+// / When no sandbox could be built the directory is named outright.
 function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
   // / Set variables.
   global $Verbose, $EnableMemoryProtection, $DirSep;
   $ConversionCompleted = FALSE;
   $ReturnData = '';
-  $sofficeBinary = $sofficeFlags = $sofficeCommand = $sandboxedCommand = $producedPath = $cleanExtension = $profileFolder = '';
+  $sofficeBinary = $sofficeFlags = $importFlag = $targetFormat = $sofficeCommand = $sandboxedCommand = $producedPath = $cleanExtension = $profileFolder = '';
   $commandMayRun = $commandIsSandboxed = $documentIsSanitized = $profileIsReady = $profileIsRemoved = FALSE;
   $commandOutput = array();
+  $writerTargets = array('doc', 'docx', 'odt', 'ott', 'fodt', 'rtf', 'xml');
   $referencesRemoved = $commandExitCode = 0;
   // / A filter may be appended to a format with a colon, so a colon is permitted here.
   $cleanExtension = preg_replace('/[^A-Za-z0-9_:.\-]/', '', (string)$targetExtension);
@@ -258,14 +241,16 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
     // / Neutralize external references before the converter ever opens the file.
     list ($documentIsSanitized, $referencesRemoved) = sanitizeDocumentLinks($inputPath);
     if ($referencesRemoved > 0) warningEntry('Document Sanitization neutralized '.$referencesRemoved.' external reference(s) in '.basename($inputPath).' before conversion. A document requesting a remote resource is worth investigating.');
-    // / Every flag here suppresses a prompt, a lock file or a recovery dialog that would
-    // / otherwise hang a headless process forever.
-    // / The user profile is written inside the sandbox tmpfs, so no state survives the run &
-    // / no two conversions can ever share a profile. Without a sandbox that path would be the
-    // / host's, shared by every conversion & by any account that made it first, so a private
-    // / folder is made for the one conversion & removed after it. Until v4.0.0 it was not.
+    // / Every flag here suppresses a prompt, a lock file or a recovery dialog that would hang a headless process.
+    // / The user profile is written inside the sandbox tmpfs, so no state survives & no two conversions share one.
+    // / Without a sandbox a private folder is made for the one conversion & removed after it.
     $sofficeFlags = ' --headless --norestore --invisible --nolockcheck --nodefault --nofirststartwizard --nologo';
-    $sofficeCommand = escapeshellarg($sofficeBinary).$sofficeFlags
+    // / LibreOffice opens a PDF in Draw, & Draw writes no word processing format.
+    // / Writer's PDF import keeps the text for these targets.
+    // / It leaves plain text & EPUB empty & HTML as pictures, so those are not given it.
+    $targetFormat = strtolower(explode(':', $cleanExtension)[0]);
+    if (getExtension($inputPath) === 'pdf' && in_array($targetFormat, $writerTargets, TRUE)) $importFlag = ' --infilter=writer_pdf_import';
+    $sofficeCommand = escapeshellarg($sofficeBinary).$sofficeFlags.$importFlag
       .' -env:UserInstallation=file:///tmp/hrc2-libreoffice'
       .' --convert-to '.escapeshellarg($cleanExtension)
       .' --outdir .'
@@ -280,7 +265,7 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
       // / A bare output directory only works because the sandbox changes into it, so it is
       // / named outright here rather than writing wherever PHP happens to be.
       list ($profileIsReady, $profileFolder) = makeLibreOfficeProfile();
-      if ($profileIsReady) $sandboxedCommand = escapeshellarg($sofficeBinary).$sofficeFlags
+      if ($profileIsReady) $sandboxedCommand = escapeshellarg($sofficeBinary).$sofficeFlags.$importFlag
         .' '.escapeshellarg('-env:UserInstallation=file://'.$profileFolder)
         .' --convert-to '.escapeshellarg($cleanExtension)
         .' --outdir '.escapeshellarg(dirname($outputPath))
@@ -292,9 +277,8 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
     if ($commandMayRun) {
       exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 '.$sandboxedCommand.' 2>&1', $commandOutput, $commandExitCode);
       $ReturnData = implode(PHP_EOL, $commandOutput);
-      // / A LibreOffice that was killed exits 137, which is 128 & the number of the signal that kills.
-      // / Inside a per conversion ceiling that is almost always its memory. Until v4.0.6 a kill reached
-      // / the log only as the document converter timing out, once every retry had been killed the same way.
+      // / A LibreOffice that was killed exits 137, which is 128 plus the number of the signal that kills.
+      // / Inside a per conversion ceiling that is almost always its memory.
       if ($commandExitCode === 137) warningEntry('LibreOffice was killed while it converted '.basename($inputPath).'. One killed inside a per conversion ceiling has almost always run out of the memory it was given. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.');
       // / LibreOffice derives the output name from the input, so rename when it differs.
       $producedPath = dirname($outputPath).$DirSep.pathinfo($inputPath, PATHINFO_FILENAME).'.'.$cleanExtension;
@@ -302,12 +286,11 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
       if (file_exists($outputPath)) $ConversionCompleted = TRUE; }
     if ($profileFolder !== '') $profileIsRemoved = removeLibreOfficeProfile($profileFolder);
     if ($profileFolder !== '' && !$profileIsRemoved) warningEntry('A private LibreOffice profile could not be removed from '.$profileFolder.'.'); }
-  // / The answer is read from the flag. Comparing the two commands said YES for every
-  // / unsandboxed conversion, because the output directory had been edited into one of them.
+  // / The answer is read from the flag, because the output directory is edited into the command either way.
   if ($Verbose) logEntry('LibreOffice Conversion: '.basename($inputPath).' to '.$cleanExtension.', Sandboxed: '.($commandIsSandboxed ? 'YES' : 'NO').', Result: '.($ConversionCompleted ? 'OK' : 'FAILED').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $ReturnData is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $sofficeBinary, $sofficeCommand, $sandboxedCommand, $producedPath, $cleanExtension, $commandMayRun, $documentIsSanitized, $referencesRemoved, $inputPath, $outputPath, $targetExtension, $profileFolder, $profileIsReady, $profileIsRemoved, $sofficeFlags, $commandIsSandboxed, $commandOutput, $commandExitCode);
+  purgeSensitiveMemory($EnableMemoryProtection, $sofficeBinary, $sofficeCommand, $sandboxedCommand, $producedPath, $cleanExtension, $commandMayRun, $documentIsSanitized, $referencesRemoved, $inputPath, $outputPath, $targetExtension, $profileFolder, $profileIsReady, $profileIsRemoved, $sofficeFlags, $importFlag, $targetFormat, $writerTargets, $commandIsSandboxed, $commandOutput, $commandExitCode);
   return array($ConversionCompleted, $ReturnData); }
 // / -----------------------------------------------------------------------------------
 

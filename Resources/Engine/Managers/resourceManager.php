@@ -8,21 +8,14 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.6.
+// / v4.0.8.
 // / This file is the Resource Manager. It is a manager subcomponent of the Engine.
 // / The Resource Manager polls the host, calculates the budget every operation is granted from & sweeps anything that has outlived its welcome.
 // /
-// / A manager is a role a long lived process runs under rather than a file the application
-// / loads on demand. It has a lifetime measured in days, a socket & a place in a budget.
-// / This file holds what this role DOES. Everything any role might need is in the Engine.
-// / The sockets, the message protocol, the budget arithmetic, the worker registry & the
-// / process identity checks are all Engine machinery & are shared by every role.
-// / A second application using this Engine gets all of that unchanged & writes only the
-// / loop that is its own.
-// /
-// / This file is pinned EXACTLY by getAcceptedManagers() in the Engine & is loaded by
-// / loadEngineManager() when a process is dispatched to this role. It is never loaded on
-// / a request that is not running as this manager.
+// / A manager is a role a long lived process runs under, with a socket & a place in a budget.
+// / This file holds what the role does.
+// / The sockets, messages, budget arithmetic, worker registry & identity checks are the Engine's, shared by every role.
+// / getAcceptedManagers() pins this file exactly, & loadEngineManager() loads it only for a process in this role.
 // /
 // / See Documentation/ABOUT_MANAGERS.txt for what each role is responsible for.
 // /
@@ -38,7 +31,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.6';
+$ManagerVersion = 'v4.0.8';
 // / -----------------------------------------------------------------------------------
 
 
@@ -116,11 +109,8 @@ function runResourceManager() {
         list ($environmentIsReady, $environmentFindings) = validateOperatingEnvironment();
         if (!$environmentIsReady) warningEntry('The operating environment has degraded. The sandbox is unavailable & conversions requiring it will be refused. Run the -fp argument as root.');
         else if ($Verbose) logEntry('Operating environment revalidated. '.count($environmentFindings).' check(s) passed.');
-        // / The bootstrap script is one of those findings. A script left behind by another
-        // / release hands arguments to a core that may no longer accept them. The listener runs
-        // / as the web server account, which cannot write to an installation root owns, so it
-        // / says what the script needs & -fp does it as root. Until v4.0.1 the listener rewrote
-        // / the script itself, which stopped working once the installation became root's.
+        // / The bootstrap script is one of those findings, because a script from another release may hand a core arguments it refuses.
+        // / The listener runs as the web server account, which cannot write to the installation, so -fp repairs it as root.
         $scriptStatus = environmentFindingStatus($environmentFindings, 'Bootstrap script');
         foreach ($environmentFindings as $scriptFinding) if (isset($scriptFinding['Check'], $scriptFinding['Detail']) && $scriptFinding['Check'] === 'Bootstrap script') $scriptDetail = (string)$scriptFinding['Detail'];
         if ($scriptStatus !== '' && !findingIsBenign($scriptStatus)) warningEntry('The bootstrap script reported '.$scriptStatus.'. '.$scriptDetail);
@@ -134,26 +124,12 @@ function runResourceManager() {
         foreach ($environmentFindings as $scriptFinding) if (isset($scriptFinding['Check'], $scriptFinding['Detail']) && $scriptFinding['Check'] === 'Hosted location') $hostedDetail = (string)$scriptFinding['Detail'];
         if ($hostedStatus !== '' && !findingIsBenign($hostedStatus)) warningEntry('The hosted location reported '.$hostedStatus.'. '.$hostedDetail);
         // / Re-prove that the web served DATA tree still hands out inert downloads.
-        // /
-        // / This is not a check that can be done once at install time.
-        // / The protection lives in web server configuration, & web server configuration is
-        // / edited by people & replaced by package upgrades long after this application was
-        // / installed. Turning AllowOverride off, moving the vhost, adding a reverse proxy
-        // / that drops response headers, or migrating from Apache to nginx each re-open this
-        // / silently. There is no error, no failed conversion & nothing in any log; the only
-        // / observable difference is that an uploaded SVG starts executing again.
-        // / So it is re-established on the same schedule as everything else that can rot,
-        // / by asking the server rather than by reading a file off the disk.
-        // /
-        // / This REPORTS only, like every other check in this block. The listener runs as
-        // / the web server user, cannot edit server configuration & must not try.
-        // / The exposure check is part of validateOperatingEnvironment() above & is not run
-        // / a second time here. Its status is read back out of the findings so the listener
-        // / can say the right thing about it, because the three outcomes need three
-        // / different sentences & a degraded environment warning covers none of them.
-        // / Each served location has an exposure line named for its folder, so HRConvert2's reads
-        // / DATA, & one the Engine refused has a placement line instead. Until v4.0.5 only the DATA
-        // / line was read, so a location it did not name was never re-proved at all.
+        // / Web server configuration changes long after installation, & a lost protection fails silently, so it is re-proved on a schedule.
+        // / It is proved by asking the server, not by reading a file off the disk.
+        // / This only reports, because the listener runs as the web server user & cannot edit server configuration.
+        // / The exposure check ran inside validateOperatingEnvironment() above, so its status is read back from the findings.
+        // / The three outcomes need three different sentences, which a degraded environment warning does not give.
+        // / Each served location has an exposure line named for its folder, & one the Engine refused has a placement line instead.
         foreach ($environmentFindings as $locationFinding) {
           if (!isset($locationFinding['Check'], $locationFinding['Status'])) continue;
           $findingCheck = (string)$locationFinding['Check'];
@@ -181,12 +157,8 @@ function runResourceManager() {
             $sessionConvertLoc = resolveSessionLocation($sessionLocations, ($managerMessages[$messageIndex]['DailyHash'] ?? ''), ($managerMessages[$messageIndex]['SessionHash'] ?? ''));
             $replyPayload = array('Approved' => TRUE, 'Reason' => 'Resolved.', 'ConvertLoc' => $sessionConvertLoc); }
           // / A budget request. Approve, register & issue a token the worker returns later.
-          // / The budget is worked out again from the conversions tracked now, because the last poll
-          // / may be several requests old. Until v4.0.6 it was worked out only as the host was polled,
-          // / so every request between two polls was judged against the same remaining budget.
-          // / The limits are scaled before the conversion is registered, so they count only the
-          // / conversions already in flight. Until v4.0.6 the conversion was registered first, so it
-          // / was counted as in flight against itself & a conversion on its own was given half.
+          // / The budget is worked out again from the conversions tracked now, because the last poll may be several requests old.
+          // / The limits are scaled before the conversion is registered, so they count only the conversions already in flight.
           else if ($managerMessages[$messageIndex]['RequestType'] === 'budget') {
             list ($budgetCalculated, $resourceBudget) = calculateResourceBudget($systemResources, trackedWorkerCost($workerRegistry));
             if ($budgetCalculated) list ($requestApproved, $denialReason) = evaluateBudgetRequest($resourceBudget, $workerRegistry, ($managerMessages[$messageIndex]['ConversionCost'] ?? 0), ($managerMessages[$messageIndex]['ExpectedRuntime'] ?? 0));
@@ -237,12 +209,10 @@ function runResourceManager() {
 // / share that was safe for one. Nothing is ever scaled below the configured minimum.
 // / The table is handed to the worker with its budget approval & is used for every file in
 // / that request, so a conversion never has to ask again mid batch.
-// / EACH CEILING IS SCALED BY THE RESOURCE IT LIMITS. The processor share shrinks with load. The
-// / memory ceiling is a share of the memory the host has available, less the reserved share, split
-// / between the conversions in flight & this one, & never more than the configured ceiling.
-// / Until v4.0.6 both shrank by whichever of load or memory in use was higher, as a fraction of the
-// / configured ceiling. A desktop with half its memory in use halved every memory ceiling while
-// / gigabytes stood free, & LibreOffice was killed inside the 137M a document conversion was left.
+// / Each ceiling is scaled by the resource it limits.
+// / The processor share shrinks with load.
+// / The memory ceiling is a share of the memory available, less the reserved share, split between the conversions in flight & this one.
+// / It is never more than the configured ceiling.
 function scaleConversionLimits($systemResources, $trackedWorkers) {
   // / Set variables.
   global $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $ReserveResourcePercentage, $Verbose, $EnableMemoryProtection;
@@ -280,13 +250,9 @@ function scaleConversionLimits($systemResources, $trackedWorkers) {
     else {
       $scaledCpu = (int)floor($cpuPercentage * $loadFactor);
       $scaledMemory = ($memoryShare > 0) ? $memoryShare : (int)floor($memoryMegabytes / $concurrentShare);
-      // / A scanner needs the memory its loaded signature database takes, & neither the file
-      // / nor the load changes that, so Scan keeps its configured memory & only its processor
-      // / share is scaled. config.php has always said to treat that figure as a floor. Until
-      // / v3.9.9 it was scaled with the rest, & a quiet server with one scan in flight handed
-      // / ClamAV 740M of a configured 2048M, so the kernel killed it while it loaded. Whether
-      // / a scan may start at all is the budget's decision, & a ceiling it cannot run inside
-      // / does not protect the host, it only turns the scan into a failure.
+      // / A scanner needs the memory its signature database takes, which neither the file nor the load changes.
+      // / So Scan keeps its configured memory, which config.php calls a floor, & only its processor share is scaled.
+      // / Whether a scan may start at all is the budget's decision, because a ceiling it cannot run inside only makes it fail.
       if ($conversionType === 'Scan') $scaledMemory = $memoryMegabytes;
       // / The floor is what stops a loaded server handing out a ceiling nothing can run in.
       if ($scaledCpu < $minimumCpu) $scaledCpu = $minimumCpu;
@@ -344,10 +310,9 @@ function measureNamespaceHeadroom() {
 // / A function to sweep every configured data location on a schedule.
 // / Accepts no arguments.
 // / Returns a completion boolean & the number of locations swept, in that order.
-// / This uses cleanDataLoc, the same function the stock clean calls use. Those calls remain
-// / in convertCore.php & are what a standalone installation with no listener relies on.
-// / Only the shared data locations are swept. The temporary location lives inside the
-// / installation directory, so it belongs to one front end & each one cleans its own.
+// / It uses cleanDataLocation(), as the core's own clean does, which is what an installation with no listener relies on.
+// / Only the shared data locations are swept.
+// / The temporary location lives inside the hosted location, so each front end cleans its own.
 function cleanEveryConvertLoc() {
   // / Set variables.
   global $DeleteThreshold, $Verbose, $EnableMemoryProtection, $PrimaryConvertLoc, $AdditionalConvertLocs, $ProtectedRootDirs, $ConvertLoc;
@@ -399,10 +364,10 @@ function evictExpiredSessionLocations(&$sessionLocations, $maximumAgeSeconds) {
 // / A function to decide which data location a session uses & remember the answer.
 // / Accepts the session map BY REFERENCE, the daily hash & the session hash.
 // / Returns the absolute path as a string.
-// / THE MAP IS A CACHE, NOT THE RECORD. resolveConvertLoc discovers an existing session
-// / directory before it distributes anything, so a Resource Manager that restarted in the
-// / middle of a session still returns the location that actually holds the files.
-// / Load balancing happens here, once, when a session is first seen. Never again.
+// / The map is a cache, not the record.
+// / resolveConvertLoc discovers an existing session directory before it distributes anything.
+// / A Resource Manager that restarted mid session therefore still returns the location that holds the files.
+// / Load balancing happens here, once, when a session is first seen.
 function resolveSessionLocation(&$sessionLocations, $dailyHash, $sessionHash) {
   // / Set variables.
   global $Verbose, $EnableMemoryProtection, $PrimaryConvertLoc, $AdditionalConvertLocs, $ProtectedRootDirs, $ConvertLoc;

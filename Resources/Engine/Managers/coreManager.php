@@ -8,22 +8,15 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.6.
+// / v4.0.8.
 // / This file is the Core Manager. It is a manager subcomponent of the Engine.
 // / The Core Manager is the listener. It starts the other three, restarts one that dies & is
 // / the only role an operator starts directly.
 // /
-// / A manager is a role a long lived process runs under rather than a file the application
-// / loads on demand. It has a lifetime measured in days, a socket & a place in a budget.
-// / This file holds what this role DOES. Everything any role might need is in the Engine.
-// / The sockets, the message protocol, the budget arithmetic, the worker registry & the
-// / process identity checks are all Engine machinery & are shared by every role.
-// / A second application using this Engine gets all of that unchanged & writes only the
-// / loop that is its own.
-// /
-// / This file is pinned EXACTLY by getAcceptedManagers() in the Engine & is loaded by
-// / loadEngineManager() when a process is dispatched to this role. It is never loaded on
-// / a request that is not running as this manager.
+// / A manager is a role a long lived process runs under, with a socket & a place in a budget.
+// / This file holds what the role does.
+// / The sockets, messages, budget arithmetic, worker registry & identity checks are the Engine's, shared by every role.
+// / getAcceptedManagers() pins this file exactly, & loadEngineManager() loads it only for a process in this role.
 // /
 // / See Documentation/ABOUT_MANAGERS.txt for what each role is responsible for.
 // /
@@ -39,7 +32,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.6';
+$ManagerVersion = 'v4.0.8';
 // / -----------------------------------------------------------------------------------
 
 
@@ -64,10 +57,9 @@ function runCoreManager() {
   list ($serverIsOpen, $socketServer) = openManagerSocketServer($socketPath);
   if (!$serverIsOpen) errorEntry('The Core Manager could not open its socket!', 31000, TRUE);
   else {
-    // / A STOP SIGNAL IS A STOP INSTRUCTION. systemctl stop sends one to this process alone, &
-    // / KillMode=mixed kills whatever is left once it exits. Until v4.0.6 nothing here answered it,
-    // / so this process died at once & the three subordinates, which are not its children, were
-    // / killed by the service manager on every stop. It is answered as the loop below waits.
+    // / A stop signal is a stop instruction.
+    // / systemctl stop sends one to this process alone, & KillMode=mixed kills whatever is left once it exits.
+    // / It is answered as the loop below waits, so the three subordinates, which are not its children, stop cleanly.
     if (function_exists('pcntl_async_signals') && function_exists('pcntl_signal') && defined('SIGTERM')) {
       pcntl_async_signals(TRUE);
       $signalIsHandled = pcntl_signal(SIGTERM, 'noteCoreManagerStop'); }
@@ -155,10 +147,8 @@ function noteCoreManagerStop($signalNumber) {
 // / A function to stop every subordinate manager & wait until each one has gone.
 // / Accepts the recorded subordinates, as role => process identifier.
 // / Returns TRUE when none of them is still running.
-// / Each is asked to stop with TERM, which ends one at once, & is waited for, so none is left for
-// / the service manager to kill after this process exits. One still running after twenty
-// / seconds, inside the thirty systemd allows, is killed. Until v4.0.6 each was signalled once &
-// / none was waited for.
+// / Each is asked to stop with TERM, which ends one at once, & is waited for, so none is left for the service manager.
+// / One still running after twenty seconds, inside the thirty systemd allows, is killed.
 function stopSubordinateManagers($subordinatePids) {
   // / Set variables.
   global $Verbose, $EnableMemoryProtection;

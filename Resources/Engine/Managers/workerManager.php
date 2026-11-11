@@ -8,22 +8,15 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.6.
+// / v4.0.8.
 // / This file is the Worker Manager. It is a manager subcomponent of the Engine.
 // / The Worker Manager ends the worker it is told to end. The Resource Manager keeps the
 // / worker registry & finds a worker that has outlived its expected runtime.
 // /
-// / A manager is a role a long lived process runs under rather than a file the application
-// / loads on demand. It has a lifetime measured in days, a socket & a place in a budget.
-// / This file holds what this role DOES. Everything any role might need is in the Engine.
-// / The sockets, the message protocol, the budget arithmetic, the worker registry & the
-// / process identity checks are all Engine machinery & are shared by every role.
-// / A second application using this Engine gets all of that unchanged & writes only the
-// / loop that is its own.
-// /
-// / This file is pinned EXACTLY by getAcceptedManagers() in the Engine & is loaded by
-// / loadEngineManager() when a process is dispatched to this role. It is never loaded on
-// / a request that is not running as this manager.
+// / A manager is a role a long lived process runs under, with a socket & a place in a budget.
+// / This file holds what the role does.
+// / The sockets, messages, budget arithmetic, worker registry & identity checks are the Engine's, shared by every role.
+// / getAcceptedManagers() pins this file exactly, & loadEngineManager() loads it only for a process in this role.
 // /
 // / See Documentation/ABOUT_MANAGERS.txt for what each role is responsible for.
 // /
@@ -39,7 +32,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.6';
+$ManagerVersion = 'v4.0.8';
 // / -----------------------------------------------------------------------------------
 
 

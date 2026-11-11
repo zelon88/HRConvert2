@@ -40,7 +40,7 @@ $selectorSwatches = array(
   'red' => '#c0392b',  'green' => '#27ae60',  'blue' => '#3d71b3',  'grey' => '#7f8c8d',
   'orange' => '#e67e22', 'purple' => '#8e44ad', 'dark' => '#2c3e50');
 // / Carry the page state so a selection returns to the page the user was already on.
-// / $ShowFiles & $NoGui ARRIVE FROM THE CORE. THEY ARE NOT READ HERE.
+// / $ShowFiles & $NoGui arrive from the core & are not read here.
 // / verifyGlobals reads every superglobal this application accepts & buildGUI hands the
 // / result to an interface as an ordinary variable. An interface that read $_GET for
 // / itself would be defining API surface, which is not an interface's to define. It also
@@ -75,20 +75,12 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
   <body>
     <div id='page' style='max-width:<?php echo $GuiWidth; ?>; margin-left:auto; margin-right:auto;'>
       <?php // / A CENTERED CHROME ROW, MATCHING convertGui2.php.
-            // / The settings toggle previously opened a PHP tag inside its own style
-            // / attribute that ASSIGNED $oppositeAlignment & echoed nothing, leaving a
-            // / text-align with no value. That is one malformed declaration, so a browser
-            // / discarded the whole of it & took the display:block after it away too. The
-            // / button was therefore never a block & the automatic margins beside it never
-            // / centred anything. Centring the row needs no such trick.
-            // / $oppositeAlignment is already computed at the top of this file, so the
-            // / second assignment was doing nothing & is gone.
-            // / EVERY BUTTON DECLARES ITS TYPE, because a button inside a form defaults to
+            // / Every button declares its type, because a button inside a form defaults to
             // / submit, & an undeclared settings toggle would submit the form & reload the
             // / page instead of opening the panel underneath it.
             // / The submit button carries no name, so nothing it is called reaches the core
             // / as POST input.
-            // / NEVER WRITE A PHP CLOSING TAG INSIDE A LINE COMMENT. A line comment ends at
+            // / Never write a PHP closing tag inside a line comment. A line comment ends at
             // / a closing tag as surely as it ends at a newline, so quoting one here drops
             // / straight out of PHP & prints every remaining line of the comment onto the
             // / page. Describe the markup instead of reproducing it. ?>
@@ -378,16 +370,8 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
         <?php // / THIS BUTTON IS THE OTHER HALF OF THE SESSION. IT RETURNS THE USER TO
               // / THEIR FILES, so it is built from the same parameters as the refresh
               // / button above & differs only by carrying showFiles.
-              // / It previously assembled its own query string out of $_GET, & the second
-              // / of those tests read
-              // /   if (isset($_GET['language'])) echo '&gui='.$_GET['gui'];
-              // / which asks about language & answers about gui. A user who had chosen a
-              // / language but not an interface got an Undefined array key warning printed
-              // / into this page & an empty &gui= on the button, which the core cannot
-              // / match to an installed interface, so it fell back to the default & the
-              // / user watched their interface change for no reason they could see.
-              // / Reading $_GET here was the root of it. The core resolves all three of
-              // / these & hands them over as $GuiToUse, $LanguageToUse & $ColorToUse. ?>
+              // / The core resolves the interface, the language & the colour, & hands them over
+              // / as $GuiToUse, $LanguageToUse & $ColorToUse, so nothing here reads $_GET. ?>
         <form action='convertCore.php?showFiles=1&<?php echo htmlspecialchars($sessionParams, ENT_QUOTES, 'UTF-8'); ?>' method='post'>
           <input type='hidden' id='token1' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
           <input type='hidden' id='token2' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>

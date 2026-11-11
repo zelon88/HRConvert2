@@ -409,7 +409,17 @@ A PDF IS OPENED IN WRITER ONLY FOR A WORD PROCESSING TARGET.
 LibreOffice opens a PDF in Draw, which has no export filter for a word processing format, so until
 v4.0.9 a PDF to doc, docx, odt, ott, fodt, rtf or xml failed. Writer's PDF import keeps the text for
 those. On LibreOffice 24.2 it leaves plain text & EPUB empty & HTML as pictures, so those stay with
-Draw, which writes plain text.
+Draw. Draw writes HTML with its text, & has no filter for plain text or EPUB, so a PDF to either
+fails. The v4.0.9 test of plain text passed only because LibreOffice's rename found the text file
+the PDF was made from & renamed that into place.
+
+LIBREOFFICE READS A COPY OF ITS INPUT NAMED AFTER ITS OUTPUT.
+LibreOffice names what it writes after what it reads, writes it beside the output, & replaces a
+file already holding that name. Until v4.1.0 converting report.txt to summary.pdf wrote report.pdf
+first, over a report.pdf the user already had, & then renamed it to summary.pdf, so report.pdf was
+lost. A copy named after the output, in a folder of its own, means the only name it writes is the
+one verifyFile() found free. Without the copy it reads the original only while the name it would
+write is free.
 
 THE LIBREOFFICE MODULE IS SHARED, NOT OWNED.
 Document & OCR both call it. Leaving it in convertCore.php kept document logic in the file the
@@ -1090,6 +1100,21 @@ start a unit, & a failed stop was rotated past.
 THE MODEL KNOWS EVERY SETTING A REPAIR MAY ADD.
 The Environment Manager settings were added to config.php alone at first, & --config --repair then
 reported that it would add nothing while the file was demonstrably short of them.
+
+AN OUTPUT WHOSE NAME IS TAKEN IS GIVEN THE NEXT FREE ONE.
+Until v4.1.0 verifyFile() deleted the file holding the name, except for a document, an archive or
+one of a selection of files, which were not cleaned. Their converters skip an output that already
+exists, so converting one of those a second time returned the old file as the new one. From v2.8 a
+conversion into an archive that already existed was meant to add to it, & that skip had ended it.
+The suffix is an underscore & a number, because sanitize() turns report (1) into report_1. An
+archive of a selection keeps the name its first file was given, because every file after the first
+adds to it.
+
+A CONVERSION SCANS ITS INPUT.
+Until v4.1.0 convertFiles() & the OCR pipeline handed the scanner the output path, before the output
+existed, & ScanCore skips a path that does not exist & reports the scan complete. With --Virus
+Scanning-- on, nothing a conversion read was scanned, & with --User Virus Scanning-- also on an
+upload is not scanned on arrival either.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1139,6 +1164,13 @@ $oppositeAlignment & echoed nothing, leaving a text-align with no value, so a br
 whole declaration & the display:block after it, & the automatic margins beside the button never
 centred anything. The session buttons in convertGui2.php carried no type until they were inside a
 form.
+
+A BULK CONTROL READS THE FILE LIST WHEN IT IS PRESSED.
+The file list publishes the session's files every time it is drawn, & Archive All & Scan All read
+them when pressed. Until v4.1.0 both were handed the files the page held when it was first drawn,
+so a file converted afterwards was left out & a deleted one was asked for, & neither refreshed the
+list when it finished. Archive All goes through run() like a conversion, so the archive downloaded
+is the one the core names, which is not the name typed when that name is taken.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

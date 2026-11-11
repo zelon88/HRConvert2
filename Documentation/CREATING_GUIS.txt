@@ -324,6 +324,11 @@ use rather than testing a reply for itself:
   line_is_filename($line), Whether one line of a reply names a file.
   download_file($basePath, $fileName), Points the hidden anchor at a file & triggers it.
 
+A file list drawn again after each operation publishes the files it was drawn from, each time it is
+drawn, with HRC2.configure({ sessionFiles: [...], filesListed: true }). The included GUIs do this at
+the top of the list. Archive All & Scan All read those files when pressed, & without them they act
+on the files the page held when it was first drawn.
+
 AN INTERFACE MUST NOT DEPEND ON THE SCRIPT LIBRARY BEING THE CURRENT COPY.
 A GUI page is generated fresh on every request. The script library beside it is a static
 asset that a browser, a proxy or a CDN caches for as long as it is permitted to. The two

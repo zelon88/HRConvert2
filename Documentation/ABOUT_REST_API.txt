@@ -160,6 +160,8 @@ The following is a list of supported POST inputs, organized into sections based 
           String.
           This input is used during File Conversions (excluding OCR & bulk archiving)
           Set this input to a name to use for the output file.
+          A name already in the session is given the next free one, such as name_1, & the
+          reply names the file that was written.
 
   Image Conversions
       height
@@ -194,6 +196,8 @@ The following is a list of supported POST inputs, organized into sections based 
           String.
           This input is used during Archive Operations (excluding conversions).
           Set this input to the name to use for the output file.
+          A name already in the session is given the next free one, such as name_1, & the
+          reply names the file that was written.
       archextension
           String.
           This name is all lower case. The core reads $_POST['archextension'] & nothing else.
@@ -213,6 +217,8 @@ The following is a list of supported POST inputs, organized into sections based 
           String.
           This input is used during OCR Operations.
           Set this input to a name to use for the output file.
+          A name already in the session is given the next free one, such as name_1, & the
+          reply names the file that was written.
       pdfextension
           String.
           This input is used during OCR Operations.

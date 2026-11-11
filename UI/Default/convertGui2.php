@@ -320,6 +320,14 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
     // / a panel, it is a border floating in the middle of nothing.
     ?>
     <div class='file-list-panel' style='max-width:500px; margin-left:auto; margin-right:auto; padding: 8px; border: 2px solid rgba(0, 0, 0, 0.3); border-radius: 10px;'>
+      <?php
+      // / The list publishes the files it was drawn from, every time it is drawn.
+      // / Archive All & Scan All read these when pressed, so they act on the files a user can see
+      // / rather than on the files the page held when it was first drawn.
+      ?>
+      <script type='text/javascript'>
+        HRC2.configure(<?php echo json_encode(array('sessionFiles' => array_values($Files), 'filesListed' => TRUE)); ?>);
+      </script>
      
 
       <?php

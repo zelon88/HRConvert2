@@ -103,6 +103,7 @@ POST inputs are organized into distinct functional operational blocks based on p
 * `userconvertfilename` *(String)*
   * Used during standard File Conversions (excluding OCR & bulk archiving workflows).
   * *Value*: The custom filename string to use for the output file.
+  * A name already in the session is given the next free one, such as `name_1`, & the reply names the file that was written.
 
 ### 🖼️ D. Image Conversions
 * `height` *(Integer)*
@@ -127,6 +128,7 @@ POST inputs are organized into distinct functional operational blocks based on p
 * `userfilename` *(String)*
   * Specifies output branding for target packages.
   * *Value*: The designated text name to apply to the generated output file.
+  * A name already in the session is given the next free one, such as `name_1`, & the reply names the file that was written.
 * `archextension` *(String)*
   * Defines packaging type compression envelopes.
   * *Value*: The explicit archive extension to use for the output file.
@@ -141,6 +143,7 @@ POST inputs are organized into distinct functional operational blocks based on p
 * `userpdfconvertfilename` *(String)*
   * Names the extracted data file product.
   * *Value*: A designated custom name string to use for the output file.
+  * A name already in the session is given the next free one, such as `name_1`, & the reply names the file that was written.
 * `pdfextension` *(String)*
   * Controls text envelope generation formats.
   * *Value*: An explicit extension string to use for the final output document.

@@ -161,7 +161,12 @@ window.HRC2 = {
   tokens: { Token1: '', Token2: '' },
   dataPath: '',
   shareBaseURL: '',
+  // / The files in the session. The upload page supplies them, & the file list publishes them
+  // / every time it is drawn, so a bulk control acts on the files a user can see.
   sessionFiles: [],
+  // / Whether the file list has published sessionFiles yet. Until it has, a bulk control uses
+  // / the names the page was drawn with.
+  filesListed: false,
   failureText: 'Operation Failed!',
   scanFailureText: 'Operation Failed!',
   operationFailedText: 'Operation Failed!',
@@ -263,6 +268,8 @@ window.HRC2 = {
       if (self.isError(line)) { result.errors.push(line); return; }
       // / Anything left that cannot be a filename is markup around the answer.
       if (!self.isFilename(line)) return;
+      // / A name reported twice is one file. An archive is named once for every file added to it.
+      if (result.files.indexOf(line) !== -1) return;
       result.files.push(line);
     });
     return result;
@@ -296,6 +303,12 @@ window.HRC2 = {
       });
     });
     return chain.then(function () { return failed; });
+  },
+
+  // / The files a bulk control acts on, read when the control is pressed.
+  // / The names the page was drawn with stand in only until the file list publishes its own.
+  listedFiles: function (pageFileNames) {
+    return this.filesListed ? this.sessionFiles.slice() : pageFileNames;
   },
 
   // / Reload the file list without reloading the page.
@@ -506,33 +519,26 @@ window.HRC2 = {
   // / Scan a selection of files & then fetch the log the scan wrote.
   // / Both legs are tested. The scan can fail with an HTTP 200 & an error in the body, &
   // / without testing it the interface went on to ask for a log that was never written.
+  // / A scan writes its reports into the session, so every exit refreshes the list, as run() does.
   scanThenFetchLog: function (scanType, fileNames, logFileName, suffix) {
     var self = this;
     var loadingId = 'loadingCommandDiv' + suffix;
+    var finish = function (succeeded) {
+      self.spinner(loadingId, false);
+      if (succeeded) self.flash('victoryCommandDiv' + suffix);
+      else {
+        self.flash('failureCommandDiv' + suffix);
+        window.alert(self.scanFailureText); }
+      try { self.refreshFileList(); }
+      catch (thrown) { self.warn('The file list could not be refreshed. ' + thrown); }
+    };
     self.spinner(loadingId, true);
     self.post({ scantype: scanType, filesToScan: fileNames }).then(function (replyText) {
-      if (self.isError(replyText)) {
-        self.spinner(loadingId, false);
-        self.flash('failureCommandDiv' + suffix);
-        window.alert(self.scanFailureText);
-        return; }
+      if (self.isError(replyText)) { finish(false); return; }
       self.post({ download: logFileName }).then(function (logReply) {
-        self.spinner(loadingId, false);
-        if (self.isError(logReply) || !self.download(self.dataPath, logFileName)) {
-          self.flash('failureCommandDiv' + suffix);
-          window.alert(self.scanFailureText);
-          return; }
-        self.flash('victoryCommandDiv' + suffix);
-      }, function () {
-        self.spinner(loadingId, false);
-        self.flash('failureCommandDiv' + suffix);
-        window.alert(self.scanFailureText);
-      });
-    }, function () {
-      self.spinner(loadingId, false);
-      self.flash('failureCommandDiv' + suffix);
-      window.alert(self.scanFailureText);
-    });
+        finish(!self.isError(logReply) && self.download(self.dataPath, logFileName));
+      }, function () { finish(false); });
+    }, function () { finish(false); });
   },
 
   // / Bind one virus scan control with a fixed scanner.
@@ -548,6 +554,7 @@ window.HRC2 = {
   // / Bind the bulk virus scan control, whose scanner is chosen by two checkboxes.
   // / Neither ticked is treated as both, because a scan button that does nothing at all
   // / reads as a broken control rather than as a refused one.
+  // / The files are read when it is pressed, so a file converted since the page was drawn is scanned too.
   bindScanAll: function (buttonId, suffix, clamCheckboxId, scanCoreCheckboxId, fileNames, logFileName) {
     var self = this;
     $(function () {
@@ -557,51 +564,22 @@ window.HRC2 = {
         var scanType = 'all';
         if (useClam && !useScanCore) scanType = 'clamav';
         if (useScanCore && !useClam) scanType = 'scancore';
-        self.scanThenFetchLog(scanType, fileNames, logFileName, suffix);
+        self.scanThenFetchLog(scanType, self.listedFiles(fileNames), logFileName, suffix);
       });
     });
   },
 
-  // / Bind the bulk archive control. Archives every file in the session, then downloads
-  // / the archive that was produced.
+  // / Bind the bulk archive control. Archives every file in the session into one archive.
+  // / The files are read when it is pressed, so a file converted since the page was drawn is included.
+  // / It runs through run(), so the archive downloaded is the one the core reports & the list is refreshed.
+  // / The core gives a taken name the next free one, so the name typed is not always the name made.
   bindArchiveAll: function (buttonId, suffix, fileNames, nameFieldId, extensionFieldId, defaultExtension) {
     var self = this;
     $(function () {
       $('#' + buttonId).click(function () {
-        var loadingId = 'loadingCommandDiv' + suffix;
         var extension = self.value(extensionFieldId);
-        var userFilename = self.value(nameFieldId);
-        var archiveName = '';
         if (extension === '') extension = defaultExtension;
-        archiveName = userFilename + '.' + extension;
-        self.spinner(loadingId, true);
-        self.post({ archive: '1', filesToArchive: fileNames, archextension: extension, userfilename: userFilename })
-          .then(function (replyText) {
-            if (self.isError(replyText)) {
-              self.spinner(loadingId, false);
-              self.flash('failureCommandDiv' + suffix);
-              window.alert(self.failureText);
-              return; }
-            self.post({ download: archiveName }).then(function (downloadReply) {
-              self.spinner(loadingId, false);
-              if (self.isError(downloadReply) || !self.download(self.dataPath, archiveName)) {
-                self.flash('failureCommandDiv' + suffix);
-                window.alert(self.failureText);
-                return; }
-              self.flash('victoryCommandDiv' + suffix);
-            }, function () {
-              self.spinner(loadingId, false);
-              self.flash('failureCommandDiv' + suffix);
-              window.alert(self.failureText);
-            });
-          }, function () {
-            // / THE ARCHIVE REQUEST ONCE HAD NO FAILURE HANDLER AT ALL.
-            // / A transport failure left the spinner running for as long as the page
-            // / stayed open & told the user nothing.
-            self.spinner(loadingId, false);
-            self.flash('failureCommandDiv' + suffix);
-            window.alert(self.failureText);
-          });
+        self.run({ archive: '1', filesToArchive: self.listedFiles(fileNames), archextension: extension, userfilename: self.value(nameFieldId) }, suffix);
       });
     });
   },

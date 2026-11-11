@@ -1355,6 +1355,30 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-2007, <SESSION_IDENTIFIER>: A document conversion was refused, because LibreOffice could not be given a copy of <FILE_NAME> & would have replaced <FILE_NAME>!
+
+FILE
+  /Resources/Pipelines/Shared/libreOffice.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  LibreOffice names what it writes after what it reads, & replaces a file that already has that name.
+  It is normally given a copy of the document named after the output, in a folder of its own beside
+  the document, so the only name it writes is the one the output was given. That copy could not be
+  made, & a file in the session already holds the name LibreOffice would write from the original.
+  The document is refused rather than converted over that file. Nothing else changes.
+  The temporary folder for the session may be full or not writable by the web server account.
+  Run -fp, which repairs the data location.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
@@ -2916,6 +2940,28 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13108, <SESSION_IDENTIFIER>: No free name was found for the bootable image <FILE_NAME>, so it was not written!
+
+FILE
+  Resources/Pipelines/Archive/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A bootable image is asked for with an extension naming its architecture, & is written as an iso.
+  An iso of that name was already in the session, & so was every name from _1 to _1000 after it.
+  A taken name is given the next free one so that nothing a user already has is replaced, & a
+  thousand copies of one name means something other than a person is converting.
+  Delete the copies that are no longer wanted, or choose another name.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14000, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed first stage validation!
   RETIRED AT v4.0.0. This number is no longer raised. A file that fails first stage validation is a
   request this application handled correctly, so it is refused with a warning that names the file,
@@ -3015,6 +3061,10 @@ ERROR DESCRIPTION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14004, <SESSION_IDENTIFIER>: Could not delete stale file <PATH_NAME>!
+  RETIRED AT v4.1.0. This number is no longer raised. An output whose name is taken is given the
+  next free name, such as name_1, so no file is deleted to make room for one. Until v4.1.0 the file
+  holding the name was deleted, & this error was raised when it could not be. The number is
+  reserved & not reused.
 
 FILE
   /convertCore.php
@@ -3048,13 +3098,36 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  A user asked for an output with the same name & the same extension as the file being converted,
-  such as photo.jpg converted to jpg & named photo.
-  verifyFile() removes a stale output before an operation writes a new one. Until v4.0.0 that removed
-  the original, because the output path & the original path were the same path, & the operation
-  then wrote over the only copy. A conversion that failed left the user with neither.
-  The file is refused & the operation reports it as a file it could not verify. Choose another name
-  or another format.
+  An operation was about to write to the very file it was reading.
+  An output whose name is taken is given the next free name, & the original holds its own name, so
+  a conversion never reaches this. It remains for an output an operation adds to after naming it,
+  such as an archive gaining its second file, which must never be one of the files being read.
+  Until v4.0.0 a stale output was removed before an operation wrote a new one, & when the output
+  & the original were the same path that removed the only copy.
+  The file is refused & the operation reports it as a file it could not verify.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14006, <SESSION_IDENTIFIER>: No free name was found for the output of <FILE_NAME>, so it was refused!
+
+FILE
+  /convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The name asked for an output was already in the session, & so was every name from _1 to _1000
+  after it.
+  A taken name is given the next free one so that nothing a user already has is replaced, & a
+  thousand copies of one name means something other than a person is converting.
+  The file is refused & the operation reports it as a file it could not verify. Delete the copies
+  that are no longer wanted, or choose another name.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

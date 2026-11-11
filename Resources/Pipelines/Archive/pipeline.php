@@ -12,9 +12,9 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.1.0.
 // / The Archive pipeline's converter. pipelineCore.php loads it only to dispatch an Archive conversion.
-// / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13107 belongs to this pipeline.
+// / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13108 belongs to this pipeline.
 // / archiveFiles() in the core raises 13012.
 // / verifyIsoBootloaders() & generateBootableIsoCommand() live here, because only this converter calls them.
 // / Its tools come from verifiedToolPath(), as the core's archiveFiles() & showVersionInfo() do.
@@ -105,17 +105,30 @@ function verifyIsoBootloaders($extension, $safedir2) {
 // / The outer shell would run isohybrid outside the namespace, so the caller sandboxes each command alone.
 // / The required boot files are injected into the staging folder, & boot files the user supplied are kept.
 // / The intent suffix is stripped from the returned path, so everything downstream sees an ordinary iso.
+// / That is a different name from the one verifyFile() found free, so a taken one is given the next free name too.
 function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisofsBinary, $isoHybridBinary) {
   // / Set variables.
   global $DirSep, $BootloadersDir, $EnableMemoryProtection;
-  $bootData = FALSE;
+  $bootData = $isoCanBeBuilt = $isoNameWasFound = FALSE;
   $CleanNewPathname = $HybridCommand = $baseFlags = $bootFlags = $command = $userBin = $targetIsoLinuxDir = '';
   $bundledBin = $bundledC32 = $isoRelativeEfi = $bundledImg = $targetEfiName = $targetEfiPath = '';
+  $freeIsoPathname = $freeIsoName = '';
   $selectedGpt = $gptMap = array();
   // / Basic validation checks to ensure filesystems and binaries exist.
-  if ($mkisofsBinary !== FALSE && file_exists($mkisofsBinary) && is_dir($safedir2) && !empty($BootloadersDir) && is_dir($BootloadersDir)) {
+  $isoCanBeBuilt = ($mkisofsBinary !== FALSE && file_exists($mkisofsBinary) && is_dir($safedir2) && !empty($BootloadersDir) && is_dir($BootloadersDir));
+  if ($isoCanBeBuilt) {
     // / Normalize the target filename right away to end in a standard .iso extension.
     $CleanNewPathname = str_replace($extension, 'iso', $newPathname);
+    clearstatcache(TRUE, $CleanNewPathname);
+    if (file_exists($CleanNewPathname) or is_link($CleanNewPathname)) {
+      list ($isoNameWasFound, $freeIsoPathname, $freeIsoName) = findFreeOutputName(dirname($CleanNewPathname).$DirSep, pathinfo($CleanNewPathname, PATHINFO_FILENAME), 'iso');
+      if ($isoNameWasFound) $CleanNewPathname = $freeIsoPathname;
+      // / The path handed back is the one asked for, which holds nothing, so the image already there is never taken for this one.
+      else {
+        $isoCanBeBuilt = FALSE;
+        errorEntry('No free name was found for the bootable image '.basename($CleanNewPathname).', so it was not written!', 13108, FALSE);
+        $CleanNewPathname = $newPathname; } } }
+  if ($isoCanBeBuilt) {
     // / Base compatibility flags for modern cross platform systems.
     $baseFlags = '-R -J -joliet-long';
     // / Handle the Legacy MBR Bootstrap implementation.
@@ -180,7 +193,7 @@ function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisof
   // / core will use the correct filename.
   $extension = 'iso';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $newPathname, $safedir2, $mkisofsBinary, $isoHybridBinary, $baseFlags, $bootFlags, $command, $userBin, $targetIsoLinuxDir, $bundledBin, $bundledC32, $gptMap, $selectedGpt, $isoRelativeEfi, $bundledImg, $targetEfiName, $targetEfiPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $newPathname, $safedir2, $mkisofsBinary, $isoHybridBinary, $baseFlags, $bootFlags, $command, $userBin, $targetIsoLinuxDir, $bundledBin, $bundledC32, $gptMap, $selectedGpt, $isoRelativeEfi, $bundledImg, $targetEfiName, $targetEfiPath, $isoCanBeBuilt, $isoNameWasFound, $freeIsoPathname, $freeIsoName);
   return array($bootData, $extension, $CleanNewPathname, $HybridCommand); }
 // / -----------------------------------------------------------------------------------
 

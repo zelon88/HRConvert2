@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.9.
+// / v4.1.0.
 // / The OCR pipeline. pipelineCore.php loads it only to dispatch an OCR operation.
 // / Error block 15000 through 15014 belongs to this pipeline.
 // / It also raises 8001 for ImageMagick.
@@ -54,7 +54,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   $ocrToolsAreValid = FALSE;
   $tesseractBinary = $pdftotextBinary = $imageBinary = FALSE;
   $clean = $copy = TRUE;
-  $returnData = $file = $pathname = $oldPathname = $oldExtension = $newPathname = '';
+  $returnData = $file = $pathname = $oldPathname = $oldExtension = $newPathname = $verifiedFilename = '';
   $pathnameTEMP = $pathnameTEMP0 = $pathnameTEMP1 = $pathnameTEMP3 = $pathnameTEMPTesseract = '';
   $filename = $cleanFilname = $pageNumber = $pagedFile = $readPageData = '';
   $ocrCommand = $policyFolder = '';
@@ -90,7 +90,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       continue; }
     if ($Verbose) logEntry('User selected to perform OCR on file '.$file.'.');
     // / Verify the file before performing any operations on it.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $UserFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
+    // / The name verifyFile returns belongs to this file alone, so the next file is still handed the name the user asked for.
+    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $verifiedFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
     if (!$fileIsVerified) {
       $OperationErrors = TRUE;
       errorEntry('Could not verify the input file.', 15001, FALSE);
@@ -103,7 +104,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
       // / Every file is also scanned when it lands, which is where the application deletes one.
     if ($VirusScan) {
       if ($Verbose) logEntry('Starting virus scan.');
-      list ($scanComplete, $virusFound) = runVirusScan(array($newPathname), '');
+      list ($scanComplete, $virusFound) = runVirusScan(array($pathname), '');
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 15002, TRUE);
       if ($virusFound) errorEntry('Virus detected!', 15003, TRUE);
       if ($Verbose) logEntry('Virus scan complete.'); }
@@ -307,7 +308,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
         $loopCheck = TRUE;
         // / A pipeline never prints, because the core decides what the interface receives.
         // / A stray warning printed here would be read by the interface as another output filename.
-        array_push($OutputFilenames, $UserFilename); }
+        array_push($OutputFilenames, $verifiedFilename); }
       else errorEntry('Could not create a file at '.$newPathname.'!', 15011, FALSE); }
     // / Record that at least one file in this request succeeded.
     // / $loopCheck is reset on every iteration, so without this the result would reflect
@@ -316,7 +317,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Error handler for if any failures happened during file loops.
   if ($anyFileSucceeded) $OperationSuccessful = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $commandMayRun, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $policyFolder, $policyVariables, $PDFWorkSelected, $UserFilename, $UserExtension, $Method, $documentConverted);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $commandMayRun, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $policyFolder, $policyVariables, $PDFWorkSelected, $UserFilename, $UserExtension, $Method, $documentConverted, $verifiedFilename);
   return array($OperationSuccessful, $OperationErrors, $OutputFilenames); }
 // / -----------------------------------------------------------------------------------
 

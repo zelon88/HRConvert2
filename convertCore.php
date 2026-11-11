@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.9.
+// / v4.1.0.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -1308,7 +1308,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.0.9';
+  $HRConvertVersion = 'v4.1.0';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -1322,7 +1322,7 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.0.0';
+  $RequiredGuiVersion = 'v4.1.0';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -3948,10 +3948,39 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to find a name for an output that nothing in its folder already has.
+// / Accepts the folder, the name the output was asked for without its extension, & the extension.
+// / A taken name is given _1 before its extension, then _2, & so on.
+// / The suffix is an underscore & a number, because sanitize() turns a space & brackets into exactly that.
+// / Returns whether a free name was found, the free path & the free name, in that order.
+function findFreeOutputName($directory, $baseName, $extension) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $NameWasFound = $nameIsSanitized = $pathIsSanitized = FALSE;
+  $FreePathname = $FreeName = $candidateName = $candidatePathname = '';
+  $suffixNumber = 0;
+  // / A session never holds this many copies of one name, so reaching the limit means something is wrong.
+  $suffixLimit = 1000;
+  for ($suffixNumber = 1; $suffixNumber <= $suffixLimit && !$NameWasFound; $suffixNumber++) {
+    list ($candidateName, $nameIsSanitized) = sanitize($baseName.'_'.$suffixNumber.'.'.$extension, TRUE);
+    list ($candidatePathname, $pathIsSanitized) = sanitize($directory.$candidateName, FALSE);
+    clearstatcache(TRUE, $candidatePathname);
+    // / A link is a taken name even when it resolves nowhere, because writing to it would follow it.
+    if (!file_exists($candidatePathname) && !is_link($candidatePathname)) {
+      $NameWasFound = TRUE;
+      $FreeName = $candidateName;
+      $FreePathname = $candidatePathname; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $directory, $baseName, $extension, $nameIsSanitized, $pathIsSanitized, $candidateName, $candidatePathname, $suffixNumber, $suffixLimit);
+  return array($NameWasFound, $FreePathname, $FreeName); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to verify files before performing operations on them.
 // / Accepts the file, the output name & extension the user asked for, & three switches.
-// / $clean removes stale copies, $copy stages the file in the temporary location & $skip
-// / tolerates a file that was not staged.
+// / $clean removes a stale staged copy & gives an output whose name is taken the next free one.
+// / $copy stages the file in the temporary location & $skip tolerates a file that was not staged.
+// / A caller that adds to an output it already named passes $clean as FALSE, so the name stays.
 // / Returns a verification boolean, the staged path, the original path, the original
 // / extension, the output path & the output name, in that order.
 // / A file this refuses is skipped rather than halted on. Every caller reports a file that
@@ -3959,7 +3988,8 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
 function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) {
   // / Set variables.
   global $ConvertDir, $ConvertTempDir, $Allowed, $Verbose, $EnableMemoryProtection;
-  $FileIsVerified = $Pathname = $OldPathname = $NewPathname = $variableIsSanitized = FALSE;
+  $FileIsVerified = $Pathname = $OldPathname = $NewPathname = $variableIsSanitized = $freeNameWasFound = FALSE;
+  $outputBaseName = $freePathname = $freeName = '';
   // / If the $UserFilename is blank then use the original filename instead.
   $OldExtension = getExtension($file);
   if ($UserFilename === '') $UserFilename = trim(str_replace('.'.$OldExtension, '', $file), '.');
@@ -3986,24 +4016,32 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
     if (file_exists($Pathname)) if ($Verbose && $copy) logEntry('Copied file '.$file.'.');
     // / If the $UserFilename & $UserExtension variables are valid we can prepare for a $NewPathname.
     if ($UserFilename && $UserExtension) {
+      $outputBaseName = $UserFilename;
       list ($UserFilename, $variableIsSanitized) = sanitize($UserFilename.'.'.$UserExtension, TRUE);
       // / Define the $NewPathname if required.
       list ($NewPathname, $variableIsSanitized) = sanitize($ConvertDir.$UserFilename, FALSE);
       // / Make sure the $NewPathname is not a dangerous file.
       if (extensionIsDangerous($UserExtension) or !in_array(strtolower($UserExtension), $Allowed)) errorEntry('The file '.$file.' failed third stage validation!', 14003, TRUE);
-      // / An output that IS the original is refused. Removing it as a stale output would
-      // / delete the file being converted, & the conversion would then write over the only copy.
-      if ($NewPathname === $OldPathname) {
+      // / An output whose name is taken is given the next free one, so nothing a user already has is replaced.
+      // / A converter skips an output it finds, so a taken name would otherwise hand the user the old file unchanged.
+      // / The original holds its own name, so this also keeps an output from ever being the file it was made from.
+      clearstatcache(TRUE, $NewPathname);
+      if ($clean && (file_exists($NewPathname) or is_link($NewPathname))) {
+        list ($freeNameWasFound, $freePathname, $freeName) = findFreeOutputName($ConvertDir, $outputBaseName, $UserExtension);
+        if ($freeNameWasFound) {
+          if ($Verbose) logEntry('The name '.$UserFilename.' is taken, so the output will be '.$freeName.'.');
+          $NewPathname = $freePathname;
+          $UserFilename = $freeName; }
+        else {
+          $FileIsVerified = FALSE;
+          errorEntry('No free name was found for the output of '.$file.', so it was refused!', 14006, FALSE); } }
+      // / An output that IS the original is refused, because writing it would write over the only copy.
+      // / A caller adding to an output it already named keeps that name, so this is still checked.
+      if ($FileIsVerified && $NewPathname === $OldPathname) {
         $FileIsVerified = FALSE;
-        errorEntry('The output for '.$file.' would replace the original, so it was refused!', 14005, FALSE); }
-      if ($FileIsVerified) {
-        if ($Verbose && file_exists($NewPathname) && $clean) logEntry('Deleting stale file '.$NewPathname.'.');
-        // / Remove the $NewPathname file if it already exists.
-        if (file_exists($NewPathname) && $clean) @unlink($NewPathname);
-        // / Check to make sure that the stale file was deleted if required or creating a new one will cause problems.
-        if (file_exists($NewPathname) && $clean) errorEntry('Could not delete stale file '.$NewPathname.'!', 14004, TRUE); } } }
+        errorEntry('The output for '.$file.' would replace the original, so it was refused!', 14005, FALSE); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $clean, $copy, $skip, $file, $variableIsSanitized);
+  purgeSensitiveMemory($EnableMemoryProtection, $clean, $copy, $skip, $file, $variableIsSanitized, $outputBaseName, $freeNameWasFound, $freePathname, $freeName);
   return array($FileIsVerified, $Pathname, $OldPathname, $OldExtension, $NewPathname, $UserFilename); }
 // / -----------------------------------------------------------------------------------
 
@@ -4328,6 +4366,8 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = $pathname = $oldPathname = $oldExtension = $NewPathname = $archiveCommand = $resolvedFilename = '';
+  // / The name every file is archived under, once the first file has settled it.
+  $archiveName = $UserFilename;
   $rararr = array('rar');
   $ziparr = array('zip');
   $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2');
@@ -4360,23 +4400,21 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       errorEntry('Could not sanitize the input file!', 4000, FALSE);
       continue; }
     // / Set the $clean & $copy arguments for the verifyFile() function as needed.
-    // / The first file clears any archive of this name left by an earlier run. Every file
-    // / after it adds to the archive that first file created, so the clean must not run again
-    // / or each file would delete the archive holding the files before it.
-    $clean = ($archiveWasStarted === FALSE);
+    // / The first file asks for a clean output, so an archive name that is taken is given the next free one.
+    // / Every file after it adds to the archive the first file started, so it keeps that archive's name.
+    // / Without a name, each file is archived under its own, so each asks for a clean output.
+    $clean = ($UserFilename === '' or $archiveWasStarted === FALSE);
     $copy = TRUE;
     if ($Verbose) logEntry('User selected to Archive file '.$file.'.');
     // / Verify the file before performing any operations on it.
-    // / verifyFile returns the name with the extension appended. Assigning that back to
-    // / $UserFilename handed the next file a name that already carried one, so the second file
-    // / became name.zip.zip & the third name.zip.zip.zip, each writing an archive of its own.
-    // / Only the first was ever offered for download, so nine files were delivered as one.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $NewPathname, $resolvedFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
+    // / verifyFile returns the name with the extension appended, so the name carried to the next file has it taken off again.
+    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $NewPathname, $resolvedFilename) = verifyFile($file, $archiveName, $UserExtension, $clean, $copy, $skip);
     if (!$fileIsVerified) {
       $ArchiveErrors = TRUE;
       errorEntry('Could not verify the input file.', 4001, FALSE);
       continue; }
     else if ($Verbose) logEntry('Verified file '.$NewPathname.'.');
+    if ($clean && $UserFilename !== '') $archiveName = preg_replace('/\.'.preg_quote((string)$UserExtension, '/').'$/', '', (string)$resolvedFilename);
     // / Scan with the default scanner if $VirusScan is set to TRUE in config.php.
     if ($VirusScan) {
       if ($Verbose) logEntry('Starting virus scan.');
@@ -4436,7 +4474,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
     if ($loopCheck) $anyFileSucceeded = TRUE; }
   if ($anyFileSucceeded) $ArchiveComplete = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $archiveWasStarted, $resolvedFilename, $file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $FilesToArchive, $UserFilename, $UserExtension);
+  purgeSensitiveMemory($EnableMemoryProtection, $archiveWasStarted, $archiveName, $resolvedFilename, $file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $FilesToArchive, $UserFilename, $UserExtension);
   return array($ArchiveComplete, $ArchiveErrors, $NewPathname); }
 // / -----------------------------------------------------------------------------------
 
@@ -4501,9 +4539,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       $MainConversionErrors = TRUE;
       errorEntry('Could not sanitize the input file!', 5000, FALSE);
       continue; }
-    // / Set the $clean & $copy arguments for the verifyFile() function as needed.
-    if (count($ConvertSelected) > 1) $clean = FALSE;
-    if (in_array($UserExtension, $archarray) or in_array($UserExtension, $docarray)) $clean = FALSE;
+    // / Every file asks verifyFile() for a clean output, so an output whose name is taken is given the next free one.
+    // / An archive is no exception, so a conversion never adds to an archive that already has the name.
     if ($Verbose) logEntry('User selected to Convert file '.$file.'.');
     // / Verify the file before performing any operations on it.
     list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $verifiedFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
@@ -4513,9 +4550,10 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       continue; }
     else if ($Verbose) logEntry('Verified file '.$newPathname.'.');
     // / Scan with the default scanner if $VirusScan is set to TRUE in config.php.
+    // / The staged input is scanned, because it is what the converter reads & the output does not exist yet.
     if ($VirusScan) {
       if ($Verbose) logEntry('Starting virus scan.');
-      list ($scanComplete, $virusFound) = virusScan($newPathname);
+      list ($scanComplete, $virusFound) = virusScan($pathname);
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 5002, TRUE);
       if ($virusFound) errorEntry('Virus detected!', 5003, TRUE);
       if ($Verbose) logEntry('Virus scan complete.'); }

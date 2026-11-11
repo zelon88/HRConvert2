@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.9.
+// / v4.1.0.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -80,7 +80,7 @@ $EngineApplicationArgumentHandler = '';
 $EngineAcceptedPipelines = array(
   'Stream' => 'v4.0.8',
   'Scad' => 'v4.0.8',
-  'OCR' => 'v4.0.9',
+  'OCR' => 'v4.1.0',
   'Document' => 'v4.0.8',
   'Subtitle' => 'v4.0.8',
   'SVG' => 'v4.0.8',
@@ -90,7 +90,7 @@ $EngineAcceptedPipelines = array(
   'Video' => 'v4.0.8',
   'Ebook' => 'v4.0.8',
   'Audio' => 'v4.0.8',
-  'Archive' => 'v4.0.8',
+  'Archive' => 'v4.1.0',
   // / Scanner pipelines. They declare no formats & are chosen by name.
   'ClamAV' => 'v4.0.8',
   // / The first pipeline of kind file. Operations that do not care what is in a file.
@@ -100,7 +100,7 @@ $EngineAcceptedPipelines = array(
 // / The shared modules a pipeline may load & the exact version each must report.
 // / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.
 $EngineAcceptedSharedModules = array(
-  'libreOffice.php' => 'v4.0.9');
+  'libreOffice.php' => 'v4.1.0');
 
 // / Where each of this application's own pins reads its version from.
 // / php convertCore.php --build --pins --write writes every pin from the files named here,

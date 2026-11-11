@@ -26,6 +26,27 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 
 --------------------
+COMMIT 11/11/2026
+v4.1.0 - A duplicate output is given the next free name, & Archive All & Scan All act on the files a user can see.
+
+-v4.1.0.
+-FIX. Archive All & Scan All acted on the files the page held when it was first drawn, so a file converted since was left out. They read the file list when pressed.
+-FIX. Archive All & Scan All did not refresh the file list. They do now, as a conversion does, & so does a scan of one file.
+-Archive All downloads the archive the core names, which is not the name typed when that name is taken.
+-An output whose name is taken is given the next free one, such as report_1.pdf, & the reply names it. Nothing is deleted to make room.
+-FIX. Converting a document, an archive or one of a selection of files a second time returned the old output unchanged.
+-A conversion into an archive that already exists is given the next free name like any other output. v2.8 made it add to that archive, which it had already stopped doing.
+-An archive of a selection keeps the name its first file was given.
+-FIX. LibreOffice wrote the name it derives from its input before renaming it, replacing a file the user already had under that name. It reads a copy named after the output.
+-FIX. A bootable image made a second time under one name returned the first one unchanged.
+-FIX. With --Virus Scanning-- on, a conversion & OCR scanned their output before it existed, which ScanCore reports as clean, so their input went unscanned. They scan their input. With --User Virus Scanning-- also on, uploads are not scanned on arrival either.
+-FIX. OCR of a selection handed every file after the first the name of the output before it, & those files failed.
+-DEVELOPMENT_NOTES no longer says Draw writes a PDF as plain text. It has no filter for it, so a PDF to plain text fails, as it did before v4.0.9.
+-Error 14004 is retired. Errors 2007, 13108 & 14006 are new.
+-ABOUT_REST_API, CREATING_GUIS, ERROR_DESCRIPTIONS & DEVELOPMENT_NOTES describe the above.
+-The core, both interfaces, the Archive & OCR pipelines, the shared LibreOffice module & the contract are v4.1.0, & every pin to them requires v4.1.0.
+
+--------------------
 COMMIT 11/10/2026
 v4.0.9 - A PDF converts to a word processing format, & the installation instructions follow the install.
 

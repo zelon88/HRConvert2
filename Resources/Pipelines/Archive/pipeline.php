@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.0.
+// / v4.1.1.
 // / The Archive pipeline's converter. pipelineCore.php loads it only to dispatch an Archive conversion.
 // / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13108 belongs to this pipeline.
 // / archiveFiles() in the core raises 13012.
@@ -112,22 +112,24 @@ function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisof
   $bootData = $isoCanBeBuilt = $isoNameWasFound = FALSE;
   $CleanNewPathname = $HybridCommand = $baseFlags = $bootFlags = $command = $userBin = $targetIsoLinuxDir = '';
   $bundledBin = $bundledC32 = $isoRelativeEfi = $bundledImg = $targetEfiName = $targetEfiPath = '';
-  $freeIsoPathname = $freeIsoName = '';
+  $normalizedPathname = $freeIsoPathname = $freeIsoName = '';
   $selectedGpt = $gptMap = array();
   // / Basic validation checks to ensure filesystems and binaries exist.
   $isoCanBeBuilt = ($mkisofsBinary !== FALSE && file_exists($mkisofsBinary) && is_dir($safedir2) && !empty($BootloadersDir) && is_dir($BootloadersDir));
   if ($isoCanBeBuilt) {
     // / Normalize the target filename right away to end in a standard .iso extension.
-    $CleanNewPathname = str_replace($extension, 'iso', $newPathname);
-    clearstatcache(TRUE, $CleanNewPathname);
-    if (file_exists($CleanNewPathname) or is_link($CleanNewPathname)) {
-      list ($isoNameWasFound, $freeIsoPathname, $freeIsoName) = findFreeOutputName(dirname($CleanNewPathname).$DirSep, pathinfo($CleanNewPathname, PATHINFO_FILENAME), 'iso');
-      if ($isoNameWasFound) $CleanNewPathname = $freeIsoPathname;
-      // / The path handed back is the one asked for, which holds nothing, so the image already there is never taken for this one.
-      else {
+    $normalizedPathname = str_replace($extension, 'iso', $newPathname);
+    clearstatcache(TRUE, $normalizedPathname);
+    if (file_exists($normalizedPathname) or is_link($normalizedPathname)) {
+      list ($isoNameWasFound, $freeIsoPathname, $freeIsoName) = findFreeOutputName(dirname($normalizedPathname).$DirSep, pathinfo($normalizedPathname, PATHINFO_FILENAME), 'iso');
+      if (!$isoNameWasFound) {
         $isoCanBeBuilt = FALSE;
-        errorEntry('No free name was found for the bootable image '.basename($CleanNewPathname).', so it was not written!', 13108, FALSE);
-        $CleanNewPathname = $newPathname; } } }
+        errorEntry('No free name was found for the bootable image '.basename($normalizedPathname).', so it was not written!', 13108, FALSE); } }
+    // / The normalized name & a free one are held under names of their own, so the path handed back is set once.
+    // / With no free name it is the one asked for, which holds nothing, so the image already there is never taken for this one.
+    if ($isoNameWasFound) $CleanNewPathname = $freeIsoPathname;
+    else if ($isoCanBeBuilt) $CleanNewPathname = $normalizedPathname;
+    else $CleanNewPathname = $newPathname; }
   if ($isoCanBeBuilt) {
     // / Base compatibility flags for modern cross platform systems.
     $baseFlags = '-R -J -joliet-long';
@@ -193,7 +195,7 @@ function generateBootableIsoCommand($extension, $newPathname, $safedir2, $mkisof
   // / core will use the correct filename.
   $extension = 'iso';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $newPathname, $safedir2, $mkisofsBinary, $isoHybridBinary, $baseFlags, $bootFlags, $command, $userBin, $targetIsoLinuxDir, $bundledBin, $bundledC32, $gptMap, $selectedGpt, $isoRelativeEfi, $bundledImg, $targetEfiName, $targetEfiPath, $isoCanBeBuilt, $isoNameWasFound, $freeIsoPathname, $freeIsoName);
+  purgeSensitiveMemory($EnableMemoryProtection, $newPathname, $safedir2, $mkisofsBinary, $isoHybridBinary, $baseFlags, $bootFlags, $command, $userBin, $targetIsoLinuxDir, $bundledBin, $bundledC32, $gptMap, $selectedGpt, $isoRelativeEfi, $bundledImg, $targetEfiName, $targetEfiPath, $isoCanBeBuilt, $isoNameWasFound, $normalizedPathname, $freeIsoPathname, $freeIsoName);
   return array($bootData, $extension, $CleanNewPathname, $HybridCommand); }
 // / -----------------------------------------------------------------------------------
 

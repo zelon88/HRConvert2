@@ -81,7 +81,7 @@ verifyLogs() runs a long way into the boot & several hundred entries are raised 
 Those entries used to go to the server error log.
 They sat there apart from everything around them & were almost never found.
 They are held in a buffer now & written in order the moment a logfile exists.
-verifyLogs() empties the buffer itself, so nothing waits for the next entry to arrive.
+The kernel empties the buffer the moment it opens the logfile, so nothing waits for the next entry to arrive.
 
 THE BUFFER IS BOUNDED AT FIVE HUNDRED & TWELVE ENTRIES.
 A process that never reaches a logfile must not grow until it is killed for memory.
@@ -144,6 +144,30 @@ The role exists in the naming for when HRProtect dispatches workers of its own.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Opening The Logfile--
+
+THE APPLICATION DECIDES WHAT THE LOGFILE IS & THE KERNEL OPENS IT.
+
+  findCurrentLogFile()   Builds a logfile's name & moves on past one that is full.
+  openLogFileForRoot()   Opens root's logfile in Engine without following a link, or standard error.
+  openLogFileByName()    Makes the folder another account logs to when it is missing & creates its logfile.
+
+verifyLogs() decides the role the logfile is named for, the folders it may be in, the file placed in
+that folder & the rest of its name. How a logfile is named in turn, opened & protected is the same
+in every application, so the kernel does that. Until v4.1.1 verifyLogs() did all of it, & built the
+same filename in five places.
+
+The role stays with the application. A manager is told apart by the command it was started with,
+& the kernel holds no list of commands, which is part of why it can be identical in every application.
+
+A FOLDER THAT CANNOT BE USED IS PASSED OVER, & THAT IS REPORTED.
+An account other than root logs to the folder --Log Storage Directory-- names, & to Logs in the data
+location when that folder cannot be made. Root logs to standard error when the logfile in Engine
+cannot be opened. Each is a warning, written once a logfile exists, or shown with error 9 when none
+can be. Until v4.1.1 both fell back in silence.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Where Root's Log Goes--
 
 ROOT LOGS TO A FILE IN ITS OWN FOLDER, Engine, INSIDE THE DATA ROOT.
@@ -153,15 +177,17 @@ place, redirecting a logfile root opened by name to any file on the host. Guardi
 not enough when the folder under it can be swapped, as Debian's nginx package was in 2016, in
 CVE-2016-1247. Engine is root:root inside a data root root owns, so no other account can swap it.
 
-Root opens its logfile in Engine through openFileWithoutFollowing() in verifyLogs(), which
-follows neither a symbolic nor a hard link & checks the handle is the file it examined. A fatal
+Root opens its logfile in Engine through openLogFileForRoot(), which opens it with
+openFileWithoutFollowing(). That follows neither a symbolic nor a hard link & checks the handle is
+the file it examined. A logfile there that exists & cannot be opened is reported in a warning, & root
+logs to standard error instead. A fatal
 error is written to that file once, by quickDie(), rather than logged by errorEntry() & written
 again. Op-Act, warning & error lines all go to the file; with $Verbose FALSE the Op-Act lines are
 suppressed. The printed report an administrator sees on the terminal is separate from the log, as
 it is for a web request, & is the human-facing summary.
 
 AN ADMINISTRATOR AT A TERMINAL STILL SEES EVERY WARNING & ERROR AS IT HAPPENS.
-When root opens its file in Engine with standard error on a terminal, verifyLogs() sets
+When root opens its file in Engine with standard error on a terminal, openLogFileForRoot() sets
 $LogEchoToConsole, & echoLogEntryToConsole() repeats each WARNING!!! & ERROR!!! line there as it
 reaches the file, held lines included. The repeat is the recorded line, sequence number & all.
 Op-Act lines are not repeated. A systemd timer, a pipe, a redirect & a Docker build have no
@@ -219,6 +245,10 @@ Logging is also used several hundred times before the Engine is loaded at all.
 The Engine is verified late on purpose, because a failure to verify it is worth a warning
 that has somewhere to be written.
 
+Opening the logfile was considered for the Engine at v4.1.1 & refused for the same reasons, so it
+moved into the kernel instead. The application still decides what the logfile is, as Opening The
+Logfile says.
+
 The Engine may call logEntry, warningEntry, errorEntry & quickDie freely.
 The kernel is the substrate both the Engine & the application stand on, & it is byte
 identical in every application, so an Engine calling it is not coupled to any one of them.
@@ -230,7 +260,7 @@ Documentation/ABOUT_ENGINE_CONTRACT.txt explains why that file is the only list.
 --About Rotation--
 
 $MaxLogSize in config.php decides when a logfile is finished with.
-verifyLogs() advances the increment in the filename until it finds one under that size.
+findCurrentLogFile() advances the count in the filename until it finds one under that size.
 A rotation therefore happens at the start of a request rather than in the middle of one.
 No entry is ever split across two files.
 

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.0.
+// / v4.1.1.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -1308,7 +1308,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.1.0';
+  $HRConvertVersion = 'v4.1.1';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -1658,18 +1658,18 @@ function verifySesHash($Token1) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to create a logfile if one does not exist.
+// / A function to open the logfile this process writes.
+// / Accepts nothing. Returns whether a logfile is in use & its path.
+// / It decides what the logfile is, which is the role it is named for, the folder it is in & the rest of its name.
+// / The kernel opens it, because how a logfile is opened, named in turn & protected is the same in every application.
 // / Root's logfile is in Engine, & root writes to standard error until that folder exists, for the reason given below.
 // / On a terminal root also repeats its warnings & errors there.
 // / The log hash suffix is assembled before any filename that uses it is built.
-// / The rotation condition compares the file size directly against the configured maximum.
 function verifyLogs() {
   // / Set variables.
-  global $EnginePerManagerLogFiles, $EnginePerWorkerLogFiles, $LogWorkerIdentifier, $LogRole, $RunningFromCLI, $LogDir, $LogFile, $LogHandle, $LogEchoToConsole, $MaxLogSize, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Time, $Date, $LogInc, $ApplicationName, $ConvertLoc, $EngineDir, $AppendLogHashToLogFiles, $EnableMemoryProtection, $RunningAsRoot;
-  $LogExists = $logWritten = $LogEchoToConsole = FALSE;
-  $logHashAppend = $roleArgument = $workerArgument = $openNotice = '';
-  $logHandle = FALSE;
-  $LogInc = 0;
+  global $EnginePerManagerLogFiles, $EnginePerWorkerLogFiles, $LogWorkerIdentifier, $LogRole, $RunningFromCLI, $LogDir, $LogFile, $MaxLogSize, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Date, $ApplicationName, $ConvertLoc, $EngineDir, $AppendLogHashToLogFiles, $EnableMemoryProtection, $RunningAsRoot;
+  $LogExists = FALSE;
+  $logHashAppend = $roleArgument = $workerArgument = $namePrefix = $nameSuffix = $rootLogFolder = $logPath = $logFolder = '';
   // / The role is part of the filename & that is the main defence against interleaving.
   // / Several processes append to one logfile. A web request, four manager processes & any
   // / worker they supervise all write to the same place at the same time.
@@ -1680,10 +1680,12 @@ function verifyLogs() {
   // / Separating by role also makes a log readable. A manager writing every few seconds
   // / for a week buried every web request that happened alongside it.
   // / Web is the default, because a request is what this application mostly is.
+  // / The role is decided here rather than in the kernel, because the kernel holds no list of commands.
   if (!isset($LogRole) or (string)$LogRole === '') {
     $LogRole = 'Web';
     if (isset($RunningFromCLI) && $RunningFromCLI) {
       $LogRole = 'Cli';
+      // / This list names the same commands as the Engine's dispatcher, which is not loaded yet.
       if (isset($_SERVER['argv'][1]) && in_array($_SERVER['argv'][1], array('--start-core-manager', '--start-manager', '--run-core-manager'), TRUE)) {
         $LogRole = 'Manager';
         // / A manager may have a file of its own when the Engine configuration asks for it.
@@ -1706,69 +1708,24 @@ function verifyLogs() {
   $DefaultLogSize = 1048576;
   // / Build the hash suffix before it is used in any filename.
   if ($AppendLogHashToLogFiles) $logHashAppend = '_'.$SesHash4;
-  $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogRole.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt');
   if (!is_numeric($MaxLogSize)) $MaxLogSize = $DefaultLogSize;
+  // / A logfile is named for the application & the role, then its count, then the date & the hash suffix.
+  $namePrefix = $ApplicationName.'_'.$LogRole;
+  $nameSuffix = $Date.$logHashAppend;
   // / Root logs to a folder of its own, Engine, inside the data root.
   // / The web server account's log folder is that account's, so root will not write there, because that account can swap the whole folder for a link.
   // / Engine is root:root inside a data root owned by root, so no other account can swap it.
-  // / Root opens its logfile there through the kernel, which follows neither a symbolic nor a hard link.
-  // / Until the data root is root's, before -fp has run after an upgrade, Engine does not exist, so root falls back to standard error, which a terminal shows & systemd journals.
   if ($RunningAsRoot) {
-    if (isset($EngineDir) && is_string($EngineDir) && is_dir($EngineDir)) {
-      $LogFile = str_replace('..', '', $EngineDir.'/'.$ApplicationName.'_'.$LogRole.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt');
-      // / Advance past a logfile that has reached the maximum size, as the web branch does below.
-      while (is_file($LogFile) && filesize($LogFile) > $MaxLogSize) {
-        $LogInc++;
-        $LogFile = str_replace('..', '', $EngineDir.'/'.$ApplicationName.'_'.$LogRole.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt'); }
-      list ($logHandle, $logWritten, $openNotice) = openFileWithoutFollowing($LogFile, 0600);
-      if (is_resource($logHandle)) {
-        $LogHandle = $logHandle;
-        $LogExists = TRUE;
-        // / An administrator running root by hand still sees each warning & error as it happens.
-        // / They are repeated only when standard error is a terminal, so a timer, a pipe, a
-        // / redirect & a build record them in this file alone. The fallback below never repeats,
-        // / because there the log is standard error already.
-        $LogEchoToConsole = (defined('STDERR') && function_exists('stream_isatty') && @stream_isatty(STDERR)); } }
-    // / Fall back to standard error whenever the log folder is not there yet, or a logfile in it
-    // / could not be opened. Root that cannot write its own folder still has to be able to speak.
-    if (!$LogExists) {
-      $logHandle = defined('STDERR') ? STDERR : @fopen('php://stderr', 'w');
-      if (is_resource($logHandle)) {
-        $LogHandle = $logHandle;
-        $LogFile = 'php://stderr';
-        $LogExists = TRUE; } } }
-  // / The permissions in this function are hard-coded deliberately.
-  // / If running as a regular user, the user will either possess or lack the permissions needed to leave the $LogDir in proper condition.
-  // / So a regular user fails silently here (and is caught further down), but they also don't do anything to the filesystem on failure.
-  // / A web user will always leave a valid $LogDir for a web user.
+    if (isset($EngineDir) && is_string($EngineDir)) $rootLogFolder = $EngineDir;
+    list ($LogExists, $logPath) = openLogFileForRoot($rootLogFolder, $namePrefix, $nameSuffix, $MaxLogSize); }
+  // / Every other account logs to the folder config.php names, & to Logs in the data location when that one cannot be made.
+  // / An index.html is placed in the folder used as document root protection.
   else {
-    if (!is_dir($LogDir)) @mkdir($LogDir, 0700);
-    // / If the $LogDir still doesn't exist after we tried to create it, fall back to trying to create one in the $ConvertLoc instead.
-    if (!is_dir($LogDir)) {
-      $LogDir = $DefaultLogDir;
-      $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogRole.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt'); }
-    // / Check if the fallback $LogDir exists already before trying to create a new one.
-    if (!is_dir($LogDir)) @mkdir($LogDir, 0700);
-    // / Regardless of whether or not a $LogDir exists, we will silently try to drop an index.html into it anyway as document root protection.
-    if (!file_exists($LogDir.'/index.html')) @copy('index.html', $LogDir.'/index.html');
-    // / If the $LogDir still doesn't exist, consider the operation to have failed.
-    // / The core will die when this function returns.
-    // / An error will be printed to the screen for CLI users, or to the page for web users.
-    if (is_dir($LogDir)) {
-      // / Advance to a new log file whenever the current one has reached the maximum size.
-      while (file_exists($LogFile) && filesize($LogFile) > $MaxLogSize) {
-        $LogInc++;
-        $LogFile = str_replace('..', '', $LogDir.'/'.$ApplicationName.'_'.$LogRole.'_'.$LogInc.'_'.$Date.$logHashAppend.'.txt'); }
-      // / A logfile is made readable by its own account alone, as the folder it is in is.
-      if (!file_exists($LogFile)) {
-        $logWritten = file_put_contents($LogFile, 'Op-Act, '.$Time.': Logfile created using method 1.'.PHP_EOL, FILE_APPEND);
-        if ($logWritten !== FALSE) @chmod($LogFile, 0600); }
-      if (file_exists($LogFile)) $LogExists = TRUE; } }
-  // / Anything logged before this point was held rather than written, so it is written now.
-  if ($LogExists) flushLogBuffer();
+    list ($LogExists, $logPath, $logFolder) = openLogFileByName(array($LogDir, $DefaultLogDir), 'index.html', $namePrefix, $nameSuffix, $MaxLogSize);
+    // / The folder in use is the one the rest of the application reads, such as for a dependency report.
+    if ($logFolder !== '') $LogDir = $logFolder; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $logHandle is a second name for $LogHandle, so clearing it leaves the global open.
-  purgeSensitiveMemory($EnableMemoryProtection, $logWritten, $logHashAppend, $roleArgument, $workerArgument, $openNotice, $logHandle);
+  purgeSensitiveMemory($EnableMemoryProtection, $logHashAppend, $roleArgument, $workerArgument, $namePrefix, $nameSuffix, $rootLogFolder, $logPath, $logFolder);
   return array($LogExists, $LogFile); }
 // / -----------------------------------------------------------------------------------
 
@@ -1783,11 +1740,14 @@ function refreshLogFile() {
   // / Set variables.
   global $RunningAsRoot, $LogFile, $EnableMemoryProtection;
   $LogExists = FALSE;
-  $LogPath = (string)$LogFile;
+  $LogPath = '';
   $timeIsSet = FALSE;
   $refreshedDate = $refreshedTime = '';
   $refreshedEpoch = 0;
-  if ($RunningAsRoot) $LogExists = ($LogPath !== '');
+  // / Each branch sets the path once, so the one it held is never written over.
+  if ($RunningAsRoot) {
+    $LogPath = (string)$LogFile;
+    $LogExists = ($LogPath !== ''); }
   else {
     clearstatcache();
     list ($timeIsSet, $refreshedDate, $refreshedTime, $refreshedEpoch) = verifyTime();
@@ -3956,14 +3916,16 @@ function convert($type, $pathname, $newPathname, $extension, $height, $width, $r
 function findFreeOutputName($directory, $baseName, $extension) {
   // / Set variables.
   global $EnableMemoryProtection;
-  $NameWasFound = $nameIsSanitized = $pathIsSanitized = FALSE;
+  $NameWasFound = FALSE;
   $FreePathname = $FreeName = $candidateName = $candidatePathname = '';
   $suffixNumber = 0;
   // / A session never holds this many copies of one name, so reaching the limit means something is wrong.
   $suffixLimit = 1000;
   for ($suffixNumber = 1; $suffixNumber <= $suffixLimit && !$NameWasFound; $suffixNumber++) {
-    list ($candidateName, $nameIsSanitized) = sanitize($baseName.'_'.$suffixNumber.'.'.$extension, TRUE);
-    list ($candidatePathname, $pathIsSanitized) = sanitize($directory.$candidateName, FALSE);
+    // / Each candidate replaces the one before it through redeclare(), so a name that was taken is shredded rather than left behind.
+    // / sanitizeString() is what sanitize() runs on one string, & it returns the string alone, which redeclare() can take.
+    redeclare($candidateName, sanitizeString($baseName.'_'.$suffixNumber.'.'.$extension, TRUE));
+    redeclare($candidatePathname, sanitizeString($directory.$candidateName, FALSE));
     clearstatcache(TRUE, $candidatePathname);
     // / A link is a taken name even when it resolves nowhere, because writing to it would follow it.
     if (!file_exists($candidatePathname) && !is_link($candidatePathname)) {
@@ -3971,7 +3933,7 @@ function findFreeOutputName($directory, $baseName, $extension) {
       $FreeName = $candidateName;
       $FreePathname = $candidatePathname; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $directory, $baseName, $extension, $nameIsSanitized, $pathIsSanitized, $candidateName, $candidatePathname, $suffixNumber, $suffixLimit);
+  purgeSensitiveMemory($EnableMemoryProtection, $directory, $baseName, $extension, $candidateName, $candidatePathname, $suffixNumber, $suffixLimit);
   return array($NameWasFound, $FreePathname, $FreeName); }
 // / -----------------------------------------------------------------------------------
 
@@ -3989,7 +3951,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
   // / Set variables.
   global $ConvertDir, $ConvertTempDir, $Allowed, $Verbose, $EnableMemoryProtection;
   $FileIsVerified = $Pathname = $OldPathname = $NewPathname = $variableIsSanitized = $freeNameWasFound = FALSE;
-  $outputBaseName = $freePathname = $freeName = '';
+  $outputBaseName = $requestedName = $requestedPathname = $freePathname = $freeName = '';
   // / If the $UserFilename is blank then use the original filename instead.
   $OldExtension = getExtension($file);
   if ($UserFilename === '') $UserFilename = trim(str_replace('.'.$OldExtension, '', $file), '.');
@@ -4017,31 +3979,31 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
     // / If the $UserFilename & $UserExtension variables are valid we can prepare for a $NewPathname.
     if ($UserFilename && $UserExtension) {
       $outputBaseName = $UserFilename;
-      list ($UserFilename, $variableIsSanitized) = sanitize($UserFilename.'.'.$UserExtension, TRUE);
-      // / Define the $NewPathname if required.
-      list ($NewPathname, $variableIsSanitized) = sanitize($ConvertDir.$UserFilename, FALSE);
-      // / Make sure the $NewPathname is not a dangerous file.
+      list ($requestedName, $variableIsSanitized) = sanitize($UserFilename.'.'.$UserExtension, TRUE);
+      // / Define the path the output asked for.
+      list ($requestedPathname, $variableIsSanitized) = sanitize($ConvertDir.$requestedName, FALSE);
+      // / Make sure the output is not a dangerous file.
       if (extensionIsDangerous($UserExtension) or !in_array(strtolower($UserExtension), $Allowed)) errorEntry('The file '.$file.' failed third stage validation!', 14003, TRUE);
       // / An output whose name is taken is given the next free one, so nothing a user already has is replaced.
       // / A converter skips an output it finds, so a taken name would otherwise hand the user the old file unchanged.
       // / The original holds its own name, so this also keeps an output from ever being the file it was made from.
-      clearstatcache(TRUE, $NewPathname);
-      if ($clean && (file_exists($NewPathname) or is_link($NewPathname))) {
+      clearstatcache(TRUE, $requestedPathname);
+      if ($clean && (file_exists($requestedPathname) or is_link($requestedPathname))) {
         list ($freeNameWasFound, $freePathname, $freeName) = findFreeOutputName($ConvertDir, $outputBaseName, $UserExtension);
-        if ($freeNameWasFound) {
-          if ($Verbose) logEntry('The name '.$UserFilename.' is taken, so the output will be '.$freeName.'.');
-          $NewPathname = $freePathname;
-          $UserFilename = $freeName; }
-        else {
+        if ($freeNameWasFound && $Verbose) logEntry('The name '.$requestedName.' is taken, so the output will be '.$freeName.'.');
+        if (!$freeNameWasFound) {
           $FileIsVerified = FALSE;
           errorEntry('No free name was found for the output of '.$file.', so it was refused!', 14006, FALSE); } }
+      // / The name asked for & the free one are held under names of their own, so the output is named once.
+      $NewPathname = ($freeNameWasFound ? $freePathname : $requestedPathname);
+      $UserFilename = ($freeNameWasFound ? $freeName : $requestedName);
       // / An output that IS the original is refused, because writing it would write over the only copy.
       // / A caller adding to an output it already named keeps that name, so this is still checked.
       if ($FileIsVerified && $NewPathname === $OldPathname) {
         $FileIsVerified = FALSE;
         errorEntry('The output for '.$file.' would replace the original, so it was refused!', 14005, FALSE); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $clean, $copy, $skip, $file, $variableIsSanitized, $outputBaseName, $freeNameWasFound, $freePathname, $freeName);
+  purgeSensitiveMemory($EnableMemoryProtection, $clean, $copy, $skip, $file, $variableIsSanitized, $outputBaseName, $requestedName, $requestedPathname, $freeNameWasFound, $freePathname, $freeName);
   return array($FileIsVerified, $Pathname, $OldPathname, $OldExtension, $NewPathname, $UserFilename); }
 // / -----------------------------------------------------------------------------------
 
@@ -4414,7 +4376,8 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
       errorEntry('Could not verify the input file.', 4001, FALSE);
       continue; }
     else if ($Verbose) logEntry('Verified file '.$NewPathname.'.');
-    if ($clean && $UserFilename !== '') $archiveName = preg_replace('/\.'.preg_quote((string)$UserExtension, '/').'$/', '', (string)$resolvedFilename);
+    // / redeclare() replaces the name, because a file that failed before the archive was started leaves the next one to settle it again.
+    if ($clean && $UserFilename !== '') redeclare($archiveName, preg_replace('/\.'.preg_quote((string)$UserExtension, '/').'$/', '', (string)$resolvedFilename));
     // / Scan with the default scanner if $VirusScan is set to TRUE in config.php.
     if ($VirusScan) {
       if ($Verbose) logEntry('Starting virus scan.');
@@ -5121,7 +5084,7 @@ function askOperator($promptText) {
 // / kernel is never executed, the same guarantee a mismatched Engine gets.
 // / The build cannot write this pin or the Engine's, because it runs inside both. Move them
 // / by hand, with the version each file declares.
-$RequiredKernelVersion = 'v4.0.8';
+$RequiredKernelVersion = 'v4.1.1';
 $KernelFile = dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Kernel'.DIRECTORY_SEPARATOR.'kernel.php';
 $KernelVersionMatch = array();
 if (!is_readable($KernelFile)) {

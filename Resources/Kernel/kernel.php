@@ -13,7 +13,7 @@
 // / command line, finds executables & loads components, the Engine among them.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.1.1.
 // / The kernel. An application's entry point requires it first & pins it exactly via $RequiredKernelVersion.
 // / Error 35000 is the direct load guard every component shares.
 // / It is a file of its own, so every application runs identical kernel code & compares it by version.
@@ -31,9 +31,11 @@
 // /   $RunningAsRoot           Whether this process is root. Only root prepares a root folder.
 // /   $CoreLoaded              Set TRUE by the application before it loads any component.
 // /   $LogFile                 The logfile. Until it exists, lines are buffered rather than lost.
+// /                            An application sets it itself, or decides the folder & the name
+// /                            & has openLogFileForRoot or openLogFileByName open it & set it.
 // /   $LogHandle               Optional. An open handle written through rather than by name.
 // /                            Root holds one, standard error until it has a log folder of
-// /                            its own, & nothing else needs to.
+// /                            its own, & nothing else needs to. openLogFileForRoot sets it.
 // /   $SesHash3                Optional. A session label for every log line. Absent reads as
 // /                            No Session, which is correct for an application without sessions.
 // / The time globals are set by verifyTime. The log buffer & sequence are managed here.
@@ -51,7 +53,7 @@ if (count(get_included_files()) < 2) die('ERROR!!! Kernel-35000, The kernel cann
 // / The version of this kernel.
 // / The application reads it with a pattern BEFORE requiring this file, so a mismatched
 // / kernel is never executed. It cannot use readComponentVersion for that, which is below.
-$KernelVersion = 'v4.0.8';
+$KernelVersion = 'v4.1.1';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -449,8 +451,8 @@ function appendLogText($logText) {
 // / A function to repeat a warning or an error on the terminal of an administrator running root.
 // / Accepts one finished line. Returns TRUE when the line was repeated.
 // / Root logs to a file in Engine, so an administrator running it by hand would otherwise see
-// / none of its warnings until the file was opened. verifyLogs sets $LogEchoToConsole only for
-// / root writing that file with standard error on a terminal, so a timer, a pipe, a redirect & a
+// / none of its warnings until the file was opened. openLogFileForRoot sets $LogEchoToConsole only
+// / for root writing that file with standard error on a terminal, so a timer, a pipe, a redirect & a
 // / build repeat nothing & every other account is untouched. Op-Act lines are never repeated.
 // / Like emitLogEntry it does NOT call purgeSensitiveMemory, because purgeSensitiveMemory logs
 // / through this path.
@@ -519,8 +521,9 @@ function emitLogEntry($composedEntry) {
 // / -----------------------------------------------------------------------------------
 // / A function to write everything held in the buffer, now that a logfile exists.
 // / Accepts nothing. Returns the number of entries written.
-// / verifyLogs calls this the moment it has a usable file, so a boot that logged before
-// / the logfile existed still lands in the logfile rather than in the server error log.
+// / openLogFileForRoot & openLogFileByName call this the moment there is a usable file, so a
+// / boot that logged before the logfile existed still lands in the logfile rather than in the
+// / server error log.
 function flushLogBuffer() {
   // / Set variables.
   global $LogBuffer;
@@ -528,6 +531,109 @@ function flushLogBuffer() {
   if (isset($LogBuffer) && is_array($LogBuffer)) $EntriesFlushed = count($LogBuffer);
   if ($EntriesFlushed > 0) emitLogEntry(composeLogEntry('Op-Act, ', 'Log buffer flushed. '.$EntriesFlushed.' entry or entries were held before a logfile existed.', ''));
   return $EntriesFlushed; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to find the logfile a process should be writing now, in one folder.
+// / Accepts the folder, the part of a logfile's name before its count, the part after it & the largest size a logfile may reach.
+// / Returns the logfile's path.
+// / A logfile is named prefix_count_suffix.txt, & the count starts at zero.
+// / A logfile past the largest size is left behind & the next count is tried, so a day's log grows by files rather than without limit.
+// / Every logfile name is built here & nowhere else.
+function findCurrentLogFile($logFolder, $namePrefix, $nameSuffix, $maximumSize) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $LogPath = '';
+  $logIncrement = -1;
+  // / Each name tried replaces the last through redeclare(), so the name of a full logfile is shredded rather than left behind.
+  do {
+    $logIncrement++;
+    redeclare($LogPath, str_replace('..', '', $logFolder.'/'.$namePrefix.'_'.$logIncrement.'_'.$nameSuffix.'.txt')); }
+  while (is_file($LogPath) && filesize($LogPath) > $maximumSize);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $logIncrement, $logFolder, $namePrefix, $nameSuffix, $maximumSize);
+  return $LogPath; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to open the logfile root writes, or standard error when that cannot be opened.
+// / Accepts the folder root logs to, the part of a logfile's name before its count, the part after it & the largest size a logfile may reach.
+// / Returns whether root has somewhere to log & where that is, in that order.
+// / It sets $LogHandle & $LogFile, which every entry is written through, & $LogEchoToConsole.
+// / The folder must be one only root can change, because a folder another account can change can be swapped for a link.
+// / The logfile is opened through openFileWithoutFollowing(), which follows no link of either kind, & is created 0600.
+// / Until the folder exists, before -fp has run after an upgrade, root writes to standard error, which a terminal shows & systemd journals.
+// / A folder that exists with a logfile in it that cannot be opened is reported, because that is not the upgrade case.
+// / Warnings & errors are repeated on standard error only when it is a terminal, so a timer, a pipe, a redirect & a build record them in the file alone.
+// / Standard error as the log is never repeated to, because it is the terminal already.
+function openLogFileForRoot($rootLogFolder, $namePrefix, $nameSuffix, $maximumSize) {
+  // / Set variables.
+  global $LogFile, $LogHandle, $LogEchoToConsole, $EnableMemoryProtection;
+  $LogIsOpen = $fileWasCreated = FALSE;
+  $LogPath = $candidatePath = $openNotice = '';
+  $fileHandle = $errorHandle = FALSE;
+  $LogEchoToConsole = FALSE;
+  if (is_string($rootLogFolder) && $rootLogFolder !== '' && is_dir($rootLogFolder)) {
+    $candidatePath = findCurrentLogFile($rootLogFolder, $namePrefix, $nameSuffix, $maximumSize);
+    list ($fileHandle, $fileWasCreated, $openNotice) = openFileWithoutFollowing($candidatePath, 0600);
+    if (!is_resource($fileHandle)) warningEntry('Root could not open its logfile, so it logs to standard error instead. '.$openNotice);
+    else {
+      $LogHandle = $fileHandle;
+      $LogPath = $candidatePath;
+      $LogIsOpen = TRUE;
+      $LogEchoToConsole = (defined('STDERR') && function_exists('stream_isatty') && @stream_isatty(STDERR)); } }
+  if (!$LogIsOpen) {
+    $errorHandle = defined('STDERR') ? STDERR : @fopen('php://stderr', 'w');
+    if (is_resource($errorHandle)) {
+      $LogHandle = $errorHandle;
+      $LogPath = 'php://stderr';
+      $LogIsOpen = TRUE; } }
+  $LogFile = $LogPath;
+  // / Anything logged before this point was held rather than written, so it is written now.
+  if ($LogIsOpen) flushLogBuffer();
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $fileHandle & $errorHandle are second names for $LogHandle, so clearing them leaves the global open.
+  purgeSensitiveMemory($EnableMemoryProtection, $fileWasCreated, $candidatePath, $openNotice, $fileHandle, $errorHandle, $rootLogFolder, $namePrefix, $nameSuffix, $maximumSize);
+  return array($LogIsOpen, $LogPath); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to open the logfile an account other than root writes, by name, in a folder of its own.
+// / Accepts the folders it may log to in order of preference, a file to place in the folder it uses, the part of a logfile's name before its count, the part after it & the largest size a logfile may reach.
+// / Returns whether there is a logfile, its path & the folder it is in, in that order.
+// / It sets $LogFile, which every entry is written to, & clears $LogEchoToConsole.
+// / A missing folder is made 0700 & a new logfile 0600, so only the account that writes them can read them.
+// / A folder that cannot be made is passed over for the next one, & that is reported once a logfile exists.
+// / The file placed in the folder keeps a web server from listing it, & an empty name places nothing.
+// / Root never calls this, because root does not open a file by name in a folder another account can change.
+function openLogFileByName($logFolders, $guardFile, $namePrefix, $nameSuffix, $maximumSize) {
+  // / Set variables.
+  global $LogFile, $LogEchoToConsole, $Time, $EnableMemoryProtection;
+  $LogIsOpen = $headerWasWritten = FALSE;
+  $LogPath = $LogFolder = $candidateFolder = $guardName = '';
+  $LogEchoToConsole = FALSE;
+  // / A folder is tried only until one is usable, so the first that is usable is the one used.
+  foreach ((array)$logFolders as $candidateFolder) {
+    if ($LogFolder !== '' or !is_string($candidateFolder) or $candidateFolder === '') continue;
+    if (!is_dir($candidateFolder)) @mkdir($candidateFolder, 0700);
+    if (is_dir($candidateFolder)) $LogFolder = $candidateFolder;
+    else warningEntry('The log folder '.$candidateFolder.' could not be made, so the next one is tried.'); }
+  if ($LogFolder !== '') {
+    // / The file is placed only where it is missing.
+    $guardName = basename((string)$guardFile);
+    if ($guardName !== '' && !file_exists($LogFolder.'/'.$guardName)) @copy($guardFile, $LogFolder.'/'.$guardName);
+    $LogPath = findCurrentLogFile($LogFolder, $namePrefix, $nameSuffix, $maximumSize);
+    if (!file_exists($LogPath)) {
+      $headerWasWritten = (file_put_contents($LogPath, 'Op-Act, '.$Time.': Logfile created using method 1.'.PHP_EOL, FILE_APPEND) !== FALSE);
+      if ($headerWasWritten) @chmod($LogPath, 0600); }
+    $LogIsOpen = file_exists($LogPath);
+    if (!$LogIsOpen) warningEntry('The logfile '.$LogPath.' could not be created.'); }
+  $LogFile = $LogPath;
+  // / Anything logged before this point was held rather than written, so it is written now.
+  if ($LogIsOpen) flushLogBuffer();
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $headerWasWritten, $candidateFolder, $guardName, $logFolders, $guardFile, $namePrefix, $nameSuffix, $maximumSize);
+  return array($LogIsOpen, $LogPath, $LogFolder); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

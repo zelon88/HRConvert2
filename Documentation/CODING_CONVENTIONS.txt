@@ -211,7 +211,7 @@ THE CORE BOOTS IN A FIXED ORDER & MOST OF IT IS NOT AVAILABLE AT THE START.
   verifyInstallation()  Reads config.php & versionInfo.php. Resolves the install secret.
   verifySession()       Establishes the session.
   verifySesHash()       Derives the session identifiers.
-  verifyLogs()          Creates the logfile. NOTHING BEFORE THIS POINT HAS A LOG TO WRITE TO.
+  verifyLogs()          Opens the logfile through the kernel. NOTHING BEFORE THIS POINT HAS A LOG TO WRITE TO.
   verifyGlobals()       Derives every path & every convenience variable.
 
 NOTHING CALLED BEFORE verifyGlobals() MAY USE A VARIABLE verifyGlobals() SETS.

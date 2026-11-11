@@ -368,12 +368,16 @@ LOGGED
 
 ERROR DESCRIPTION
   The path to the Logs directory specified in the --Log Storage Directory-- section of the config.php file does not exist or cannot be accessed.
+  Logs in the data location is tried when that one cannot be made, & this means neither held a logfile.
+  From v4.1.1 a WARNING above this error names each folder that could not be made, & the logfile that could not be created.
   This may be the result of incorrect file permission levels on the directory where Logs are being stored.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The www-data:www-data user:group needs to have read & write access to the Logs directory.
   The device where data is stored has an insufficient amount of storage space available.
-  Root never reaches this through the Logs directory. Root writes no logfile & logs to standard
-  error, so as root this means standard error itself could not be opened.
+  Root never reaches this through the Logs directory. Root logs to Engine in the data location, & to
+  standard error when its logfile there cannot be opened, so as root this means standard error itself
+  could not be opened. A WARNING above it says why the logfile in Engine could not be, unless Engine
+  does not exist yet, as before -fp has run after an upgrade.
   Because this error takes place before the logging environment is initialized, this error will not be logged.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 

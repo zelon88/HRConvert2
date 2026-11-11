@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.0.
+// / v4.1.1.
 // / The OCR pipeline. pipelineCore.php loads it only to dispatch an OCR operation.
 // / Error block 15000 through 15014 belongs to this pipeline.
 // / It also raises 8001 for ImageMagick.
@@ -91,6 +91,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
     if ($Verbose) logEntry('User selected to perform OCR on file '.$file.'.');
     // / Verify the file before performing any operations on it.
     // / The name verifyFile returns belongs to this file alone, so the next file is still handed the name the user asked for.
+    // / The name the file before it was given is shredded first, as redeclare() would, because a list() cannot pass through redeclare().
+    purgeSensitiveMemory($EnableMemoryProtection, $verifiedFilename);
     list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $verifiedFilename) = verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip);
     if (!$fileIsVerified) {
       $OperationErrors = TRUE;

@@ -457,6 +457,13 @@ redeclare() SHREDS THE TARGET, NEVER THE NEW VALUE.
 It once purged $newValue, which wrote NULL through its reference, so every redeclare() in
 convertGui2.php wiped the URL it was building & the settings links rendered with no path.
 
+WHAT A LOOP REPLACES GOES THROUGH redeclare(), & A list() THAT CANNOT IS SHREDDED FIRST.
+Until v4.1.1 the code v4.1.0 added replaced a value in a loop, or a path in straight line code once
+a free name was found, without redeclare() or a second name, in findFreeOutputName(), verifyFile(),
+archiveFiles(), the LibreOffice module, the bootable image & OCR. OCR takes each file's name with a
+list(), which cannot pass through redeclare(), so the name the file before it was given is shredded
+first.
+
 A DANGEROUS EXTENSION IS REMOVED AS A WHOLE PART OF A NAME.
 Until v4.0.6 sanitizeString() removed its letters wherever they appeared, so a.json became aon & no
 Model conversion to json could be fetched. It also removed any two dashes in a row, & trimmed the
@@ -478,6 +485,14 @@ always fails.
 A PROCESS HOLDING $LogHandle NEVER WRITES ITS LOGFILE BY NAME.
 A write by name follows a link planted in a folder another account owns. Debian's nginx package was
 rooted exactly that way in 2016, as CVE-2016-1247.
+
+THE KERNEL OPENS THE LOGFILE, & THE APPLICATION DECIDES WHAT IT IS.
+Until v4.1.1 verifyLogs() did both & built the same filename in five places. Moving it into the
+Engine was considered & refused, because the logfile is opened before the Engine is verified, & an
+Engine that cannot load is a warning that needs somewhere to be written. The role stays with the
+application, because a manager is told apart by the command it was started with & the kernel holds
+no list of commands. Until v4.1.1 a log folder that could not be made, & a logfile root could not
+open in Engine, both fell back in silence.
 
 A LOG LINE'S TIME IS TAKEN WHEN IT IS WRITTEN.
 $Time is set once during boot. A listener started at three in the morning once stamped every entry

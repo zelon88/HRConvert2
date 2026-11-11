@@ -27,6 +27,20 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 --------------------
 COMMIT 11/11/2026
+v4.1.1 - The kernel opens the logfile, & the code v4.1.0 added follows convention six.
+
+-v4.1.1.
+-The kernel opens the logfile. verifyLogs() decides the role, the folder & the rest of the name, & the kernel's findCurrentLogFile(), openLogFileForRoot() & openLogFileByName() name it, move on past a full one & open it.
+-No logfile is named, placed or given a mode differently.
+-A log folder that cannot be made, & a logfile root cannot open in Engine, are each reported in a warning. Both fell back in silence.
+-FIX. The code v4.1.0 added replaced a value in a loop, or a path once a free name was found, without redeclare() or a second name, contrary to convention six. findFreeOutputName(), verifyFile(), archiveFiles(), the LibreOffice module, the bootable image & OCR now follow it.
+-refreshLogFile() sets the path it returns once.
+-ERROR_DESCRIPTIONS no longer says root writes no logfile.
+-ABOUT_LOGGING, ERROR_DESCRIPTIONS, CODING_CONVENTIONS & DEVELOPMENT_NOTES describe the above.
+-The core, the kernel, the Archive & OCR pipelines, the shared LibreOffice module & the contract are v4.1.1, & every pin to them requires v4.1.1.
+
+--------------------
+COMMIT 11/11/2026
 v4.1.0 - A duplicate output is given the next free name, & Archive All & Scan All act on the files a user can see.
 
 -v4.1.0.

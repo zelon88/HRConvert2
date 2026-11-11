@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.0.
+// / v4.1.1.
 // / The LibreOffice shared module, which is not a pipeline & converts nothing on its own.
 // / It holds the code the Document & OCR pipelines both need, so neither depends on the other.
 // / It is version pinned exactly as a pipeline is, by the table in Resources/Contract/app-engine-config.php.
@@ -35,7 +35,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v4.1.0';
+$SharedModuleVersion = 'v4.1.1';
 // / -----------------------------------------------------------------------------------
 
 
@@ -200,18 +200,20 @@ function makeLibreOfficeProfile() {
 function makeLibreOfficeInput($inputPath, $outputPath) {
   // / Set variables.
   global $DirSep, $EnableMemoryProtection;
-  $InputIsReady = FALSE;
-  $InputFolder = $InputCopy = '';
+  $InputIsReady = $folderIsMade = FALSE;
+  $InputFolder = $InputCopy = $candidateFolder = '';
   $attempt = 0;
-  while ($InputFolder === '' && $attempt < 3) {
+  // / Each name tried replaces the last through redeclare(), so a name that could not be made is shredded rather than left behind.
+  while (!$folderIsMade && $attempt < 3) {
     $attempt++;
-    $InputFolder = dirname($inputPath).$DirSep.'libreoffice-'.bin2hex(random_bytes(16));
-    if (!@mkdir($InputFolder, 0700) or !is_dir($InputFolder) or is_link($InputFolder)) $InputFolder = ''; }
-  if ($InputFolder !== '') {
+    redeclare($candidateFolder, dirname($inputPath).$DirSep.'libreoffice-'.bin2hex(random_bytes(16)));
+    $folderIsMade = (@mkdir($candidateFolder, 0700) && is_dir($candidateFolder) && !is_link($candidateFolder)); }
+  if ($folderIsMade) {
+    $InputFolder = $candidateFolder;
     $InputCopy = $InputFolder.$DirSep.pathinfo($outputPath, PATHINFO_FILENAME).'.'.pathinfo($inputPath, PATHINFO_EXTENSION);
     $InputIsReady = (@copy($inputPath, $InputCopy) && is_file($InputCopy)); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $attempt, $inputPath, $outputPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $folderIsMade, $candidateFolder, $attempt, $inputPath, $outputPath);
   return array($InputIsReady, $InputFolder, $InputCopy); }
 // / -----------------------------------------------------------------------------------
 
@@ -253,7 +255,7 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
   $ConversionCompleted = FALSE;
   $ReturnData = '';
   $sofficeBinary = $sofficeFlags = $importFlag = $targetFormat = $sofficeCommand = $sandboxedCommand = $producedPath = $cleanExtension = $profileFolder = '';
-  $inputFolder = $readPath = $derivedPath = '';
+  $inputFolder = $copyPath = $readPath = $derivedPath = '';
   $commandMayRun = $commandIsSandboxed = $documentIsSanitized = $profileIsReady = $profileIsRemoved = FALSE;
   $inputIsCopied = $readPathIsSafe = FALSE;
   $commandOutput = array();
@@ -269,10 +271,11 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
     $targetFormat = strtolower(explode(':', $cleanExtension)[0]);
     // / LibreOffice writes beside the output, & replaces a file that already has the name it writes.
     // / It reads a copy named after the output, so the only name it writes is the one the output was given.
-    list ($inputIsCopied, $inputFolder, $readPath) = makeLibreOfficeInput($inputPath, $outputPath);
+    list ($inputIsCopied, $inputFolder, $copyPath) = makeLibreOfficeInput($inputPath, $outputPath);
     // / Without a copy it reads the original, which is safe only while nothing holds the name it would write.
+    // / The copy & the original are held under names of their own, so the path LibreOffice reads is set once.
+    $readPath = ($inputIsCopied ? $copyPath : $inputPath);
     if (!$inputIsCopied) {
-      $readPath = $inputPath;
       $derivedPath = dirname($outputPath).$DirSep.pathinfo($inputPath, PATHINFO_FILENAME).'.'.$targetFormat;
       $readPathIsSafe = ($derivedPath === $outputPath or (!file_exists($derivedPath) && !is_link($derivedPath)));
       if ($readPathIsSafe) warningEntry('LibreOffice could not be given a copy of '.basename($inputPath).', so it read the original. Nothing held the name it writes, so nothing was replaced.');
@@ -331,7 +334,7 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
   if ($Verbose) logEntry('LibreOffice Conversion: '.basename($inputPath).' to '.$cleanExtension.', Sandboxed: '.($commandIsSandboxed ? 'YES' : 'NO').', Result: '.($ConversionCompleted ? 'OK' : 'FAILED').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $ReturnData is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $sofficeBinary, $sofficeCommand, $sandboxedCommand, $producedPath, $cleanExtension, $commandMayRun, $documentIsSanitized, $referencesRemoved, $inputPath, $outputPath, $targetExtension, $profileFolder, $profileIsReady, $profileIsRemoved, $sofficeFlags, $importFlag, $targetFormat, $writerTargets, $commandIsSandboxed, $commandOutput, $commandExitCode, $inputFolder, $readPath, $derivedPath, $inputIsCopied, $readPathIsSafe);
+  purgeSensitiveMemory($EnableMemoryProtection, $sofficeBinary, $sofficeCommand, $sandboxedCommand, $producedPath, $cleanExtension, $commandMayRun, $documentIsSanitized, $referencesRemoved, $inputPath, $outputPath, $targetExtension, $profileFolder, $profileIsReady, $profileIsRemoved, $sofficeFlags, $importFlag, $targetFormat, $writerTargets, $commandIsSandboxed, $commandOutput, $commandExitCode, $inputFolder, $copyPath, $readPath, $derivedPath, $inputIsCopied, $readPathIsSafe);
   return array($ConversionCompleted, $ReturnData); }
 // / -----------------------------------------------------------------------------------
 

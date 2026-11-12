@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.1.2.
+// / v4.1.3.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -41,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.1.2';
+$EngineVersion = 'v4.1.3';
 // / -----------------------------------------------------------------------------------
 
 
@@ -540,10 +540,10 @@ function getAcceptedManagers() {
   global $EnableMemoryProtection;
   $AcceptedManagers = array();
   $AcceptedManagers = array(
-    'coreManager.php' => 'v4.0.8',
-    'resourceManager.php' => 'v4.0.8',
+    'coreManager.php' => 'v4.1.3',
+    'resourceManager.php' => 'v4.1.3',
     'workerManager.php' => 'v4.0.8',
-    'requestManager.php' => 'v4.0.8');
+    'requestManager.php' => 'v4.1.3');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $AcceptedManagers is not purged, because it is the return value.
   purgeSensitiveMemory($EnableMemoryProtection);
@@ -1443,7 +1443,7 @@ function giveBackOperationBudget($operationName) {
 // / not answer, because a conversion nothing accounted for is what that setting refuses.
 function requestConversionBudget($conversionCost, $expectedRuntime) {
   // / Set variables.
-  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EffectiveConversionLimits, $EnableMemoryProtection, $Verbose;
+  global $ResourceAwarenessActive, $ManagerSocketTimeout, $EffectiveConversionLimits, $EnableMemoryProtection, $Verbose, $ConvertLoc;
   $BudgetWasApproved = FALSE;
   $BudgetToken = '';
   $requestPayload = $replyPayload = array();
@@ -1453,10 +1453,13 @@ function requestConversionBudget($conversionCost, $expectedRuntime) {
   if (!$ResourceAwarenessActive) $BudgetWasApproved = TRUE;
   else {
     $requestSocket = buildManagerSocketPath('request-manager');
+    // / The data location is the one this session writes to, so the listener can refuse work on a disk within its reserve.
     $requestPayload = array(
       'RequestType' => 'budget',
       'ConversionCost' => (int)$conversionCost,
       'ExpectedRuntime' => (int)$expectedRuntime,
+      'ConvertLoc' => (string)$ConvertLoc,
+      'QuotaOwner' => storageQuotaOwner(),
       'WorkerPid' => getmypid());
     // / The worker waits longer than the chain it is waiting on. The request crosses three
     // / processes & each inner hop waits less than the one outside it, so a slow manager
@@ -1484,6 +1487,63 @@ function requestConversionBudget($conversionCost, $expectedRuntime) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $awarenessIsRequired, $requestSocket, $conversionCost, $expectedRuntime);
   return array($BudgetWasApproved, $BudgetToken); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to ask the listener whether a write that takes no budget may go ahead.
+// / Accepts the data location the write goes to & the bytes it would write, in that order.
+// / Returns whether it may & the reason it may not, in that order.
+// / An upload takes no budget, because it is the network that limits it & not the processor.
+// / It still writes, so it asks before it does, & the listener refuses one that would leave the disk within its reserve.
+// / This fails open, as a budget request does. With no listener nothing is measured & every write may go ahead.
+// / An answer that measured nothing is no answer, so a listener started before storage requests refuses nothing either.
+// / A command line invocation never asks, because administrative work must not wait on a listener that may not be running.
+// / An application that requires resource awareness fails closed instead when the listener does not answer.
+function requestStorageSpace($dataLocation, $requestedBytes) {
+  // / Set variables.
+  global $ResourceAwarenessActive, $RunningFromCLI, $ManagerSocketTimeout, $EnableMemoryProtection, $Verbose;
+  $StorageWasGranted = FALSE;
+  $StorageReason = '';
+  $requestPayload = $replyPayload = array();
+  $messageWasDelivered = $awarenessIsRequired = FALSE;
+  $awarenessIsRequired = (bool)applicationSetting('RequireResourceAwareness', FALSE);
+  if (!$ResourceAwarenessActive or $RunningFromCLI) $StorageWasGranted = TRUE;
+  else {
+    $requestPayload = array('RequestType' => 'storage', 'ConvertLoc' => (string)$dataLocation, 'RequestedBytes' => max(0, (int)$requestedBytes), 'QuotaOwner' => storageQuotaOwner(), 'WorkerPid' => getmypid());
+    list ($messageWasDelivered, $replyPayload) = sendManagerMessage(buildManagerSocketPath('request-manager'), $requestPayload, 'worker', (int)$ManagerSocketTimeout * 3);
+    if (!$messageWasDelivered or !isset($replyPayload['Approved'])) {
+      warningEntry('The Core Manager listener did not answer a storage request. '.($awarenessIsRequired ? 'Resource awareness is required, so the write was refused.' : 'Proceeding without resource awareness.'));
+      $StorageWasGranted = !$awarenessIsRequired;
+      if ($awarenessIsRequired) $StorageReason = 'The listener did not answer, & resource awareness is required.'; }
+    // / Every answer the Resource Manager gives a storage request names the disk's state.
+    // / An answer that names none measured nothing, & is treated as no answer.
+    // / A listener still running a release from before storage requests answers this way, because its Request Manager refuses a type it does not know.
+    // / A drop in leaves that listener running until it is restarted, & an upload must not be refused for it meanwhile.
+    else if (!isset($replyPayload['StorageState'])) {
+      warningEntry('The Core Manager listener answered a storage request without measuring the disk. A listener still running a release from before storage requests answers this way until it is restarted. It said: '.((isset($replyPayload['Reason']) && is_string($replyPayload['Reason']) && $replyPayload['Reason'] !== '') ? $replyPayload['Reason'] : 'No reason was supplied.').' '.($awarenessIsRequired ? 'Resource awareness is required, so the write was refused.' : 'Proceeding without resource awareness.'));
+      $StorageWasGranted = !$awarenessIsRequired;
+      if ($awarenessIsRequired) $StorageReason = 'The listener did not measure the disk, & resource awareness is required.'; }
+    else if ($replyPayload['Approved'] === TRUE) {
+      $StorageWasGranted = TRUE;
+      if ($Verbose) logEntry('Worker '.getmypid().' was granted storage for '.max(0, (int)$requestedBytes).' byte(s).'); }
+    else $StorageReason = (isset($replyPayload['Reason']) && is_string($replyPayload['Reason']) && $replyPayload['Reason'] !== '') ? $replyPayload['Reason'] : 'No reason was supplied.'; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $requestPayload, $replyPayload, $messageWasDelivered, $awarenessIsRequired, $dataLocation, $requestedBytes);
+  return array($StorageWasGranted, $StorageReason); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the owner a write is charged to.
+// / Accepts no arguments.
+// / Returns the owner, or an empty string for a request nobody has signed in to.
+// / This is where an owner will come from, & every request is anonymous until the Authentication Manager signs a user in.
+// / The listener charges an owner's writes against their quota, & charges an anonymous write to nobody.
+function storageQuotaOwner() {
+  // / Set variables.
+  $QuotaOwner = '';
+  return $QuotaOwner; }
+// / -----------------------------------------------------------------------------------
+
 // / -----------------------------------------------------------------------------------
 // / A function to request more runtime for a conversion that is still working.
 // / Accepts the budget token & the number of additional seconds required.
@@ -2458,7 +2518,7 @@ function reportListenerStatus() {
   // / Set variables.
   global $ManagerSocketTimeout, $EnableMemoryProtection;
   $ListenerIsRunning = FALSE;
-  $ListenerStatus = array('CoreManagerPid' => 0, 'Subordinates' => array(), 'TrackedWorkers' => 0, 'SessionLocations' => 0, 'Budget' => array(), 'Answered' => FALSE);
+  $ListenerStatus = array('CoreManagerPid' => 0, 'Subordinates' => array(), 'TrackedWorkers' => 0, 'SessionLocations' => 0, 'Budget' => array(), 'Storage' => array(), 'StorageReserveBytes' => 0, 'StorageWarningPercentage' => 0, 'Answered' => FALSE);
   $managerState = $replyPayload = array();
   $stateWasRead = $messageWasDelivered = FALSE;
   list ($stateWasRead, $managerState) = readManagerState('managers');
@@ -2472,6 +2532,9 @@ function reportListenerStatus() {
       $ListenerStatus['TrackedWorkers'] = (int)$replyPayload['TrackedWorkers'];
       $ListenerStatus['SessionLocations'] = (int)($replyPayload['SessionLocations'] ?? 0);
       $ListenerStatus['Budget'] = (isset($replyPayload['Budget']) && is_array($replyPayload['Budget'])) ? $replyPayload['Budget'] : array();
+      $ListenerStatus['Storage'] = (isset($replyPayload['Storage']) && is_array($replyPayload['Storage'])) ? $replyPayload['Storage'] : array();
+      $ListenerStatus['StorageReserveBytes'] = (int)($replyPayload['StorageReserveBytes'] ?? 0);
+      $ListenerStatus['StorageWarningPercentage'] = (int)($replyPayload['StorageWarningPercentage'] ?? 0);
       $ListenerStatus['Answered'] = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $managerState, $replyPayload, $stateWasRead, $messageWasDelivered);
@@ -4289,7 +4352,7 @@ function showEngineStatus($cliWhoami, $cliListenerAuthorized) {
   global $Lol, $InstLoc, $ApacheUser, $RunningAsRoot, $ResourceAwarenessActive, $EnableMemoryProtection;
   $CommandStatus = 0;
   $cliListenerRunning = $cliStateWasRead = FALSE;
-  $cliStatus = $cliAccountOutput = $cliEnvironmentState = array();
+  $cliStatus = $cliAccountOutput = $cliEnvironmentState = $cliDisk = array();
   $cliAccountExit = 1;
   $cliStateStatus = $cliPassLine = '';
   // / Root reports none of this itself, because the listener state lives in the web server
@@ -4312,7 +4375,13 @@ function showEngineStatus($cliWhoami, $cliListenerAuthorized) {
       print('Subordinates        '.count($cliStatus['Subordinates']).$Lol);
       print('Tracked workers     '.$cliStatus['TrackedWorkers'].$Lol);
       if (isset($cliStatus['SessionLocations'])) print('Mapped sessions     '.$cliStatus['SessionLocations'].$Lol);
-      if (isset($cliStatus['Budget']['RemainingBudget'])) print('Remaining budget    '.$cliStatus['Budget']['RemainingBudget'].' of '.$cliStatus['Budget']['TotalBudget'].$Lol); }
+      if (isset($cliStatus['Budget']['RemainingBudget'])) print('Remaining budget    '.$cliStatus['Budget']['RemainingBudget'].' of '.$cliStatus['Budget']['TotalBudget'].$Lol);
+      // / Each disk holding a data location, as the listener last measured it, & the reserve it keeps on each.
+      // / A listener that has not polled yet has measured nothing, & says so rather than printing nothing.
+      if ($cliStatus['Answered']) {
+        if (empty($cliStatus['Storage'])) print('Storage             NOT MEASURED YET'.$Lol);
+        foreach ($cliStatus['Storage'] as $cliDisk) print('Storage             '.strtoupper((string)($cliDisk['State'] ?? 'unknown')).', '.describeByteCount((int)($cliDisk['FreeBytes'] ?? 0)).' free of '.describeByteCount((int)($cliDisk['TotalBytes'] ?? 0)).', '.implode(' & ', (array)($cliDisk['Locations'] ?? array())).$Lol);
+        print('Storage reserve     '.($cliStatus['StorageReserveBytes'] > 0 ? describeByteCount($cliStatus['StorageReserveBytes']) : 'NONE').', warned at '.($cliStatus['StorageWarningPercentage'] > 0 ? $cliStatus['StorageWarningPercentage'].'% free' : 'NOTHING').$Lol); } }
     // / The last Environment Manager pass, from the state file root writes for every reader.
     // / It answers whether anything has been quietly wrong since somebody last looked.
     list ($cliStateWasRead, $cliEnvironmentState, $cliStateStatus) = readEnvironmentState();
@@ -4325,7 +4394,7 @@ function showEngineStatus($cliWhoami, $cliListenerAuthorized) {
     else print('Environment pass    UNREADABLE, not written by the Environment Manager'.$Lol);
     print($Lol); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerRunning, $cliStateWasRead, $cliStatus, $cliAccountOutput, $cliEnvironmentState, $cliAccountExit, $cliStateStatus, $cliPassLine, $cliWhoami, $cliListenerAuthorized);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerRunning, $cliStateWasRead, $cliStatus, $cliAccountOutput, $cliEnvironmentState, $cliAccountExit, $cliStateStatus, $cliPassLine, $cliDisk, $cliWhoami, $cliListenerAuthorized);
   return $CommandStatus; }
 // / -----------------------------------------------------------------------------------
 
@@ -4732,6 +4801,26 @@ function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWh
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to list what the running tree lacks that installing it needs.
+// / Accepts no arguments.
+// / Returns the paths it lacks, each relative to the running tree.
+// / -fp installs the running tree when it is not the installation, & three files decide whether it can.
+// / The Engine's configuration loads the application's contract, which names the repair & everything the installer copies.
+// / Setup Core holds the installer, which compares the tree with the installation before it copies anything.
+// / Without any one of them -fp would correct nothing & install nothing, & still report success.
+function listMissingInstallEssentials() {
+  // / Set variables.
+  global $InstLoc, $EnableMemoryProtection;
+  $MissingEssentials = array();
+  $essentialPaths = array('Resources'.DIRECTORY_SEPARATOR.'Engine'.DIRECTORY_SEPARATOR.'engineConfig.php', 'Resources'.DIRECTORY_SEPARATOR.'Contract'.DIRECTORY_SEPARATOR.'app-engine-config.php', 'Resources'.DIRECTORY_SEPARATOR.'Engine'.DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'setupCore.php');
+  $essentialPath = '';
+  foreach ($essentialPaths as $essentialPath) if (!is_file(rtrim((string)$InstLoc, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$essentialPath)) $MissingEssentials[] = $essentialPath;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $essentialPaths, $essentialPath);
+  return $MissingEssentials; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to run one of the Engine's root only commands.
 // / Accepts the command & its target, in that order. Returns the exit status.
 // / The caller has already refused these to anybody but root.
@@ -4743,7 +4832,9 @@ function runEngineRootCommand($cliCommand, $cliTarget) {
   $cliPermissionsFixed = $cliManagerAvailable = $cliPassCompleted = FALSE;
   $cliPathsCorrected = 0;
   $cliManagerVersion = '';
-  $cliPassFindings = array();
+  $cliPassFindings = $cliMissingEssentials = array();
+  // / -fp from a tree that is not the installation installs that tree, so the tree must hold what installing it needs.
+  if (($cliCommand === '-fp' or $cliCommand === '--fix-permissions') && (string)$ApplicationLoc !== '' && (string)@realpath((string)$InstLoc) !== (string)@realpath((string)$ApplicationLoc)) $cliMissingEssentials = listMissingInstallEssentials();
   // / The Environment Manager is loaded here by name, through loadEngineRootManager(), & never through loadEngineManager().
   // / getAcceptedManagers() is what the listener dispatches from, & a root role the listener could reach is what its design refuses.
   // / A pass that could not complete exits 1, so a timer reports it as failed.
@@ -4765,14 +4856,16 @@ function runEngineRootCommand($cliCommand, $cliTarget) {
         print($Lol.'Environment Manager pass complete. Findings, before repair:'.$Lol);
         showEnvironmentFindings($cliPassFindings, FALSE);
         print($Lol); } } }
-  // / -fp installs the running tree when it is not the installation, & the installer is Setup Core's.
-  // / A drop-in carries Setup Core only when its release changed it, so one unpacked over the web root by mistake can bring an Engine & no Setup Core.
-  // / -fp then had no installer to refuse it, corrected a tree that is not the installation & reported success, while the installation ran the release before.
-  // / A tree without Setup Core is never a whole release, so -fp from one is refused here, with the direction a tree without an Engine is given.
-  else if (($cliCommand === '-fp' or $cliCommand === '--fix-permissions') && (string)$ApplicationLoc !== '' && (string)@realpath((string)$InstLoc) !== (string)@realpath((string)$ApplicationLoc) && !is_file(dirname(__FILE__).DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'setupCore.php')) {
-    warningEntry('The command '.$cliCommand.' was refused because '.$InstLoc.' holds no Setup Core & is not the installation.');
+  // / -fp installs the running tree when it is not the installation.
+  // / A drop-in carries only the files its release changed, so one unpacked over the web root by mistake is not a whole release.
+  // / Without Setup Core there is no installer, & without the Engine's configuration or the contract there is no repair & nothing to copy.
+  // / -fp would then correct nothing & install nothing, & report success while the installation runs the release before.
+  // / A tree lacking any of the three is refused here, with the direction a tree without an Engine is given.
+  // / A tree holding all three reaches the installer, which refuses one that lacks code the installation holds.
+  else if (count($cliMissingEssentials) > 0) {
+    warningEntry('The command '.$cliCommand.' was refused because '.$InstLoc.' is not the installation & lacks '.implode(' & ', $cliMissingEssentials).'.');
     $CommandStatus = 1;
-    print($Lol.'This folder holds no Setup Core, so it is not a whole release & cannot be installed.'.$Lol);
+    print($Lol.'This folder lacks '.implode(' & ', $cliMissingEssentials).', so it is not a whole release & cannot be installed.'.$Lol);
     if (is_dir((string)$ApplicationLoc)) print('The installation is '.$ApplicationLoc.'. Unpack a drop-in into '.$ApplicationLoc.' & run -fp there.'.$Lol.$Lol);
     else print('Install from a whole release.'.$Lol.$Lol); }
   // / Handle the -fp or --fix-permissions arguments.
@@ -4785,7 +4878,7 @@ function runEngineRootCommand($cliCommand, $cliTarget) {
     if (!$cliPermissionsFixed) $CommandStatus = 1;
     print($Lol.($cliPermissionsFixed ? 'Corrected '.$cliPathsCorrected.' path(s).' : 'Permissions could not be corrected.').$Lol.$Lol); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliPermissionsFixed, $cliManagerAvailable, $cliPassCompleted, $cliPathsCorrected, $cliManagerVersion, $cliPassFindings, $cliCommand, $cliTarget);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliPermissionsFixed, $cliManagerAvailable, $cliPassCompleted, $cliPathsCorrected, $cliManagerVersion, $cliPassFindings, $cliMissingEssentials, $cliCommand, $cliTarget);
   return $CommandStatus; }
 // / -----------------------------------------------------------------------------------
 

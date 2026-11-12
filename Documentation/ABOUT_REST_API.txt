@@ -150,6 +150,8 @@ The following is a list of supported POST inputs, organized into sections based 
           Multipart file field, or file[] for several files at once.
           This input is used to upload files. An upload happens whenever a file is posted with
           valid tokens, & no other input is needed to trigger it.
+          An upload fails with error 18 when the listener refuses it, because the disk holding the
+          session has --Storage Reserve-- megabytes free or less, or would have once it was written.
       download
           String or JSON Array.
           This input is used at any time to download user files.

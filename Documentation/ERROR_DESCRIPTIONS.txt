@@ -600,6 +600,9 @@ ERROR DESCRIPTION
   This may be the result of incorrect user or group associations for the www-data user or group.
   The web server account needs read & write access to Sessions, Cache, Logs & Sockets in the data location, which -fp gives it. The data location itself is root's.
   The device where data is stored has an insufficient amount of storage space available.
+  The disk holding the session has --Storage Reserve-- megabytes free or less, or would have once the upload
+  was written, so the listener refused it. A WARNING!!! above this error says so, & ERROR 31026 says when the
+  disk entered the reserve. Free space on that disk, & the next upload is accepted.
   The request contained character types or encoded data that are not supported.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -4537,7 +4540,8 @@ ERROR DESCRIPTION
   An undefined setting reads as NULL in PHP, which silently becomes FALSE or zero at every
   point of use, so a missing setting is a silently changed behaviour rather than an error.
   Run --config --repair as root. It adds every missing setting at its shipped default,
-  inside the section that setting belongs to, & does not touch one existing value.
+  inside the section that setting belongs to, & touches no existing value but the version
+  stamp, which it raises to the version the core requires once every setting is present.
   A backup is written before anything is changed & the file is checked with php -l before
   it replaces the original, so a repair that would not parse never lands.
 
@@ -4672,6 +4676,15 @@ ERROR DESCRIPTION
   failed & what version it reports, & -h still lists every command.
   An Engine refused on version grounds is the common cause & the fix is to install the matching Engine
   rather than to edit either version stamp.
+  A request that arrives the moment an update is unpacked can meet it too. PHP's opcode cache looks at a
+  file for changes at most every opcache.revalidate_freq seconds, two by default, so for that long it can
+  run the core it cached against an Engine on disk that is already the new one. Requests after that are
+  served by the new release, & nothing needs repairing.
+  The cache knows a file has changed only by its modification time. A drop in unpacked without --touch
+  gives each file the time the drop in was built with, & a file whose time matches the one it replaced
+  is never read again, so this error stays until the web server is reloaded.
+
+    sudo systemctl reload apache2
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6115,6 +6128,37 @@ ERROR DESCRIPTION
     echo 'user.max_user_namespaces = <NEW_LIMIT>' | sudo tee /etc/sysctl.d/60-user-namespaces.conf
   This error only occurs if --Enable Resource Awareness-- is set to TRUE in config.php & the
   listener is running.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31026, <SESSION_IDENTIFIER>: The disk holding <DATA_LOCATIONS> has <FREE> free, within its storage reserve of <RESERVE>! Nothing more is written to it until more is free.
+
+FILE
+  Resources/Engine/Managers/resourceManager.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A disk holding a data location has --Storage Reserve-- megabytes free or less.
+  The Resource Manager measures every disk holding a data location every --Resource Poll Interval--.
+  While a disk is within the reserve, every upload & every operation that takes a budget is refused, & each
+  refusal is logged with the reason. Downloads & deletes still work, because deleting is how space is freed.
+  Work is accepted again at the first poll, or the first request, that finds more than the reserve free.
+  Nothing needs restarting.
+  It is logged once when the disk enters the reserve. A warning comes first, once a disk has
+  --Low Storage Warning-- percent of its size free or less, unless the reserve is the larger of the two.
+  See what is using the disk, largest first.
+    sudo du -xh --max-depth=2 <DATA_LOCATION> | sort -rh | head -20
+  Sessions older than --File Deletion Age Threshold-- are removed every --Storage Cleanup Interval--.
+  A shorter threshold frees space sooner. Space held by anything else on the disk is the administrator's to free.
+  This error only occurs if --Enable Resource Awareness-- is set to TRUE in config.php & the
+  listener is running. It is never raised by -fp or by an installation, which measure nothing.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

@@ -813,7 +813,17 @@ window.HRC2 = {
       // / The server decides what it will accept & says so. A limit repeated here would be a
       // / second opinion that disagrees with the first the moment either changes.
       maxFilesize: null,
-      timeout: 0
+      timeout: 0,
+      // / A refused upload arrives with an HTTP 200 & a reply, as every core error does, so the reply is tested.
+      // / Dropzone's own handler marked every upload finished whatever its reply said, so a refused file looked uploaded.
+      // / A refusal is handed to Dropzone's own error handler, which marks the file & shows the words.
+      success: function (file, replyText) {
+        if (!reply_is_error(replyText, HRC2.failureStrings)) {
+          if (file.previewElement) file.previewElement.classList.add('dz-success');
+          return; }
+        file.status = Dropzone.ERROR;
+        this.emit('error', file, HRC2.operationFailedText);
+      }
     });
   }
 };

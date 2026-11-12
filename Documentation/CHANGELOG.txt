@@ -27,6 +27,37 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 --------------------
 COMMIT 11/11/2026
+v4.1.3 - The listener watches the free space on every disk holding a data location, & stops writing before one fills.
+
+-v4.1.3.
+-The Resource Manager measures every disk holding a data location at each poll. It warns once a disk is low, & raises error 31026 once it is within the storage reserve. Each change of state is logged once.
+-While a disk is within the reserve, uploads & every operation that takes a budget are refused, with the reason logged. Downloads & deletes still work, because deleting frees space.
+-An upload asks the listener before it writes, naming the bytes it holds. One that would take its disk within the reserve is refused, & fails with error 18.
+-A disk is measured again when a request asks. A request may only name a configured data location.
+-New settings --Low Storage Warning--, 10 percent free, & --Storage Reserve--, 1024 megabytes. 0 turns either off. After unpacking a drop in, run --config --repair before -fp.
+-New contract names StorageWarningPercentage & StorageReserveMegabytes in $EngineSettingNames.
+-New request type storage. The Request Manager & the Core Manager pass it to the Resource Manager.
+-Every budget request names its session's data location & an owner.
+-Hooks for quotas. storageQuotaOwner() names the owner, & is empty until the Authentication Manager signs users in. evaluateStorageQuota() allows every write until that manager keeps quotas.
+-Only the listener measures. An installation, -fp, --setup & the command line measure nothing & refuse nothing.
+-An answer to a storage request that names no state for the disk is no answer. A listener started before v4.1.3 gives one until it is restarted, so uploads go ahead meanwhile & the log says to restart it.
+-INSTALLATION_INSTRUCTIONS says to restart the listener after unpacking a drop in.
+-New functions readStorageThresholds, measureStorageAt, measureStorageHeadroom, reportStorageState, evaluateStorageRequest & evaluateStorageQuota in the Resource Manager, requestStorageSpace, storageQuotaOwner & listMissingInstallEssentials in the Engine, planConfigRepairOutcome in Setup Core, & measureUploadSize in the core.
+-The --status command reports each disk's state & free space, & the reserve.
+-FIX. Dropzone marked every upload finished whatever its reply said, so a refused upload looked uploaded. The script library tests the reply, & the upload page hands it the words in its language.
+-FIX. --config --repair with nothing missing asked to confirm adding no settings, & then failed. It says every setting is present, & succeeds.
+-FIX. A configuration kept the version stamp of the release that first wrote it, because an update's merge carried the old stamp over & a repair never raised it, so --config warned about a complete file at every run. The merge keeps the new file's stamp, a repair that completes the file raises it, & --config warns only about an older stamp, compared by number.
+-A repair that cannot add a setting names it & fails, rather than saying every setting is present.
+-FIX. A drop in unpacked over one built the same day kept its files' times, & PHP's opcode cache, which rereads a file only when its time changes, served the release before until Apache restarted, as error 28005. INSTALLATION_INSTRUCTIONS unpacks a drop in with --touch.
+-FIX. -fp from a folder that is not the installation is refused unless the folder holds the Engine's configuration, the contract & Setup Core, & the refusal names what it lacks. A drop in carrying Setup Core without the Engine's configuration, unpacked over the web root, loaded no contract, so -fp reported success & installed nothing.
+-The Request Manager's comment no longer says three request types pass.
+-config.php & its template say an update & --config --repair keep the stamp current.
+-Error 31026 is new. Error 18 names the reserve as a cause, error 28005 a request served while an update is unpacked & a drop in unpacked without --touch, & error 28000 says the repair raises the stamp.
+-README, ABOUT_RESOURCE_RATE_LIMITING, ABOUT_MANAGERS, ABOUT_MANAGED_LOCATIONS, ABOUT_REST_API, ABOUT_COMMAND_LINE_ARGUMENTS, CREATING_GUIS, ERROR_DESCRIPTIONS, INSTALLATION_INSTRUCTIONS & DEVELOPMENT_NOTES describe the above.
+-The core, the Engine, Setup Core, the Resource, Request & Core Managers, both interfaces, config.php, config-template.php & the contract are v4.1.3, & every pin to them requires v4.1.3.
+
+--------------------
+COMMIT 11/11/2026
 v4.1.2 - Identify says what a file holds, & the file list sorts & shows each file's size & time.
 
 -v4.1.2.

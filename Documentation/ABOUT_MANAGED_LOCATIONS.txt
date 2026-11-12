@@ -226,7 +226,7 @@ UPGRADING ONCE THE APPLICATION HAS MOVED.
   A drop in of changed files is unpacked into Application, followed by --config --repair, which
   adds any setting its release introduced, & -fp. The workflow it may carry in .github belongs to
   the repository & not to an installation.
-    sudo tar -xzf <drop in> -C <data location>/Application --exclude='./Resources/config.php' --exclude='./.github'
+    sudo tar --touch -xzf <drop in> -C <data location>/Application --exclude='./Resources/config.php' --exclude='./.github'
     sudo php <data location>/Application/convertCore.php --config --repair
     sudo php <data location>/Application/convertCore.php -fp
   A drop in unpacked over the hosted location is refused rather than installed, because it is
@@ -240,7 +240,10 @@ UPGRADING ONCE THE APPLICATION HAS MOVED.
   A drop in whose release changed the Engine & left Setup Core as it was brings an Engine & no
   Setup Core, which is where the comparison lives. From v4.1.2 -fp run from it says the folder is
   not a whole release & where Application is. Until then it corrected the folder's permissions,
-  reported success & installed nothing.
+  reported success & installed nothing. From v4.1.3 the same is said of a folder that lacks the
+  Engine's configuration or the application's contract, which name the repair & what is copied, &
+  the refusal names each file the folder lacks. A drop in that brought Setup Core without them
+  reported success & installed nothing until then.
 A Docker image keeps its release in the web root, & the entrypoint's -fp installs it into the
 data volume on every start, so a volume kept from an older container runs the new release.
 

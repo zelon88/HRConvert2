@@ -129,6 +129,7 @@ System assets are measured in arbitrary cost units. The host is polled every `--
 - Idle server → no throttling (maximum performance)
 - Loaded server → rejects new work before crashing
 - Namespaces nearly spent → every sandbox is a user namespace, so the Resource Manager counts the web server account's at each poll. It warns at 10% free and refuses work at 1% free, with error 31025.
+- Disk nearly full → the Resource Manager measures every disk holding a data location at each poll. It warns once `--Low Storage Warning--` percent or less is free, and once `--Storage Reserve--` megabytes or less is free it raises error 31026 and refuses uploads and every operation that takes a budget until more is free. Downloads and deletes still work, because deleting frees space. See About Storage below.
 
 ---
 
@@ -144,6 +145,7 @@ Before an operation begins, it must declare its estimated cost and expected runt
   - ❌ The runtime exceeds `--Maximum Expected Runtime--`
   - ❌ The worker count hits `--Maximum Concurrent Workers--`
   - ❌ The remaining unallocated budget is smaller than the requested job cost
+  - ❌ The disk holding its session's data location has `--Storage Reserve--` megabytes free or less
 
 - The request is APPROVED if:
   - The job fits within safety margins
@@ -152,6 +154,40 @@ Before an operation begins, it must declare its estimated cost and expected runt
   - The return is registered as a shutdown handler when the token is issued so operations that die mid-run still return borrowed resources rather than leaving them for the reaper
 
 A refused operation is not an error—nothing failed and nothing was attempted. The core writes a warning naming the operation and prints the same alert string a refused conversion prints, which can be used by front-ends for reporting.
+
+---
+
+## 💽 About Storage
+
+The Resource Manager watches the free space on every disk holding a data location. It measures each one every `--Resource Poll Interval--` seconds. Locations on one disk are measured as one, because they share one free space. Free means free to the web server account, so the blocks a filesystem keeps for root are not counted.
+
+| State   | Meaning |
+| :------ | :------ |
+| ok      | More than `--Low Storage Warning--` percent of the disk is free. |
+| low     | That share or less is free. A warning is logged once. |
+| spent   | `--Storage Reserve--` megabytes or less are free. Error 31026 is logged once, and nothing more is written to the disk until more is free. |
+| unknown | The disk could not be measured. A warning is logged once, and nothing is refused for want of a measurement. |
+
+A recovery is logged once too. Every change of state is logged once, never at every poll.
+
+### 🚫 What Is Refused While a Disk Is Spent
+- Every operation that takes a budget, because each one may write.
+- Every upload. An upload takes no budget, because it is the network that limits it, so it asks the listener before it writes and names the bytes it holds. An upload that would leave the disk within the reserve is refused even on a disk that is not spent yet. It fails as any other failed upload does, with error 18, and the warning above it says why.
+- Nothing else. Downloads, deletes and every page still work, because deleting is how space is freed.
+
+A disk is measured when a request asks, not read from the last poll, because a disk can fill between two polls. A request may only name a configured data location. Any other is answered for the primary, so a request cannot have the web server account measure a path of its choosing.
+
+⚠️ **The reserve is not a guarantee.** An operation that started before the reserve was reached may still finish, and what it writes comes out of the reserve. Keep the reserve larger than the largest file a conversion here writes.
+
+### 🛠️ Nothing Is Measured Without the Listener
+The listener runs once an installation is set up, so an installation, `-fp` and `--setup` measure nothing and refuse nothing, and neither does a command run at the command line. With no listener every write goes ahead as it always has. `--Require Resource Awareness--` refuses an upload the listener does not answer, as it refuses a budget request.
+
+An answer that names no state for the disk measured nothing, and is treated as no answer. A listener still running a release from before v4.1.3 gives one, because its Request Manager refuses the storage request type, so uploads go ahead while it runs, and the log says to restart it.
+
+### 🔑 Quotas
+Quotas are not kept yet. The hooks are. Every budget and storage request names an owner, which storageQuotaOwner() supplies and which is empty for every request until the Authentication Manager signs users in. The Resource Manager asks evaluateStorageQuota() about that owner after it has measured the disk, and it allows every write until that manager keeps a quota for each owner.
+
+`--status` as root reports each disk, its state and its free space, and the reserve.
 
 ---
 

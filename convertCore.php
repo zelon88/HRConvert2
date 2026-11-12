@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.2.
+// / v4.1.3.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -104,7 +104,7 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'EnableResourceAwareness', 'RequireResourceAwareness', 'CoreManagerSubprocessPollInterval',
     'ResourcePollInterval', 'WorkerReapInterval', 'WorkerStaleGracePeriod', 'TotalResourceBudget',
     'ReserveResourcePercentage', 'MaxConcurrentWorkers', 'MaxExpectedRuntime', 'MaxRuntimeExtensions',
-    'DefaultConversionCost', 'DefaultExpectedRuntime', 'MaintainHTAccess');
+    'DefaultConversionCost', 'DefaultExpectedRuntime', 'LowStorageWarning', 'StorageReserve', 'MaintainHTAccess');
   // / Check that every required setting actually exists in the global scope.
   // / config.php is required at global scope, so every setting it defines lands in $GLOBALS.
   foreach ($requiredConfigVars as $requiredConfigVar) {
@@ -1231,7 +1231,7 @@ function verifyCodeIsTrustedByRoot($treePath) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $AllowUserIdentify, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc,
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $AllowUserIdentify, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $LowStorageWarning, $StorageReserve, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc,
     $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $EngineApplicationVersion, $CodeIsTrusted, $HostedLoc, $ApplicationLoc, $SecretPlacesWereOpen;
   $rootRecord = array();
   $legacyWasRemoved = FALSE;
@@ -1308,7 +1308,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.1.2';
+  $HRConvertVersion = 'v4.1.3';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -1316,13 +1316,13 @@ function verifyInstallation() {
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v4.1.2';
+  $RequiredConfigVersion = 'v4.1.3';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.1.2';
+  $RequiredGuiVersion = 'v4.1.3';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -1337,7 +1337,7 @@ function verifyInstallation() {
   // / Setup Core holds the configuration model, so this MUST be raised whenever
   // / $RequiredConfigVersion is raised. Forgetting does not break anything immediately.
   // / The utility reports a variable it does not know as unaccounted & carries on.
-  $RequiredSetupCoreVersion = 'v4.0.9';
+  $RequiredSetupCoreVersion = 'v4.1.3';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
@@ -1362,7 +1362,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.1.2';
+  $RequiredEngineVersion = 'v4.1.3';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -3604,10 +3604,10 @@ function applicationConfigModel() {
   $ConfigModel = array();
   $ConfigModel = array(
     // / $ConfigVersion is declared above the first section header, so it belongs to no
-    // / section. It is modelled here as read only. config.php says not to change it by
-    // / hand & replacing the file with a newer one is the only correct way to move it.
+    // / section. It is modelled here as read only, so no reset & no edit touches it.
+    // / An update's merge takes the new file's stamp, & a repair that completes the file raises it.
     'Unsectioned' => array('Writable' => FALSE, 'Variables' => array(
-      'ConfigVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Config Version. Read only. Replaced by an update.'))),
+      'ConfigVersion' => array('Type' => 'version', 'Depends' => '', 'Description' => 'Config Version. Read only. Raised by an update & by a repair.'))),
     'General Information' => array('Writable' => TRUE, 'Variables' => array(
       'ApplicationName' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Application Name String'),
       'ApplicationTitle' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Application Title String'),
@@ -3709,7 +3709,9 @@ function applicationConfigModel() {
       'MaxExpectedRuntime' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Maximum Expected Runtime'),
       'MaxRuntimeExtensions' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Maximum Runtime Extensions'),
       'DefaultConversionCost' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Default Conversion Cost'),
-      'DefaultExpectedRuntime' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Default Expected Runtime'))),
+      'DefaultExpectedRuntime' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Default Expected Runtime'),
+      'LowStorageWarning' => array('Type' => 'int', 'Depends' => 'EnableResourceAwareness', 'Description' => 'Low Storage Warning'),
+      'StorageReserve' => array('Type' => 'int', 'Depends' => 'EnableResourceAwareness', 'Description' => 'Storage Reserve'))),
     // / The format lists ARE modelled & the section stays Writable FALSE.
     // / Those answer different questions. Modelling them lets the utility say whether a
     // / list is present & report the section honestly instead of as an unknown. Writable
@@ -4229,6 +4231,25 @@ function showGUI($ShowGUI, $ButtonCode) {
   // / Call the GUI from the selected language pack before files have been uploaded.
   else $GUIDisplayed = buildGUI(1, $ShowGUI, $ButtonCode);
   return $GUIDisplayed; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to add up the size of everything in an upload.
+// / Accepts no arguments.
+// / Returns the bytes uploaded.
+// / PHP has received every file by the time this runs, & reports each one's size itself.
+// / A file that did not arrive is counted as nothing.
+function measureUploadSize() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $UploadBytes = 0;
+  $uploadSizes = array();
+  $uploadSize = 0;
+  if (isset($_FILES['file']['size'])) $uploadSizes = is_array($_FILES['file']['size']) ? $_FILES['file']['size'] : array($_FILES['file']['size']);
+  foreach ($uploadSizes as $uploadSize) $UploadBytes = $UploadBytes + max(0, (int)$uploadSize);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $uploadSizes, $uploadSize);
+  return $UploadBytes; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -5453,7 +5474,15 @@ if (!$CommandLineHandled && $UserType === 'web') {
       // / The following code is performed when a user initiates a file upload.
       if (!empty($_FILES)) {
         logEntry('Initiating Uploader.');
-        list ($UploadComplete, $UploadErrors) = uploadFiles();
+        // / An upload takes no budget, so it asks the listener whether the disk holding this session can take it.
+        // / A refusal fails the upload as any other failure does, & the warning says why.
+        // / With no Engine there is no listener to ask, so the upload goes ahead as it always has.
+        if (function_exists('requestStorageSpace')) list ($UploadIsPermitted, $UploadRefusal) = requestStorageSpace($ConvertLoc, measureUploadSize());
+        else list ($UploadIsPermitted, $UploadRefusal) = array(TRUE, '');
+        if (!$UploadIsPermitted) {
+          warningEntry('An upload was refused. '.$UploadRefusal);
+          list ($UploadComplete, $UploadErrors) = array(FALSE, TRUE); }
+        else list ($UploadComplete, $UploadErrors) = uploadFiles();
         if (!$UploadComplete) errorEntry('Upload Failed!', 18, TRUE);
         if ($UploadErrors) logEntry('Upload finished with errors.');
         if ($Verbose) logEntry('Upload Complete.'); }

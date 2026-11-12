@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.2.
+// / v4.1.3.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -196,6 +196,9 @@ $EngineUnwantedApacheConfs = array('javascript-common');
 // / An application that maps nothing permits it.
 // / RequireResourceAwareness says whether a conversion the listener gives no answer for is
 // / refused. An application that maps nothing lets it run.
+// / StorageWarningPercentage is the free share of a disk, in percent, at which the listener warns
+// / that a data location is filling, & StorageReserveMegabytes is the free space it keeps on every
+// / disk holding one. An application that maps nothing is warned at 10% & keeps 1024 megabytes.
 $EngineSettingNames = array(
   'FormatDetectionType' => 'SupportedFormatDetectionType',
   'WarnOnCapabilityMismatch' => 'WarnOnCapabilityMismatch',
@@ -205,6 +208,8 @@ $EngineSettingNames = array(
   'DocumentRoot' => 'ServerRootDir',
   'MaintainProtectionFile' => 'MaintainHTAccess',
   'LiftNamespaceRestriction' => 'AllowUnprivilegedNamespaces',
-  'RequireResourceAwareness' => 'RequireResourceAwareness');
+  'RequireResourceAwareness' => 'RequireResourceAwareness',
+  'StorageWarningPercentage' => 'LowStorageWarning',
+  'StorageReserveMegabytes' => 'StorageReserve');
 // / -----------------------------------------------------------------------------------
 ?>

@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.1.3.
 // / This file is the Request Manager. It is a manager subcomponent of the Engine.
 // / The Request Manager owns the only socket a worker may address. It refuses a request a
 // / worker may not issue & forwards the rest, so a budget request reaches the Resource
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.8';
+$ManagerVersion = 'v4.1.3';
 // / -----------------------------------------------------------------------------------
 
 
@@ -68,8 +68,8 @@ function runRequestManager() {
       list ($messagesReceived, $managerMessages, $managerConnections) = receiveManagerMessages($socketServer, 'worker', (int)$ManagerMessageBatchSize, (int)$ManagerSocketTimeout);
       $messageIndex = 0;
       while ($messageIndex < $messagesReceived) {
-        // / A worker may not issue a manager instruction. Only these three types pass.
-        if (isset($managerMessages[$messageIndex]['RequestType']) && in_array($managerMessages[$messageIndex]['RequestType'], array('budget', 'release', 'extend', 'convertloc'), TRUE)) {
+        // / A worker may not issue a manager instruction. Only these types pass.
+        if (isset($managerMessages[$messageIndex]['RequestType']) && in_array($managerMessages[$messageIndex]['RequestType'], array('budget', 'release', 'extend', 'convertloc', 'storage'), TRUE)) {
           list ($forwardWasDelivered, $forwardedReply) = sendManagerMessage($coreSocket, $managerMessages[$messageIndex], 'core', (int)$ManagerSocketTimeout * 2);
           if ($forwardWasDelivered && !empty($forwardedReply)) $replyPayload = $forwardedReply;
           else $replyPayload = array('Approved' => FALSE, 'Reason' => 'The Core Manager did not answer.'); 

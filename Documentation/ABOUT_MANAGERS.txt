@@ -58,17 +58,21 @@ A virus scanner dispatching workers wants sockets, budgets, worker tracking & su
                     three, restarts one that dies, routes every request to the role that
                     answers it, & is the only one an operator starts.
 
-  resource-manager  Polls the host. Load average, memory, processor count & the web server
-                    account's user namespaces. Calculates the budget every operation is
-                    granted from, grants & reclaims it, keeps the worker registry & the
-                    session map, & finds a worker that has outlived its expected runtime.
+  resource-manager  Polls the host. Load average, memory, processor count, the web server
+                    account's user namespaces & the free space on every disk holding a data
+                    location. Calculates the budget every operation is granted from, grants &
+                    reclaims it, refuses a write a disk has no room for, keeps the worker
+                    registry & the session map, & finds a worker that has outlived its
+                    expected runtime.
 
   worker-manager    Ends the worker it is told to end. It keeps no registry of its own & is
                     the only role that acts on a process without negotiation.
 
   request-manager   Owns the only socket a worker may address. It validates a worker's
                     request & forwards it, so a budget request reaches the resource-manager
-                    without a worker ever addressing it.
+                    without a worker ever addressing it. A worker may ask for a budget, return
+                    or extend one, ask which data location its session uses, & ask whether a
+                    write that takes no budget, such as an upload, may go ahead.
 
 A manager that is not running is not an error. Conversions run without resource awareness &
 every budget request is approved. --Require Resource Awareness-- inverts that for an

@@ -14,7 +14,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / File information ...
-// / v4.1.2.
+// / v4.1.3.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -43,8 +43,8 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /  --Config Version--
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
-// /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v4.1.2';
+// /   Do not change this value by hand. An update & --config --repair keep it current.
+$ConfigVersion = 'v4.1.3';
 // / ------------------------------
 
 // / ------------------------------
@@ -1077,6 +1077,29 @@ $DefaultConversionCost = 10;
 // /   Valid options are integers greater than 0.
 // /   Default is 120.
 $DefaultExpectedRuntime = 120;
+// /  --Low Storage Warning--
+// /   The free share of a disk at which the listener warns that a data location is filling, in percent.
+// /   The listener measures every disk holding a data location each --Resource Poll Interval--, & logs a
+// /   warning once when a disk falls to this share free or less, & a line once when it recovers.
+// /   Requires a running listener. See --Enable Resource Awareness--.
+// /   Set to 0 to warn about nothing but the reserve below.
+// /   Valid options are integers 0 through 99.
+// /   Default is 10.
+$LowStorageWarning = 10;
+// /  --Storage Reserve--
+// /   The free space the listener keeps on every disk holding a data location, in megabytes.
+// /   Once a disk has this much free or less, nothing new is written to it. Uploads, conversions & every
+// /   other operation that writes are refused, & the log says why, until more is free.
+// /   An upload that would take a disk within the reserve is refused before it is written.
+// /   Downloads & deletes still work, because deleting is how space is freed.
+// /   Keep it larger than the largest file a conversion here writes, because a conversion that started
+// /   before the reserve was reached may still finish.
+// /   It keeps a disk from filling to nothing, which would stop the logs & the operating system as well.
+// /   Requires a running listener. See --Enable Resource Awareness--.
+// /   Set to 0 to refuse nothing.
+// /   Valid options are integers 0 and larger.
+// /   Default is 1024.
+$StorageReserve = 1024;
 // / ------------------------------
 
 // / ------------------------------

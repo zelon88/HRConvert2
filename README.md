@@ -161,7 +161,7 @@ Arabic, Hebrew, Persian, Urdu and both Syriac script languages get proper right-
 
 **🧩 Built on the HRProprietary Engine.** HRConvert2 is a thin application on a reusable engine. The engine provides sandboxing, dependency management, self-repairing configuration, resource budgets and data protection. Every conversion, scan and file operation is a version-pinned **pipeline** you can inspect with `--pipeline`.
 
-**⚙️ Resource-aware.** Optional processor and memory budgets keep a busy server responsive, and runaway conversions are stopped. Storage can span several disks, round-robin, least-active or as a standby. A missing budget never stops a conversion.
+**⚙️ Resource-aware.** Optional processor and memory budgets keep a busy server responsive, and runaway conversions are stopped. Storage can span several disks, round-robin, least-active or as a standby, and work stops before any of them fills. A missing budget never stops a conversion.
 
 **🔄 Updates that roll back.** `php convertCore.php -u` stages a release, swaps it in, and validates it. If the new version can't run, it rolls back on its own. Your configuration is kept.
 

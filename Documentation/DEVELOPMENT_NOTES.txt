@@ -93,6 +93,41 @@ The count reads /proc. A process of another account cannot be read, & a namespac
 process of its own is not seen, so the count is a floor. That is the cheap answer, & it is
 enough to catch sandboxes that pile up or a limit set too low.
 
+WORK STOPS BEFORE A DISK HOLDING A DATA LOCATION FILLS. v4.1.3.
+A full disk stops more than uploads. The logs, the sessions & the operating system all write to
+it, & a log that cannot be written cannot say why. The Resource Manager measures every disk
+holding a data location at each poll, & refuses uploads & every operation that takes a budget
+while one has --Storage Reserve-- or less free. Unlike the namespace thresholds, both storage
+thresholds are configured, because what a disk can spare depends on how large it is & on how
+large the files converted on it are. The reserve is an amount rather than a share, because a
+share large enough to matter on a small disk is wasteful on a large one.
+A disk is measured again when a request asks, because uploads can fill a disk faster than the
+poll comes round. A request may only name a configured data location, so the web server account
+never measures a path a worker chose.
+An upload names the bytes it holds, so one that would take a disk into the reserve is refused
+before it is written. PHP has already written it to its own temporary folder, & the copy into the
+session needs as much again, so the bytes are counted whatever disk that folder is on.
+
+AN ANSWER THAT MEASURED NOTHING IS NO ANSWER. v4.1.3.
+A drop in replaces the code & leaves the listener running the release it started with. That
+listener's Request Manager refuses the storage request type as one a worker may not issue, & a
+refusal read as a verdict would refuse every upload until somebody restarted it. Every answer the
+Resource Manager gives a storage request names the disk's state, so an answer that names none
+measured nothing, & the Engine treats it as a listener that did not answer.
+
+THE STORAGE MONITOR RUNS ONLY IN THE LISTENER. v4.1.3.
+An installation, -fp & --setup measure nothing & refuse nothing. A container image is built on
+whatever disk its builder has, & a continuous integration runner's disk is often nearly full by
+the time the image is built, so an installer that refused would fail a build for a reason that
+has nothing to do with the host the image will run on. The listener only runs once a host is set
+up, so the monitor is enabled after setup by construction rather than by a setting.
+
+QUOTAS ARE A HOOK UNTIL THERE ARE USERS. v4.1.3.
+A quota needs an owner, & every request is anonymous until the Authentication Manager signs users
+in. So every budget & storage request carries an owner from storageQuotaOwner(), which is empty,
+& the Resource Manager asks evaluateStorageQuota(), which allows everything, once it has measured
+the disk. That manager fills both, & nothing between them changes.
+
 SYSTEMD IS JUDGED RUNNING, NOT INSTALLED.
 A container can ship systemctl without systemd running. A unit written there is read by nothing,
 & makes the listener defer to a service manager that never answers. Without systemd no unit is
@@ -877,6 +912,22 @@ said it had corrected all of them. Until v4.0.5 the delegation drop in was writt
 systemd reloaded every unit on the host for it, & the operator was told every time to restart a user
 manager that already had the delegation.
 
+THE CONFIGURATION'S STAMP MOVES WITH ITS SETTINGS. v4.1.3.
+$ConfigVersion names the release in which the file last gained or lost a setting. Until v4.1.3
+nothing moved it. A repair added settings & left the stamp, & an update's merge carried every
+scalar from the old file into the new one, the stamp included. Every configuration kept the stamp
+of the release that first wrote it, error 28000 named that release as the one detected, & the
+utility warned at every run about a file that held every setting the core reads. The utility also
+compared the stamp as a string, so a newer stamp warned too. A repair that leaves every modelled
+setting in the file now raises the stamp to the version the core requires, the merge keeps the
+new file's stamp, & the utility warns only about an older stamp, compared by number.
+
+A REPAIR WITH NOTHING TO DO SUCCEEDS. v4.1.3.
+Until v4.1.3 a repair that found nothing missing asked to confirm the addition of no settings &
+then exited 1, after every drop in that added none. A repair that cannot add a setting, because the
+file has no section for it, names it & fails, because saying every setting is present would be
+false & the core would go on refusing with error 28000.
+
 A CONFIGURATION REPAIR ADDS WHAT IS MISSING, ONCE, INSIDE THE PHP BLOCK.
 An earlier version appended past the closing tag & produced a file that looked repaired & was not.
 Both of the lines that queue a setting once skipped during a repair, one for a setting that was
@@ -906,6 +957,12 @@ A DROP-IN IS NEVER INSTALLED IN PLACE OF A RELEASE.
 Every release before v4.0.1 was unpacked into the web root & runs from a tree outside Application in
 the data location. -fp run from a drop-in unpacked there would install it in place of the whole
 application.
+The installer compares the tree with Application, but only a tree that reaches it is compared. The
+installer is Setup Core's, & the Engine's configuration loads the contract, which names the repair
+that loads Setup Core & every entry the installer copies. A drop-in carries each of the three only
+when its release changed it. Without Setup Core, until v4.1.2, & without the configuration or the
+contract, until v4.1.3, -fp corrected nothing, installed nothing & reported success. The Engine
+now refuses a tree that lacks any of the three before the repair starts, & names what it lacks.
 
 THE BUILD FOLDER IS FOUND FROM THE INSTALLATION.
 Until v4.0.0 the Build folder was read from dirname(__DIR__), the folder above the installation, so
@@ -1216,6 +1273,12 @@ whole declaration & the display:block after it, & the automatic margins beside t
 centred anything. The session buttons in convertGui2.php carried no type until they were inside a
 form.
 
+A REFUSED UPLOAD IS MARKED AS ONE. v4.1.3.
+A core error arrives with an HTTP 200 & a reply, & Dropzone marks every upload with an HTTP 200
+finished unless it is told otherwise. Until v4.1.3 nothing told it, so an upload the core refused,
+for a format it does not accept as much as for a full disk, looked uploaded & was simply missing
+from the list. The script library tests the reply as every other control does.
+
 A BULK CONTROL READS THE FILE LIST WHEN IT IS PRESSED.
 The file list publishes the session's files every time it is drawn, & Archive All & Scan All read
 them when pressed. Until v4.1.0 both were handed the files the page held when it was first drawn,
@@ -1257,6 +1320,14 @@ still bounded by scheduling priority.
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Updates--
+
+A DROP IN IS UNPACKED WITH --touch. v4.1.3.
+tar gives each file the time recorded in the archive, & every drop in recorded the day it was built.
+PHP's opcode cache decides whether a file changed by its modification time alone, so the v4.1.3
+drop in, unpacked over v4.1.2's on the day both were built, left Apache running v4.1.2's core &
+Engine from the cache. That core read the Engine's version from the file on disk, refused v4.1.3,
+& every web request failed with error 28005 until Apache restarted, while the command line, which
+has no opcode cache, reported nothing wrong. --touch gives every file the time it is unpacked.
 
 EDGE IS NOT A RELEASE.
 -u=edge installs the master branch as it stands. It carries whatever version master holds,

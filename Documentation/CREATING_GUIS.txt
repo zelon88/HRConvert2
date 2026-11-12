@@ -358,6 +358,9 @@ thing that separates a failure from a success. Every reply must be tested before
 acted on. An error carries the ERROR!!! tag, & a refusal the core makes BEFORE attempting
 an operation carries no tag at all, only the alert string. Both are failures.
 Never treat an empty reply as a failure. A successful download prints no filename.
+An upload's reply is tested as well. Dropzone marks every upload that got an HTTP 200 finished
+unless it is told otherwise, so the script library hands it a success handler that tests the reply
+& hands a failure to Dropzone's own error handler. Until v4.1.3 a refused upload looked uploaded.
 Never accept a line of a reply by its position. The core opens every reply with a doctype
 & prints a line break after every error message, & both of those are lines.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

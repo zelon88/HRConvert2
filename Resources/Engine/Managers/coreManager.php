@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.1.3.
 // / This file is the Core Manager. It is a manager subcomponent of the Engine.
 // / The Core Manager is the listener. It starts the other three, restarts one that dies & is
 // / the only role an operator starts directly.
@@ -32,7 +32,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.8';
+$ManagerVersion = 'v4.1.3';
 // / -----------------------------------------------------------------------------------
 
 
@@ -97,7 +97,7 @@ function runCoreManager() {
           // / The Resource Manager holds the budget, the registry & the session map, so every
           // / question about state goes there. Only an instruction to end a process goes to
           // / the Worker Manager, which is the only component permitted to carry one out.
-          else if (in_array($managerMessages[$messageIndex]['RequestType'], array('budget', 'release', 'extend', 'convertloc', 'status', 'kill-tracked'), TRUE)) $targetSocket = buildManagerSocketPath('resource-manager');
+          else if (in_array($managerMessages[$messageIndex]['RequestType'], array('budget', 'release', 'extend', 'convertloc', 'storage', 'status', 'kill-tracked'), TRUE)) $targetSocket = buildManagerSocketPath('resource-manager');
           else if (in_array($managerMessages[$messageIndex]['RequestType'], array('kill', 'kill-every'), TRUE)) $targetSocket = buildManagerSocketPath('worker-manager'); }
         if ($targetSocket !== '') {
           if ($Verbose) logEntry('Core Manager routed a '.$managerMessages[$messageIndex]['RequestType'].' request to '.basename($targetSocket).'.');

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.0.9.
+// / v4.1.3.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.0.9';
+$SetupCoreVersion = 'v4.1.3';
 // / -----------------------------------------------------------------------------------
 
 
@@ -1245,6 +1245,39 @@ function generateConfigFile($configPath) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to decide what a repair leaves missing & whether it raises the configuration's version stamp.
+// / Accepts the configuration model, the detected sections, the settings the repair adds & the stamp the file carries, in that order.
+// / Returns the settings the repair cannot add, whether the stamp is raised & the change that raises it, in that order.
+// / A repair adds a setting only into a section the file has, & only one the model holds a default for.
+// / The stamp names the release in which the file last gained or lost a setting.
+// / A repair that leaves every modelled setting in the file brings it to the version the core requires, so the stamp says so.
+// / A file the repair cannot complete keeps its stamp, because it still lacks what the core requires.
+// / A stamp at or above the requirement is never touched, so a file from a newer release is never lowered.
+function planConfigRepairOutcome($configModel, $detectedSections, $addedSettings, $detectedConfigVersion) {
+  // / Set variables.
+  global $RequiredConfigVersion, $EnableMemoryProtection;
+  $SettingsLeftMissing = $StampChange = array();
+  $StampIsRaised = FALSE;
+  $valueIsValid = FALSE;
+  $sectionName = $variableName = $foundSection = $stampSection = $formattedValue = '';
+  $sectionModel = $variableModel = $foundRecord = $stampRecord = array();
+  foreach ($configModel as $sectionName => $sectionModel) {
+    if (!$sectionModel['Writable']) continue;
+    foreach ($sectionModel['Variables'] as $variableName => $variableModel) {
+      list ($foundSection, $foundRecord) = findConfigVariable($detectedSections, $variableName);
+      if ($foundSection === '' && !isset($addedSettings[$variableName])) $SettingsLeftMissing[] = $variableName; } }
+  list ($stampSection, $stampRecord) = findConfigVariable($detectedSections, 'ConfigVersion');
+  if (empty($SettingsLeftMissing) && $stampSection !== '' && !compareVersionMinimum($detectedConfigVersion, (string)$RequiredConfigVersion)) {
+    list ($valueIsValid, $formattedValue) = formatConfigValue('version', 'v'.ltrim((string)$RequiredConfigVersion, 'vV'));
+    if ($valueIsValid) {
+      $StampIsRaised = TRUE;
+      $StampChange = array('Section' => $stampSection, 'Value' => $formattedValue, 'Record' => $stampRecord); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $valueIsValid, $sectionName, $variableName, $foundSection, $stampSection, $formattedValue, $sectionModel, $variableModel, $foundRecord, $stampRecord, $configModel, $detectedSections, $addedSettings, $detectedConfigVersion);
+  return array($SettingsLeftMissing, $StampIsRaised, $StampChange); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to run the configuration utility.
 // / Accepts the supplied path, the mode, the target of that mode & a confirmation boolean.
 // / Returns TRUE when the utility completed without refusing.
@@ -1262,9 +1295,10 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
   $configModel = $detectedSections = $validationFindings = $dependencyFindings = $pendingChanges = array();
   $sectionModel = $variableModel = $finding = array();
   $targetWasResolved = $parseSucceeded = $configIsAuthentic = $sectionsAreTrusted = $configIsCoherent = FALSE;
-  $valueIsValid = $changesWereApplied = FALSE;
+  $valueIsValid = $changesWereApplied = $stampIsRaised = FALSE;
   $formattedValue = '';
   $changesApplied = 0;
+  $stampChange = $settingsLeftMissing = array();
   list ($targetWasResolved, $configTarget) = resolveConfigTarget($suppliedPath);
   // / A missing file is every setting missing, so repair is the mode that answers it, with a working default.
   // / Any other mode has nothing to work on & says so.
@@ -1303,7 +1337,8 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
         print('Core needs v'.ltrim((string)$RequiredConfigVersion, 'vV').$Lol);
         // / The version is reported & never enforced. An out of date file is exactly the
         // / file an administrator has opened this utility to fix.
-        if (ltrim($detectedConfigVersion, 'vV') !== ltrim((string)$RequiredConfigVersion, 'vV')) print('WARNING   This configuration does not match what the core requires.'.$Lol);
+        // / It is a minimum, compared by number, so a stamp from a newer release is not warned about.
+        if (!compareVersionMinimum($detectedConfigVersion, (string)$RequiredConfigVersion)) print('WARNING   This configuration is older than the core requires.'.$Lol);
         list ($sectionsAreTrusted, $validationFindings) = validateConfigSections($configModel, $detectedSections);
         print($Lol.'Sections'.$Lol);
         foreach ($validationFindings as $finding) print('  '.str_pad($finding['Status'], 13).str_pad($finding['Section'], 36).$finding['Detail'].$Lol);
@@ -1343,19 +1378,41 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
                 // / rather than the thing it had correctly found.
                 // / applyConfigChanges treats a record with no StartLine as one to ADD.
                 if ($valueIsValid) $pendingChanges[$variableName] = array('Section' => $sectionName, 'Value' => $formattedValue, 'Record' => $foundRecord); } }
+            // / A repair that completes the file raises its stamp too, & one that cannot names what it leaves missing, as planConfigRepairOutcome() decides.
+            if ($utilityMode === 'repair') list ($settingsLeftMissing, $stampIsRaised, $stampChange) = planConfigRepairOutcome($configModel, $detectedSections, $pendingChanges, $detectedConfigVersion);
+            // / The core refuses to run until every one of them is in the file, so each is named.
+            if (!empty($settingsLeftMissing)) print($Lol.count($settingsLeftMissing).' setting(s) cannot be added, because config.php has no section for them or this release holds no default.'.$Lol.'  $'.implode($Lol.'  $', $settingsLeftMissing).$Lol);
             if ($utilityMode === 'reset-section' && empty($pendingChanges)) print($Lol.'No writable section named '.$modeTarget.' was found. Nothing was done.'.$Lol.$Lol);
+            // / A repair with nothing to add & no stamp to raise has nothing left to do, or nothing it can do, & says which.
+            else if ($utilityMode === 'repair' && empty($pendingChanges) && !$stampIsRaised) {
+              if (!empty($settingsLeftMissing)) print($Lol.'Nothing was written.'.$Lol.$Lol);
+              else {
+                print($Lol.'Every setting is present. Nothing was written.'.$Lol.$Lol);
+                $UtilityCompleted = TRUE; } }
             else if (!$operatorConfirmed) {
               // / A repair ADDS & a reset REWRITES, & the prompt says which. An operator asked to
               // / confirm a rewrite of a setting that is not in the file has been told the wrong
               // / thing about what is going to happen to their configuration.
               // / The names are listed, because a count on its own does not let anybody decide.
-              print($Lol.'This will '.($utilityMode === 'repair' ? 'ADD ' : 'rewrite ').count($pendingChanges).' setting(s) in '.$configTarget.'.'.$Lol);
+              // / The stamp is the one existing value a repair changes, & the prompt names it.
+              if ($utilityMode === 'repair' && empty($pendingChanges)) print($Lol.'Every setting is present in '.$configTarget.'.'.$Lol);
+              else print($Lol.'This will '.($utilityMode === 'repair' ? 'ADD ' : 'rewrite ').count($pendingChanges).' setting(s) in '.$configTarget.'.'.$Lol);
               foreach ($pendingChanges as $changeName => $changeRecord) print('  $'.$changeName.' = '.$changeRecord['Value'].$Lol);
-              print($Lol.($utilityMode === 'repair' ? 'No existing value is changed. A backup is written first.' : 'A backup is written first.').$Lol);
+              if ($stampIsRaised) print('The version stamp moves from v'.ltrim($detectedConfigVersion, 'vV').' to v'.ltrim((string)$RequiredConfigVersion, 'vV').'.'.$Lol);
+              print($Lol.($utilityMode !== 'repair' ? 'A backup is written first.' : ($stampIsRaised ? 'No other value is changed. A backup is written first.' : 'No existing value is changed. A backup is written first.')).$Lol);
               $operatorChoice = promptOperator('Type YES to continue. Anything else cancels. ');
               if ($operatorChoice !== 'YES') print($Lol.'Cancelled. Nothing was written.'.$Lol.$Lol);
-              else { list ($changesWereApplied, $changesApplied) = applyConfigChanges($configTarget, $detectedSections, $pendingChanges); $UtilityCompleted = $changesWereApplied; } }
-            else { list ($changesWereApplied, $changesApplied) = applyConfigChanges($configTarget, $detectedSections, $pendingChanges); $UtilityCompleted = $changesWereApplied; } }
+              else {
+                if ($stampIsRaised) $pendingChanges['ConfigVersion'] = $stampChange;
+                list ($changesWereApplied, $changesApplied) = applyConfigChanges($configTarget, $detectedSections, $pendingChanges);
+                // / A repair that leaves a setting missing has not repaired the file, whatever it wrote.
+                $UtilityCompleted = ($changesWereApplied && empty($settingsLeftMissing)); } }
+            else {
+              if ($stampIsRaised) {
+                print($Lol.'The version stamp moves from v'.ltrim($detectedConfigVersion, 'vV').' to v'.ltrim((string)$RequiredConfigVersion, 'vV').'.'.$Lol);
+                $pendingChanges['ConfigVersion'] = $stampChange; }
+              list ($changesWereApplied, $changesApplied) = applyConfigChanges($configTarget, $detectedSections, $pendingChanges);
+              $UtilityCompleted = ($changesWereApplied && empty($settingsLeftMissing)); } }
           else if ($utilityMode === 'reset-variable') {
             $variableName = ltrim(trim((string)$modeTarget), '$');
             foreach ($configModel as $sectionName => $sectionModel) {
@@ -1379,7 +1436,7 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
               if ($operatorChoice !== 'YES') print($Lol.'Cancelled. Nothing was written.'.$Lol.$Lol);
               else { list ($changesWereApplied, $changesApplied) = applyConfigChanges($configTarget, $detectedSections, $pendingChanges); $UtilityCompleted = $changesWereApplied; } } } } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $generatedOk, $generatedCount, $foundSection, $foundRecord, $changeName, $changeRecord, $configTarget, $detectedConfigVersion, $sectionName, $variableName, $operatorChoice, $configModel, $detectedSections, $validationFindings, $dependencyFindings, $pendingChanges, $sectionModel, $variableModel, $finding, $targetWasResolved, $parseSucceeded, $configIsAuthentic, $sectionsAreTrusted, $configIsCoherent, $valueIsValid, $changesWereApplied, $formattedValue, $changesApplied, $suppliedPath, $utilityMode, $modeTarget, $operatorConfirmed);
+  purgeSensitiveMemory($EnableMemoryProtection, $generatedOk, $generatedCount, $foundSection, $foundRecord, $changeName, $changeRecord, $configTarget, $detectedConfigVersion, $sectionName, $variableName, $operatorChoice, $configModel, $detectedSections, $validationFindings, $dependencyFindings, $pendingChanges, $sectionModel, $variableModel, $finding, $targetWasResolved, $parseSucceeded, $configIsAuthentic, $sectionsAreTrusted, $configIsCoherent, $valueIsValid, $changesWereApplied, $formattedValue, $changesApplied, $stampIsRaised, $stampChange, $settingsLeftMissing, $suppliedPath, $utilityMode, $modeTarget, $operatorConfirmed);
   return $UtilityCompleted; }
 // / -----------------------------------------------------------------------------------
 // / A function to find a setting anywhere in a configuration file.
@@ -3129,6 +3186,8 @@ function mergeConfigFile($oldConfigPath, $newConfigPath) {
       function ($match) use ($oldValues, &$ChangedArrays, &$PreservedSettings) {
         $settingName = $match[1];
         $newValue = trim($match[3]);
+        // / The stamp is the new file's, because it names the release whose settings the new file holds.
+        if ($settingName === 'ConfigVersion') return $match[0];
         // / A setting that does not exist in the old file keeps the new default.
         if (!isset($oldValues[$settingName])) return $match[0];
         $oldValue = $oldValues[$settingName];

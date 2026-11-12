@@ -249,8 +249,9 @@ Documentation/Build/ffmpeg-build in the installation, & root refuses to run an i
 holding a link, with error 28008. -fp takes that folder away. From v4.0.6 every source build
 works in a folder of its own under /var/tmp & removes it when it ends.
 
-RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.1.2 DROP IN, &
-BEFORE -fp. v4.1.2 adds --User File Identification-- to config.php. -u adds it by itself.
+RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.1.2 OR v4.1.3 DROP
+IN, & BEFORE -fp. v4.1.2 adds --User File Identification-- to config.php, & v4.1.3 adds --Low
+Storage Warning-- & --Storage Reserve--. -u adds them by itself.
 
 RUN  'sudo php convertCore.php --setup --install-depends --subsystem=Identification'  AFTER
 UPDATING TO v4.1.2 WHERE -v SAYS FAILED BESIDE File OR FFprobe. Identify still hashes every file
@@ -330,13 +331,28 @@ the update replaced is kept in Last-Installed-Version, & the new release runs it
 A drop in holds only the files that changed. Unpack it into Application, keeping the config.php
 in use, add any setting the release introduced with --config --repair, & run -fp there.
 
-  sudo tar -xzf <drop in> -C /DATA/HRConvert2/Application --exclude='./Resources/config.php' --exclude='./.github'
+  sudo tar --touch -xzf <drop in> -C /DATA/HRConvert2/Application --exclude='./Resources/config.php' --exclude='./.github'
   sudo php /DATA/HRConvert2/Application/convertCore.php --config --repair
   sudo php /DATA/HRConvert2/Application/convertCore.php -fp
 
+A listener that is running keeps the release it started with until it is restarted, so restart it
+once -fp has run.
+
+  sudo systemctl restart hrconvert2-listener
+
+Until it is restarted, a listener from before v4.1.3 measures no disk, & every upload goes ahead
+as it did before, with a warning in the log that says so.
+
+--touch gives every file the time it was unpacked. Without it each file keeps the time the drop in
+was built with. PHP's opcode cache rereads a file only when its time changes, so a file whose time
+matches the one it replaces is never reread, & the web server goes on running the release before
+until it is restarted.
+
 --config --repair adds each setting config.php lacks, at the default the release ships, & changes
-no setting already there. When nothing is missing it has nothing to do. Until it has run, every
-other command refuses with error 28000, which names the settings that are missing.
+no setting already there. Once every setting is present it raises the file's stamp to the version
+the core requires. With nothing missing & the stamp current it says so, writes nothing & succeeds.
+Until it has run, every other command refuses with error 28000, which names the settings that are
+missing.
 
 Do not update by running the installer again from a new clone. It installs that clone's
 config.php in place of the one in use, which is then kept only in Last-Installed-Version.

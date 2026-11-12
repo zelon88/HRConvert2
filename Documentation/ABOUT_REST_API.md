@@ -87,6 +87,7 @@ POST inputs are organized into distinct functional operational blocks based on p
 ### 🗄️ B. General File Operations
 * `file` *(Multipart file field, or `file[]` for several)*
   * An upload happens whenever a file is posted with valid tokens. No other input is needed to trigger it.
+  * An upload fails with error 18 when the listener refuses it, because the disk holding the session has `--Storage Reserve--` megabytes free or less, or would have once it was written.
 * `download` *(String or JSON Array)*
   * Used at any time to download user files or generate file URLs for sharing operations.
   * *Value*: A target name or string list of names to use for input files.

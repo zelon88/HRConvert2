@@ -367,6 +367,10 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
         <input type='hidden' id='token2' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
         </form>
       </div>
+      <?php // / The dropzone marks a refused upload in this page's language, on a first visit as on any other. ?>
+      <script type='text/javascript'>
+        if (typeof HRC2 !== 'undefined' && typeof HRC2.configure === 'function') HRC2.configure(<?php echo json_encode(array('operationFailedText' => (isset($Gui2Text74) ? $Gui2Text74 : 'Operation Failed!'))); ?>);
+      </script>
     </div>
     <div align='center'>
       <div id='continue' style='max-width:<?php echo $GuiWidth; ?>; text-align:center;'>

@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.1.4.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -260,6 +260,19 @@ $EngineOperatorPrompt = '';
 // /   installation's settings to another application's defaults, which is worse than
 // /   refusing to do anything at all.
 $EngineConfigModelProvider = '';
+
+// /  --Engine Operation Provider--
+// /   The name of a function returning the operations a workflow may run, & the kinds of file a step may name.
+// /   The Workflow Core runs what it is handed & knows nothing else about any of it.
+// /   The named function accepts nothing & returns an array holding Operations & FileTypes.
+// /   See Documentation/ABOUT_WORKFLOWS.txt for what each operation declares.
+// /   An application that names nothing has no workflows, which is correct rather than degraded.
+$EngineOperationProvider = '';
+
+// /  --Engine Shipped Workflows--
+// /   The folder inside the installation that holds the workflows a release ships, relative to it.
+// /   An application that names none ships no workflows, & an administrator may still install some.
+$EngineShippedWorkflows = '';
 
 // /  --Engine Config Template--
 // /   The file this application uses to say what its configuration looks like.

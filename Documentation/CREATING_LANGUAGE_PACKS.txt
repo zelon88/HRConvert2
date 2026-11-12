@@ -209,6 +209,10 @@ This works because a language pack contains only variable assignments.
 Simple logic is permitted where localization requires it.
 Plural selection is the common case. $FCPlural1 & $FCPlural2 exist for languages that inflect nouns for number.
 Languages that do not inflect leave both empty & write the sentence so it reads correctly for any count.
+A string the page fills in carries placeholders in braces, such as {fit} & {count}. A translation keeps
+every placeholder its English carries, in whatever order the language needs, because each is replaced by
+its name. $Gui2Text137, $Gui2Text138 & $Gui2Text139 carry them, from v4.1.4. A sentence with a count in it
+is written so it reads correctly for any count, as a plural helper would otherwise be needed.
 Do not repeat a closing HTML tag that footer.php already supplies. $GuiFooterText1 ends without its final closing anchor tag for this reason.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 

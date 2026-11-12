@@ -7214,6 +7214,177 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-38000, <SESSION_IDENTIFIER>: The application names no operation provider, so no workflow can run. It is named by $EngineOperationProvider in <INSTALLATION>/Resources/Contract/app-engine-config.php.
+
+FILE
+  Resources/Engine/Cores/workflowCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Workflow Core asks the application which operations a workflow may run, through the function $EngineOperationProvider names.
+  That name is empty, or names a function the application does not define, so there are no operations & no workflow runs.
+  HRConvert2 names applicationOperations(). A contract file older than v4.1.4, or one edited without that line, causes this.
+  Every page that asks for workflows is told they are unavailable, & --workflow --list & --workflow --check say no operation is offered.
+  Nothing else changes. Every button still works.
+  Unpack the release again & run  sudo php convertCore.php -fp , which installs the contract it ships.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-38001, <SESSION_IDENTIFIER>: The operation provider <FUNCTION_NAME> returned no list of operations, so no workflow can run.
+
+FILE
+  Resources/Engine/Cores/workflowCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The function the contract names was called, & what it returned is not an array holding Operations as an array.
+  An application's provider returns array('Operations' => array(...), 'FileTypes' => array(...)). See ABOUT_WORKFLOWS.txt.
+  In HRConvert2 that function is applicationOperations() in convertCore.php, & a core & a contract from different releases is the likely cause.
+  Every page that asks for workflows is told they are unavailable, & every button still works.
+  Run  php convertCore.php -v  & check the core & the Engine report the same release.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-38002, <SESSION_IDENTIFIER>: A workflow could not be started. <REASON>
+
+FILE
+  Resources/Engine/Cores/workflowCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The session was claimed & the worker that runs the workflow did not start. The claim is given back, so the user may try again.
+  The page is told the workflow could not be started. <REASON> says which of these it was.
+    Its job could not be written.                       The session's Workflow folder could not be written. Check the data location is not full & is the web server account's.
+    No install secret is available ...                  The worker is given a startup key derived from the install secret, & none could be read. Run -fp as root.
+    setsid or php could not be found ...                Both are needed to start a worker. php is, by definition, & setsid is part of util-linux.
+    PHP has proc_open disabled ...                      disable_functions in the web server's PHP configuration names proc_open. Workflows need it.
+    The worker process could not be created.            The operating system refused a new process. Read the web server's error log.
+    setsid exited with status <N> ...                   setsid could not hand the worker its own session.
+  A worker that starts & then cannot take the job up is a different fault. Its status says interrupted, with the reason start,
+  & a warning in the log beginning A workflow worker was refused says why.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-38003, <SESSION_IDENTIFIER>: The <OPERATION> operation failed with <EXCEPTION_CLASS>. <EXCEPTION_MESSAGE>
+
+FILE
+  Resources/Engine/Cores/workflowCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An operation a workflow step ran threw an exception or an error, rather than returning that it failed.
+  The Workflow Core catches it, treats every file in that call as failed & goes on, so one failure does not halt the worker.
+  A step whose every file failed ends the workflow, & the page is told a step of the workflow failed.
+  <EXCEPTION_CLASS> & <EXCEPTION_MESSAGE> are PHP's own. An operation should report a failure by returning it, so this is a fault in the
+  operation's code or in a tool it calls. The entries before it in the Workflow log name the files it was given.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-38004, <SESSION_IDENTIFIER>: Workflow job <JOB_ID> halted before it ended. The entry before this one says why.
+
+FILE
+  Resources/Engine/Cores/workflowCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A workflow worker stopped while its workflow was still running. A fatal PHP error halts a process this way, & so does a fatal error the
+  application raises, such as a virus found by the scan --Virus Scanning-- runs on every conversion.
+  The worker's shutdown handler writes the status as failed, with the reason halted, & gives back the session & the server's count of
+  running workflows, so the page is told the workflow stopped unexpectedly rather than waiting for it.
+  The entry before this one, in the Workflow log, or PHP's own error in the web server's error log, says what halted the worker.
+  Every file the workflow made before it halted is still in the session.
+  This error is not fatal on its own. It is the report of a halt that already happened.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-38005, <SESSION_IDENTIFIER>: The workflow <WORKFLOW_ID> could not be installed. <REASON>
+
+FILE
+  Resources/Engine/Cores/workflowCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  --workflow --install checked the workflow, found it valid & could not write it into the installed library.
+  The installed library is the Workflows folder in the data root. <REASON> says which of these it was.
+    The installed library does not exist yet.           -fp creates it. Run  sudo php convertCore.php -fp  & install again.
+    A reason naming a folder another account can change  Root writes only into a folder no other account can change. -fp gives the
+                                                          library & the folders above it back to root.
+    A reason from the write                              The kernel refused to write through a link, or the disk is full or read only.
+  Nothing was installed, & the library is as it was. The command exits 1.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-38006, <SESSION_IDENTIFIER>: The workflow <WORKFLOW_ID> could not be removed. <REASON>
+
+FILE
+  Resources/Engine/Cores/workflowCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  --workflow --remove found the installed workflow & could not remove it.
+  Root removes a file only from a folder no other account can change, & never through a link. <REASON> is the kernel's.
+  Run  sudo php convertCore.php -fp , which gives the library back to root, & remove it again.
+  A shipped workflow is part of the release & is never removed by this command. To replace one, install a workflow with the same identifier.
+  The command exits 1.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  38000 through 38019 are reserved for workflows, & 38007 through 38019 are currently unused.
+  38000 through 38006 are raised by the Workflow Core, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-40000, <SESSION_IDENTIFIER>: Cannot purge sensitive memory for the <FUNCTION_NAME> function! Memory protection is Enabled. Execution cannot continue!
 
 FILE

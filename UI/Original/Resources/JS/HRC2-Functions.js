@@ -189,6 +189,23 @@ window.HRC2 = {
   // / It has no prototype, so a file named after a property every object has is still just a file.
   identifyRecords: Object.create(null),
   isConfigured: false,
+  // / The files a user has ticked, by name, in the order they were ticked.
+  selection: [],
+  // / What wants to know when the selection changes. Each is called with a copy of it, & the Workflows panel is one.
+  selectionListeners: [],
+  // / What the last operation on the selection said, shown beside the count until the selection changes.
+  selectionNote: '',
+  // / Whether the menu beside the box at the top has been bound to the document, which happens once.
+  selectMenuIsBound: false,
+  // / What the selection bar says. The page supplies them from the language pack. The English defaults are a last resort.
+  selectionText: { selected: 'Selected: ', usable: 'Selected files that can be used: {fit} of {count}.' },
+  // / The controls a selection applies to, by the key that names the file they act on.
+  // / A mode of each sends a request per file & names each output from that file's own name box, & together sends every file at once.
+  // / formatKey names the format asked for, so a file that is already in it is left out.
+  selectionKeys: {
+    convertSelected: { mode: 'each', nameKey: 'userconvertfilename', formatKey: 'extension' },
+    pdfworkSelected: { mode: 'each', nameKey: 'userpdfconvertfilename', formatKey: '' },
+    filesToArchive: { mode: 'together', nameKey: '', formatKey: '' } },
 
   // / Accept the page's values. Every key is optional so a page supplies only what it uses.
   // / The upload page has no jQuery & no file list, & supplies neither.
@@ -346,55 +363,93 @@ window.HRC2 = {
   // / THE WHOLE PATTERN, ONCE.
   // / suffix is the ConvertGuiCounter1 value, or an empty string for the bulk controls at
   // / the top of the page. Every element id is derived from it.
+  // / One request is a batch of one, so it is handed to runBatch(), which is where the pattern lives.
   run: function (payload, suffix) {
+    this.runBatch([{ payload: payload, row: suffix }], suffix);
+  },
+
+  // / Send requests one after another as one operation, & report them once.
+  // / Each request is sent when the one before it has answered, so a batch never races itself & takes one operation's budget at a time.
+  // / Each request names the row it is for. That row's spinner turns while it runs, & the spinner for suffix turns throughout.
+  // / What every request made is downloaded once they have all answered, & the list is drawn again once.
+  runBatch: function (requests, suffix) {
     var self = this;
     suffix = (suffix === undefined || suffix === null) ? '' : String(suffix);
     var loadingId = 'loadingCommandDiv' + suffix;
     var victoryId = 'victoryCommandDiv' + suffix;
     var failureId = 'failureCommandDiv' + suffix;
     var isFinished = false;
+    var madeFiles = [];
+    var problems = [];
+    var chain = $.Deferred().resolve().promise();
 
     // / THE SPINNER IS STOPPED HERE & NOWHERE ELSE.
     // / Every exit from this operation goes through this function, including the ones that
     // / were not planned for. A spinner that never stops is the worst outcome available,
     // / because it tells the user the work is still happening & gives them nothing to
     // / report. The guard makes it safe to call twice.
-    var finish = function (problems, anySucceeded) {
+    // / A problem that several requests report is reported once.
+    var finish = function (problemList, anySucceeded) {
       if (isFinished) return;
       isFinished = true;
       self.spinner(loadingId, false);
-      if (problems && problems.length > 0) {
+      problemList = (problemList || []).filter(function (problem, index, list) { return list.indexOf(problem) === index; });
+      if (problemList.length > 0) {
         self.flash(failureId);
-        window.alert(problems.join('\n')); }
+        window.alert(problemList.join('\n')); }
       if (anySucceeded) self.flash(victoryId);
       try { self.refreshFileList(); }
       catch (thrown) { self.warn('The file list could not be refreshed. ' + thrown); }
     };
 
+    // / Read one reply into what the operation made & what went wrong.
+    // / A reply with neither a file nor an error is a failure, because the operation ran & produced nothing.
+    // / A name reported twice is one file, so a batch never downloads a file twice.
+    var collect = function (replyText) {
+      var parsed = self.parseReply(replyText);
+      if (parsed.files.length === 0 && parsed.errors.length === 0) problems.push(self.failureText);
+      parsed.errors.forEach(function (line) { problems.push(line); });
+      parsed.files.forEach(function (fileName) { if (madeFiles.indexOf(fileName) === -1) madeFiles.push(fileName); });
+    };
+
     self.spinner(loadingId, true);
 
-    self.post(payload).then(function (replyText) {
-      // / EVERYTHING FROM HERE DOWN RUNS INSIDE A PROMISE HANDLER.
-      // / jQuery catches whatever is thrown in one of these & converts the promise to a
-      // / rejected one rather than letting it reach the console. Nothing downstream
-      // / handles that rejection, so an uncaught throw in here is invisible & strands the
-      // / operation. It is caught here instead.
+    (requests || []).forEach(function (request) {
+      var row = (request.row === undefined || request.row === null) ? '' : String(request.row);
+      var rowSpinner = (row !== '' && row !== suffix) ? 'loadingCommandDiv' + row : '';
+      chain = chain.then(function () {
+        if (rowSpinner !== '') self.spinner(rowSpinner, true);
+        return self.post(request.payload).then(function (replyText) {
+          // / EVERYTHING FROM HERE DOWN RUNS INSIDE A PROMISE HANDLER.
+          // / jQuery catches whatever is thrown in one of these & converts the promise to a
+          // / rejected one rather than letting it reach the console. Nothing downstream
+          // / handles that rejection, so an uncaught throw in here is invisible & strands the
+          // / operation. It is caught here instead.
+          if (rowSpinner !== '') self.spinner(rowSpinner, false);
+          try { collect(replyText); }
+          catch (thrown) {
+            self.warn('Failed while reading the reply from the core. ' + thrown);
+            problems.push(self.failureText); }
+        }, function () {
+          // / The request itself failed. There is no reply to read, & the next request is still sent.
+          if (rowSpinner !== '') self.spinner(rowSpinner, false);
+          problems.push(self.failureText);
+          return $.Deferred().resolve().promise();
+        });
+      });
+    });
+
+    chain.then(function () {
       try {
-        var parsed = self.parseReply(replyText);
-        // / Nothing came back at all. The operation ran & produced no file.
-        if (parsed.files.length === 0 && parsed.errors.length === 0) {
-          finish([self.failureText], false);
-          return; }
         // / A failure with no file to fetch is reported without asking the core for
         // / anything further. There is nothing to download.
-        if (parsed.files.length === 0) {
-          finish(parsed.errors, false);
+        if (madeFiles.length === 0) {
+          finish(problems.length > 0 ? problems : [self.failureText], false);
           return; }
-        self.downloadAll(parsed.files).then(function (failedDownloads) {
+        self.downloadAll(madeFiles).then(function (failedDownloads) {
           try {
-            var problems = parsed.errors.concat(failedDownloads.map(function (name) {
-              return name + ' could not be downloaded.'; }));
-            finish(problems, parsed.files.length > failedDownloads.length); }
+            finish(problems.concat(failedDownloads.map(function (name) {
+              return name + ' could not be downloaded.'; })), madeFiles.length > failedDownloads.length); }
           catch (thrown) {
             self.warn('Failed while reporting the result of an operation. ' + thrown);
             finish([self.failureText], false); }
@@ -402,15 +457,213 @@ window.HRC2 = {
           // / downloadAll resolves even when every file fails, so reaching this arm means
           // / the chain itself broke rather than a download.
           self.warn('The download chain failed. ' + thrown);
-          finish(parsed.errors.concat([self.failureText]), false); });
+          finish(problems.concat([self.failureText]), false); });
       }
       catch (thrown) {
-        self.warn('Failed while reading the reply from the core. ' + thrown);
+        self.warn('Failed while reporting the result of an operation. ' + thrown);
         finish([self.failureText], false); }
-    }, function () {
-      // / The request itself failed. There is no reply to read.
-      finish([self.failureText], false);
+    }, function (thrown) {
+      // / Every request's failure is caught above, so reaching this arm means the chain itself broke.
+      self.warn('The operation could not be completed. ' + thrown);
+      finish(problems.concat([self.failureText]), false);
     });
+  },
+
+  // / -------------------------------------------------------------------------------
+  // / Selection.
+  // / A user ticks files in the list, & the order they were ticked in is shown inside each box.
+  // / The selection is kept by name, because the list is drawn again after every operation & a file keeps its name when its row changes.
+  // / A file the list no longer holds leaves the selection.
+  // / Each box carries its file's name, its row & its kinds as data. Nothing here reads a filename the page wrote into a script.
+  // / -------------------------------------------------------------------------------
+
+  // / Every box the list has drawn, in the order the list drew them.
+  selectionBoxes: function () {
+    return Array.prototype.slice.call(document.querySelectorAll('input.hrc2-pick-box[data-hrc2-file]'));
+  },
+
+  // / The box the list drew for one file, or null.
+  selectionBoxFor: function (fileName) {
+    var boxes = this.selectionBoxes();
+    var index = 0;
+    for (index = 0; index < boxes.length; index++) { if (boxes[index].getAttribute('data-hrc2-file') === fileName) return boxes[index]; }
+    return null;
+  },
+
+  // / Draw the selection into the list.
+  // / Each ticked box shows its place in the order. The box at the top is ticked for all, half ticked for some & clear for none.
+  // / The line beside it counts the selection & repeats what the last operation on it said.
+  showSelection: function () {
+    var self = this;
+    var boxes = self.selectionBoxes();
+    var allBox = document.getElementById('hrc2SelectAll');
+    var countLine = document.getElementById('hrc2SelectionCount');
+    var words = [];
+    boxes.forEach(function (box) {
+      var place = self.selection.indexOf(box.getAttribute('data-hrc2-file'));
+      var mark = box.parentNode ? box.parentNode.querySelector('.hrc2-pick-mark') : null;
+      box.checked = (place !== -1);
+      if (mark) mark.textContent = (place === -1) ? '' : String(place + 1);
+    });
+    if (allBox) {
+      allBox.checked = (boxes.length > 0 && self.selection.length >= boxes.length);
+      allBox.indeterminate = (self.selection.length > 0 && self.selection.length < boxes.length); }
+    if (countLine) {
+      if (self.selection.length > 0) words.push(self.selectionText.selected + self.selection.length);
+      if (self.selectionNote !== '') words.push(self.selectionNote);
+      countLine.textContent = words.join(' \u00B7 '); }
+  },
+
+  // / Tell whatever is listening that the selection changed. A listener that throws is noted, & the rest are still told.
+  announceSelection: function () {
+    var self = this;
+    self.selectionListeners.forEach(function (listener) {
+      try { listener(self.selection.slice()); }
+      catch (thrown) { self.warn('Something listening to the selection failed. ' + thrown); } });
+  },
+
+  // / Replace the selection, draw it & announce it.
+  // / A note about the last operation was about the selection it ran on, so it goes when the selection changes.
+  changeSelection: function (fileNames) {
+    this.selection = fileNames;
+    this.selectionNote = '';
+    this.showSelection();
+    this.announceSelection();
+  },
+
+  // / Tick or untick one file. A file ticked goes to the end of the order, & a file unticked leaves it.
+  setSelected: function (fileName, isSelected) {
+    var kept = this.selection.filter(function (name) { return name !== fileName; });
+    if (isSelected) kept.push(fileName);
+    this.changeSelection(kept);
+  },
+
+  // / Tick the files one choice names, in the order the list shows them, & untick the rest.
+  // / all ticks every file, none ticks nothing & kind:<name> ticks every file of that kind.
+  selectWhere: function (choice) {
+    var kind = (String(choice).indexOf('kind:') === 0) ? String(choice).slice(5) : '';
+    var picked = [];
+    this.selectionBoxes().forEach(function (box) {
+      var kinds = String(box.getAttribute('data-hrc2-kinds') || '').split(' ');
+      if (choice === 'all' || (kind !== '' && kinds.indexOf(kind) !== -1)) picked.push(box.getAttribute('data-hrc2-file')); });
+    this.changeSelection(picked);
+  },
+
+  // / Tick exactly these files, in this order, & untick the rest. A name the list does not hold is left out.
+  selectNames: function (fileNames) {
+    var listed = this.selectionBoxes().map(function (box) { return box.getAttribute('data-hrc2-file'); });
+    var picked = [];
+    (fileNames || []).forEach(function (fileName) {
+      if (listed.indexOf(fileName) !== -1 && picked.indexOf(fileName) === -1) picked.push(fileName); });
+    this.changeSelection(picked);
+  },
+
+  // / Open or close the menu beside the box at the top, & say which it is.
+  showSelectMenu: function (shouldShow) {
+    var menu = document.getElementById('hrc2SelectMenu');
+    var button = document.getElementById('hrc2SelectMenuButton');
+    if (!menu || !button) return;
+    menu.hidden = !shouldShow;
+    button.setAttribute('aria-expanded', shouldShow ? 'true' : 'false');
+  },
+
+  // / Bind the boxes & the bar the list just drew, & draw the selection into them.
+  // / The list calls this every time it is drawn. A file the list no longer holds leaves the selection, & that is announced.
+  // / The menu closes on a click anywhere outside it & on Escape. Those are bound to the document once, because the document is never drawn again.
+  bindSelection: function () {
+    var self = this;
+    var listed = self.selectionBoxes().map(function (box) { return box.getAttribute('data-hrc2-file'); });
+    var kept = self.selection.filter(function (fileName) { return listed.indexOf(fileName) !== -1; });
+    var allBox = document.getElementById('hrc2SelectAll');
+    var menuButton = document.getElementById('hrc2SelectMenuButton');
+    var menu = document.getElementById('hrc2SelectMenu');
+    self.selectionBoxes().forEach(function (box) {
+      box.addEventListener('change', function () { self.setSelected(box.getAttribute('data-hrc2-file'), box.checked); }); });
+    if (allBox) allBox.addEventListener('change', function () { self.selectWhere(self.selection.length > 0 ? 'none' : 'all'); });
+    if (menuButton) menuButton.addEventListener('click', function () { self.showSelectMenu(!!(menu && menu.hidden)); });
+    if (menu) Array.prototype.slice.call(menu.querySelectorAll('[data-hrc2-select]')).forEach(function (item) {
+      item.addEventListener('click', function () {
+        self.selectWhere(item.getAttribute('data-hrc2-select'));
+        self.showSelectMenu(false);
+        if (menuButton) menuButton.focus(); }); });
+    if (!self.selectMenuIsBound) {
+      self.selectMenuIsBound = true;
+      document.addEventListener('click', function (event) {
+        var menuWrap = document.getElementById('hrc2SelectMenuWrap');
+        if (menuWrap && !menuWrap.contains(event.target)) self.showSelectMenu(false); });
+      document.addEventListener('keydown', function (event) {
+        var openMenu = document.getElementById('hrc2SelectMenu');
+        if (event.key !== 'Escape' || !openMenu || openMenu.hidden) return;
+        self.showSelectMenu(false);
+        if (document.getElementById('hrc2SelectMenuButton')) document.getElementById('hrc2SelectMenuButton').focus(); }); }
+    if (kept.length !== self.selection.length) self.changeSelection(kept);
+    else self.showSelection();
+  },
+
+  // / The part of an element id before its row, or an empty string when the id does not end in that row.
+  idPrefix: function (elementId, suffix) {
+    elementId = String(elementId || '');
+    suffix = String(suffix || '');
+    if (suffix === '' || elementId.length <= suffix.length || elementId.slice(-suffix.length) !== suffix) return '';
+    return elementId.slice(0, elementId.length - suffix.length);
+  },
+
+  // / A file's extension in lower case, or an empty string when it has none.
+  extensionOf: function (fileName) {
+    var name = String(fileName || '');
+    var dot = name.lastIndexOf('.');
+    return (dot > 0 && dot < name.length - 1) ? name.slice(dot + 1).toLowerCase() : '';
+  },
+
+  // / A copy of a payload that names other files, & another output name when a name field is given.
+  withValues: function (payload, selectedKey, selectedValue, nameKey, nameValue) {
+    var copy = {};
+    var key = '';
+    for (key in payload) { if (payload.hasOwnProperty(key)) copy[key] = payload[key]; }
+    copy[selectedKey] = selectedValue;
+    if (nameKey !== '') copy[nameKey] = nameValue;
+    return copy;
+  },
+
+  // / The requests a control sends when its own file is ticked among others.
+  // / Returns null when the control acts on its own file alone. That is when its file is not ticked, is the only file ticked,
+  // / or the control is not one a selection applies to. Otherwise returns the requests, how many files they use & how many are ticked.
+  // / A ticked file is eligible when its own row offers the same control, which the core drew for it by the same test that drew this one.
+  // / A conversion leaves out a file already in the format asked for, because there is nothing to convert. An ineligible file is skipped.
+  // / Each request named in selectionKeys as each is sent once per file, & named by that file's own name box, so every output keeps the name its row shows.
+  // / One named as together is sent once, holding every eligible file, because an archive is one file made from many.
+  selectionRequests: function (buttonId, suffix, staticPayload, fieldMap, payload) {
+    var self = this;
+    var selectedKey = '';
+    var key = '';
+    var rule = null;
+    var fileName = '';
+    var buttonPrefix = '';
+    var namePrefix = '';
+    var format = '';
+    var eligible = [];
+    var requests = [];
+    suffix = (suffix === undefined || suffix === null) ? '' : String(suffix);
+    for (key in self.selectionKeys) { if (self.selectionKeys.hasOwnProperty(key) && staticPayload && staticPayload.hasOwnProperty(key)) selectedKey = key; }
+    if (selectedKey === '' || suffix === '') return null;
+    rule = self.selectionKeys[selectedKey];
+    fileName = String(staticPayload[selectedKey]);
+    if (self.selection.length < 2 || self.selection.indexOf(fileName) === -1) return null;
+    buttonPrefix = self.idPrefix(buttonId, suffix);
+    if (buttonPrefix === '') return null;
+    if (rule.nameKey !== '' && fieldMap && fieldMap.hasOwnProperty(rule.nameKey)) namePrefix = self.idPrefix(fieldMap[rule.nameKey], suffix);
+    if (rule.formatKey !== '' && payload.hasOwnProperty(rule.formatKey)) format = String(payload[rule.formatKey]).toLowerCase();
+    self.selection.forEach(function (selectedName) {
+      var box = self.selectionBoxFor(selectedName);
+      var row = box ? String(box.getAttribute('data-hrc2-row') || '') : '';
+      if (row === '' || !document.getElementById(buttonPrefix + row)) return;
+      if (format !== '' && self.extensionOf(selectedName) === format) return;
+      eligible.push({ name: selectedName, row: row }); });
+    if (eligible.length === 0) return null;
+    if (rule.mode === 'together') requests.push({ payload: self.withValues(payload, selectedKey, eligible.map(function (entry) { return entry.name; }), '', ''), row: suffix });
+    else eligible.forEach(function (entry) {
+      requests.push({ payload: self.withValues(payload, selectedKey, entry.name, rule.nameKey, namePrefix === '' ? '' : self.value(namePrefix + entry.row)), row: entry.row }); });
+    return { requests: requests, used: eligible.length, count: self.selection.length };
   },
 
   // / -------------------------------------------------------------------------------
@@ -424,15 +677,23 @@ window.HRC2 = {
   // / Bind a conversion control. staticPayload carries values PHP already knows, such as
   // / the input filename. fieldMap maps a POST name to the id of the input holding it, &
   // / is read at click time so the user's latest choice is the one that is sent.
+  // / A control whose file is ticked among others acts on every eligible ticked file, & says how many it could use.
   bindRun: function (buttonId, suffix, staticPayload, fieldMap) {
     var self = this;
     $(function () {
       $('#' + buttonId).click(function () {
         var payload = {};
         var key = '';
+        var batch = null;
         for (key in staticPayload) { if (staticPayload.hasOwnProperty(key)) payload[key] = staticPayload[key]; }
         for (key in fieldMap) { if (fieldMap.hasOwnProperty(key)) payload[key] = self.value(fieldMap[key]); }
-        self.run(payload, suffix);
+        batch = self.selectionRequests(buttonId, suffix, staticPayload, fieldMap, payload);
+        if (!batch) {
+          self.run(payload, suffix);
+          return; }
+        self.selectionNote = self.selectionText.usable.replace('{fit}', String(batch.used)).replace('{count}', String(batch.count));
+        self.showSelection();
+        self.runBatch(batch.requests, suffix);
       });
     });
   },
@@ -738,6 +999,30 @@ window.HRC2 = {
         var wantReport = self.checked(spec.reportId);
         self.identify(self.listedFiles(spec.fileNames), wantReport, self.value(spec.nameId), spec.suffix); });
     });
+  },
+
+  // / -------------------------------------------------------------------------------
+  // / Workflows.
+  // / HRC2-Workflows.js is self contained & knows nothing about this file, so this is where the two meet.
+  // / The page supplies the panel's words. This file supplies the tokens & the ways the panel reaches the file list.
+  // / A page whose Workflows library did not load is noted in the console, & its panel goes on saying workflows are unavailable.
+  // / -------------------------------------------------------------------------------
+  startWorkflows: function (settings) {
+    var self = this;
+    var library = window.HRC2Workflows;
+    if (!library || typeof library.configure !== 'function') {
+      self.warn('HRC2-Workflows.js did not load, so the Workflows panel cannot run.');
+      return false; }
+    settings = settings || {};
+    settings.tokens = self.tokens;
+    settings.listSelection = function () { return self.selection.slice(); };
+    settings.listFiles = function () { return self.selectionBoxes().map(function (box) { return box.getAttribute('data-hrc2-file'); }); };
+    settings.selectNames = function (fileNames) { self.selectNames(fileNames); };
+    settings.filesChanged = function () { self.refreshFileList(); };
+    settings.download = function (fileName) {
+      self.downloadOne(fileName).then(null, function () { window.alert(self.operationFailedText); }); };
+    self.selectionListeners.push(function () { library.selectionChanged(); });
+    return library.configure(settings);
   },
 
   // / Delete every file in this session & then land on a new one.

@@ -317,4 +317,51 @@ The following is a list of supported POST inputs, organized into sections based 
                             Present where they apply. What the tool for that kind of file read.
       Every character that means something in HTML is escaped, & so is the exclamation mark,
       so nothing a file carries can spell the tag an interface reads as an error.
+
+  Workflow Operations
+      Every reply is one line of JSON under the key Workflow, after the doctype line that opens every reply.
+      Every character that means something in HTML is escaped, & so is the exclamation mark.
+      A server with --Enable Workflows-- off, or without the Workflow Core, answers every one of them with
+        {"Workflow":{"Available":false}}
+      & says why in its log, & says nothing else, because the reason is the administrator's.
+      See ABOUT_WORKFLOWS.txt for the format, the operations & how a workflow runs.
+      workflowLibrary
+          1.
+          Lists the workflows this session may run.
+          {"Workflow":{"Available":true,"Library":[{"Id":"documents-to-pdf-zip","Name":"...","Description":"...",
+            "Steps":[{"Operation":"Convert","Mode":"each","Options":{...}}, ...],"AcceptsAll":false,"Accepts":["doc","docx", ...]}]}}
+          Only a usable workflow is listed. AcceptsAll is true when its first step reads every file, & Accepts
+          otherwise lists the extensions its first step reads. It is a hint, & the server decides.
+      workflowRun
+          String.
+          Starts the workflow with that identifier on the files named in workflowFiles[], in the order given.
+          A name the session does not hold is dropped. The request returns as soon as the worker starts.
+          {"Workflow":{"Started":true,"JobId":"<24 hexadecimal digits>","Reason":""}}
+          A run that does not start says why in Reason. The reasons are asked in this order.
+            disabled   Workflows are off.
+            unknown    No workflow this session is offered has that identifier.
+            busy       A workflow already runs in this session.
+            files      More files were named than --Maximum Workflow Files--.
+            nothing    No step would take any of the files.
+            server     The server already runs --Maximum Concurrent Workflows--.
+            start      The worker could not be started. See error 38002.
+      workflowFiles
+          JSON Array, sent as workflowFiles[] once for each file.
+          The files workflowRun runs on.
+      workflowStatus
+          1.
+          Reports this session's workflow.
+          {"Workflow":{"Available":true,"State":"running","Reason":"","JobId":"...","WorkflowId":"...","Name":"...",
+            "StepCount":2,"StepNumber":1,"Operation":"Convert","FilesDone":1,"FilesTotal":3,"Waiting":false,
+            "Steps":[...],"Produced":["notes.pdf"],"Elapsed":4}}
+          State is none, starting, running, finished, stopped, failed or interrupted.
+          AN ENDED WORKFLOW IS REPORTED ONCE. The request that reads a State of finished, stopped, failed or
+          interrupted removes it, so the next one reads none & the session may start another.
+          ABOUT_WORKFLOWS.txt describes every key & every Reason.
+      workflowStop
+          1.
+          Asks this session's running workflow to stop before its next operation.
+          {"Workflow":{"Available":true,"Stop":"stopping"}}
+          Stop is stopping for a workflow that runs, cleared for one that had ended, which is removed unread,
+          & none when there was nothing. Read workflowStatus until it says stopped.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

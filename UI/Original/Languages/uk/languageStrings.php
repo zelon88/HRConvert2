@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -388,6 +388,111 @@ $Gui2Text106 = 'Розмір';
 $Gui2Text107 = 'Дата';
 // / 'Type'
 $Gui2Text108 = 'Тип';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'Вибрати';
+// / 'Select All'
+$Gui2Text110 = 'Вибрати все';
+// / 'Select None'
+$Gui2Text111 = 'Зняти вибір';
+// / 'Select By Type'
+$Gui2Text112 = 'Вибрати за типом';
+// / 'Selected: '
+$Gui2Text113 = 'Вибрано: ';
+// / 'Documents'
+$Gui2Text114 = 'Документи';
+// / 'Spreadsheets'
+$Gui2Text115 = 'Електронні таблиці';
+// / 'Presentations'
+$Gui2Text116 = 'Презентації';
+// / 'Images'
+$Gui2Text117 = 'Зображення';
+// / 'Audio'
+$Gui2Text118 = 'Аудіо';
+// / 'Video'
+$Gui2Text119 = 'Відео';
+// / 'Archives'
+$Gui2Text120 = 'Архіви';
+// / 'E-Books'
+$Gui2Text121 = 'Електронні книги';
+// / '3D Models'
+$Gui2Text122 = '3D-моделі';
+// / 'Drawings'
+$Gui2Text123 = 'Креслення';
+// / 'Vector Images'
+$Gui2Text124 = 'Векторні зображення';
+// / 'Subtitles'
+$Gui2Text125 = 'Субтитри';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'Файли OpenSCAD';
+// / 'Streams'
+$Gui2Text127 = 'Потоки';
+// / 'Workflows'
+$Gui2Text128 = 'Робочі процеси';
+// / 'Files'
+$Gui2Text129 = 'Файли';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'Виберіть файли у списку нижче.';
+// / 'Select By Name: '
+$Gui2Text131 = 'Вибрати за назвою: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'Використовуйте * і ? як символи підстановки або напишіть регулярний вираз між скісними рисками.';
+// / 'Workflow'
+$Gui2Text133 = 'Робочий процес';
+// / 'Choose a workflow'
+$Gui2Text134 = 'Виберіть робочий процес';
+// / 'Run'
+$Gui2Text135 = 'Запустити';
+// / 'Stop'
+$Gui2Text136 = 'Зупинити';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'Вибрані файли, які можна використати: {fit} з {count}.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'Крок {step} з {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'Файл {done} з {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'Очікування сервера.';
+// / 'Starting.'
+$Gui2Text141 = 'Запуск.';
+// / 'Finished.'
+$Gui2Text142 = 'Готово.';
+// / 'Stopping.'
+$Gui2Text143 = 'Зупинка.';
+// / 'Stopped.'
+$Gui2Text144 = 'Зупинено.';
+// / 'Files made: '
+$Gui2Text145 = 'Створені файли: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'Робочі процеси недоступні на цьому сервері.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'На цьому сервері не встановлено жодного робочого процесу.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'Цей робочий процес більше недоступний.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'Цей робочий процес не може використати жоден із вибраних файлів.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'Для одного робочого процесу вибрано забагато файлів.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'Сервер зайнятий. Спробуйте ще раз за кілька хвилин.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'У цьому сеансі вже виконується робочий процес.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'Не вдалося запустити робочий процес.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'Один із кроків робочого процесу завершився помилкою.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'Виявлено вірус, тому робочий процес зупинено.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'Робочому процесу забракло часу.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'Робочий процес створив забагато файлів.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'Сервер був надто зайнятий, щоб завершити робочий процес.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'Операція, потрібна цьому робочому процесу, недоступна.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'Робочий процес несподівано зупинився.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

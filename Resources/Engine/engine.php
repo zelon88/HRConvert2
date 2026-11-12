@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.1.3.
+// / v4.1.4.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -41,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.1.3';
+$EngineVersion = 'v4.1.4';
 // / -----------------------------------------------------------------------------------
 
 
@@ -154,6 +154,37 @@ function readTransportedStartupKey() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $rawKey, $keyVariable);
   return $TransportedKey; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the environment variable a workflow worker's session travels in.
+// / Accepts nothing. Returns the application's slug upper cased, followed by _WORKER_CONTEXT.
+// / For HRConvert2 it is HRCONVERT2_WORKER_CONTEXT.
+function engineWorkerContextVariable() {
+  // / Set variables.
+  $WorkerContextVariable = strtoupper(engineApplicationSlug()).'_WORKER_CONTEXT';
+  return $WorkerContextVariable; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the session a workflow worker was handed & clear it from the environment.
+// / Accepts nothing. Returns the session as the application wrote it, or an empty string when none was handed over.
+// / It is also kept in $TransportedWorkerContext, because the worker's startup key is bound to it & is checked once the Workflow Core loads.
+// / It is cleared from the environment at once, so a converter the worker starts does not inherit it.
+// / It lives here rather than in the Workflow Core, because the application adopts the session before the globals that hang off one are built, & that is before any core loads.
+function readTransportedWorkerContext() {
+  // / Set variables.
+  global $TransportedWorkerContext, $EnableMemoryProtection;
+  $WorkerContext = '';
+  $contextVariable = '';
+  $contextVariable = engineWorkerContextVariable();
+  $WorkerContext = (string)getenv($contextVariable);
+  putenv($contextVariable);
+  unset($_ENV[$contextVariable], $_SERVER[$contextVariable]);
+  $TransportedWorkerContext = $WorkerContext;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $contextVariable);
+  return $WorkerContext; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1370,7 +1401,7 @@ function replyToManagerMessage($socketConnection, $replyPayload, $keyPurpose) {
 // / It fails open exactly as requestConversionBudget() does, which refuses instead when resource awareness is required.
 function takeOperationBudget($operationName) {
   // / Set variables.
-  global $BudgetToken, $BudgetTokenIsReleased, $DefaultConversionCost, $DefaultExpectedRuntime, $Verbose, $EnableMemoryProtection;
+  global $BudgetToken, $BudgetTokenIsReleased, $BudgetReleaseIsArmed, $DefaultConversionCost, $DefaultExpectedRuntime, $Verbose, $EnableMemoryProtection;
   $BudgetWasApproved = FALSE;
   list ($BudgetWasApproved, $BudgetToken) = requestConversionBudget($DefaultConversionCost, $DefaultExpectedRuntime);
   // / Every message names the operation the same way, so $operationName is a bare noun &
@@ -1382,7 +1413,11 @@ function takeOperationBudget($operationName) {
     // / Every one of these operations has a fatal exit between taking a budget & returning
     // / it, so the release cannot live only at the bottom of the caller's block.
     $BudgetTokenIsReleased = FALSE;
-    register_shutdown_function('releaseBudgetOnShutdown');
+    // / The return is armed once a process, because a workflow worker takes a budget for every file it converts.
+    // / The guard inside releaseBudgetOnShutdown() returns whichever token is out when the process ends.
+    if (empty($BudgetReleaseIsArmed)) {
+      register_shutdown_function('releaseBudgetOnShutdown');
+      $BudgetReleaseIsArmed = TRUE; }
     if ($Verbose) logEntry('The '.$operationName.' operation holds budget token '.$BudgetToken.'.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $operationName);
@@ -4270,7 +4305,9 @@ function engineSubOptionOwners() {
     // / --pipeline reaches into the components themselves, the way --setup reaches into
     // / dependencies & --config reaches into settings. Same shape, same place.
     '--list' => '--pipeline', '--describe' => '--pipeline', '--verify' => '--pipeline',
-    '--check-depends' => '--pipeline');
+    '--check-depends' => '--pipeline',
+    // / --workflow reads, checks & installs workflows, the way --pipeline reads pipelines.
+    '--check' => '--workflow', '--install' => '--workflow', '--remove' => '--workflow');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection);
   return $SubOptionOwners; }
@@ -4801,6 +4838,27 @@ function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWh
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to answer the two workflow commands.
+// / Accepts the arguments, the command, its target & whether it was confirmed, in that order. Returns the exit status.
+// / --run-workflow is how a request starts a workflow's worker, & is never typed by a person. Its target is the job.
+// / --workflow lists, checks, installs & removes workflows, & the dispatcher has already refused a write to anybody but root.
+// / Both need the Workflow Core, which the application loads & pins, so neither runs without it.
+function runEngineWorkflowCommand($cliArguments, $cliCommand, $cliTarget, $cliConfirmed) {
+  // / Set variables.
+  global $WorkflowCoreActive, $Lol, $EnableMemoryProtection;
+  $CommandStatus = 1;
+  $workerRanJob = FALSE;
+  if (empty($WorkflowCoreActive) or !function_exists('runWorkflowWorker') or !function_exists('runWorkflowAdminCommand')) {
+    warningEntry('The command '.$cliCommand.' was refused because the Workflow Core is unavailable.');
+    print($Lol.'The Workflow Core is unavailable. Run  php '.engineApplicationEntryPoint().' -v  to see why.'.$Lol.$Lol); }
+  else if ($cliCommand === '--run-workflow') list ($workerRanJob, $CommandStatus) = runWorkflowWorker((string)$cliTarget);
+  else $CommandStatus = runWorkflowAdminCommand($cliArguments, $cliTarget, $cliConfirmed);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $workerRanJob, $cliArguments, $cliCommand, $cliTarget, $cliConfirmed);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to list what the running tree lacks that installing it needs.
 // / Accepts no arguments.
 // / Returns the paths it lacks, each relative to the running tree.
@@ -5028,7 +5086,7 @@ function listEnginePins() {
   $engineSources = $pinSources = $pinMatches = $pinMatch = array();
   $entryPath = $entryContents = $enginePath = $contractFile = $pinKey = $pinVersion = '';
   $engineSources = array('KernelVersion' => 'Resources/Kernel/kernel.php', 'EngineVersion' => 'Resources/Engine/engine.php', 'SetupCoreVersion' => 'Resources/Engine/Cores/setupCore.php',
-    'DependencyCoreVersion' => 'Resources/Engine/Cores/dependencyCore.php', 'PipelineCoreVersion' => 'Resources/Engine/Cores/pipelineCore.php', 'ConfigScript' => 'Documentation/Build/'.engineApplicationSlug().'-setup.sh');
+    'DependencyCoreVersion' => 'Resources/Engine/Cores/dependencyCore.php', 'PipelineCoreVersion' => 'Resources/Engine/Cores/pipelineCore.php', 'WorkflowCoreVersion' => 'Resources/Engine/Cores/workflowCore.php', 'ConfigScript' => 'Documentation/Build/'.engineApplicationSlug().'-setup.sh');
   $pinSources = array_merge((isset($EnginePinSources) && is_array($EnginePinSources)) ? $EnginePinSources : array(), $engineSources);
   $entryPath = $InstLoc.$DirSep.engineApplicationEntryPoint();
   $enginePath = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'engine.php';
@@ -5175,6 +5233,8 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
   $buildCommands = array('--build');
   // / The entry points the listener starts its managers through. Never typed by a person.
   $managerCommands = array('--start-core-manager', '--run-core-manager', '--start-manager');
+  // / The entry point a request starts a workflow's worker through, & the command an administrator reads & installs workflows with.
+  $workflowCommands = array('--run-workflow', '--workflow');
   // / Only the web server user & root may operate the listener.
   // / A standard user holds a per user secret, which cannot derive a valid startup key.
   // / The web server user must hold the install secret for every listener command, every
@@ -5203,9 +5263,14 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
   else if (in_array($cliCommand, $cleanCommands, TRUE)) $CommandStatus = runEngineCleanCommand($cliTarget);
   else if (in_array($cliCommand, $rootCommands, TRUE) && !$RunningAsRoot) $CommandStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A root only command was refused for an unauthorized user.');
   else if (in_array($cliCommand, $rootCommands, TRUE)) $CommandStatus = runEngineRootCommand($cliCommand, $cliTarget);
+  // / Installing & removing a workflow write the installed library, which is root's, so both are refused here for anybody else.
+  // / --workflow is refused by what it was asked to do, because --list & --check are anybody's & only a write is root's.
+  // / So the refusal names the option as typed, & the command it suggests is the whole one.
+  else if ($cliCommand === '--workflow' && !$RunningAsRoot && (strpos((string)$cliTarget, '--install') === 0 or strpos((string)$cliTarget, '--remove') === 0)) $CommandStatus = refuseCommandForUser($cliCommand.' '.(string)$cliTarget, $cliWhoami, 'A workflow command that writes the installed library was refused for an unauthorized user.');
+  else if (in_array($cliCommand, $workflowCommands, TRUE)) $CommandStatus = runEngineWorkflowCommand($cliArguments, $cliCommand, $cliTarget, $cliConfirmed);
   else $CommandWasHandled = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerAuthorized, $cliPinsMatch, $cliWhoami, $listenerCommands, $setupCommands, $rootCommands, $cleanCommands, $buildCommands, $managerCommands, $cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerAuthorized, $cliPinsMatch, $cliWhoami, $listenerCommands, $setupCommands, $rootCommands, $cleanCommands, $buildCommands, $managerCommands, $workflowCommands, $cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed);
   return array($CommandWasHandled, $CommandStatus); }
 // / -----------------------------------------------------------------------------------
 ?>

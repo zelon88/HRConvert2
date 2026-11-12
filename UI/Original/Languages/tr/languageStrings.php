@@ -39,7 +39,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -399,6 +399,111 @@ $Gui2Text106 = 'Boyut';
 $Gui2Text107 = 'Tarih';
 // / 'Type'
 $Gui2Text108 = 'Tür';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'Seç';
+// / 'Select All'
+$Gui2Text110 = 'Tümünü Seç';
+// / 'Select None'
+$Gui2Text111 = 'Seçimi Kaldır';
+// / 'Select By Type'
+$Gui2Text112 = 'Türe Göre Seç';
+// / 'Selected: '
+$Gui2Text113 = 'Seçilen: ';
+// / 'Documents'
+$Gui2Text114 = 'Belgeler';
+// / 'Spreadsheets'
+$Gui2Text115 = 'Hesap Tabloları';
+// / 'Presentations'
+$Gui2Text116 = 'Sunumlar';
+// / 'Images'
+$Gui2Text117 = 'Görüntüler';
+// / 'Audio'
+$Gui2Text118 = 'Ses';
+// / 'Video'
+$Gui2Text119 = 'Video';
+// / 'Archives'
+$Gui2Text120 = 'Arşivler';
+// / 'E-Books'
+$Gui2Text121 = 'E-Kitaplar';
+// / '3D Models'
+$Gui2Text122 = '3B Modeller';
+// / 'Drawings'
+$Gui2Text123 = 'Çizimler';
+// / 'Vector Images'
+$Gui2Text124 = 'Vektör Görüntüler';
+// / 'Subtitles'
+$Gui2Text125 = 'Altyazılar';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'OpenSCAD Dosyaları';
+// / 'Streams'
+$Gui2Text127 = 'Akışlar';
+// / 'Workflows'
+$Gui2Text128 = 'İş Akışları';
+// / 'Files'
+$Gui2Text129 = 'Dosyalar';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'Aşağıdaki listeden dosya seçin.';
+// / 'Select By Name: '
+$Gui2Text131 = 'Ada Göre Seç: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'Joker karakter olarak * ve ? kullanın ya da eğik çizgiler arasına bir düzenli ifade yazın.';
+// / 'Workflow'
+$Gui2Text133 = 'İş Akışı';
+// / 'Choose a workflow'
+$Gui2Text134 = 'Bir iş akışı seçin';
+// / 'Run'
+$Gui2Text135 = 'Çalıştır';
+// / 'Stop'
+$Gui2Text136 = 'Durdur';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'Kullanılabilecek seçili dosyalar: {count} dosyanın {fit} tanesi.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'Adım {step} / {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'Dosya {done} / {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'Sunucu bekleniyor.';
+// / 'Starting.'
+$Gui2Text141 = 'Başlatılıyor.';
+// / 'Finished.'
+$Gui2Text142 = 'Tamamlandı.';
+// / 'Stopping.'
+$Gui2Text143 = 'Durduruluyor.';
+// / 'Stopped.'
+$Gui2Text144 = 'Durduruldu.';
+// / 'Files made: '
+$Gui2Text145 = 'Oluşturulan dosyalar: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'İş akışları bu sunucuda kullanılamıyor.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'Bu sunucuda yüklü iş akışı yok.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'Bu iş akışı artık kullanılamıyor.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'Seçili dosyaların hiçbiri bu iş akışı tarafından kullanılamıyor.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'Tek bir iş akışı için çok fazla dosya seçildi.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'Sunucu meşgul. Birkaç dakika sonra yeniden deneyin.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'Bu oturumda zaten çalışan bir iş akışı var.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'İş akışı başlatılamadı.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'İş akışının bir adımı başarısız oldu.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'Bir virüs bulundu, bu yüzden iş akışı durduruldu.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'İş akışının süresi doldu.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'İş akışı çok fazla dosya oluşturdu.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'Sunucu, iş akışını bitiremeyecek kadar meşguldü.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'Bu iş akışının ihtiyaç duyduğu bir işlem kullanılamıyor.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'İş akışı beklenmedik şekilde durdu.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

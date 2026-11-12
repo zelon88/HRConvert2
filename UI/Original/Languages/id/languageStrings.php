@@ -37,7 +37,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -394,6 +394,111 @@ $Gui2Text106 = 'Ukuran';
 $Gui2Text107 = 'Tanggal';
 // / 'Type'
 $Gui2Text108 = 'Jenis';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'Pilih';
+// / 'Select All'
+$Gui2Text110 = 'Pilih Semua';
+// / 'Select None'
+$Gui2Text111 = 'Batalkan Semua Pilihan';
+// / 'Select By Type'
+$Gui2Text112 = 'Pilih Berdasarkan Jenis';
+// / 'Selected: '
+$Gui2Text113 = 'Dipilih: ';
+// / 'Documents'
+$Gui2Text114 = 'Dokumen';
+// / 'Spreadsheets'
+$Gui2Text115 = 'Lembar Kerja';
+// / 'Presentations'
+$Gui2Text116 = 'Presentasi';
+// / 'Images'
+$Gui2Text117 = 'Gambar';
+// / 'Audio'
+$Gui2Text118 = 'Audio';
+// / 'Video'
+$Gui2Text119 = 'Video';
+// / 'Archives'
+$Gui2Text120 = 'Arsip';
+// / 'E-Books'
+$Gui2Text121 = 'E-Book';
+// / '3D Models'
+$Gui2Text122 = 'Model 3D';
+// / 'Drawings'
+$Gui2Text123 = 'Gambar Teknik';
+// / 'Vector Images'
+$Gui2Text124 = 'Gambar Vektor';
+// / 'Subtitles'
+$Gui2Text125 = 'Takarir';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'Berkas OpenSCAD';
+// / 'Streams'
+$Gui2Text127 = 'Strim';
+// / 'Workflows'
+$Gui2Text128 = 'Alur Kerja';
+// / 'Files'
+$Gui2Text129 = 'Berkas';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'Pilih berkas pada daftar di bawah.';
+// / 'Select By Name: '
+$Gui2Text131 = 'Pilih Berdasarkan Nama: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'Gunakan * dan ? sebagai karakter pengganti, atau tulis ekspresi reguler di antara garis miring.';
+// / 'Workflow'
+$Gui2Text133 = 'Alur Kerja';
+// / 'Choose a workflow'
+$Gui2Text134 = 'Pilih alur kerja';
+// / 'Run'
+$Gui2Text135 = 'Jalankan';
+// / 'Stop'
+$Gui2Text136 = 'Hentikan';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'Berkas terpilih yang dapat digunakan: {fit} dari {count}.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'Langkah {step} dari {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'Berkas {done} dari {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'Menunggu server.';
+// / 'Starting.'
+$Gui2Text141 = 'Memulai.';
+// / 'Finished.'
+$Gui2Text142 = 'Selesai.';
+// / 'Stopping.'
+$Gui2Text143 = 'Menghentikan.';
+// / 'Stopped.'
+$Gui2Text144 = 'Dihentikan.';
+// / 'Files made: '
+$Gui2Text145 = 'Berkas yang dibuat: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'Alur kerja tidak tersedia di server ini.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'Tidak ada alur kerja yang terpasang di server ini.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'Alur kerja itu sudah tidak tersedia.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'Tidak satu pun berkas terpilih dapat digunakan oleh alur kerja ini.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'Terlalu banyak berkas dipilih untuk satu alur kerja.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'Server sedang sibuk. Coba lagi dalam beberapa menit.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'Sebuah alur kerja sudah berjalan di sesi ini.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'Alur kerja tidak dapat dimulai.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'Sebuah langkah alur kerja gagal.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'Virus ditemukan, jadi alur kerja dihentikan.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'Waktu alur kerja habis.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'Alur kerja membuat terlalu banyak berkas.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'Server terlalu sibuk untuk menyelesaikan alur kerja.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'Operasi yang dibutuhkan alur kerja ini tidak tersedia.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'Alur kerja berhenti secara tak terduga.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

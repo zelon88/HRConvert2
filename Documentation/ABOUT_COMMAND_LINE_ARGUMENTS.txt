@@ -138,6 +138,7 @@ code that root then runs. To correct anything, run -fp instead.
   --config <argument>         An entire suite of commands for configuring HRConvert2 installations.
   --setup <argument>          An entire suite of commands for installing & managing HRConvert2 installations.
   --pipeline <argument>       Inspect & verify the installed pipelines.
+  --workflow <argument>       List, check, install & remove workflows.
   --build --pins              Check every version pin against what ships. A developer step.
   --build --pins --write      Rewrite every version pin that differs from what ships.
   --app<name>                 Handed to the application untouched. See --About --app.
@@ -152,7 +153,8 @@ prompt, & --rotate-secret, at the terminal first. --status is relayed from that 
 same reason, & --rotate-secret stops & restarts the listener through it. See the sections below.
 Root refuses an installation another account could change, & only the repairs run on one.
 See --CLI User Account Considerations--.
-The -v, -h, --status & --pipeline arguments work when run as any user.
+The -v, -h, --status & --pipeline arguments work when run as any user, & so do --workflow --list & --check.
+--workflow --install & --remove require root.
 --build needs write access to the source tree & nothing more. It is the developer's build
 step. It rewrites source files, & an operator never has a reason to run it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -177,6 +179,7 @@ to. --status needs the Engine to build its report, so without one it is refused 
 A check exits 1 when it finds a fault. --setup --check-depends exits 1 when a REQUIRED
 dependency is missing or too old. An optional one costs a feature & does not fail the check.
 --pipeline --verify exits 1 when a pinned pipeline did not load.
+--workflow --list exits 1 when a workflow in either library is not valid, & --check when the file is not.
 --build --pins exits 1 when a pin differs from what ships or cannot be built. With --write
 it exits 1 only when a pin could not be built or could not be written.
 
@@ -335,6 +338,31 @@ Requires the Pipeline Core component. Needs no privileges. It reads & reports & 
 
 --verify is the one worth running after any change. A pipeline can be pinned, installed &
 syntactically valid & still never load, & nothing else reports it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About   --workflow----
+
+Lists, checks, installs & removes workflows. See ABOUT_WORKFLOWS.txt.
+
+Requires the Workflow Core component. --list & --check need no privileges & change nothing.
+
+  --workflow --list                        Every workflow in the shipped & the installed library,
+                                           whether it is usable, disabled or invalid, & why.
+  --workflow --check=<file>                Check a workflow file against this installation, & name
+                                           every problem with it.
+  --workflow --install=<file>              Check a workflow & install the text that was checked
+                                           into the installed library. Requires root.
+  --workflow --remove=<id>                 Remove an installed workflow. Requires root.
+
+A workflow file is named for its identifier followed by -workflow.json, & it is installed under
+that name. --install never installs a file that does not check, & a file changed after the
+check cannot be installed, because what is written is the text that was checked. --remove never
+touches the shipped library. A workflow installed with the identifier of a shipped one takes its
+place, which is how one is replaced.
+
+--run-workflow <job> is not an operator command. It is how a workflow's worker is started, & a
+worker without the startup key for its job & its session refuses the job & does nothing.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -67,13 +67,14 @@ account root is protecting itself from.
               $ManagerSocketDir
   served      $ConvertTemp, DATA                     the web server account, 0700, served inert
   root-only   $EngineDir, $BackupLoc                  root:root, folders 0700, files 0600
+  library     $WorkflowLoc, Workflows                root:root, folders 0755, files 0644
   shared      $ProprietaryLoc                        checked, & only its own entry corrected
 
 THE DATA LOCATION IS A ROOT ROOT OWNS, & each kind of file lives in a folder of its own below
 it. $ConvertLoc is the data location & $DataRootLoc holds that same path on the command line,
 where $ConvertLoc has been narrowed to the session area a request uses. Sessions live in
 Sessions, the web server account's caches & its home in Cache, its logs in Logs & its sockets
-in Sockets. Root's own log folder is Engine & the previous installation is Last-Installed-Version.
+in Sockets, & from v4.1.4 the workflows an administrator installs are in Workflows. Root's own log folder is Engine & the previous installation is Last-Installed-Version.
 The install secret is kept in Secrets, from v4.0.4, which only root may change & only the web
 server account's group may enter, & a copy with the same key stays at the top for every release
 that reads it there. The Environment Manager's state sits at the top of the data location,
@@ -155,6 +156,14 @@ ROOT-ONLY.
 Root's own log folder, Engine, & the previous installation kept for an operator after an update.
 Both are root's alone, & each is kept & walked only where no other account could replace the
 folder it is in, which beneath a root owned data location is always.
+
+LIBRARY.
+The installed workflow library, Workflows in the data location, from v4.1.4. It is code an
+administrator adds, & is given the code role's owners & modes & walked the same way, through
+applyCodeRole, so every account may read a workflow & none but root may change one. The web
+server account runs what it reads there, so it must never be able to write it. -fp creates the
+folder, & --workflow --install writes into it only through the kernel, & only while no other
+account can change it. See ABOUT_WORKFLOWS.txt.
 
 SHARED.
 The HRProprietary folder holds every HRProprietary application & whatever else an operator

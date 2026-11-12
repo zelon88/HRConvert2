@@ -1,0 +1,10 @@
+{
+  "Format": "HRProprietary Workflow",
+  "Version": 1,
+  "Name": "Images to JPG, in one zip",
+  "Description": "Converts every selected image to JPG, then puts the JPGs in one zip archive.",
+  "Steps": [
+    { "Operation": "Convert", "Filter": { "Types": ["Image"] }, "Options": { "Extension": "jpg" } },
+    { "Operation": "Archive", "Mode": "together", "Options": { "Extension": "zip", "Filename": "Images" } }
+  ]
+}

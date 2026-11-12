@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -387,6 +387,111 @@ $Gui2Text106 = 'اندازه';
 $Gui2Text107 = 'تاریخ';
 // / 'Type'
 $Gui2Text108 = 'نوع';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'انتخاب';
+// / 'Select All'
+$Gui2Text110 = 'انتخاب همه';
+// / 'Select None'
+$Gui2Text111 = 'لغو انتخاب همه';
+// / 'Select By Type'
+$Gui2Text112 = 'انتخاب بر اساس نوع';
+// / 'Selected: '
+$Gui2Text113 = 'انتخاب‌شده: ';
+// / 'Documents'
+$Gui2Text114 = 'اسناد';
+// / 'Spreadsheets'
+$Gui2Text115 = 'صفحه‌گسترده‌ها';
+// / 'Presentations'
+$Gui2Text116 = 'ارائه‌ها';
+// / 'Images'
+$Gui2Text117 = 'تصاویر';
+// / 'Audio'
+$Gui2Text118 = 'صوت';
+// / 'Video'
+$Gui2Text119 = 'ویدئو';
+// / 'Archives'
+$Gui2Text120 = 'بایگانی‌ها';
+// / 'E-Books'
+$Gui2Text121 = 'کتاب‌های الکترونیکی';
+// / '3D Models'
+$Gui2Text122 = 'مدل‌های سه‌بعدی';
+// / 'Drawings'
+$Gui2Text123 = 'نقشه‌ها';
+// / 'Vector Images'
+$Gui2Text124 = 'تصاویر برداری';
+// / 'Subtitles'
+$Gui2Text125 = 'زیرنویس‌ها';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'فایل‌های OpenSCAD';
+// / 'Streams'
+$Gui2Text127 = 'استریم‌ها';
+// / 'Workflows'
+$Gui2Text128 = 'گردش‌کارها';
+// / 'Files'
+$Gui2Text129 = 'فایل‌ها';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'فایل‌ها را از فهرست زیر انتخاب کنید.';
+// / 'Select By Name: '
+$Gui2Text131 = 'انتخاب بر اساس نام: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'از * و ? به‌عنوان نویسه‌های جایگزین استفاده کنید، یا یک عبارت منظم را بین دو خط مورب بنویسید.';
+// / 'Workflow'
+$Gui2Text133 = 'گردش‌کار';
+// / 'Choose a workflow'
+$Gui2Text134 = 'یک گردش‌کار انتخاب کنید';
+// / 'Run'
+$Gui2Text135 = 'اجرا';
+// / 'Stop'
+$Gui2Text136 = 'توقف';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'فایل‌های انتخاب‌شدهٔ قابل استفاده: {fit} از {count}.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'مرحله {step} از {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'فایل {done} از {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'در انتظار سرور.';
+// / 'Starting.'
+$Gui2Text141 = 'در حال شروع.';
+// / 'Finished.'
+$Gui2Text142 = 'تمام شد.';
+// / 'Stopping.'
+$Gui2Text143 = 'در حال توقف.';
+// / 'Stopped.'
+$Gui2Text144 = 'متوقف شد.';
+// / 'Files made: '
+$Gui2Text145 = 'فایل‌های ساخته‌شده: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'گردش‌کارها در این سرور در دسترس نیستند.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'هیچ گردش‌کاری روی این سرور نصب نشده است.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'آن گردش‌کار دیگر در دسترس نیست.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'این گردش‌کار نمی‌تواند از هیچ‌یک از فایل‌های انتخاب‌شده استفاده کند.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'برای یک گردش‌کار فایل‌های بیش از حد انتخاب شده است.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'سرور مشغول است. چند دقیقهٔ دیگر دوباره تلاش کنید.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'یک گردش‌کار هم‌اکنون در این نشست در حال اجراست.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'گردش‌کار شروع نشد.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'یکی از مراحل گردش‌کار ناموفق بود.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'یک ویروس پیدا شد، بنابراین گردش‌کار متوقف شد.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'زمان گردش‌کار به پایان رسید.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'گردش‌کار فایل‌های بیش از حد ساخت.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'سرور برای تمام کردن گردش‌کار بیش از حد مشغول بود.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'عملیاتی که این گردش‌کار به آن نیاز دارد در دسترس نیست.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'گردش‌کار به‌طور غیرمنتظره متوقف شد.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

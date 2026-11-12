@@ -14,7 +14,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / File information ...
-// / v4.1.3.
+// / v4.1.4.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. An update & --config --repair keep it current.
-$ConfigVersion = 'v4.1.3';
+$ConfigVersion = 'v4.1.4';
 // / ------------------------------
 
 // / ------------------------------
@@ -753,6 +753,18 @@ $AllowUserShare = TRUE;
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AllowUserIdentify = TRUE;
+// /  --Enable Workflows--
+// /   Provide users with workflows, each a list of steps that runs one operation after another on the files a user selects.
+// /   A workflow converts, archives, reads text from, identifies & scans files, as the buttons do, & passes what each step made to the next.
+// /   It runs in the background, so a user may watch it, stop it or leave it, & each operation takes a resource budget as a button does.
+// /   The workflows offered are the ones this release ships & the ones an administrator installs with --workflow --install.
+// /   A workflow that uses an operation switched off here is not offered.
+// /   If set to TRUE the user will be provided with a Workflows panel, & a page may ask for the library, run one & watch it.
+// /   If set to FALSE no workflow is offered or run.
+// /   See Documentation/ABOUT_WORKFLOWS.txt.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$EnableWorkflows = TRUE;
 // /  --Allowed Conversion Types--
 // /   The list of supported conversion types.
 // /   Only conversion types contained in this list will be processed.
@@ -1100,6 +1112,34 @@ $LowStorageWarning = 10;
 // /   Valid options are integers 0 and larger.
 // /   Default is 1024.
 $StorageReserve = 1024;
+// /  --Maximum Workflow Steps--
+// /   The most steps a workflow may have. A workflow with more is not offered, & --workflow --list says why.
+// /   Requires --Enable Workflows--.
+// /   Valid options are integers 1 and larger.
+// /   Default is 16.
+$MaxWorkflowSteps = 16;
+// /  --Maximum Workflow Files--
+// /   The most files a workflow is started on, & the most any one of its steps runs on.
+// /   Requires --Enable Workflows--.
+// /   Valid options are integers 1 and larger.
+// /   Default is 100.
+$MaxWorkflowFiles = 100;
+// /  --Maximum Workflow Runtime--
+// /   The longest a workflow may run, in minutes. It is checked before each operation, & a workflow past it stops there.
+// /   An operation already running is left to finish, because a converter stopped part way leaves a broken file.
+// /   Keep it shorter than --File Deletion Age Threshold--, or a session may be swept while its workflow still runs.
+// /   Requires --Enable Workflows--.
+// /   Valid options are integers 1 and larger.
+// /   Default is 30.
+$MaxWorkflowRuntime = 30;
+// /  --Maximum Concurrent Workflows--
+// /   The most workflows that may run at once on this server, across every session.
+// /   A workflow waiting for a resource budget is still running, so it counts.
+// /   One more is refused until one ends, & the page says the server is busy.
+// /   Requires --Enable Workflows--.
+// /   Valid options are integers 1 and larger.
+// /   Default is 4.
+$MaxConcurrentWorkflows = 4;
 // / ------------------------------
 
 // / ------------------------------

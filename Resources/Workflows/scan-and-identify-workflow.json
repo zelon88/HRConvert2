@@ -1,0 +1,10 @@
+{
+  "Format": "HRProprietary Workflow",
+  "Version": 1,
+  "Name": "Scan, then identify",
+  "Description": "Scans every selected file for viruses, & identifies them in one report when none is found. A file found infected ends the workflow.",
+  "Steps": [
+    { "Operation": "Scan", "Options": { "Scanner": "all" } },
+    { "Operation": "Identify", "Input": "selection", "Options": { "Report": true, "Filename": "Identify_Report" } }
+  ]
+}

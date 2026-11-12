@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.3.
+// / v4.1.4.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -80,7 +80,7 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'SupportedGuis', 'DefaultGui', 'AllowUserSelectableGui',
     'SupportedColors', 'AllowUserSelectableColor', 'ButtonStyle',
     'Font', 'SpinnerStyle', 'SpinnerColor', 'UserEbookInputArray',
-    'ShowGUI', 'ShowFinePrint', 'TOSURL', 'PPURL', 'LogoURL', 'AllowUserShare', 'AllowUserIdentify',
+    'ShowGUI', 'ShowFinePrint', 'TOSURL', 'PPURL', 'LogoURL', 'AllowUserShare', 'AllowUserIdentify', 'EnableWorkflows',
     // / A setting nothing reads is not required, because every installation would carry it for no reason.
     'SupportedConversionTypes', 'RetryCount',
     'RARArchiveMethod', 'AllowBootableIsoImage',
@@ -104,7 +104,8 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'EnableResourceAwareness', 'RequireResourceAwareness', 'CoreManagerSubprocessPollInterval',
     'ResourcePollInterval', 'WorkerReapInterval', 'WorkerStaleGracePeriod', 'TotalResourceBudget',
     'ReserveResourcePercentage', 'MaxConcurrentWorkers', 'MaxExpectedRuntime', 'MaxRuntimeExtensions',
-    'DefaultConversionCost', 'DefaultExpectedRuntime', 'LowStorageWarning', 'StorageReserve', 'MaintainHTAccess');
+    'DefaultConversionCost', 'DefaultExpectedRuntime', 'LowStorageWarning', 'StorageReserve', 'MaintainHTAccess',
+    'MaxWorkflowSteps', 'MaxWorkflowFiles', 'MaxWorkflowRuntime', 'MaxConcurrentWorkflows');
   // / Check that every required setting actually exists in the global scope.
   // / config.php is required at global scope, so every setting it defines lands in $GLOBALS.
   foreach ($requiredConfigVars as $requiredConfigVar) {
@@ -1231,7 +1232,7 @@ function verifyCodeIsTrustedByRoot($treePath) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $AllowUserIdentify, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $LowStorageWarning, $StorageReserve, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc,
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $AllowUserIdentify, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $LowStorageWarning, $StorageReserve, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $WorkflowLoc, $EnableWorkflows, $MaxWorkflowSteps, $MaxWorkflowFiles, $MaxWorkflowRuntime, $MaxConcurrentWorkflows, $RequiredWorkflowCoreVersion,
     $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $EngineApplicationVersion, $CodeIsTrusted, $HostedLoc, $ApplicationLoc, $SecretPlacesWereOpen;
   $rootRecord = array();
   $legacyWasRemoved = FALSE;
@@ -1299,16 +1300,18 @@ function verifyInstallation() {
   // / The web server user's group can read the secret file, so this grants it nothing new.
   // / --run-core-manager is how a service unit starts the listener, & without it every socket key the unit derived would differ from the web workers'.
   // / -c is granted it too, because root hands every sweep to the web server user, & the sweep finds its data location by asking the listener.
+  // / --run-workflow is granted it, because a workflow's worker continues a web session & checks a startup key a web request made with the install secret.
+  // / It logs where a web request logs, for the same reason.
   // / The command is read with the kernel's parser, because parseCommandLine has not run yet & two places deciding what the first argument means come to disagree.
   if ($RunningFromCLI && $CurrentUser === $ApacheUser) {
     list ($listenerArguments, $listenerArgumentCount, $listenerCommand) = parseArgumentVector(isset($_SERVER['argv']) ? $_SERVER['argv'] : array());
-    if (in_array($listenerCommand, array('--start-core-manager', '--start-manager', '--run-core-manager', '-l', '--listen', '-k', '--kill', '--kill-all-workers', '--kill-every-worker', '--status', '-c', '--clean'), TRUE)) {
+    if (in_array($listenerCommand, array('--start-core-manager', '--start-manager', '--run-core-manager', '-l', '--listen', '-k', '--kill', '--kill-all-workers', '--kill-every-worker', '--status', '-c', '--clean', '--run-workflow'), TRUE)) {
       $secretAuthorized = TRUE;
       $userSecretAuthorized = FALSE; } }
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.1.3';
+  $HRConvertVersion = 'v4.1.4';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -1316,19 +1319,19 @@ function verifyInstallation() {
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v4.1.3';
+  $RequiredConfigVersion = 'v4.1.4';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.1.3';
+  $RequiredGuiVersion = 'v4.1.4';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A Language Pack version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v4.1.2';
+  $RequiredLanguageVersion = 'v4.1.4';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / No Core Manager version is pinned here. Every manager role is a subcomponent of the
   // / Engine & getAcceptedManagers() inside the Engine pins each one exactly.
@@ -1337,7 +1340,7 @@ function verifyInstallation() {
   // / Setup Core holds the configuration model, so this MUST be raised whenever
   // / $RequiredConfigVersion is raised. Forgetting does not break anything immediately.
   // / The utility reports a variable it does not know as unaccounted & carries on.
-  $RequiredSetupCoreVersion = 'v4.1.3';
+  $RequiredSetupCoreVersion = 'v4.1.4';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
@@ -1355,6 +1358,11 @@ function verifyInstallation() {
   // / The pipelines this application accepts are listed in its contract, in app-engine-config.php, so adding a pipeline or moving one to a new version raises nothing here.
   $RequiredPipelineCoreVersion = 'v4.1.2';
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
+  // / The Workflow Core component version this core requires.
+  // / This is an exact match, because a component built for another core may call an operation with arguments that have moved.
+  // / Raise this when the Workflow Core itself changes & for nothing else. It is an Engine core, at Resources/Engine/Cores/workflowCore.php.
+  $RequiredWorkflowCoreVersion = 'v4.1.4';
+  $RequiredWorkflowCoreVersion = ltrim($RequiredWorkflowCoreVersion, 'vV');
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
   // / rather than installed beside it. The updater replaces both together, so the pin & the
@@ -1362,7 +1370,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.1.3';
+  $RequiredEngineVersion = 'v4.1.4';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -1492,6 +1500,7 @@ function verifyInstallation() {
   $CacheLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Cache';
   $EngineDir = $DataRootLoc.DIRECTORY_SEPARATOR.'Engine';
   $SecretLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Secrets';
+  $WorkflowLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Workflows';
   // / Every account but root runs its tools with its home in the cache folder, set now that
   // / config.php has been read. A $HomeLoc that still names the data location, as an older
   // / config.php does, is the data location root now owns, so the cache folder is used instead
@@ -1686,6 +1695,8 @@ function verifyLogs() {
     if (isset($RunningFromCLI) && $RunningFromCLI) {
       $LogRole = 'Cli';
       // / This list names the same commands as the Engine's dispatcher, which is not loaded yet.
+      // / A workflow's worker writes a log of its own, so what it did is read apart from every request.
+      if (isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === '--run-workflow') $LogRole = 'Workflow';
       if (isset($_SERVER['argv'][1]) && in_array($_SERVER['argv'][1], array('--start-core-manager', '--start-manager', '--run-core-manager'), TRUE)) {
         $LogRole = 'Manager';
         // / A manager may have a file of its own when the Engine configuration asks for it.
@@ -1795,7 +1806,7 @@ function verifyTokens($Token1, $Token2) {
   // / core would not accept, & that is worth recording once, at the tier that means
   // / somebody should know rather than the tier that means something is broken.
   if ($issueNewSession && $secretIsUsable && !empty($Token1)) warningEntry('A session token arrived & did not verify, so a new session was issued. The token was '.strlen((string)$Token1).' characters. A stale bookmark, a rotated install secret, or a request built by something other than this interface will all do this.');
-  else if ($issueNewSession && $secretIsUsable && $Verbose) logEntry('No session token arrived, so a new session was issued. This is a first visit.');
+  else if ($issueNewSession && $secretIsUsable && $Verbose && PHP_SAPI !== 'cli') logEntry('No session token arrived, so a new session was issued. This is a first visit.');
   // / Issue a fresh token pair. This is the only place tokens are ever generated.
   if ($issueNewSession && $secretIsUsable) {
     list ($Token1, $randomCheck) = generateRandomNumber();
@@ -1815,8 +1826,8 @@ function verifyInputs() {
   // / Set variables.
   global $ShowGUI, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $StreamBaseURL, $UserURLDownload, $LogoURL, $ResolvedLogoURL, $SupportedLanguages, $SupportedColors, $SupportedGuis;
   $InputsAreVerified = TRUE;
-  $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $IdentifyReport = $IdentifyFilename = $Sort = $var = '';
-  $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = $FilesToIdentify = $logoParts = $logoQuery = array();
+  $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $IdentifyReport = $IdentifyFilename = $Sort = $WorkflowName = $var = '';
+  $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = $FilesToIdentify = $WorkflowFiles = $logoParts = $logoQuery = array();
   $key = 0;
   // / Determine whether or not to display a full GUI or a minimalized GUI.
   // / The default action is set in config.php. The user can opt for less than the default, but never more.
@@ -1916,11 +1927,14 @@ function verifyInputs() {
   if (isset($_POST['filesToIdentify'])) list ($FilesToIdentify, $variableIsSanitized[$key++]) = sanitize($_POST['filesToIdentify'], TRUE);
   if (isset($_POST['identifyreport'])) list ($IdentifyReport, $variableIsSanitized[$key++]) = sanitize($_POST['identifyreport'], TRUE);
   if (isset($_POST['identifyfilename'])) list ($IdentifyFilename, $variableIsSanitized[$key++]) = sanitize($_POST['identifyfilename'], TRUE);
+  // / A workflow run reads the workflow to run & the files, in the order a user selected them.
+  if (isset($_POST['workflowRun'])) list ($WorkflowName, $variableIsSanitized[$key++]) = sanitize($_POST['workflowRun'], TRUE);
+  if (isset($_POST['workflowFiles'])) list ($WorkflowFiles, $variableIsSanitized[$key++]) = sanitize($_POST['workflowFiles'], TRUE);
   // / Check the list of error check results and see if any errors occurred.
   foreach ($variableIsSanitized as $var) if (!$var) ($InputsAreVerified = FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $logoParts, $logoQuery, $variableIsSanitized, $key, $var);
-  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort); }
+  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2150,7 +2164,7 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
-    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $HostedLoc, $ApplicationLoc;
+    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $HostedLoc, $ApplicationLoc, $WorkflowLoc;
   // / Application related variables.
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
   $SleepTimer = 0;
@@ -2234,6 +2248,7 @@ function verifyGlobals() {
   $CacheLoc = $DataRootLoc.$DirSep.'Cache';
   $EngineDir = $DataRootLoc.$DirSep.'Engine';
   $SecretLoc = $DataRootLoc.$DirSep.'Secrets';
+  $WorkflowLoc = $DataRootLoc.$DirSep.'Workflows';
   $PrimaryConvertLoc = $SessionLoc;
   // / Each additional data location is a root too, so its session area is the pool member.
   if (is_array($AdditionalConvertLocs)) {
@@ -2612,7 +2627,7 @@ function toolRequirement($manifestName) {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $EngineActive, $DependsManifest, $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $SecretFile, $SecretLoc, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $AllowUserIdentify, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
+  global $EngineActive, $DependsManifest, $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $SecretFile, $SecretLoc, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $AllowUserIdentify, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines, $RequiredWorkflowCoreVersion, $EnableWorkflows;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
@@ -2693,7 +2708,8 @@ function showVersionInfo() {
   $componentChecks = array(
     'Setup Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion'), $RequiredSetupCoreVersion),
     'Dependency Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion'), $RequiredDependencyCoreVersion),
-    'Pipeline Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'pipelineCore.php', 'PipelineCoreVersion'), $RequiredPipelineCoreVersion));
+    'Pipeline Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'pipelineCore.php', 'PipelineCoreVersion'), $RequiredPipelineCoreVersion),
+    'Workflow Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'workflowCore.php', 'WorkflowCoreVersion'), $RequiredWorkflowCoreVersion));
   foreach ($componentChecks as $componentName => $componentPair) {
     if (ltrim((string)$componentPair[0], 'vV') === ltrim((string)$componentPair[1], 'vV')) print('  '.str_pad($componentName, 28).'OK, '.ltrim((string)$componentPair[0], 'vV').$Lol);
     else {
@@ -2803,6 +2819,7 @@ function showVersionInfo() {
   if (!$VirusScan) $disabledFeatures[] = array('Virus scanning', 'Virus Scanning');
   if (!$AllowUserShare) $disabledFeatures[] = array('Share a file', 'User Shareable File Links');
   if (!$AllowUserIdentify) $disabledFeatures[] = array('Identify a file', 'User File Identification');
+  if (!$EnableWorkflows) $disabledFeatures[] = array('Workflows', 'Enable Workflows');
   if (!$EnvironmentManagerMayRepair) $disabledFeatures[] = array('Environment repair', 'Environment Manager May Repair');
   if (!$EnablePerConversionLimits) $disabledFeatures[] = array('Per conversion limits', 'Enable Per Conversion Limits');
   if (!empty($disabledFeatures)) {
@@ -3031,6 +3048,10 @@ function showHelpInfo() {
   print('                              Asks first. -y answers in advance. Root only.'.$Lol);
   print('  --config                    Configure this installation without a text editor.'.$Lol);
   print('  --setup                     Install, check & audit dependencies.'.$Lol);
+  print('  --workflow                  List the workflow library & what is wrong with any of it.'.$Lol);
+  print('  --workflow --check=FILE     Check a workflow file against this installation.'.$Lol);
+  print('  --workflow --install=FILE   Check a workflow & install it. Root only.'.$Lol);
+  print('  --workflow --remove=ID      Remove an installed workflow. Root only.'.$Lol);
   print('  --build --pins              Check every version pin against what ships.'.$Lol);
   print('  --build --pins --write      Rewrite every pin that differs. A developer step.'.$Lol);
   print($Lol);
@@ -3371,7 +3392,9 @@ function verifySort($requestedSort) {
 // / A function to put the session's files in the order asked for & describe each one.
 // / Accepts the session folder, the names of the files in it & the sort code, in that order.
 // / Returns the names in order & a record for each, keyed by name, in that order.
-// / A record holds Size in bytes, SizeText, Modified as a Unix time, ModifiedText & Type, which is the extension.
+// / A record holds Size in bytes, SizeText, Modified as a Unix time, ModifiedText, Type, which is the extension, & Kinds.
+// / Kinds lists the kinds of file applicationFileTypes() says it is, which is how an interface ticks the files of one kind.
+// / A file can be more than one kind, as an rtf file is a document & an e-book.
 // / The Files pipeline reads the sizes & the times, because it is what touches the session folder.
 // / A file it could not describe keeps its place in the list, sorted as if it were empty & oldest, & shows no size or time.
 // / Ties are broken by name, so the order never depends on the order the folder was read in.
@@ -3379,9 +3402,9 @@ function arrangeFiles($sessionFolder, $fileNames, $sortCode) {
   // / Set variables.
   global $EnableMemoryProtection;
   $ArrangedFiles = $FileDetails = array();
-  $describedFiles = $sortKeys = array();
+  $describedFiles = $sortKeys = $fileTypes = $fileKinds = $typeExtensions = array();
   $descriptionsWereRead = $fileWasDescribed = FALSE;
-  $fileName = $sortField = '';
+  $fileName = $sortField = $typeName = '';
   $sortDirection = SORT_ASC;
   $sortFlags = SORT_NATURAL | SORT_FLAG_CASE;
   $fileSize = $fileTime = 0;
@@ -3391,11 +3414,14 @@ function arrangeFiles($sessionFolder, $fileNames, $sortCode) {
   if (sortCodeIsValid($sortCode) && substr((string)$sortCode, 1, 1) === '2') $sortDirection = SORT_DESC;
   if ($sortField === '2' or $sortField === '3') $sortFlags = SORT_NUMERIC;
   if ($sortField === '4') $sortFlags = SORT_STRING | SORT_FLAG_CASE;
+  $fileTypes = applicationFileTypes();
   foreach ((array)$fileNames as $fileName) {
+    redeclare($fileKinds, array());
+    foreach ($fileTypes as $typeName => $typeExtensions) if (in_array(strtolower(getExtension($fileName)), $typeExtensions, TRUE)) $fileKinds[] = $typeName;
     $fileWasDescribed = isset($describedFiles[$fileName]);
     $fileSize = $fileWasDescribed ? (int)$describedFiles[$fileName]['Size'] : 0;
     $fileTime = $fileWasDescribed ? (int)$describedFiles[$fileName]['Modified'] : 0;
-    $FileDetails[$fileName] = array('Size' => $fileSize, 'SizeText' => $fileWasDescribed ? describeByteCount($fileSize) : '', 'Modified' => $fileTime, 'ModifiedText' => $fileWasDescribed ? date('Y-m-d H:i', $fileTime) : '', 'Type' => getExtension($fileName));
+    $FileDetails[$fileName] = array('Size' => $fileSize, 'SizeText' => $fileWasDescribed ? describeByteCount($fileSize) : '', 'Modified' => $fileTime, 'ModifiedText' => $fileWasDescribed ? date('Y-m-d H:i', $fileTime) : '', 'Type' => getExtension($fileName), 'Kinds' => $fileKinds);
     $ArrangedFiles[] = $fileName;
     if ($sortField === '2') $sortKeys[] = $fileSize;
     else if ($sortField === '3') $sortKeys[] = $fileTime;
@@ -3404,7 +3430,7 @@ function arrangeFiles($sessionFolder, $fileNames, $sortCode) {
   // / The keys are sorted in the direction asked for, & the names ascending within a tie, & the names follow both.
   if (!empty($ArrangedFiles)) array_multisort($sortKeys, $sortDirection, $sortFlags, $ArrangedFiles, SORT_ASC, SORT_NATURAL | SORT_FLAG_CASE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $describedFiles, $sortKeys, $descriptionsWereRead, $fileWasDescribed, $fileName, $sortField, $sortDirection, $sortFlags, $fileSize, $fileTime, $sessionFolder, $fileNames, $sortCode);
+  purgeSensitiveMemory($EnableMemoryProtection, $describedFiles, $sortKeys, $fileTypes, $fileKinds, $typeExtensions, $descriptionsWereRead, $fileWasDescribed, $fileName, $sortField, $typeName, $sortDirection, $sortFlags, $fileSize, $fileTime, $sessionFolder, $fileNames, $sortCode);
   return array($ArrangedFiles, $FileDetails); }
 // / -----------------------------------------------------------------------------------
 
@@ -3429,6 +3455,246 @@ function encodeIdentifyReply($identifyComplete, $identifyErrors, $identifyResult
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $replyData, $encodedReply, $identifyComplete, $identifyErrors, $identifyResult);
   return $ReplyLine; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the conversion families & the extensions each reads & writes.
+// / Accepts nothing. Returns each family, keyed by name, as the list it reads & the list it writes, in that order.
+// / The order is significant & Stream must remain last.
+// / Every stream output format is also an ordinary audio or video format, so an mp3 to aac conversion belongs to Audio & to Stream both.
+// / The first family to match wins, so Stream sits last & only ever claims a file no earlier family recognized.
+// / A stream family needs both halves together, because a family matches only when the input & the output extension are both in it.
+// / The two halves are kept apart everywhere else, so that detecting an m3u8 does not also claim every ordinary audio & video file.
+// / convertFiles() resolves a conversion with it, & a workflow asks it which files a conversion reads, so the two cannot disagree.
+function applicationConversionFamilies() {
+  // / Set variables.
+  global $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageInputArray, $ImageOutputArray, $ModelInputArray, $ModelOutputArray, $SCADInputArray, $SCADOutputArray, $SVGInputArray, $SVGOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $MediaInputArray, $MediaOutputArray, $ArchiveArray, $DrawingInputArray, $DrawingOutputArray, $EbookInputArray, $EbookOutputArray, $StreamArray, $StreamOutputArray;
+  $ConversionFamilies = array(
+    'Document' => array(array_merge($DocumentArray, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray), array_merge($DocumentArray, $SpreadsheetArray, $PresentationOutputArray, $XPSOutputArray)),
+    'Image' => array($ImageInputArray, $ImageOutputArray),
+    'Model' => array($ModelInputArray, $ModelOutputArray),
+    'Scad' => array($SCADInputArray, $SCADOutputArray),
+    'SVG' => array($SVGInputArray, $SVGOutputArray),
+    'Video' => array($VideoInputArray, $VideoOutputArray),
+    'Subtitle' => array($SubtitleInputArray, $SubtitleOutputArray),
+    'Audio' => array($MediaInputArray, $MediaOutputArray),
+    'Archive' => array($ArchiveArray, $ArchiveArray),
+    'Drawing' => array($DrawingInputArray, $DrawingOutputArray),
+    'Ebook' => array($EbookInputArray, $EbookOutputArray),
+    'Stream' => array(array_merge($StreamArray, $StreamOutputArray), array_merge($StreamArray, $StreamOutputArray)));
+  return $ConversionFamilies; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the kinds of file this application reads, by the lists config.php keeps.
+// / Accepts nothing. Returns each kind's name & the extensions it reads.
+// / A workflow's filter names a kind, & an interface's select by type lists them.
+// / A kind whose list is empty is left out, because its family is switched off.
+function applicationFileTypes() {
+  // / Set variables.
+  global $DocumentArray, $XPSInputArray, $SpreadsheetArray, $PresentationInputArray, $ImageInputArray, $MediaInputArray, $VideoInputArray, $DearchiveArray, $EbookInputArray, $ModelInputArray, $DrawingInputArray, $SVGInputArray, $SubtitleInputArray, $SCADInputArray, $StreamArray, $EnableMemoryProtection;
+  $FileTypes = array();
+  $typeName = '';
+  $typeExtensions = $typeLists = array();
+  $typeLists = array('Document' => array_merge((array)$DocumentArray, (array)$XPSInputArray), 'Spreadsheet' => $SpreadsheetArray, 'Presentation' => $PresentationInputArray, 'Image' => $ImageInputArray,
+    'Audio' => $MediaInputArray, 'Video' => $VideoInputArray, 'Archive' => $DearchiveArray, 'Ebook' => $EbookInputArray, 'Model' => $ModelInputArray, 'Drawing' => $DrawingInputArray,
+    'Vector' => $SVGInputArray, 'Subtitle' => $SubtitleInputArray, 'Scad' => $SCADInputArray, 'Stream' => $StreamArray);
+  foreach ($typeLists as $typeName => $typeExtensions) if (is_array($typeExtensions) && count($typeExtensions) > 0) $FileTypes[$typeName] = array_values(array_unique(array_map('strtolower', $typeExtensions)));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $typeName, $typeExtensions, $typeLists);
+  return $FileTypes; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to declare the operations a workflow may run, & the kinds of file a step may name.
+// / Accepts nothing. Returns an array holding Operations & FileTypes. It is $EngineOperationProvider.
+// / Each operation names the function that runs it, the budget it takes, whether this server allows it, what it reads, its modes & its options.
+// / Every one runs the code a button in an interface runs, so a workflow does nothing a user could not do by hand.
+// / Convert decides what it reads from the extension it is asked to write, because a conversion to jpg reads an image & not a spreadsheet.
+// / Archive's Filename names the one archive every file goes into, & an empty one archives each file under its own name.
+// / See Documentation/ABOUT_WORKFLOWS.txt.
+function applicationOperations() {
+  // / Set variables.
+  global $SupportedConversionTypes, $AllowUserIdentify, $AllowUserVirusScan, $ArchiveArray, $DocumentArray, $PDFWorkArr, $EnableMemoryProtection;
+  $OperationRegistry = array();
+  $convertOutputs = $archiveFormats = $ocrFormats = $familyFormats = array();
+  $familyName = '';
+  foreach (applicationConversionFamilies() as $familyName => $familyFormats) if (is_array($familyFormats[1])) redeclare($convertOutputs, array_merge($convertOutputs, $familyFormats[1]));
+  redeclare($convertOutputs, array_values(array_unique(array_map('strtolower', $convertOutputs))));
+  $archiveFormats = array_values(array_unique(array_merge(array('zip'), (array)$ArchiveArray)));
+  $ocrFormats = array_values(array_unique(array_merge(array('pdf'), (array)$DocumentArray)));
+  $OperationRegistry = array(
+    'Operations' => array(
+      'Convert' => array('Invoke' => 'invokeConvertOperation', 'Budget' => 'conversion', 'Enabled' => (count($convertOutputs) > 0), 'Accepts' => 'convertOperationAccepts', 'Modes' => array('each'),
+        'Options' => array('Extension' => array('Type' => 'choice', 'Required' => TRUE, 'Choices' => $convertOutputs), 'Filename' => array('Type' => 'name', 'Default' => ''),
+          'Height' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 65535), 'Width' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 65535),
+          'Rotate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => -360, 'Maximum' => 360), 'Bitrate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 100000))),
+      'Archive' => array('Invoke' => 'invokeArchiveOperation', 'Budget' => 'archive', 'Enabled' => in_array('Archive', (array)$SupportedConversionTypes, TRUE), 'Inputs' => array(), 'Modes' => array('together', 'each'),
+        'Options' => array('Extension' => array('Type' => 'choice', 'Default' => 'zip', 'Choices' => $archiveFormats), 'Filename' => array('Type' => 'name', 'Default' => 'Workflow_Files'))),
+      'OCR' => array('Invoke' => 'invokeOcrOperation', 'Budget' => 'OCR', 'Enabled' => (in_array('OCR', (array)$SupportedConversionTypes, TRUE) && in_array('Document', (array)$SupportedConversionTypes, TRUE)), 'Inputs' => (array)$PDFWorkArr, 'Modes' => array('each'),
+        'Options' => array('Extension' => array('Type' => 'choice', 'Default' => 'pdf', 'Choices' => $ocrFormats), 'Method' => array('Type' => 'choice', 'Default' => '0', 'Choices' => array('0', '1', '2')), 'Filename' => array('Type' => 'name', 'Default' => ''))),
+      'Identify' => array('Invoke' => 'invokeIdentifyOperation', 'Budget' => 'Identify', 'Enabled' => ($AllowUserIdentify === TRUE), 'Inputs' => array(), 'Modes' => array('together'),
+        'Options' => array('Report' => array('Type' => 'boolean', 'Default' => TRUE), 'Filename' => array('Type' => 'name', 'Default' => 'User_Identify_Report'))),
+      'Scan' => array('Invoke' => 'invokeScanOperation', 'Budget' => 'user virus scan', 'Enabled' => ($AllowUserVirusScan === TRUE), 'Inputs' => array(), 'Modes' => array('together'),
+        'Options' => array('Scanner' => array('Type' => 'choice', 'Default' => 'all', 'Choices' => array('all', 'clamav', 'scancore'))))),
+    'FileTypes' => applicationFileTypes());
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $convertOutputs, $archiveFormats, $ocrFormats, $familyFormats, $familyName);
+  return $OperationRegistry; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether Convert reads a file, given the extension it is asked to write.
+// / Accepts the file's extension & the step's options. Returns TRUE when a family reads the one & writes the other.
+// / A file that is already the format asked for is not read, because there is nothing to convert.
+// / It asks the lists convertFiles() asks, so a workflow leaves out a file the converter would refuse.
+function convertOperationAccepts($fileExtension, $operationOptions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OperationAccepts = FALSE;
+  $outputExtension = $inputExtension = $familyName = '';
+  $familyFormats = array();
+  $inputExtension = strtolower((string)$fileExtension);
+  $outputExtension = (is_array($operationOptions) && isset($operationOptions['Extension'])) ? strtolower((string)$operationOptions['Extension']) : '';
+  foreach (applicationConversionFamilies() as $familyName => $familyFormats) if (is_array($familyFormats[0]) && is_array($familyFormats[1]) && in_array($inputExtension, $familyFormats[0]) && in_array($outputExtension, $familyFormats[1])) $OperationAccepts = TRUE;
+  if ($inputExtension === $outputExtension) $OperationAccepts = FALSE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $outputExtension, $inputExtension, $familyName, $familyFormats, $fileExtension, $operationOptions);
+  return $OperationAccepts; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run Convert, as a button & a workflow both run it.
+// / Accepts the files & the options, which are Extension, Filename, Height, Width, Rotate & Bitrate.
+// / Returns whether any file converted, whether anything went wrong, the names it made & what it found, which is nothing, in that order.
+// / A size, a rotation or a bitrate of 0 is passed on as none, which is what a page sends when a user leaves one alone.
+function invokeConvertOperation($selectedFiles, $operationOptions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $OperationFindings = array();
+  $optionValues = array();
+  $numericName = '';
+  $optionValues = array('Filename' => (string)($operationOptions['Filename'] ?? ''), 'Extension' => strtolower((string)($operationOptions['Extension'] ?? '')));
+  foreach (array('Height', 'Width', 'Rotate', 'Bitrate') as $numericName) $optionValues[$numericName] = (isset($operationOptions[$numericName]) && (string)$operationOptions[$numericName] !== '0') ? (string)$operationOptions[$numericName] : '';
+  list ($OperationSucceeded, $OperationErrors, $ProducedFiles) = convertFiles($selectedFiles, $optionValues['Filename'], $optionValues['Extension'], $optionValues['Height'], $optionValues['Width'], $optionValues['Rotate'], $optionValues['Bitrate']);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $optionValues, $numericName, $selectedFiles, $operationOptions);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run Archive, as a button & a workflow both run it.
+// / Accepts the files & the options, which are Extension & Filename.
+// / Returns whether any file was archived, whether anything went wrong, the archives it made & what it found, which is nothing, in that order.
+// / A Filename puts every file into one archive of that name, & an empty one archives each file under its own name.
+function invokeArchiveOperation($selectedFiles, $operationOptions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $OperationFindings = array();
+  $archivePath = '';
+  list ($OperationSucceeded, $OperationErrors, $archivePath, $ProducedFiles) = archiveFiles($selectedFiles, (string)($operationOptions['Filename'] ?? ''), strtolower((string)($operationOptions['Extension'] ?? 'zip')));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $archivePath, $selectedFiles, $operationOptions);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run OCR, as a button & a workflow both run it.
+// / Accepts the files & the options, which are Extension, Method & Filename.
+// / Returns whether any file was read, whether anything went wrong, the names it made & what it found, which is nothing, in that order.
+// / OCR is an operation pipeline, & there is no built in fallback for it, so a missing OCR pipeline is reported rather than read as an OCR run that produced nothing.
+function invokeOcrOperation($selectedFiles, $operationOptions) {
+  // / Set variables.
+  global $PipelineCoreActive, $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $OperationFindings = array();
+  $operationOutput = array();
+  if (!$PipelineCoreActive or !function_exists('runOperationPipeline')) {
+    $OperationErrors = TRUE;
+    errorEntry('OCR was requested but no OCR pipeline is installed & this core has no built in OCR!', 34006, FALSE); }
+  else {
+    list ($OperationSucceeded, $OperationErrors, $operationOutput) = runOperationPipeline('OCR', $selectedFiles, (string)($operationOptions['Filename'] ?? ''), strtolower((string)($operationOptions['Extension'] ?? 'pdf')), (string)($operationOptions['Method'] ?? '0'));
+    if (is_array($operationOutput)) $ProducedFiles = array_values($operationOutput); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $operationOutput, $selectedFiles, $operationOptions);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run Identify, as a button & a workflow both run it.
+// / Accepts the files & the options, which are Report & Filename. Report is a boolean, or 1 as a page sends it.
+// / Returns whether any file was identified, whether anything went wrong, the report it wrote if any & what it found, in that order.
+// / What it found is Identify's result, holding Records & Report, which a button shows & a workflow passes over.
+function invokeIdentifyOperation($selectedFiles, $operationOptions) {
+  // / Set variables.
+  global $PipelineCoreActive, $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $OperationFindings = array();
+  if (!$PipelineCoreActive or !function_exists('runOperationPipeline')) {
+    $OperationErrors = TRUE;
+    errorEntry('Identify was requested but no Identify pipeline is installed!', 34006, FALSE); }
+  else {
+    list ($OperationSucceeded, $OperationErrors, $OperationFindings) = runOperationPipeline('Identify', $selectedFiles, (string)($operationOptions['Filename'] ?? ''), 'txt', $operationOptions['Report'] ?? FALSE);
+    if (!is_array($OperationFindings)) $OperationFindings = array();
+    if (isset($OperationFindings['Report']) && is_string($OperationFindings['Report']) && $OperationFindings['Report'] !== '') $ProducedFiles[] = $OperationFindings['Report']; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $selectedFiles, $operationOptions);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to scan files for a workflow, & keep the report beside them.
+// / Accepts the files & the options, which hold Scanner, all, clamav or scancore.
+// / Returns whether a verdict was reached, whether anything went wrong, the report it kept & what it found, in that order.
+// / What it found holds Halt as threat when any file is found infected, which ends a workflow, so nothing is made from an infected file.
+// / A button's scan hands its report straight to the browser, & a workflow keeps it in the session instead, beside what it scanned.
+// / The report is named User_Virus_Scan_Report.txt, or the next free name when that is taken.
+function invokeScanOperation($selectedFiles, $operationOptions) {
+  // / Set variables.
+  global $ConvertDir, $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $OperationFindings = array();
+  $threatWasFound = $nameWasFound = FALSE;
+  $reportPath = $reportName = $keptPath = $keptName = '';
+  list ($OperationSucceeded, $OperationErrors, $threatWasFound, $reportPath, $reportName) = userVirusScan($selectedFiles, strtolower((string)($operationOptions['Scanner'] ?? 'all')));
+  if ($threatWasFound) $OperationFindings['Halt'] = 'threat';
+  clearstatcache(TRUE, (string)$reportPath);
+  if (is_file((string)$reportPath)) {
+    list ($nameWasFound, $keptPath, $keptName) = array(TRUE, $ConvertDir.'User_Virus_Scan_Report.txt', 'User_Virus_Scan_Report.txt');
+    if (file_exists($keptPath) or is_link($keptPath)) list ($nameWasFound, $keptPath, $keptName) = findFreeOutputName($ConvertDir, 'User_Virus_Scan_Report', 'txt');
+    if ($nameWasFound && @copy((string)$reportPath, $keptPath)) $ProducedFiles[] = $keptName;
+    else {
+      $OperationErrors = TRUE;
+      warningEntry('A workflow\'s virus scan report could not be kept beside the files it scanned.'); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $threatWasFound, $nameWasFound, $reportPath, $reportName, $keptPath, $keptName, $selectedFiles, $operationOptions);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to adopt the session a workflow worker was handed.
+// / Accepts nothing. Returns TRUE when a session was handed over & adopted.
+// / A session is handed over as the two halves $SesHash3 joins, the day's folder & the session's, each 18 hexadecimal digits.
+// / Anything else is refused, & the worker is left in the empty session it made for itself, so it finds no job & stops.
+// / Nothing is trusted yet. The Workflow Core checks the worker's startup key, which is bound to this session & its job, before anything is acted on.
+function adoptWorkflowSession() {
+  // / Set variables.
+  global $SesHash, $SesHash2, $SesHash3, $EnableMemoryProtection;
+  $SessionWasAdopted = FALSE;
+  $workerContext = '';
+  $contextParts = array();
+  if (function_exists('readTransportedWorkerContext')) $workerContext = readTransportedWorkerContext();
+  if (preg_match('/^([a-f0-9]{18})\/([a-f0-9]{18})$/', $workerContext, $contextParts) === 1) {
+    $SesHash = $contextParts[1];
+    $SesHash2 = $contextParts[2];
+    $SesHash3 = $SesHash.DIRECTORY_SEPARATOR.$SesHash2;
+    $SessionWasAdopted = TRUE; }
+  else warningEntry('A workflow worker was started without a session it can continue.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $workerContext, $contextParts);
+  return $SessionWasAdopted; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -3624,6 +3890,7 @@ function applicationConfigModel() {
       'AllowUserSelectableLanguage' => array('Type' => 'bool', 'Depends' => 'SupportedLanguages', 'Description' => 'Allow User Selectable Language'),
       'AllowUserShare' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User Shareable File Links'),
       'AllowUserIdentify' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User File Identification'),
+      'EnableWorkflows' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Workflows'),
       'SupportedConversionTypes' => array('Type' => 'array', 'Default' => 'array(\'Document\', \'Image\', \'Model\', \'Scad\', \'Drawing\', \'SVG\', \'Video\', \'Subtitle\', \'Audio\', \'Archive\', \'Stream\', \'OCR\', \'Ebook\')', 'Depends' => '', 'Description' => 'Allowed Conversion Types'),
       'AllowBootableIsoImage' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow Creation Of Bootable ISO Images'),
       'DeleteThreshold' => array('Type' => 'int', 'Depends' => '', 'Description' => 'File Deletion Age Threshold'),
@@ -3711,7 +3978,11 @@ function applicationConfigModel() {
       'DefaultConversionCost' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Default Conversion Cost'),
       'DefaultExpectedRuntime' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Default Expected Runtime'),
       'LowStorageWarning' => array('Type' => 'int', 'Depends' => 'EnableResourceAwareness', 'Description' => 'Low Storage Warning'),
-      'StorageReserve' => array('Type' => 'int', 'Depends' => 'EnableResourceAwareness', 'Description' => 'Storage Reserve'))),
+      'StorageReserve' => array('Type' => 'int', 'Depends' => 'EnableResourceAwareness', 'Description' => 'Storage Reserve'),
+      'MaxWorkflowSteps' => array('Type' => 'int', 'Depends' => 'EnableWorkflows', 'Description' => 'Maximum Workflow Steps'),
+      'MaxWorkflowFiles' => array('Type' => 'int', 'Depends' => 'EnableWorkflows', 'Description' => 'Maximum Workflow Files'),
+      'MaxWorkflowRuntime' => array('Type' => 'int', 'Depends' => 'EnableWorkflows', 'Description' => 'Maximum Workflow Runtime'),
+      'MaxConcurrentWorkflows' => array('Type' => 'int', 'Depends' => 'EnableWorkflows', 'Description' => 'Maximum Concurrent Workflows'))),
     // / The format lists ARE modelled & the section stays Writable FALSE.
     // / Those answer different questions. Modelling them lets the utility say whether a
     // / list is present & report the section honestly instead of as an unknown. Writable
@@ -4141,7 +4412,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
   $Files = $FileDetails = array();
@@ -4465,6 +4736,8 @@ function deleteFiles($FilesToDelete) {
 // / the version that was verified is provably the version that runs.
 // / 7-Zip cannot create rar archives. RAR compression is proprietary & 7-Zip reads the
 // / format without being able to write it, so rar output has NO fallback.
+// / Returns whether any file was archived, whether anything went wrong, the last archive's path & the name of every archive it made, in that order.
+// / It prints nothing. The core prints what it made for a button, & a workflow passes it to the next step.
 function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   // / Set variables.
   global $Verbose, $VirusScan, $Lol, $Lolol, $EnableMemoryProtection;
@@ -4474,6 +4747,7 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = $pathname = $oldPathname = $oldExtension = $NewPathname = $archiveCommand = $resolvedFilename = '';
+  $ArchivedFiles = array();
   // / The name every file is archived under, once the first file has settled it.
   $archiveName = $UserFilename;
   $rararr = array('rar');
@@ -4574,8 +4848,8 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
     else {
       $loopCheck = TRUE;
       $archiveWasStarted = TRUE;
-      // / Output the filename of the converted file to the UI so it can be given to the user.
-      print($resolvedFilename.$Lol);
+      // / An archive several files went into is named once.
+      if (!in_array($resolvedFilename, $ArchivedFiles, TRUE)) $ArchivedFiles[] = $resolvedFilename;
       if ($Verbose) logEntry('Archived file '.$pathname.' to '.$NewPathname.'.'); }
     // / Record that at least one file in this request succeeded.
     // / $loopCheck is reset on every iteration, so without this the result would reflect
@@ -4584,56 +4858,25 @@ function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
   if ($anyFileSucceeded) $ArchiveComplete = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $archiveWasStarted, $archiveName, $resolvedFilename, $file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $FilesToArchive, $UserFilename, $UserExtension);
-  return array($ArchiveComplete, $ArchiveErrors, $NewPathname); }
+  return array($ArchiveComplete, $ArchiveErrors, $NewPathname, $ArchivedFiles); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to convert a selection of files.
+// / Returns whether any file converted, whether anything went wrong & the name of every file it made, in that order.
+// / It prints nothing. The core prints what it made for a button, & a workflow passes it to the next step.
 // / A backgrounded successful stream has no output file when this function returns.
 // / $WaitForStream tells us the conversion is still running & must not be judged by its output.
+// / A family is resolved by applicationConversionFamilies(), so a workflow asks the same lists this does.
 function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate) {
   // / Set variables.
-  global $Verbose, $VirusScan, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $DocumentArray, $ImageArray, $ModelArray, $SCADArray, $DrawingArray, $SVGInputArray, $SVGOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $StreamOutputArray, $MediaInputArray, $MediaOutputArray, $ArchiveArray, $EbookInputArray, $EbookOutputArray, $Lol, $WaitForStream, $EnableMemoryProtection,
-    $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $SCADOutputArray, $DrawingInputArray, $DrawingOutputArray;
+  global $Verbose, $VirusScan, $WaitForStream, $EnableMemoryProtection;
   $MainConversionSuccess = $MainConversionErrors = $virusFound = $skip = $isExtensionSupported = $fileIsVerified = $variableIsSanitized = $outputExists = $conversionSuccess = $conversionErrors = $fileConversionSuccess = $anyStreamStarted = $scanComplete = FALSE;
   $clean = $copy = TRUE;
   $pathname = $oldPathname = $oldExtension = $newPathname = $file = $convertedFilename = $extension = $verifiedFilename = '';
-  $arrArray = array();
-  $arrKey = 0;
-  // / This is for input file filtering.
-  $docarray = array_merge($DocumentArray, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray);
-  $imgarray = $ImageInputArray;
-  // / The GUI variable names are unchanged. Only what feeds them has changed.
-  $modelarray = $ModelInputArray;
-  $scadarray = $SCADInputArray;
-  $drawingarray = $DrawingInputArray;
-  $svgarray = $SVGInputArray;
-  $videoarray = $VideoInputArray;
-  $subtitleArray = $SubtitleInputArray;
-  $audioarray = $MediaInputArray;
-  $archarray = $ArchiveArray;
-  $ebookarray = $EbookInputArray;
-  $ebookarrayout = $EbookOutputArray;
-  // / A stream family needs both halves together, because a family matches only when the
-  // / input & the output extension are both in it. The two halves are kept apart everywhere
-  // / else so that detecting an m3u8 does not also claim every ordinary audio & video file.
-  $streamarray = array_merge($StreamArray, $StreamOutputArray);
-  // / The format family map, where order is significant & Stream must remain last.
-  // / Every stream output format is also an ordinary audio or video format, so an mp3 to aac conversion belongs to Audio & to Stream both.
-  // / The first family to match wins, so Stream sits last & only ever claims a file no earlier family recognized.
-  $arrayArray = array('Document' => $docarray, 'Image' => $imgarray, 'Model' => $modelarray, 'Scad' => $scadarray, 'SVG' => $svgarray, 'Video' => $videoarray, 'Subtitle' => $subtitleArray, 'Audio' => $audioarray, 'Archive' => $archarray, 'Drawing' => $drawingarray, 'Ebook' => $ebookarray, 'Stream' => $streamarray);
-  // / This is for output file filtering.
-  $docarrayout = array_merge($DocumentArray, $SpreadsheetArray, $PresentationOutputArray, $XPSOutputArray);
-  $imgarrayout = $ImageOutputArray;
-  $modelarrayout = $ModelOutputArray;
-  $scadarrayout = $SCADOutputArray;
-  $drawingarrayout = $DrawingOutputArray;
-  $svgarrayout = $SVGOutputArray;
-  $videoarrayout = $VideoOutputArray;
-  $subtitleArrayout = $SubtitleOutputArray;
-  $audioarrayout = $MediaOutputArray;
-  $archarrayout = $ArchiveArray;
-  $arrayArrayOut = array('Document' => $docarrayout, 'Image' => $imgarrayout, 'Model' => $modelarrayout, 'Scad' => $scadarrayout, 'SVG' => $svgarrayout, 'Video' => $videoarrayout, 'Subtitle' => $subtitleArrayout, 'Audio' => $audioarrayout, 'Archive' => $archarrayout, 'Drawing' => $drawingarrayout, 'Ebook' => $ebookarrayout, 'Stream' => $streamarray);
+  $ConvertedFiles = $familyFormats = $conversionFamilies = array();
+  $arrKey = '';
+  $conversionFamilies = applicationConversionFamilies();
   // / Make sure the input files are formatted into an array.
   if (!is_array($ConvertSelected)) $ConvertSelected = array($ConvertSelected);
   // / Iterate through the array of input files.
@@ -4666,16 +4909,16 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
       if (!$scanComplete) errorEntry('Could not perform a virus scan!', 5002, TRUE);
       if ($virusFound) errorEntry('Virus detected!', 5003, TRUE);
       if ($Verbose) logEntry('Virus scan complete.'); }
-    // / Loop through the array of supported formats & only call the converter if both input & output files are supported.
+    // / Loop through the families & only call the converter if both input & output files are supported.
     // / This loop resolves. It does not enumerate.
     // / An interface offers every family that claims the input extension, which is why an
     // / rtf file shows a Document menu & an E-Book menu. By the time a request arrives the
     // / user has already chosen an output format from one of those menus, so the input &
     // / output pair together name one family & the first match is the right match.
-    foreach ($arrayArray as $arrKey => $arrArray) {
-      if (!is_array($arrArray) or !is_array($arrayArrayOut[$arrKey] ?? NULL)) continue;
-      if (!in_array(strtolower($oldExtension), $arrArray)) continue;
-      if (!in_array(strtolower($UserExtension), $arrayArrayOut[$arrKey])) continue;
+    foreach ($conversionFamilies as $arrKey => $familyFormats) {
+      if (!is_array($familyFormats[0]) or !is_array($familyFormats[1])) continue;
+      if (!in_array(strtolower($oldExtension), $familyFormats[0])) continue;
+      if (!in_array(strtolower($UserExtension), $familyFormats[1])) continue;
       $isExtensionSupported = TRUE;
       list ($conversionSuccess, $conversionErrors, $newPathname, $extension, $convertedFilename) = convert($arrKey, $pathname, $newPathname, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
       if ($conversionErrors) {
@@ -4701,8 +4944,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
     $outputExists = $WaitForStream ? TRUE : file_exists($newPathname);
     if ($outputExists) {
       $fileConversionSuccess = TRUE;
-      // / Output the filename of the converted file to the UI so it can be given to the user.
-      print($convertedFilename.$Lol);
+      // / The name is returned, so the caller decides what is done with it.
+      $ConvertedFiles[] = $convertedFilename;
       if ($Verbose) logEntry('Created a file at '.$newPathname.'.'); }
     else {
       $MainConversionErrors = TRUE;
@@ -4713,8 +4956,8 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
   // / Restore the aggregate so the core can supervise a stream started by ANY file.
   $WaitForStream = $anyStreamStarted;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $archarrayout, $audioarrayout, $docarrayout, $drawingarrayout, $imgarrayout, $modelarrayout, $scadarrayout, $subtitleArrayout, $svgarray, $svgarrayout, $videoarrayout, $file, $pathname, $oldPathname, $oldExtension, $newPathname, $docarray, $imgarray, $audioarray, $videoarray, $subtitleArray, $modelarray, $scadarray, $drawingarray, $archarray, $streamarray, $arrayArray, $arrArray, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists, $conversionSuccess, $conversionErrors, $fileConversionSuccess, $anyStreamStarted, $arrayArrayOut, $convertedFilename, $extension, $ebookarray, $ebookarrayout, $verifiedFilename);
-  return array($MainConversionSuccess, $MainConversionErrors); }
+  purgeSensitiveMemory($EnableMemoryProtection, $familyFormats, $conversionFamilies, $file, $pathname, $oldPathname, $oldExtension, $newPathname, $fileIsVerified, $scanComplete, $virusFound, $variableIsSanitized, $arrKey, $clean, $copy, $skip, $isExtensionSupported, $outputExists, $conversionSuccess, $conversionErrors, $fileConversionSuccess, $anyStreamStarted, $convertedFilename, $extension, $verifiedFilename);
+  return array($MainConversionSuccess, $MainConversionErrors, $ConvertedFiles); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -5262,7 +5505,7 @@ list ($InstallationIsVerified, $ConfigFile, $Version, $CoreLoaded) = verifyInsta
 if (!$InstallationIsVerified) quickDie('Could not verify installation!', 5);
 
 // / The following code verifies that string inputs to the core are properly sanitized.
-list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort) = verifyInputs();
+list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles) = verifyInputs();
 if (!$InputsAreVerified) quickDie('Could not verify inputs!', 6);
 
 // / The following code verifies enough user information to generate a unique session identifier.
@@ -5344,6 +5587,11 @@ else {
 // / not exist until the Engine has been verified.
 if ($RequireResourceAwareness && !$ResourceAwarenessActive) errorEntry('Resource awareness is required by config.php & the Engine is unavailable!', 31010, TRUE);
 
+// / A workflow's worker continues a session a request handed it, rather than one a browser presented.
+// / It is adopted here, after the Engine has loaded & before the globals that hang off a session are built.
+$WorkflowSessionAdopted = FALSE;
+if ($RunningFromCLI && $EngineActive && isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === '--run-workflow') $WorkflowSessionAdopted = adoptWorkflowSession();
+
 // / The following code verifies & sanitizes global variables for the session.
 list ($GlobalsAreVerified) = verifyGlobals();
 if (!$GlobalsAreVerified) errorEntry('Could not verify globals!', 11, TRUE);
@@ -5365,6 +5613,15 @@ if ($PipelineCoreActive) {
 if (!$PipelineCoreActive) warningEntry('The Pipeline Core is unavailable. No conversion can run until it is repaired.');
 else if ($Verbose) logEntry('Verified the Pipeline Core. '.$PipelineCount.' conversion pipeline(s) are available.');
 
+// / The following code verifies the Workflow Core, which reads, checks & runs workflows.
+// / It is loaded where workflows are enabled, & for --workflow, so an administrator can check a workflow before enabling them.
+// / A missing or mismatched Workflow Core costs workflows & nothing else, so it is a warning.
+$WorkflowCoreActive = FALSE;
+$WorkflowCoreVersion = '';
+if ($EnableWorkflows or ($RunningFromCLI && isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === '--workflow')) list ($WorkflowCoreActive, $WorkflowCoreVersion) = verifyCoreComponent('Workflow Core', 'Engine'.$DirSep.'Cores'.$DirSep.'workflowCore.php', 'WorkflowCoreVersion', $RequiredWorkflowCoreVersion);
+if ($EnableWorkflows && !$WorkflowCoreActive) warningEntry('The Workflow Core is unavailable. No workflow can run until it is repaired.');
+else if ($WorkflowCoreActive && $Verbose) logEntry('Verified the Workflow Core.');
+
 // / The following code decides if the security context being attempted matches a valid CLI or web request.
 // / Error 27 should not be possible & should never be able to fire. If it does something is seriously wrong.
 list ($CommandLineHandled, $UserType, $CommandLineStatus) = parseCommandLine();
@@ -5379,7 +5636,8 @@ $EngineActiveSurface = $UserType;
 if ($CommandLineHandled && $UserType === 'web') errorEntry('Could not verify user type!', 27, TRUE);
 
 // / If this is a CLI operation log a warning that conversion operations will be disabled.
-if ($CommandLineHandled && $UserType === 'cli') warningEntry('CLI user detected. Conversion operations are disabled.');
+// / A workflow's worker is the one command line that converts, so it is not warned about.
+if ($CommandLineHandled && $UserType === 'cli' && !$WorkflowSessionAdopted) warningEntry('CLI user detected. Conversion operations are disabled.');
 
 // / Only enable file operations for web users, when the script is being run with Apache+PHP.
 if (!$CommandLineHandled && $UserType === 'web') {
@@ -5431,7 +5689,7 @@ if (!$CommandLineHandled && $UserType === 'web') {
     // / A caller can tell a failure from a success only by reading the body, & a whole page carries the script literal that recognises a core error.
     // / A file operation returns a filename or an error, & never a page.
     // / An upload is known by its files, because Dropzone sends the file & the two tokens & no upload field.
-    if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete']) && !isset($_POST['filesToIdentify'])) {
+    if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete']) && !isset($_POST['filesToIdentify']) && !isset($_POST['workflowLibrary']) && !isset($_POST['workflowRun']) && !isset($_POST['workflowStatus']) && !isset($_POST['workflowStop'])) {
 
       // / The following code sets the GUI for the session.
       list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
@@ -5511,7 +5769,9 @@ if (!$CommandLineHandled && $UserType === 'web') {
         if (!takeOperationBudget('archive')) print($Alert3.$Lol);
         else {
           logEntry('Initiating Archiver.');
-          list ($ArchiveComplete, $ArchiveErrors) = archiveFiles($FilesToArchive, $UserFilename, $UserExtension);
+          list ($ArchiveComplete, $ArchiveErrors, $ArchivedFiles, $ArchiveFindings) = invokeArchiveOperation($FilesToArchive, array('Filename' => $UserFilename, 'Extension' => $UserExtension));
+          // / The core prints, & the operation returned, as contract 6 says. The interface reads one line per file.
+          foreach ($ArchivedFiles as $ArchivedFile) print($ArchivedFile.$Lol);
           if (!$ArchiveComplete) errorEntry('Archive Failed!', 20, TRUE);
           if ($ArchiveErrors) logEntry('Archive finished with errors.');
           if ($Verbose) logEntry('Archive Complete.'); }
@@ -5522,7 +5782,9 @@ if (!$CommandLineHandled && $UserType === 'web') {
         if (!takeOperationBudget('conversion')) print($Alert3.$Lol);
         else {
           logEntry('Initiating Converter.');
-          list ($ConversionComplete, $ConversionErrors) = convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, $Width, $Rotate, $Bitrate);
+          list ($ConversionComplete, $ConversionErrors, $ConvertedFiles, $ConversionFindings) = invokeConvertOperation($ConvertSelected, array('Filename' => $UserFilename, 'Extension' => $UserExtension, 'Height' => $Height, 'Width' => $Width, 'Rotate' => $Rotate, 'Bitrate' => $Bitrate));
+          // / The core prints, & the operation returned, as contract 6 says. The interface reads one line per file.
+          foreach ($ConvertedFiles as $ConvertedFile) print($ConvertedFile.$Lol);
           if (!$ConversionComplete) errorEntry('Conversion Failed!', 21, TRUE);
           if ($ConversionErrors) logEntry('Conversion finished with errors.');
           if ($Verbose) logEntry('Conversion Complete.'); }
@@ -5538,18 +5800,12 @@ if (!$CommandLineHandled && $UserType === 'web') {
           // / own route per file, & it returns two values rather than the six a conversion
           // / pipeline returns. Forcing it into the conversion contract would have meant
           // / describing a batch as a single file & discarding most of what it reports.
-          // / There is NO built in fallback left for OCR. Its body has moved out of this
-          // / file, so a missing or mismatched OCR pipeline is reported rather than being
-          // / quietly treated as an OCR run that produced nothing.
-          if ($PipelineCoreActive && function_exists('runOperationPipeline')) {
-            list ($ConversionComplete, $ConversionErrors, $OcrOutputFilenames) = runOperationPipeline('OCR', $PDFWorkSelected, $UserFilename, $UserExtension, $Method);
-            // / The core prints, & the pipeline returned, as contract 6 says.
-            // / The interface reads this reply one line per produced file, exactly as it reads the reply from a conversion.
-            // / A pipeline never prints these itself, because its output shares a stream with any PHP warning.
-            if (is_array($OcrOutputFilenames)) foreach ($OcrOutputFilenames as $OcrOutputFilename) print($OcrOutputFilename.$Lol); }
-          else {
-            $ConversionErrors = TRUE;
-            errorEntry('OCR was requested but no OCR pipeline is installed & this core has no built in OCR!', 34006, FALSE); }
+          // / A missing or mismatched OCR pipeline is reported by the adapter rather than read as an OCR run that produced nothing.
+          list ($ConversionComplete, $ConversionErrors, $OcrOutputFilenames, $OcrFindings) = invokeOcrOperation($PDFWorkSelected, array('Filename' => $UserFilename, 'Extension' => $UserExtension, 'Method' => $Method));
+          // / The core prints, & the pipeline returned, as contract 6 says.
+          // / The interface reads this reply one line per produced file, exactly as it reads the reply from a conversion.
+          // / A pipeline never prints these itself, because its output shares a stream with any PHP warning.
+          foreach ($OcrOutputFilenames as $OcrOutputFilename) print($OcrOutputFilename.$Lol);
           if (!$ConversionComplete) errorEntry('OCR Operation Failed!', 22, TRUE);
           if ($ConversionErrors) logEntry('OCR Operation finished with errors.');
           if ($Verbose) logEntry('OCR Operation Complete.'); }
@@ -5566,14 +5822,9 @@ if (!$CommandLineHandled && $UserType === 'web') {
         else if (!takeOperationBudget('Identify')) print($Alert3.$Lol);
         else {
           logEntry('Initiating Identify.');
-          if ($PipelineCoreActive && function_exists('runOperationPipeline')) {
-            list ($IdentifyComplete, $IdentifyErrors, $IdentifyResult) = runOperationPipeline('Identify', $FilesToIdentify, $IdentifyFilename, 'txt', $IdentifyReport);
-            // / The core prints, & the pipeline returned, as contract 6 says.
-            print(encodeIdentifyReply($IdentifyComplete, $IdentifyErrors, $IdentifyResult).$Lol); }
-          else {
-            $IdentifyComplete = FALSE;
-            $IdentifyErrors = TRUE;
-            errorEntry('Identify was requested but no Identify pipeline is installed!', 34006, FALSE); }
+          list ($IdentifyComplete, $IdentifyErrors, $IdentifyFiles, $IdentifyResult) = invokeIdentifyOperation($FilesToIdentify, array('Report' => $IdentifyReport, 'Filename' => $IdentifyFilename));
+          // / The core prints, & the pipeline returned, as contract 6 says.
+          print(encodeIdentifyReply($IdentifyComplete, $IdentifyErrors, $IdentifyResult).$Lol);
           if (!$IdentifyComplete) errorEntry('Identify Failed!', 31, TRUE);
           if ($IdentifyErrors) logEntry('Identify finished with errors.');
           if ($Verbose) logEntry('Identify Complete.'); }
@@ -5625,6 +5876,20 @@ if (!$CommandLineHandled && $UserType === 'web') {
           if ($ScanErrors) logEntry('User Virus Scan finished with errors.');
           if ($Verbose) logEntry('User Virus Scan Complete.'); }
         $BudgetWasReleased = giveBackOperationBudget('user virus scan'); }
+
+      // / The following code is performed when a page or a caller of the API asks about workflows.
+      // / Each answer is one line of JSON under the key Workflow, as Identify answers under its own.
+      // / The work is the Workflow Core's. A workflow runs in a worker of its own, so a request here lists, starts, reads or stops one.
+      // / Which files a user may name is this application's policy, so a run is handed only files this session lists.
+      // / A server with workflows off, or without the Workflow Core, answers that none are available, & says why in its log.
+      if (isset($_POST['workflowLibrary']) or isset($_POST['workflowRun']) or isset($_POST['workflowStatus']) or isset($_POST['workflowStop'])) {
+        if (!$EnableWorkflows or !$WorkflowCoreActive or !function_exists('encodeWorkflowReply')) {
+          warningEntry('A workflow was requested & '.($EnableWorkflows ? 'the Workflow Core is unavailable.' : 'workflows are disabled.'));
+          print('{"Workflow":{"Available":false}}'.$Lol); }
+        else if (isset($_POST['workflowRun'])) print(encodeWorkflowReply(startWorkflowRun($WorkflowName, array_values(array_intersect((array)$WorkflowFiles, getFiles($ConvertDir))))).$Lol);
+        else if (isset($_POST['workflowStop'])) print(encodeWorkflowReply(stopWorkflowRun()).$Lol);
+        else if (isset($_POST['workflowStatus'])) print(encodeWorkflowReply(reportWorkflowStatus()).$Lol);
+        else print(encodeWorkflowReply(describeWorkflowLibrary()).$Lol); }
 
       // / Close the web server connection after all required content has been served.
       if ($Verbose) logEntry('Closing connection.');

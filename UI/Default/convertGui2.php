@@ -144,7 +144,9 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
               // / carrying one of these is a failure even though nothing in it is tagged.
               'failureStrings' => array($Alert3),
               // / What Identify writes into a panel in words, & what it says when it fails.
-              'identifyText' => array('yes' => $Gui2Text100, 'no' => $Gui2Text101, 'unknown' => $Gui2Text102, 'failure' => $Gui2Text103))); ?>);
+              'identifyText' => array('yes' => $Gui2Text100, 'no' => $Gui2Text101, 'unknown' => $Gui2Text102, 'failure' => $Gui2Text103),
+              // / What the selection bar says, & what a control says when it acts on the ticked files.
+              'selectionText' => array('selected' => $Gui2Text113, 'usable' => $Gui2Text137))); ?>);
             $(document).ready(function () { HRC2.init(); });
           }
         </script>
@@ -237,6 +239,9 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
       </div>
       <br /> <br />
       <button id='scandocMoreOptionsButton' name='scandocMoreOptionsButton' class='info-button' onclick='toggle_visibility("compressAllOptions");'><?php echo $Gui2Text2; ?></button>
+      <?php if ($EnableWorkflows) { ?>
+      <button type='button' id='hrc2WorkflowsButton' name='hrc2WorkflowsButton' class='info-button' aria-expanded='false' aria-controls='hrc2Workflows' onclick='toggle_visibility("hrc2Workflows");'><?php echo $Gui2Text128; ?></button>
+      <?php } ?>
       <div id='compressAllOptions' name='compressAllOptions' align='center' style='display:none;'>
         <?php if ($AllowUserVirusScan) { ?>
         <hr style='width: 50%;'/>
@@ -283,6 +288,44 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         <?php } ?>
         <hr style='width: 50%;'/>
       </div>
+      <?php if ($EnableWorkflows) {
+      // / The Workflows panel. HRC2-Workflows.js is its behaviour, & this page supplies its words & the places it draws.
+      // / The three boxes are the files, the workflow & running it, & whichever needs attention next is highlighted.
+      // / The boxes stay hidden, & the panel says workflows are unavailable, until the library has drawn it.
+      // / So a page whose library did not load still says something true, & so does a server without the Workflow Core.
+      // / A pattern is code in any language, so the box it is typed into reads left to right.
+      ?>
+      <div id='hrc2Workflows' name='hrc2Workflows' class='hrc2-workflows' style='display:none;'>
+        <hr style='width: 50%;'/>
+        <p><strong><?php echo $Gui2Text128; ?></strong></p>
+        <div id='hrc2WfBoxes' class='hrc2-wf-boxes' hidden>
+          <div id='hrc2WfFilesBox' class='hrc2-wf-box'>
+            <p class='hrc2-wf-label'><?php echo $Gui2Text129; ?></p>
+            <div id='hrc2WfFiles' class='hrc2-wf-files'></div>
+            <label class='hrc2-wf-pattern'><?php echo $Gui2Text131; ?><input type='text' id='hrc2WfPattern' name='hrc2WfPattern' dir='ltr' placeholder='*.jpg' title='<?php echo htmlspecialchars($Gui2Text132, ENT_QUOTES, 'UTF-8'); ?>' autocomplete='off' spellcheck='false'></label>
+          </div>
+          <div id='hrc2WfPickBox' class='hrc2-wf-box'>
+            <p class='hrc2-wf-label'><label for='hrc2WfSelect'><?php echo $Gui2Text133; ?></label></p>
+            <select id='hrc2WfSelect' name='hrc2WfSelect' class='hrc2-wf-select'></select>
+            <div id='hrc2WfAbout' class='hrc2-wf-about'></div>
+          </div>
+          <div id='hrc2WfRunBox' class='hrc2-wf-box hrc2-wf-run-box'>
+            <button type='button' id='hrc2WfRun' name='hrc2WfRun' class='hrc2-wf-run' title='<?php echo htmlspecialchars($Gui2Text135, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text135, ENT_QUOTES, 'UTF-8'); ?>' disabled>&#9654;</button>
+            <button type='button' id='hrc2WfStop' name='hrc2WfStop' class='hrc2-wf-stop' title='<?php echo htmlspecialchars($Gui2Text136, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text136, ENT_QUOTES, 'UTF-8'); ?>' hidden>&#9632;</button>
+          </div>
+        </div>
+        <div id='hrc2WfStatus' class='hrc2-wf-status' role='status' aria-live='polite'><p><?php echo $Gui2Text146; ?></p></div>
+        <script type='text/javascript'>
+          HRC2.startWorkflows(<?php echo json_encode(array(
+            'text' => array('selected' => $Gui2Text113, 'pickFiles' => $Gui2Text130, 'choose' => $Gui2Text134, 'usable' => $Gui2Text137, 'step' => $Gui2Text138, 'file' => $Gui2Text139,
+              'waiting' => $Gui2Text140, 'starting' => $Gui2Text141, 'finished' => $Gui2Text142, 'stopping' => $Gui2Text143, 'stopped' => $Gui2Text144, 'made' => $Gui2Text145,
+              'unavailable' => $Gui2Text146, 'empty' => $Gui2Text147,
+              'refused' => array('disabled' => $Gui2Text146, 'unknown' => $Gui2Text148, 'nothing' => $Gui2Text149, 'files' => $Gui2Text150, 'server' => $Gui2Text151, 'busy' => $Gui2Text152, 'start' => $Gui2Text153),
+              'failed' => array('operation' => $Gui2Text154, 'threat' => $Gui2Text155, 'runtime' => $Gui2Text156, 'files' => $Gui2Text157, 'budget' => $Gui2Text158, 'unavailable' => $Gui2Text159, 'halted' => $Gui2Text160, 'stopped' => $Gui2Text144)),
+            'operations' => array('Convert' => $Gui2Text14, 'Archive' => $Gui2Text10, 'OCR' => $Gui2Text12, 'Identify' => $Gui2Text86, 'Scan' => $Gui2Text8))); ?>);
+        </script>
+      </div>
+      <?php } ?>
     </div>
     <div id='utilityupper' align='center'>
 
@@ -296,10 +339,10 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
     </div>
     <br />
     <?php } // / End of the chrome region.
-      // / The chrome opens one wrapper that footer.php closes. In list only mode that
-      // / wrapper is skipped, so a plain one is opened in its place below & the closing tag
-      // / the footer emits still has something to pair with. Both modes emit the same
-      // / number of wrappers, which is what keeps the footer valid in either.
+      // / The chrome opens one wrapper, & the full page closes it below the list's frame, before the footer.
+      // / In list only mode that wrapper is skipped, so a plain one is opened in its place below, & the end of the list closes it.
+      // / So each mode closes every element it opens, & the footer is drawn outside the card on this page as it is on the upload page.
+      // / The wrapper was left for the footer to close & the footer never did, so every page ended with an element still open.
       // /
       // / The full page shows the list through a frame, so a conversion can refresh it in
       // / place without reloading the page & losing every panel the user had open. Nothing
@@ -324,6 +367,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
     // / just inside the other.
     ?>
     <div id='hrc2FileList'></div>
+  </div>
     <?php } else {
       // / The else branch stays open through the entire file list & closes at the end of
       // / this file. The list belongs to list only mode. Closing here would end the branch
@@ -372,6 +416,36 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
      
 
       <?php
+      // / The selection bar, at the top of the column of boxes.
+      // / Its box ticks every file, or none when any are ticked. The arrow beside it opens a menu that ticks all, none, or every file of one kind.
+      // / Only the kinds the list holds are offered, in the order the core names them.
+      // / HRC2.bindSelection(), called below the list, binds the bar & draws the selection into it.
+      $selectKinds = array('Document' => $Gui2Text114, 'Spreadsheet' => $Gui2Text115, 'Presentation' => $Gui2Text116, 'Image' => $Gui2Text117, 'Audio' => $Gui2Text118, 'Video' => $Gui2Text119, 'Archive' => $Gui2Text120,
+        'Ebook' => $Gui2Text121, 'Model' => $Gui2Text122, 'Drawing' => $Gui2Text123, 'Vector' => $Gui2Text124, 'Subtitle' => $Gui2Text125, 'Scad' => $Gui2Text126, 'Stream' => $Gui2Text127);
+      $selectListed = array();
+      $selectRows = 0;
+      foreach ($Files as $selectFile) {
+        if (!in_array(strtolower(getExtension($ConvertTempDir.'/'.$selectFile)), $Allowed)) continue;
+        $selectRows++;
+        if (isset($FileDetails[$selectFile]['Kinds'])) foreach ($FileDetails[$selectFile]['Kinds'] as $selectKind) $selectListed[$selectKind] = TRUE; }
+      if ($selectRows > 0) { ?>
+      <div id='hrc2SelectBar' class='hrc2-select-bar'>
+        <label class='hrc2-pick' title='<?php echo htmlspecialchars($Gui2Text110, ENT_QUOTES, 'UTF-8'); ?>'><input type='checkbox' id='hrc2SelectAll' class='hrc2-pick-all' aria-label='<?php echo htmlspecialchars($Gui2Text110, ENT_QUOTES, 'UTF-8'); ?>'><span class='hrc2-pick-mark' aria-hidden='true'></span></label>
+        <span id='hrc2SelectMenuWrap' class='hrc2-select-menu-wrap'>
+          <button type='button' id='hrc2SelectMenuButton' class='hrc2-select-menu-button' title='<?php echo htmlspecialchars($Gui2Text112, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text112, ENT_QUOTES, 'UTF-8'); ?>' aria-expanded='false' aria-controls='hrc2SelectMenu'>&#9662;</button>
+          <span id='hrc2SelectMenu' class='hrc2-select-menu' hidden>
+            <button type='button' data-hrc2-select='all'><?php echo $Gui2Text110; ?></button>
+            <?php foreach ($selectKinds as $selectKind => $selectLabel) if (isset($selectListed[$selectKind])) { ?>
+            <button type='button' data-hrc2-select='kind:<?php echo $selectKind; ?>'><?php echo $selectLabel; ?></button>
+            <?php } ?>
+            <button type='button' data-hrc2-select='none'><?php echo $Gui2Text111; ?></button>
+          </span>
+        </span>
+        <span id='hrc2SelectionCount' class='hrc2-selection-count' aria-live='polite'></span>
+      </div>
+      <?php } ?>
+
+      <?php
       foreach ($Files as $File) {
         $extension = getExtension($ConvertTempDir.'/'.$File);
         $FileNoExt = str_replace($extension, '', $File);
@@ -381,6 +455,11 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
 
       <div id='file<?php echo $ConvertGuiCounter1; ?>' name='<?php echo $ConvertGuiCounter1; ?>' style='padding-top: 6px; '>
 
+        <?php
+        // / The file's box. It carries the file's name, its row & its kinds, which is all HRC2-Functions.js reads.
+        // / The number of its place in the selection is drawn inside it, & it sits first in the row whichever way a language reads.
+        ?>
+        <label class='hrc2-pick' style='float:<?php echo $GUIAlignment; ?>;' title='<?php echo htmlspecialchars($Gui2Text109.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'><input type='checkbox' class='hrc2-pick-box' data-hrc2-file='<?php echo htmlspecialchars($File, ENT_QUOTES, 'UTF-8'); ?>' data-hrc2-row='<?php echo $ConvertGuiCounter1; ?>' data-hrc2-kinds='<?php echo htmlspecialchars(implode(' ', isset($FileDetails[$File]['Kinds']) ? $FileDetails[$File]['Kinds'] : array()), ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text109.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'><span class='hrc2-pick-mark' aria-hidden='true'></span></label>
         <a style='float:<?php echo $GUIAlignment; ?>;'><strong><?php echo $ConvertGuiCounter1; ?>.</strong> <u style="color: #3d71b3;  font-weight: 700;  font-size: 18px;  text-decoration: none; "><?php echo $File; ?></u>&nbsp;&nbsp;</a>
 
           <img id='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' name='loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $PacmanLoc; ?>' style='float:<?php echo $GUIAlignment; ?>; max-width:24px; max-height:24px; display:none;'/>
@@ -1091,12 +1170,21 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         <?php } ?>
 
         <div style="border-top: 1px solid #aaaaaa; "></div>
-      <?php } ?>
+      </div>
+      <?php
+      // / A row closes where its divider ends. A row left open held every row after it, so the list nested one file inside another.
+      } ?>
+      <?php
+      // / Every row is drawn, so the boxes & the bar are bound, & the selection is drawn into them.
+      ?>
+      <script type='text/javascript'>
+        HRC2.bindSelection();
+      </script>
     </div>
   </div>
     <?php } // / End of the file list. It renders only in list only mode, because the
       // / full page shows it through the frame above & would otherwise print it twice. ?>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = $gui2EbookArr = $sessionParams = $sortParams = $sortCurrentKey = $sortCurrentWay = $sortChoices = $sortKey = $sortLabel = $sortIsCurrent = $sortNextWay = $sortURL = $backURL = $refreshURL = $extension = $FileNoExt = NULL;
+    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = $gui2EbookArr = $sessionParams = $sortParams = $sortCurrentKey = $sortCurrentWay = $sortChoices = $sortKey = $sortLabel = $sortIsCurrent = $sortNextWay = $sortURL = $backURL = $refreshURL = $extension = $FileNoExt = $selectKinds = $selectListed = $selectRows = $selectFile = $selectKind = $selectLabel = NULL;
     unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $selectorSide, $selectorSwatches, $selectorLang, $selectorLabel, $selectorCurrent, $selectorColor, $selectorSwatch, $selectorGui, $selectorURL, $gui2EbookArr, $sessionParams, $sortParams, $sortCurrentKey, $sortCurrentWay, $sortChoices, $sortKey, $sortLabel, $sortIsCurrent, $sortNextWay, $sortURL, $backURL, $refreshURL, $extension, $FileNoExt);

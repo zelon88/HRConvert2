@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -387,6 +387,111 @@ $Gui2Text106 = 'အရွယ်အစား';
 $Gui2Text107 = 'ရက်စွဲ';
 // / 'Type'
 $Gui2Text108 = 'အမျိုးအစား';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'ရွေးပါ';
+// / 'Select All'
+$Gui2Text110 = 'အားလုံးရွေးပါ';
+// / 'Select None'
+$Gui2Text111 = 'ရွေးချယ်မှုအားလုံး ဖြုတ်ပါ';
+// / 'Select By Type'
+$Gui2Text112 = 'အမျိုးအစားအလိုက် ရွေးပါ';
+// / 'Selected: '
+$Gui2Text113 = 'ရွေးထားသည်: ';
+// / 'Documents'
+$Gui2Text114 = 'စာရွက်စာတမ်းများ';
+// / 'Spreadsheets'
+$Gui2Text115 = 'စပရက်ရှီတ်များ';
+// / 'Presentations'
+$Gui2Text116 = 'ပရဆင်တေးရှင်းများ';
+// / 'Images'
+$Gui2Text117 = 'ရုပ်ပုံများ';
+// / 'Audio'
+$Gui2Text118 = 'အော်ဒီယို';
+// / 'Video'
+$Gui2Text119 = 'ဗီဒီယို';
+// / 'Archives'
+$Gui2Text120 = 'မော်ကွန်းဖိုင်များ';
+// / 'E-Books'
+$Gui2Text121 = 'အီလက်ထရွန်နစ်စာအုပ်များ';
+// / '3D Models'
+$Gui2Text122 = '3D မော်ဒယ်များ';
+// / 'Drawings'
+$Gui2Text123 = 'ပုံဆွဲချက်များ';
+// / 'Vector Images'
+$Gui2Text124 = 'ဗက်တာ ရုပ်ပုံများ';
+// / 'Subtitles'
+$Gui2Text125 = 'စာတန်းထိုးများ';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'OpenSCAD ဖိုင်များ';
+// / 'Streams'
+$Gui2Text127 = 'တိုက်ရိုက်ထုတ်လွှင့်မှုများ';
+// / 'Workflows'
+$Gui2Text128 = 'လုပ်ငန်းစဉ်များ';
+// / 'Files'
+$Gui2Text129 = 'ဖိုင်များ';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'အောက်ပါစာရင်းမှ ဖိုင်များကို ရွေးပါ။';
+// / 'Select By Name: '
+$Gui2Text131 = 'အမည်ဖြင့် ရွေးပါ: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = '* နှင့် ? ကို အစားထိုးသင်္ကေတအဖြစ် သုံးပါ၊ သို့မဟုတ် မျဉ်းစောင်းနှစ်ခုကြားတွင် ပုံမှန်ဖော်ပြချက် (regular expression) ကို ရေးပါ။';
+// / 'Workflow'
+$Gui2Text133 = 'လုပ်ငန်းစဉ်';
+// / 'Choose a workflow'
+$Gui2Text134 = 'လုပ်ငန်းစဉ်တစ်ခု ရွေးပါ';
+// / 'Run'
+$Gui2Text135 = 'လုပ်ဆောင်ပါ';
+// / 'Stop'
+$Gui2Text136 = 'ရပ်ပါ';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'အသုံးပြုနိုင်သော ရွေးထားသည့်ဖိုင်များ: {count} ခုအနက် {fit} ခု။';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'အဆင့် {step}/{steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'ဖိုင် {done}/{total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'ဆာဗာကို စောင့်နေသည်။';
+// / 'Starting.'
+$Gui2Text141 = 'စတင်နေသည်။';
+// / 'Finished.'
+$Gui2Text142 = 'ပြီးဆုံးပါပြီ။';
+// / 'Stopping.'
+$Gui2Text143 = 'ရပ်တန့်နေသည်။';
+// / 'Stopped.'
+$Gui2Text144 = 'ရပ်တန့်လိုက်ပါပြီ။';
+// / 'Files made: '
+$Gui2Text145 = 'ပြုလုပ်ထားသော ဖိုင်များ: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'ဤဆာဗာတွင် လုပ်ငန်းစဉ်များကို အသုံးမပြုနိုင်ပါ။';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'ဤဆာဗာတွင် ထည့်သွင်းထားသော လုပ်ငန်းစဉ် မရှိပါ။';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'ထိုလုပ်ငန်းစဉ်ကို အသုံးမပြုနိုင်တော့ပါ။';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'ရွေးထားသောဖိုင်များထဲမှ မည်သည့်ဖိုင်ကိုမျှ ဤလုပ်ငန်းစဉ်က အသုံးမပြုနိုင်ပါ။';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'လုပ်ငန်းစဉ်တစ်ခုအတွက် ဖိုင်များ အလွန်များစွာ ရွေးထားသည်။';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'ဆာဗာ အလုပ်များနေသည်။ မိနစ်အနည်းငယ်အကြာတွင် ထပ်ကြိုးစားပါ။';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'ဤဆက်ရှင်တွင် လုပ်ငန်းစဉ်တစ်ခု လုပ်ဆောင်နေပြီ ဖြစ်သည်။';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'လုပ်ငန်းစဉ်ကို စတင်၍ မရပါ။';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'လုပ်ငန်းစဉ်၏ အဆင့်တစ်ခု မအောင်မြင်ပါ။';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'ဗိုင်းရပ်စ်တစ်ခု တွေ့ရှိသဖြင့် လုပ်ငန်းစဉ်ကို ရပ်တန့်လိုက်သည်။';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'လုပ်ငန်းစဉ်၏ အချိန် ကုန်သွားပါပြီ။';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'လုပ်ငန်းစဉ်သည် ဖိုင်များ အလွန်များစွာ ပြုလုပ်ခဲ့သည်။';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'ဆာဗာ အလွန်အလုပ်များနေသဖြင့် လုပ်ငန်းစဉ်ကို အပြီးမသတ်နိုင်ခဲ့ပါ။';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'ဤလုပ်ငန်းစဉ် လိုအပ်သော လုပ်ဆောင်ချက်တစ်ခုကို အသုံးမပြုနိုင်ပါ။';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'လုပ်ငန်းစဉ် မမျှော်လင့်ဘဲ ရပ်သွားပါသည်။';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -387,6 +387,111 @@ $Gui2Text106 = 'גודל';
 $Gui2Text107 = 'תאריך';
 // / 'Type'
 $Gui2Text108 = 'סוג';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'בחר';
+// / 'Select All'
+$Gui2Text110 = 'בחר הכל';
+// / 'Select None'
+$Gui2Text111 = 'בטל בחירה';
+// / 'Select By Type'
+$Gui2Text112 = 'בחר לפי סוג';
+// / 'Selected: '
+$Gui2Text113 = 'נבחרו: ';
+// / 'Documents'
+$Gui2Text114 = 'מסמכים';
+// / 'Spreadsheets'
+$Gui2Text115 = 'גיליונות אלקטרוניים';
+// / 'Presentations'
+$Gui2Text116 = 'מצגות';
+// / 'Images'
+$Gui2Text117 = 'תמונות';
+// / 'Audio'
+$Gui2Text118 = 'אודיו';
+// / 'Video'
+$Gui2Text119 = 'וידאו';
+// / 'Archives'
+$Gui2Text120 = 'ארכיונים';
+// / 'E-Books'
+$Gui2Text121 = 'ספרים אלקטרוניים';
+// / '3D Models'
+$Gui2Text122 = 'מודלים בתלת-ממד';
+// / 'Drawings'
+$Gui2Text123 = 'שרטוטים';
+// / 'Vector Images'
+$Gui2Text124 = 'תמונות וקטוריות';
+// / 'Subtitles'
+$Gui2Text125 = 'כתוביות';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'קובצי OpenSCAD';
+// / 'Streams'
+$Gui2Text127 = 'סטרימינג';
+// / 'Workflows'
+$Gui2Text128 = 'תהליכי עבודה';
+// / 'Files'
+$Gui2Text129 = 'קבצים';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'בחר קבצים ברשימה שלמטה.';
+// / 'Select By Name: '
+$Gui2Text131 = 'בחר לפי שם: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'השתמש ב-* וב-? כתווים כלליים, או כתוב ביטוי רגולרי בין שני לוכסנים.';
+// / 'Workflow'
+$Gui2Text133 = 'תהליך עבודה';
+// / 'Choose a workflow'
+$Gui2Text134 = 'בחר תהליך עבודה';
+// / 'Run'
+$Gui2Text135 = 'הפעל';
+// / 'Stop'
+$Gui2Text136 = 'עצור';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'קבצים נבחרים שניתן להשתמש בהם: {fit} מתוך {count}.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'שלב {step} מתוך {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'קובץ {done} מתוך {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'ממתין לשרת.';
+// / 'Starting.'
+$Gui2Text141 = 'מתחיל.';
+// / 'Finished.'
+$Gui2Text142 = 'הסתיים.';
+// / 'Stopping.'
+$Gui2Text143 = 'עוצר.';
+// / 'Stopped.'
+$Gui2Text144 = 'נעצר.';
+// / 'Files made: '
+$Gui2Text145 = 'קבצים שנוצרו: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'תהליכי עבודה אינם זמינים בשרת זה.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'לא מותקנים תהליכי עבודה בשרת זה.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'תהליך העבודה הזה כבר אינו זמין.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'תהליך עבודה זה אינו יכול להשתמש באף אחד מהקבצים שנבחרו.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'נבחרו יותר מדי קבצים לתהליך עבודה אחד.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'השרת עסוק. נסה שוב בעוד כמה דקות.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'תהליך עבודה כבר פועל בהפעלה זו.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'לא ניתן היה להתחיל את תהליך העבודה.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'שלב בתהליך העבודה נכשל.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'נמצא וירוס, ולכן תהליך העבודה נעצר.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'הזמן של תהליך העבודה נגמר.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'תהליך העבודה יצר יותר מדי קבצים.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'השרת היה עסוק מכדי להשלים את תהליך העבודה.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'פעולה שתהליך עבודה זה זקוק לה אינה זמינה.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'תהליך העבודה נעצר באופן בלתי צפוי.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

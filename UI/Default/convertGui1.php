@@ -388,7 +388,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
               // / button above & differs only by carrying showFiles.
               // / The core resolves the interface, the language & the colour, & hands them over
               // / as $GuiToUse, $LanguageToUse & $ColorToUse, so nothing here reads $_GET. ?>
-        <form action='convertCore.php?showFiles=1&<?php echo htmlspecialchars($sessionParams.$sortParams, ENT_QUOTES, 'UTF-8'); ?>' method='post'>
+        <form action='convertCore.php?showFiles=1&amp;<?php echo htmlspecialchars($sessionParams.$sortParams, ENT_QUOTES, 'UTF-8'); ?>' method='post'>
           <input type='hidden' id='token1' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
           <input type='hidden' id='token2' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
           <input type='submit' id='continue-button' class='info-button' value='<?php echo htmlspecialchars($Gui1Text29, ENT_QUOTES, 'UTF-8'); ?>'>

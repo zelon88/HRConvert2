@@ -1,0 +1,440 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 11/12/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v4.1.4.
+This file documents workflows. What one is, the format it is written in, how one runs & what a page or a caller of the API is told while it does.
+It describes the Workflow Core component, the operations HRConvert2 offers it & the Workflows panel in both interfaces.
+For the requests themselves, see ABOUT_REST_API.txt. For the commands, see ABOUT_COMMAND_LINE_ARGUMENTS.txt.
+For what another application must supply, see ABOUT_ENGINE_CONTRACT.txt. For why it is shaped the way it is, see DEVELOPMENT_NOTES.txt.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Workflows--
+
+A WORKFLOW is a list of steps. Each step runs one operation on files, & a step after the first
+may work on what an earlier step made. Convert every document to PDF, then put the PDFs in
+one zip, is a workflow of two steps.
+
+An OPERATION is something a user can already do with a button. Convert, Archive, OCR,
+Identify & Virus Scan are HRConvert2's. A workflow does nothing a user could not do by hand,
+because every step runs the same code that button runs, under the same budget & the same
+limits. A workflow only saves the clicking.
+
+The pieces, & where each one lives.
+  Resources/Engine/Cores/workflowCore.php   The Workflow Core. It reads, checks & runs workflows, & keeps their status.
+                                            It is an Engine core & names no operation of its own.
+  applicationOperations() in convertCore.php
+                                            What HRConvert2 lets a workflow run. The Engine asks for it by the name
+                                            $EngineOperationProvider gives it in Resources/Contract/app-engine-config.php.
+  Resources/Workflows                       The shipped library. The workflows that come with a release.
+  <data root>/Workflows                     The installed library. Where an administrator adds workflows.
+  <session>/Workflow                        One session's job & status, while a workflow runs & until it is read.
+  UI/<interface>/Resources/JS/HRC2-Workflows.js
+                                            The Workflows panel. A library of its own that needs no other.
+
+A workflow runs in a WORKER, a process of its own started for that workflow alone. The request
+that starts it returns as soon as it is started, & a page asks how it is doing until it ends.
+That is why a long workflow is not bound by the time a web request may take.
+
+Workflows are on by default. --Enable Workflows-- in config.php turns them off, & then every
+request about one is answered that workflows are unavailable, & the interfaces draw no
+Workflows button.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Workflow Format--
+
+A workflow is one JSON object of at most 64 KiB, in a file named for its identifier followed
+by -workflow.json. An identifier is 1 to 64 letters, digits, dashes & underscores, & starts
+with a letter or a digit. documents-to-pdf-zip-workflow.json holds documents-to-pdf-zip.
+The file names no file of a user's, so one workflow serves every user.
+
+  {
+    "Format": "HRProprietary Workflow",
+    "Version": 1,
+    "Name": "Documents to PDF, in one zip",
+    "Description": "Converts every selected document to PDF, then puts the PDFs in one zip archive.",
+    "Steps": [
+      { "Operation": "Convert", "Filter": { "Types": ["Document", "Spreadsheet", "Presentation"] }, "Options": { "Extension": "pdf" } },
+      { "Operation": "Archive", "Mode": "together", "Options": { "Extension": "zip", "Filename": "Documents" } }
+    ]
+  }
+
+The workflow.
+  Format        Required. Exactly HRProprietary Workflow.
+  Version       Required. Exactly the number 1, which is the only version this core reads.
+  Name          Required. Plain text of 1 to 80 characters, with no control characters. Shown to users.
+  Description   Text of up to 500 characters. Shown to users.
+  Steps         Required. A list of at least one step, & no more than --Maximum Workflow Steps--.
+
+Each step.
+  Operation     Required. The operation it runs, by the name the application gives it.
+  Input         Which files it takes. selection, previous or step N, or a list of up to 8 of them.
+                selection is the files the user selected. previous is the step before, & for
+                the first step it is the selection. step N is what step N made, & N must be a
+                step before this one. A file named twice is taken once. The default is previous.
+  Filter        An object narrowing the files. A file must pass every test it names, & a filter
+                that names none passes every file.
+                  Glob          A shell pattern of up to 128 characters, matched against the name
+                                without regard to case. *.jpg matches photo.JPG.
+                  Regex         A delimited PCRE pattern of up to 256 characters, matched against
+                                the name as written. Say i at its end to ignore case.
+                  Types         A list of kinds of file. See --Kinds Of File--.
+                  Extensions    A list of extensions, of 1 to 16 letters & digits each.
+                  MinimumSize   Bytes, or a number followed by K, M or G, with or without B.
+                  MaximumSize   The same. K is 1024 bytes, M is 1024 K & G is 1024 M.
+  Mode          each runs the operation once for every file, & together once for all of them.
+                An operation says which it runs in, & the first it names is the default.
+  Order         selection keeps the order the files arrived in, & name sorts them by name, as a
+                person would, ignoring case. The default is selection.
+  Options       What the operation is given. Each operation declares its own, its type & its
+                default. One left out takes its default, & one the operation needs & does not
+                default is a problem.
+
+A key this format does not know is a problem, in the workflow, in a step or in a filter. A
+misspelt key would otherwise be a setting silently ignored, & the workflow would do something
+other than what its author wrote.
+
+Every step is checked, & every problem is named at once, so one reading says everything to fix.
+Run  php convertCore.php --workflow --check=FILE  to read them.
+
+Which files a step reads is decided in this order. The file must still be a plain file in the
+session. The operation must read its extension. Then the filter must pass it. A file left out
+at any of the three is counted, & the status says how many each step left out.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Operations HRConvert2 Offers--
+
+Each operation names the budget it takes from the Resource Manager, which is the budget its
+button takes, so a workflow waits its turn as a button does.
+
+  Convert    Modes: each. Budget: conversion.
+             Reads a file when a family reads its extension & writes the format asked for, so
+             a conversion to jpg reads images & not spreadsheets. A file already in that format
+             is not read, because there is nothing to convert.
+             Options: Extension, required, any format a family writes. Filename, the name
+             without its extension, empty for each file's own. Height & Width, 0 to 65535.
+             Rotate, -360 to 360. Bitrate, 0 to 100000. A 0 is none, as a page sends it.
+  Archive    Modes: together, each. Budget: archive. Reads every file.
+             Options: Extension, zip by default, or any archive format the server writes.
+             Filename, Workflow_Files by default. A Filename puts every file into one archive
+             of that name, & an empty one archives each file under its own.
+  OCR        Modes: each. Budget: OCR. Reads what OCR reads, the formats PDFWorkArr lists.
+             Options: Extension, pdf by default or a document format. Method, 0, 1 or 2.
+             Filename, empty for each file's own. Needs the OCR & the Document types on.
+  Identify   Modes: together. Budget: Identify. Reads every file.
+             Options: Report, true by default, writes a report into the session. Filename,
+             User_Identify_Report by default. Needs --User File Identification--.
+  Scan       Modes: together. Budget: user virus scan. Reads every file.
+             Options: Scanner, all by default, or clamav or scancore. Needs --User Virus Scanning--.
+             The report is kept in the session as User_Virus_Scan_Report.txt, or the next free
+             name. A file found infected ENDS THE WORKFLOW, so nothing is made from it.
+
+An operation the server has switched off is still a valid step, because a valid workflow stays
+valid while an administrator turns a feature off & on. A workflow using one is not offered, &
+--workflow --list says why.
+
+A name a step gives is checked before it is used. It is up to 64 characters, with no slash, no
+backslash, no control character & no leading dot. The operation then cleans it as it cleans a
+name a user types, & a name already taken is given the next free one, as it is for a button.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Kinds Of File--
+
+A filter's Types names kinds of file, & the interfaces tick the files of one kind by the same
+names. HRConvert2 declares these, each from the lists of extensions config.php keeps. A kind
+whose list is empty is not declared, because its family is switched off.
+
+  Document       Documents & XPS files.          Spreadsheet    Spreadsheets.
+  Presentation   Presentations.                  Image          Images.
+  Audio          Audio.                          Video          Video.
+  Archive        Archives & disk images.         Ebook          E-books.
+  Model          3D models.                      Drawing        Technical drawings.
+  Vector         SVG & vector images.            Subtitle       Subtitles.
+  Scad           OpenSCAD sources.               Stream         Stream playlists.
+
+A file can be more than one kind. An rtf file is a Document & an Ebook, & a txt file is too.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Libraries--
+
+Two folders hold workflows, & a user is offered every usable workflow in either.
+
+THE SHIPPED LIBRARY is Resources/Workflows. It comes with the release & is replaced by the
+next one. v4.1.4 ships three.
+  documents-to-pdf-zip    Converts documents, spreadsheets & presentations to PDF, then zips them.
+  images-to-jpg-zip       Converts images to JPG, then zips them.
+  scan-and-identify       Scans the selected files for viruses, then identifies them with a report.
+
+THE INSTALLED LIBRARY is the Workflows folder in the data root, beside Logs & Sessions. It is
+where an administrator adds workflows, & an update leaves it alone. -fp creates it, owned by
+root & readable by everyone. See the library role in ABOUT_MANAGED_LOCATIONS.txt.
+An installed workflow with the identifier of a shipped one takes its place, which is how an
+administrator replaces one.
+
+Every workflow is read from a folder no account but root can change, so the web server
+account cannot write a workflow it will then run. A file that does not read, or does not
+validate, is never offered, & --workflow --list names every problem with it.
+
+  php convertCore.php --workflow --list             Every workflow, its library & whether it is usable.
+  php convertCore.php --workflow --check=FILE       Check a workflow file against this installation.
+  sudo php convertCore.php --workflow --install=FILE
+                                                    Check a workflow & install what was checked.
+  sudo php convertCore.php --workflow --remove=ID   Remove an installed workflow.
+
+--install installs the text it checked, under the file's own name, so a file changed after the
+check cannot be installed. Neither command touches the shipped library.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Running A Workflow--
+
+1. A page or a caller asks to run a workflow on files the user selected, in the order they
+   were selected. The core keeps only the files the session holds, because which files a user
+   may act on is the application's decision, & hands the rest to the Workflow Core.
+
+2. The Workflow Core refuses the run, & says why, when workflows are off, the workflow is not
+   one this session is offered, a workflow already runs in this session, more files are selected
+   than --Maximum Workflow Files--, no step would take any selected file, or the server already
+   runs --Maximum Concurrent Workflows--. It asks in that order, so a session whose own workflow
+   is running is told so, rather than that the server is busy.
+
+3. Otherwise it claims the session by creating its status file, which only one request can
+   create, writes the job beside it & starts the worker. The reply carries the job.
+
+4. The worker is this application's own entry point, started through setsid -f, so it leads a
+   session of its own & outlives the request. Nothing passes through a shell. It runs as the
+   account the request ran as, which is the web server account, & refuses to run as root.
+   The session it continues & a startup key travel in its environment, which only its own
+   account can read. Neither is ever put on a command line, which every account can read.
+   The startup key is bound to this job & this session, & the worker spends it, so a job
+   starts once. A worker that holds no key for its job does nothing.
+
+5. The worker runs each step in turn. Before every operation it reads whether a stop was asked
+   for & whether --Maximum Workflow Runtime-- has passed, & takes the operation's budget. A
+   budget the server cannot give yet is asked for again after 5, 10 & 20 seconds & then every 30,
+   for about four & a half minutes in all, & the status says it is waiting meanwhile. A budget
+   still not given by then fails the workflow, with the reason budget.
+
+6. A step ends the workflow when every one of its files failed, because each later step would
+   build on nothing. A file found infected ends it too. A step whose files all fall out of its
+   filter is skipped, & the workflow goes on.
+
+7. When the last step ends the status says the workflow finished, with every file it made.
+
+ONE WORKFLOW RUNS IN A SESSION AT A TIME, & the server runs no more than --Maximum Concurrent
+Workflows-- at once. A workflow takes its budgets one operation at a time, as buttons do, so a
+running workflow never holds more of the server than a user clicking through it would.
+
+A STOP is honoured before the next operation. The operation in progress finishes, because a
+converter stopped part way leaves a broken file.
+
+A workflow whose worker is gone, as a restart of the web server leaves one, is reported as
+interrupted. So is one that has not started a minute after it was asked for. Either can be
+cleared, & another started.
+
+If the worker halts part way, as a fatal error halts a process, its shutdown handler marks the
+status failed & logs error 38004, so the page is not left waiting.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Status File--
+
+A session's workflow is described by Workflow/status.json in its session folder. The folder is
+created 0700 & every file in it 0600, & a listing of the session leaves folders out, so it is
+never offered to the user as one of their files. Each write goes to a file beside it & is
+renamed into place, so a reader never sees half of one.
+
+THE STATUS IS READ ONCE AFTER IT ENDS.
+The request that reads an ended status, finished, stopped, failed or interrupted, returns it &
+then removes the status, the job & any stop marker. So a page reads its result exactly once,
+& the session is free for the next workflow. A worker writes its final status only where a
+status is still there, so a status that was cleared is never written back.
+Starting another workflow clears an ended one too, & the sweep that ends a session removes the
+whole session folder. Nothing is left behind by any path.
+
+What a page or a caller is told. Nothing else in the file leaves the server.
+  Available     true when workflows are on.
+  State         none, starting, running, finished, stopped, failed or interrupted.
+  Reason        Why it ended, when it did not finish.
+                  failed       operation, threat, runtime, files, budget, unavailable or halted.
+                  interrupted  start, worker or unreadable.
+  JobId         The job, 24 hexadecimal digits.
+  WorkflowId    The workflow's identifier, & Name, its name.
+  StepCount     How many steps it has, StepNumber the one running, & Operation that step's operation.
+  FilesDone     How many of the step's files are done, & FilesTotal how many it has.
+  Waiting       true while it waits for a budget.
+  Steps         Each step's Operation, State, Inputs, Skipped, Produced & whether it had Errors.
+                A step's State is waiting, running, done, skipped, stopped or failed.
+  Produced      Every file the workflow made, in the order it made them.
+  Elapsed       Seconds since it started, or how long it ran once it ended.
+
+The reasons.
+  operation    Every file in a step failed. The log names each failure.
+  threat       A virus scan found a file infected.
+  runtime      --Maximum Workflow Runtime-- passed.
+  files        A step was handed more files than --Maximum Workflow Files--.
+  budget       The server could not give a budget before the runtime passed.
+  unavailable  An operation a step needs is switched off or missing.
+  halted       The worker stopped before the workflow ended. See error 38004.
+  start        The worker never took the job up.
+  worker       The worker is gone, as a restart of the web server leaves it.
+  unreadable   The status could not be read.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Settings--
+
+Each is in config.php & is read through the contract, so the Workflow Core never knows what
+the application calls it. After unpacking a drop in, run --config --repair before -fp.
+
+  --Enable Workflows--                $EnableWorkflows = TRUE. Whether users are offered workflows.
+  --Maximum Workflow Steps--          $MaxWorkflowSteps = 16. A workflow with more is not valid here.
+  --Maximum Workflow Files--          $MaxWorkflowFiles = 100. The most files a run, or one step, may take.
+  --Maximum Workflow Runtime--        $MaxWorkflowRuntime = 30. Minutes a workflow may run.
+  --Maximum Concurrent Workflows--    $MaxConcurrentWorkflows = 4. Workflows the server runs at once.
+
+A limit below one is taken as one.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Interface--
+
+Both interfaces draw a Workflows button beside Bulk File Options when workflows are on. It
+opens a panel of three boxes, the files, the workflow & running it. The box that needs
+attention next is outlined. Files first, then the workflow, then running it.
+
+THE FILES are the ones ticked in the list. Every file has a box, & a ticked box shows its place
+in the order it was ticked, which is the order a workflow takes them in. The box at the top of
+the column ticks every file, or none when any are ticked, & the arrow beside it ticks every file
+of one kind. The menu opens toward the side a line starts on, in a language read either way.
+Select By Name ticks the files whose names match what is typed. Text between slashes is a
+regular expression, & anything else is a pattern where * & ? are wildcards.
+
+THE WORKFLOW box lists the workflows offered, & says what the chosen one does, its steps & how
+many of the ticked files it can use. That count is a hint taken from the first step's
+operation & filter, & the server decides.
+
+RUNNING shows the step, the file & a bar while the workflow runs, & a Stop button. When it ends
+the panel says how, names every file it made, each of which can be fetched, & draws the list
+again.
+
+The panel is HRC2-Workflows.js, a library of its own that needs no other, not even jQuery. It
+speaks only the requests in ABOUT_REST_API.txt, so any interface that gives it somewhere to
+draw can use it. HRC2-Functions.js hands it the tokens & the file list through HRC2.startWorkflows(settings).
+A server with workflows off, or without the Workflow Core, answers that they are unavailable.
+So does any answer the library cannot read. The panel then says workflows are not available
+on this server, & says nothing else, because the reason is the administrator's.
+Until the library has drawn the panel it says the same, so a page whose copy of the library did
+not load still says something true.
+Everything a server or a workflow supplies is written into the page as text, never as markup.
+A workflow's name & description are shown as its author wrote them, in the language they wrote.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Ticked Files & The Buttons--
+
+Converting any ticked file converts every eligible ticked file. Ineligible files are skipped.
+
+A ticked file is eligible when its own row offers the same control, which the core drew for it
+by the same test that drew the one pressed. A conversion leaves out a file already in the
+format asked for. Each eligible file is converted by a request of its own, one after another,
+& named by its own row's name box, so every output keeps the name its row shows. What they made
+is downloaded once all have answered, & the line beside the box at the top says how many of the
+ticked files could be used, until the selection changes.
+
+The same holds for OCR. Archiving a ticked file puts every ticked file into one archive, under
+the name typed, because an archive is one file made from many.
+
+A control whose file is not ticked, or is the only file ticked, acts on its own file as before.
+The All controls under Bulk File Options still act on every file.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--For An Application Built On The Engine--
+
+The Workflow Core is version pinned like every Engine core, by $RequiredWorkflowCoreVersion, &
+an application loads it only when a workflow is asked for. It names no operation of its own.
+
+An application supplies three things, in Resources/Contract/app-engine-config.php.
+  $EngineOperationProvider   The name of a function returning an array holding Operations & FileTypes.
+  $EngineShippedWorkflows    Its shipped library, relative to the installation, or empty for none.
+  $EngineSettingNames        The names of its settings for EnableWorkflows, MaxWorkflowSteps,
+                             MaxWorkflowFiles, MaxWorkflowRuntime, MaxConcurrentWorkflows,
+                             SessionFolder, SessionContext & WorkflowLibrary.
+SessionFolder is the folder of the session a request serves. SessionContext names that session
+in a form the application can adopt again in a worker, & HRConvert2 gives its two halves.
+WorkflowLibrary is the installed library, a location of the library role.
+
+An operation is an entry under Operations, keyed by a plain word.
+  Invoke    The function that runs it, called with the files & the step's options.
+            It returns whether any file succeeded, whether anything went wrong, the names of
+            the files it made in the session & what it found, in that order.
+            What it found may hold Halt, a short lower case word that ends the workflow, which
+            is how Scan ends one with threat.
+  Budget    The budget it takes, named as the Resource Manager names it.
+  Enabled   Whether this server allows it now.
+  Inputs    The extensions it reads. Empty reads every file.
+  Accepts   A function deciding whether it reads an extension, given the step's options.
+            It wins over Inputs, because what a conversion reads depends on what it writes.
+  Modes     each, together or both. The first is the default.
+  Options   Each option's Type, choice, name, integer or boolean, & its Default, Required,
+            Choices, Minimum & Maximum where they apply.
+An entry that is not usable is left out & named in a warning, so one bad entry costs that
+operation & nothing else.
+
+FileTypes maps a kind of file, a plain word, to the extensions it covers.
+
+An application that starts workers must also adopt the session a worker is handed, before it
+reads any input. HRConvert2 does that in adoptWorkflowSession(), & the worker's startup key is
+checked against that session before anything is acted on.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Errors--
+
+Error block 38000 through 38019 is reserved for workflows. 38000 through 38006 are raised by the
+Workflow Core & are described in ERROR_DESCRIPTIONS.txt. None is fatal to the page.
+  38000   The application names no operation provider.
+  38001   The operation provider returned no list of operations.
+  38002   A workflow could not be started.
+  38003   An operation failed by throwing.
+  38004   A worker halted before its workflow ended.
+  38005   A workflow could not be installed.
+  38006   A workflow could not be removed.
+
+Every warning a workflow raises is logged under the session it serves. A worker logs under the
+role Workflow, so its entries are kept in a log of their own beside the web server's.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Not Yet--
+
+v4.1.4 is the first round. A workflow is chosen from the libraries & run.
+These are planned & are not in this version.
+  A builder, under $EnableWorkflowBuilder, for assembling a workflow from operations in the page.
+  Import & export, under $EnableWorkflowImport, of workflows as anonymous, generic JSON files.
+  Operations that serve workflows, such as Rescan, Hash, Diff, Grep & Replace, Combine & Split.
+  An operation's own estimate of what it will cost, compiled into what a whole workflow needs.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

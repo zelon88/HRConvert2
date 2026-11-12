@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -383,6 +383,111 @@ $Gui2Text106 = '大小';
 $Gui2Text107 = '日期';
 // / 'Type'
 $Gui2Text108 = '类型';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = '选择';
+// / 'Select All'
+$Gui2Text110 = '全选';
+// / 'Select None'
+$Gui2Text111 = '全不选';
+// / 'Select By Type'
+$Gui2Text112 = '按类型选择';
+// / 'Selected: '
+$Gui2Text113 = '已选择：';
+// / 'Documents'
+$Gui2Text114 = '文档';
+// / 'Spreadsheets'
+$Gui2Text115 = '电子表格';
+// / 'Presentations'
+$Gui2Text116 = '演示文稿';
+// / 'Images'
+$Gui2Text117 = '图像';
+// / 'Audio'
+$Gui2Text118 = '音频';
+// / 'Video'
+$Gui2Text119 = '视频';
+// / 'Archives'
+$Gui2Text120 = '压缩包';
+// / 'E-Books'
+$Gui2Text121 = '电子书';
+// / '3D Models'
+$Gui2Text122 = '3D 模型';
+// / 'Drawings'
+$Gui2Text123 = '图纸';
+// / 'Vector Images'
+$Gui2Text124 = '矢量图像';
+// / 'Subtitles'
+$Gui2Text125 = '字幕';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'OpenSCAD 文件';
+// / 'Streams'
+$Gui2Text127 = '流媒体';
+// / 'Workflows'
+$Gui2Text128 = '工作流';
+// / 'Files'
+$Gui2Text129 = '文件';
+// / 'Select files in the list below.'
+$Gui2Text130 = '请在下方列表中选择文件。';
+// / 'Select By Name: '
+$Gui2Text131 = '按名称选择：';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = '可使用 * 和 ? 作为通配符，或在两个斜杠之间输入正则表达式。';
+// / 'Workflow'
+$Gui2Text133 = '工作流';
+// / 'Choose a workflow'
+$Gui2Text134 = '选择工作流';
+// / 'Run'
+$Gui2Text135 = '运行';
+// / 'Stop'
+$Gui2Text136 = '停止';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = '可使用的已选文件：{count} 个中的 {fit} 个。';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = '第 {step}/{steps} 步：{operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = '文件 {done}/{total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = '正在等待服务器。';
+// / 'Starting.'
+$Gui2Text141 = '正在启动。';
+// / 'Finished.'
+$Gui2Text142 = '已完成。';
+// / 'Stopping.'
+$Gui2Text143 = '正在停止。';
+// / 'Stopped.'
+$Gui2Text144 = '已停止。';
+// / 'Files made: '
+$Gui2Text145 = '已生成的文件：';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = '此服务器上不提供工作流。';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = '此服务器上未安装任何工作流。';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = '该工作流已不再可用。';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = '此工作流无法使用所选的任何文件。';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = '为一个工作流选择的文件过多。';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = '服务器繁忙。请几分钟后重试。';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = '此会话中已有工作流正在运行。';
+// / 'The workflow could not be started.'
+$Gui2Text153 = '无法启动工作流。';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = '工作流的某个步骤失败。';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = '发现病毒，因此工作流已停止。';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = '工作流已超时。';
+// / 'The workflow made too many files.'
+$Gui2Text157 = '工作流生成的文件过多。';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = '服务器过于繁忙，无法完成工作流。';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = '此工作流所需的某项操作不可用。';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = '工作流意外停止。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

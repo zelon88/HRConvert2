@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -384,6 +384,111 @@ $Gui2Text106 = 'Taille';
 $Gui2Text107 = 'Date';
 // / 'Type'
 $Gui2Text108 = 'Type';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'Sélectionner';
+// / 'Select All'
+$Gui2Text110 = 'Tout Sélectionner';
+// / 'Select None'
+$Gui2Text111 = 'Tout Désélectionner';
+// / 'Select By Type'
+$Gui2Text112 = 'Sélectionner Par Type';
+// / 'Selected: '
+$Gui2Text113 = 'Sélectionnés: ';
+// / 'Documents'
+$Gui2Text114 = 'Documents';
+// / 'Spreadsheets'
+$Gui2Text115 = 'Feuilles De Calcul';
+// / 'Presentations'
+$Gui2Text116 = 'Présentations';
+// / 'Images'
+$Gui2Text117 = 'Images';
+// / 'Audio'
+$Gui2Text118 = 'Audio';
+// / 'Video'
+$Gui2Text119 = 'Vidéo';
+// / 'Archives'
+$Gui2Text120 = 'Archives';
+// / 'E-Books'
+$Gui2Text121 = 'Livres Numériques';
+// / '3D Models'
+$Gui2Text122 = 'Modèles 3D';
+// / 'Drawings'
+$Gui2Text123 = 'Dessins';
+// / 'Vector Images'
+$Gui2Text124 = 'Images Vectorielles';
+// / 'Subtitles'
+$Gui2Text125 = 'Sous-Titres';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'Fichiers OpenSCAD';
+// / 'Streams'
+$Gui2Text127 = 'Flux Vidéo';
+// / 'Workflows'
+$Gui2Text128 = 'Flux De Travail';
+// / 'Files'
+$Gui2Text129 = 'Fichiers';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'Sélectionnez des fichiers dans la liste ci-dessous.';
+// / 'Select By Name: '
+$Gui2Text131 = 'Sélectionner Par Nom: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'Utilisez * et ? comme caractères génériques, ou écrivez une expression régulière entre barres obliques.';
+// / 'Workflow'
+$Gui2Text133 = 'Flux De Travail';
+// / 'Choose a workflow'
+$Gui2Text134 = 'Choisissez un flux de travail';
+// / 'Run'
+$Gui2Text135 = 'Exécuter';
+// / 'Stop'
+$Gui2Text136 = 'Arrêter';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'Fichiers sélectionnés utilisables: {fit} sur {count}.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'Étape {step} sur {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'Fichier {done} sur {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'En attente du serveur.';
+// / 'Starting.'
+$Gui2Text141 = 'Démarrage.';
+// / 'Finished.'
+$Gui2Text142 = 'Terminé.';
+// / 'Stopping.'
+$Gui2Text143 = 'Arrêt en cours.';
+// / 'Stopped.'
+$Gui2Text144 = 'Arrêté.';
+// / 'Files made: '
+$Gui2Text145 = 'Fichiers créés: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'Les flux de travail ne sont pas disponibles sur ce serveur.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'Aucun flux de travail n’est installé sur ce serveur.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'Ce flux de travail n’est plus disponible.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'Aucun des fichiers sélectionnés ne peut être utilisé par ce flux de travail.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'Trop de fichiers sont sélectionnés pour un seul flux de travail.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'Le serveur est occupé. Réessayez dans quelques minutes.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'Un flux de travail est déjà en cours dans cette session.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'Le flux de travail n’a pas pu démarrer.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'Une étape du flux de travail a échoué.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'Un virus a été trouvé, le flux de travail s’est donc arrêté.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'Le flux de travail a manqué de temps.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'Le flux de travail a créé trop de fichiers.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'Le serveur était trop occupé pour terminer le flux de travail.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'Une opération nécessaire à ce flux de travail n’est pas disponible.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'Le flux de travail s’est arrêté de manière inattendue.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

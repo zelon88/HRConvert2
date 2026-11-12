@@ -26,6 +26,39 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 
 --------------------
+COMMIT 11/12/2026
+v4.1.4 - Workflows chain operations on the files a user ticks, & a ticked file converts every eligible ticked file.
+
+-v4.1.4.
+-New Workflow Core, an Engine core pinned exactly by $RequiredWorkflowCoreVersion. It reads, checks & runs workflows, & keeps their status. Errors 38000 through 38019 are reserved for it.
+-A workflow is a list of steps in the HRProprietary Workflow format, version 1. A step runs one operation on the selected files or on what earlier steps made, & may filter them by glob, regex, kind, extension & size.
+-New operation registry. applicationOperations() declares Convert, Archive, OCR, Identify & Scan, & the Engine reads it through $EngineOperationProvider. A button & a workflow run each operation through the same adapter.
+-convertFiles & archiveFiles return what they made & print nothing. The core prints it for a button.
+-A workflow runs in a worker, the core started with --run-workflow through setsid, as the web server account & never as root. Its session & a single use startup key travel in its environment.
+-A session's workflow keeps Workflow/status.json in its session folder, which a page reads. An ended status is read once & then removed, & a new run clears an ended one.
+-One workflow runs in a session at a time, & no more than --Maximum Concurrent Workflows-- on the server. A session running one is told so before the server's count. Each operation takes its budget as its button does, & waits while the server is busy.
+-A workflow whose worker is gone, even one killed & not yet collected, reads as interrupted & may be cleared.
+-New POST inputs workflowLibrary, workflowRun with workflowFiles[], workflowStatus & workflowStop. Each reply is one line of JSON under Workflow.
+-Resources/Workflows ships three workflows. The installed library is Workflows in the data root, a location of the new library role.
+-New commands --workflow --list, --check=FILE, --install=FILE & --remove=ID. Installing & removing need root.
+-New settings --Enable Workflows--, --Maximum Workflow Steps--, --Maximum Workflow Files--, --Maximum Workflow Runtime-- & --Maximum Concurrent Workflows--. After unpacking a drop in, run --config --repair before -fp.
+-New contract names $EngineOperationProvider & $EngineShippedWorkflows, & EnableWorkflows, MaxWorkflowSteps, MaxWorkflowFiles, MaxWorkflowRuntime, MaxConcurrentWorkflows, SessionFolder, SessionContext & WorkflowLibrary in $EngineSettingNames.
+-Both interfaces give every file a box. A ticked box shows its place in the order it was ticked. The box at the top ticks all or none, & the arrow beside it ticks every file of one kind.
+-Converting a ticked file converts every eligible ticked file, one request at a time, each named by its own row. Ineligible files are skipped, & the bar says how many were used. OCR does the same, & archiving a ticked file archives every ticked file.
+-New Workflows panel in both interfaces, HRC2-Workflows.js, a library that needs no other. It shows the files, the workflow & its progress, can stop one, & says workflows are unavailable when the server cannot run them.
+-$FileDetails names each file's kinds, & an interface is handed $EnableWorkflows & $WorkflowsJsPath.
+-52 new strings in every language pack, in all 26 languages.
+-New functions applicationConversionFamilies, applicationFileTypes, applicationOperations, convertOperationAccepts, invokeConvertOperation, invokeArchiveOperation, invokeOcrOperation, invokeIdentifyOperation, invokeScanOperation & adoptWorkflowSession in the core, & engineWorkerContextVariable, readTransportedWorkerContext & runEngineWorkflowCommand in the Engine.
+-FIX. Every row of the file list was left open, so each row held every row after it. Each row closes.
+-FIX. The file list page left its card open for a footer that never closed it. The page closes it, & the fine print sits below the card, as it does on the upload page.
+-FIX. The upload page wrote its Continue address with a bare ampersand.
+-FIX. The orange, purple & dark schemes named select arrows neither interface shipped, so every visible select in them was a 404. Both interfaces ship all three.
+-takeOperationBudget registers its shutdown handler once, because a worker takes a budget for every operation.
+-Errors 38000 through 38006 are new.
+-ABOUT_WORKFLOWS is new. README, ABOUT_REST_API, ABOUT_COMMAND_LINE_ARGUMENTS, ABOUT_ENGINE_CONTRACT, ABOUT_MANAGED_LOCATIONS, ABOUT_COMPONENTS, CREATING_GUIS, CREATING_LANGUAGE_PACKS, ERROR_DESCRIPTIONS & DEVELOPMENT_NOTES describe workflows.
+-The core, the Engine, the Engine configuration, Setup Core, the Workflow Core, both interfaces, every language pack, config.php, config-template.php & the contract are v4.1.4, & every pin to them requires v4.1.4.
+
+--------------------
 COMMIT 11/11/2026
 v4.1.3 - The listener watches the free space on every disk holding a data location, & stops writing before one fills.
 

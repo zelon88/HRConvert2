@@ -75,6 +75,7 @@ Navigate the complete documentation library using the directory structure below.
 * [ENGINE_MIGRATION_STATUS.txt](ENGINE_MIGRATION_STATUS.txt) — How far the migration has actually got, & the check that proves each line.
 * [ABOUT_COMPONENTS.txt](ABOUT_COMPONENTS.txt) — How a detachable component is versioned & loaded.
 * [ABOUT_PIPELINE_COMPONENTS.txt](ABOUT_PIPELINE_COMPONENTS.txt) — The contracts every conversion pipeline obeys.
+* [ABOUT_WORKFLOWS.txt](ABOUT_WORKFLOWS.txt) — Workflows. Their format, their libraries, how one runs & what a page is told.
 * [ABOUT_MANAGERS.txt](ABOUT_MANAGERS.txt) — The manager processes & the protocol between them.
 * [ABOUT_ENVIRONMENT_MANAGER.txt](ABOUT_ENVIRONMENT_MANAGER.txt) — The privileged repair process & what it may change.
 * [ABOUT_RESOURCE_RATE_LIMITING.md](ABOUT_RESOURCE_RATE_LIMITING.md) / [.txt](ABOUT_RESOURCE_RATE_LIMITING.txt) — Budgets, data locations & scheduled cleanup.

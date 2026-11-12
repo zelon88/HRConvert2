@@ -38,7 +38,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -395,6 +395,111 @@ $Gui2Text106 = 'Kích thước';
 $Gui2Text107 = 'Ngày';
 // / 'Type'
 $Gui2Text108 = 'Loại';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'Chọn';
+// / 'Select All'
+$Gui2Text110 = 'Chọn Tất Cả';
+// / 'Select None'
+$Gui2Text111 = 'Bỏ Chọn Tất Cả';
+// / 'Select By Type'
+$Gui2Text112 = 'Chọn Theo Loại';
+// / 'Selected: '
+$Gui2Text113 = 'Đã chọn: ';
+// / 'Documents'
+$Gui2Text114 = 'Tài Liệu';
+// / 'Spreadsheets'
+$Gui2Text115 = 'Bảng Tính';
+// / 'Presentations'
+$Gui2Text116 = 'Bài Thuyết Trình';
+// / 'Images'
+$Gui2Text117 = 'Hình Ảnh';
+// / 'Audio'
+$Gui2Text118 = 'Âm Thanh';
+// / 'Video'
+$Gui2Text119 = 'Video';
+// / 'Archives'
+$Gui2Text120 = 'Tệp Nén';
+// / 'E-Books'
+$Gui2Text121 = 'Sách Điện Tử';
+// / '3D Models'
+$Gui2Text122 = 'Mô Hình 3D';
+// / 'Drawings'
+$Gui2Text123 = 'Bản Vẽ';
+// / 'Vector Images'
+$Gui2Text124 = 'Ảnh Vector';
+// / 'Subtitles'
+$Gui2Text125 = 'Phụ Đề';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'Tệp OpenSCAD';
+// / 'Streams'
+$Gui2Text127 = 'Luồng';
+// / 'Workflows'
+$Gui2Text128 = 'Quy Trình';
+// / 'Files'
+$Gui2Text129 = 'Tệp';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'Chọn tệp trong danh sách bên dưới.';
+// / 'Select By Name: '
+$Gui2Text131 = 'Chọn Theo Tên: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'Dùng * và ? làm ký tự đại diện, hoặc viết biểu thức chính quy giữa hai dấu gạch chéo.';
+// / 'Workflow'
+$Gui2Text133 = 'Quy Trình';
+// / 'Choose a workflow'
+$Gui2Text134 = 'Chọn một quy trình';
+// / 'Run'
+$Gui2Text135 = 'Chạy';
+// / 'Stop'
+$Gui2Text136 = 'Dừng';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'Số tệp đã chọn có thể dùng: {fit} trên {count}.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'Bước {step} trên {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'Tệp {done} trên {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'Đang chờ máy chủ.';
+// / 'Starting.'
+$Gui2Text141 = 'Đang bắt đầu.';
+// / 'Finished.'
+$Gui2Text142 = 'Đã xong.';
+// / 'Stopping.'
+$Gui2Text143 = 'Đang dừng.';
+// / 'Stopped.'
+$Gui2Text144 = 'Đã dừng.';
+// / 'Files made: '
+$Gui2Text145 = 'Tệp đã tạo: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'Quy trình không khả dụng trên máy chủ này.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'Không có quy trình nào được cài đặt trên máy chủ này.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'Quy trình đó không còn khả dụng.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'Quy trình này không thể dùng tệp nào trong số các tệp đã chọn.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'Đã chọn quá nhiều tệp cho một quy trình.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'Máy chủ đang bận. Hãy thử lại sau vài phút.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'Một quy trình đang chạy trong phiên này.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'Không thể bắt đầu quy trình.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'Một bước của quy trình đã thất bại.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'Phát hiện vi-rút nên quy trình đã dừng.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'Quy trình đã hết thời gian.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'Quy trình đã tạo quá nhiều tệp.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'Máy chủ quá bận nên không thể hoàn tất quy trình.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'Một thao tác mà quy trình này cần không khả dụng.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'Quy trình đã dừng bất ngờ.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

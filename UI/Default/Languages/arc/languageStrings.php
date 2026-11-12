@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -387,6 +387,111 @@ $Gui2Text106 = 'ܪܒܘܬܐ';
 $Gui2Text107 = 'ܙܒܢܐ';
 // / 'Type'
 $Gui2Text108 = 'ܐܕܫܐ';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'ܓܒܝ';
+// / 'Select All'
+$Gui2Text110 = 'ܓܒܝ ܟܠ';
+// / 'Select None'
+$Gui2Text111 = 'ܫܪܝ ܓܒܝܬܐ';
+// / 'Select By Type'
+$Gui2Text112 = 'ܓܒܝ ܒܝܕ ܐܕܫܐ';
+// / 'Selected: '
+$Gui2Text113 = 'ܓܒܝ̈ܐ: ';
+// / 'Documents'
+$Gui2Text114 = 'ܟܬܝܒܬ̈ܐ';
+// / 'Spreadsheets'
+$Gui2Text115 = 'ܦܬܘܪ̈ܐ ܕܚܘܫܒܢܐ';
+// / 'Presentations'
+$Gui2Text116 = 'ܚܘܘܝ̈ܐ';
+// / 'Images'
+$Gui2Text117 = 'ܨܘܪ̈ܬܐ';
+// / 'Audio'
+$Gui2Text118 = 'ܩܠܐ';
+// / 'Video'
+$Gui2Text119 = 'ܚܙܘܐ';
+// / 'Archives'
+$Gui2Text120 = 'ܓܙ̈ܐ';
+// / 'E-Books'
+$Gui2Text121 = 'ܟܬܒ̈ܐ ܐܠܩܛܪܘܢܝ̈ܐ';
+// / '3D Models'
+$Gui2Text122 = 'ܛܘܦܣ̈ܐ ܕܬܠܬܐ ܡܫܘܚܝܢ';
+// / 'Drawings'
+$Gui2Text123 = 'ܪ̈ܫܡܐ';
+// / 'Vector Images'
+$Gui2Text124 = 'ܨܘܪ̈ܬܐ ܕܒܩܛܘܪ';
+// / 'Subtitles'
+$Gui2Text125 = 'ܟܬܝܒܬܐ ܕܠܬܚܬ';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'ܦܬܩ̈ܐ ܕ-OpenSCAD';
+// / 'Streams'
+$Gui2Text127 = 'ܪ̈ܕܝܬܐ';
+// / 'Workflows'
+$Gui2Text128 = 'ܡܪ̈ܕܝܬܐ ܕܦܘܠܚܢܐ';
+// / 'Files'
+$Gui2Text129 = 'ܦܬܩ̈ܐ';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'ܓܒܝ ܦܬܩ̈ܐ ܒܪܫܝܡܬܐ ܕܠܬܚܬ.';
+// / 'Select By Name: '
+$Gui2Text131 = 'ܓܒܝ ܒܝܕ ܫܡܐ: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'ܦܠܘܚ ܒ- * ܘ- ? ܐܝܟ ܐܬܘ̈ܬܐ ܕܚܘܠܦܐ، ܐܘ ܟܬܘܒ ܡܡܠܐ ܩܢܘܢܝܐ (regex) ܒܝܬ ܬܪܝܢ ܣܪ̈ܛܐ ܣܡܝܟ̈ܐ.';
+// / 'Workflow'
+$Gui2Text133 = 'ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ';
+// / 'Choose a workflow'
+$Gui2Text134 = 'ܓܒܝ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ';
+// / 'Run'
+$Gui2Text135 = 'ܫܪܝ';
+// / 'Stop'
+$Gui2Text136 = 'ܟܠܝ';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'ܦܬܩ̈ܐ ܓܒܝ̈ܐ ܕܡܫܟܚܝܢ ܠܡܬܦܠܚܘ: {fit} ܡܢ {count}.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'ܕܪܓܐ {step} ܡܢ {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'ܦܬܩܐ {done} ܡܢ {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'ܡܣܟܝܢܢ ܠܡܫܡܫܢܐ.';
+// / 'Starting.'
+$Gui2Text141 = 'ܡܫܪܝܢܢ.';
+// / 'Finished.'
+$Gui2Text142 = 'ܫܠܡ.';
+// / 'Stopping.'
+$Gui2Text143 = 'ܟܠܝܢܢ.';
+// / 'Stopped.'
+$Gui2Text144 = 'ܐܬܟܠܝ.';
+// / 'Files made: '
+$Gui2Text145 = 'ܦܬܩ̈ܐ ܕܐܬܥܒܕܘ: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'ܡܪ̈ܕܝܬܐ ܕܦܘܠܚܢܐ ܠܐ ܡܛܝܒܢ ܥܠ ܗܢܐ ܡܫܡܫܢܐ.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'ܠܝܬ ܡܪ̈ܕܝܬܐ ܕܦܘܠܚܢܐ ܡܩܝܡ̈ܢ ܥܠ ܗܢܐ ܡܫܡܫܢܐ.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'ܗܝ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܠܐ ܡܛܝܒܐ ܬܘܒ.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'ܐܦܠܐ ܚܕ ܡܢ ܦܬܩ̈ܐ ܓܒܝ̈ܐ ܡܫܟܚ ܠܡܬܦܠܚܘ ܒܗܕܐ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'ܦܬܩ̈ܐ ܣܓܝ̈ܐܐ ܛܒ ܐܬܓܒܝܘ ܠܚܕܐ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'ܡܫܡܫܢܐ ܛܪܝܕ. ܢܣܐ ܬܘܒ ܒܬܪ ܩܠܝܠ ܩܛܝܢ̈ܐ.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'ܚܕܐ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܪܗܛܐ ܡܢ ܟܕܘ ܒܗܢܐ ܡܘܬܒܐ.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'ܠܐ ܐܫܟܚܬ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܠܡܫܪܝܘ.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'ܚܕ ܕܪܓܐ ܕܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܚܪܒ.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'ܐܫܬܟܚ ܒܝܪܘܣ، ܘܡܛܠ ܗܢܐ ܐܬܟܠܝܬ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'ܫܠܡ ܙܒܢܐ ܕܡܪܕܝܬܐ ܕܦܘܠܚܢܐ.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܥܒܕܬ ܦܬܩ̈ܐ ܣܓܝ̈ܐܐ ܛܒ.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'ܡܫܡܫܢܐ ܛܪܝܕ ܗܘܐ ܛܒ ܠܡܫܠܡܘ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'ܦܘܠܚܢܐ ܕܣܢܝܩܐ ܠܗ ܗܕܐ ܡܪܕܝܬܐ ܠܐ ܡܛܝܒ.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܐܬܟܠܝܬ ܕܠܐ ܣܘܟܝܐ.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

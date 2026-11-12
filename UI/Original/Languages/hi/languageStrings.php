@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -386,6 +386,111 @@ $Gui2Text106 = 'आकार';
 $Gui2Text107 = 'दिनांक';
 // / 'Type'
 $Gui2Text108 = 'प्रकार';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'चुनें';
+// / 'Select All'
+$Gui2Text110 = 'सभी चुनें';
+// / 'Select None'
+$Gui2Text111 = 'कोई नहीं चुनें';
+// / 'Select By Type'
+$Gui2Text112 = 'प्रकार के अनुसार चुनें';
+// / 'Selected: '
+$Gui2Text113 = 'चयनित: ';
+// / 'Documents'
+$Gui2Text114 = 'दस्तावेज़';
+// / 'Spreadsheets'
+$Gui2Text115 = 'स्प्रेडशीट';
+// / 'Presentations'
+$Gui2Text116 = 'प्रस्तुतियाँ';
+// / 'Images'
+$Gui2Text117 = 'छवियाँ';
+// / 'Audio'
+$Gui2Text118 = 'ऑडियो';
+// / 'Video'
+$Gui2Text119 = 'वीडियो';
+// / 'Archives'
+$Gui2Text120 = 'संग्रह';
+// / 'E-Books'
+$Gui2Text121 = 'ई-बुक';
+// / '3D Models'
+$Gui2Text122 = '3डी मॉडल';
+// / 'Drawings'
+$Gui2Text123 = 'आरेखण';
+// / 'Vector Images'
+$Gui2Text124 = 'वेक्टर छवियाँ';
+// / 'Subtitles'
+$Gui2Text125 = 'उपशीर्षक';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'OpenSCAD फ़ाइलें';
+// / 'Streams'
+$Gui2Text127 = 'स्ट्रीम';
+// / 'Workflows'
+$Gui2Text128 = 'वर्कफ़्लो';
+// / 'Files'
+$Gui2Text129 = 'फ़ाइलें';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'नीचे दी गई सूची में फ़ाइलें चुनें।';
+// / 'Select By Name: '
+$Gui2Text131 = 'नाम के अनुसार चुनें: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = '* और ? को वाइल्डकार्ड के रूप में उपयोग करें, या स्लैश के बीच एक रेगुलर एक्सप्रेशन लिखें।';
+// / 'Workflow'
+$Gui2Text133 = 'वर्कफ़्लो';
+// / 'Choose a workflow'
+$Gui2Text134 = 'एक वर्कफ़्लो चुनें';
+// / 'Run'
+$Gui2Text135 = 'चलाएँ';
+// / 'Stop'
+$Gui2Text136 = 'रोकें';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'उपयोग की जा सकने वाली चयनित फ़ाइलें: {count} में से {fit}।';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'चरण {step} / {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'फ़ाइल {done} / {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'सर्वर की प्रतीक्षा की जा रही है।';
+// / 'Starting.'
+$Gui2Text141 = 'शुरू हो रहा है।';
+// / 'Finished.'
+$Gui2Text142 = 'पूरा हुआ।';
+// / 'Stopping.'
+$Gui2Text143 = 'रोका जा रहा है।';
+// / 'Stopped.'
+$Gui2Text144 = 'रोक दिया गया।';
+// / 'Files made: '
+$Gui2Text145 = 'बनाई गई फ़ाइलें: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'इस सर्वर पर वर्कफ़्लो उपलब्ध नहीं हैं।';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'इस सर्वर पर कोई वर्कफ़्लो स्थापित नहीं है।';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'वह वर्कफ़्लो अब उपलब्ध नहीं है।';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'चयनित फ़ाइलों में से किसी का भी उपयोग यह वर्कफ़्लो नहीं कर सकता।';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'एक वर्कफ़्लो के लिए बहुत अधिक फ़ाइलें चुनी गई हैं।';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'सर्वर व्यस्त है। कुछ मिनट बाद फिर से प्रयास करें।';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'इस सत्र में एक वर्कफ़्लो पहले से चल रहा है।';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'वर्कफ़्लो शुरू नहीं किया जा सका।';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'वर्कफ़्लो का एक चरण विफल हो गया।';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'एक वायरस मिला, इसलिए वर्कफ़्लो रोक दिया गया।';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'वर्कफ़्लो का समय समाप्त हो गया।';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'वर्कफ़्लो ने बहुत अधिक फ़ाइलें बनाईं।';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'सर्वर वर्कफ़्लो पूरा करने के लिए बहुत व्यस्त था।';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'इस वर्कफ़्लो के लिए आवश्यक एक कार्रवाई उपलब्ध नहीं है।';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'वर्कफ़्लो अप्रत्याशित रूप से रुक गया।';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

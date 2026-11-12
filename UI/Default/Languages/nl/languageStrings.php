@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -387,6 +387,111 @@ $Gui2Text106 = 'Grootte';
 $Gui2Text107 = 'Datum';
 // / 'Type'
 $Gui2Text108 = 'Type';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'Selecteren';
+// / 'Select All'
+$Gui2Text110 = 'Alles Selecteren';
+// / 'Select None'
+$Gui2Text111 = 'Niets Selecteren';
+// / 'Select By Type'
+$Gui2Text112 = 'Selecteren Op Type';
+// / 'Selected: '
+$Gui2Text113 = 'Geselecteerd: ';
+// / 'Documents'
+$Gui2Text114 = 'Documenten';
+// / 'Spreadsheets'
+$Gui2Text115 = 'Spreadsheets';
+// / 'Presentations'
+$Gui2Text116 = 'Presentaties';
+// / 'Images'
+$Gui2Text117 = 'Afbeeldingen';
+// / 'Audio'
+$Gui2Text118 = 'Audio';
+// / 'Video'
+$Gui2Text119 = 'Video';
+// / 'Archives'
+$Gui2Text120 = 'Archieven';
+// / 'E-Books'
+$Gui2Text121 = 'E-books';
+// / '3D Models'
+$Gui2Text122 = '3D-modellen';
+// / 'Drawings'
+$Gui2Text123 = 'Tekeningen';
+// / 'Vector Images'
+$Gui2Text124 = 'Vectorafbeeldingen';
+// / 'Subtitles'
+$Gui2Text125 = 'Ondertitels';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'OpenSCAD-bestanden';
+// / 'Streams'
+$Gui2Text127 = 'Streams';
+// / 'Workflows'
+$Gui2Text128 = 'Workflows';
+// / 'Files'
+$Gui2Text129 = 'Bestanden';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'Selecteer bestanden in de lijst hieronder.';
+// / 'Select By Name: '
+$Gui2Text131 = 'Selecteren Op Naam: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'Gebruik * en ? als jokertekens, of schrijf een reguliere expressie tussen schuine strepen.';
+// / 'Workflow'
+$Gui2Text133 = 'Workflow';
+// / 'Choose a workflow'
+$Gui2Text134 = 'Kies een workflow';
+// / 'Run'
+$Gui2Text135 = 'Uitvoeren';
+// / 'Stop'
+$Gui2Text136 = 'Stoppen';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'Bruikbare geselecteerde bestanden: {fit} van {count}.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'Stap {step} van {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'Bestand {done} van {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'Wachten op de server.';
+// / 'Starting.'
+$Gui2Text141 = 'Bezig met starten.';
+// / 'Finished.'
+$Gui2Text142 = 'Voltooid.';
+// / 'Stopping.'
+$Gui2Text143 = 'Bezig met stoppen.';
+// / 'Stopped.'
+$Gui2Text144 = 'Gestopt.';
+// / 'Files made: '
+$Gui2Text145 = 'Gemaakte bestanden: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'Workflows zijn niet beschikbaar op deze server.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'Er zijn geen workflows geïnstalleerd op deze server.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'Die workflow is niet meer beschikbaar.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'Geen van de geselecteerde bestanden kan door deze workflow worden gebruikt.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'Er zijn te veel bestanden geselecteerd voor één workflow.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'De server is bezet. Probeer het over een paar minuten opnieuw.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'Er loopt al een workflow in deze sessie.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'De workflow kon niet worden gestart.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'Een stap van de workflow is mislukt.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'Er is een virus gevonden, dus de workflow is gestopt.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'De workflow had geen tijd meer.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'De workflow heeft te veel bestanden gemaakt.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'De server was te druk om de workflow af te ronden.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'Een bewerking die deze workflow nodig heeft, is niet beschikbaar.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'De workflow is onverwacht gestopt.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -187,3 +187,18 @@ POST inputs are organized into distinct functional operational blocks based on p
   * A name already in the session is given the next free one, such as `name_1`, & the reply names the file that was written.
 
 > ℹ️ The reply is one line of JSON after the doctype line that opens every reply: `{"Identify":{"Complete":true,"Errors":false,"Report":"","Records":[...]}}`. `Complete` is false when no file was identified, or a report was asked for and not written, and error 31 follows the JSON. `Errors` is true when anything was skipped or failed. `Report` names the report written, or is empty. Each record holds `Name`, `Size`, `SizeText`, `Modified`, `Description`, `MimeType`, `Charset`, `ExtensionMatches` (`yes`, `no` or `unknown`), `ExpectedExtensions`, `SHA256`, `SHA1`, `MD5`, `Details` and `Notes`, and where they apply `Text`, `Image`, `Media`, `Pdf` and `Archive`. `ABOUT_REST_API.txt` describes each one. Every character that means something in HTML is escaped, and so is the exclamation mark, so nothing a file carries can spell the error tag.
+
+### 🧭 K. Workflow Operations
+Every reply is one line of JSON under the key `Workflow`, after the doctype line that opens every reply. A server with `--Enable Workflows--` off, or without the Workflow Core, answers every one of them with `{"Workflow":{"Available":false}}` and says why only in its log. `ABOUT_WORKFLOWS.txt` describes the format, the operations and how a workflow runs.
+* `workflowLibrary` *(1)*
+  * Lists the workflows this session may run, each with `Id`, `Name`, `Description`, `Steps`, `AcceptsAll` and `Accepts`, the extensions its first step reads.
+* `workflowRun` *(String)* with `workflowFiles[]` *(one for each file)*
+  * Starts the workflow with that identifier on those files, in that order, and returns as soon as its worker starts: `{"Workflow":{"Started":true,"JobId":"...","Reason":""}}`.
+  * A run that does not start says why in `Reason`, asked in this order: `disabled`, `unknown`, `busy`, `files`, `nothing`, `server` or `start`.
+* `workflowStatus` *(1)*
+  * Reports this session's workflow. `State` is `none`, `starting`, `running`, `finished`, `stopped`, `failed` or `interrupted`, with the step, the file, every file it made and the reason it ended.
+  * **An ended workflow is reported once.** The request that reads it removes it, so the session may start another.
+* `workflowStop` *(1)*
+  * Asks the running workflow to stop before its next operation. `Stop` is `stopping`, `cleared` or `none`. Read `workflowStatus` until it says `stopped`.
+
+> ℹ️ Every character that means something in HTML is escaped in every reply, and so is the exclamation mark.

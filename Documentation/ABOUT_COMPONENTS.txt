@@ -39,6 +39,7 @@ lost is the capability that component provides, & the loss is reported rather th
   Resources/Engine/Cores/setupCore.php        Installation & configuration.
   Resources/Engine/Cores/dependencyCore.php   Dependency management & the supply chain audit.
   Resources/Engine/Cores/pipelineCore.php     Pipeline verification & dispatch.
+  Resources/Engine/Cores/workflowCore.php     Workflows, their libraries, their workers & their status.
 
 Each Core lives in Resources/Engine/Cores, because a Core is part of the Engine. Configuration
 files do not. config.php & versionInfo.php stay in Resources, & depends.php lives in
@@ -74,6 +75,7 @@ the core does not have on its own.
   Setup Core        Installing, configuring, repairing & the service unit.
   Dependency Core   Dependencies, capability detection & the supply chain audit.
   Pipeline Core     Which conversion families exist & which one gets a given conversion.
+  Workflow Core     Workflows, from their format to running one & reporting how it went.
   Core Manager      Resource awareness & the manager processes.
 
 FOUR PROPERTIES SEPARATE A CORE FROM ANYTHING ELSE IN THIS APPLICATION.
@@ -84,13 +86,16 @@ FOUR PROPERTIES SEPARATE A CORE FROM ANYTHING ELSE IN THIS APPLICATION.
   2  IT RUNS INSIDE THE CALLER. It is called, it works, it returns. A Core starts nothing
      that outlives the call. Core Manager starts processes, which is why the processes it
      starts are described separately in ABOUT_MANAGERS.txt rather than here.
+     The Workflow Core starts one worker for each workflow it runs. A worker is the
+     application's own entry point running that one workflow & ending with it, with no
+     socket & no supervisor, so it is not a manager. See ABOUT_WORKFLOWS.txt.
 
   3  IT IS OPTIONAL. Every Core can be deleted & the application still converts files.
      What is lost is the scope that Core provided, & the loss is reported rather than silent.
 
   4  IT EXTENDS SCOPE RATHER THAN CAPABILITY. A dependency gives the application a new
      format. A pipeline gives it a new conversion. A Core gives it a new thing it is able
-     to be responsible for, which is a larger claim & is why there are only four.
+     to be responsible for, which is a larger claim & is why there are only five.
 
 A CORE IS NOT A MANAGER, & THE WORD MANAGER MEANS SOMETHING ELSE IN THIS APPLICATION.
 A Core is a file that is loaded. A manager is a role a long lived process runs under, with
@@ -171,6 +176,7 @@ component it will not call. Only the Engine & Pipeline Core are resolved on ever
 
   engine.php             Resolved in the main logic, before verifyGlobals().
   pipelineCore.php       Resolved in the main logic, directly after verifyGlobals().
+  workflowCore.php       Resolved after Pipeline Core, when workflows are on or --workflow is asked for.
   setupCore.php          Loaded by --config, & by -fp for resource limits & the service unit.
   dependencyCore.php     Loaded by --setup.
   Managers/<role>.php    Loaded by loadEngineManager, only in a process running as that role.
@@ -191,7 +197,7 @@ did by loading Setup Core before every --setup option.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Version Pins--
 
-ELEVEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
+TWELVE PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
 
   $RequiredConfigVersion           config.php                    MINIMUM. A newer config carrying
                                                                  every required setting is fine.
@@ -200,6 +206,7 @@ ELEVEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
   $RequiredSetupCoreVersion        setupCore.php                 EXACT.
   $RequiredDependencyCoreVersion   dependencyCore.php            EXACT.
   $RequiredPipelineCoreVersion     pipelineCore.php              EXACT.
+  $RequiredWorkflowCoreVersion     workflowCore.php              EXACT.
   $RequiredDependsVersion          depends.php                   EXACT.
   $RequiredSecretVersion           the install secret file       EXACT.
   $RequiredGuiVersion              every UI folder               EXACT.

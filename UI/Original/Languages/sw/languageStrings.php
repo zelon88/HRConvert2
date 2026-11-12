@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -387,6 +387,111 @@ $Gui2Text106 = 'Ukubwa';
 $Gui2Text107 = 'Tarehe';
 // / 'Type'
 $Gui2Text108 = 'Aina';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'Chagua';
+// / 'Select All'
+$Gui2Text110 = 'Chagua Zote';
+// / 'Select None'
+$Gui2Text111 = 'Ondoa Uteuzi Wote';
+// / 'Select By Type'
+$Gui2Text112 = 'Chagua Kwa Aina';
+// / 'Selected: '
+$Gui2Text113 = 'Zilizochaguliwa: ';
+// / 'Documents'
+$Gui2Text114 = 'Nyaraka';
+// / 'Spreadsheets'
+$Gui2Text115 = 'Lahajedwali';
+// / 'Presentations'
+$Gui2Text116 = 'Mawasilisho';
+// / 'Images'
+$Gui2Text117 = 'Picha';
+// / 'Audio'
+$Gui2Text118 = 'Sauti';
+// / 'Video'
+$Gui2Text119 = 'Video';
+// / 'Archives'
+$Gui2Text120 = 'Kumbukumbu';
+// / 'E-Books'
+$Gui2Text121 = 'Vitabu vya Kielektroniki';
+// / '3D Models'
+$Gui2Text122 = 'Mifano ya 3D';
+// / 'Drawings'
+$Gui2Text123 = 'Michoro';
+// / 'Vector Images'
+$Gui2Text124 = 'Picha za Vekta';
+// / 'Subtitles'
+$Gui2Text125 = 'Manukuu';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'Faili za OpenSCAD';
+// / 'Streams'
+$Gui2Text127 = 'Faili za Kutiririsha';
+// / 'Workflows'
+$Gui2Text128 = 'Mitiririko ya Kazi';
+// / 'Files'
+$Gui2Text129 = 'Faili';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'Chagua faili kwenye orodha iliyo hapa chini.';
+// / 'Select By Name: '
+$Gui2Text131 = 'Chagua Kwa Jina: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'Tumia * na ? kama herufi mbadala, au andika usemi wa kawaida kati ya mikwaju.';
+// / 'Workflow'
+$Gui2Text133 = 'Mtiririko wa Kazi';
+// / 'Choose a workflow'
+$Gui2Text134 = 'Chagua mtiririko wa kazi';
+// / 'Run'
+$Gui2Text135 = 'Endesha';
+// / 'Stop'
+$Gui2Text136 = 'Simamisha';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'Faili zilizochaguliwa zinazoweza kutumika: {fit} kati ya {count}.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'Hatua {step} kati ya {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'Faili {done} kati ya {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'Inasubiri seva.';
+// / 'Starting.'
+$Gui2Text141 = 'Inaanza.';
+// / 'Finished.'
+$Gui2Text142 = 'Imekamilika.';
+// / 'Stopping.'
+$Gui2Text143 = 'Inasimama.';
+// / 'Stopped.'
+$Gui2Text144 = 'Imesimamishwa.';
+// / 'Files made: '
+$Gui2Text145 = 'Faili zilizoundwa: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'Mitiririko ya kazi haipatikani kwenye seva hii.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'Hakuna mitiririko ya kazi iliyosakinishwa kwenye seva hii.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'Mtiririko huo wa kazi haupatikani tena.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'Hakuna faili kati ya zilizochaguliwa inayoweza kutumiwa na mtiririko huu wa kazi.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'Faili nyingi mno zimechaguliwa kwa mtiririko mmoja wa kazi.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'Seva ina shughuli nyingi. Jaribu tena baada ya dakika chache.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'Mtiririko wa kazi tayari unaendeshwa katika kipindi hiki.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'Mtiririko wa kazi haukuweza kuanzishwa.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'Hatua moja ya mtiririko wa kazi imeshindwa.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'Virusi vimepatikana, kwa hiyo mtiririko wa kazi umesimamishwa.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'Muda wa mtiririko wa kazi umeisha.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'Mtiririko wa kazi umeunda faili nyingi mno.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'Seva ilikuwa na shughuli nyingi mno kumaliza mtiririko wa kazi.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'Operesheni inayohitajika na mtiririko huu wa kazi haipatikani.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'Mtiririko wa kazi umesimama bila kutarajiwa.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -382,6 +382,111 @@ $Gui2Text106 = '크기';
 $Gui2Text107 = '날짜';
 // / 'Type'
 $Gui2Text108 = '형식';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = '선택';
+// / 'Select All'
+$Gui2Text110 = '모두 선택';
+// / 'Select None'
+$Gui2Text111 = '선택 해제';
+// / 'Select By Type'
+$Gui2Text112 = '형식별 선택';
+// / 'Selected: '
+$Gui2Text113 = '선택됨: ';
+// / 'Documents'
+$Gui2Text114 = '문서';
+// / 'Spreadsheets'
+$Gui2Text115 = '스프레드시트';
+// / 'Presentations'
+$Gui2Text116 = '프레젠테이션';
+// / 'Images'
+$Gui2Text117 = '이미지';
+// / 'Audio'
+$Gui2Text118 = '오디오';
+// / 'Video'
+$Gui2Text119 = '비디오';
+// / 'Archives'
+$Gui2Text120 = '아카이브';
+// / 'E-Books'
+$Gui2Text121 = '전자책';
+// / '3D Models'
+$Gui2Text122 = '3D 모델';
+// / 'Drawings'
+$Gui2Text123 = '도면';
+// / 'Vector Images'
+$Gui2Text124 = '벡터 이미지';
+// / 'Subtitles'
+$Gui2Text125 = '자막';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'OpenSCAD 파일';
+// / 'Streams'
+$Gui2Text127 = '스트림';
+// / 'Workflows'
+$Gui2Text128 = '워크플로';
+// / 'Files'
+$Gui2Text129 = '파일';
+// / 'Select files in the list below.'
+$Gui2Text130 = '아래 목록에서 파일을 선택하세요.';
+// / 'Select By Name: '
+$Gui2Text131 = '이름으로 선택: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = '* 와 ? 를 와일드카드로 사용하거나, 슬래시 사이에 정규식을 입력하세요.';
+// / 'Workflow'
+$Gui2Text133 = '워크플로';
+// / 'Choose a workflow'
+$Gui2Text134 = '워크플로 선택';
+// / 'Run'
+$Gui2Text135 = '실행';
+// / 'Stop'
+$Gui2Text136 = '중지';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = '사용할 수 있는 선택한 파일: {count}개 중 {fit}개.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = '단계 {step}/{steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = '파일 {done}/{total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = '서버를 기다리는 중입니다.';
+// / 'Starting.'
+$Gui2Text141 = '시작하는 중입니다.';
+// / 'Finished.'
+$Gui2Text142 = '완료되었습니다.';
+// / 'Stopping.'
+$Gui2Text143 = '중지하는 중입니다.';
+// / 'Stopped.'
+$Gui2Text144 = '중지되었습니다.';
+// / 'Files made: '
+$Gui2Text145 = '만든 파일: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = '이 서버에서는 워크플로를 사용할 수 없습니다.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = '이 서버에 설치된 워크플로가 없습니다.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = '해당 워크플로는 더 이상 사용할 수 없습니다.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = '선택한 파일 중 이 워크플로에서 사용할 수 있는 파일이 없습니다.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = '하나의 워크플로에 너무 많은 파일이 선택되었습니다.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = '서버가 사용 중입니다. 몇 분 후에 다시 시도하세요.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = '이 세션에서 이미 워크플로가 실행 중입니다.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = '워크플로를 시작할 수 없습니다.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = '워크플로의 단계가 실패했습니다.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = '바이러스가 발견되어 워크플로가 중지되었습니다.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = '워크플로의 실행 시간이 초과되었습니다.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = '워크플로가 너무 많은 파일을 만들었습니다.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = '서버가 너무 바빠 워크플로를 완료하지 못했습니다.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = '이 워크플로에 필요한 작업을 사용할 수 없습니다.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = '워크플로가 예기치 않게 중지되었습니다.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

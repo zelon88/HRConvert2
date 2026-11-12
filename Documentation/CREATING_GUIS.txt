@@ -311,7 +311,10 @@ exist, a script tag to a library that does not exist, & an interface whose every
 calls into that missing library. Checking for the folder up front converts a page that
 silently does nothing into a logged warning & a working Default GUI.
 
-The included GUIs keep their client side script library at 'Resources/JS/HRC2-Functions.js'.
+The included GUIs keep their client side script library at 'Resources/JS/HRC2-Functions.js', & the
+Workflows panel's at 'Resources/JS/HRC2-Workflows.js'. header.php points $WorkflowsJsPath at the
+second & loads it only while $EnableWorkflows is on. Both are stamped with their modification time,
+so a browser fetches a new copy the moment one changes.
 header.php points $JsLibraryPath at it & loads it before anything that calls into it.
 That file is static javascript & CANNOT read a language pack, so every string it shows a
 user is passed in as an argument by the PHP that calls it. Pass those strings through
@@ -381,7 +384,7 @@ This GUI only has access to certain variables. Variables that are available to t
   $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed,
   $GuiJSDir, $GuiImageDir, $EbookInputArray, $EbookOutputArray, $BootableIsoArray, $AllowBootableIsoImage, $ShowFiles, $FileListOnly, $NoGui,
   $EnableMemoryProtection, $Verbose, $LanguageBaselineFile, $ImageOutputArray, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL,
-  $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails
+  $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $WorkflowsJsPath
 This list is the whole contract & it is the list buildGUI() declares.
 Until v4.1.2 it named $ImageArray twice & left out seven that buildGUI() already declared. A GUI that reads
 anything not named here is reading a variable that does not exist in its scope, which is a
@@ -468,6 +471,8 @@ the name in $Files.
   Modified        When it last changed, as a timestamp.
   ModifiedText    When it last changed, as YYYY-MM-DD HH:MM.
   Type            Its extension.
+  Kinds           The kinds of file it is, such as Document or Image, from v4.1.4. A file can be
+                  more than one kind. ABOUT_WORKFLOWS.txt lists them.
 A row shows these rather than reading the file again.
 A size, a date & a hash read left to right in every language, so isolate each one, with a bdi
 element or unicode-bidi, or a language read from right to left reorders its parts.
@@ -499,6 +504,53 @@ Every value is written with textContent, because a record repeats what a file sa
 Never write one as markup.
 A list drawn again keeps what was read. The library holds every record by its file's name &
 writes it into the panels the new list draws.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Ticking Files & Workflows--
+
+A file list may give every file a box, & the script library keeps which are ticked, by name, in
+the order they were ticked, so the selection survives the list being drawn again. Each box is
+  <input type='checkbox' class='hrc2-pick-box' data-hrc2-file='NAME' data-hrc2-row='ROW' data-hrc2-kinds='KINDS'>
+NAME is the file, escaped for an attribute. ROW is the number the row's elements are suffixed
+with, as ConvertGuiCounter1 numbers them. KINDS is $FileDetails[NAME]['Kinds'] joined by spaces.
+An element with class hrc2-pick-mark beside it, in the same parent, is where the library writes the
+box's place in the order. The included GUIs lay the real box over that square & hide it.
+The bar above the column is optional, & the library finds each part by its id.
+  hrc2SelectAll          A box that ticks every file, or none when any are ticked. It shows all,
+                         some or none, & its own hrc2-pick-mark draws which.
+  hrc2SelectMenuWrap     Holds the arrow & its menu. A click outside it closes the menu.
+  hrc2SelectMenuButton   The arrow that opens hrc2SelectMenu.
+  hrc2SelectMenu         Holds buttons with data-hrc2-select of all, none or kind:NAME.
+  hrc2SelectionCount     Where the library writes how many are ticked.
+Call HRC2.bindSelection with no arguments below the last row, every time the list is drawn. It binds the boxes &
+the bar & draws the selection into them, & lets go of a file the list no longer holds.
+HRC2.configure({ selectionText: { selected, usable } }) supplies the words. usable carries {fit} &
+{count}, which the library fills in.
+Draw the arrow's menu so it opens toward the side a line starts on. The included GUIs anchor it to
+the left, & to the right where the page is dir rtl.
+
+A ticked file converts every eligible ticked file. HRC2.bindRun does it for any control whose
+static values name convertSelected, pdfworkSelected or filesToArchive, when its file is ticked among
+others. A file is eligible when its own row has the same control, by the same id with its own row
+number, so give every control & every name box an id ending in its row. Each eligible file is sent
+in a request of its own, named by its own row's name box, & an archive is sent once holding them all.
+
+The Workflows panel is HRC2-Workflows.js, & HRC2.startWorkflows(settings) starts it, handing it
+the tokens & the file list. settings carries the words, as text, & the operations' names, as
+operations, & may carry endpoint & elements to change where it posts & draws. The library finds
+these ids unless elements names others.
+  hrc2Workflows         The panel. Its button toggles it with toggle_visibility.
+  hrc2WorkflowsButton   The button. The library keeps its aria-expanded true while the panel is open.
+  hrc2WfBoxes           The three boxes, hidden until the library has drawn them.
+  hrc2WfFilesBox, hrc2WfPickBox, hrc2WfRunBox
+                        The boxes. The library adds hrc2-wf-attention to the one that needs it.
+  hrc2WfFiles, hrc2WfPattern, hrc2WfSelect, hrc2WfAbout, hrc2WfRun, hrc2WfStop, hrc2WfStatus
+                        Where it writes the files, reads a name pattern, lists the workflows,
+                        describes one, runs, stops & reports.
+Put the words for workflows being unavailable into hrc2WfStatus as the page draws it, so a page
+whose library did not load still says something true. The library replaces them once it runs.
+Draw the panel only while $EnableWorkflows is on. See ABOUT_WORKFLOWS.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.1.3.
+// / v4.1.4.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.1.3';
+$SetupCoreVersion = 'v4.1.4';
 // / -----------------------------------------------------------------------------------
 
 
@@ -745,8 +745,9 @@ function enableConversionLimits() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to give one installation tree to root, with folders 0755 & files 0644.
+// / A function to give one installation tree, or a library, to root, with folders 0755 & files 0644.
 // / Accepts the tree & the paths inside it that hold another role. Returns a success boolean.
+// / A library holds no other role, so it is handed no paths.
 // / The tree is walked by GNU find, which never follows a link & never leaves the filesystem it started on.
 // / -execdir hands each command a name relative to a folder find already holds open, so a folder renamed during the walk cannot redirect a change.
 // / Root's group is used, so the web server account reads the installation as everybody else does & can write none of it.
@@ -770,12 +771,12 @@ function applyCodeRole($treePath, $prunedPaths) {
   // / -path reads a pattern, so a bracket, star or question mark in a real path is escaped.
   foreach ($prunedPaths as $prunedPath) $pruneExpression .= ' -path '.escapeshellarg(addcslashes((string)$prunedPath, '*?[]\\')).' -prune -o';
   exec($findPrefix.$pruneExpression.' -type f -links +1 -print 2>&1', $linkedFiles, $linkedExitCode);
-  if (count($linkedFiles) > 0) warningEntry(count($linkedFiles).' file(s) in the installation at '.$treePath.' have more than one name & were left alone, because changing one name changes every other. Remove them & run -fp again. The first is '.$linkedFiles[0].'.');
+  if (count($linkedFiles) > 0) warningEntry(count($linkedFiles).' file(s) in '.$treePath.' have more than one name & were left alone, because changing one name changes every other. Remove them & run -fp again. The first is '.$linkedFiles[0].'.');
   exec($findPrefix.$pruneExpression.' ! \( -type f -links +1 \) -execdir chown -h root:root {} + 2>&1', $commandOutput, $ownerExitCode);
   $commandOutput = array();
   exec($findPrefix.$pruneExpression.' -type d -execdir chmod 0755 {} \; -o -type f -links 1 -execdir chmod 0644 {} \; 2>&1', $commandOutput, $modeExitCode);
   if ($ownerExitCode === 0 && $modeExitCode === 0) $RoleWasApplied = TRUE;
-  else warningEntry('The installation at '.$treePath.' could not be given to root completely. '.implode(' ', array_slice($commandOutput, 0, 3)));
+  else warningEntry($treePath.' could not be given to root completely. '.implode(' ', array_slice($commandOutput, 0, 3)));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $pruneExpression, $prunedPath, $findPrefix, $commandOutput, $linkedFiles, $ownerExitCode, $modeExitCode, $linkedExitCode, $treePath, $prunedPaths);
   return $RoleWasApplied; }
@@ -1037,9 +1038,9 @@ function locationDiffersFromRole($locationPath, $roleName, $webAccount, $prunedP
   $folderStatus = @lstat((string)$locationPath);
   if (is_array($folderStatus)) $folderPermissions = ((int)$folderStatus['mode'] & 07777);
   if (!is_array($folderStatus)) $LocationDiffers = TRUE;
-  else if ($roleName === 'code' or $roleName === 'root-only') {
-    $folderMode = ($roleName === 'code') ? '0755' : '0700';
-    $fileMode = ($roleName === 'code') ? '0644' : '0600';
+  else if ($roleName === 'code' or $roleName === 'library' or $roleName === 'root-only') {
+    $folderMode = ($roleName === 'root-only') ? '0700' : '0755';
+    $fileMode = ($roleName === 'root-only') ? '0600' : '0644';
     $findPrefix = 'PATH=/usr/sbin:/usr/bin:/sbin:/bin find '.escapeshellarg((string)$locationPath).' -xdev';
     // / -path reads a pattern, so a bracket, star or question mark in a real path is escaped.
     foreach ((array)$prunedPaths as $prunedPath) $pruneExpression .= ' -path '.escapeshellarg(addcslashes((string)$prunedPath, '*?[]\\')).' -prune -o';
@@ -1075,6 +1076,8 @@ function locationDiffersFromRole($locationPath, $roleName, $webAccount, $prunedP
 // /              web role's, & verifyApacheConfiguration() gives it the rules that hand
 // /              every file in it over as an inert download. One that is not inside the
 // /              hosted location is refused.
+// /   library    A folder root writes & the web server account reads, which no release replaces.
+// /              root, 0755 & 0644. The workflows an administrator installs.
 // /   root-only  root alone, 0700 & 0600. The previous installation kept for an operator.
 // /   shared     A folder other software shares. Checked, never walked.
 // / The data root comes before the installation, which sits inside it as Application, & before the secret role.
@@ -1093,7 +1096,7 @@ function correctManagedLocations($webAccount) {
   global $EngineManagedLocations, $RunningAsRoot, $Lol, $EnableMemoryProtection;
   $CorrectionRan = FALSE;
   $LocationsCorrected = $LocationsRefused = 0;
-  $roleOrder = array('shared', 'data-root', 'code', 'secret', 'root-only', 'web', 'served');
+  $roleOrder = array('shared', 'data-root', 'code', 'library', 'secret', 'root-only', 'web', 'served');
   $locationRoles = $resolvedLocations = $prunedPaths = $sharedPaths = $otherLocation = $seenLocations = $servedPaths = $retiredPaths = array();
   $settingName = $locationRole = $roleName = $locationPath = $runningInstall = $configuredPath = $holdNotice = $retiredPath = '';
   $roleWasApplied = $treeIsHeld = $retiredPathsAreGone = $locationDiffered = FALSE;
@@ -1136,7 +1139,7 @@ function correctManagedLocations($webAccount) {
         $locationPath = $locationRoles[0];
         $roleWasApplied = FALSE;
         // / Nothing walked by root may resolve to a system folder or a folder other software shares.
-        if (($roleName === 'code' or $roleName === 'root-only') && (!pathIsSafeToModifyRecursively($locationPath) or in_array($locationPath, $sharedPaths, TRUE))) {
+        if (($roleName === 'code' or $roleName === 'library' or $roleName === 'root-only') && (!pathIsSafeToModifyRecursively($locationPath) or in_array($locationPath, $sharedPaths, TRUE))) {
           print('  '.str_pad('REFUSED', 12).$locationPath.' is a system or shared folder & will not be changed recursively.'.$Lol);
           warningEntry('The managed location '.$locationRoles[2].' resolved to a system or shared folder & was refused: '.$locationPath);
           $LocationsRefused++;
@@ -1153,14 +1156,14 @@ function correctManagedLocations($webAccount) {
           continue; }
         // / Root walks a code or root-only tree, so the tree must be one nothing else can replace partway through, which means every folder above it is root's.
         // / The shared & data-root roles run first, so an installation whose folder was given away has it back by now.
-        if ($roleName === 'code' or $roleName === 'root-only') list ($treeIsHeld, $holdNotice) = folderIsHeldForRoot($locationPath);
+        if ($roleName === 'code' or $roleName === 'library' or $roleName === 'root-only') list ($treeIsHeld, $holdNotice) = folderIsHeldForRoot($locationPath);
         // / A root-only tree that is not held is skipped & left as it is, because root keeps nothing & walks nothing where another account could replace it.
         // / That is not a fault in any location, so --setup goes on, & the updater keeps no backup there.
         if ($roleName === 'root-only' && !$treeIsHeld) {
           print('  '.str_pad('SKIPPED', 12).$locationPath.' could be replaced by another account. Left as it is. '.$holdNotice.$Lol);
           warningEntry('The managed location '.$locationRoles[2].' at '.$locationPath.' could be replaced by another account, so root did not walk it & keeps nothing there. '.$holdNotice);
           continue; }
-        if ($roleName === 'code' && !$treeIsHeld) {
+        if (($roleName === 'code' or $roleName === 'library') && !$treeIsHeld) {
           print('  '.str_pad('REFUSED', 12).$locationPath.' could be replaced by another account & was not walked. '.$holdNotice.$Lol);
           warningEntry('The managed location '.$locationRoles[2].' at '.$locationPath.' could be replaced by another account, so root did not walk it. '.$holdNotice);
           $LocationsRefused++;
@@ -1186,6 +1189,8 @@ function correctManagedLocations($webAccount) {
           $retiredPathsAreGone = removeRetiredPaths($retiredPaths);
           // / An installation still holding one is not root's alone, so the location is incomplete.
           if (!$retiredPathsAreGone) $roleWasApplied = FALSE; }
+        // / A library is walked as the installation is, with nothing inside it holding another role.
+        else if ($roleName === 'library') $roleWasApplied = applyCodeRole($locationPath, array());
         else if ($roleName === 'root-only') $roleWasApplied = applyRootOnlyRole($locationPath);
         // / A served location is owned & moded exactly as a web one. What makes it served is the
         // / Apache configuration, which is written from the same contract.
@@ -1525,7 +1530,7 @@ function namesToList($entryNames) {
 // / Accepts the web server account. Must run as root. Returns whether the primary folders are
 // / present & how many session directories were moved, in that order.
 // / The data root is owned by root, & each kind of file lives in a folder of its own below it.
-// / This creates the primary folders, which are Sessions, Cache, Logs, Engine, Secrets & the socket folder.
+// / This creates the primary folders, which are Sessions, Cache, Logs, Engine, Secrets, Workflows & the socket folder.
 // / correctManagedLocations gives them their roles, & runs straight after this in both --setup & -fp.
 // / Each additional data location is a root of its own the contract does not name, so its root & its Sessions folder are created & given their roles here.
 // / Nothing is put in Secrets here.
@@ -1539,20 +1544,22 @@ function namesToList($entryNames) {
 // / A folder that is not held is named, & nothing is moved into it.
 function provisionAndMigrateDataRoot($webAccount) {
   // / Set variables.
-  global $DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $ManagerSocketDir, $AdditionalConvertLocs, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
+  global $DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $WorkflowLoc, $ManagerSocketDir, $AdditionalConvertLocs, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
   $FoldersAreReady = TRUE;
   $MovedCount = 0;
   $primaryFolders = $additionalEntry = $additionalRoots = $rootEntries = $sessionEntries = $cacheStatus = $foreignEntries = $sessionNames = $strangerEntries = $entryStatus = $webRecord = array();
   $folderPath = $additionalRoot = $rootToMigrate = $sessionTarget = $rootEntry = $entryPath = $holdNotice = $cacheSource = $cacheTarget = $sessionName = $removalNotice = '';
   $targetIsHeld = $cacheIsHeld = $rootWasTaken = $cacheWasRemoved = FALSE;
   $webUid = -1;
-  $reservedNames = array('.', '..', 'Sessions', 'Cache', 'Logs', 'Sockets', 'Engine', 'Secrets', 'Last-Installed-Version', 'Application', 'lost+found', '.cache', '.config');
+  $reservedNames = array('.', '..', 'Sessions', 'Cache', 'Logs', 'Sockets', 'Engine', 'Secrets', 'Workflows', 'Last-Installed-Version', 'Application', 'lost+found', '.cache', '.config');
   if (!$RunningAsRoot) { warningEntry('The data root can only be provisioned while running as root, so nothing was created or moved.'); $FoldersAreReady = FALSE; }
   else {
     // / Create the primary root & give it back to root first, so every folder below it is
     // / created, & every session moved, beneath a folder no other account can change.
     if ((string)$DataRootLoc !== '' && createHeldFolder($DataRootLoc)) $rootWasTaken = applyDataRootRole($DataRootLoc);
     $primaryFolders = array($DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $ManagerSocketDir);
+    // / The installed workflow library is made only where the application names one, because an application without workflows has none.
+    if (isset($WorkflowLoc) && is_string($WorkflowLoc) && $WorkflowLoc !== '') $primaryFolders[] = $WorkflowLoc;
     foreach ($primaryFolders as $folderPath) {
       if ((string)$folderPath === '') continue;
       if (!createHeldFolder($folderPath)) $FoldersAreReady = FALSE; }

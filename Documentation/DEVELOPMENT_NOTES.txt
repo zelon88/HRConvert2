@@ -1311,6 +1311,88 @@ moved the number of 3.8 KB to the far end of the line & turned a date & its time
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Workflows--
+
+A WORKFLOW RUNS IN A WORKER, & A PAGE READS A STATUS FILE. v4.1.4.
+A web request is bounded by the time PHP & the web server give it, & a workflow of several
+conversions outlasts that. So the request that starts one hands it to a worker, the
+application's own entry point in a process of its own, & returns. The worker writes a status
+file in the session, & the page reads it until the workflow ends. Each operation still takes its
+budget from the Resource Manager as a button does, so resource management did not change at all.
+
+AN ENDED STATUS IS READ ONCE, & THEN IT IS GONE.
+Every way a workflow can end leaves a status, & every one of them is cleared. The request that
+reports an ended status removes it with the job & any stop marker, a run started in the session
+clears an ended one, & the sweep removes the session. A worker writes its last status only where
+one is still there, so a status that was cleared is never written back.
+
+THE ENGINE NAMES NO OPERATION.
+The Workflow Core belongs to the Engine so that any application built on it can run workflows, so
+everything it knows about operations it is told, by the application's operation provider. An
+operation the application switches off is still a valid step, because a workflow should not
+become invalid while an administrator turns a feature off & on again.
+
+A WORKFLOW RUNS A BUTTON'S CODE.
+Each operation is an adapter both the buttons & the workflows call, so the two cannot disagree
+about what Convert does. convertFiles & archiveFiles stopped printing for this, because a step
+passes what it made to the next one, & the core prints for a button.
+
+THE WORKER NEVER RUNS AS ROOT, & NOTHING IT IS GIVEN IS ON A COMMAND LINE.
+A command line can be read by every account on the host, & a session's name is how its files
+are fetched from DATA, so it travels in the worker's environment with a startup key bound to
+the job & the session. The key is spent when it is checked, so a job starts once. The worker is
+started without a shell, through setsid, so it outlives the request & leads a session of its own.
+
+A WORKFLOW IS READ ONLY FROM A FOLDER ROOT HOLDS.
+The web server account runs every workflow it reads, so it must not be able to write one. The
+installed library has the library role, which is the code role's owners & modes, & --workflow
+--install writes the text it checked, so a file changed after the check is never installed.
+
+A SESSION'S OWN WORKFLOW IS ASKED ABOUT BEFORE THE SERVER'S COUNT.
+The count includes the session's own workflow, so asking the server first told a user whose own
+workflow was running that the server was busy. Busy is asked first, & the claim, which creates the
+status file only where none exists, still refuses a second run asked for at the same moment.
+
+A KILLED WORKER IS GONE, EVEN BEFORE ANYTHING COLLECTS IT.
+A worker's parent exits as soon as it is started, so whatever adopts the worker collects it when it
+ends. Until then it is a zombie, & /proc still lists it. The Workflow Core asks the Engine's test,
+which reads a zombie as ended, as the listener does for its managers, so a killed worker's workflow
+reads as interrupted & its place on the server is given back.
+
+AN UNKNOWN KEY IS A PROBLEM, & EVERY PROBLEM IS NAMED AT ONCE.
+A misspelt key would otherwise be a setting silently ignored, & the workflow would do something
+other than what its author wrote. One reading names everything to fix.
+
+THE PANEL IS A LIBRARY OF ITS OWN.
+The Workflow Core may run where the interfaces are not installed, & an interface may be installed
+where the core is not. HRC2-Workflows.js needs no other library & speaks only the API, & says
+workflows are unavailable whenever it cannot read an answer. It never says why, because a reason
+from the server is the administrator's business & not a visitor's.
+
+TICKED FILES ARE KEPT BY NAME, IN THE ORDER THEY WERE TICKED.
+The list is drawn again after every operation & a file's row number changes with it, & a workflow
+takes its files in the order a user chose them. Nothing is stored, because there are no cookies &
+no storage, so the selection lasts as long as the page.
+
+A TICKED FILE CONVERTS EVERY ELIGIBLE TICKED FILE, ONE REQUEST AT A TIME.
+One request for many files would take one budget for all of them & run as long as all of them.
+One at a time, each takes its own budget, can fail on its own & keeps its own name. A file is
+eligible when its own row offers the same control, because the core drew that control by the
+same test, so the page cannot offer a conversion the core would refuse.
+
+THE MENU REPLACES THE SELECTION.
+Choosing a kind from the arrow beside the top box ticks exactly the files of that kind, as such a
+menu does everywhere else, so what is ticked is never a surprise.
+
+EVERY ELEMENT A PAGE OPENS IS CLOSED. v4.1.4.
+Each row of the file list was left open, so every row held every row after it, & the card the
+file list page opens was left for the footer to close, which it never did. Browsers forgave both,
+which is why neither was noticed. The upload page also wrote an ampersand bare in an address, &
+the orange, purple & dark schemes named select arrows neither interface shipped, so every
+visible select in them asked for a file that answered 404.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Per Conversion Limits--
 
 A KERNEL THAT DELEGATES NO CGROUP CONTROLLERS CANNOT HOLD A PER CONVERSION LIMIT.

@@ -1,0 +1,10 @@
+{
+  "Format": "HRProprietary Workflow",
+  "Version": 1,
+  "Name": "Documents to PDF, in one zip",
+  "Description": "Converts every selected document, spreadsheet & presentation to PDF, then puts the PDFs in one zip archive.",
+  "Steps": [
+    { "Operation": "Convert", "Filter": { "Types": ["Document", "Spreadsheet", "Presentation"] }, "Options": { "Extension": "pdf" } },
+    { "Operation": "Archive", "Mode": "together", "Options": { "Extension": "zip", "Filename": "Documents" } }
+  ]
+}

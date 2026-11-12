@@ -39,6 +39,7 @@ if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process yo
 $FaviconPath = $GuiImageDir.'favicon.ico';
 $JqueryPath = $GuiJSDir.'jquery-4.0.0.min.js';
 $JsLibraryPath = $GuiJSDir.'HRC2-Functions.js';
+$WorkflowsJsPath = $GuiJSDir.'HRC2-Workflows.js';
 $DropzonePath = $GuiJSDir.'dropzone.js';
 $StylesheetPath = $GuiCSSDir.'HRConvert2.css';
 $DropzoneStylesheetPath = $GuiCSSDir.'dropzone.css';
@@ -64,6 +65,7 @@ $DropzoneStylesheetPath = $GuiCSSDir.'dropzone.css';
 // / A missing file is left alone so that a broken path still reports as a plain 404
 // / rather than as a 404 with a confusing query string attached to it.
 if (file_exists($JsLibraryPath)) $JsLibraryPath .= '?v='.filemtime($JsLibraryPath);
+if (file_exists($WorkflowsJsPath)) $WorkflowsJsPath .= '?v='.filemtime($WorkflowsJsPath);
 if (file_exists($StylesheetPath)) $StylesheetPath .= '?v='.filemtime($StylesheetPath);
 // / -----------------------------------------------------------------------------------
 ?>
@@ -75,6 +77,11 @@ if (file_exists($StylesheetPath)) $StylesheetPath .= '?v='.filemtime($Stylesheet
     <link rel='stylesheet' href='<?php echo $StylesheetPath; ?>'/>
     <script type='text/javascript'>var dropzoneText = '<?php echo $GuiHeaderText1; ?>';</script>
     <script type='text/javascript' src='<?php echo $JsLibraryPath; ?>'></script>
+    <?php
+    // / The Workflows library is loaded only where workflows are on, & does nothing until a page configures it.
+    if ($EnableWorkflows) { ?>
+    <script type='text/javascript' src='<?php echo $WorkflowsJsPath; ?>'></script>
+    <?php } ?>
     <script type='text/javascript' src='<?php echo $DropzonePath; ?>'></script>
     <style>
       body {

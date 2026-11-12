@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -390,6 +390,111 @@ $Gui2Text106 = 'الحجم';
 $Gui2Text107 = 'التاريخ';
 // / 'Type'
 $Gui2Text108 = 'النوع';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'تحديد';
+// / 'Select All'
+$Gui2Text110 = 'تحديد الكل';
+// / 'Select None'
+$Gui2Text111 = 'إلغاء تحديد الكل';
+// / 'Select By Type'
+$Gui2Text112 = 'التحديد حسب النوع';
+// / 'Selected: '
+$Gui2Text113 = 'المحدد: ';
+// / 'Documents'
+$Gui2Text114 = 'المستندات';
+// / 'Spreadsheets'
+$Gui2Text115 = 'جداول البيانات';
+// / 'Presentations'
+$Gui2Text116 = 'العروض التقديمية';
+// / 'Images'
+$Gui2Text117 = 'الصور';
+// / 'Audio'
+$Gui2Text118 = 'الصوت';
+// / 'Video'
+$Gui2Text119 = 'الفيديو';
+// / 'Archives'
+$Gui2Text120 = 'الأرشيفات';
+// / 'E-Books'
+$Gui2Text121 = 'الكتب الإلكترونية';
+// / '3D Models'
+$Gui2Text122 = 'النماذج ثلاثية الأبعاد';
+// / 'Drawings'
+$Gui2Text123 = 'الرسومات';
+// / 'Vector Images'
+$Gui2Text124 = 'الصور المتجهة';
+// / 'Subtitles'
+$Gui2Text125 = 'الترجمات النصية';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'ملفات OpenSCAD';
+// / 'Streams'
+$Gui2Text127 = 'البث';
+// / 'Workflows'
+$Gui2Text128 = 'مسارات العمل';
+// / 'Files'
+$Gui2Text129 = 'الملفات';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'حدد الملفات من القائمة أدناه.';
+// / 'Select By Name: '
+$Gui2Text131 = 'التحديد حسب الاسم: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'استخدم * و ? كأحرف بدل، أو اكتب تعبيرًا نمطيًا بين شرطتين مائلتين.';
+// / 'Workflow'
+$Gui2Text133 = 'سير العمل';
+// / 'Choose a workflow'
+$Gui2Text134 = 'اختر سير عمل';
+// / 'Run'
+$Gui2Text135 = 'تشغيل';
+// / 'Stop'
+$Gui2Text136 = 'إيقاف';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'الملفات المحددة القابلة للاستخدام: {fit} من {count}.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'الخطوة {step} من {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'الملف {done} من {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'في انتظار الخادم.';
+// / 'Starting.'
+$Gui2Text141 = 'جارٍ البدء.';
+// / 'Finished.'
+$Gui2Text142 = 'اكتمل.';
+// / 'Stopping.'
+$Gui2Text143 = 'جارٍ الإيقاف.';
+// / 'Stopped.'
+$Gui2Text144 = 'توقف.';
+// / 'Files made: '
+$Gui2Text145 = 'الملفات المُنشأة: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'مسارات العمل غير متاحة على هذا الخادم.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'لا توجد مسارات عمل مثبتة على هذا الخادم.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'سير العمل هذا لم يعد متاحًا.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'لا يمكن لسير العمل هذا استخدام أي من الملفات المحددة.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'تم تحديد ملفات كثيرة جدًا لسير عمل واحد.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'الخادم مشغول. حاول مرة أخرى بعد بضع دقائق.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'يوجد سير عمل قيد التشغيل بالفعل في هذه الجلسة.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'تعذر بدء سير العمل.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'فشلت إحدى خطوات سير العمل.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'تم العثور على فيروس، لذا توقف سير العمل.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'نفد الوقت المتاح لسير العمل.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'أنشأ سير العمل ملفات كثيرة جدًا.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'كان الخادم مشغولًا جدًا لإكمال سير العمل.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'إحدى العمليات التي يحتاجها سير العمل هذا غير متاحة.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'توقف سير العمل بشكل غير متوقع.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

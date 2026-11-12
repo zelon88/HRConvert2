@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.2';
+$LanguageVersion = 'v4.1.4';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -387,6 +387,111 @@ $Gui2Text106 = 'Size';
 $Gui2Text107 = 'Date';
 // / 'Type'
 $Gui2Text108 = 'Type';
+// / The words in braces, such as {fit} & {count}, are filled in by the page. Each translation keeps every one of them.
+// / 'Select'
+$Gui2Text109 = 'Select';
+// / 'Select All'
+$Gui2Text110 = 'Select All';
+// / 'Select None'
+$Gui2Text111 = 'Select None';
+// / 'Select By Type'
+$Gui2Text112 = 'Select By Type';
+// / 'Selected: '
+$Gui2Text113 = 'Selected: ';
+// / 'Documents'
+$Gui2Text114 = 'Documents';
+// / 'Spreadsheets'
+$Gui2Text115 = 'Spreadsheets';
+// / 'Presentations'
+$Gui2Text116 = 'Presentations';
+// / 'Images'
+$Gui2Text117 = 'Images';
+// / 'Audio'
+$Gui2Text118 = 'Audio';
+// / 'Video'
+$Gui2Text119 = 'Video';
+// / 'Archives'
+$Gui2Text120 = 'Archives';
+// / 'E-Books'
+$Gui2Text121 = 'E-Books';
+// / '3D Models'
+$Gui2Text122 = '3D Models';
+// / 'Drawings'
+$Gui2Text123 = 'Drawings';
+// / 'Vector Images'
+$Gui2Text124 = 'Vector Images';
+// / 'Subtitles'
+$Gui2Text125 = 'Subtitles';
+// / 'OpenSCAD Files'
+$Gui2Text126 = 'OpenSCAD Files';
+// / 'Streams'
+$Gui2Text127 = 'Streams';
+// / 'Workflows'
+$Gui2Text128 = 'Workflows';
+// / 'Files'
+$Gui2Text129 = 'Files';
+// / 'Select files in the list below.'
+$Gui2Text130 = 'Select files in the list below.';
+// / 'Select By Name: '
+$Gui2Text131 = 'Select By Name: ';
+// / 'Use * and ? as wildcards, or write a regular expression between slashes.'
+$Gui2Text132 = 'Use * and ? as wildcards, or write a regular expression between slashes.';
+// / 'Workflow'
+$Gui2Text133 = 'Workflow';
+// / 'Choose a workflow'
+$Gui2Text134 = 'Choose a workflow';
+// / 'Run'
+$Gui2Text135 = 'Run';
+// / 'Stop'
+$Gui2Text136 = 'Stop';
+// / 'Selected files that can be used: {fit} of {count}.'
+$Gui2Text137 = 'Selected files that can be used: {fit} of {count}.';
+// / 'Step {step} of {steps}: {operation}'
+$Gui2Text138 = 'Step {step} of {steps}: {operation}';
+// / 'File {done} of {total}'
+$Gui2Text139 = 'File {done} of {total}';
+// / 'Waiting for the server.'
+$Gui2Text140 = 'Waiting for the server.';
+// / 'Starting.'
+$Gui2Text141 = 'Starting.';
+// / 'Finished.'
+$Gui2Text142 = 'Finished.';
+// / 'Stopping.'
+$Gui2Text143 = 'Stopping.';
+// / 'Stopped.'
+$Gui2Text144 = 'Stopped.';
+// / 'Files made: '
+$Gui2Text145 = 'Files made: ';
+// / 'Workflows are not available on this server.'
+$Gui2Text146 = 'Workflows are not available on this server.';
+// / 'No workflows are installed on this server.'
+$Gui2Text147 = 'No workflows are installed on this server.';
+// / 'That workflow is no longer available.'
+$Gui2Text148 = 'That workflow is no longer available.';
+// / 'None of the selected files can be used by this workflow.'
+$Gui2Text149 = 'None of the selected files can be used by this workflow.';
+// / 'Too many files are selected for one workflow.'
+$Gui2Text150 = 'Too many files are selected for one workflow.';
+// / 'The server is busy. Try again in a few minutes.'
+$Gui2Text151 = 'The server is busy. Try again in a few minutes.';
+// / 'A workflow is already running in this session.'
+$Gui2Text152 = 'A workflow is already running in this session.';
+// / 'The workflow could not be started.'
+$Gui2Text153 = 'The workflow could not be started.';
+// / 'A step of the workflow failed.'
+$Gui2Text154 = 'A step of the workflow failed.';
+// / 'A virus was found, so the workflow stopped.'
+$Gui2Text155 = 'A virus was found, so the workflow stopped.';
+// / 'The workflow ran out of time.'
+$Gui2Text156 = 'The workflow ran out of time.';
+// / 'The workflow made too many files.'
+$Gui2Text157 = 'The workflow made too many files.';
+// / 'The server was too busy to finish the workflow.'
+$Gui2Text158 = 'The server was too busy to finish the workflow.';
+// / 'An operation this workflow needs is not available.'
+$Gui2Text159 = 'An operation this workflow needs is not available.';
+// / 'The workflow stopped unexpectedly.'
+$Gui2Text160 = 'The workflow stopped unexpectedly.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -209,8 +209,11 @@ application maps nothing. An operator's setting keeps its name, & no shared laye
 application's settings by their names. The names read today are FormatDetectionType,
 WarnOnCapabilityMismatch, DefaultScanner, MaintainProtectionFile, LiftNamespaceRestriction,
 RequireResourceAwareness,
-HostedLocation, ServerURL & DocumentRoot. The last three name values the application works out
-as it starts, which the map reads the same way. LiftNamespaceRestriction, from v4.0.5, says
+HostedLocation, ServerURL & DocumentRoot, & from v4.1.3 StorageWarningPercentage &
+StorageReserveMegabytes. From v4.1.4 the Workflow Core reads EnableWorkflows, MaxWorkflowSteps,
+MaxWorkflowFiles, MaxWorkflowRuntime, MaxConcurrentWorkflows, SessionFolder, SessionContext &
+WorkflowLibrary. HostedLocation, ServerURL, DocumentRoot, SessionFolder & SessionContext name
+values the application works out as it starts, which the map reads the same way. LiftNamespaceRestriction, from v4.0.5, says
 whether -fp may lift the kernel's AppArmor restriction on unprivileged namespaces where
 bubblewrap, run through the application's own copy & the profile attached to it, refuses a
 sandbox twice, & an application that maps nothing permits it. It is never lifted for an attempt
@@ -379,6 +382,16 @@ day turns or its logfile passes --Maximum Log File Size--. A provider declared &
 one that fails, is a warning once for the life of the process, & the manager keeps the logfile it
 has. An application that names none leaves a manager on the logfile it started with, which is
 what every manager did until v4.0.6.
+
+A WORKFLOW RUNS THE APPLICATION'S OPERATIONS & NAMES NONE OF ITS OWN, FROM v4.1.4.
+The Workflow Core asks the function the application names in $EngineOperationProvider which
+operations a workflow may run, & what each reads, takes & accepts, & which kinds of file a step
+may name. HRConvert2 names applicationOperations(). $EngineShippedWorkflows names the library the
+application ships, relative to the installation, & WorkflowLibrary in $EngineSettingNames the
+installed one, a location of the library role. An application that names no provider runs no
+workflow, logs error 38000 & loses nothing else. A worker is the application's own entry point,
+& the application adopts the session it is handed before it reads any input, as HRConvert2 does in
+adoptWorkflowSession(). See ABOUT_WORKFLOWS.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

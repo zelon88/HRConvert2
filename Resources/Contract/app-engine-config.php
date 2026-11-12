@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.3.
+// / v4.1.4.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -39,7 +39,7 @@ $EngineApplicationSlug = 'hrconvert2';
 
 // / -----------------------------------------------------------------------------------
 // / The providers. Every one names a function this application defines, & the Engine calls what it is given without knowing anything else about it.
-// / This is the whole of how the Engine learns about an application, through six names.
+// / This is the whole of how the Engine learns about an application, through seven names.
 // /
 // / An Engine with none of them still runs & does less, which is the correct degradation
 // / rather than a failure. See ABOUT_ENGINE_CONTRACT.txt.
@@ -59,12 +59,19 @@ $EngineRepairProvider = 'fixManagedPermissions';
 // /   Moves a manager that has run for a while on to the logfile it should be writing now.
 $EngineLogProvider = 'refreshLogFile';
 
+// /   Returns the operations a workflow may run & the kinds of file a step may name.
+// /   Each is the code a button runs, so a workflow does nothing a user could not do by hand.
+$EngineOperationProvider = 'applicationOperations';
+
 // /   A real config.php at defaults. What this application's configuration looks like.
 $EngineConfigTemplate = 'Contract/config-template.php';
 
 // /   Handles arguments beginning --app. This application has none yet, & the first
 // /   will be conversion from the command line.
 $EngineApplicationArgumentHandler = '';
+
+// /   The folder inside the installation holding the workflows this release ships.
+$EngineShippedWorkflows = 'Resources/Workflows';
 // / -----------------------------------------------------------------------------------
 
 
@@ -132,6 +139,7 @@ $EnginePinSources = array(
 // /              rules that make every file in it an inert download, & proves they are in force.
 // /              It must be inside HostedLocation & below it, or the Engine refuses it.
 // /   root-only  root alone. 0700 & 0600.
+// /   library    A folder root writes & the web server account reads, which no release replaces. 0755 & 0644.
 // /   shared     A folder other software shares. Checked & never walked.
 // / A location inside another keeps its own role, so DATA stays the web server account's
 // / inside an installation that is root's. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
@@ -139,6 +147,7 @@ $EnginePinSources = array(
 // / Sessions & the web server account's cache are that account's, & root's log folder & the previous installation are root's.
 // / The data location itself is never walked & only its own owner & mode are corrected, which is what the data-root role means.
 // / HomeLoc is not listed, because the cache folder is the web server account's home.
+// / WorkflowLoc is Workflows, where an administrator installs workflows with --workflow --install, & an update leaves them.
 // / SecretLoc is Secrets, where this application keeps its install secret.
 // / Root writes it & the web server account's group reads it, & no other account can list the folder.
 // / The data location is named by $DataRootLoc here, not $ConvertLoc. $ConvertLoc is narrowed to
@@ -155,6 +164,7 @@ $EngineManagedLocations = array(
   'CacheLoc' => 'web',
   'LogDir' => 'web',
   'ManagerSocketDir' => 'web',
+  'WorkflowLoc' => 'library',
   'EngineDir' => 'root-only',
   'BackupLoc' => 'root-only');
 
@@ -199,6 +209,9 @@ $EngineUnwantedApacheConfs = array('javascript-common');
 // / StorageWarningPercentage is the free share of a disk, in percent, at which the listener warns
 // / that a data location is filling, & StorageReserveMegabytes is the free space it keeps on every
 // / disk holding one. An application that maps nothing is warned at 10% & keeps 1024 megabytes.
+// / EnableWorkflows & the four workflow limits are the Workflow Core's, & an application that maps none has no workflows.
+// / SessionFolder is the folder a session's files are in, SessionContext is the name a worker is handed to continue it,
+// / & WorkflowLibrary is the installed library.
 $EngineSettingNames = array(
   'FormatDetectionType' => 'SupportedFormatDetectionType',
   'WarnOnCapabilityMismatch' => 'WarnOnCapabilityMismatch',
@@ -210,6 +223,14 @@ $EngineSettingNames = array(
   'LiftNamespaceRestriction' => 'AllowUnprivilegedNamespaces',
   'RequireResourceAwareness' => 'RequireResourceAwareness',
   'StorageWarningPercentage' => 'LowStorageWarning',
-  'StorageReserveMegabytes' => 'StorageReserve');
+  'StorageReserveMegabytes' => 'StorageReserve',
+  'EnableWorkflows' => 'EnableWorkflows',
+  'MaxWorkflowSteps' => 'MaxWorkflowSteps',
+  'MaxWorkflowFiles' => 'MaxWorkflowFiles',
+  'MaxWorkflowRuntime' => 'MaxWorkflowRuntime',
+  'MaxConcurrentWorkflows' => 'MaxConcurrentWorkflows',
+  'SessionFolder' => 'ConvertDir',
+  'SessionContext' => 'SesHash3',
+  'WorkflowLibrary' => 'WorkflowLoc');
 // / -----------------------------------------------------------------------------------
 ?>

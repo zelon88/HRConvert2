@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -341,6 +341,52 @@ $Gui2Text83 = 'ဖွင့်စာရင်း၏ မူလ URL၊ ဆွယ�
 $Gui2Text84 = 'URL မှ ဖိုင်ကို ဒေါင်းလုဒ်လုပ်ရန်';
 // / 'Fetch'
 $Gui2Text85 = 'ရယူရန်';
+// / 'Identify'
+$Gui2Text86 = 'ခွဲခြားသတ်မှတ်ပါ';
+// / 'Close Identify Options'
+$Gui2Text87 = 'ခွဲခြားသတ်မှတ်ခြင်း ရွေးချယ်စရာများကို ပိတ်ပါ';
+// / 'Identify This File'
+$Gui2Text88 = 'ဤဖိုင်ကို ခွဲခြားသတ်မှတ်ပါ';
+// / 'Size: '
+$Gui2Text89 = 'အရွယ်အစား: ';
+// / 'Modified: '
+$Gui2Text90 = 'ပြင်ဆင်ခဲ့သည့်အချိန်: ';
+// / 'Type: '
+$Gui2Text91 = 'အမျိုးအစား: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'MIME အမျိုးအစား: ';
+// / 'Character Set: '
+$Gui2Text93 = 'စာလုံးအစု: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'ဖိုင်တိုးချဲ့အမည်နှင့် အကြောင်းအရာ ကိုက်ညီမှု: ';
+// / 'Details: '
+$Gui2Text95 = 'အသေးစိတ်: ';
+// / 'Notes: '
+$Gui2Text96 = 'မှတ်ချက်များ: ';
+// / 'Save report as file'
+$Gui2Text97 = 'အစီရင်ခံစာကို ဖိုင်အဖြစ် သိမ်းဆည်းပါ';
+// / 'Identify All Files'
+$Gui2Text98 = 'ဖိုင်အားလုံးကို ခွဲခြားသတ်မှတ်ပါ';
+// / 'Identify All'
+$Gui2Text99 = 'အားလုံးကို ခွဲခြားသတ်မှတ်ပါ';
+// / 'Yes'
+$Gui2Text100 = 'ဟုတ်ကဲ့';
+// / 'No'
+$Gui2Text101 = 'မဟုတ်ပါ';
+// / 'Unknown'
+$Gui2Text102 = 'မသိရှိပါ';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'ဤဖိုင်ကို ခွဲခြားသတ်မှတ်၍ မရပါ!';
+// / 'Sort By: '
+$Gui2Text104 = 'စီစဉ်ရန်: ';
+// / 'Name'
+$Gui2Text105 = 'အမည်';
+// / 'Size'
+$Gui2Text106 = 'အရွယ်အစား';
+// / 'Date'
+$Gui2Text107 = 'ရက်စွဲ';
+// / 'Type'
+$Gui2Text108 = 'အမျိုးအစား';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

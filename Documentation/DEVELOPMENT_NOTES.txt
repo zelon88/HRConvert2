@@ -283,6 +283,17 @@ Installing a package can enable configuration HRConvert2 never asked for.
 
 THE SUPPLY CHAIN TEMPLATE'S RIGHT HAND COLUMNS ARE BLANK ON PURPOSE.
 They are the audit, & a person fills them in.
+
+EVERY TOOL IDENTIFY RUNS IS AN ENTRY OF ITS OWN, EVEN ONE ANOTHER ENTRY ALREADY INSTALLS.
+FFprobe comes from the FFMPEG build & PDFInfo from the package Poppler Utils names. Each has an
+entry, so Identify asks for it by name & a host missing one is told which, rather than being
+assumed to have it because its sibling is there. v4.1.2 added both, with File. PDFInfo keeps
+Poppler Utils' subsystem, so removing Identification never removes a package Documents & OCR need.
+
+FILE'S FLOOR IS 5.43.
+Every release before 5.38 overflows the heap reading a CDF document, CVE-2019-18218, & every
+release before 5.43 reads past a buffer on the stack copying a string, CVE-2022-48554. Ubuntu
+24.04 carries 5.45 & Debian's bookworm 5.44, so the floor costs neither a build of its own.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -435,6 +446,31 @@ EVERY BOOTABLE FORMAT'S BOOTLOADER IS PINNED.
 An earlier verifyIsoBootloaders() skipped iso_mbr-boot & returned TRUE without looking.
 The hybrid image once read its assets from the top of the bootloaders folder, & its isohybrid step
 was tested after the extension had been normalized to iso, so it never ran.
+
+IDENTIFY IS AN OPERATION, & IT CHANGES NO FILE.
+It takes a selection & answers with a record for each file, which the six value contract has no
+place for, so it is the second operation pipeline after OCR. It reads every file where it is,
+because a copy would be a second file to clean up & the original is never written. Each tool
+writes only into a folder made for the request inside the session, which is removed afterwards.
+
+A MISSING TOOL COSTS ITS DETAILS & NOTHING ELSE.
+PHP reads the size, the time & the three hashes itself, in one pass, so a file is always
+identified. Each tool adds what it can, & one that is absent or refused leaves a note saying so.
+An identification that failed outright because pdfinfo was missing would tell a user nothing
+about a file they were only asking to look at.
+
+EACH TOOL IS ASKED ONLY WHAT IT CAN ANSWER SAFELY.
+Each runs in the sandbox with no network, bounded in time & in how much it may print. An SVG is
+never handed to ImageMagick, & neither is a PDF, because both reach a delegate & a PDF reaches
+Ghostscript. Identify carries an ImageMagick policy stricter than the Image pipeline's, which may
+read every coder & write none. PDFInfo is never given -dests, which is where CVE-2024-6239 is
+reached. FFprobe may open only a file. 7-Zip is handed a password that opens nothing, so an encrypted
+archive is reported rather than waiting for somebody to type one.
+
+A REPORT IS CREATED, NEVER REPLACED.
+It takes the next free name as a conversion output does, & it is opened exclusively, so a name
+taken in the moment between choosing it & writing it fails rather than being written through.
+A report written in part is removed, because it would read as a complete one.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1186,6 +1222,29 @@ them when pressed. Until v4.1.0 both were handed the files the page held when it
 so a file converted afterwards was left out & a deleted one was asked for, & neither refreshed the
 list when it finished. Archive All goes through run() like a conversion, so the archive downloaded
 is the one the core names, which is not the name typed when that name is taken.
+
+THE ORDER OF THE FILE LIST IS TWO DIGITS IN THE ADDRESS.
+There are no cookies & no storage, so the order has to travel with the page. Four fields & two
+directions fit in two digits, which say nothing about the session, need no encoding & are checked
+by a pattern before they are used. The core sorts, because it already reads the folder & the
+Files pipeline already stats it, & the interface would otherwise need every size & time sent to
+it to sort them itself. Every link & form carries the order, or a refresh would quietly undo it.
+
+IDENTIFY ANSWERS IN JSON, NOT IN LINES.
+A conversion answers with filenames because the interface downloads them. Identify's answer is
+read into a panel field by field, & a list of lines would need a parser of its own in every
+interface. It is one line, so the interface finds it among any warnings PHP printed. The
+exclamation mark is escaped too, because a PDF's title is text its author chose, & an interface
+reads three of them after ERROR as a failure.
+
+OPENING A FILE'S PANEL IDENTIFIES IT.
+A panel full of blanks waiting for a second press is a step that teaches nothing. A file is
+identified once for each page, when its panel is first opened, & what was read is held by name, so
+a list drawn again after a conversion fills its panels in again without asking.
+
+A VALUE IN A LANGUAGE READ FROM RIGHT TO LEFT IS ISOLATED.
+A size, a time & a hash read left to right in every language. Without isolation, an Arabic page
+moved the number of 3.8 KB to the far end of the line & turned a date & its time around.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

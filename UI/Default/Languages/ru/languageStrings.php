@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -339,6 +339,52 @@ $Gui2Text83 = 'Исходный URL плейлиста, нужен только 
 $Gui2Text84 = 'Скачать файл по URL';
 // / 'Fetch'
 $Gui2Text85 = 'Загрузить';
+// / 'Identify'
+$Gui2Text86 = 'Определить';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Закрыть параметры определения';
+// / 'Identify This File'
+$Gui2Text88 = 'Определить этот файл';
+// / 'Size: '
+$Gui2Text89 = 'Размер: ';
+// / 'Modified: '
+$Gui2Text90 = 'Изменён: ';
+// / 'Type: '
+$Gui2Text91 = 'Тип: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'Тип MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Кодировка: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'Расширение соответствует содержимому: ';
+// / 'Details: '
+$Gui2Text95 = 'Подробности: ';
+// / 'Notes: '
+$Gui2Text96 = 'Примечания: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Сохранить отчёт в файл';
+// / 'Identify All Files'
+$Gui2Text98 = 'Определить все файлы';
+// / 'Identify All'
+$Gui2Text99 = 'Определить все';
+// / 'Yes'
+$Gui2Text100 = 'Да';
+// / 'No'
+$Gui2Text101 = 'Нет';
+// / 'Unknown'
+$Gui2Text102 = 'Неизвестно';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Невозможно определить этот файл!';
+// / 'Sort By: '
+$Gui2Text104 = 'Сортировать по: ';
+// / 'Name'
+$Gui2Text105 = 'Имя';
+// / 'Size'
+$Gui2Text106 = 'Размер';
+// / 'Date'
+$Gui2Text107 = 'Дата';
+// / 'Type'
+$Gui2Text108 = 'Тип';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

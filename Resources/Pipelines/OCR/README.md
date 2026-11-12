@@ -1,6 +1,6 @@
 # The Optical Character Recognition pipeline
 
-The Optical Character Recognition pipeline is a operation pipeline.
+The Optical Character Recognition pipeline is an operation. It takes a selection of files at once & decides what to do with each one.
 
 This file is written by `Documentation/Build/hrconvert2-approvals.py --readme`.
 It is rewritten from the pipeline's own declarations & from the dependency manifest,
@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.0.0
+- **Version** v4.1.1
 - **Kind** operation
 - **Family** OCR
 - **Entry point** ocrFiles

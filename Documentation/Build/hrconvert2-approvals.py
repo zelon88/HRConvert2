@@ -207,6 +207,7 @@ def read_pipeline_config(path):
 # / Accepts the declarations. Returns the sentence.
 # / Nothing here is invented. A pipeline that declares formats is described by its formats,
 # / & one that declares none is described by its kind, because that is all there is to say.
+# / An operation is described by what makes it one, which is that it takes a selection.
 # / -----------------------------------------------------------------------------------
 def describe_pipeline(facts):
     kind = facts['PipelineKind']
@@ -218,7 +219,11 @@ def describe_pipeline(facts):
         return 'The ' + name + ' pipeline examines a file rather than converting it. It reports what it finds & converts nothing.'
     if kind == 'file':
         return 'The ' + name + ' pipeline performs operations that do not depend on what is inside a file.'
-    return 'The ' + name + ' pipeline is a ' + (kind or 'pipeline') + ' pipeline.'
+    if kind == 'operation':
+        return 'The ' + name + ' pipeline is an operation. It takes a selection of files at once & decides what to do with each one.'
+    # / The article follows the kind's first letter, because a kind is any word a declaration gives.
+    kind = kind or 'pipeline'
+    return 'The ' + name + ' pipeline is ' + ('an ' if kind[0].lower() in 'aeiou' else 'a ') + kind + ' pipeline.'
 
 
 # / -----------------------------------------------------------------------------------

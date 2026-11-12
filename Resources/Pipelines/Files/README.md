@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.0.0
+- **Version** v4.1.2
 - **Kind** file
 - **Family** Files
 - **Entry point** operateOnFiles

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -110,7 +110,7 @@ $Gui1Text9 = 'Підтримувані формати';
 // / 'Audio Formats'
 $Gui1Text10 = 'Аудіоформати';
 // / 'Supports specific bitrate.'
-$Gui1Text11 = 'Supports specific bitrate.';
+$Gui1Text11 = 'Підтримує вказаний бітрейт.';
 // / 'Video Formats'
 $Gui1Text12 = 'Формати відео';
 // / 'Stream Formats'
@@ -342,6 +342,52 @@ $Gui2Text83 = 'Початковий URL плейлиста, потрібен л�
 $Gui2Text84 = 'Завантажити файл за URL';
 // / 'Fetch'
 $Gui2Text85 = 'Завантажити';
+// / 'Identify'
+$Gui2Text86 = 'Визначити';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Закрийте параметри визначення';
+// / 'Identify This File'
+$Gui2Text88 = 'Визначити цей файл';
+// / 'Size: '
+$Gui2Text89 = 'Розмір: ';
+// / 'Modified: '
+$Gui2Text90 = 'Змінено: ';
+// / 'Type: '
+$Gui2Text91 = 'Тип: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'Тип MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Кодування: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'Розширення відповідає вмісту: ';
+// / 'Details: '
+$Gui2Text95 = 'Подробиці: ';
+// / 'Notes: '
+$Gui2Text96 = 'Примітки: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Зберегти звіт у файл';
+// / 'Identify All Files'
+$Gui2Text98 = 'Визначити всі файли';
+// / 'Identify All'
+$Gui2Text99 = 'Визначити все';
+// / 'Yes'
+$Gui2Text100 = 'Так';
+// / 'No'
+$Gui2Text101 = 'Ні';
+// / 'Unknown'
+$Gui2Text102 = 'Невідомо';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Неможливо визначити цей файл!';
+// / 'Sort By: '
+$Gui2Text104 = 'Сортувати за: ';
+// / 'Name'
+$Gui2Text105 = 'Ім’я';
+// / 'Size'
+$Gui2Text106 = 'Розмір';
+// / 'Date'
+$Gui2Text107 = 'Дата';
+// / 'Type'
+$Gui2Text108 = 'Тип';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

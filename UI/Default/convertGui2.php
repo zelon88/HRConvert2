@@ -85,12 +85,15 @@ if ($NoGui) redeclare($selectorBase, $selectorBase.'noGui=TRUE&');
 $sessionParams = '';
 if ($NoGui) redeclare($sessionParams, $sessionParams.'noGui=TRUE&');
 redeclare($sessionParams, $sessionParams.'gui='.$GuiToUse.'&language='.$LanguageToUse.'&color='.$ColorToUse);
+// / The sort order rides along in a part of its own, so a sort control can name a different one beside everything else.
+// / The core has already checked it, so it is always one of the codes the core understands.
+$sortParams = '&sort='.rawurlencode((string)$SortToUse);
 // / No showFiles, so the core renders the upload page & the session stays alive.
-$backURL = 'convertCore.php?'.$sessionParams;
+$backURL = 'convertCore.php?'.$sessionParams.$sortParams;
 // / showFiles, so the core renders this page again. Never fileListOnly. That asks for a
 // / fragment, & a fragment loaded into the whole window is a page with no header, no
 // / footer & no script library.
-$refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
+$refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
 // / -----------------------------------------------------------------------------------
 ?>
         <?php if (!$FileListOnly) {
@@ -135,11 +138,13 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams;
               // / the wrong colours, inside a page that is using the ones the user chose.
               // / fileListOnly asks for the fragment. showFiles is what selects this
               // / interface rather than the upload page.
-              'fileListURL' => 'convertCore.php?showFiles=1&fileListOnly=1&'.$sessionParams,
+              'fileListURL' => 'convertCore.php?showFiles=1&fileListOnly=1&'.$sessionParams.$sortParams,
               // / The core refuses some operations BEFORE attempting them & reports that
               // / refusal by printing an alert string with no error tag on it. A reply
               // / carrying one of these is a failure even though nothing in it is tagged.
-              'failureStrings' => array($Alert3))); ?>);
+              'failureStrings' => array($Alert3),
+              // / What Identify writes into a panel in words, & what it says when it fails.
+              'identifyText' => array('yes' => $Gui2Text100, 'no' => $Gui2Text101, 'unknown' => $Gui2Text102, 'failure' => $Gui2Text103))); ?>);
             $(document).ready(function () { HRC2.init(); });
           }
         </script>
@@ -192,7 +197,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p style='margin:4px 0;'>
             <?php foreach ($SupportedLanguages as $selectorLang => $selectorLabel) {
               $selectorCurrent = ($selectorLang === $LanguageToUse);
-              $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
+              $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse.$sortParams, ENT_QUOTES, 'UTF-8'); ?>
             <button type='submit' lang='<?php echo htmlspecialchars($selectorLang, ENT_QUOTES, 'UTF-8'); ?>'
               style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
@@ -206,7 +211,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <?php foreach ($SupportedColors as $selectorColor) {
               $selectorSwatch = isset($selectorSwatches[$selectorColor]) ? $selectorSwatches[$selectorColor] : '#cccccc';
               $selectorCurrent = (strtolower($selectorColor) === strtolower($ColorToUse));
-              $selectorURL = htmlspecialchars($selectorBase.'color='.$selectorColor.'&language='.$LanguageToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
+              $selectorURL = htmlspecialchars($selectorBase.'color='.$selectorColor.'&language='.$LanguageToUse.'&gui='.$GuiToUse.$sortParams, ENT_QUOTES, 'UTF-8'); ?>
             <button type='submit'
               style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
@@ -219,7 +224,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p style='margin:4px 0;'>
             <?php foreach ($SupportedGuis as $selectorGui) {
               $selectorCurrent = ($selectorGui === $GuiToUse);
-              $selectorURL = htmlspecialchars($selectorBase.'gui='.$selectorGui.'&language='.$LanguageToUse.'&color='.$ColorToUse, ENT_QUOTES, 'UTF-8'); ?>
+              $selectorURL = htmlspecialchars($selectorBase.'gui='.$selectorGui.'&language='.$LanguageToUse.'&color='.$ColorToUse.$sortParams, ENT_QUOTES, 'UTF-8'); ?>
             <button type='submit' class='txtbtn'
               style='margin:2px; <?php if ($selectorCurrent) echo 'font-weight:700; text-decoration:underline;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
@@ -242,6 +247,19 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         <script type='text/javascript'>
           HRC2.bindScanAll('scanAllButton', '', 'clamscanall', 'scancoreall',
             <?php echo json_encode(array_values($Files)); ?>, <?php echo json_encode($ConsolidatedLogFileName); ?>);
+        </script>
+      <?php } if ($AllowUserIdentify) { ?>
+        <?php
+        // / Identify every file. Without a report what it reads is shown beside each file in the list.
+        // / With one, the report is written beside the files & downloaded, as an archive is.
+        ?>
+        <hr style='width: 50%;'/>
+        <p><strong><?php echo $Gui2Text98; ?></strong></p>
+        <p><label><input type='checkbox' id='identifyallreport' name='identifyallreport'> <?php echo $Gui2Text97; ?></label></p>
+        <p><?php echo $Gui2Text17; ?><input type='text' id='identifyallfilename' name='identifyallfilename' value='User_Identify_Report' disabled></p>
+        <p><input type='submit' id='identifyAllButton' name='identifyAllButton' class='info-button' value='<?php echo htmlspecialchars($Gui2Text99, ENT_QUOTES, 'UTF-8'); ?>'></p>
+        <script type='text/javascript'>
+          HRC2.bindIdentifyAll(<?php echo json_encode(array('submitId' => 'identifyAllButton', 'suffix' => '', 'fileNames' => array_values($Files), 'reportId' => 'identifyallreport', 'nameId' => 'identifyallfilename')); ?>);
         </script>
 
 
@@ -328,6 +346,29 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
       <script type='text/javascript'>
         HRC2.configure(<?php echo json_encode(array('sessionFiles' => array_values($Files), 'filesListed' => TRUE)); ?>);
       </script>
+      <?php
+      // / The sort controls. Each one is a form submission, as the selector's are, because the
+      // / session's tokens travel in a POST body & the order travels in the address.
+      // / The order in force turns around when it is chosen again, & any other starts the way people
+      // / usually want it, by name & by type from A, & by size & by date from the largest & the newest.
+      // / The whole page is drawn again, because a list fetched on its own would leave every other
+      // / link on the page naming the order it was drawn with.
+      $sortCurrentKey = substr((string)$SortToUse, 0, 1);
+      $sortCurrentWay = substr((string)$SortToUse, 1, 1);
+      $sortChoices = array('1' => $Gui2Text105, '2' => $Gui2Text106, '3' => $Gui2Text107, '4' => $Gui2Text108);
+      ?>
+      <form id='sortForm' name='sortForm' class='sort-bar' method='post' action='<?php echo htmlspecialchars($refreshURL, ENT_QUOTES, 'UTF-8'); ?>'>
+        <input type='hidden' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
+        <input type='hidden' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
+        <span><?php echo $Gui2Text104; ?></span>
+        <?php foreach ($sortChoices as $sortKey => $sortLabel) {
+          // / A numeric key is an integer to PHP, so it is compared as the string the code is made of.
+          $sortIsCurrent = ((string)$sortKey === $sortCurrentKey);
+          $sortNextWay = $sortIsCurrent ? (($sortCurrentWay === '2') ? '1' : '2') : (($sortKey === 2 or $sortKey === 3) ? '2' : '1');
+          $sortURL = 'convertCore.php?showFiles=1&'.$sessionParams.'&sort='.$sortKey.$sortNextWay; ?>
+        <button type='submit' id='sortButton<?php echo $sortKey; ?>' class='sort-button<?php if ($sortIsCurrent) echo ' sort-current'; ?>' formaction='<?php echo htmlspecialchars($sortURL, ENT_QUOTES, 'UTF-8'); ?>'<?php if ($sortIsCurrent) echo " aria-pressed='true'"; ?>><?php echo $sortLabel; ?><?php if ($sortIsCurrent) echo ($sortCurrentWay === '2') ? ' &#9660;' : ' &#9650;'; ?></button>
+        <?php } ?>
+      </form>
      
 
       <?php
@@ -348,7 +389,12 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
 
           <img id='failureCommandDiv<?php echo $ConvertGuiCounter1; ?>' name='failureCommandDiv<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>xcircle.png' style='float:<?php echo $GUIAlignment; ?>; max-width:24px; max-height:24px; display:none;'/>
 
-        <br><br>
+        <?php
+        // / The size & the time the file changed, which the core read when it drew the list, & what Identify says it is once it has been asked.
+        // / Each one is isolated, so a language read from right to left keeps each value whole & puts them in its own order.
+        ?>
+        <div class='file-details'><?php if (isset($FileDetails[$File]) && $FileDetails[$File]['SizeText'] !== '') echo '<bdi>'.htmlspecialchars($FileDetails[$File]['SizeText'], ENT_QUOTES, 'UTF-8').'</bdi> · <bdi>'.htmlspecialchars($FileDetails[$File]['ModifiedText'], ENT_QUOTES, 'UTF-8').'</bdi>'; ?> <span id='identifySummary<?php echo $ConvertGuiCounter1; ?>' class='identify-summary' dir='auto'></span></div>
+        <br>
 
         <div id='buttonDiv<?php echo $ConvertGuiCounter1; ?>' name='buttonDiv<?php echo $ConvertGuiCounter1; ?>' style='height:45px;'>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;&nbsp;&nbsp;&nbsp;</a>
@@ -378,6 +424,13 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
            onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text8.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text8.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' name='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text9, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text9, ENT_QUOTES, 'UTF-8'); ?>'/>
+
+          <?php } if ($AllowUserIdentify) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+          <img id='identifyfilebutton<?php echo $ConvertGuiCounter1; ?>' name='identifyfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>identify.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
+           onclick='toggle_visibility("identifyOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("identifyfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("identifyXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text86.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text86.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <img id='identifyXfilebutton<?php echo $ConvertGuiCounter1; ?>' name='identifyXfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
+           onclick='toggle_visibility("identifyOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("identifyfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("identifyXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text87, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text87, ENT_QUOTES, 'UTF-8'); ?>'/>
 
           <?php } ?>
           
@@ -603,6 +656,36 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             HRC2.bindScan('scanallbutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', 'all', <?php echo $gui2ScanFile; ?>, <?php echo $gui2ScanLog; ?>);
           </script>
 
+        </div>
+        <?php }
+
+        if ($AllowUserIdentify) {
+        // / What Identify read about this file. Opening the panel asks for it once, & the button asks again.
+        // / Every value is written into the page as text by the script, & never as markup.
+        // / A report is written only when the box is ticked, & the name beside it is greyed out until it is.
+        ?>
+        <div id='identifyOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='identifyOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;" data-identify-file='<?php echo htmlspecialchars($File, ENT_QUOTES, 'UTF-8'); ?>' data-identify-suffix='<?php echo $ConvertGuiCounter1; ?>'>
+          <p style="max-width:500px;"></p>
+          <p><strong><?php echo $Gui2Text88; ?></strong></p>
+          <table class='identify-table'>
+            <tr><th><?php echo $Gui2Text89; ?></th><td data-identify-field='Size'>&#8230;</td></tr>
+            <tr><th><?php echo $Gui2Text90; ?></th><td data-identify-field='Modified'>&#8230;</td></tr>
+            <tr><th><?php echo $Gui2Text91; ?></th><td data-identify-field='Description'>&#8230;</td></tr>
+            <tr><th><?php echo $Gui2Text92; ?></th><td data-identify-field='MimeType'>&#8230;</td></tr>
+            <tr><th><?php echo $Gui2Text93; ?></th><td data-identify-field='Charset'>&#8230;</td></tr>
+            <tr><th><?php echo $Gui2Text94; ?></th><td data-identify-field='ExtensionMatches'>&#8230;</td></tr>
+            <tr><th>SHA-256</th><td data-identify-field='SHA256' class='identify-hash'>&#8230;</td></tr>
+            <tr><th>SHA-1</th><td data-identify-field='SHA1' class='identify-hash'>&#8230;</td></tr>
+            <tr><th>MD5</th><td data-identify-field='MD5' class='identify-hash'>&#8230;</td></tr>
+            <tr><th><?php echo $Gui2Text95; ?></th><td data-identify-field='Details' class='identify-lines'>&#8230;</td></tr>
+            <tr><th><?php echo $Gui2Text96; ?></th><td data-identify-field='Notes' class='identify-lines'>&#8230;</td></tr>
+          </table>
+          <p><label><input type='checkbox' id='identifyreport<?php echo $ConvertGuiCounter1; ?>' name='identifyreport<?php echo $ConvertGuiCounter1; ?>'> <?php echo $Gui2Text97; ?></label></p>
+          <p><?php echo $Gui2Text17; ?><input type='text' id='identifyfilename<?php echo $ConvertGuiCounter1; ?>' name='identifyfilename<?php echo $ConvertGuiCounter1; ?>' value='User_Identify_Report' disabled></p>
+          <input type='submit' id='identifySubmit<?php echo $ConvertGuiCounter1; ?>' name='identifySubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text86, ENT_QUOTES, 'UTF-8'); ?>'>
+          <script type='text/javascript'>
+            HRC2.bindIdentify(<?php echo json_encode(array('openId' => 'identifyfilebutton'.$ConvertGuiCounter1, 'submitId' => 'identifySubmit'.$ConvertGuiCounter1, 'suffix' => (string)$ConvertGuiCounter1, 'fileName' => $File, 'reportId' => 'identifyreport'.$ConvertGuiCounter1, 'nameId' => 'identifyfilename'.$ConvertGuiCounter1)); ?>);
+          </script>
         </div>
         <?php }
 
@@ -1015,5 +1098,5 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
       // / full page shows it through the frame above & would otherwise print it twice. ?>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = $gui2EbookArr = $sessionParams = $backURL = $refreshURL = $extension = $FileNoExt = NULL;
-    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $selectorSide, $selectorSwatches, $selectorLang, $selectorLabel, $selectorCurrent, $selectorColor, $selectorSwatch, $selectorGui, $selectorURL, $gui2EbookArr, $sessionParams, $backURL, $refreshURL, $extension, $FileNoExt);
+    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $selectorSide = $selectorSwatches = $selectorLang = $selectorLabel = $selectorCurrent = $selectorColor = $selectorSwatch = $selectorGui = $selectorURL = $gui2SvgArr = $gui2EbookArr = $sessionParams = $sortParams = $sortCurrentKey = $sortCurrentWay = $sortChoices = $sortKey = $sortLabel = $sortIsCurrent = $sortNextWay = $sortURL = $backURL = $refreshURL = $extension = $FileNoExt = NULL;
+    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $selectorSide, $selectorSwatches, $selectorLang, $selectorLabel, $selectorCurrent, $selectorColor, $selectorSwatch, $selectorGui, $selectorURL, $gui2EbookArr, $sessionParams, $sortParams, $sortCurrentKey, $sortCurrentWay, $sortChoices, $sortKey, $sortLabel, $sortIsCurrent, $sortNextWay, $sortURL, $backURL, $refreshURL, $extension, $FileNoExt);

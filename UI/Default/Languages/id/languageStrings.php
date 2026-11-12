@@ -37,7 +37,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -348,6 +348,52 @@ $Gui2Text83 = 'URL sumber playlist, hanya diperlukan jika playlist memakai jalur
 $Gui2Text84 = 'Unduh berkas dari URL';
 // / 'Fetch'
 $Gui2Text85 = 'Ambil';
+// / 'Identify'
+$Gui2Text86 = 'Identifikasi';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Tutup Opsi Identifikasi';
+// / 'Identify This File'
+$Gui2Text88 = 'Identifikasi Berkas Ini';
+// / 'Size: '
+$Gui2Text89 = 'Ukuran: ';
+// / 'Modified: '
+$Gui2Text90 = 'Diubah: ';
+// / 'Type: '
+$Gui2Text91 = 'Jenis: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'Jenis MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Set Karakter: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'Ekstensi Sesuai Isi: ';
+// / 'Details: '
+$Gui2Text95 = 'Rincian: ';
+// / 'Notes: '
+$Gui2Text96 = 'Catatan: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Simpan laporan sebagai berkas';
+// / 'Identify All Files'
+$Gui2Text98 = 'Identifikasi Semua Berkas';
+// / 'Identify All'
+$Gui2Text99 = 'Identifikasi Semua';
+// / 'Yes'
+$Gui2Text100 = 'Ya';
+// / 'No'
+$Gui2Text101 = 'Tidak';
+// / 'Unknown'
+$Gui2Text102 = 'Tidak diketahui';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Berkas ini tidak dapat diidentifikasi.';
+// / 'Sort By: '
+$Gui2Text104 = 'Urutkan Berdasarkan: ';
+// / 'Name'
+$Gui2Text105 = 'Nama';
+// / 'Size'
+$Gui2Text106 = 'Ukuran';
+// / 'Date'
+$Gui2Text107 = 'Tanggal';
+// / 'Type'
+$Gui2Text108 = 'Jenis';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

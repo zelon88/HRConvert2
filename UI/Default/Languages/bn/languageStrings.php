@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -341,6 +341,52 @@ $Gui2Text83 = 'প্লেলিস্টের উৎস URL, কেবল আ
 $Gui2Text84 = 'URL থেকে ফাইল ডাউনলোড করুন';
 // / 'Fetch'
 $Gui2Text85 = 'আনুন';
+// / 'Identify'
+$Gui2Text86 = 'শনাক্ত করুন';
+// / 'Close Identify Options'
+$Gui2Text87 = 'শনাক্তকরণ বিকল্পগুলি বন্ধ করুন';
+// / 'Identify This File'
+$Gui2Text88 = 'এই ফাইলটি শনাক্ত করুন';
+// / 'Size: '
+$Gui2Text89 = 'আকার: ';
+// / 'Modified: '
+$Gui2Text90 = 'পরিবর্তিত: ';
+// / 'Type: '
+$Gui2Text91 = 'ধরন: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'MIME ধরন: ';
+// / 'Character Set: '
+$Gui2Text93 = 'অক্ষর সেট: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'এক্সটেনশন বিষয়বস্তুর সাথে মেলে: ';
+// / 'Details: '
+$Gui2Text95 = 'বিস্তারিত: ';
+// / 'Notes: '
+$Gui2Text96 = 'টীকা: ';
+// / 'Save report as file'
+$Gui2Text97 = 'প্রতিবেদন ফাইল হিসেবে সংরক্ষণ করুন';
+// / 'Identify All Files'
+$Gui2Text98 = 'সমস্ত ফাইল শনাক্ত করুন';
+// / 'Identify All'
+$Gui2Text99 = 'সমস্ত শনাক্ত করুন';
+// / 'Yes'
+$Gui2Text100 = 'হ্যাঁ';
+// / 'No'
+$Gui2Text101 = 'না';
+// / 'Unknown'
+$Gui2Text102 = 'অজানা';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'এই ফাইলটি শনাক্ত করা যাবে না!';
+// / 'Sort By: '
+$Gui2Text104 = 'যেভাবে সাজান: ';
+// / 'Name'
+$Gui2Text105 = 'নাম';
+// / 'Size'
+$Gui2Text106 = 'আকার';
+// / 'Date'
+$Gui2Text107 = 'তারিখ';
+// / 'Type'
+$Gui2Text108 = 'ধরন';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

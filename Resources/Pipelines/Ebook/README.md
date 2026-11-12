@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.0.0
+- **Version** v4.0.8
 - **Kind** conversion
 - **Family** Ebook
 - **Entry point** convertEbooks
@@ -19,7 +19,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 **Accepts** epub, mobi, azw, azw3, fb2, lit, lrf, pdb, pml, rb, snb, tcr, txtz, htmlz, cbz, cbr, cbc, chm, recipe
 
-**Produces** epub, mobi, azw3, fb2, lit, lrf, pdb, pml, rb, snb, tcr, txtz, htmlz, txt, rtf, docx, pdf
+**Produces** epub, mobi, azw3, fb2, lit, lrf, pdb, pmlz, rb, snb, tcr, txtz, htmlz, txt, rtf, docx, pdf
 
 ## Dependencies
 

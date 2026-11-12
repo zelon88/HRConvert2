@@ -43,3 +43,64 @@ select::-ms-expand {
   background-color: #edf9ff;
   border: 1px solid #bfbfbf;
   border-radius: 7px; }
+
+/* / -----------------------------------------------------------------------------------
+   / The sort controls, the line under each file's name & what Identify read about a file.
+   / None of these vary by colour scheme, so they live here rather than in styleCore.php.
+   / Colours are inherited, so each one reads in every scheme, the dark one included.
+   / ----------------------------------------------------------------------------------- */
+.sort-bar {
+  margin: 0 0 6px 0;
+  font-size: 13px; }
+.sort-button {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  padding: 1px 6px;
+  text-decoration: underline; }
+.sort-button.sort-current {
+  font-weight: 700;
+  border-color: rgba(0, 0, 0, 0.3);
+  text-decoration: none; }
+/* / The size & the time a file changed, under its name, & what Identify says it is once asked. */
+/* / Each is isolated in the markup, so a language read from right to left keeps each one whole & puts them in its own order. */
+.file-details {
+  clear: both;
+  font-size: 12px;
+  opacity: 0.8;
+  padding: 2px 0 0 0; }
+.identify-summary {
+  font-style: italic; }
+/* / A hash is long & unbroken, so it may break anywhere rather than widen the panel. */
+.identify-table {
+  border-collapse: collapse;
+  margin: 0 auto 8px auto;
+  font-size: 13px;
+  text-align: start; }
+/* / A label sits against its value whichever way a language reads, & the gap between them follows it. */
+/* / The physical padding is for a browser that has no logical padding. */
+.identify-table th {
+  font-weight: 700;
+  text-align: end;
+  padding: 2px 8px 2px 0;
+  padding-inline-start: 0;
+  padding-inline-end: 8px;
+  vertical-align: top;
+  white-space: nowrap; }
+/* / A size, a date or a hash reads left to right in every language, so each line of a value takes the direction of its own words. */
+/* / A value still sits against its label in a language read from right to left. */
+.identify-table td {
+  padding: 2px 0;
+  vertical-align: top;
+  text-align: left;
+  unicode-bidi: plaintext; }
+[dir='rtl'] .identify-table td {
+  text-align: right; }
+.identify-hash {
+  font-family: monospace;
+  word-break: break-all; }
+.identify-lines {
+  white-space: pre-line; }

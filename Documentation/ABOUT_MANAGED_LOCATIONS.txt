@@ -223,9 +223,11 @@ UPGRADING ONCE THE APPLICATION HAS MOVED.
   A release unpacked over the hosted location is installed by  sudo php convertCore.php -fp  run
   there. Its config.php is installed with it, as unpacking over the installation has always
   replaced it, & the configuration it replaced is in Last-Installed-Version.
-  A drop in of changed files is unpacked into Application, followed by -fp. The workflow it may
-  carry in .github belongs to the repository & not to an installation.
+  A drop in of changed files is unpacked into Application, followed by --config --repair, which
+  adds any setting its release introduced, & -fp. The workflow it may carry in .github belongs to
+  the repository & not to an installation.
     sudo tar -xzf <drop in> -C <data location>/Application --exclude='./Resources/config.php' --exclude='./.github'
+    sudo php <data location>/Application/convertCore.php --config --repair
     sudo php <data location>/Application/convertCore.php -fp
   A drop in unpacked over the hosted location is refused rather than installed, because it is
   not a whole release. -fp compares the tree it would install with Application, & a tree that
@@ -235,6 +237,10 @@ UPGRADING ONCE THE APPLICATION HAS MOVED.
   whose release left the Engine as it was holds no Engine, so from v4.0.6 a command that needs
   the Engine, run from it, says the folder is not a whole release & where Application is, before
   anything is compared. Until then it said to replace the Engine.
+  A drop in whose release changed the Engine & left Setup Core as it was brings an Engine & no
+  Setup Core, which is where the comparison lives. From v4.1.2 -fp run from it says the folder is
+  not a whole release & where Application is. Until then it corrected the folder's permissions,
+  reported success & installed nothing.
 A Docker image keeps its release in the web root, & the entrypoint's -fp installs it into the
 data volume on every start, so a volume kept from an older container runs the new release.
 

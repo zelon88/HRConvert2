@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -200,7 +200,7 @@ $Gui2Text13 = 'Optionen Der Optischen Zeichenerkennung Schließen';
 // / 'Convert'
 $Gui2Text14 = 'Konvertieren';
 // / 'Close Convert Options'
-$Gui2Text15 = 'Close Convert Options';
+$Gui2Text15 = 'Konvertierungsoptionen Schließen';
 // / 'Archive This File'
 $Gui2Text16 = 'Diese Datei Archivieren';
 // / 'Specify Filename: '
@@ -282,7 +282,7 @@ $Gui2Text54 = 'Dokument Konvertieren';
 // / 'Convert Spreadsheet'
 $Gui2Text55 = 'Tabellenkalkulation Konvertieren';
 // / 'Convert Presentation'
-$Gui2Text56 = 'Convert Presentation';
+$Gui2Text56 = 'Präsentation Konvertieren';
 // / 'Convert Audio'
 $Gui2Text57 = 'Audio Konvertieren';
 // / 'Convert Video'
@@ -339,6 +339,52 @@ $Gui2Text83 = 'Quell-URL der Wiedergabeliste, nur nötig wenn die Liste relative
 $Gui2Text84 = 'Eine Datei von einer URL herunterladen';
 // / 'Fetch'
 $Gui2Text85 = 'Abrufen';
+// / 'Identify'
+$Gui2Text86 = 'Identifizieren';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Identifizierungsoptionen Schließen';
+// / 'Identify This File'
+$Gui2Text88 = 'Diese Datei Identifizieren';
+// / 'Size: '
+$Gui2Text89 = 'Größe: ';
+// / 'Modified: '
+$Gui2Text90 = 'Geändert: ';
+// / 'Type: '
+$Gui2Text91 = 'Typ: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'MIME-Typ: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Zeichensatz: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'Endung Passt Zum Inhalt: ';
+// / 'Details: '
+$Gui2Text95 = 'Details: ';
+// / 'Notes: '
+$Gui2Text96 = 'Hinweise: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Bericht als Datei speichern';
+// / 'Identify All Files'
+$Gui2Text98 = 'Alle Dateien Identifizieren';
+// / 'Identify All'
+$Gui2Text99 = 'Alle Identifizieren';
+// / 'Yes'
+$Gui2Text100 = 'Ja';
+// / 'No'
+$Gui2Text101 = 'Nein';
+// / 'Unknown'
+$Gui2Text102 = 'Unbekannt';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Diese Datei kann nicht identifiziert werden!';
+// / 'Sort By: '
+$Gui2Text104 = 'Sortieren Nach: ';
+// / 'Name'
+$Gui2Text105 = 'Name';
+// / 'Size'
+$Gui2Text106 = 'Größe';
+// / 'Date'
+$Gui2Text107 = 'Datum';
+// / 'Type'
+$Gui2Text108 = 'Typ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

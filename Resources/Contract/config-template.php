@@ -5,7 +5,9 @@
 // / The Engine reads it to learn what settings should exist & what they should default to.
 // / A missing config.php is written FROM it. A repair adds whatever it holds that a live
 // / configuration lacks. AN OPERATOR VALUE IS NEVER REPLACED by a default here.
-// / Adding a setting to this application means adding it HERE. Nothing else needs editing.
+// / Adding a setting to this application means adding it here, & to config.php, to
+// / applicationConfigModel() & to the list verifyConfigVersion() checks, both in convertCore.php.
+// / ABOUT_COMPONENTS.txt says why each one is needed.
 // / Everything below the COPY FROM HERE marker is copied verbatim, including the header &
 // / the guard, because a generated configuration needs both. This note is not copied,
 // / because a generated configuration is not a template & should not claim to be.
@@ -27,7 +29,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / File information ...
-// / v3.9.6.
+// / v4.1.2.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -57,7 +59,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. Replacing config.php with a newer one is the correct fix.
-$ConfigVersion = 'v3.9.6';
+$ConfigVersion = 'v4.1.2';
 // / ------------------------------
 
 // / ------------------------------
@@ -752,6 +754,16 @@ $AllowUserSelectableLanguage = TRUE;
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AllowUserShare = TRUE;
+// /  --User File Identification--
+// /   Provide users with the option to identify the files they upload or convert.
+// /   Identify reports a file's size, when it changed, its SHA-256, SHA-1 & MD5 hashes, what it holds & whether its name agrees.
+// /   An image, an audio or video file, a PDF & an archive are also read by the tool for that format, each inside the sandbox.
+// /   A user may also ask for the same details as a plain text report, which is saved beside their files.
+// /   If set to TRUE the user will be provided with buttons to identify one file or every file.
+// /   If set to FALSE the user will not be provided with the buttons, & a request to identify a file is refused.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowUserIdentify = TRUE;
 // /  --Allowed Conversion Types--
 // /   The list of supported conversion types.
 // /   Only conversion types contained in this list will be processed.

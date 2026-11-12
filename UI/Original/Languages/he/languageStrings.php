@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -341,6 +341,52 @@ $Gui2Text83 = 'כתובת המקור של רשימת ההשמעה, נדרשת ר
 $Gui2Text84 = 'הורדת קובץ מכתובת URL';
 // / 'Fetch'
 $Gui2Text85 = 'הבא';
+// / 'Identify'
+$Gui2Text86 = 'זיהוי';
+// / 'Close Identify Options'
+$Gui2Text87 = 'סגור אפשרויות זיהוי';
+// / 'Identify This File'
+$Gui2Text88 = 'זהה קובץ זה';
+// / 'Size: '
+$Gui2Text89 = 'גודל: ';
+// / 'Modified: '
+$Gui2Text90 = 'שונה: ';
+// / 'Type: '
+$Gui2Text91 = 'סוג: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'סוג MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'ערכת תווים: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'הסיומת תואמת לתוכן: ';
+// / 'Details: '
+$Gui2Text95 = 'פרטים: ';
+// / 'Notes: '
+$Gui2Text96 = 'הערות: ';
+// / 'Save report as file'
+$Gui2Text97 = 'שמור דוח כקובץ';
+// / 'Identify All Files'
+$Gui2Text98 = 'זהה את כל הקבצים';
+// / 'Identify All'
+$Gui2Text99 = 'זהה הכל';
+// / 'Yes'
+$Gui2Text100 = 'כן';
+// / 'No'
+$Gui2Text101 = 'לא';
+// / 'Unknown'
+$Gui2Text102 = 'לא ידוע';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'לא ניתן לזהות קובץ זה!';
+// / 'Sort By: '
+$Gui2Text104 = 'מיין לפי: ';
+// / 'Name'
+$Gui2Text105 = 'שם';
+// / 'Size'
+$Gui2Text106 = 'גודל';
+// / 'Date'
+$Gui2Text107 = 'תאריך';
+// / 'Type'
+$Gui2Text108 = 'סוג';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

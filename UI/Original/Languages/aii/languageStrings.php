@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -341,6 +341,52 @@ $Gui2Text83 = 'ܐܘܪܚܐ ܕܡܒܘܥܐ ܕܠܝܣܬܐ، ܣܢܝܩܐ ܐܢ ܠܝܣܬܐ
 $Gui2Text84 = 'ܡܚܬ ܦܝܠܐ ܡܢ ܐܘܪܚܐ';
 // / 'Fetch'
 $Gui2Text85 = 'ܡܝܬܐ';
+// / 'Identify'
+$Gui2Text86 = 'ܦܪܘܿܫ';
+// / 'Close Identify Options'
+$Gui2Text87 = 'ܐܲܚܸܕ ܓܘܼܒܵܝܹܐ ܕܦܘܼܪܫܵܢܵܐ';
+// / 'Identify This File'
+$Gui2Text88 = 'ܦܪܘܿܫ ܗܵܢܵܐ ܦܸܬܩܵܐ';
+// / 'Size: '
+$Gui2Text89 = 'ܪܲܒ݂ܘܼܬܵܐ: ';
+// / 'Modified: '
+$Gui2Text90 = 'ܫܘܼܚܠܵܦܵܐ ܚܪܵܝܵܐ: ';
+// / 'Type: '
+$Gui2Text91 = 'ܐܕ݂ܫܵܐ: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'ܐܕ݂ܫܵܐ ܕ-MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'ܛܘܼܟܵܣܵܐ ܕܐܵܬ݂ܘܵܬܹ̈ܐ: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'ܫܘܼܠܵܡܵܐ ܕܫܸܡܵܐ ܫܵܘܝܵܐ ܠܡܸܕܸܡ ܕܒܓܵܘܹܗ: ';
+// / 'Details: '
+$Gui2Text95 = 'ܦܘܼܫܵܩܹ̈ܐ: ';
+// / 'Notes: '
+$Gui2Text96 = 'ܥܘܼܗܕܵܢܹ̈ܐ: ';
+// / 'Save report as file'
+$Gui2Text97 = 'ܢܛܘܿܪ ܡܘܼܕܥܵܢܘܼܬܵܐ ܐܲܝܟ ܦܸܬܩܵܐ';
+// / 'Identify All Files'
+$Gui2Text98 = 'ܦܪܘܿܫ ܟܠܗܘܿܢ ܦܸܬܩܹܐ';
+// / 'Identify All'
+$Gui2Text99 = 'ܦܪܘܿܫ ܟܠ';
+// / 'Yes'
+$Gui2Text100 = 'ܐܝܼܢ';
+// / 'No'
+$Gui2Text101 = 'ܠܵܐ';
+// / 'Unknown'
+$Gui2Text102 = 'ܠܵܐ ܝܼܕܝܼܥܵܐ';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'ܠܹܐ ܡܵܨܹܐ ܠܡܲܦܪܘܼܫܹܐ ܗܵܢܵܐ ܦܸܬܩܵܐ!';
+// / 'Sort By: '
+$Gui2Text104 = 'ܛܲܟܸܣ ܒܝܲܕ: ';
+// / 'Name'
+$Gui2Text105 = 'ܫܸܡܵܐ';
+// / 'Size'
+$Gui2Text106 = 'ܪܲܒ݂ܘܼܬܵܐ';
+// / 'Date'
+$Gui2Text107 = 'ܙܲܒ݂ܢܵܐ';
+// / 'Type'
+$Gui2Text108 = 'ܐܕ݂ܫܵܐ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

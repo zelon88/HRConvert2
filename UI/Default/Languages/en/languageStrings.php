@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -341,6 +341,52 @@ $Gui2Text83 = 'Playlist source URL, only needed if the playlist uses relative pa
 $Gui2Text84 = 'Download A File From A URL';
 // / 'Fetch'
 $Gui2Text85 = 'Fetch';
+// / 'Identify'
+$Gui2Text86 = 'Identify';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Close Identify Options';
+// / 'Identify This File'
+$Gui2Text88 = 'Identify This File';
+// / 'Size: '
+$Gui2Text89 = 'Size: ';
+// / 'Modified: '
+$Gui2Text90 = 'Modified: ';
+// / 'Type: '
+$Gui2Text91 = 'Type: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'MIME Type: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Character Set: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'Extension Matches Content: ';
+// / 'Details: '
+$Gui2Text95 = 'Details: ';
+// / 'Notes: '
+$Gui2Text96 = 'Notes: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Save report as file';
+// / 'Identify All Files'
+$Gui2Text98 = 'Identify All Files';
+// / 'Identify All'
+$Gui2Text99 = 'Identify All';
+// / 'Yes'
+$Gui2Text100 = 'Yes';
+// / 'No'
+$Gui2Text101 = 'No';
+// / 'Unknown'
+$Gui2Text102 = 'Unknown';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Cannot identify this file!';
+// / 'Sort By: '
+$Gui2Text104 = 'Sort By: ';
+// / 'Name'
+$Gui2Text105 = 'Name';
+// / 'Size'
+$Gui2Text106 = 'Size';
+// / 'Date'
+$Gui2Text107 = 'Date';
+// / 'Type'
+$Gui2Text108 = 'Type';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -48,12 +48,12 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Binary                                        7z
     Install type                                  apt
     Package                                       p7zip-full p7zip-rar
-    Minimum version                               23.01
+    Minimum version                               26.02
     Required                                      YES
     Subsystem                                     Archives
     License                                       LGPL-2.1
     Depends on                                    -
-    Source                                        https://www.7-zip.org
+    Source                                        https://github.com/ip7z/7zip
     Purpose                                       Extracts every archive format offered.
 
   Audit answers. Every one is a judgement a person records here.

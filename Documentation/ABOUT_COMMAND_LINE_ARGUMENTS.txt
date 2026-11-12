@@ -191,7 +191,8 @@ Before v3.9.9 every command but one exited 0, whatever happened.
 
 Configures this installation without opening config.php in a text editor.
 
-Requires the Setup Core component, which holds a model of every setting config.php declares.
+Requires the Setup Core component. The model of every setting is applicationConfigModel() in
+convertCore.php, & every default is what Resources/Contract/config-template.php holds.
 Requires root, except for a backup, which any account that can write the destination may take.
 
   --config                                 Walk every section & queue changes. Nothing is written until the end.
@@ -222,7 +223,13 @@ into place, so a configuration that would not parse never reaches the installati
 A SETTING THIS UTILITY DOES NOT KNOW IS STILL EDITABLE.
 It is reported as unaccounted, can be set by hand, & cannot be reset, because nothing in the
 model knows what it should be. This is how the utility survives a release that adds a setting
-before anybody updates Setup Core.
+before anybody updates the model.
+
+A RELEASE THAT ADDS A SETTING IS FOLLOWED BY  --config --repair.
+Every other command refuses with error 28000 while config.php lacks a setting the core reads,
+because a missing setting reads as nothing & silently changes what the application does.
+--config --repair adds each missing setting at the default the release ships, & changes no
+setting already there. -u does this as part of an update. After a drop in, run it before -fp.
 
 NOTHING IS WRITTEN IF ANY SECTION FAILS VALIDATION.
 A section holding fewer than half, or more than one and a half times, the settings the model

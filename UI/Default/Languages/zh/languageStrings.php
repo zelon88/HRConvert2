@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -117,7 +117,7 @@ $Gui1Text15 = '电子表格格式';
 // / 'Presentation Formats'
 $Gui1Text16 = '演示格式';
 // / 'Archive Formats'
-$Gui1Text17 = 'Archive Formats';
+$Gui1Text17 = '存档格式';
 // / 'Can convert between archive formats & disk image formats.'
 $Gui1Text18 = '可以在选择的存档格式和磁盘映像格式之间进行转换。';
 // / 'Image Formats'
@@ -184,7 +184,7 @@ $Gui2Text6 = '分享';
 // / 'Close Share Options'
 $Gui2Text7 = '关闭股票期权';
 // / 'Virus Scan'
-$Gui2Text8 = 'Virus Scan';
+$Gui2Text8 = '病毒扫描';
 // / 'Close Virus Scan Options'
 $Gui2Text9 = '关闭病毒扫描选项';
 // / 'Archive'
@@ -337,6 +337,52 @@ $Gui2Text83 = '播放列表来源网址，仅当列表使用相对路径时需�
 $Gui2Text84 = '从网址下载文件';
 // / 'Fetch'
 $Gui2Text85 = '获取';
+// / 'Identify'
+$Gui2Text86 = '识别';
+// / 'Close Identify Options'
+$Gui2Text87 = '关闭识别选项';
+// / 'Identify This File'
+$Gui2Text88 = '识别此文件';
+// / 'Size: '
+$Gui2Text89 = '大小：';
+// / 'Modified: '
+$Gui2Text90 = '修改时间：';
+// / 'Type: '
+$Gui2Text91 = '类型：';
+// / 'MIME Type: '
+$Gui2Text92 = 'MIME 类型：';
+// / 'Character Set: '
+$Gui2Text93 = '字符集：';
+// / 'Extension Matches Content: '
+$Gui2Text94 = '扩展名与内容一致：';
+// / 'Details: '
+$Gui2Text95 = '详细信息：';
+// / 'Notes: '
+$Gui2Text96 = '备注：';
+// / 'Save report as file'
+$Gui2Text97 = '将报告另存为文件';
+// / 'Identify All Files'
+$Gui2Text98 = '识别所有文件';
+// / 'Identify All'
+$Gui2Text99 = '全部识别';
+// / 'Yes'
+$Gui2Text100 = '是';
+// / 'No'
+$Gui2Text101 = '否';
+// / 'Unknown'
+$Gui2Text102 = '未知';
+// / 'Cannot identify this file!'
+$Gui2Text103 = '无法识别此文件！';
+// / 'Sort By: '
+$Gui2Text104 = '排序方式：';
+// / 'Name'
+$Gui2Text105 = '名称';
+// / 'Size'
+$Gui2Text106 = '大小';
+// / 'Date'
+$Gui2Text107 = '日期';
+// / 'Type'
+$Gui2Text108 = '类型';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

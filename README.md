@@ -51,7 +51,7 @@ Free online converters are paid for with your files. Upload a contract, a medica
 <td valign="top">
 
 1. **Drop files in.** Any number, any mix of types. Archives, photos, documents, 3D models, video.
-2. **Choose what to do with each one.** Convert, compress, extract, run OCR, virus scan, share or delete. Only the options that make sense for that file appear.
+2. **Choose what to do with each one.** Convert, compress, extract, run OCR, identify, virus scan, share or delete. Only the options that make sense for that file appear.
 3. **Download the result.** Bulk options convert or archive a whole selection at once.
 4. **Walk away.** Files expire on their own and nothing about the visit is kept.
 
@@ -120,6 +120,7 @@ sudo php convertCore.php -fp    # Repair permissions & the web server setup
 | **Drawings & Vectors** | dxf, dia, vdx, svg |
 | **Bootable Disk Images** | x86, ARM, UEFI and MBR/GPT hybrid ISOs |
 | **OCR** | Extract text from images and PDFs |
+| **Identify** | Size, type, character set & hashes of any file, and whether its name matches what it holds |
 | **Live Streams** | Capture and convert m3u8 playlists |
 | **Remote Files** | Fetch a file from a URL. Off by default. |
 

@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.0.0
+- **Version** v4.1.1
 - **Kind** conversion
 - **Family** Archive
 - **Entry point** convertArchives
@@ -23,7 +23,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## Dependencies
 
-- **7-Zip** (required, 23.01 or newer, LGPL-2.1). Extracts every archive format offered.
+- **7-Zip** (required, 26.02 or newer, LGPL-2.1). Extracts every archive format offered.
 - **Bubblewrap** (required, 0.4 or newer, LGPL-2.0). Isolates every conversion from the host & the network.
 - **Genisoimage** (optional, 1.1 or newer, GPL-2.0). Builds ISO images from an archive.
 - **RAR** (optional, 5.0 or newer, Proprietary). Creates RAR archives. Licence forbids redistribution. On arm64 fetch the arm64 build, not the package.

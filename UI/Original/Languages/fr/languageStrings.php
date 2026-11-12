@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -235,7 +235,7 @@ $Gui2Text31 = 'Votre fichier'.$FCPlural2.' maintenant prêt à convertir en util
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'Générer Un Lien Et Copier Dans Le Presse-Papiers';
 // / 'Generate Link'
-$Gui2Text33 = 'Generate Link';
+$Gui2Text33 = 'Générer Un Lien';
 // / 'Scan This File For Viruses'
 $Gui2Text34 = 'Analyser Ce Fichier Pour Les Virus';
 // / 'Scan File With ScanCore'
@@ -338,6 +338,52 @@ $Gui2Text83 = 'URL source de la liste de lecture, requise seulement si elle util
 $Gui2Text84 = 'Télécharger un fichier depuis une URL';
 // / 'Fetch'
 $Gui2Text85 = 'Récupérer';
+// / 'Identify'
+$Gui2Text86 = 'Identifier';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Fermer Les Options D’Identification';
+// / 'Identify This File'
+$Gui2Text88 = 'Identifier Ce Fichier';
+// / 'Size: '
+$Gui2Text89 = 'Taille: ';
+// / 'Modified: '
+$Gui2Text90 = 'Modifié: ';
+// / 'Type: '
+$Gui2Text91 = 'Type: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'Type MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Jeu De Caractères: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'L’Extension Correspond Au Contenu: ';
+// / 'Details: '
+$Gui2Text95 = 'Détails: ';
+// / 'Notes: '
+$Gui2Text96 = 'Remarques: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Enregistrer le rapport dans un fichier';
+// / 'Identify All Files'
+$Gui2Text98 = 'Identifier Tous Les Fichiers';
+// / 'Identify All'
+$Gui2Text99 = 'Tout Identifier';
+// / 'Yes'
+$Gui2Text100 = 'Oui';
+// / 'No'
+$Gui2Text101 = 'Non';
+// / 'Unknown'
+$Gui2Text102 = 'Inconnu';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Impossible d’identifier ce fichier !';
+// / 'Sort By: '
+$Gui2Text104 = 'Trier Par: ';
+// / 'Name'
+$Gui2Text105 = 'Nom';
+// / 'Size'
+$Gui2Text106 = 'Taille';
+// / 'Date'
+$Gui2Text107 = 'Date';
+// / 'Type'
+$Gui2Text108 = 'Type';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

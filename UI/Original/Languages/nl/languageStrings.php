@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -330,7 +330,7 @@ $Gui2Text78 = 'Converteer Dit XPS-bestand';
 // / 'Render This OpenSCAD Model'
 $Gui2Text79 = 'Render Dit OpenSCAD-model';
 // / 'Render Model'
-$Gui2Text80 = 'Render Model';
+$Gui2Text80 = 'Model Renderen';
 // / 'Convert This E-Book'
 $Gui2Text81 = 'Dit e-boek converteren';
 // / 'Convert E-Book'
@@ -341,6 +341,52 @@ $Gui2Text83 = 'Bron-URL van de afspeellijst, alleen nodig bij relatieve paden';
 $Gui2Text84 = 'Een bestand downloaden van een URL';
 // / 'Fetch'
 $Gui2Text85 = 'Ophalen';
+// / 'Identify'
+$Gui2Text86 = 'Identificeren';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Sluit Identificatie Opties';
+// / 'Identify This File'
+$Gui2Text88 = 'Identificeer Dit Bestand';
+// / 'Size: '
+$Gui2Text89 = 'Grootte: ';
+// / 'Modified: '
+$Gui2Text90 = 'Gewijzigd: ';
+// / 'Type: '
+$Gui2Text91 = 'Type: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'MIME-Type: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Tekenset: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'Extensie Komt Overeen Met Inhoud: ';
+// / 'Details: '
+$Gui2Text95 = 'Details: ';
+// / 'Notes: '
+$Gui2Text96 = 'Opmerkingen: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Rapport als bestand opslaan';
+// / 'Identify All Files'
+$Gui2Text98 = 'Identificeer Alle Bestanden';
+// / 'Identify All'
+$Gui2Text99 = 'Alles Identificeren';
+// / 'Yes'
+$Gui2Text100 = 'Ja';
+// / 'No'
+$Gui2Text101 = 'Nee';
+// / 'Unknown'
+$Gui2Text102 = 'Onbekend';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Kan dit bestand niet identificeren!';
+// / 'Sort By: '
+$Gui2Text104 = 'Sorteren Op: ';
+// / 'Name'
+$Gui2Text105 = 'Naam';
+// / 'Size'
+$Gui2Text106 = 'Grootte';
+// / 'Date'
+$Gui2Text107 = 'Datum';
+// / 'Type'
+$Gui2Text108 = 'Type';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

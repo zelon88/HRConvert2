@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -341,6 +341,52 @@ $Gui2Text83 = 'URL ya chanzo cha orodha, inahitajika tu ikiwa orodha inatumia nj
 $Gui2Text84 = 'Pakua faili kutoka URL';
 // / 'Fetch'
 $Gui2Text85 = 'Leta';
+// / 'Identify'
+$Gui2Text86 = 'Tambua';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Funga Chaguzi za Utambuzi';
+// / 'Identify This File'
+$Gui2Text88 = 'Tambua Faili Hili';
+// / 'Size: '
+$Gui2Text89 = 'Ukubwa: ';
+// / 'Modified: '
+$Gui2Text90 = 'Ilibadilishwa: ';
+// / 'Type: '
+$Gui2Text91 = 'Aina: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'Aina ya MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Seti ya Herufi: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'Kiendelezi Kinalingana na Maudhui: ';
+// / 'Details: '
+$Gui2Text95 = 'Maelezo: ';
+// / 'Notes: '
+$Gui2Text96 = 'Vidokezo: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Hifadhi ripoti kama faili';
+// / 'Identify All Files'
+$Gui2Text98 = 'Tambua Faili Zote';
+// / 'Identify All'
+$Gui2Text99 = 'Tambua Zote';
+// / 'Yes'
+$Gui2Text100 = 'Ndiyo';
+// / 'No'
+$Gui2Text101 = 'Hapana';
+// / 'Unknown'
+$Gui2Text102 = 'Haijulikani';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Haiwezi kutambua faili hili!';
+// / 'Sort By: '
+$Gui2Text104 = 'Panga Kwa: ';
+// / 'Name'
+$Gui2Text105 = 'Jina';
+// / 'Size'
+$Gui2Text106 = 'Ukubwa';
+// / 'Date'
+$Gui2Text107 = 'Tarehe';
+// / 'Type'
+$Gui2Text108 = 'Aina';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

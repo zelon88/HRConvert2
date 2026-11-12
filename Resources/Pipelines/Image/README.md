@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.0.0
+- **Version** v4.0.8
 - **Kind** conversion
 - **Family** Image
 - **Entry point** convertImages

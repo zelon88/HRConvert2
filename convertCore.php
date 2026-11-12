@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.1.
+// / v4.1.2.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -80,7 +80,7 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'SupportedGuis', 'DefaultGui', 'AllowUserSelectableGui',
     'SupportedColors', 'AllowUserSelectableColor', 'ButtonStyle',
     'Font', 'SpinnerStyle', 'SpinnerColor', 'UserEbookInputArray',
-    'ShowGUI', 'ShowFinePrint', 'TOSURL', 'PPURL', 'LogoURL', 'AllowUserShare',
+    'ShowGUI', 'ShowFinePrint', 'TOSURL', 'PPURL', 'LogoURL', 'AllowUserShare', 'AllowUserIdentify',
     // / A setting nothing reads is not required, because every installation would carry it for no reason.
     'SupportedConversionTypes', 'RetryCount',
     'RARArchiveMethod', 'AllowBootableIsoImage',
@@ -1231,7 +1231,7 @@ function verifyCodeIsTrustedByRoot($treePath) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc,
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $AllowUserIdentify, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc,
     $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $EngineApplicationVersion, $CodeIsTrusted, $HostedLoc, $ApplicationLoc, $SecretPlacesWereOpen;
   $rootRecord = array();
   $legacyWasRemoved = FALSE;
@@ -1308,7 +1308,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.1.1';
+  $HRConvertVersion = 'v4.1.2';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -1316,19 +1316,19 @@ function verifyInstallation() {
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v3.9.6';
+  $RequiredConfigVersion = 'v4.1.2';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.1.0';
+  $RequiredGuiVersion = 'v4.1.2';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A Language Pack version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v3.9.3';
+  $RequiredLanguageVersion = 'v4.1.2';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / No Core Manager version is pinned here. Every manager role is a subcomponent of the
   // / Engine & getAcceptedManagers() inside the Engine pins each one exactly.
@@ -1346,14 +1346,14 @@ function verifyInstallation() {
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v4.0.8';
+  $RequiredDependsVersion = 'v4.1.2';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
   // / The Pipeline Core component version this core requires.
   // / This is an exact match, because a component built for another core may declare an entry point whose arguments have moved, or capabilities this core cannot honour.
   // / Raise this when the Pipeline Core itself changes & for nothing else.
   // / It is an Engine core, at Resources/Engine/Cores/pipelineCore.php.
   // / The pipelines this application accepts are listed in its contract, in app-engine-config.php, so adding a pipeline or moving one to a new version raises nothing here.
-  $RequiredPipelineCoreVersion = 'v4.0.8';
+  $RequiredPipelineCoreVersion = 'v4.1.2';
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
@@ -1362,7 +1362,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.0.8';
+  $RequiredEngineVersion = 'v4.1.2';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -1815,8 +1815,8 @@ function verifyInputs() {
   // / Set variables.
   global $ShowGUI, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $StreamBaseURL, $UserURLDownload, $LogoURL, $ResolvedLogoURL, $SupportedLanguages, $SupportedColors, $SupportedGuis;
   $InputsAreVerified = TRUE;
-  $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $var = '';
-  $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = $logoParts = $logoQuery = array();
+  $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $IdentifyReport = $IdentifyFilename = $Sort = $var = '';
+  $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = $FilesToIdentify = $logoParts = $logoQuery = array();
   $key = 0;
   // / Determine whether or not to display a full GUI or a minimalized GUI.
   // / The default action is set in config.php. The user can opt for less than the default, but never more.
@@ -1843,6 +1843,8 @@ function verifyInputs() {
   if (isset($_POST['gui'])) list ($GUI, $variableIsSanitized[$key++]) = sanitize($_POST['gui'], TRUE);
   if (isset($_GET['gui'])) list ($_GET['gui'], $variableIsSanitized[$key++]) = sanitize($_GET['gui'], TRUE);
   if (isset($_GET['gui'])) list ($GUI, $variableIsSanitized[$key++]) = sanitize($_GET['gui'], TRUE);
+  // / The sort order rides in the address, as the language, the colour & the interface do, & is read from nowhere else.
+  if (isset($_GET['sort'])) list ($Sort, $variableIsSanitized[$key++]) = sanitize($_GET['sort'], TRUE);
   if (isset($_POST['Token1'])) list ($Token1, $variableIsSanitized[$key++]) = sanitize($_POST['Token1'], TRUE);
   if (isset($_POST['Token2'])) list ($Token2, $variableIsSanitized[$key++]) = sanitize($_POST['Token2'], TRUE);
   if (isset($_POST['height'])) list ($Height, $variableIsSanitized[$key++]) = sanitize($_POST['height'], TRUE);
@@ -1890,7 +1892,9 @@ function verifyInputs() {
     if (isset($Language) && isset($SupportedLanguages) && is_array($SupportedLanguages) && array_key_exists($Language, $SupportedLanguages)) $logoQuery[] = 'language='.rawurlencode($Language);
     if (isset($Color) && isset($SupportedColors) && is_array($SupportedColors) && in_array($Color, $SupportedColors, TRUE)) $logoQuery[] = 'color='.rawurlencode($Color);
     if (isset($GUI) && isset($SupportedGuis) && is_array($SupportedGuis) && in_array($GUI, $SupportedGuis, TRUE)) $logoQuery[] = 'gui='.rawurlencode($GUI);
+    if (sortCodeIsValid($Sort)) $logoQuery[] = 'sort='.rawurlencode($Sort);
     if (!empty($logoQuery)) $ResolvedLogoURL = 'convertCore.php?'.implode('&', $logoQuery); }
+  // / The logo carries the sort order too, because the order a user chose is one of the choices it keeps.
   // / The stream base address is NOT passed through sanitize() & that is deliberate.
   // / sanitize() removes the characters a filename must never hold, which are the ones a
   // / URL is made of. It would return a filename rather than an address.
@@ -1908,11 +1912,15 @@ function verifyInputs() {
   if (isset($_POST['userpdfconvertfilename'])) list ($UserFilename, $variableIsSanitized[$key++]) = sanitize($_POST['userpdfconvertfilename'], TRUE);
   if (isset($_POST['scantype'])) list ($UserScanType, $variableIsSanitized[$key++]) = sanitize($_POST['scantype'], TRUE);
   if (isset($_POST['filesToScan'])) list ($FilesToScan, $variableIsSanitized[$key++]) = sanitize($_POST['filesToScan'], TRUE);
+  // / Identify reads the files to identify, whether to write a report, & the name to give it.
+  if (isset($_POST['filesToIdentify'])) list ($FilesToIdentify, $variableIsSanitized[$key++]) = sanitize($_POST['filesToIdentify'], TRUE);
+  if (isset($_POST['identifyreport'])) list ($IdentifyReport, $variableIsSanitized[$key++]) = sanitize($_POST['identifyreport'], TRUE);
+  if (isset($_POST['identifyfilename'])) list ($IdentifyFilename, $variableIsSanitized[$key++]) = sanitize($_POST['identifyfilename'], TRUE);
   // / Check the list of error check results and see if any errors occurred.
   foreach ($variableIsSanitized as $var) if (!$var) ($InputsAreVerified = FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $logoParts, $logoQuery, $variableIsSanitized, $key, $var);
-  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload); }
+  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2458,7 +2466,7 @@ function verifyImageMagickPolicy($mayRepair) {
       if (isset($statusRanks[$copyStatus]) && $statusRanks[$copyStatus] > $statusRanks[$retireStatus]) $retireStatus = $copyStatus; }
     // / Every pipeline here that runs ImageMagick carries a policy, & is judged only if it is installed.
     $policyIsCarried = TRUE;
-    foreach (array('Image', 'OCR') as $pipelineName) {
+    foreach (array('Image', 'OCR', 'Identify') as $pipelineName) {
       $pipelineFolder = $InstLoc.$DirSep.'Resources'.$DirSep.'Pipelines'.$DirSep.$pipelineName;
       if (is_file($pipelineFolder.$DirSep.'pipeline.php') && !is_file($pipelineFolder.$DirSep.'Policy'.$DirSep.'policy.xml')) $policyIsCarried = FALSE; }
     if (!$policyIsCarried) $PolicyStatus = 'not carried';
@@ -2536,12 +2544,15 @@ function verifyOpenScadPolicy($mayRepair) {
 // / Only -fp writes the host's files, & -fp repairs this profile itself, as does an Environment Manager pass whose repair is permitted & due, because that repair is -fp's.
 // / It runs once the Engine has loaded, & not at all without one, because without an Engine there is no sandbox for the profile to serve.
 // / When the check runs is still the application's, because it is the application that knows when a request starts.
+// / The check lives in the Environment Core, which the Engine runs on without & warns about, so a missing one skips the check.
+// / Until v4.1.2 it was called regardless, so a drop-in carrying the Engine without its Environment Core, unpacked over the
+// / web root by mistake, stopped with a PHP fatal error before -fp could say where the drop-in belongs.
 function verifySandboxPolicyAtStart() {
   // / Set variables.
   global $EnableMemoryProtection;
   $PolicyIsValid = FALSE;
   $policyStatus = '';
-  list ($PolicyIsValid, $policyStatus) = verifySandboxPolicy(FALSE);
+  if (function_exists('verifySandboxPolicy')) list ($PolicyIsValid, $policyStatus) = verifySandboxPolicy(FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $policyStatus);
   return $PolicyIsValid; }
@@ -2601,11 +2612,12 @@ function toolRequirement($manifestName) {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $EngineActive, $DependsManifest, $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $SecretFile, $SecretLoc, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
+  global $EngineActive, $DependsManifest, $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $SecretFile, $SecretLoc, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $AllowUserIdentify, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
+  $fileBinary = $probeBinary = $pdfInfoBinary = FALSE;
   $listenerIsRunning = $bwrapBinary = $listenerIsAsked = FALSE;
   $sandboxLauncher = $secretLabel = '';
   $listenerStatus = array();
@@ -2651,6 +2663,11 @@ function showVersionInfo() {
   $mkisofsBinary = toolPath('Genisoimage');
   $archiveToolsAreValid = ($sevenZipBinary !== FALSE && $zipBinary !== FALSE && $tarBinary !== FALSE && $mkisofsBinary !== FALSE);
   $isoHybridBinary = toolPath('Syslinux Utils');
+  // / Identify reads a file with each of these where it is installed, & hashes it whether or not they are.
+  // / ImageMagick & 7-Zip are listed already, for the conversions they serve.
+  $fileBinary = toolPath('File');
+  $probeBinary = toolPath('FFprobe');
+  $pdfInfoBinary = toolPath('PDFInfo');
   // / The sandbox probe lives in the Engine, so with no Engine the honest answer is not functional.
   // / The launcher says whether a sandbox runs the application's own copy of bubblewrap, which is how a kernel restricting unprivileged namespaces is kept restricted.
   if (function_exists('verifySandboxLauncher')) list ($bwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
@@ -2739,7 +2756,10 @@ function showVersionInfo() {
     'Mkisofs, iso' => array($mkisofsBinary !== FALSE, toolRequirement('Genisoimage'), TRUE),
     'Rar, archives' => array($rarBinary !== FALSE, toolRequirement('RAR'), FALSE),
     'Isohybrid, iso' => array($isoHybridBinary !== FALSE, toolRequirement('Syslinux Utils'), FALSE),
-    'Calibre, e-books' => array($ebookBinary !== FALSE, toolRequirement('Calibre'), TRUE));
+    'Calibre, e-books' => array($ebookBinary !== FALSE, toolRequirement('Calibre'), TRUE),
+    'File, identification' => array($fileBinary !== FALSE, toolRequirement('File'), FALSE),
+    'FFprobe, identification' => array($probeBinary !== FALSE, toolRequirement('FFprobe'), FALSE),
+    'PDFInfo, identification' => array($pdfInfoBinary !== FALSE, toolRequirement('PDFInfo'), FALSE));
   foreach ($dependencyChecks as $dependencyName => $dependencyState) {
     if ($dependencyState[0]) print('  '.str_pad($dependencyName, 28).'OK'.($dependencyState[2] ? '' : ', optional').$Lol);
     else {
@@ -2779,9 +2799,10 @@ function showVersionInfo() {
   // / & a list of everything that is on is a list nobody reads.
   $disabledFeatures = array();
   if (!$AllowUserURLDownload) $disabledFeatures[] = array('Fetch from a URL', 'Allow User URL Download');
-  if (!$AllowUserVirusScan) $disabledFeatures[] = array('User virus scanning', 'Allow User Virus Scan');
-  if (!$VirusScan) $disabledFeatures[] = array('Virus scanning', 'Virus Scan');
-  if (!$AllowUserShare) $disabledFeatures[] = array('Share a file', 'Allow User Share');
+  if (!$AllowUserVirusScan) $disabledFeatures[] = array('User virus scanning', 'User Virus Scanning');
+  if (!$VirusScan) $disabledFeatures[] = array('Virus scanning', 'Virus Scanning');
+  if (!$AllowUserShare) $disabledFeatures[] = array('Share a file', 'User Shareable File Links');
+  if (!$AllowUserIdentify) $disabledFeatures[] = array('Identify a file', 'User File Identification');
   if (!$EnvironmentManagerMayRepair) $disabledFeatures[] = array('Environment repair', 'Environment Manager May Repair');
   if (!$EnablePerConversionLimits) $disabledFeatures[] = array('Per conversion limits', 'Enable Per Conversion Limits');
   if (!empty($disabledFeatures)) {
@@ -2973,7 +2994,7 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $listenerIsAsked, $secretLabel, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $secretShown, $olderSecretFile, $topCopyMode, $topCopyOwner, $secretGroup, $topCopyGroup, $secretGroupExpected, $webAccountNumber, $secretPasses, $secretsState, $secretsMode, $secretsOwnership, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $secretOwner, $secretExpected, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $listenerIsAsked, $secretLabel, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $secretShown, $olderSecretFile, $topCopyMode, $topCopyOwner, $secretGroup, $topCopyGroup, $secretGroupExpected, $webAccountNumber, $secretPasses, $secretsState, $secretsMode, $secretsOwnership, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $fileBinary, $probeBinary, $pdfInfoBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $secretOwner, $secretExpected, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -3309,6 +3330,108 @@ function getFiles($pathToFiles) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to say whether a sort code is one this application understands.
+// / Accepts the code. Returns TRUE when it is.
+// / A code is two digits. The first says what to sort by, 1 the name, 2 the size, 3 the time it changed & 4 the type.
+// / The second says which way, 1 ascending & 2 descending.
+// / It is a number rather than a word, because it rides in every link an interface draws & says nothing to anybody else.
+// / Nothing about it is secret, so it is checked against what it may be rather than encrypted.
+function sortCodeIsValid($sortCode) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $CodeIsValid = FALSE;
+  $CodeIsValid = ((is_string($sortCode) or is_int($sortCode)) && preg_match('/^[1-4][12]$/', (string)$sortCode) === 1);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $sortCode);
+  return $CodeIsValid; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to set the order the session's files are listed in.
+// / Accepts the sort code asked for. Returns the code in force.
+// / No code asked for is the default, by name ascending.
+// / A code this application does not understand falls back to the default & says so.
+// / The default is a local, so nothing a request carries can leave the list without an order.
+function verifySort($requestedSort) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $SortToUse = '';
+  $defaultSort = '11';
+  if ((string)$requestedSort === '') $SortToUse = $defaultSort;
+  else if (sortCodeIsValid($requestedSort)) $SortToUse = (string)$requestedSort;
+  else {
+    $SortToUse = $defaultSort;
+    warningEntry('A sort order this application does not understand was asked for, so the files are listed by name.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $defaultSort, $requestedSort);
+  return $SortToUse; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to put the session's files in the order asked for & describe each one.
+// / Accepts the session folder, the names of the files in it & the sort code, in that order.
+// / Returns the names in order & a record for each, keyed by name, in that order.
+// / A record holds Size in bytes, SizeText, Modified as a Unix time, ModifiedText & Type, which is the extension.
+// / The Files pipeline reads the sizes & the times, because it is what touches the session folder.
+// / A file it could not describe keeps its place in the list, sorted as if it were empty & oldest, & shows no size or time.
+// / Ties are broken by name, so the order never depends on the order the folder was read in.
+function arrangeFiles($sessionFolder, $fileNames, $sortCode) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ArrangedFiles = $FileDetails = array();
+  $describedFiles = $sortKeys = array();
+  $descriptionsWereRead = $fileWasDescribed = FALSE;
+  $fileName = $sortField = '';
+  $sortDirection = SORT_ASC;
+  $sortFlags = SORT_NATURAL | SORT_FLAG_CASE;
+  $fileSize = $fileTime = 0;
+  if (function_exists('describeFilesInDirectory')) list ($descriptionsWereRead, $describedFiles) = describeFilesInDirectory($sessionFolder, $fileNames);
+  if (!$descriptionsWereRead && !empty($fileNames)) warningEntry('The files in this session could not be described, so the list shows no sizes or times.');
+  $sortField = sortCodeIsValid($sortCode) ? substr((string)$sortCode, 0, 1) : '1';
+  if (sortCodeIsValid($sortCode) && substr((string)$sortCode, 1, 1) === '2') $sortDirection = SORT_DESC;
+  if ($sortField === '2' or $sortField === '3') $sortFlags = SORT_NUMERIC;
+  if ($sortField === '4') $sortFlags = SORT_STRING | SORT_FLAG_CASE;
+  foreach ((array)$fileNames as $fileName) {
+    $fileWasDescribed = isset($describedFiles[$fileName]);
+    $fileSize = $fileWasDescribed ? (int)$describedFiles[$fileName]['Size'] : 0;
+    $fileTime = $fileWasDescribed ? (int)$describedFiles[$fileName]['Modified'] : 0;
+    $FileDetails[$fileName] = array('Size' => $fileSize, 'SizeText' => $fileWasDescribed ? describeByteCount($fileSize) : '', 'Modified' => $fileTime, 'ModifiedText' => $fileWasDescribed ? date('Y-m-d H:i', $fileTime) : '', 'Type' => getExtension($fileName));
+    $ArrangedFiles[] = $fileName;
+    if ($sortField === '2') $sortKeys[] = $fileSize;
+    else if ($sortField === '3') $sortKeys[] = $fileTime;
+    else if ($sortField === '4') $sortKeys[] = $FileDetails[$fileName]['Type'];
+    else $sortKeys[] = $fileName; }
+  // / The keys are sorted in the direction asked for, & the names ascending within a tie, & the names follow both.
+  if (!empty($ArrangedFiles)) array_multisort($sortKeys, $sortDirection, $sortFlags, $ArrangedFiles, SORT_ASC, SORT_NATURAL | SORT_FLAG_CASE);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $describedFiles, $sortKeys, $descriptionsWereRead, $fileWasDescribed, $fileName, $sortField, $sortDirection, $sortFlags, $fileSize, $fileTime, $sessionFolder, $fileNames, $sortCode);
+  return array($ArrangedFiles, $FileDetails); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write what an Identify operation produced as the reply an interface reads.
+// / Accepts the operation boolean, the errors boolean & what the operation produced, in that order.
+// / Returns one line of JSON holding Complete, Errors, Report & Records, under the key Identify.
+// / Every value a file or a tool supplied is plain text by now, & the encoding still escapes every character that means something in HTML.
+// / An exclamation mark is escaped too, so a title a file carries can never spell the tag an interface reads as an error.
+// / Invalid UTF-8 is substituted rather than refused, because a reply that will not encode would tell the user nothing.
+function encodeIdentifyReply($identifyComplete, $identifyErrors, $identifyResult) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ReplyLine = '';
+  $replyData = array();
+  $encodedReply = '';
+  $replyData = array('Identify' => array('Complete' => (bool)$identifyComplete, 'Errors' => (bool)$identifyErrors,
+    'Report' => (is_array($identifyResult) && isset($identifyResult['Report'])) ? (string)$identifyResult['Report'] : '',
+    'Records' => (is_array($identifyResult) && isset($identifyResult['Records']) && is_array($identifyResult['Records'])) ? array_values($identifyResult['Records']) : array()));
+  $encodedReply = (string)json_encode($replyData, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR);
+  $ReplyLine = str_replace('!', '\u0021', $encodedReply);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $replyData, $encodedReply, $identifyComplete, $identifyErrors, $identifyResult);
+  return $ReplyLine; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to declare every sandbox profile this application uses.
 // / Accepts nothing. Returns an array of profile name to a record describing it.
 // /
@@ -3500,6 +3623,7 @@ function applicationConfigModel() {
       'DefaultLanguage' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default Language'),
       'AllowUserSelectableLanguage' => array('Type' => 'bool', 'Depends' => 'SupportedLanguages', 'Description' => 'Allow User Selectable Language'),
       'AllowUserShare' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User Shareable File Links'),
+      'AllowUserIdentify' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User File Identification'),
       'SupportedConversionTypes' => array('Type' => 'array', 'Default' => 'array(\'Document\', \'Image\', \'Model\', \'Scad\', \'Drawing\', \'SVG\', \'Video\', \'Subtitle\', \'Audio\', \'Archive\', \'Stream\', \'OCR\', \'Ebook\')', 'Depends' => '', 'Description' => 'Allowed Conversion Types'),
       'AllowBootableIsoImage' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow Creation Of Bootable ISO Images'),
       'DeleteThreshold' => array('Type' => 'int', 'Depends' => '', 'Description' => 'File Deletion Age Threshold'),
@@ -4015,10 +4139,10 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
-  $Files = array();
+  $Files = $FileDetails = array();
   $FileCount = 0;
   // / Make sure the $guiType is valid.
   // / A non numeric type cannot be compared against a range, so it is replaced outright.
@@ -4039,7 +4163,8 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / visit apart from a return visit.
   // / getFiles() is a filtered scandir with no side effects, so this costs the upload page
   // / one directory listing & nothing else.
-  $Files = getFiles($ConvertDir);
+  // / The files arrive in the order the user chose, each with its size & the time it changed.
+  list ($Files, $FileDetails) = arrangeFiles($ConvertDir, getFiles($ConvertDir), $SortToUse);
   $FileCount = count($Files);
   // / An interface that renders an empty list has either been handed the wrong directory
   // / or a directory with nothing in it, & those are different faults with different
@@ -5084,7 +5209,7 @@ function askOperator($promptText) {
 // / kernel is never executed, the same guarantee a mismatched Engine gets.
 // / The build cannot write this pin or the Engine's, because it runs inside both. Move them
 // / by hand, with the version each file declares.
-$RequiredKernelVersion = 'v4.1.1';
+$RequiredKernelVersion = 'v4.1.2';
 $KernelFile = dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Kernel'.DIRECTORY_SEPARATOR.'kernel.php';
 $KernelVersionMatch = array();
 if (!is_readable($KernelFile)) {
@@ -5116,7 +5241,7 @@ list ($InstallationIsVerified, $ConfigFile, $Version, $CoreLoaded) = verifyInsta
 if (!$InstallationIsVerified) quickDie('Could not verify installation!', 5);
 
 // / The following code verifies that string inputs to the core are properly sanitized.
-list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload) = verifyInputs();
+list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort) = verifyInputs();
 if (!$InputsAreVerified) quickDie('Could not verify inputs!', 6);
 
 // / The following code verifies enough user information to generate a unique session identifier.
@@ -5285,7 +5410,7 @@ if (!$CommandLineHandled && $UserType === 'web') {
     // / A caller can tell a failure from a success only by reading the body, & a whole page carries the script literal that recognises a core error.
     // / A file operation returns a filename or an error, & never a page.
     // / An upload is known by its files, because Dropzone sends the file & the two tokens & no upload field.
-    if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete'])) {
+    if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete']) && !isset($_POST['filesToIdentify'])) {
 
       // / The following code sets the GUI for the session.
       list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
@@ -5301,6 +5426,11 @@ if (!$CommandLineHandled && $UserType === 'web') {
       list ($LanguageIsSet, $LanguageToUse, $LanguageDir, $LanguageFiles) = verifyLanguage();
       if (!$LanguageIsSet) errorEntry('Could not verify language! Language set to '.$LanguageToUse.'!', 16, TRUE);
       else if ($Verbose) logEntry('Verified language. Language set to '.$LanguageToUse.'.');
+
+      // / The following code sets the order the session's files are listed in.
+      // / It cannot fail, because a code it does not understand falls back to listing by name.
+      $SortToUse = verifySort($Sort);
+      if ($Verbose) logEntry('Verified sort order. Sort set to '.$SortToUse.'.');
 
       // / The following code actually builds & renders the GUI.
       $GUIDisplayed = showGUI($ShowGUI, $ButtonCode);
@@ -5395,6 +5525,30 @@ if (!$CommandLineHandled && $UserType === 'web') {
           if ($ConversionErrors) logEntry('OCR Operation finished with errors.');
           if ($Verbose) logEntry('OCR Operation Complete.'); }
         $BudgetWasReleased = giveBackOperationBudget('OCR'); }
+
+      // / The following code is performed when a user identifies a selection of files.
+      // / Identify is an operation pipeline & is dispatched as OCR is. It changes no file & may write a report.
+      // / Its reply is one line of JSON, because an interface fills in what it shows rather than downloading a file.
+      // / A request when the feature is off is refused in words, as a URL download is, because an API caller deserves to know why.
+      if (isset($_POST['filesToIdentify'])) {
+        if (!$AllowUserIdentify) {
+          warningEntry('An identification was requested & the feature is disabled.');
+          print('Identifying files is disabled on this server.'.$Lol); }
+        else if (!takeOperationBudget('Identify')) print($Alert3.$Lol);
+        else {
+          logEntry('Initiating Identify.');
+          if ($PipelineCoreActive && function_exists('runOperationPipeline')) {
+            list ($IdentifyComplete, $IdentifyErrors, $IdentifyResult) = runOperationPipeline('Identify', $FilesToIdentify, $IdentifyFilename, 'txt', $IdentifyReport);
+            // / The core prints, & the pipeline returned, as contract 6 says.
+            print(encodeIdentifyReply($IdentifyComplete, $IdentifyErrors, $IdentifyResult).$Lol); }
+          else {
+            $IdentifyComplete = FALSE;
+            $IdentifyErrors = TRUE;
+            errorEntry('Identify was requested but no Identify pipeline is installed!', 34006, FALSE); }
+          if (!$IdentifyComplete) errorEntry('Identify Failed!', 31, TRUE);
+          if ($IdentifyErrors) logEntry('Identify finished with errors.');
+          if ($Verbose) logEntry('Identify Complete.'); }
+        $BudgetWasReleased = giveBackOperationBudget('Identify'); }
 
       // / The following code is performed when a user asks the server to fetch a URL.
       // / A URL the operator typed is fetched into their session, & only when an

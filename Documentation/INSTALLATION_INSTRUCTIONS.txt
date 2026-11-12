@@ -249,6 +249,15 @@ Documentation/Build/ffmpeg-build in the installation, & root refuses to run an i
 holding a link, with error 28008. -fp takes that folder away. From v4.0.6 every source build
 works in a folder of its own under /var/tmp & removes it when it ends.
 
+RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.1.2 DROP IN, &
+BEFORE -fp. v4.1.2 adds --User File Identification-- to config.php. -u adds it by itself.
+
+RUN  'sudo php convertCore.php --setup --install-depends --subsystem=Identification'  AFTER
+UPDATING TO v4.1.2 WHERE -v SAYS FAILED BESIDE File OR FFprobe. Identify still hashes every file
+without them, & a note on each file names the tool it went without. It installs file from the
+package manager. FFprobe is made by the FFMPEG build, so where FFMPEG came without it, it runs
+that whole build again. PDFInfo comes in the same package as Poppler Utils.
+
 DO NOT HAND THE INSTALLATION TO THE WEB SERVER USER WITH chown. Root runs that code. A
 command run as root no longer leaves a logfile or a secret the web server user cannot use.
 
@@ -319,10 +328,15 @@ takes the new default & is named, so a deliberate change can be made again. The 
 the update replaced is kept in Last-Installed-Version, & the new release runs its own -fp.
 
 A drop in holds only the files that changed. Unpack it into Application, keeping the config.php
-in use, & run -fp there.
+in use, add any setting the release introduced with --config --repair, & run -fp there.
 
   sudo tar -xzf <drop in> -C /DATA/HRConvert2/Application --exclude='./Resources/config.php' --exclude='./.github'
+  sudo php /DATA/HRConvert2/Application/convertCore.php --config --repair
   sudo php /DATA/HRConvert2/Application/convertCore.php -fp
+
+--config --repair adds each setting config.php lacks, at the default the release ships, & changes
+no setting already there. When nothing is missing it has nothing to do. Until it has run, every
+other command refuses with error 28000, which names the settings that are missing.
 
 Do not update by running the installer again from a new clone. It installs that clone's
 config.php in place of the one in use, which is then kept only in Last-Installed-Version.

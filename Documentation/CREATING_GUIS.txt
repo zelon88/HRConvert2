@@ -370,18 +370,22 @@ This GUI only has access to certain variables. Variables that are available to t
   $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray,
   $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $StreamArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray,
   $SubtitleOutputArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $GuiCSSDir,
-  $StreamOutputArray, $SCADArray, $SCADOutputArray, $SVGInputArray, $SVGOutputArray, $ImageArray, $AllowUserSelectableColor, $AllowUserSelectableGui,
+  $StreamOutputArray, $SCADArray, $SCADOutputArray, $SVGInputArray, $SVGOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui,
   $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $LanguageFlagFile,
   $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural,
   $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir,
   $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath,
   $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed,
   $GuiJSDir, $GuiImageDir, $EbookInputArray, $EbookOutputArray, $BootableIsoArray, $AllowBootableIsoImage, $ShowFiles, $FileListOnly, $NoGui,
-  $EnableMemoryProtection, $Verbose
-This list is the whole contract & it is the list buildGUI() declares. A GUI that reads
+  $EnableMemoryProtection, $Verbose, $LanguageBaselineFile, $ImageOutputArray, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL,
+  $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails
+This list is the whole contract & it is the list buildGUI() declares.
+Until v4.1.2 it named $ImageArray twice & left out seven that buildGUI() already declared. A GUI that reads
 anything not named here is reading a variable that does not exist in its scope, which is a
 PHP warning printed into the page & an empty string where the value should have been.
 $ShowFiles, $FileListOnly & $NoGui carry the request state the core has already resolved.
+$SortToUse is the order the file list is in, & $FileDetails what the core read about each file
+while it put them in that order. See About Identify & Sorting below.
 An interface reads those rather than reaching into $_GET or $_POST for itself. Reading a
 superglobal directly defines API surface, which is not an interface's to define, & a second
 interface reading a different parameter is how two GUIs stop agreeing about what the
@@ -442,6 +446,56 @@ inviting them to press it, so gate such a control on $FileCount.
 The GUI must iterate through this array, determine what format it is, & display the correct options.
 When submitting a file as input, only submit its name with extension. HRConvert2 will determine the path.
 When redirecting the user to a download you must send them to the proper filename and hosted file path.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Identify & Sorting--
+
+$Files arrives in the order $SortToUse names, so an interface draws it as it is.
+$SortToUse is two digits, what the list is sorted by & then the direction, as ABOUT_REST_API.txt
+describes under sort. Every link & form an interface draws carries it as sort=, or a refresh, a
+change of language & every operation that draws the list again put the files back in name order.
+A sort control asks for the page again with a new code. The included GUIs draw one for each of
+the four, & pressing the one in force again turns its direction around.
+
+$FileDetails holds what the core read about each file when it put the list in order, keyed by
+the name in $Files.
+  Size            The size in bytes.
+  SizeText        The size in words, such as 1.2 KB.
+  Modified        When it last changed, as a timestamp.
+  ModifiedText    When it last changed, as YYYY-MM-DD HH:MM.
+  Type            Its extension.
+A row shows these rather than reading the file again.
+A size, a date & a hash read left to right in every language, so isolate each one, with a bdi
+element or unicode-bidi, or a language read from right to left reorders its parts.
+
+$AllowUserIdentify is whether --User File Identification-- is on. An interface draws no Identify
+control while it is off, because the core refuses every request & says so in words.
+
+The script library carries Identify for any interface that wants it. The reply is one line of
+JSON, & HRC2.readIdentifyReply(replyText) looks for it rather than assuming where it is, because a
+PHP warning would come first.
+  HRC2.bindIdentify(spec), One file's panel. Opening it identifies the file the first time.
+    openId        The control that opens the panel.
+    submitId      The button that identifies the file again, with a report when one is asked for.
+    suffix        What the panel's elements are numbered with. The library uses
+                  loadingCommandDiv, victoryCommandDiv & failureCommandDiv with it, as a
+                  conversion does, & writes the summary into identifySummary with it.
+    fileName      The file.
+    reportId      The box that asks for a report.
+    nameId        The report's name, which is greyed out unless the box is ticked.
+  HRC2.bindIdentifyAll(spec), Every file the list shows. The same keys, with fileNames in
+    place of fileName & no openId. The files are read when it is pressed.
+  HRC2.configure({ identifyText: { yes, no, unknown, failure } }), The words it writes. They come
+    from the language pack, as every word a user sees does.
+A panel is any element with data-identify-file, naming its file, & data-identify-suffix.
+The library writes into each element inside it with data-identify-field, naming one of Size,
+Modified, Description, MimeType, Charset, ExtensionMatches, SHA256, SHA1, MD5, Details & Notes.
+Details & Notes are one line for each entry, so give them white-space: pre-line.
+Every value is written with textContent, because a record repeats what a file says about itself.
+Never write one as markup.
+A list drawn again keeps what was read. The library holds every record by its file's name &
+writes it into the panels the new list draws.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

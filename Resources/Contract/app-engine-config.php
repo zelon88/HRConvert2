@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.1.
+// / v4.1.2.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -91,10 +91,12 @@ $EngineAcceptedPipelines = array(
   'Ebook' => 'v4.0.8',
   'Audio' => 'v4.0.8',
   'Archive' => 'v4.1.1',
+  // / The second operation pipeline. It reads every file & changes none.
+  'Identify' => 'v4.1.2',
   // / Scanner pipelines. They declare no formats & are chosen by name.
   'ClamAV' => 'v4.0.8',
   // / The first pipeline of kind file. Operations that do not care what is in a file.
-  'Files' => 'v4.0.8',
+  'Files' => 'v4.1.2',
   'ScanCore' => 'v4.0.8');
 
 // / The shared modules a pipeline may load & the exact version each must report.

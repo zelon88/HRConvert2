@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v3.9.9
+- **Version** v4.0.8
 - **Kind** scanner
 - **Family** ScanCore
 - **Entry point** scanWithScanCore

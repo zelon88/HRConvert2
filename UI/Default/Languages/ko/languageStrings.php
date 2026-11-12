@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -336,6 +336,52 @@ $Gui2Text83 = '재생목록 원본 URL. 상대 경로를 사용할 때만 필요
 $Gui2Text84 = 'URL에서 파일 다운로드';
 // / 'Fetch'
 $Gui2Text85 = '가져오기';
+// / 'Identify'
+$Gui2Text86 = '식별';
+// / 'Close Identify Options'
+$Gui2Text87 = '식별 옵션 닫기';
+// / 'Identify This File'
+$Gui2Text88 = '이 파일 식별';
+// / 'Size: '
+$Gui2Text89 = '크기: ';
+// / 'Modified: '
+$Gui2Text90 = '수정 날짜: ';
+// / 'Type: '
+$Gui2Text91 = '형식: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'MIME 형식: ';
+// / 'Character Set: '
+$Gui2Text93 = '문자 집합: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = '확장자와 내용 일치: ';
+// / 'Details: '
+$Gui2Text95 = '세부 정보: ';
+// / 'Notes: '
+$Gui2Text96 = '참고: ';
+// / 'Save report as file'
+$Gui2Text97 = '보고서를 파일로 저장';
+// / 'Identify All Files'
+$Gui2Text98 = '모든 파일 식별';
+// / 'Identify All'
+$Gui2Text99 = '모두 식별';
+// / 'Yes'
+$Gui2Text100 = '예';
+// / 'No'
+$Gui2Text101 = '아니요';
+// / 'Unknown'
+$Gui2Text102 = '알 수 없음';
+// / 'Cannot identify this file!'
+$Gui2Text103 = '이 파일을 식별할 수 없습니다!';
+// / 'Sort By: '
+$Gui2Text104 = '정렬 기준: ';
+// / 'Name'
+$Gui2Text105 = '이름';
+// / 'Size'
+$Gui2Text106 = '크기';
+// / 'Date'
+$Gui2Text107 = '날짜';
+// / 'Type'
+$Gui2Text108 = '형식';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

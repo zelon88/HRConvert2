@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.1.2.
 // / The Pipeline Core, one of the Engine's cores.
 // / It verifies, describes & dispatches the pipelines under Resources/Pipelines, each at the exact version the application pins.
 // / Which pipelines are accepted is the application's decision, read from its contract, so this file names none of them.
@@ -37,7 +37,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v4.0.8';
+$PipelineCoreVersion = 'v4.1.2';
 // / -----------------------------------------------------------------------------------
 
 
@@ -223,7 +223,9 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
     // / This rule was written when every pipeline converted something. It refused both
     // / scanner pipelines silently, so they were pinned, installed, syntactically valid &
     // / never enumerated, & the version report counted zero of them without saying why.
-  else if (!in_array($declaredKind, array('scanner', 'file'), TRUE) && (count($declaredCapabilities['Input']) === 0 or count($declaredCapabilities['Output']) === 0)) warningEntry('The '.$pipelineFolderName.' pipeline declared an empty capability list & was refused.');
+    // / An operation may read every file, as Identify does, & an empty input list is how it says so.
+    // / It must still say what it writes, so an operation that declares nothing at all is refused as a conversion is.
+  else if (!in_array($declaredKind, array('scanner', 'file'), TRUE) && (count($declaredCapabilities['Output']) === 0 or ($declaredKind !== 'operation' && count($declaredCapabilities['Input']) === 0))) warningEntry('The '.$pipelineFolderName.' pipeline declared an empty capability list & was refused.');
   else {
     // / Extensions are compared lowercased everywhere else, so they are lowercased here once.
     $inputExtensions = array_map('strtolower', $declaredCapabilities['Input']);
@@ -770,18 +772,19 @@ function runVirusScan($pathsToScan, $requestedScanner) {
 // / -----------------------------------------------------------------------------------
 // / A function to dispatch an operation to the installed pipeline of the family named.
 // / Accepts the family, the selected files, the requested filename, the requested extension
-// / & the method, in that order. Returns an operation boolean, an errors boolean & the list of
-// / filenames the operation produced, in that order.
-// / The filename list is returned rather than printed, because neither a pipeline nor this function prints. See contract 6.
+// / & the method, in that order. Returns an operation boolean, an errors boolean & what the
+// / operation produced, in that order.
+// / What an operation produced is its own shape. OCR returns the filenames it wrote, & Identify returns its records & the name of any report.
+// / It is returned rather than printed, because neither a pipeline nor this function prints. See contract 6.
 // / This is not runConversion().
-// / OCR takes a selection of files, chooses a route per file & reports one verdict for the batch, which six values cannot hold.
+// / An operation takes a selection of files, chooses a route per file & reports one verdict for the batch, which six values cannot hold.
 // / Fallback across implementations is not attempted, because a half completed batch has already written files & spent budget.
 // / The first installed pipeline of the family is the one that runs, & the family is the caller's to name.
 function runOperationPipeline($operationFamily, $selectedFiles, $userFilename, $userExtension, $operationMethod) {
   // / Set variables.
   global $Pipelines, $Verbose, $EnableMemoryProtection;
   $OperationSuccessful = $OperationErrors = FALSE;
-  $OutputFilenames = array();
+  $OperationOutput = array();
   $pipelineIsReady = FALSE;
   $entryPointName = $chosenFolder = '';
   if (is_array($Pipelines)) {
@@ -798,12 +801,12 @@ function runOperationPipeline($operationFamily, $selectedFiles, $userFilename, $
     if (!$pipelineIsReady) $OperationErrors = TRUE;
     else {
       if ($Verbose) logEntry('Dispatching an '.$operationFamily.' operation to the '.$chosenFolder.' pipeline.');
-      list ($OperationSuccessful, $OperationErrors, $OutputFilenames) = $entryPointName($selectedFiles, $userFilename, $userExtension, $operationMethod); } }
+      list ($OperationSuccessful, $OperationErrors, $OperationOutput) = $entryPointName($selectedFiles, $userFilename, $userExtension, $operationMethod); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $selectedFiles is not purged, because the caller still holds the selection.
-  // / $OutputFilenames is not purged, because it is a return value.
+  // / $OperationOutput is not purged, because it is a return value.
   purgeSensitiveMemory($EnableMemoryProtection, $operationFamily, $folderName, $pipelineRecord, $selectedFiles, $pipelineIsReady, $entryPointName, $chosenFolder, $userFilename, $userExtension, $operationMethod);
-  return array($OperationSuccessful, $OperationErrors, $OutputFilenames); }
+  return array($OperationSuccessful, $OperationErrors, $OperationOutput); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

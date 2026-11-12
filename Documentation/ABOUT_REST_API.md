@@ -64,6 +64,7 @@ GET inputs modify structural application flags. While some can be specified via 
 | `gui` | UI Interface Selector | Selects the active UI theme. Theme must be installed to the UI folder and defined inside `config.php` (can be enabled/disabled via config). |
 | `language` | Localization Engine | Sets the system language. Input must match an installed code inside the `--Supported Languages--` section of `config.php`. Uses **ISO 639-1** two-letter codes (Except Aramaic which utilizes **ISO 639-3** codes `'aii'` & `'arc'`). |
 | `color` | Visual Palette Selector | Selects active UI color scheme. Input must map to a supported color scheme configuration defined inside `config.php`. |
+| `sort` | File List Order | Two digits. The first is what the list is sorted by, `1` name, `2` size, `3` the time a file changed & `4` its type. The second is the direction, `1` ascending & `2` descending. `11` is the default. Ties are listed by name. Anything else lists by name & is logged as a warning. Every link an interface draws carries it. **GET only.** |
 
 ---
 
@@ -171,3 +172,17 @@ POST inputs are organized into distinct functional operational blocks based on p
 * `streamBaseURL` *(String)*
   * Used during Stream Conversions to resolve relative playlist entries.
   * *Value*: The base address. It is rebuilt from its parsed parts at the point of use.
+
+### 🔎 J. File Identification Operations
+* `filesToIdentify` *(String or JSON Array)*
+  * Identifies files, and is what triggers it. Identifying changes no file. Each one is hashed, and the tools installed say what it holds.
+  * *Value*: A target name or string list of names to use for input files. A name the session does not hold is skipped and logged.
+  * Requires `--User File Identification--` in `config.php`. When it is off, the reply is the sentence *Identifying files is disabled on this server.*
+* `identifyreport` *(String: '0' | '1')*
+  * *Value = '1'*: Also writes a text report of every file identified into the session.
+  * Anything else writes no report, and the reply alone describes the files.
+* `identifyfilename` *(String)*
+  * The report's name, without its extension. A report is always `txt`. `User_Identify_Report` is used when it is empty.
+  * A name already in the session is given the next free one, such as `name_1`, & the reply names the file that was written.
+
+> ℹ️ The reply is one line of JSON after the doctype line that opens every reply: `{"Identify":{"Complete":true,"Errors":false,"Report":"","Records":[...]}}`. `Complete` is false when no file was identified, or a report was asked for and not written, and error 31 follows the JSON. `Errors` is true when anything was skipped or failed. `Report` names the report written, or is empty. Each record holds `Name`, `Size`, `SizeText`, `Modified`, `Description`, `MimeType`, `Charset`, `ExtensionMatches` (`yes`, `no` or `unknown`), `ExpectedExtensions`, `SHA256`, `SHA1`, `MD5`, `Details` and `Notes`, and where they apply `Text`, `Image`, `Media`, `Pdf` and `Archive`. `ABOUT_REST_API.txt` describes each one. Every character that means something in HTML is escaped, and so is the exclamation mark, so nothing a file carries can spell the error tag.

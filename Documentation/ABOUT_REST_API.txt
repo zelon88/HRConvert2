@@ -111,6 +111,19 @@ The following is a list of supported GET inputs with description & supported val
       Supported colors can be added/removed in config.php.
       Set this input to a supported color scheme defined in config.php.
       This input can also be specified by POST request, but GET will always take precedence.
+
+  sort
+      GUI Operation
+      The order the file list is drawn in, as two digits. The first is what it is sorted by,
+      & the second is the direction.
+      The first digit is 1 for the name, 2 for the size, 3 for the time a file changed & 4 for
+      its type, which is its extension. The second is 1 for ascending & 2 for descending.
+      11 is the default, & lists by name from A to Z. 22 lists the largest first.
+      Files that tie are listed by name, in natural order, so file2 comes before file10.
+      A value that is not two such digits lists by name, & is logged as a warning.
+      Every link & form an interface draws carries it, so the order survives a refresh, a
+      change of language & every operation that draws the list again.
+      Reachable through GET only.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -257,4 +270,49 @@ The following is a list of supported POST inputs, organized into sections based 
           String.
           This input is used during Stream Conversions to resolve relative playlist entries.
           It is read as an address & rebuilt from its parsed parts at the point of use.
+
+  File Identification Operations
+      filesToIdentify
+          String or JSON Array.
+          This input is used during Identify Operations & is what triggers one.
+          Set this input to a name or list of names to use for input files.
+          Identifying changes no file. Each one is hashed, & the tools installed say what it holds.
+          A name the session does not hold is skipped & logged, & the rest are still identified.
+          This name is camel case. The core reads $_POST['filesToIdentify'] & nothing else.
+          Requires --User File Identification-- in config.php. When it is off, the reply is the
+          sentence Identifying files is disabled on this server.
+      identifyreport
+          String, 0 or 1.
+          This input is used during Identify Operations.
+          Set this input to 1 to write a report of every file identified into the session.
+          Anything else writes no report, & the reply alone describes the files.
+      identifyfilename
+          String.
+          This input is used during Identify Operations when a report is written.
+          Set this input to a name for the report, without its extension. A report is always txt.
+          User_Identify_Report is used when it is empty.
+          A name already in the session is given the next free one, such as name_1, & the
+          reply names the file that was written.
+
+      The reply is one line of JSON, after the doctype line that opens every reply.
+        {"Identify":{"Complete":true,"Errors":false,"Report":"","Records":[...]}}
+      Complete is false when no file was identified, or when a report was asked for & was not
+      written, & error 31 follows the JSON.
+      Errors is true when anything was skipped or failed, even when Complete is true.
+      Report is the name of the report that was written, or empty.
+      Records holds one object for every file identified, with these keys.
+        Name                The file.
+        Size, SizeText      Its size in bytes, & in words such as 1.2 KB.
+        Modified            When it last changed, as YYYY-MM-DD HH:MM in the server's time.
+        Description         What file says it holds, or empty when file could not be asked.
+        MimeType, Charset   Its MIME type & character set, from file.
+        ExtensionMatches    yes, no or unknown. Whether its extension is one file expects.
+        ExpectedExtensions  The extensions file expects for what it holds.
+        SHA256, SHA1, MD5   Its hashes, in lower case hexadecimal.
+        Details             A list of sentences describing what the tools read.
+        Notes               A list of sentences about anything unusual, & any tool not asked.
+        Text, Image, Media, Pdf, Archive
+                            Present where they apply. What the tool for that kind of file read.
+      Every character that means something in HTML is escaped, & so is the exclamation mark,
+      so nothing a file carries can spell the tag an interface reads as an error.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

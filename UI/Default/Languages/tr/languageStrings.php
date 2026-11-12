@@ -39,7 +39,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -353,6 +353,52 @@ $Gui2Text83 = 'Oynatma listesinin kaynak URL adresi, yalnızca göreli yollar ku
 $Gui2Text84 = 'Bir URL adresinden dosya indir';
 // / 'Fetch'
 $Gui2Text85 = 'Getir';
+// / 'Identify'
+$Gui2Text86 = 'Tanımla';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Tanımlama Seçeneklerini Kapat';
+// / 'Identify This File'
+$Gui2Text88 = 'Bu Dosyayı Tanımla';
+// / 'Size: '
+$Gui2Text89 = 'Boyut: ';
+// / 'Modified: '
+$Gui2Text90 = 'Değiştirilme: ';
+// / 'Type: '
+$Gui2Text91 = 'Tür: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'MIME Türü: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Karakter Kümesi: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'Uzantı İçerikle Eşleşiyor: ';
+// / 'Details: '
+$Gui2Text95 = 'Ayrıntılar: ';
+// / 'Notes: '
+$Gui2Text96 = 'Notlar: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Raporu dosya olarak kaydet';
+// / 'Identify All Files'
+$Gui2Text98 = 'Tüm Dosyaları Tanımla';
+// / 'Identify All'
+$Gui2Text99 = 'Tümünü Tanımla';
+// / 'Yes'
+$Gui2Text100 = 'Evet';
+// / 'No'
+$Gui2Text101 = 'Hayır';
+// / 'Unknown'
+$Gui2Text102 = 'Bilinmiyor';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Bu dosya tanımlanamıyor.';
+// / 'Sort By: '
+$Gui2Text104 = 'Sıralama Ölçütü: ';
+// / 'Name'
+$Gui2Text105 = 'Ad';
+// / 'Size'
+$Gui2Text106 = 'Boyut';
+// / 'Date'
+$Gui2Text107 = 'Tarih';
+// / 'Type'
+$Gui2Text108 = 'Tür';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

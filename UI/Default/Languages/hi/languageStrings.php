@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -340,6 +340,52 @@ $Gui2Text83 = 'प्लेलिस्ट का स्रोत URL, केव
 $Gui2Text84 = 'URL से फ़ाइल डाउनलोड करें';
 // / 'Fetch'
 $Gui2Text85 = 'लाएँ';
+// / 'Identify'
+$Gui2Text86 = 'पहचानें';
+// / 'Close Identify Options'
+$Gui2Text87 = 'पहचान विकल्प बंद करें';
+// / 'Identify This File'
+$Gui2Text88 = 'इस फ़ाइल को पहचानें';
+// / 'Size: '
+$Gui2Text89 = 'आकार: ';
+// / 'Modified: '
+$Gui2Text90 = 'संशोधित: ';
+// / 'Type: '
+$Gui2Text91 = 'प्रकार: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'MIME प्रकार: ';
+// / 'Character Set: '
+$Gui2Text93 = 'वर्ण सेट: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'एक्सटेंशन सामग्री से मेल खाता है: ';
+// / 'Details: '
+$Gui2Text95 = 'विवरण: ';
+// / 'Notes: '
+$Gui2Text96 = 'टिप्पणियाँ: ';
+// / 'Save report as file'
+$Gui2Text97 = 'रिपोर्ट को फ़ाइल के रूप में सहेजें';
+// / 'Identify All Files'
+$Gui2Text98 = 'सभी फ़ाइलों को पहचानें';
+// / 'Identify All'
+$Gui2Text99 = 'सभी पहचानें';
+// / 'Yes'
+$Gui2Text100 = 'हाँ';
+// / 'No'
+$Gui2Text101 = 'नहीं';
+// / 'Unknown'
+$Gui2Text102 = 'अज्ञात';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'इस फ़ाइल को पहचाना नहीं जा सकता!';
+// / 'Sort By: '
+$Gui2Text104 = 'इसके अनुसार क्रमबद्ध करें: ';
+// / 'Name'
+$Gui2Text105 = 'नाम';
+// / 'Size'
+$Gui2Text106 = 'आकार';
+// / 'Date'
+$Gui2Text107 = 'दिनांक';
+// / 'Type'
+$Gui2Text108 = 'प्रकार';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

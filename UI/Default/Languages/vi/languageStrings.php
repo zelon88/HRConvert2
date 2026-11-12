@@ -38,7 +38,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -349,6 +349,52 @@ $Gui2Text83 = 'URL nguồn của danh sách phát, chỉ cần khi danh sách d�
 $Gui2Text84 = 'Tải tệp từ một URL';
 // / 'Fetch'
 $Gui2Text85 = 'Lấy về';
+// / 'Identify'
+$Gui2Text86 = 'Nhận Dạng';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Đóng Tùy Chọn Nhận Dạng';
+// / 'Identify This File'
+$Gui2Text88 = 'Nhận Dạng Tệp Này';
+// / 'Size: '
+$Gui2Text89 = 'Kích thước: ';
+// / 'Modified: '
+$Gui2Text90 = 'Sửa đổi: ';
+// / 'Type: '
+$Gui2Text91 = 'Loại: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'Kiểu MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Bộ ký tự: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'Phần mở rộng khớp nội dung: ';
+// / 'Details: '
+$Gui2Text95 = 'Chi tiết: ';
+// / 'Notes: '
+$Gui2Text96 = 'Ghi chú: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Lưu báo cáo thành tệp';
+// / 'Identify All Files'
+$Gui2Text98 = 'Nhận Dạng Tất Cả Tệp';
+// / 'Identify All'
+$Gui2Text99 = 'Nhận Dạng Tất Cả';
+// / 'Yes'
+$Gui2Text100 = 'Có';
+// / 'No'
+$Gui2Text101 = 'Không';
+// / 'Unknown'
+$Gui2Text102 = 'Không rõ';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Không thể nhận dạng tệp này.';
+// / 'Sort By: '
+$Gui2Text104 = 'Sắp xếp theo: ';
+// / 'Name'
+$Gui2Text105 = 'Tên';
+// / 'Size'
+$Gui2Text106 = 'Kích thước';
+// / 'Date'
+$Gui2Text107 = 'Ngày';
+// / 'Type'
+$Gui2Text108 = 'Loại';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

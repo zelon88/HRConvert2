@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v3.8.8
+- **Version** v4.0.8
 - **Kind** conversion
 - **Family** Document
 - **Entry point** convertDocuments

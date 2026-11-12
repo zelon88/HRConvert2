@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -341,6 +341,52 @@ $Gui2Text83 = 'نشانی مبدأ فهرست پخش، تنها در صورت ا
 $Gui2Text84 = 'دانلود یک فایل از نشانی اینترنتی';
 // / 'Fetch'
 $Gui2Text85 = 'دریافت';
+// / 'Identify'
+$Gui2Text86 = 'شناسایی';
+// / 'Close Identify Options'
+$Gui2Text87 = 'بستن گزینه‌های شناسایی';
+// / 'Identify This File'
+$Gui2Text88 = 'شناسایی این فایل';
+// / 'Size: '
+$Gui2Text89 = 'اندازه: ';
+// / 'Modified: '
+$Gui2Text90 = 'تاریخ تغییر: ';
+// / 'Type: '
+$Gui2Text91 = 'نوع: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'نوع MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'مجموعه نویسه: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'پسوند با محتوا مطابقت دارد: ';
+// / 'Details: '
+$Gui2Text95 = 'جزئیات: ';
+// / 'Notes: '
+$Gui2Text96 = 'یادداشت‌ها: ';
+// / 'Save report as file'
+$Gui2Text97 = 'ذخیره گزارش به‌صورت فایل';
+// / 'Identify All Files'
+$Gui2Text98 = 'شناسایی همه فایل‌ها';
+// / 'Identify All'
+$Gui2Text99 = 'شناسایی همه';
+// / 'Yes'
+$Gui2Text100 = 'بله';
+// / 'No'
+$Gui2Text101 = 'خیر';
+// / 'Unknown'
+$Gui2Text102 = 'نامشخص';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'امکان شناسایی این فایل وجود ندارد!';
+// / 'Sort By: '
+$Gui2Text104 = 'مرتب‌سازی بر اساس: ';
+// / 'Name'
+$Gui2Text105 = 'نام';
+// / 'Size'
+$Gui2Text106 = 'اندازه';
+// / 'Date'
+$Gui2Text107 = 'تاریخ';
+// / 'Type'
+$Gui2Text108 = 'نوع';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

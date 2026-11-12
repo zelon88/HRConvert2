@@ -234,10 +234,19 @@ RAISE $RequiredPipelineCoreVersion WHEN THE PIPELINE CORE ITSELF CHANGES, & FOR 
 A pipeline added, removed or raised is a line in the contract. Until v3.9.9 the pin list was
 inside the Pipeline Core, so a pipeline moving meant a new Pipeline Core & a new pin here.
 
-RAISE $RequiredSetupCoreVersion WHENEVER $RequiredConfigVersion IS RAISED.
-Setup Core holds the model of every setting config.php declares. Forgetting does not break
-anything immediately, which is the point. A setting the model does not know is reported as
-unaccounted, can still be edited by hand, & simply cannot be reset.
+A SETTING ADDED TO config.php IS ADDED IN FOUR PLACES.
+config.php, Resources/Contract/config-template.php, applicationConfigModel() in convertCore.php,
+& the list verifyConfigVersion() in convertCore.php checks for. The template holds every default.
+The model holds what a configuration cannot say about itself, a type, a dependency between
+settings & a section an operator owns. The Engine finds both through $EngineConfigModelProvider
+& $EngineConfigTemplate in Resources/Contract/app-engine-config.php.
+Forgetting the model does not break anything immediately, which is the point. A setting the
+model does not know is reported as unaccounted, can still be edited by hand, & simply cannot
+be reset. Forgetting the list stops the check covering that setting.
+An installation updated by a drop in runs  --config --repair  before -fp, which adds each new
+setting at its default. Until then every other command refuses with error 28000.
+Until v4.1.2 this said to raise $RequiredSetupCoreVersion whenever $RequiredConfigVersion was
+raised. The model left Setup Core for convertCore.php at v3.9.3, so raising it changed nothing.
 
 RAISING $RequiredSecretVersion ROTATES THE SECRET & INVALIDATES EVERY SESSION IN PROGRESS.
 Do it deliberately, not as part of a routine version bump.

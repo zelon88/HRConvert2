@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.1.2.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -41,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.0.8';
+$EngineVersion = 'v4.1.2';
 // / -----------------------------------------------------------------------------------
 
 
@@ -1365,7 +1365,7 @@ function replyToManagerMessage($socketConnection, $replyPayload, $keyPurpose) {
 // / Every expensive operation takes a budget, not only conversion.
 // / Tesseract on a large PDF, 7-Zip on a large folder & a ClamAV scan are each as heavy as a conversion.
 // / An operation that takes nothing also counts for nothing, & a saturated host would report itself idle.
-// / All four operations take the same $DefaultConversionCost & $DefaultExpectedRuntime.
+// / Every operation takes the same $DefaultConversionCost & $DefaultExpectedRuntime, however many an application has.
 // / No measurement supports weighting them separately, & the per conversion limit table already gives finer control.
 // / It fails open exactly as requestConversionBudget() does, which refuses instead when resource awareness is required.
 function takeOperationBudget($operationName) {
@@ -4738,7 +4738,7 @@ function runEngineListenerCommand($cliCommand, $cliTarget, $cliConfirmed, $cliWh
 // / -u is root only too, & the application dispatches it, because it loads Setup Core for it.
 function runEngineRootCommand($cliCommand, $cliTarget) {
   // / Set variables.
-  global $Lol, $EnableMemoryProtection;
+  global $Lol, $InstLoc, $ApplicationLoc, $EnableMemoryProtection;
   $CommandStatus = 0;
   $cliPermissionsFixed = $cliManagerAvailable = $cliPassCompleted = FALSE;
   $cliPathsCorrected = 0;
@@ -4765,6 +4765,16 @@ function runEngineRootCommand($cliCommand, $cliTarget) {
         print($Lol.'Environment Manager pass complete. Findings, before repair:'.$Lol);
         showEnvironmentFindings($cliPassFindings, FALSE);
         print($Lol); } } }
+  // / -fp installs the running tree when it is not the installation, & the installer is Setup Core's.
+  // / A drop-in carries Setup Core only when its release changed it, so one unpacked over the web root by mistake can bring an Engine & no Setup Core.
+  // / -fp then had no installer to refuse it, corrected a tree that is not the installation & reported success, while the installation ran the release before.
+  // / A tree without Setup Core is never a whole release, so -fp from one is refused here, with the direction a tree without an Engine is given.
+  else if (($cliCommand === '-fp' or $cliCommand === '--fix-permissions') && (string)$ApplicationLoc !== '' && (string)@realpath((string)$InstLoc) !== (string)@realpath((string)$ApplicationLoc) && !is_file(dirname(__FILE__).DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'setupCore.php')) {
+    warningEntry('The command '.$cliCommand.' was refused because '.$InstLoc.' holds no Setup Core & is not the installation.');
+    $CommandStatus = 1;
+    print($Lol.'This folder holds no Setup Core, so it is not a whole release & cannot be installed.'.$Lol);
+    if (is_dir((string)$ApplicationLoc)) print('The installation is '.$ApplicationLoc.'. Unpack a drop-in into '.$ApplicationLoc.' & run -fp there.'.$Lol.$Lol);
+    else print('Install from a whole release.'.$Lol.$Lol); }
   // / Handle the -fp or --fix-permissions arguments.
   // / The repair is the application's & is reached through the provider it declares, $EngineRepairProvider.
   // / HRConvert2 declares fixManagedPermissions.

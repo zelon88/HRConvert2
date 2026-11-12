@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -344,6 +344,52 @@ $Gui2Text83 = 'عنوان URL لمصدر قائمة التشغيل، مطلوب 
 $Gui2Text84 = 'تنزيل ملف من عنوان URL';
 // / 'Fetch'
 $Gui2Text85 = 'جلب';
+// / 'Identify'
+$Gui2Text86 = 'تعرّف';
+// / 'Close Identify Options'
+$Gui2Text87 = 'أغلق خيارات التعرّف';
+// / 'Identify This File'
+$Gui2Text88 = 'تعرّف على هذا الملف';
+// / 'Size: '
+$Gui2Text89 = 'الحجم: ';
+// / 'Modified: '
+$Gui2Text90 = 'آخر تعديل: ';
+// / 'Type: '
+$Gui2Text91 = 'النوع: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'نوع MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'مجموعة المحارف: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'الامتداد يطابق المحتوى: ';
+// / 'Details: '
+$Gui2Text95 = 'التفاصيل: ';
+// / 'Notes: '
+$Gui2Text96 = 'ملاحظات: ';
+// / 'Save report as file'
+$Gui2Text97 = 'حفظ التقرير كملف';
+// / 'Identify All Files'
+$Gui2Text98 = 'تعرّف على جميع الملفات';
+// / 'Identify All'
+$Gui2Text99 = 'تعرّف على الكل';
+// / 'Yes'
+$Gui2Text100 = 'نعم';
+// / 'No'
+$Gui2Text101 = 'لا';
+// / 'Unknown'
+$Gui2Text102 = 'غير معروف';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'لا يمكن التعرّف على هذا الملف!';
+// / 'Sort By: '
+$Gui2Text104 = 'فرز حسب: ';
+// / 'Name'
+$Gui2Text105 = 'الاسم';
+// / 'Size'
+$Gui2Text106 = 'الحجم';
+// / 'Date'
+$Gui2Text107 = 'التاريخ';
+// / 'Type'
+$Gui2Text108 = 'النوع';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

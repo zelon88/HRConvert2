@@ -31,7 +31,7 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 --Vocabulary--
 
 A PIPELINE is the complete path a file takes through the core during one request.
-There are several. Upload, Delete, Download, Conversion, Archive, OCR, Stream & Scan.
+There are several. Upload, Delete, Download, Conversion, Archive, OCR, Identify, Stream & Scan.
 
 A BUILTIN PIPELINE is one the core owns & that no installation may replace.
 Upload, Delete & Download are builtin. They are guaranteed identical on every install.
@@ -43,7 +43,7 @@ delete & a file listing is done by the Files pipeline, a pipeline of the file ki
 decisions stay in the core & only the filesystem work is dispatched.
 
 A DETACHABLE PIPELINE is a pipeline supplied as a versioned component folder.
-Conversion, Archive, OCR, Stream & Scan are detachable.
+Conversion, Archive, OCR, Identify, Stream & Scan are detachable.
 These are the pipelines the community is invited to write, extend & replace.
 
 A PIPELINE FAMILY is the name a detachable pipeline converts under. Document, Image, SVG,
@@ -67,13 +67,15 @@ on demand by the application. A converter owns neither & is dispatched to.
 See ABOUT_COMPONENTS.txt for what a Core is.
 
 A CONVERSION PIPELINE takes one file, returns the six value contract, & is dispatched by
-convert(). Every family except OCR is one of these.
+convert(). Every family is one of these except OCR & Identify, which are operations, & ClamAV,
+ScanCore & Files, which are the scanner & file kinds.
 
 AN OPERATION PIPELINE takes a SELECTION of files, decides its own route per file, returns
-its own shape, & is dispatched from wherever the core handles that operation. OCR is the
-first & currently the only one. It reports one verdict for a whole batch plus the list of
-filenames it produced, & the six value conversion contract has nowhere to put either. Both kinds are verified, pinned,
-ordered & loaded identically. ONLY DISPATCH DIFFERS.
+its own shape, & is dispatched from wherever the core handles that operation. OCR was the
+first. It reports one verdict for a whole batch plus the list of filenames it produced, & the
+six value conversion contract has nowhere to put either. Identify is the second, from v4.1.2.
+It changes no file, & reports a record of every file it read & the name of any report it wrote.
+Both kinds are verified, pinned, ordered & loaded identically. ONLY DISPATCH DIFFERS.
 
 A SHARED MODULE is a file two or more pipelines both need & neither can own. It is not a
 pipeline, converts nothing, & is never dispatched to. It is version pinned by Pipeline Core
@@ -181,6 +183,9 @@ Every administrator facing setting lives in config.php & is owned by Setup Core.
   $PipelineRequestFields Array. Request fields this pipeline reads. Required, may be empty.
   $Capabilities          Array with Input & Output keys, each an array of extensions. Required.
                          The CEILING. Detection may narrow it & may never exceed it.
+                         An operation that reads any file leaves Input empty, as Identify does.
+                         Its Output still names what it writes. A conversion that leaves either
+                         one empty is refused with a warning.
                          Read & write are judged separately, because reading a format is
                          not writing it. Assimp reads OFF & has no OFF exporter.
   $PipelineExclude       Array of 'input>output' pairs to remove from the cross product. Optional.
@@ -326,6 +331,9 @@ Contracts 1 through 3 are unchanged & still live in CREATING_CONVERSION_PIPELINE
         component. It returns an array instead & the core prints it. The reply the
         interface receives is byte for byte what it was.
     6g. This is why an operation pipeline returns three values rather than two.
+    6h. What the third value holds is the operation's own. OCR returns the filenames it wrote.
+        Identify returns its records & the name of any report, & the core prints them as one
+        line of JSON, because an interface fills in what it shows rather than downloading a file.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

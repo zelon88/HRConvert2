@@ -13,7 +13,7 @@
 // / command line, finds executables & loads components, the Engine among them.
 // /
 // / File Information ...
-// / v4.1.1.
+// / v4.1.2.
 // / The kernel. An application's entry point requires it first & pins it exactly via $RequiredKernelVersion.
 // / Error 35000 is the direct load guard every component shares.
 // / It is a file of its own, so every application runs identical kernel code & compares it by version.
@@ -53,7 +53,7 @@ if (count(get_included_files()) < 2) die('ERROR!!! Kernel-35000, The kernel cann
 // / The version of this kernel.
 // / The application reads it with a pattern BEFORE requiring this file, so a mismatched
 // / kernel is never executed. It cannot use readComponentVersion for that, which is below.
-$KernelVersion = 'v4.1.1';
+$KernelVersion = 'v4.1.2';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -857,6 +857,31 @@ function getExtension($pathToFile) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $pathToFile, $pathinfoCleaned, $pathinfo);
   return $Pathinfo;  }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to describe a number of bytes the way a person reads one.
+// / Accepts the number of bytes. Returns the description, such as 1.2 MB.
+// / A kilobyte here is 1024 bytes, which is how most file managers count.
+// / One decimal place is kept below ten of a unit & none above, because a glance needs no more.
+// / The unit is worked out with a logarithm rather than by dividing in a loop, so no value is replaced while it is worked out.
+// / The units are symbols rather than words, so every interface shows them as they are.
+function describeByteCount($byteCount) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ByteDescription = '';
+  $unitNames = array('B', 'KB', 'MB', 'GB', 'TB', 'PB');
+  $wholeCount = $unitIndex = 0;
+  $scaledCount = 0.0;
+  $wholeCount = max(0, (int)$byteCount);
+  // / A little is added before rounding down, because a logarithm can land a hair below a whole number & would report 1024 KB for a megabyte.
+  if ($wholeCount >= 1024) $unitIndex = min(count($unitNames) - 1, (int)floor(log($wholeCount, 1024) + 0.000000001));
+  $scaledCount = $wholeCount / pow(1024, $unitIndex);
+  if ($unitIndex === 0) $ByteDescription = $wholeCount.' '.$unitNames[0];
+  else $ByteDescription = number_format($scaledCount, ($scaledCount < 10) ? 1 : 0, '.', '').' '.$unitNames[$unitIndex];
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $unitNames, $wholeCount, $unitIndex, $scaledCount, $byteCount);
+  return $ByteDescription; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

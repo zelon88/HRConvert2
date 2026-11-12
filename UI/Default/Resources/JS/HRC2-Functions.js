@@ -182,6 +182,12 @@ window.HRC2 = {
   // / then comes back in the wrong language & the wrong colours, inside a page that is
   // / using the ones the user picked. The bare default is a last resort.
   fileListURL: 'convertCore.php?showFiles=1&fileListOnly=1',
+  // / What Identify writes into a panel in words, & what it says when it fails. The page supplies
+  // / them from the language pack. The English defaults are a last resort.
+  identifyText: { yes: 'Yes', no: 'No', unknown: 'Unknown', failure: 'Operation Failed!' },
+  // / What Identify returned for each file, keyed by its name, so a list drawn again shows it again.
+  // / It has no prototype, so a file named after a property every object has is still just a file.
+  identifyRecords: Object.create(null),
   isConfigured: false,
 
   // / Accept the page's values. Every key is optional so a page supplies only what it uses.
@@ -327,6 +333,9 @@ window.HRC2 = {
     }).then(function (returnedHtml) {
       try { container.html(returnedHtml); }
       catch (thrown) { self.warn('The file list could not be replaced. ' + thrown); }
+      // / A list drawn again has empty panels, so what Identify already read is written back into them.
+      try { self.applyIdentifyRecords(); }
+      catch (thrown) { self.warn('What Identify read could not be shown again. ' + thrown); }
     }, function () {
       // / A list that could not be refreshed is not worth an alert. The files are still
       // / there & the next conversion will try again.
@@ -581,6 +590,153 @@ window.HRC2 = {
         if (extension === '') extension = defaultExtension;
         self.run({ archive: '1', filesToArchive: self.listedFiles(fileNames), archextension: extension, userfilename: self.value(nameFieldId) }, suffix);
       });
+    });
+  },
+
+  // / -------------------------------------------------------------------------------
+  // / Identify.
+  // / The core answers an Identify request with one line of JSON under the key Identify,
+  // / holding Complete, Errors, Report & Records. Every value in a record is written into the
+  // / page with textContent & never as markup, because a record repeats what a file says
+  // / about itself.
+  // / -------------------------------------------------------------------------------
+
+  // / Read the line of JSON an Identify reply carries. Returns null when there is none.
+  // / The line is looked for rather than assumed, because a warning PHP prints would come first.
+  readIdentifyReply: function (replyText) {
+    var lines = String(replyText || '').split(/\r?\n/);
+    var index = 0;
+    var line = '';
+    var parsed = null;
+    for (index = lines.length - 1; index >= 0; index--) {
+      line = lines[index].trim();
+      if (line.indexOf('{"Identify"') !== 0) continue;
+      try { parsed = JSON.parse(line); }
+      catch (thrown) { parsed = null; }
+      if (parsed && parsed.Identify && Object.prototype.toString.call(parsed.Identify.Records) === '[object Array]') return parsed.Identify; }
+    return null;
+  },
+
+  // / Keep each record by the name of its file, & show every one the list has a place for.
+  keepIdentifyRecords: function (records) {
+    var self = this;
+    (records || []).forEach(function (record) {
+      if (record && typeof record.Name === 'string') self.identifyRecords[record.Name] = record; });
+    self.applyIdentifyRecords();
+  },
+
+  // / Write one record into one panel, & a summary of it beside the file's name.
+  showIdentifyRecord: function (panel, summary, record) {
+    var self = this;
+    var words = self.identifyText;
+    var put = function (fieldName, value) {
+      var cell = panel.querySelector('[data-identify-field="' + fieldName + '"]');
+      if (cell) cell.textContent = (value === undefined || value === null || value === '') ? words.unknown : String(value); };
+    var lines = function (list) { return (list && list.length) ? list.join('\n') : '-'; };
+    put('Size', record.SizeText + ' (' + record.Size + ' B)');
+    put('Modified', record.Modified);
+    put('Description', record.Description);
+    put('MimeType', record.MimeType);
+    put('Charset', record.Charset);
+    put('ExtensionMatches', words[record.ExtensionMatches] || words.unknown);
+    put('SHA256', record.SHA256);
+    put('SHA1', record.SHA1);
+    put('MD5', record.MD5);
+    put('Details', lines(record.Details));
+    put('Notes', lines(record.Notes));
+    // / A name that does not agree with what the file holds is flagged in the list as well as in the panel.
+    if (summary) summary.textContent = (record.ExtensionMatches === 'no' ? '\u26A0 ' : '') + (record.Description || record.MimeType || '');
+  },
+
+  // / Show every record held in whichever panels the list has drawn for those files.
+  applyIdentifyRecords: function () {
+    var self = this;
+    var panels = document.querySelectorAll('[data-identify-file]');
+    var index = 0;
+    var panel = null;
+    var record = null;
+    for (index = 0; index < panels.length; index++) {
+      panel = panels[index];
+      record = self.identifyRecords[panel.getAttribute('data-identify-file')];
+      if (record) self.showIdentifyRecord(panel, document.getElementById('identifySummary' + panel.getAttribute('data-identify-suffix')), record); }
+  },
+
+  // / Identify files & show what came back, & write a report too when one is asked for.
+  // / A report is fetched as an archive is, & the list is drawn again so it shows the report.
+  // / Without a report nothing new is in the session, so the list is left as it is & every panel stays open.
+  // / The spinner is stopped in finish & nowhere else, for the reason run() gives.
+  identify: function (fileNames, wantReport, reportName, suffix) {
+    var self = this;
+    var loadingId = 'loadingCommandDiv' + suffix;
+    var isFinished = false;
+    var finish = function (problems, succeeded, listChanged) {
+      if (isFinished) return;
+      isFinished = true;
+      self.spinner(loadingId, false);
+      if (problems.length > 0) {
+        self.flash('failureCommandDiv' + suffix);
+        window.alert(problems.join('\n')); }
+      else if (succeeded) self.flash('victoryCommandDiv' + suffix);
+      if (listChanged) {
+        try { self.refreshFileList(); }
+        catch (thrown) { self.warn('The file list could not be refreshed. ' + thrown); } }
+    };
+    self.spinner(loadingId, true);
+    self.post({ filesToIdentify: fileNames, identifyreport: wantReport ? '1' : '0', identifyfilename: wantReport ? reportName : '' }).then(function (replyText) {
+      try {
+        var result = self.readIdentifyReply(replyText);
+        if (result) self.keepIdentifyRecords(result.Records);
+        // / A reply carrying an error, or no answer at all, is a failure, & whatever records it did carry are still shown.
+        if (self.isError(replyText) || !result || !result.Complete) {
+          finish([self.identifyText.failure], false, !!(result && result.Report));
+          return; }
+        if (!result.Report) {
+          finish([], true, false);
+          return; }
+        self.downloadOne(result.Report).then(function () { finish([], true, true); },
+          function () { finish([result.Report + ' could not be downloaded.'], false, true); });
+      }
+      catch (thrown) {
+        self.warn('Failed while reading the reply to an identification. ' + thrown);
+        finish([self.identifyText.failure], false, false); }
+    }, function () {
+      // / The request itself failed. There is no reply to read.
+      finish([self.identifyText.failure], false, false);
+    });
+  },
+
+  // / Grey out a report's name unless a report is asked for.
+  bindReportName: function (reportId, nameId) {
+    var reportBox = document.getElementById(reportId);
+    var nameField = document.getElementById(nameId);
+    if (!reportBox || !nameField) return;
+    nameField.disabled = !reportBox.checked;
+    $(reportBox).on('change', function () { nameField.disabled = !reportBox.checked; });
+  },
+
+  // / Bind one file's Identify panel.
+  // / Opening the panel identifies the file the first time, so its details are there when it opens.
+  // / The button identifies it again, with a report when the box is ticked.
+  bindIdentify: function (spec) {
+    var self = this;
+    $(function () {
+      self.bindReportName(spec.reportId, spec.nameId);
+      $('#' + spec.openId).click(function () {
+        if (!self.identifyRecords[spec.fileName]) self.identify(spec.fileName, false, '', spec.suffix); });
+      $('#' + spec.submitId).click(function () {
+        var wantReport = self.checked(spec.reportId);
+        self.identify(spec.fileName, wantReport, self.value(spec.nameId), spec.suffix); });
+    });
+  },
+
+  // / Bind Identify All. The files are read when it is pressed, so a file converted since the page was drawn is identified too.
+  bindIdentifyAll: function (spec) {
+    var self = this;
+    $(function () {
+      self.bindReportName(spec.reportId, spec.nameId);
+      $('#' + spec.submitId).click(function () {
+        var wantReport = self.checked(spec.reportId);
+        self.identify(self.listedFiles(spec.fileNames), wantReport, self.value(spec.nameId), spec.suffix); });
     });
   },
 

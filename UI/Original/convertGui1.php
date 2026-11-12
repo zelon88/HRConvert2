@@ -66,10 +66,13 @@ if ($NoGui) $selectorBase .= 'noGui=TRUE&';
 // / The interface, language & colour ride along in the query string. A refresh that
 // / dropped them would reset the user to the configured defaults, which reads as the
 // / application forgetting the settings they just chose.
+// / The sort order the file list uses rides along too, so the list comes back in the order the user left it.
+// / redeclare() rather than .= on each of these, as the file list page does, so no earlier string is left behind.
 $sessionParams = '';
-if ($NoGui) $sessionParams .= 'noGui=TRUE&';
-$sessionParams .= 'gui='.$GuiToUse.'&language='.$LanguageToUse.'&color='.$ColorToUse;
-$refreshURL = 'convertCore.php?'.$sessionParams;
+if ($NoGui) redeclare($sessionParams, $sessionParams.'noGui=TRUE&');
+redeclare($sessionParams, $sessionParams.'gui='.$GuiToUse.'&language='.$LanguageToUse.'&color='.$ColorToUse);
+$sortParams = '&sort='.rawurlencode((string)$SortToUse);
+$refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
 // / -----------------------------------------------------------------------------------
 ?>
   <body>
@@ -149,7 +152,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
           <p style='margin:4px 0;'>
             <?php foreach ($SupportedLanguages as $selectorLang => $selectorLabel) {
               $selectorCurrent = ($selectorLang === $LanguageToUse);
-              $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
+              $selectorURL = htmlspecialchars($selectorBase.'language='.$selectorLang.'&color='.$ColorToUse.'&gui='.$GuiToUse.$sortParams, ENT_QUOTES, 'UTF-8'); ?>
             <button type='submit' lang='<?php echo htmlspecialchars($selectorLang, ENT_QUOTES, 'UTF-8'); ?>'
               style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
@@ -163,7 +166,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
             <?php foreach ($SupportedColors as $selectorColor) {
               $selectorSwatch = isset($selectorSwatches[$selectorColor]) ? $selectorSwatches[$selectorColor] : '#cccccc';
               $selectorCurrent = (strtolower($selectorColor) === strtolower($ColorToUse));
-              $selectorURL = htmlspecialchars($selectorBase.'color='.$selectorColor.'&language='.$LanguageToUse.'&gui='.$GuiToUse, ENT_QUOTES, 'UTF-8'); ?>
+              $selectorURL = htmlspecialchars($selectorBase.'color='.$selectorColor.'&language='.$LanguageToUse.'&gui='.$GuiToUse.$sortParams, ENT_QUOTES, 'UTF-8'); ?>
             <button type='submit'
               style='margin:2px; padding:2px; <?php if ($selectorCurrent) echo 'outline:2px solid #000;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
@@ -176,7 +179,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
           <p style='margin:4px 0;'>
             <?php foreach ($SupportedGuis as $selectorGui) {
               $selectorCurrent = ($selectorGui === $GuiToUse);
-              $selectorURL = htmlspecialchars($selectorBase.'gui='.$selectorGui.'&language='.$LanguageToUse.'&color='.$ColorToUse, ENT_QUOTES, 'UTF-8'); ?>
+              $selectorURL = htmlspecialchars($selectorBase.'gui='.$selectorGui.'&language='.$LanguageToUse.'&color='.$ColorToUse.$sortParams, ENT_QUOTES, 'UTF-8'); ?>
             <button type='submit' class='txtbtn'
               style='margin:2px; <?php if ($selectorCurrent) echo 'font-weight:700; text-decoration:underline;'; ?>'
               formaction='<?php echo $selectorURL; ?>'
@@ -189,7 +192,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
       </div>
 
     <?php
-    if (!isset($_GET['noGui'])) { ?>
+    if (!$NoGui) { ?>
     <div id='header-text' style='max-width:<?php echo $GuiWidth; ?>; margin-left:auto; margin-right:auto; text-align:center;'>
       <?php
       // / The logo returns to this page carrying the language, colour & interface,
@@ -372,13 +375,13 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
               // / button above & differs only by carrying showFiles.
               // / The core resolves the interface, the language & the colour, & hands them over
               // / as $GuiToUse, $LanguageToUse & $ColorToUse, so nothing here reads $_GET. ?>
-        <form action='convertCore.php?showFiles=1&<?php echo htmlspecialchars($sessionParams, ENT_QUOTES, 'UTF-8'); ?>' method='post'>
+        <form action='convertCore.php?showFiles=1&<?php echo htmlspecialchars($sessionParams.$sortParams, ENT_QUOTES, 'UTF-8'); ?>' method='post'>
           <input type='hidden' id='token1' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
           <input type='hidden' id='token2' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
           <input type='submit' id='continue-button' class='info-button' value='<?php echo htmlspecialchars($Gui1Text29, ENT_QUOTES, 'UTF-8'); ?>'>
         </form>
         <br />
-        <?php if (!isset($_GET['noGui'])) { ?>
+        <?php if (!$NoGui) { ?>
 		    <hr />
         <?php } ?>
       </div>
@@ -390,5 +393,5 @@ $refreshURL = 'convertCore.php?'.$sessionParams;
     // / $gui1OcrArr & $gui1ScadArr are declared at the top of this file & were missing from
     // / the chain below, so they survived the page. $gui1ScadArr was named in the unset but
     // / never nulled, which drops the symbol without shredding what it held.
-    $oppositeAlignment = $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = $sessionParams = $refreshURL = NULL;
-    unset($oppositeAlignment, $gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui1SubArr, $gui1DraArr, $gui1OcrArr, $gui1XpsArr, $gui1ScadArr, $gui1SvgArr, $gui1EbkArr, $sessionParams, $refreshURL);
+    $oppositeAlignment = $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = $sessionParams = $sortParams = $refreshURL = NULL;
+    unset($oppositeAlignment, $gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui1SubArr, $gui1DraArr, $gui1OcrArr, $gui1XpsArr, $gui1ScadArr, $gui1SvgArr, $gui1EbkArr, $sessionParams, $sortParams, $refreshURL);

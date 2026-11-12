@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File information ...
-// / v4.0.8.
+// / v4.1.2.
 // / HRConvert2 Dependency Manifest.
 // / This file is data. It defines nothing & does nothing.
 // / dependencyCore.php reads it. Nothing else may.
@@ -114,7 +114,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v4.0.8';
+$DependsVersion = 'v4.1.2';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -232,6 +232,16 @@ $DependsManifest = array(
       'ass' => 'ssa', 'webvtt' => 'vtt', 'microdvd' => 'sub'),
     'Required' => FALSE, 'Subsystem' => 'Audio, Video & Streams', 'Requires' => array('Bubblewrap'),
     'License' => 'LGPL-2.1', 'Source' => 'https://ffmpeg.org', 'Purpose' => 'Converts audio, video, subtitles & captures streams.'),
+  // / FFprobe comes from the same build as FFMPEG, which installs both, so it names the same build script.
+  // / It is an entry of its own so that Identify asks for it by name, & a host whose FFMPEG came without it is told so rather than assumed to have it.
+  // / It follows FFMPEG, so a build made for FFMPEG has already installed it by the time it is reached & it is found present.
+  // / Where FFMPEG is in place & FFprobe is not, installing FFprobe runs the whole build again, because that is the only build that makes it.
+  // / Identify is all that uses it, so that is its subsystem. A subsystem's removal never touches it, because no package manager manages it.
+  array('Name' => 'FFprobe', 'Binary' => 'ffprobe', 'Type' => 'source', 'Package' => '',
+    'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'ffmpeg-build.sh'),
+    'MinimumVersion' => '6.1', 'VersionCommand' => 'ffprobe -version', 'VersionPattern' => '/ffprobe version n?(\d+\.\d+)/',
+    'Required' => FALSE, 'Subsystem' => 'Identification', 'Requires' => array('Bubblewrap'),
+    'License' => 'LGPL-2.1', 'Source' => 'https://ffmpeg.org', 'Purpose' => 'Reads the duration, the container & the streams of audio & video for Identify.'),
 
   // / ---- Documents. ----
   array('Name' => 'LibreOffice', 'Binary' => 'soffice', 'Type' => 'apt', 'Package' => 'libreoffice libreoffice-java-common',
@@ -242,6 +252,13 @@ $DependsManifest = array(
     'MinimumVersion' => '20.09', 'VersionCommand' => 'pdftotext -v', 'VersionPattern' => '/pdftotext version (\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => 'Documents & OCR', 'Requires' => array(),
     'License' => 'GPL-2.0', 'Source' => 'https://poppler.freedesktop.org', 'Purpose' => 'Extracts text & converts XPS documents.'),
+  // / PDFInfo comes in the same package as Poppler Utils & is an entry of its own so that Identify asks for it by name.
+  // / It shares Poppler Utils' subsystem & requirements, because it is the same package.
+  // / Removing the Identification subsystem therefore never removes the package Documents & OCR need.
+  array('Name' => 'PDFInfo', 'Binary' => 'pdfinfo', 'Type' => 'apt', 'Package' => 'poppler-utils',
+    'MinimumVersion' => '20.09', 'VersionCommand' => 'pdfinfo -v', 'VersionPattern' => '/pdfinfo version (\d+\.\d+)/',
+    'Required' => FALSE, 'Subsystem' => 'Documents & OCR', 'Requires' => array(),
+    'License' => 'GPL-2.0', 'Source' => 'https://poppler.freedesktop.org', 'Purpose' => 'Reads the page count, the version & the encryption of a PDF for Identify.'),
 
   // / ---- Images. ----
   // / ImageMagick is built from source rather than installed from a repository.
@@ -444,6 +461,17 @@ $DependsManifest = array(
     // / an arm host can still write an image, just not make it USB bootable this way.
     'Architectures' => array('x86_64', 'x86'),
     'License' => 'GPL-2.0', 'Source' => 'https://wiki.syslinux.org', 'Purpose' => 'Makes an ISO image bootable.'),
+
+  // / ---- Identification. ----
+  // / file reads what a file holds from its content rather than its name, & reports its character set.
+  // / 5.43 is the floor. Every release before 5.38 overflows the heap reading a CDF document, CVE-2019-18218.
+  // / Every release before 5.43 reads past a buffer on the stack copying a string, CVE-2022-48554.
+  // / Ubuntu 24.04 carries 5.45 & Debian's bookworm carries 5.44, so neither needs a build of its own.
+  // / Identify runs it in the sandbox, because it parses whatever a user uploaded.
+  array('Name' => 'File', 'Binary' => 'file', 'Type' => 'apt', 'Package' => 'file',
+    'MinimumVersion' => '5.43', 'VersionCommand' => 'file --version', 'VersionPattern' => '/file-(\d+\.\d+)/',
+    'Required' => FALSE, 'Subsystem' => 'Identification', 'Requires' => array('Bubblewrap'),
+    'License' => 'BSD-2-Clause', 'Source' => 'https://www.darwinsys.com/file', 'Purpose' => 'Tells what a file holds & its character set from its content for Identify.'),
 
   // / ---- Ebooks. ----
   array('Name' => 'Calibre', 'Binary' => 'ebook-convert', 'Type' => 'apt', 'Package' => 'calibre',

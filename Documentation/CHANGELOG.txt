@@ -27,6 +27,41 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 --------------------
 COMMIT 11/11/2026
+v4.1.2 - Identify says what a file holds, & the file list sorts & shows each file's size & time.
+
+-v4.1.2.
+-New Identify pipeline, an operation like OCR. It reports each file's size, time, type, MIME type, character set, SHA-256, SHA-1 & MD5, & whether its extension matches what it holds. It changes no file.
+-Identify asks file, ImageMagick, FFprobe, PDFInfo & 7-Zip what each kind of file holds, each in the sandbox, with no network & a time limit. A missing tool costs its details, & a note says so.
+-Identify writes a text report into the session when asked, under the name given or User_Identify_Report. A taken name is given the next free one.
+-Identify carries its own ImageMagick policy, which reads every coder, writes none & refuses Ghostscript & every delegate.
+-New setting --User File Identification--, on by default. After unpacking a drop in, run --config --repair before -fp.
+-New manifest entries File, FFprobe & PDFInfo. File & FFprobe are the Identification subsystem. File needs 5.43 or later.
+-New POST inputs filesToIdentify, identifyreport & identifyfilename. The reply is one line of JSON.
+-New GET input sort. The file list sorts by name, size, date or type, either way, & every link & form carries the order.
+-Both interfaces show each file's size & time under its name, an Identify control & panel for each file, Identify All, & the sort controls. Opening a file's panel identifies it.
+-A size, a time & a hash keep their order in a language read from right to left.
+-23 new strings in every language pack, translated into all 26 languages. 10 strings still in English are translated.
+-New functions describeByteCount in the kernel, describeFilesInDirectory in the Files pipeline, & sortCodeIsValid, verifySort, arrangeFiles & encodeIdentifyReply in the core.
+-Pipeline Core accepts an operation that declares no input formats, because it may read any file.
+-The version report lists File, FFprobe & PDFInfo, & counts Identify among the operation pipelines.
+-Error 31 & errors 37000 through 37004 are new. Error 34006 also names a missing Identify pipeline.
+-FIX. The version report named three switched off settings by labels config.php does not use. It names --User Virus Scanning--, --Virus Scanning-- & --User Shareable File Links--.
+-FIX. The upload page read noGui from the query string only, so a noGui that was posted still showed the header & introduction. It reads what the core resolved.
+-FIX. A drop in carrying the Engine but not its Environment Core, unpacked over the web root by mistake, stopped every command with a PHP fatal error. The startup check of the AppArmor profile is skipped without the Environment Core, as the Engine already allows.
+-FIX. One carrying the Engine but not Setup Core left -fp no installer to refuse it, so -fp corrected the tree's permissions, reported success & installed nothing. -fp refuses a tree with no Setup Core that is not the installation, & says where the drop in belongs.
+-FIX. CREATING_GUIS listed $ImageArray twice & left out seven variables buildGUI() hands an interface.
+-FIX. ABOUT_RESOURCE_RATE_LIMITING said four operations take a budget. Six do, a fetch from a URL & Identify among them.
+-FIX. ABOUT_COMPONENTS & ABOUT_COMMAND_LINE_ARGUMENTS said Setup Core holds the settings model. It has been applicationConfigModel() in convertCore.php since v3.9.3.
+-FIX. config-template.php said a new setting is added there & nowhere else. It names the other three places.
+-FIX. Every pipeline README named an older version of its pipeline, & the Archive pipeline's approval record an older 7-Zip. Both are written again.
+-FIX. hrconvert2-approvals.py wrote that an operation pipeline is a operation pipeline. It says what makes one an operation.
+-New DEPENDENCY_APPROVALS.txt & README.md for Identify. Its dependencies are not yet audited.
+-An Engine comment no longer says there are four operations.
+-ABOUT_REST_API, CREATING_GUIS, ABOUT_PIPELINE_COMPONENTS, ABOUT_MANAGED_LOCATIONS, ERROR_DESCRIPTIONS, INSTALLATION_INSTRUCTIONS, DEVELOPMENT_NOTES, ICON_CREDITS & the README describe the above.
+-The core, the kernel, the Engine, Pipeline Core, the Files & Identify pipelines, both interfaces, every language pack, the manifest, config.php, config-template.php & the contract are v4.1.2, & every pin to them requires v4.1.2.
+
+--------------------
+COMMIT 11/11/2026
 v4.1.1 - The kernel opens the logfile, & the code v4.1.0 added follows convention six.
 
 -v4.1.1.

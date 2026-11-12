@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -378,6 +378,52 @@ $Gui2Text83 = 'Adres URL playlisty, potrzebny tylko gdy playlista używa ścież
 $Gui2Text84 = 'Pobierz plik z adresu URL';
 // / 'Fetch'
 $Gui2Text85 = 'Pobierz';
+// / 'Identify'
+$Gui2Text86 = 'Identyfikuj';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Zamknij Opcje Identyfikacji';
+// / 'Identify This File'
+$Gui2Text88 = 'Identyfikuj Ten Plik';
+// / 'Size: '
+$Gui2Text89 = 'Rozmiar: ';
+// / 'Modified: '
+$Gui2Text90 = 'Zmodyfikowano: ';
+// / 'Type: '
+$Gui2Text91 = 'Typ: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'Typ MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Zestaw Znaków: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'Rozszerzenie Zgodne z Zawartością: ';
+// / 'Details: '
+$Gui2Text95 = 'Szczegóły: ';
+// / 'Notes: '
+$Gui2Text96 = 'Uwagi: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Zapisz raport jako plik';
+// / 'Identify All Files'
+$Gui2Text98 = 'Identyfikuj Wszystkie Pliki';
+// / 'Identify All'
+$Gui2Text99 = 'Identyfikuj Wszystko';
+// / 'Yes'
+$Gui2Text100 = 'Tak';
+// / 'No'
+$Gui2Text101 = 'Nie';
+// / 'Unknown'
+$Gui2Text102 = 'Nieznany';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Nie można zidentyfikować tego pliku!';
+// / 'Sort By: '
+$Gui2Text104 = 'Sortuj Według: ';
+// / 'Name'
+$Gui2Text105 = 'Nazwa';
+// / 'Size'
+$Gui2Text106 = 'Rozmiar';
+// / 'Date'
+$Gui2Text107 = 'Data';
+// / 'Type'
+$Gui2Text108 = 'Typ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -35,7 +35,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -346,6 +346,52 @@ $Gui2Text83 = 'プレイリストの元URL。相対パスを使う場合のみ�
 $Gui2Text84 = 'URLからファイルをダウンロード';
 // / 'Fetch'
 $Gui2Text85 = '取得';
+// / 'Identify'
+$Gui2Text86 = '識別';
+// / 'Close Identify Options'
+$Gui2Text87 = '識別オプションを閉じる';
+// / 'Identify This File'
+$Gui2Text88 = 'このファイルを識別';
+// / 'Size: '
+$Gui2Text89 = 'サイズ：';
+// / 'Modified: '
+$Gui2Text90 = '更新日時：';
+// / 'Type: '
+$Gui2Text91 = '種類：';
+// / 'MIME Type: '
+$Gui2Text92 = 'MIME タイプ：';
+// / 'Character Set: '
+$Gui2Text93 = '文字セット：';
+// / 'Extension Matches Content: '
+$Gui2Text94 = '拡張子と内容の一致：';
+// / 'Details: '
+$Gui2Text95 = '詳細：';
+// / 'Notes: '
+$Gui2Text96 = '注記：';
+// / 'Save report as file'
+$Gui2Text97 = 'レポートをファイルとして保存';
+// / 'Identify All Files'
+$Gui2Text98 = 'すべてのファイルを識別';
+// / 'Identify All'
+$Gui2Text99 = 'すべて識別';
+// / 'Yes'
+$Gui2Text100 = 'はい';
+// / 'No'
+$Gui2Text101 = 'いいえ';
+// / 'Unknown'
+$Gui2Text102 = '不明';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'このファイルは識別できません。';
+// / 'Sort By: '
+$Gui2Text104 = '並べ替え：';
+// / 'Name'
+$Gui2Text105 = '名前';
+// / 'Size'
+$Gui2Text106 = 'サイズ';
+// / 'Date'
+$Gui2Text107 = '日付';
+// / 'Type'
+$Gui2Text108 = '種類';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

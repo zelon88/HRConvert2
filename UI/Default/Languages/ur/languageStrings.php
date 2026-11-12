@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -341,6 +341,52 @@ $Gui2Text83 = 'پلے لسٹ کا ماخذ یو آر ایل، صرف اس صور
 $Gui2Text84 = 'یو آر ایل سے فائل ڈاؤن لوڈ کریں';
 // / 'Fetch'
 $Gui2Text85 = 'حاصل کریں';
+// / 'Identify'
+$Gui2Text86 = 'شناخت کریں';
+// / 'Close Identify Options'
+$Gui2Text87 = 'شناخت کے اختیارات بند کریں';
+// / 'Identify This File'
+$Gui2Text88 = 'اس فائل کی شناخت کریں';
+// / 'Size: '
+$Gui2Text89 = 'سائز: ';
+// / 'Modified: '
+$Gui2Text90 = 'ترمیم شدہ: ';
+// / 'Type: '
+$Gui2Text91 = 'قسم: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'MIME قسم: ';
+// / 'Character Set: '
+$Gui2Text93 = 'حروف کا مجموعہ: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'ایکسٹینشن مواد سے مطابقت رکھتی ہے: ';
+// / 'Details: '
+$Gui2Text95 = 'تفصیلات: ';
+// / 'Notes: '
+$Gui2Text96 = 'نوٹس: ';
+// / 'Save report as file'
+$Gui2Text97 = 'رپورٹ کو فائل کے طور پر محفوظ کریں';
+// / 'Identify All Files'
+$Gui2Text98 = 'تمام فائلوں کی شناخت کریں';
+// / 'Identify All'
+$Gui2Text99 = 'سب کی شناخت کریں';
+// / 'Yes'
+$Gui2Text100 = 'ہاں';
+// / 'No'
+$Gui2Text101 = 'نہیں';
+// / 'Unknown'
+$Gui2Text102 = 'نامعلوم';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'اس فائل کی شناخت نہیں کی جا سکتی!';
+// / 'Sort By: '
+$Gui2Text104 = 'ترتیب بلحاظ: ';
+// / 'Name'
+$Gui2Text105 = 'نام';
+// / 'Size'
+$Gui2Text106 = 'سائز';
+// / 'Date'
+$Gui2Text107 = 'تاریخ';
+// / 'Type'
+$Gui2Text108 = 'قسم';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

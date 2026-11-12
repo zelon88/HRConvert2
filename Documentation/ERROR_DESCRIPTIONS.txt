@@ -59,6 +59,7 @@ The 2000 block is raised by /Resources/Pipelines/Shared/libreOffice.php, which s
 An operator seeing one of those numbers may have been running either one. The log line above it names which.
 The Pipeline Core reserves 34000 through 34019. It became an Engine core at v3.9.9 & none of its numbers changed.
 The 32000 and 33000 blocks were already taken by Setup Core and Dependency Core.
+The Identify pipeline reserves 37000 through 37004. It is the first pipeline to number its own errors.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -907,6 +908,36 @@ ERROR DESCRIPTION
   Until v4.0.1 this message sent the user to -fp, which never touched this file.
   This error is not fatal on its own. Without a secret the installation does not verify, so
   ERROR 5 follows & that user's command does not run until the file is removed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31, <SESSION_IDENTIFIER>: Identify Failed!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A selection of files was sent to be identified & no file in it was identified, or a report was asked for & was not written.
+  The reply describing the selection is sent before this error, so an interface still shows what it can.
+  In that reply Complete is false, & Records holds every file that was identified.
+  The user asked to identify a file that does not exist, or one deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  The Identify pipeline could not create a folder to work in. ERROR 37000 precedes this one.
+  A report was asked for & could not be written. ERROR 37001, 37002 or 37003 precedes this one.
+  No Identify pipeline could be reached. ERROR 34006 precedes this one.
+  The device where data is stored has an insufficient amount of storage space available.
+  A missing tool does not cause this error. The file is still identified by its size, its date & its hashes, & a note names the tool.
+  Neither does a refused sandbox. ERROR 37004 reports that, & every file is still hashed.
+  Identifying changes no file, so nothing a user holds is lost when this error fires.
+  Until v4.1.2 this number was unused.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6801,6 +6832,7 @@ ERROR MESSAGE
   Until v3.9.9 the Pipeline Core worded this OCR was requested but no OCR pipeline is installed!, because it
   could only dispatch OCR. It names whatever operation family was requested now.
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: OCR was requested but no OCR pipeline is installed & this core has no built in OCR!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Identify was requested but no Identify pipeline is installed!
 
 FILE
   /convertCore.php
@@ -6820,6 +6852,7 @@ ERROR DESCRIPTION
   This error is not itself fatal, but error 22 fires immediately after it and that error is fatal.
   Without this error, an OCR request on an installation with no OCR pipeline would produce an empty result and raise only error 22, which reports that the OCR operation failed and does not report that no OCR was ever attempted.
   OCR is an operation pipeline rather than a conversion pipeline. It accepts a selection of files, chooses a different route for each one depending on whether it is a PDF, a document or an image, and returns a single verdict for the whole batch along with the list of files it produced.
+  Since v4.1.2 Identify is an operation pipeline too, & the same reasoning applies to it. Its folder is /Resources/Pipelines/Identify/ & ERROR 31 follows this one in its place.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -7017,6 +7050,121 @@ ERROR DESCRIPTION
   --run-environment-manager to every account but root, & loadEngineRootManager refuses to load
   the manager for one, before this check is ever reached. Run it as root.
   See Documentation/ABOUT_ENVIRONMENT_MANAGER.txt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-37000, <SESSION_IDENTIFIER>: The Identify pipeline could not create a folder to work in, so no file was identified!
+
+FILE
+  Resources/Pipelines/Identify/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Every tool that reads a file for Identify may write only into a folder made for the request inside the session, which is removed when the request ends.
+  That folder could not be made, so no tool was run & no file was read.
+  The session folder is missing, or the web server account cannot write to it.
+  Sessions are kept in Sessions in the data location, which only the web server account may write. -fp gives each managed location its owner & mode. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
+  The device where data is stored has no space left.
+  This error is not fatal on its own. No file was identified, so ERROR 31 follows & that error is fatal.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-37001, <SESSION_IDENTIFIER>: No free name was found for the Identify report, so it was not written!
+
+FILE
+  Resources/Pipelines/Identify/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A report was asked for under a name the session already holds, & so was every numbered name after it.
+  A report is never written over a file a user already has. A taken name is given _1, then _2, as every conversion output is, up to _1000.
+  A session holding a thousand copies of one name is not normal use. The session is being filled on purpose, or a script is asking for reports in a loop.
+  Ask for the report under another name, or delete the old reports.
+  This error is not fatal on its own. The files were identified & the reply still describes them, but ERROR 31 follows because the report asked for was not written.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-37002, <SESSION_IDENTIFIER>: The Identify report could not be created!
+
+FILE
+  Resources/Pipelines/Identify/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A free name was found for the report & the file could not be created under it.
+  The report is created exclusively, so a name taken in the moment between choosing it & creating it fails here rather than being followed or replaced.
+  Two requests for the same report name at the same moment can reach this. Ask again & the next free name is used.
+  The web server account cannot write to the session folder. -fp gives each managed location its owner & mode. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
+  The device where data is stored has no space left, or no inodes left.
+  This error is not fatal on its own. The files were identified & the reply still describes them, but ERROR 31 follows because the report asked for was not written.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-37003, <SESSION_IDENTIFIER>: The Identify report could not be written in full, so it was removed!
+
+FILE
+  Resources/Pipelines/Identify/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The report was created & fewer bytes were written into it than it holds, so the part that was written was deleted.
+  A report that stops partway could be read as a complete one, so none is left rather than part of one.
+  The device where data is stored filled while the report was being written.
+  This error is not fatal on its own. The files were identified & the reply still describes them, but ERROR 31 follows because the report asked for was not written.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-37004, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so no tool could read the files being identified!
+
+FILE
+  Resources/Pipelines/Identify/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Every tool Identify runs on a file runs inside the sandbox. The sandbox could not be built, & config.php requires one, so no tool was run.
+  The setting is --Require Sandbox--, or --Require Sandbox On Docker-- in a container.
+  Each file was still read by PHP, so its size, its date & its hashes are reported, & a note on each says no tool read it.
+  The type, the character set & every detail a tool reads are missing from what is reported.
+  This is logged once for the whole selection rather than once for every tool & every file.
+  A WARNING!!! above it, from the sandbox, says why the sandbox could not be built.
+  Run  php convertCore.php -v  as root & read the Sandbox line. Bubblewrap is a required dependency.
+  Turning either setting off would let every tool read the files unprotected. Repair the sandbox instead.
+  This error is not fatal. Every file that was hashed is still in the reply.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

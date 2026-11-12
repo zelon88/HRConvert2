@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.1.2.
 // / The Files pipeline. Operations on a file that do not care what is inside it.
 // /
 // / Every path arrives as an argument.
@@ -53,6 +53,42 @@ function listFilesInDirectory($permittedDirectory) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $resolvedDirectory, $candidateName, $directoryEntries, $permittedDirectory);
   return array($DirectoryWasRead, $FileNames); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the size & the modification time of files in one directory.
+// / Accepts the directory & the names to describe.
+// / Returns whether the directory could be read & a record for each name, keyed by the name, in that order.
+// / A record holds Size, in bytes, & Modified, as a Unix time.
+// / Every name is sanitized & resolved, & one that resolves outside the directory is left out, as for a removal.
+// / A name that is not a file is left out too, so a caller can tell a described file from one it asked about.
+// / Nothing is opened, so describing a file never reads what it holds.
+function describeFilesInDirectory($permittedDirectory, $namesToDescribe) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $DirectoryWasRead = FALSE;
+  $FileRecords = array();
+  $resolvedDirectory = $candidateName = $cleanName = $candidatePath = $resolvedPath = '';
+  $nameIsSanitized = FALSE;
+  $fileFacts = array();
+  $resolvedDirectory = (string)@realpath((string)$permittedDirectory);
+  if ($resolvedDirectory === '' or !is_dir($resolvedDirectory)) warningEntry('A file description was requested for a directory that does not resolve.');
+  else {
+    $DirectoryWasRead = TRUE;
+    foreach ((array)$namesToDescribe as $candidateName) {
+      // / The name the file before it was given is shredded first, as redeclare() would, because a list() cannot pass through redeclare().
+      purgeSensitiveMemory($EnableMemoryProtection, $cleanName);
+      list ($cleanName, $nameIsSanitized) = sanitize($candidateName, TRUE);
+      if (!$nameIsSanitized or !is_string($cleanName) or $cleanName === '' or $cleanName === '.' or $cleanName === '..') continue;
+      redeclare($candidatePath, $resolvedDirectory.DIRECTORY_SEPARATOR.$cleanName);
+      redeclare($resolvedPath, (string)@realpath($candidatePath));
+      // / A path that does not sit inside what the caller permitted is left out whatever it looks like.
+      if ($resolvedPath === '' or strpos($resolvedPath, $resolvedDirectory.DIRECTORY_SEPARATOR) !== 0 or !is_file($resolvedPath)) continue;
+      redeclare($fileFacts, @stat($resolvedPath));
+      if (is_array($fileFacts)) $FileRecords[$cleanName] = array('Size' => (int)$fileFacts['size'], 'Modified' => (int)$fileFacts['mtime']); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedDirectory, $candidateName, $cleanName, $candidatePath, $resolvedPath, $nameIsSanitized, $fileFacts, $permittedDirectory, $namesToDescribe);
+  return array($DirectoryWasRead, $FileRecords); }
 // / -----------------------------------------------------------------------------------
 // / A function to place a file into one directory.
 // / Accepts the directory that may be written, the source path, the name to give it & the permissions to set.

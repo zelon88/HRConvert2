@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility chec takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v3.9.3';
+$LanguageVersion = 'v4.1.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -242,7 +242,7 @@ $Gui2Text34 = 'Scansiona Questo File Alla Ricerca Di Virus';
 // / 'Scan File With ScanCore'
 $Gui2Text35 = 'Scansiona File Con ScanCore';
 // / 'Scan File With ClamAV'
-$Gui2Text36 = 'Scan File With ClamAV';
+$Gui2Text36 = 'Scansiona File Con ClamAV';
 // / 'Scan File With ScanCore & ClamAV'
 $Gui2Text37 = 'Scansiona File Con ScanCore & ClamAV';
 // / 'Perform Optical Character Recognition On This File'
@@ -339,6 +339,52 @@ $Gui2Text83 = 'URL di origine della playlist, necessario solo se usa percorsi re
 $Gui2Text84 = 'Scarica un file da un URL';
 // / 'Fetch'
 $Gui2Text85 = 'Preleva';
+// / 'Identify'
+$Gui2Text86 = 'Identifica';
+// / 'Close Identify Options'
+$Gui2Text87 = 'Chiudi opzioni di identificazione';
+// / 'Identify This File'
+$Gui2Text88 = 'Identifica Questo File';
+// / 'Size: '
+$Gui2Text89 = 'Dimensione: ';
+// / 'Modified: '
+$Gui2Text90 = 'Modificato: ';
+// / 'Type: '
+$Gui2Text91 = 'Tipo: ';
+// / 'MIME Type: '
+$Gui2Text92 = 'Tipo MIME: ';
+// / 'Character Set: '
+$Gui2Text93 = 'Set Di Caratteri: ';
+// / 'Extension Matches Content: '
+$Gui2Text94 = 'L’Estensione Corrisponde Al Contenuto: ';
+// / 'Details: '
+$Gui2Text95 = 'Dettagli: ';
+// / 'Notes: '
+$Gui2Text96 = 'Note: ';
+// / 'Save report as file'
+$Gui2Text97 = 'Salva il rapporto come file';
+// / 'Identify All Files'
+$Gui2Text98 = 'Identifica Tutti I File';
+// / 'Identify All'
+$Gui2Text99 = 'Identifica Tutto';
+// / 'Yes'
+$Gui2Text100 = 'Sì';
+// / 'No'
+$Gui2Text101 = 'No';
+// / 'Unknown'
+$Gui2Text102 = 'Sconosciuto';
+// / 'Cannot identify this file!'
+$Gui2Text103 = 'Impossibile identificare questo file!';
+// / 'Sort By: '
+$Gui2Text104 = 'Ordina Per: ';
+// / 'Name'
+$Gui2Text105 = 'Nome';
+// / 'Size'
+$Gui2Text106 = 'Dimensione';
+// / 'Date'
+$Gui2Text107 = 'Data';
+// / 'Type'
+$Gui2Text108 = 'Tipo';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

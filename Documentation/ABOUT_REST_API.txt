@@ -232,6 +232,40 @@ The following is a list of supported POST inputs, organized into sections based 
           next free one, & the reply names every file placed, one per line.
           An archive refused for a password, its size, its count of files or its format places
           nothing & is named in a warning. A request that placed nothing ends with error 32.
+      filesToRename
+          String or JSON Array.
+          This input is used during Rename Operations & is what triggers one.
+          Set this input to the name or list of names of files in the session, in the order they are numbered.
+          The reply names the name each file now has, one per line, in the order given.
+          Renaming reads nothing inside a file, so it takes no budget, as a deletion takes none.
+      renamepattern
+          String, up to 64 characters.
+          The pattern every new name is made from. {name} is a file's name without its extension, {n} its
+          place in filesToRename counting from 1, & {date} the day it is renamed, as 2026-11-13.
+          The tokens are kept & the rest is sanitized as a typed filename is. The extension is never changed,
+          & a name that is taken is given the next free one, so no file is ever written over.
+          A pattern holding a control character is refused. A request that renamed nothing ends with error 33.
+      filesToStrip
+          String or JSON Array.
+          This input is used during Strip Metadata Operations & is what triggers one.
+          Set this input to the name or list of names of files in the session.
+          A copy of each is made beside it without its metadata, named by userfilename or the file's own name,
+          & the next free name when that is taken. The reply names every copy made, one per line.
+          A format the Metadata pipeline does not list is refused & named in a warning. A request that made
+          nothing ends with error 34.
+      filesToMerge
+          String or JSON Array.
+          This input is used during Merge Operations & is what triggers one.
+          Set this input to the names of PDFs in the session, in the order their pages are to follow.
+          They are put into one PDF named by userfilename, or Merged when it is empty, & the reply names it.
+          A request holding a file that is not a PDF, or one that cannot be read, merges nothing & ends with error 35.
+      filesToSplit
+          String or JSON Array.
+          This input is used during Split Operations & is what triggers one.
+          Set this input to the name or list of names of PDFs in the session.
+          Each page of report.pdf becomes report-1.pdf, report-2.pdf & so on, & the reply names every page made.
+          A PDF with more pages than --Maximum Extracted Files-- allows, or pages holding more than
+          --Maximum Extracted Size-- allows, is not split. A request that made nothing ends with error 36.
 
   Optical Character Recognition (OCR) Operations
       pdfworkSelected
@@ -339,10 +373,12 @@ The following is a list of supported POST inputs, organized into sections based 
           1.
           Lists the workflows this session may run.
           {"Workflow":{"Available":true,"Library":[{"Id":"documents-to-pdf-zip","Name":"...","Description":"...",
-            "Steps":[{"Operation":"Convert","Mode":"each","Options":{...}}, ...],"AcceptsAll":false,"Accepts":["doc","docx", ...]}]}}
+            "Steps":[{"Operation":"Convert","Mode":"each","Options":{...}}, ...],"AcceptsAll":false,"Accepts":["doc","docx", ...],
+            "NeedsSelection":true,"Deletes":false}]}}
           Only a usable workflow is listed. AcceptsAll is true when its first step reads every file, & Accepts
           otherwise lists the extensions its first step reads. It is a hint, & the server decides.
           NeedsSelection is false when a Select step finds files of its own, so it may be run with none named.
+          Deletes is true when a step deletes files, so a page asks before it runs the workflow.
       workflowRun
           String.
           Starts the workflow with that identifier on the files named in workflowFiles[], in the order given.
@@ -364,9 +400,26 @@ The following is a list of supported POST inputs, organized into sections based 
             builder    --Enable Workflow Builder-- is off.
             invalid    The workflow does not check, or names an operation this server has off. Problems lists
                        every problem, in the server's words, which are English.
+      workflowPreview
+          String. A workflow's identifier, as workflowRun names one.
+          Names the files each step would take were the workflow run now on the files named in
+          workflowFiles[], & runs nothing. It takes no budget, starts no worker & keeps nothing.
+          {"Workflow":{"Previewed":true,"Reason":"","Steps":[{"Operation":"Convert","From":["selection"],
+            "Known":true,"Takes":["notes.docx"],"LeftOut":1,"Unknown":[],"Consumes":""}, ...]}}
+          Reason is what a run would be refused for now, files or nothing, & is empty when it would start.
+          A preview that is not made says disabled, unknown or files, & Previewed is false.
+          Known is false for a step taking what an operation makes, which is not known until it runs, &
+          Unknown names those references. Consumes is deleted for a step that deletes what it takes.
+          ABOUT_WORKFLOWS.txt describes every key.
+      workflowPreviewDocument
+          String. A workflow a page built, as JSON text, as workflowDocument sends one.
+          Previews it on the files named in workflowFiles[], as workflowPreview previews one from the
+          library, & replies as workflowPreview does. It is checked as a run checks it, so builder &
+          invalid, with Problems, may be given too, & unknown never is.
+          A request naming a preview & a run is answered as the preview, & runs nothing.
       workflowFiles
           JSON Array, sent as workflowFiles[] once for each file.
-          The files workflowRun & workflowDocument run on.
+          The files workflowRun & workflowDocument run on, & workflowPreview & workflowPreviewDocument preview.
       workflowStatus
           1.
           Reports this session's workflow.
@@ -390,11 +443,16 @@ The following is a list of supported POST inputs, organized into sections based 
           Describes what a page's builder may build from.
           {"Workflow":{"Available":true,"Builder":true,"ImportExport":true,"MaxSteps":16,"MaxFiles":100,
             "Operations":[{"Name":"Convert","BuiltIn":false,"Modes":["each"],"Options":[{"Name":"Extension",
-            "Type":"choice","Required":true,"Choices":["pdf", ...]}, ...]}, ...],"Kinds":["Document", ...]}}
+            "Type":"choice","Required":true,"Choices":["pdf", ...],"Groups":[{"Name":"Document","Choices":["pdf", ...]}, ...]},
+            ...],"Consumes":""}, ...],"Kinds":["Document", ...]}}
           Builder & ImportExport say whether each is on. Operations & Kinds are empty unless the builder is.
           Only an operation this server has on is described, & BuiltIn is true for Select, the Workflow Core's
           own. Each option has its Name & Type, & its Choices, Default, Required, Minimum & Maximum where it
           has them. A choice is described in lower case, as a step names it.
+          Groups sorts a long list of choices under a kind of file each, as a list of Name & Choices, in the
+          order the application gave. A format is in each group of a kind that writes it.
+          Consumes is deleted for Delete, renamed for Rename & empty for every other operation. A step taking
+          files an earlier step consumed is refused when the workflow is checked.
       workflowCheck
           String. A workflow, as JSON text.
           Checks it, & runs nothing & keeps nothing.

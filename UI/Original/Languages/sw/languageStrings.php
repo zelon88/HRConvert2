@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -410,8 +410,8 @@ $Gui2Text126 = 'Faili za OpenSCAD';
 $Gui2Text127 = 'Faili za Kutiririsha';
 // / 'Workflows'
 $Gui2Text128 = 'Mitiririko ya Kazi';
-// / 'Files'
-$Gui2Text129 = 'Faili';
+// / 'Selected Files'
+$Gui2Text129 = 'Faili Zilizochaguliwa';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'Chagua faili kwenye orodha iliyo hapa chini.';
 // / 'Select By Name: '
@@ -475,8 +475,8 @@ $Gui2Text159 = 'Operesheni inayohitajika na mtiririko huu wa kazi haipatikani.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Mtiririko wa kazi umesimama bila kutarajiwa.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'Mikondo ya Uchakataji';
+// / 'Available Pipelines'
+$Gui2Text161 = 'Mikondo ya Uchakataji Inayopatikana';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'Chagua mkondo hapo juu...';
 // / 'Select Pipeline...'
@@ -491,8 +491,8 @@ $Gui2Text166 = 'Chaguo';
 $Gui2Text167 = 'Rudi';
 // / 'Take: '
 $Gui2Text168 = 'Chukua: ';
-// / 'the ticked files'
-$Gui2Text169 = 'faili zilizowekwa alama';
+// / 'the selected files'
+$Gui2Text169 = 'faili zilizochaguliwa';
 // / 'the files step {step} made'
 $Gui2Text170 = 'faili zilizoundwa na hatua {step}';
 // / 'each file on its own'
@@ -547,6 +547,72 @@ $Gui2Text194 = 'Toa Yaliyomo ya Kumbukumbu Hii';
 $Gui2Text195 = 'Kila faili lililomo huongezwa kwenye faili zako, kwa jina lake au jina huru linalofuata.';
 // / 'Extract Files'
 $Gui2Text196 = 'Toa Faili';
+// / 'to {format}'
+$Gui2Text197 = 'kuwa {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'Mtiririko huu wa kazi unafuta faili. Faili lililofutwa haliwezi kurejeshwa.';
+// / 'Delete & Run'
+$Gui2Text199 = 'Futa & Endesha';
+// / 'Cancel'
+$Gui2Text200 = 'Ghairi';
+// / 'Rename'
+$Gui2Text201 = 'Badilisha Jina';
+// / 'Close Rename Options'
+$Gui2Text202 = 'Funga Chaguzi za Kubadilisha Jina';
+// / 'Rename This File'
+$Gui2Text203 = 'Badilisha Jina la Faili Hili';
+// / 'New Name'
+$Gui2Text204 = 'Jina Jipya';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'Tumia {name} kwa jina lake la sasa, {n} kwa nafasi yake kati ya faili zilizochaguliwa na {date} kwa tarehe ya leo. Kiendelezi chake kinabaki.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'Ondoa Metadata';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'Funga Chaguzi za Metadata';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'Ondoa Metadata Kwenye Faili Hili';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'Nakala inaundwa kando yake bila waandishi, mahali, tarehe na programu iliyoliunda. Kinachoonyeshwa kinabaki kama kilivyokuwa.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'Unganisha PDF';
+// / 'Split PDF'
+$Gui2Text211 = 'Gawanya PDF';
+// / 'Merge Or Split'
+$Gui2Text212 = 'Unganisha au Gawanya';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'Funga Chaguzi za Kuunganisha & Kugawanya';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'Unganisha PDF Zilizochaguliwa Kuwa Moja';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'Kurasa zake zinafuatana kwa mpangilio ambao PDF zilichaguliwa.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'Chagua PDF mbili au zaidi ili kuziunganisha.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'Unda PDF ya Kila Ukurasa';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'Kila faili lililochaguliwa linafutwa pamoja nalo: faili {count}.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'Kila faili lililochaguliwa linabadilishwa jina pamoja nalo: faili {count}.';
+// / 'Library'
+$Gui2Text220 = 'Maktaba';
+// / 'from Selected Files'
+$Gui2Text221 = 'kutoka Faili Zilizochaguliwa';
+// / 'from Step {step}'
+$Gui2Text222 = 'kutoka Hatua {step}';
+// / 'Preview'
+$Gui2Text223 = 'Hakiki';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'Mtiririko wa kazi ukiendeshwa sasa, kila hatua ingechukua:';
+// / 'Left out: '
+$Gui2Text225 = 'Zilizoachwa: ';
+// / 'No files.'
+$Gui2Text226 = 'Hakuna faili.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'kila faili kwenye orodha wakati hatua inapoendeshwa';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'Mtiririko huu wa kazi unafuta faili hizi. Faili lililofutwa haliwezi kurejeshwa.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'Hatua moja ilikuwa na hitilafu, kwa hivyo mtiririko wa kazi ulisimama kabla ya hatua inayofuta faili.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

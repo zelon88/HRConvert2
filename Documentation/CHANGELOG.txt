@@ -27,6 +27,36 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 --------------------
 COMMIT 11/13/2026
+v4.1.8 - New Rename, Delete, Strip Metadata, Merge & Split for files & workflows, Convert's formats grouped by kind, & the upload page's boxes take their scheme's colours.
+
+-v4.1.8.
+-New Rename button & workflow step. A pattern of {name}, {n} & {date} renames one file or every selected file, keeps each extension & never writes over a file. The Files pipeline renames.
+-New Delete workflow step. A file's Delete deletes every selected file & says how many first. A workflow that deletes asks before it runs, & no shipped workflow deletes.
+-A step taking files an earlier step deleted or renamed is refused when the workflow is checked, & what a workflow made is read again after every step.
+-New Metadata operation pipeline & Strip Metadata button & step. mat2 0.13 or newer makes a clean copy of a photo, PDF, office document, ebook, song or video beside it, in the sandbox, & leaves what it shows as it was.
+-New PDF operation pipeline & Merge & Split buttons & steps. PDFUnite merges the selected PDFs in the order selected, & PDFSeparate makes a PDF of each page, held to --Maximum Extracted Files-- & --Maximum Extracted Size--.
+-New dependencies MAT2, PDFUnite & PDFSeparate, & -v names each. Run --setup --install-depends --subsystem=Metadata after updating, or Strip Metadata fails with 41000.
+-The builder groups Convert's formats under tabs by kind of file, & a step that writes a format says to & the format.
+-The builder's boxes are Available Pipelines & Selected Files, & ticked is selected everywhere.
+-The upload page's dropzone & Start Over question are panels in the scheme's colours.
+-New Rename, Strip Metadata & Merge & Split icons in both interfaces, which ICON_CREDITS credits.
+-New workflow preview. A Preview button names the files each step would take & runs nothing. workflowPreview & workflowPreviewDocument ask for one.
+-A workflow that deletes names the files it deletes when it asks, & asks again if the workflow or the selection changed while it asked.
+-A step that deletes does not run after a step that had errors. The workflow ends failed & incomplete, & every file is kept.
+-A workflow's Delete & Rename steps take no budget, as their buttons take none, so cleaning up works while storage is spent. An operation that takes none declares a Budget of FALSE.
+-Each step's box says where its files come from, & the library's tab is Library.
+-A run, a preview & an export find a library's workflow through findLibraryWorkflow(), & a run, a preview & a check read a page's through checkSentWorkflow().
+-ABOUT_RESOURCE_RATE_LIMITING counts ten operations that take a budget, & ABOUT_PIPELINE_COMPONENTS names every pipeline. Both had missed Extract since v4.1.7.
+-ERROR_DESCRIPTIONS documents the incomplete warning & the unknown Consumes warning.
+-FIX. A file's buttons that ran onto a second line spilled over the file below. The row grows to hold them.
+-FIX. Every delete warned that a removal resolved outside its folder, for the folder its file was never in. The Files pipeline passes over a name with nothing under it, & ERROR_DESCRIPTIONS documents its warnings.
+-placeSessionFile() is the core's, & the Extractor places through it.
+-verifyLogs() & refreshLogFile() moved out of convertCore.php into the kernel.
+-ERROR_DESCRIPTIONS adds 33 to 36, 23100 to 23103, 41000 to 41008 & 42000 to 42008. ABOUT_WORKFLOWS, ABOUT_REST_API, ABOUT_PIPELINE_COMPONENTS, CREATING_GUIS, INSTALLATION_INSTRUCTIONS, DEVELOPMENT_NOTES & README describe them.
+-The core, the kernel, the contract, the manifest, the Workflow Core, the Files & Extractor pipelines, both interfaces & every language pack are v4.1.8, & every pin to them requires v4.1.8. The Metadata & PDF pipelines are new at v4.1.8.
+
+--------------------
+COMMIT 11/13/2026
 v4.1.7 - New Extractor pipeline & Extract step, the Docker image builds arm64 natively, --config's notes are true, & remote streams & URL fetches work.
 
 -v4.1.7.

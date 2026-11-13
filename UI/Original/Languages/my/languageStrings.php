@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -410,8 +410,8 @@ $Gui2Text126 = 'OpenSCAD ဖိုင်များ';
 $Gui2Text127 = 'တိုက်ရိုက်ထုတ်လွှင့်မှုများ';
 // / 'Workflows'
 $Gui2Text128 = 'လုပ်ငန်းစဉ်များ';
-// / 'Files'
-$Gui2Text129 = 'ဖိုင်များ';
+// / 'Selected Files'
+$Gui2Text129 = 'ရွေးထားသော ဖိုင်များ';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'အောက်ပါစာရင်းမှ ဖိုင်များကို ရွေးပါ။';
 // / 'Select By Name: '
@@ -475,8 +475,8 @@ $Gui2Text159 = 'ဤလုပ်ငန်းစဉ် လိုအပ်သော
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'လုပ်ငန်းစဉ် မမျှော်လင့်ဘဲ ရပ်သွားပါသည်။';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'ပိုက်လိုင်းများ';
+// / 'Available Pipelines'
+$Gui2Text161 = 'ရနိုင်သော ပိုက်လိုင်းများ';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'အထက်တွင် ပိုက်လိုင်းတစ်ခု ရွေးပါ...';
 // / 'Select Pipeline...'
@@ -491,8 +491,8 @@ $Gui2Text166 = 'ရွေးချယ်စရာများ';
 $Gui2Text167 = 'နောက်သို့';
 // / 'Take: '
 $Gui2Text168 = 'ယူရန်: ';
-// / 'the ticked files'
-$Gui2Text169 = 'အမှန်ခြစ်ထားသော ဖိုင်များ';
+// / 'the selected files'
+$Gui2Text169 = 'ရွေးထားသော ဖိုင်များ';
 // / 'the files step {step} made'
 $Gui2Text170 = 'အဆင့် {step} မှ ပြုလုပ်ခဲ့သော ဖိုင်များ';
 // / 'each file on its own'
@@ -547,6 +547,72 @@ $Gui2Text194 = 'ဤမော်ကွန်းကို ထုတ်ယူပါ
 $Gui2Text195 = 'ယင်းတွင်ပါဝင်သော ဖိုင်တိုင်းကို ၎င်း၏အမည် သို့မဟုတ် နောက်ထပ်လွတ်နေသော အမည်ဖြင့် သင့်ဖိုင်များထဲသို့ ထည့်ပေးပါသည်။';
 // / 'Extract Files'
 $Gui2Text196 = 'ဖိုင်များကို ထုတ်ယူပါ';
+// / 'to {format}'
+$Gui2Text197 = '{format} သို့';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'ဤလုပ်ငန်းစဉ်သည် ဖိုင်များကို ပယ်ဖျက်သည်။ ပယ်ဖျက်ပြီးသော ဖိုင်ကို ပြန်ယူ၍ မရပါ။';
+// / 'Delete & Run'
+$Gui2Text199 = 'ပယ်ဖျက်ပြီး လုပ်ဆောင်ပါ';
+// / 'Cancel'
+$Gui2Text200 = 'မလုပ်တော့ပါ';
+// / 'Rename'
+$Gui2Text201 = 'အမည်ပြောင်းရန်';
+// / 'Close Rename Options'
+$Gui2Text202 = 'အမည်ပြောင်းခြင်း ရွေးချယ်စရာများကို ပိတ်ပါ';
+// / 'Rename This File'
+$Gui2Text203 = 'ဤဖိုင်၏ အမည်ကို ပြောင်းပါ';
+// / 'New Name'
+$Gui2Text204 = 'အမည်သစ်';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'လက်ရှိအမည်အတွက် {name}၊ ရွေးထားသော ဖိုင်များထဲရှိ နေရာအတွက် {n} နှင့် ယနေ့ရက်စွဲအတွက် {date} ကို သုံးပါ။ ဖိုင်အမျိုးအစား နောက်ဆက်မပြောင်းပါ။';
+// / 'Strip Metadata'
+$Gui2Text206 = 'မက်တာဒေတာ ဖယ်ရှားရန်';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'မက်တာဒေတာ ရွေးချယ်စရာများကို ပိတ်ပါ';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'ဤဖိုင်မှ မက်တာဒေတာကို ဖယ်ရှားပါ';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'ရေးသားသူ၊ နေရာ၊ ရက်စွဲနှင့် ၎င်းကို ဖန်တီးခဲ့သော ဆော့ဖ်ဝဲ မပါသော မိတ္တူတစ်ခုကို ဘေးတွင် ပြုလုပ်ပါသည်။ ပြသသည့်အရာမှာ ယခင်အတိုင်း ရှိနေပါသည်။';
+// / 'Merge PDFs'
+$Gui2Text210 = 'PDF များ ပေါင်းရန်';
+// / 'Split PDF'
+$Gui2Text211 = 'PDF ခွဲရန်';
+// / 'Merge Or Split'
+$Gui2Text212 = 'ပေါင်းရန် သို့မဟုတ် ခွဲရန်';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'ပေါင်းခြင်းနှင့် ခွဲခြင်း ရွေးချယ်စရာများကို ပိတ်ပါ';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'ရွေးထားသော PDF များကို တစ်ခုတည်း ပေါင်းပါ';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'စာမျက်နှာများသည် PDF များကို ရွေးခဲ့သည့် အစီအစဉ်အတိုင်း ဆက်တိုက် ရှိပါသည်။';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'ပေါင်းရန် PDF နှစ်ခု သို့မဟုတ် ထို့ထက်ပို၍ ရွေးပါ။';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'စာမျက်နှာတိုင်းမှ PDF တစ်ခုစီ ပြုလုပ်ပါ';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'ရွေးထားသော ဖိုင်တိုင်းကိုလည်း အတူ ပယ်ဖျက်ပါမည်: {count} ခု။';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'ရွေးထားသော ဖိုင်တိုင်း၏ အမည်ကိုလည်း အတူ ပြောင်းပါမည်: {count} ခု။';
+// / 'Library'
+$Gui2Text220 = 'စာကြည့်တိုက်';
+// / 'from Selected Files'
+$Gui2Text221 = 'ရွေးထားသော ဖိုင်များမှ';
+// / 'from Step {step}'
+$Gui2Text222 = 'အဆင့် {step} မှ';
+// / 'Preview'
+$Gui2Text223 = 'အစမ်းကြည့်ရန်';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'လုပ်ငန်းစဉ်ကို ယခု လုပ်ဆောင်ပါက အဆင့်တစ်ခုစီ ယူမည့် ဖိုင်များ:';
+// / 'Left out: '
+$Gui2Text225 = 'ချန်ထားသည်: ';
+// / 'No files.'
+$Gui2Text226 = 'ဖိုင် မရှိပါ။';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'အဆင့် လုပ်ဆောင်ချိန်တွင် စာရင်းထဲရှိ ဖိုင်အားလုံး';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'ဤလုပ်ငန်းစဉ်သည် ဤဖိုင်များကို ပယ်ဖျက်သည်။ ပယ်ဖျက်ပြီးသော ဖိုင်ကို ပြန်ယူ၍ မရပါ။';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'အဆင့်တစ်ခုတွင် အမှားများ ရှိခဲ့သဖြင့် ဖိုင်များကို ပယ်ဖျက်သည့် အဆင့်မတိုင်မီ လုပ်ငန်းစဉ် ရပ်သွားသည်။';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

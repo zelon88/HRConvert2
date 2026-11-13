@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -413,8 +413,8 @@ $Gui2Text126 = 'ملفات OpenSCAD';
 $Gui2Text127 = 'البث';
 // / 'Workflows'
 $Gui2Text128 = 'مسارات العمل';
-// / 'Files'
-$Gui2Text129 = 'الملفات';
+// / 'Selected Files'
+$Gui2Text129 = 'الملفات المحددة';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'حدد الملفات من القائمة أدناه.';
 // / 'Select By Name: '
@@ -478,8 +478,8 @@ $Gui2Text159 = 'إحدى العمليات التي يحتاجها سير الع�
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'توقف سير العمل بشكل غير متوقع.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'خطوط المعالجة';
+// / 'Available Pipelines'
+$Gui2Text161 = 'خطوط المعالجة المتاحة';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'اختر خط معالجة من الأعلى...';
 // / 'Select Pipeline...'
@@ -494,8 +494,8 @@ $Gui2Text166 = 'الخيارات';
 $Gui2Text167 = 'رجوع';
 // / 'Take: '
 $Gui2Text168 = 'المدخلات: ';
-// / 'the ticked files'
-$Gui2Text169 = 'الملفات المؤشر عليها';
+// / 'the selected files'
+$Gui2Text169 = 'الملفات المحددة';
 // / 'the files step {step} made'
 $Gui2Text170 = 'الملفات التي أنشأتها الخطوة {step}';
 // / 'each file on its own'
@@ -550,6 +550,72 @@ $Gui2Text194 = 'استخراج هذا الأرشيف';
 $Gui2Text195 = 'يُضاف كل ملف يحتويه إلى ملفاتك، باسمه أو بأول اسم متاح بعده.';
 // / 'Extract Files'
 $Gui2Text196 = 'استخراج الملفات';
+// / 'to {format}'
+$Gui2Text197 = 'إلى {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'يحذف سير العمل هذا ملفات. لا يمكن استعادة الملف المحذوف.';
+// / 'Delete & Run'
+$Gui2Text199 = 'احذف وشغّل';
+// / 'Cancel'
+$Gui2Text200 = 'إلغاء';
+// / 'Rename'
+$Gui2Text201 = 'إعادة تسمية';
+// / 'Close Rename Options'
+$Gui2Text202 = 'إغلاق خيارات إعادة التسمية';
+// / 'Rename This File'
+$Gui2Text203 = 'إعادة تسمية هذا الملف';
+// / 'New Name'
+$Gui2Text204 = 'الاسم الجديد';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'استخدم {name} لاسمه الحالي، و{n} لترتيبه بين الملفات المحددة، و{date} لتاريخ اليوم. يبقى امتداده كما هو.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'إزالة البيانات الوصفية';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'إغلاق خيارات البيانات الوصفية';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'إزالة البيانات الوصفية من هذا الملف';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'تُنشأ نسخة بجانبه دون مؤلفيه وأماكنه وتواريخه والبرنامج الذي أنشأه. يبقى ما يعرضه كما كان.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'دمج ملفات PDF';
+// / 'Split PDF'
+$Gui2Text211 = 'تقسيم PDF';
+// / 'Merge Or Split'
+$Gui2Text212 = 'دمج أو تقسيم';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'إغلاق خيارات الدمج والتقسيم';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'دمج ملفات PDF المحددة في ملف واحد';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'تتتابع صفحاتها بالترتيب الذي حُددت به ملفات PDF.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'حدد ملفي PDF أو أكثر لدمجها.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'إنشاء PDF لكل صفحة';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'يُحذف معه كل ملف محدد. عدد الملفات: {count}.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'يُعاد معه تسمية كل ملف محدد. عدد الملفات: {count}.';
+// / 'Library'
+$Gui2Text220 = 'المكتبة';
+// / 'from Selected Files'
+$Gui2Text221 = 'من الملفات المحددة';
+// / 'from Step {step}'
+$Gui2Text222 = 'من الخطوة {step}';
+// / 'Preview'
+$Gui2Text223 = 'معاينة';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'لو شُغّل سير العمل الآن، لأخذت كل خطوة:';
+// / 'Left out: '
+$Gui2Text225 = 'المستبعدة: ';
+// / 'No files.'
+$Gui2Text226 = 'لا توجد ملفات.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'كل ملف في القائمة عند تشغيل الخطوة';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'يحذف سير العمل هذا هذه الملفات. لا يمكن استعادة الملف المحذوف.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'حدثت أخطاء في إحدى الخطوات، لذلك توقف سير العمل قبل الخطوة التي تحذف الملفات.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

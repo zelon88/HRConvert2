@@ -57,7 +57,7 @@ window.HRC2Workflows = {
   elements: {
     panel: 'hrc2Workflows', button: 'hrc2WorkflowsButton', boxes: 'hrc2WfBoxes', filesBox: 'hrc2WfFilesBox', files: 'hrc2WfFiles',
     pattern: 'hrc2WfPattern', pickBox: 'hrc2WfPickBox', select: 'hrc2WfSelect', about: 'hrc2WfAbout', runBox: 'hrc2WfRunBox',
-    run: 'hrc2WfRun', stop: 'hrc2WfStop', status: 'hrc2WfStatus',
+    preview: 'hrc2WfPreview', run: 'hrc2WfRun', stop: 'hrc2WfStop', status: 'hrc2WfStatus',
     pipelines: 'hrc2WfPipelines', tabs: 'hrc2WfTabs', tabPanel: 'hrc2WfTabPanel', tools: 'hrc2WfTools', add: 'hrc2WfAdd', addMenu: 'hrc2WfAddMenu' },
   // / The panel's words. The page supplies them from the language pack. The English defaults are a last resort.
   text: {
@@ -66,8 +66,12 @@ window.HRC2Workflows = {
     waiting: 'Waiting for the server.', starting: 'Starting.', finished: 'Finished.', stopping: 'Stopping.', stopped: 'Stopped.', made: 'Files made: ',
     running: 'A workflow is running.', idle: 'No workflow is running.',
     unavailable: 'Workflows are not available on this server.', empty: 'No workflows are installed on this server.',
-    library: 'Workflows', pickPipeline: 'Select a pipeline above...', options: 'Options', back: 'Back', remove: 'Delete',
-    take: 'Take: ', ticked: 'the ticked files', stepFiles: 'the files step {step} made', each: 'each file on its own', together: 'all files together',
+    library: 'Library', pickPipeline: 'Select a pipeline above...', options: 'Options', back: 'Back', remove: 'Delete',
+    take: 'Take: ', selectedFiles: 'the selected files', stepFiles: 'the files step {step} made', sessionFiles: 'every file in the list when it runs',
+    each: 'each file on its own', together: 'all files together', fromSelection: 'from Selected Files', fromStep: 'from Step {step}',
+    toFormat: 'to {format}', confirmDelete: 'This workflow deletes files. A deleted file cannot be brought back.', confirmRun: 'Delete & Run', cancel: 'Cancel',
+    confirmDeleteFiles: 'This workflow deletes these files. A deleted file cannot be brought back.',
+    preview: 'Preview', previewHeadline: 'If the workflow ran now, each step would take:', leftOut: 'Left out: ', nothingTaken: 'No files.',
     kinds: 'Only these kinds: ', extensions: 'Only these extensions: ', byName: 'Select By Name: ', patternHint: 'Use * and ? as wildcards, or write a regular expression between slashes.',
     smallest: 'Smallest size: ', largest: 'Largest size: ', sortBy: 'Sort By: ', arrival: 'In the order they arrive', nameOrder: 'Name',
     allFiles: 'all files', allKind: 'all {kind}', name: 'Name', untitled: 'My workflow', newWorkflow: 'New', importFile: 'Import', exportFile: 'Export',
@@ -81,19 +85,22 @@ window.HRC2Workflows = {
     failed: {
       operation: 'A step of the workflow failed.', threat: 'A virus was found, so the workflow stopped.', runtime: 'The workflow ran out of time.',
       files: 'The workflow made too many files.', budget: 'The server was too busy to finish the workflow.',
-      unavailable: 'An operation this workflow needs is not available.', halted: 'The workflow stopped unexpectedly.', stopped: 'Stopped.' } },
+      unavailable: 'An operation this workflow needs is not available.', halted: 'The workflow stopped unexpectedly.', stopped: 'Stopped.',
+      incomplete: 'A step had errors, so the workflow stopped before the step that deletes files.' } },
   // / What each operation, kind of file & option is called in the page's language, & what each choice an option offers is called.
   // / Anything not named here is shown as the server names it.
   operations: {},
   kinds: {},
   optionLabels: {},
+  // / A sentence that says how an option is written, shown when a pointer rests on its field, such as the tokens a Pattern holds.
+  optionHints: {},
   choiceLabels: {},
   // / Whether the page offers the builder & import & export. The server's answer decides whether either is drawn.
   builder: false,
   importExport: false,
   // / What the page lets this reach. Each one is optional, & each default does nothing.
-  // / listSelection returns the ticked files in the order they were ticked, & listFiles returns every file the list shows.
-  // / selectNames ticks exactly the files it is given, filesChanged asks for the list to be drawn again & download fetches one file.
+  // / listSelection returns the selected files in the order they were selected, & listFiles returns every file the list shows.
+  // / selectNames selects exactly the files it is given, filesChanged asks for the list to be drawn again & download fetches one file.
   listSelection: function () { return []; },
   listFiles: function () { return []; },
   selectNames: function () { return false; },
@@ -126,6 +133,11 @@ window.HRC2Workflows = {
   isRenamed: false,
   openStep: -1,
   activeTab: '',
+  // / The group of choices each operation's tab shows, by the operation's name, such as Image for Convert.
+  activeGroups: {},
+  // / Each preview asked for, & each question about deleting, is numbered, & only the answer to the last one asked is drawn.
+  // / A change to the files selected or to the workflow moves the number on, so an answer about what was there before is never drawn.
+  previewCount: 0,
   menuIsOpen: false,
   importer: null,
   // / What a workflow already running in this session is, when a page is loaded again while it runs.
@@ -146,7 +158,7 @@ window.HRC2Workflows = {
     if (!settings) return false;
     for (key in settings) {
       if (!settings.hasOwnProperty(key)) continue;
-      if ((key === 'elements' || key === 'operations' || key === 'kinds' || key === 'optionLabels') && settings[key] && typeof settings[key] === 'object') self[key] = self.merged(self[key], settings[key]);
+      if ((key === 'elements' || key === 'operations' || key === 'kinds' || key === 'optionLabels' || key === 'optionHints') && settings[key] && typeof settings[key] === 'object') self[key] = self.merged(self[key], settings[key]);
       else if (key === 'choiceLabels' && settings.choiceLabels && typeof settings.choiceLabels === 'object') self.choiceLabels = self.mergedChoices(self.choiceLabels, settings.choiceLabels);
       else if (key === 'text' && settings.text && typeof settings.text === 'object') self.text = self.mergedText(self.text, settings.text);
       else if (key === 'builder' || key === 'importExport') self[key] = (settings[key] === true);
@@ -248,6 +260,7 @@ window.HRC2Workflows = {
     var self = this;
     var button = self.element('button');
     var select = self.element('select');
+    var preview = self.element('preview');
     var run = self.element('run');
     var stop = self.element('stop');
     var pattern = self.element('pattern');
@@ -259,9 +272,11 @@ window.HRC2Workflows = {
       button.setAttribute('aria-expanded', self.isOpen() ? 'true' : 'false');
       if (self.isOpen() && self.libraryState === 'unread') self.loadLibrary(); });
     if (select) select.addEventListener('change', function () {
+      self.dropQuestion();
       self.chosenId = select.value;
       self.drawWorkflow();
       self.drawControls(); });
+    if (preview) preview.addEventListener('click', function () { self.preview(); });
     if (run) run.addEventListener('click', function () { self.run(); });
     if (stop) stop.addEventListener('click', function () { self.stop(); });
     if (pattern) {
@@ -360,8 +375,8 @@ window.HRC2Workflows = {
     });
   },
 
-  // / Keep each workflow's identifier, name, description, steps, what its first step reads & whether it needs ticked files, & nothing else.
-  // / A server that does not say whether a workflow needs ticked files is taken to mean that it does.
+  // / Keep each workflow's identifier, name, description, steps, what its first step reads & whether it needs selected files, & nothing else.
+  // / A server that does not say whether a workflow needs selected files is taken to mean that it does.
   cleanLibrary: function (entries) {
     var self = this;
     var cleaned = [];
@@ -372,7 +387,7 @@ window.HRC2Workflows = {
         if (step && typeof step.Operation === 'string') steps.push({ Operation: step.Operation, Options: (step.Options && typeof step.Options === 'object') ? step.Options : {} }); });
       cleaned.push({ Id: entry.Id, Name: entry.Name, Description: (typeof entry.Description === 'string') ? entry.Description : '', Steps: steps,
         AcceptsAll: entry.AcceptsAll === true, Accepts: self.isList(entry.Accepts) ? entry.Accepts.filter(function (value) { return typeof value === 'string'; }) : [],
-        NeedsSelection: entry.NeedsSelection !== false }); });
+        NeedsSelection: entry.NeedsSelection !== false, Deletes: entry.Deletes === true }); });
     return cleaned;
   },
 
@@ -401,7 +416,8 @@ window.HRC2Workflows = {
     });
   },
 
-  // / Keep each operation's name, whether it is the server's own Select, its modes & its options, & nothing else.
+  // / Keep each operation's name, whether it is the server's own Select, its modes, its options & what becomes of the files it takes, & nothing else.
+  // / A choice option keeps the groups its choices are sorted into, each a Name & its Choices.
   cleanCatalog: function (entries) {
     var self = this;
     var cleaned = [];
@@ -414,9 +430,11 @@ window.HRC2Workflows = {
         if (!option || typeof option.Name !== 'string' || ['choice', 'name', 'integer', 'boolean'].indexOf(option.Type) === -1) return;
         options.push({ Name: option.Name, Type: option.Type, Default: option.Default, Required: option.Required === true,
           Minimum: (typeof option.Minimum === 'number') ? option.Minimum : null, Maximum: (typeof option.Maximum === 'number') ? option.Maximum : null,
-          Choices: self.isList(option.Choices) ? option.Choices.filter(function (choice) { return typeof choice === 'string'; }) : [] }); });
+          Choices: self.isList(option.Choices) ? option.Choices.filter(function (choice) { return typeof choice === 'string'; }) : [],
+          Groups: self.isList(option.Groups) ? option.Groups.filter(function (group) { return group && typeof group.Name === 'string' && self.isList(group.Choices); }).map(function (group) {
+            return { Name: group.Name, Choices: group.Choices.filter(function (choice) { return typeof choice === 'string'; }) }; }) : [] }); });
       if (entry.BuiltIn !== true && modes.length === 0) return;
-      cleaned.push({ Name: entry.Name, BuiltIn: entry.BuiltIn === true, Modes: modes, Options: options }); });
+      cleaned.push({ Name: entry.Name, BuiltIn: entry.BuiltIn === true, Modes: modes, Options: options, Consumes: (typeof entry.Consumes === 'string') ? entry.Consumes : '' }); });
     return cleaned;
   },
 
@@ -428,7 +446,7 @@ window.HRC2Workflows = {
     return found;
   },
 
-  // / How many of the ticked files a workflow's first step reads, going by their extensions.
+  // / How many of the selected files a workflow's first step reads, going by their extensions.
   // / It is a hint, because the server applies each step's filter & decides.
   usableCount: function (entry, fileNames) {
     if (!entry) return 0;
@@ -462,8 +480,28 @@ window.HRC2Workflows = {
     return found;
   },
 
+  // / The groups an option's choices are shown in, or none when they are not grouped.
+  // / Groups are used only when every choice is in one, so no choice is ever out of reach of a tab.
+  choiceGroups: function (option) {
+    var grouped = [];
+    if (!option || !this.isList(option.Groups) || option.Groups.length < 2) return [];
+    option.Groups.forEach(function (group) { group.Choices.forEach(function (choice) { if (grouped.indexOf(choice) === -1) grouped.push(choice); }); });
+    return option.Choices.every(function (choice) { return grouped.indexOf(choice) !== -1; }) ? option.Groups : [];
+  },
+
+  // / Whether the workflow about to run deletes files, as a step built here or a workflow from the library says.
+  deletesFiles: function () {
+    var self = this;
+    var entry = self.chosen();
+    if (self.isBuilding()) return self.steps.some(function (step) {
+      var stepEntry = self.catalogEntry(step.Operation);
+      return !!(stepEntry && stepEntry.Consumes === 'deleted'); });
+    return !!(entry && entry.Deletes === true);
+  },
+
   // / Begin again with one box waiting for a pipeline.
   startNewWorkflow: function () {
+    this.dropQuestion();
     this.steps = [{ Operation: '' }];
     this.workflowName = '';
     this.workflowDescription = '';
@@ -498,7 +536,7 @@ window.HRC2Workflows = {
     return this.steps.length > 0 && this.emptyIndex() === -1;
   },
 
-  // / Whether a step finds files of its own, so the workflow may run with no file ticked.
+  // / Whether a step finds files of its own, so the workflow may run with no file selected.
   hasSelectStep: function () {
     var self = this;
     return self.steps.some(function (step) { var entry = self.catalogEntry(step.Operation); return !!(entry && entry.BuiltIn); });
@@ -510,9 +548,11 @@ window.HRC2Workflows = {
   },
 
   // / Note that the steps were changed. The description was its author's, of the steps they wrote, so it goes.
+  // / A preview or a question about deleting no longer says what would run, so it goes too.
   markModified: function () {
     this.isModified = true;
     this.workflowDescription = '';
+    this.dropQuestion();
   },
 
   // / Put an operation into the box waiting for one, or into a new box at the end.
@@ -604,6 +644,7 @@ window.HRC2Workflows = {
       if (written.Options && typeof written.Options === 'object') Object.keys(written.Options).forEach(function (optionName) { step.Options[optionName] = written.Options[optionName]; });
       steps.push(step); });
     if (!isUsable) return false;
+    self.dropQuestion();
     self.steps = steps;
     self.workflowName = parsed.Name;
     self.workflowDescription = (typeof parsed.Description === 'string') ? parsed.Description : '';
@@ -723,14 +764,21 @@ window.HRC2Workflows = {
     return step.Filter.Types.map(function (kind) { return self.kindName(kind); }).join(', ');
   },
 
-  // / The files a step takes, in words.
-  inputWords: function (step) {
+  // / The files one reference names, in words. The selected files, the files an earlier step made, or every file the list holds when a Select step runs.
+  referenceWords: function (reference) {
+    if (reference === 'selection') return this.text.selectedFiles;
+    if (reference === 'session') return this.text.sessionFiles;
+    return this.fill(this.text.stepFiles, { step: String(reference).replace(/^step /, '') });
+  },
+
+  // / Where a step's files come from, named as the boxes are. The Selected Files box, or the step whose files it takes.
+  fromWords: function (step) {
     var self = this;
-    return step.Input.map(function (reference) { return (reference === 'selection') ? self.text.ticked : self.fill(self.text.stepFiles, { step: reference.slice(5) }); }).join(', ');
+    return step.Input.map(function (reference) { return (reference === 'selection') ? self.text.fromSelection : self.fill(self.text.fromStep, { step: String(reference).replace(/^step /, '') }); }).join(', ');
   },
 
   // / What a closed box says about its step.
-  summaryLines: function (step, stepIndex) {
+  summaryLines: function (step) {
     var self = this;
     var entry = self.catalogEntry(step.Operation);
     var primary = self.primaryOption(entry);
@@ -739,11 +787,12 @@ window.HRC2Workflows = {
     if (!entry) return lines;
     if (entry.BuiltIn) lines.push(self.selectWords(step));
     else {
-      if (primary && step.Options[primary.Name] !== undefined) lines.push(self.choiceName(primary.Name, step.Options[primary.Name]));
+      // / Where a step's files come from is said first, & the format it writes reads as where they go, so a closed box says from Selected Files & then to png.
+      lines.push(self.fromWords(step));
+      if (primary && step.Options[primary.Name] !== undefined) lines.push((primary.Name === 'Extension') ? self.fill(self.text.toFormat, { format: self.choiceName(primary.Name, step.Options[primary.Name]) }) : self.choiceName(primary.Name, step.Options[primary.Name]));
       lines.push(step.Mode === 'together' ? self.text.together : self.text.each);
       if (step.Filter.Types.length > 0) lines.push(step.Filter.Types.map(function (kind) { return self.kindName(kind); }).join(', ')); }
     if (pattern !== '') lines.push(pattern);
-    if (!entry.BuiltIn && !(step.Input.length === 1 && step.Input[0] === (stepIndex === 0 ? 'selection' : 'step ' + stepIndex))) lines.push(self.text.take + self.inputWords(step));
     return lines;
   },
 
@@ -767,7 +816,8 @@ window.HRC2Workflows = {
       if (this.libraryState === 'unavailable') this.showLines([this.text.unavailable]);
       else if (this.libraryState === 'ready' && this.library.length === 0 && this.buildState === 'unavailable') this.showLines([this.text.empty]);
       // / The idle line is written only when it is not already there, because the status is read aloud whenever it changes.
-      else if (status.getAttribute('data-hrc2-result') !== 'true' && status.getAttribute('data-hrc2-notice') !== 'true' && status.textContent !== this.text.idle) this.showLines([this.text.idle]); }
+      // / A preview & a question about deleting stay, because whatever changes what they are about takes them back with dropQuestion().
+      else if (status.getAttribute('data-hrc2-result') !== 'true' && status.getAttribute('data-hrc2-notice') !== 'true' && !status.hasAttribute('data-hrc2-preview') && !status.hasAttribute('data-hrc2-confirm') && status.textContent !== this.text.idle) this.showLines([this.text.idle]); }
     this.drawFiles();
     this.drawChoices();
     this.drawWorkflow();
@@ -776,7 +826,7 @@ window.HRC2Workflows = {
     this.drawControls();
   },
 
-  // / The ticked files, in the order they were ticked, or what to do when there are none.
+  // / The selected files, in the order they were selected, or what to do when there are none.
   drawFiles: function () {
     var self = this;
     var target = self.element('files');
@@ -816,7 +866,7 @@ window.HRC2Workflows = {
     select.value = self.chosenId;
   },
 
-  // / What the chosen workflow is & does, & how many of the ticked files it can use.
+  // / What the chosen workflow is & does, & how many of the selected files it can use.
   // / Where the server allows it, the chosen workflow can be exported from here.
   drawWorkflow: function () {
     var self = this;
@@ -916,10 +966,13 @@ window.HRC2Workflows = {
 
   // / An operation's tab. Its choices are what its first choice offers, such as every format Convert writes.
   // / Select's choices are every file, or every file of one kind. An operation offering no choice is one choice of its own.
+  // / Choices sorted into groups are shown a group at a time, under a row of tabs of their own, each named as its kind of file is.
   drawOperationTab: function (panel, entry, isIdle) {
     var self = this;
     var chips = self.make('div', null, 'hrc2-wf-chips');
     var primary = self.primaryOption(entry);
+    var groups = self.choiceGroups(primary);
+    var shownGroup = null;
     var offer = function (label, choiceValue, kindName) {
       var chip = self.makeButton(label, 'hrc2-wf-chip');
       chip.setAttribute('data-hrc2-choice', (choiceValue !== undefined) ? choiceValue : (kindName || ''));
@@ -933,9 +986,52 @@ window.HRC2Workflows = {
     if (entry.BuiltIn) {
       offer(self.text.allFiles, undefined, '');
       self.catalogKinds.forEach(function (kind) { offer(self.fill(self.text.allKind, { kind: self.kindName(kind) }), undefined, kind); }); }
+    else if (primary && groups.length > 0) {
+      groups.forEach(function (group) { if (group.Name === self.activeGroups[entry.Name]) shownGroup = group; });
+      if (!shownGroup) shownGroup = groups[0];
+      self.activeGroups[entry.Name] = shownGroup.Name;
+      panel.appendChild(self.groupTabs(entry, groups, shownGroup));
+      shownGroup.Choices.forEach(function (choice) { offer(self.choiceName(primary.Name, choice), choice, ''); }); }
     else if (primary) primary.Choices.forEach(function (choice) { offer(self.choiceName(primary.Name, choice), choice, ''); });
     else offer(self.operationName(entry.Name), undefined, '');
     panel.appendChild(chips);
+  },
+
+  // / The row of tabs beneath an operation's own, one for each group of its choices.
+  // / Each tab is pressed or not, & the arrow keys move between them in the direction a line is read, as between the tabs above them.
+  groupTabs: function (entry, groups, shownGroup) {
+    var self = this;
+    var row = self.make('div', null, 'hrc2-wf-subtabs');
+    row.setAttribute('role', 'group');
+    row.setAttribute('aria-label', self.operationName(entry.Name));
+    groups.forEach(function (group, position) {
+      var tab = self.makeButton(self.kindName(group.Name), 'hrc2-wf-subtab');
+      tab.id = 'hrc2WfGroup-' + entry.Name + '-' + group.Name;
+      tab.setAttribute('data-hrc2-group', group.Name);
+      tab.setAttribute('aria-pressed', (group === shownGroup) ? 'true' : 'false');
+      tab.tabIndex = (group === shownGroup) ? 0 : -1;
+      tab.addEventListener('click', function () {
+        self.activeGroups[entry.Name] = group.Name;
+        self.drawPipelines();
+        self.focusGroup(entry.Name, group.Name); });
+      tab.addEventListener('keydown', function (event) {
+        var step = 0;
+        var isRightToLeft = (window.getComputedStyle(row).direction === 'rtl');
+        if (event.key === 'ArrowRight') step = isRightToLeft ? -1 : 1;
+        else if (event.key === 'ArrowLeft') step = isRightToLeft ? 1 : -1;
+        if (step === 0) return;
+        event.preventDefault();
+        self.activeGroups[entry.Name] = groups[(position + step + groups.length) % groups.length].Name;
+        self.drawPipelines();
+        self.focusGroup(entry.Name, self.activeGroups[entry.Name]); });
+      row.appendChild(tab); });
+    return row;
+  },
+
+  // / Hand the focus to a group's tab.
+  focusGroup: function (operationName, groupName) {
+    var tab = document.getElementById('hrc2WfGroup-' + operationName + '-' + groupName);
+    if (tab) tab.focus();
   },
 
   // / The workflow's name, & New, Import & Export. Import needs the builder, & both need the server to allow them.
@@ -1047,7 +1143,7 @@ window.HRC2Workflows = {
     if (self.openStep === stepIndex) {
       box.appendChild(self.optionsForm(step, stepIndex, entry, isIdle));
       return box; }
-    self.summaryLines(step, stepIndex).forEach(function (line) {
+    self.summaryLines(step).forEach(function (line) {
       var paragraph = self.make('p', null, 'hrc2-wf-summary');
       paragraph.appendChild(self.make('bdi', line));
       box.appendChild(paragraph); });
@@ -1101,8 +1197,8 @@ window.HRC2Workflows = {
     return row;
   },
 
-  // / Which files a step takes, the ticked files or what an earlier step made, & any of them together.
-  // / A step takes something, so the last one ticked cannot be taken away, & it takes no more than the format's eight.
+  // / Which files a step takes, the selected files or what an earlier step made, & any of them together.
+  // / A step takes something, so the last one checked cannot be taken away, & it takes no more than the format's eight.
   takeRow: function (step, stepIndex, touched) {
     var self = this;
     var group = self.make('span', null, 'hrc2-wf-row-control hrc2-wf-checks');
@@ -1125,7 +1221,7 @@ window.HRC2Workflows = {
         step.Input = sources.filter(function (reference) { return chosen.indexOf(reference) !== -1; }).concat(chosen.filter(function (reference) { return sources.indexOf(reference) === -1; }));
         touched(); });
       label.appendChild(box);
-      label.appendChild(self.make('span', (source === 'selection') ? self.text.ticked : self.fill(self.text.stepFiles, { step: source.slice(5) })));
+      label.appendChild(self.make('span', self.referenceWords(source)));
       group.appendChild(label); });
     return self.makeRow(self.text.take, group, '');
   },
@@ -1152,7 +1248,7 @@ window.HRC2Workflows = {
     return self.makeRow('', group, '');
   },
 
-  // / The kinds of file a step keeps. None ticked keeps every kind.
+  // / The kinds of file a step keeps. None checked keeps every kind.
   kindsRow: function (step, stepIndex, touched) {
     var self = this;
     var group = self.make('span', null, 'hrc2-wf-row-control hrc2-wf-checks');
@@ -1212,7 +1308,7 @@ window.HRC2Workflows = {
   },
 
   // / One option an operation is given, drawn by its type.
-  // / A choice is a list, a name is text of up to 64 characters, an integer is a number within its bounds & a boolean is a tick.
+  // / A choice is a list, a name is text of up to 64 characters, an integer is a number within its bounds & a boolean is a select.
   // / A number outside its bounds is not kept, & the box is marked until it is put right.
   optionRow: function (step, stepIndex, option, touched) {
     var self = this;
@@ -1261,6 +1357,7 @@ window.HRC2Workflows = {
         touched(); }); }
     control.id = controlId;
     control.className = 'hrc2-wf-row-control';
+    if (self.optionHints && typeof self.optionHints[option.Name] === 'string') control.title = self.optionHints[option.Name];
     return self.makeRow(self.optionName(option.Name), control, controlId);
   },
 
@@ -1306,7 +1403,8 @@ window.HRC2Workflows = {
 
   // / Which box needs attention next, & which controls can be used.
   // / Files come first, then the workflow, then running it. Nothing is highlighted while a workflow runs or when none can.
-  // / A workflow with a Select step finds files of its own, so it needs none ticked.
+  // / A workflow with a Select step finds files of its own, so it needs none selected.
+  // / Preview is offered whenever Run is, because it asks about exactly what Run would run.
   drawControls: function () {
     var self = this;
     var fileCount = (self.listSelection() || []).length;
@@ -1316,8 +1414,10 @@ window.HRC2Workflows = {
     var isIdle = (self.jobState === 'idle');
     var needsFiles = building ? !self.hasSelectStep() : !(entry && entry.NeedsSelection === false);
     var hasWorkflow = building ? self.isComplete() : !!entry;
+    var canRun = isReady && isIdle && hasWorkflow && (fileCount > 0 || !needsFiles);
     var attention = '';
     var select = self.element('select');
+    var preview = self.element('preview');
     var run = self.element('run');
     var stop = self.element('stop');
     var add = self.element('add');
@@ -1329,8 +1429,11 @@ window.HRC2Workflows = {
     if (boxes) Array.prototype.forEach.call(boxes.children, function (box) {
       if (box.classList.contains('hrc2-wf-step')) box.classList.toggle('hrc2-wf-attention', attention === 'step' && box.classList.contains('hrc2-wf-step-empty')); });
     if (select) select.disabled = !(isReady && isIdle);
+    if (preview) {
+      preview.disabled = !canRun;
+      preview.hidden = !isIdle; }
     if (run) {
-      run.disabled = !(isReady && isIdle && hasWorkflow && (fileCount > 0 || !needsFiles));
+      run.disabled = !canRun;
       run.hidden = !isIdle; }
     if (stop) {
       stop.hidden = isIdle;
@@ -1346,6 +1449,8 @@ window.HRC2Workflows = {
     self.clear(status);
     status.removeAttribute('data-hrc2-result');
     status.removeAttribute('data-hrc2-notice');
+    status.removeAttribute('data-hrc2-preview');
+    status.removeAttribute('data-hrc2-confirm');
     (lines || []).forEach(function (line) { if (line !== '') status.appendChild(self.make('p', line)); });
   },
 
@@ -1404,6 +1509,55 @@ window.HRC2Workflows = {
     status.appendChild(list);
   },
 
+  // / A line naming files, each as text of its own, & then the words for files that cannot be named yet.
+  // / No more than twenty are named, & the rest are counted. A line with nothing to name says so.
+  namesLine: function (names, words, className) {
+    var self = this;
+    var line = self.make('p', null, className);
+    var shown = 20;
+    var parts = 0;
+    if (names.length === 0 && words.length === 0) {
+      line.textContent = self.text.nothingTaken;
+      return line; }
+    names.slice(0, shown).forEach(function (name) {
+      if (parts++ > 0) line.appendChild(document.createTextNode(', '));
+      line.appendChild(self.make('bdi', name)); });
+    if (names.length > shown) line.appendChild(document.createTextNode(' +' + (names.length - shown)));
+    words.forEach(function (word) {
+      if (parts++ > 0) line.appendChild(document.createTextNode(', '));
+      line.appendChild(self.make('span', word)); });
+    return line;
+  },
+
+  // / Show what each step would take were the workflow run now, as the server worked it out, & why a run would be refused when it would be.
+  // / Each step names the files it would take, & a step whose files cannot be known until an earlier one has run says whose files it takes instead.
+  // / It stays until the files selected or the workflow change, because then it no longer says what would run.
+  showPreview: function (reply) {
+    var self = this;
+    var status = self.element('status');
+    var steps = self.isList(reply.Steps) ? reply.Steps.filter(function (step) { return step && typeof step === 'object'; }) : [];
+    var reason = String(reply.Reason || '');
+    self.showLines([self.text.previewHeadline]);
+    if (!status) return;
+    status.setAttribute('data-hrc2-preview', 'true');
+    steps.forEach(function (step, index) {
+      var names = self.isList(step.Takes) ? step.Takes.filter(function (name) { return typeof name === 'string'; }) : [];
+      var words = self.isList(step.Unknown) ? step.Unknown.map(function (reference) { return self.referenceWords(String(reference)); }) : [];
+      var leftOut = Math.max(0, parseInt(step.LeftOut, 10) || 0);
+      status.appendChild(self.make('p', self.fill(self.text.step, { step: index + 1, steps: steps.length, operation: self.operationName(String(step.Operation || '')) }), 'hrc2-wf-preview-step'));
+      status.appendChild(self.namesLine(names, words, 'hrc2-wf-preview-files'));
+      if (leftOut > 0) status.appendChild(self.make('p', self.text.leftOut + leftOut, 'hrc2-wf-preview-files')); });
+    if (reason !== '' && self.text.refused.hasOwnProperty(reason)) status.appendChild(self.make('p', self.text.refused[reason]));
+  },
+
+  // / Take back a preview or a question about deleting, & stop waiting for one asked for, once what it was about has changed.
+  // / Neither says what would run any more, so the status says what it says when nothing is happening.
+  dropQuestion: function () {
+    var status = this.element('status');
+    this.previewCount++;
+    if (status && (status.hasAttribute('data-hrc2-preview') || status.hasAttribute('data-hrc2-confirm'))) this.showLines([this.text.idle]);
+  },
+
   // / Words for why a workflow ended as it did.
   // / A worker that never started could not start the workflow, & any other interruption stopped it unexpectedly.
   endingLine: function (reply) {
@@ -1418,8 +1572,9 @@ window.HRC2Workflows = {
   // / Selection.
   // / -------------------------------------------------------------------------------
 
-  // / The page calls this when the ticked files change.
+  // / The page calls this when the selected files change. A preview or a question about the files that were selected goes.
   selectionChanged: function () {
+    this.dropQuestion();
     this.drawFiles();
     this.drawWorkflow();
     this.drawControls();
@@ -1440,7 +1595,7 @@ window.HRC2Workflows = {
     return expression ? function (fileName) { return expression.test(String(fileName)); } : null;
   },
 
-  // / Tick the files whose names match what the user typed, in the order the list shows them.
+  // / Select the files whose names match what the user typed, in the order the list shows them.
   applyPattern: function () {
     var pattern = this.element('pattern');
     var typed = pattern ? String(pattern.value || '').trim() : '';
@@ -1557,22 +1712,42 @@ window.HRC2Workflows = {
   // / Running.
   // / -------------------------------------------------------------------------------
 
-  // / Run the chosen or built workflow on the ticked files, in the order they were ticked.
-  // / A library's workflow left as it was is run by its identifier, & anything built is sent as a workflow for the server to check.
-  run: function () {
+  // / The fields naming the chosen or built workflow, to run it or to preview it, or null when there is none that could run.
+  // / A library's workflow left as it was is named by its identifier, & anything built is sent as a workflow for the server to check.
+  // / A preview is asked for by names of its own, so a server that does not know them runs nothing.
+  workflowFields: function (isPreview) {
     var self = this;
     var entry = self.chosen();
     var fileNames = self.listSelection() || [];
-    var fields = [];
-    if (self.jobState !== 'idle') return;
     if (self.isBuilding()) {
-      if (!self.isComplete() || (fileNames.length === 0 && !self.hasSelectStep())) return;
-      if (self.matchesLibrary()) fields.push(['workflowRun', self.sourceId]);
-      else fields.push(['workflowDocument', self.documentText()]); }
-    else {
-      if (!entry || (fileNames.length === 0 && entry.NeedsSelection)) return;
-      fields.push(['workflowRun', entry.Id]); }
-    fileNames.forEach(function (fileName) { fields.push(['workflowFiles[]', fileName]); });
+      if (!self.isComplete() || (fileNames.length === 0 && !self.hasSelectStep())) return null;
+      if (self.matchesLibrary()) return [[isPreview ? 'workflowPreview' : 'workflowRun', self.sourceId]];
+      return [[isPreview ? 'workflowPreviewDocument' : 'workflowDocument', self.documentText()]]; }
+    if (!entry || (fileNames.length === 0 && entry.NeedsSelection)) return null;
+    return [[isPreview ? 'workflowPreview' : 'workflowRun', entry.Id]];
+  },
+
+  // / The fields naming the selected files, in the order they were selected.
+  fileFields: function () {
+    return (this.listSelection() || []).map(function (fileName) { return ['workflowFiles[]', fileName]; });
+  },
+
+  // / Run the chosen or built workflow on the selected files, in the order they were selected.
+  // / A deleted file cannot be brought back, so a workflow that deletes asks first, every time, & runs only once a user says it may.
+  run: function () {
+    var self = this;
+    var fields = self.workflowFields(false);
+    if (self.jobState !== 'idle' || !fields) return;
+    fields = fields.concat(self.fileFields());
+    if (self.deletesFiles()) self.askToDelete(fields);
+    else self.start(fields);
+  },
+
+  // / Start a workflow the fields name, & read its status until it ends.
+  start: function (fields) {
+    var self = this;
+    if (self.jobState !== 'idle') return;
+    self.previewCount++;
     self.jobState = 'starting';
     self.openStep = -1;
     self.closeMenu();
@@ -1591,6 +1766,103 @@ window.HRC2Workflows = {
       if (String(reply.Reason) === 'invalid') self.showNotice(self.text.refused.invalid, reply.Problems);
       else self.showLines([self.text.refused.hasOwnProperty(String(reply.Reason)) ? self.text.refused[String(reply.Reason)] : self.text.refused.start]);
     });
+  },
+
+  // / The fields that preview what a run's fields would run. The files are the same, & only the name of what is asked for changes.
+  previewFields: function (fields) {
+    return fields.map(function (field) {
+      if (field[0] === 'workflowRun') return ['workflowPreview', field[1]];
+      if (field[0] === 'workflowDocument') return ['workflowPreviewDocument', field[1]];
+      return field; });
+  },
+
+  // / Say why a workflow cannot run, from a preview's answer, as a run's refusal would say it. Returns whether it was refused.
+  // / A reason this page has no words for is not a refusal it can name, so it is left for the run to name.
+  refuseFromPreview: function (reply) {
+    var reason = String(reply.Reason || '');
+    if (reason === '' || !this.text.refused.hasOwnProperty(reason)) return false;
+    this.showNotice(this.text.refused[reason], (reason === 'invalid') ? reply.Problems : []);
+    return true;
+  },
+
+  // / Ask the server which files each step would take were the workflow run now, & show it in the status. Nothing is run.
+  preview: function () {
+    var self = this;
+    var fields = self.workflowFields(true);
+    var asked = 0;
+    var status = self.element('status');
+    if (self.jobState !== 'idle' || !fields) return;
+    asked = ++self.previewCount;
+    self.showLines([self.text.waiting]);
+    if (status) status.setAttribute('data-hrc2-preview', 'waiting');
+    self.request(fields.concat(self.fileFields()), function (reply) {
+      if (asked !== self.previewCount || self.jobState !== 'idle') return;
+      if (!reply || reply.Available === false) {
+        self.becomeUnavailable();
+        return; }
+      if (reply.Previewed === true) self.showPreview(reply);
+      else if (!self.refuseFromPreview(reply)) self.showNotice(self.text.refused.start, []); });
+  },
+
+  // / The files a preview says the workflow deletes, & the words for those it cannot name until it runs, each once.
+  deletedNames: function (reply) {
+    var self = this;
+    var named = { names: [], words: [] };
+    (self.isList(reply.Steps) ? reply.Steps : []).forEach(function (step) {
+      if (!step || step.Consumes !== 'deleted') return;
+      (self.isList(step.Takes) ? step.Takes : []).forEach(function (name) { if (typeof name === 'string' && named.names.indexOf(name) === -1) named.names.push(name); });
+      (self.isList(step.Unknown) ? step.Unknown : []).forEach(function (reference) {
+        var word = self.referenceWords(String(reference));
+        if (named.words.indexOf(word) === -1) named.words.push(word); }); });
+    return named;
+  },
+
+  // / Ask whether a workflow that deletes files may run. The server is asked first which files it would delete, so the question can name them.
+  // / A workflow the server would refuse is refused here, as a run would be, so nothing is asked about that could not run.
+  // / An answer that cannot be read asks the question without naming files, so a user is never kept from a workflow by a preview.
+  askToDelete: function (fields) {
+    var self = this;
+    var asked = ++self.previewCount;
+    var status = self.element('status');
+    self.showLines([self.text.waiting]);
+    if (status) status.setAttribute('data-hrc2-confirm', 'waiting');
+    self.request(self.previewFields(fields), function (reply) {
+      if (asked !== self.previewCount || self.jobState !== 'idle') return;
+      if (reply && reply.Available === false) {
+        self.becomeUnavailable();
+        return; }
+      if (reply && self.refuseFromPreview(reply)) return;
+      self.confirmDelete(fields, (reply && reply.Previewed === true) ? self.deletedNames(reply) : null); });
+  },
+
+  // / Ask the question in the status, with a button that runs the workflow & a button that does not.
+  // / It names the files the workflow deletes where the server named them, & says only that it deletes files where it did not.
+  // / Nothing is sent until one of its buttons is pressed, & the question is gone once it is answered.
+  // / What was asked about runs only while it is still what the page would run, so a workflow or a selection changed since is asked about again.
+  confirmDelete: function (fields, named) {
+    var self = this;
+    var status = self.element('status');
+    var actions = self.make('p', null, 'hrc2-wf-confirm-actions');
+    var confirm = self.makeButton(self.text.confirmRun, 'hrc2-wf-confirm-run');
+    var cancel = self.makeButton(self.text.cancel, 'hrc2-wf-confirm-cancel');
+    var isNamed = !!(named && (named.names.length > 0 || named.words.length > 0));
+    if (!status) return;
+    self.showLines([isNamed ? self.text.confirmDeleteFiles : self.text.confirmDelete]);
+    if (isNamed) status.appendChild(self.namesLine(named.names, named.words, 'hrc2-wf-confirm-files'));
+    status.setAttribute('data-hrc2-confirm', 'true');
+    confirm.id = 'hrc2WfConfirmRun';
+    cancel.id = 'hrc2WfConfirmCancel';
+    confirm.addEventListener('click', function () {
+      var current = self.workflowFields(false);
+      if (current) current = current.concat(self.fileFields());
+      self.showLines([self.text.idle]);
+      if (current && JSON.stringify(current) === JSON.stringify(fields)) self.start(fields);
+      else self.run(); });
+    cancel.addEventListener('click', function () { self.showLines([self.text.idle]); });
+    actions.appendChild(confirm);
+    actions.appendChild(cancel);
+    status.appendChild(actions);
+    confirm.focus();
   },
 
   // / Ask a running workflow to stop. It stops before its next operation, because a converter stopped part way leaves a broken file.
@@ -1674,6 +1946,7 @@ window.HRC2Workflows = {
   becomeUnavailable: function () {
     if (this.pollTimer) window.clearTimeout(this.pollTimer);
     this.pollTimer = 0;
+    this.previewCount++;
     this.jobState = 'idle';
     this.libraryState = 'unavailable';
     this.library = [];

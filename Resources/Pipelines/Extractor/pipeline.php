@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.7.
+// / v4.1.8.
 // / The Extractor pipeline. pipelineCore.php loads it only to dispatch an Extract operation.
 // / Error block 39100 through 39104 belongs to this pipeline.
 // / It also raises 39000 through 39003, which belong to the archiveExtraction.php shared module it uses.
@@ -21,8 +21,8 @@
 // / A pipeline never prints. See contract 6.
 // / It is dispatched by runOperationPipeline('Extract'), never through convert().
 // / The extraction is extractArchiveContained(), in the shared module, & it is held to --Maximum Extracted Size-- & --Maximum Extracted Files--.
-// / What a session may hold is this application's policy, so every file is held to the names & formats an upload is, through $Allowed & $DangerousFiles.
-// / Files are scanned through runVirusScan(), verifyFile() & findFreeOutputName() are the core's, & cleanFiles() is the Engine's.
+// / What a session may hold is this application's policy, so every file is placed by the core's placeSessionFile(), which holds it to the names & formats an upload is.
+// / Files are scanned through runVirusScan(), verifyFile() & placeSessionFile() are the core's, & cleanFiles() is the Engine's.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
 // / <3 Open-Source
@@ -78,52 +78,6 @@ function collectExtractedFiles($contentsFolder) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $pendingFolders, $folderListing, $entryStatus, $foundRecords, $rootPath, $currentFolder, $entryName, $entryPath, $entryType, $contentsFolder);
   return array($WalkCompleted, $FileRecords, $ItemsTakenAway); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to put one extracted file into the session, under its own name or the next free one.
-// / Accepts the file's path & the name the archive gave it, in that order.
-// / Returns whether it was placed, the name it was placed under & whether its name or its format was refused, in that order.
-// / A name is held to what an upload's is. It is sanitized, & a name or a format this application refuses to show or to handle is refused here too.
-// / A name already taken is given _1 before its extension, then _2, & so on, by findFreeOutputName(), as an output is.
-// / Nothing in the session is ever written over. A name is taken by linking the file to it, which fails rather than replaces when the name was taken in the meantime.
-// / A filesystem that cannot link falls back to a rename, once the name is found to be free.
-function placeExtractedFile($sourcePath, $fileName) {
-  // / Set variables.
-  global $ConvertDir, $Allowed, $DangerousFiles, $PermissionLevels, $EnableMemoryProtection;
-  $FileWasPlaced = $NameWasRefused = FALSE;
-  $PlacedName = '';
-  $cleanName = $fileExtension = $baseName = $candidateName = $candidatePath = $freePath = '';
-  $nameIsSanitized = $nameWasFound = FALSE;
-  $attemptNumber = 0;
-  list ($cleanName, $nameIsSanitized) = sanitize((string)$fileName, TRUE);
-  if ($nameIsSanitized && is_string($cleanName)) $fileExtension = getExtension($cleanName);
-  if (!$nameIsSanitized or !is_string($cleanName) or $cleanName === '' or $cleanName === '.' or $cleanName === '..' or strtolower($cleanName) === 'index.html' or in_array(strtolower($cleanName), (array)$DangerousFiles) or extensionIsDangerous($fileExtension) or !in_array($fileExtension, (array)$Allowed)) $NameWasRefused = TRUE;
-  else {
-    $baseName = (string)pathinfo($cleanName, PATHINFO_FILENAME);
-    $candidateName = $cleanName;
-    for ($attemptNumber = 0; $attemptNumber < 3 && !$FileWasPlaced; $attemptNumber++) {
-      redeclare($candidatePath, $ConvertDir.$candidateName);
-      clearstatcache(TRUE, $candidatePath);
-      // / A name that is taken, or that a link holds, is passed over for the next free one.
-      if (file_exists($candidatePath) or is_link($candidatePath)) {
-        // / The name before it is shredded first, as redeclare() would, because a list() cannot pass through redeclare().
-        purgeSensitiveMemory($EnableMemoryProtection, $candidateName, $freePath);
-        list ($nameWasFound, $freePath, $candidateName) = findFreeOutputName($ConvertDir, $baseName, $fileExtension);
-        if (!$nameWasFound) break;
-        redeclare($candidatePath, $freePath); }
-      if (@link((string)$sourcePath, $candidatePath)) {
-        @unlink((string)$sourcePath);
-        $FileWasPlaced = TRUE; }
-      else {
-        clearstatcache(TRUE, $candidatePath);
-        if (!file_exists($candidatePath) && !is_link($candidatePath) && @rename((string)$sourcePath, $candidatePath)) $FileWasPlaced = TRUE; } }
-    if ($FileWasPlaced) {
-      @chmod($candidatePath, $PermissionLevels);
-      $PlacedName = $candidateName; } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cleanName, $fileExtension, $baseName, $candidateName, $candidatePath, $freePath, $nameIsSanitized, $nameWasFound, $attemptNumber, $sourcePath, $fileName);
-  return array($FileWasPlaced, $PlacedName, $NameWasRefused); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -220,7 +174,7 @@ function extractSelection($FilesToExtract, $UserFilename, $UserExtension, $Metho
         else $contentsAreClean = TRUE;
         if ($contentsAreClean) {
           foreach ($fileRecords as $fileRecord) {
-            list ($fileWasPlaced, $placedName, $nameWasRefused) = placeExtractedFile($fileRecord['Path'], $fileRecord['Name']);
+            list ($fileWasPlaced, $placedName, $nameWasRefused) = placeSessionFile($fileRecord['Path'], $fileRecord['Name']);
             if ($fileWasPlaced) {
               $ExtractedFiles[] = $placedName;
               $archiveGaveFiles = TRUE;

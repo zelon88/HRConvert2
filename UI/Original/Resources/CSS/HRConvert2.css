@@ -72,6 +72,23 @@ select::-ms-expand {
 .hrc2-menu {
   margin: 12px auto 0 auto;
   padding: 8px 4px; }
+/* / A question a button opens, such as whether to start over, is a panel too, with room around what it says. */
+.hrc2-confirm {
+  margin-top: 12px;
+  padding: 10px; }
+/* / The box files are dropped on is a panel, so it is drawn in the scheme's colours as the file list is.
+   / Two classes outrank the one dropzone.css draws it with, whichever sheet loads last.
+   / What it says before anything is dropped takes the panel's ink, softened, so it reads in every scheme. */
+.dropzone.hrc2-panel {
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink);
+  border: 2px solid var(--hrc2-frame);
+  border-radius: 8px;
+  box-shadow: var(--hrc2-anchor); }
+.dropzone.hrc2-panel .dz-message,
+.dropzone.hrc2-panel .dz-message .dz-button {
+  color: var(--hrc2-ink);
+  opacity: 0.75; }
 
 /* / -----------------------------------------------------------------------------------
    / EVERY FILE OPERATION PANEL IS ONE CARD.
@@ -165,10 +182,10 @@ select::-ms-expand {
   white-space: pre-line; }
 
 /* / -----------------------------------------------------------------------------------
-   / The boxes that tick files, & the bar at the top of their column.
-   / A box is a real checkbox laid over the square a user sees, so it can still be reached, ticked & read by anything.
-   / The square shows the file's place in the order it was ticked, & the box at the top shows a tick for all & a dash for some.
-   / A ticked square is the scheme's accent with its own colour written on it, so the number reads against it in every scheme.
+   / The boxes that select files, & the bar at the top of their column.
+   / A box is a real checkbox laid over the square a user sees, so it can still be reached, checked & read by anything.
+   / The square shows the file's place in the order it was selected, & the box at the top shows a check mark for all & a dash for some.
+   / A checked square is the scheme's accent with its own colour written on it, so the number reads against it in every scheme.
    / Spacing is logical, so the gap after a box falls on the right side of it whichever way a language reads.
    / ----------------------------------------------------------------------------------- */
 .hrc2-pick {
@@ -388,6 +405,7 @@ select.hrc2-wf-row-control {
    / It grows a third as fast as a card, so it keeps to its buttons while it shares a row & fills a row it has to itself.
    / It is sized by the row & never by its words, so naming its buttons can never move it onto another row.
    / Its buttons are named beside them once it has the room, & side by side once it has more. The names are labels, so pressing one presses its button.
+   / Preview is the size of Run & Stop, & keeps the plain colour of the box, because it runs nothing.
    / A browser that cannot measure the box shows the buttons alone, as every box did before.
    / It sits above what follows it, so the add button's menu opens over the Status panel & the list.
    / ----------------------------------------------------------------------------------- */
@@ -415,10 +433,12 @@ select.hrc2-wf-row-control {
   font-weight: 700;
   cursor: pointer; }
 .hrc2-wf-add[hidden] + .hrc2-wf-caption,
+.hrc2-wf-preview[hidden] + .hrc2-wf-caption,
 .hrc2-wf-run[hidden] + .hrc2-wf-caption,
 .hrc2-wf-stop[hidden] + .hrc2-wf-caption {
   display: none; }
 .hrc2-wf-add:disabled + .hrc2-wf-caption,
+.hrc2-wf-preview:disabled + .hrc2-wf-caption,
 .hrc2-wf-run:disabled + .hrc2-wf-caption,
 .hrc2-wf-stop:disabled + .hrc2-wf-caption {
   opacity: 0.4;
@@ -434,15 +454,18 @@ select.hrc2-wf-row-control {
   .hrc2-wf-run-actions {
     grid-template-columns: none;
     grid-auto-flow: column; }
+  .hrc2-wf-preview,
   .hrc2-wf-run,
   .hrc2-wf-stop {
     margin-left: 26px;
     margin-inline-start: 26px; }
+  [dir='rtl'] .hrc2-wf-preview,
   [dir='rtl'] .hrc2-wf-run,
   [dir='rtl'] .hrc2-wf-stop {
     margin-left: 0;
     margin-right: 26px; } }
 .hrc2-wf-add,
+.hrc2-wf-preview,
 .hrc2-wf-run,
 .hrc2-wf-stop {
   width: 44px;
@@ -458,6 +481,7 @@ select.hrc2-wf-row-control {
   border-color: var(--hrc2-accent);
   color: var(--hrc2-accent);
   font-size: 24px; }
+.hrc2-wf-preview,
 .hrc2-wf-run,
 .hrc2-wf-stop {
   font-size: 18px; }
@@ -468,11 +492,13 @@ select.hrc2-wf-row-control {
   border-color: var(--hrc2-bad);
   color: var(--hrc2-bad); }
 .hrc2-wf-add:disabled,
+.hrc2-wf-preview:disabled,
 .hrc2-wf-run:disabled,
 .hrc2-wf-stop:disabled {
   opacity: 0.4;
   cursor: default; }
 .hrc2-wf-add[hidden],
+.hrc2-wf-preview[hidden],
 .hrc2-wf-run[hidden],
 .hrc2-wf-stop[hidden] {
   display: none; }
@@ -526,6 +552,15 @@ select.hrc2-wf-row-control {
   width: 100%;
   max-width: 320px;
   accent-color: var(--hrc2-accent); }
+/* / A preview names each step & then the files it would take, & a question about deleting names the files it deletes.
+   / Each step stands out from the names beneath it, & a long name wraps anywhere rather than widening the panel. */
+.hrc2-wf-status .hrc2-wf-preview-step {
+  margin-top: 6px;
+  font-weight: 700; }
+.hrc2-wf-preview-files,
+.hrc2-wf-confirm-files {
+  padding-inline-start: 12px;
+  overflow-wrap: anywhere; }
 
 /* / -----------------------------------------------------------------------------------
    / The workflow builder, drawn where a server allows it.
@@ -556,10 +591,14 @@ select.hrc2-wf-row-control {
   border-bottom-color: var(--hrc2-accent);
   font-weight: 700; }
 .hrc2-wf-tab:focus-visible,
+.hrc2-wf-subtab:focus-visible,
+.hrc2-wf-confirm-run:focus-visible,
+.hrc2-wf-confirm-cancel:focus-visible,
 .hrc2-wf-chip:focus-visible,
 .hrc2-wf-icon:focus-visible,
 .hrc2-wf-tool:focus-visible,
 .hrc2-wf-add:focus-visible,
+.hrc2-wf-preview:focus-visible,
 .hrc2-wf-run:focus-visible,
 .hrc2-wf-stop:focus-visible {
   outline: 2px solid var(--hrc2-accent);
@@ -570,6 +609,48 @@ select.hrc2-wf-row-control {
 .hrc2-wf-tab-panel p {
   margin: 4px 0 0 0;
   font-size: 12px; }
+/* / The tabs beneath an operation's own, one for each group of its choices, such as Image beneath Convert.
+   / They are smaller than the tabs above them, & pressed rather than selected, so the two rows never read as one. */
+.hrc2-wf-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0 0 6px 0; }
+.hrc2-wf-subtab {
+  padding: 1px 8px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer; }
+.hrc2-wf-subtab:hover {
+  background-color: var(--hrc2-wash); }
+.hrc2-wf-subtab[aria-pressed='true'] {
+  border-color: var(--hrc2-accent);
+  background-color: var(--hrc2-press);
+  font-weight: 700; }
+/* / The question a workflow that deletes files asks before it runs, & its two answers.
+   / The answer that runs it is drawn in the scheme's accent, & the one that does not is drawn as a plain card. */
+.hrc2-wf-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px; }
+.hrc2-wf-confirm-run,
+.hrc2-wf-confirm-cancel {
+  padding: 3px 12px;
+  border-radius: 4px;
+  font: inherit;
+  cursor: pointer; }
+.hrc2-wf-confirm-run {
+  background-color: var(--hrc2-accent);
+  color: var(--hrc2-on-accent);
+  border: 1px solid var(--hrc2-accent); }
+.hrc2-wf-confirm-cancel {
+  background-color: var(--hrc2-surface);
+  color: var(--hrc2-ink);
+  border: 1px solid var(--hrc2-edge); }
 .hrc2-wf-chips {
   display: flex;
   flex-wrap: wrap;

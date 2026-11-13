@@ -149,8 +149,13 @@ An idle server throttles nothing. A loaded server stops accepting work before it
 Until v4.0.6 the budget was worked out only as the host was polled, so every request between two
 polls was judged against the same remaining budget, however many of them had been approved since.
 
-SIX OPERATIONS TAKE A BUDGET. Conversion, archiving, OCR, Identify, a fetch from a URL & the user
-virus scan. Until v4.1.2 this said four, though a fetch from a URL already took one.
+TEN OPERATIONS TAKE A BUDGET. Conversion, archiving, extraction, stripping metadata, merging,
+splitting, OCR, Identify, a fetch from a URL & the user virus scan. Until v4.1.2 this said four,
+though a fetch from a URL already took one, & until v4.1.8 it said six, though extraction took
+one from v4.1.7. Deleting & renaming take none, because deleting is how space is freed & a
+rename writes nothing new, so both still work once a disk is within --Storage Reserve--.
+A workflow's step takes the budget its operation's button takes, so its Delete & Rename steps
+take none either.
 
 Only conversion did so originally. Archiving, OCR & scanning ran unmetered, which understated
 the load twice over; they were never held back when the machine was full, & because they took

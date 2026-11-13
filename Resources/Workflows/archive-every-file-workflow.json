@@ -2,7 +2,7 @@
   "Format": "HRProprietary Workflow",
   "Version": 1,
   "Name": "Archive every file",
-  "Description": "Finds every file in this session & puts them all into one zip archive. No file needs to be ticked.",
+  "Description": "Finds every file in this session & puts them all into one zip archive. No file needs to be selected.",
   "Steps": [
     { "Operation": "Select" },
     { "Operation": "Archive", "Mode": "together", "Options": { "Extension": "zip", "Filename": "All_Files" } }

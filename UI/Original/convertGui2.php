@@ -143,8 +143,8 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
               'failureStrings' => array($Alert3),
               // / What Identify writes into a panel in words, & what it says when it fails.
               'identifyText' => array('yes' => $Gui2Text100, 'no' => $Gui2Text101, 'unknown' => $Gui2Text102, 'failure' => $Gui2Text103),
-              // / What the selection bar says, & what a control says when it acts on the ticked files.
-              'selectionText' => array('selected' => $Gui2Text113, 'usable' => $Gui2Text137))); ?>);
+              // / What the selection bar says, & what a control says when it acts on the selected files.
+              'selectionText' => array('selected' => $Gui2Text113, 'usable' => $Gui2Text137, 'deleteCount' => $Gui2Text218, 'renameCount' => $Gui2Text219, 'mergeNeeds' => $Gui2Text216))); ?>);
             $(document).ready(function () { HRC2.init(); });
           }
         </script>
@@ -238,6 +238,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
       // / A pattern is code in any language, so the box it is typed into reads left to right.
       // / Where the builder is on, the Pipelines panel offers a tab for the library & one for each operation, & the workflow's box becomes a box for each step.
       // / The box that runs them is split, & its add button adds a step to its left. The library draws the tabs, the steps & their options.
+      // / Its preview button asks which files each step would take, & the Status panel shows the answer, as it shows the question a workflow that deletes asks first.
       // / Each of its buttons is named beside it where the box has the room, & the name is a label, so pressing it presses the button.
       // / The Status panel says whether a workflow is running, how far it has got & how it ended, & a page loaded again while one runs draws it there.
       if ($EnableWorkflows) { ?>
@@ -263,6 +264,8 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
             <div class='hrc2-wf-run-actions'>
               <button type='button' id='hrc2WfAdd' name='hrc2WfAdd' class='hrc2-wf-add' title='<?php echo htmlspecialchars($Gui2Text165, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text165, ENT_QUOTES, 'UTF-8'); ?>' aria-haspopup='menu' aria-expanded='false' aria-controls='hrc2WfAddMenu' hidden>+</button>
               <label for='hrc2WfAdd' class='hrc2-wf-caption'><?php echo $Gui2Text165; ?></label>
+              <button type='button' id='hrc2WfPreview' name='hrc2WfPreview' class='hrc2-wf-preview' title='<?php echo htmlspecialchars($Gui2Text223, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text223, ENT_QUOTES, 'UTF-8'); ?>' disabled>&#9673;</button>
+              <label for='hrc2WfPreview' class='hrc2-wf-caption'><?php echo $Gui2Text223; ?></label>
               <button type='button' id='hrc2WfRun' name='hrc2WfRun' class='hrc2-wf-run' title='<?php echo htmlspecialchars($Gui2Text135, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text135, ENT_QUOTES, 'UTF-8'); ?>' disabled>&#9654;</button>
               <label for='hrc2WfRun' class='hrc2-wf-caption'><?php echo $Gui2Text135; ?></label>
               <button type='button' id='hrc2WfStop' name='hrc2WfStop' class='hrc2-wf-stop' title='<?php echo htmlspecialchars($Gui2Text136, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text136, ENT_QUOTES, 'UTF-8'); ?>' hidden>&#9632;</button>
@@ -285,19 +288,24 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
               'waiting' => $Gui2Text140, 'starting' => $Gui2Text141, 'finished' => $Gui2Text142, 'stopping' => $Gui2Text143, 'stopped' => $Gui2Text144, 'made' => $Gui2Text145,
               'running' => $Gui2Text190, 'idle' => $Gui2Text191,
               'unavailable' => $Gui2Text146, 'empty' => $Gui2Text147,
-              'library' => $Gui2Text128, 'pickPipeline' => $Gui2Text162, 'options' => $Gui2Text166, 'back' => $Gui2Text167, 'remove' => $Gui2Text67,
-              'take' => $Gui2Text168, 'ticked' => $Gui2Text169, 'stepFiles' => $Gui2Text170, 'each' => $Gui2Text171, 'together' => $Gui2Text172,
+              'library' => $Gui2Text220, 'pickPipeline' => $Gui2Text162, 'options' => $Gui2Text166, 'back' => $Gui2Text167, 'remove' => $Gui2Text67,
+              'take' => $Gui2Text168, 'selectedFiles' => $Gui2Text169, 'stepFiles' => $Gui2Text170, 'sessionFiles' => $Gui2Text227, 'each' => $Gui2Text171, 'together' => $Gui2Text172,
+              'fromSelection' => $Gui2Text221, 'fromStep' => $Gui2Text222, 'preview' => $Gui2Text223, 'previewHeadline' => $Gui2Text224, 'leftOut' => $Gui2Text225, 'nothingTaken' => $Gui2Text226,
               'kinds' => $Gui2Text173, 'extensions' => $Gui2Text174, 'byName' => $Gui2Text131, 'patternHint' => $Gui2Text132, 'smallest' => $Gui2Text175, 'largest' => $Gui2Text176,
               'sortBy' => $Gui2Text104, 'arrival' => $Gui2Text177, 'nameOrder' => $Gui2Text105, 'allFiles' => $Gui2Text178, 'allKind' => $Gui2Text179,
               'name' => $Gui2Text105, 'untitled' => $Gui2Text182, 'newWorkflow' => $Gui2Text183, 'importFile' => $Gui2Text184, 'exportFile' => $Gui2Text185,
               'notWorkflow' => $Gui2Text186, 'unreadable' => $Gui2Text187,
+              'toFormat' => $Gui2Text197, 'confirmDelete' => $Gui2Text198, 'confirmRun' => $Gui2Text199, 'cancel' => $Gui2Text200, 'confirmDeleteFiles' => $Gui2Text228,
               'refused' => array('disabled' => $Gui2Text146, 'unknown' => $Gui2Text148, 'nothing' => $Gui2Text149, 'files' => $Gui2Text150, 'server' => $Gui2Text151, 'busy' => $Gui2Text152, 'start' => $Gui2Text153, 'builder' => $Gui2Text188, 'invalid' => $Gui2Text186),
-              'failed' => array('operation' => $Gui2Text154, 'threat' => $Gui2Text155, 'runtime' => $Gui2Text156, 'files' => $Gui2Text157, 'budget' => $Gui2Text158, 'unavailable' => $Gui2Text159, 'halted' => $Gui2Text160, 'stopped' => $Gui2Text144)),
-            'operations' => array('Convert' => $Gui2Text14, 'Archive' => $Gui2Text10, 'Extract' => $Gui2Text192, 'OCR' => $Gui2Text12, 'Identify' => $Gui2Text86, 'Scan' => $Gui2Text8, 'Select' => $Gui2Text109),
+              'failed' => array('operation' => $Gui2Text154, 'threat' => $Gui2Text155, 'runtime' => $Gui2Text156, 'files' => $Gui2Text157, 'budget' => $Gui2Text158, 'unavailable' => $Gui2Text159, 'halted' => $Gui2Text160, 'stopped' => $Gui2Text144, 'incomplete' => $Gui2Text229)),
+            'operations' => array('Convert' => $Gui2Text14, 'Archive' => $Gui2Text10, 'Extract' => $Gui2Text192, 'OCR' => $Gui2Text12, 'Identify' => $Gui2Text86, 'Scan' => $Gui2Text8, 'Select' => $Gui2Text109,
+              'Delete' => $Gui2Text67, 'Rename' => $Gui2Text201, 'StripMetadata' => $Gui2Text206, 'Merge' => $Gui2Text210, 'Split' => $Gui2Text211),
             'kinds' => array('Document' => $Gui2Text114, 'Spreadsheet' => $Gui2Text115, 'Presentation' => $Gui2Text116, 'Image' => $Gui2Text117, 'Audio' => $Gui2Text118, 'Video' => $Gui2Text119, 'Archive' => $Gui2Text120,
               'Ebook' => $Gui2Text121, 'Model' => $Gui2Text122, 'Drawing' => $Gui2Text123, 'Vector' => $Gui2Text124, 'Subtitle' => $Gui2Text125, 'Scad' => $Gui2Text126, 'Stream' => $Gui2Text127),
             'optionLabels' => array('Extension' => $Gui2Text18, 'Filename' => $Gui2Text17, 'Width' => $Gui2Text180, 'Height' => $Gui2Text181, 'Rotate' => $Gui2Text65, 'Bitrate' => $Gui2Text66,
-              'Method' => $Gui2Text39, 'Report' => $Gui2Text97, 'Scanner' => $Gui2Text8),
+              'Method' => $Gui2Text39, 'Report' => $Gui2Text97, 'Scanner' => $Gui2Text8, 'Pattern' => $Gui2Text204),
+            // / A pattern's tokens are named where a pointer rests on its field, as they are in a file's Rename panel.
+            'optionHints' => array('Pattern' => $Gui2Text205),
             // / OCR's methods are named as the OCR button names them, & each scanner as the button that scans with it.
             'choiceLabels' => array('Method' => array('0' => $Gui2Text39, '1' => $Gui2Text39.' 1 ('.$Gui2Text40.')', '2' => $Gui2Text39.' 2 ('.$Gui2Text41.')'),
               'Scanner' => array('all' => $Gui2Text37, 'clamav' => $Gui2Text36, 'scancore' => $Gui2Text35)))); ?>);
@@ -396,7 +404,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
 
       <?php
       // / The selection bar, at the top of the column of boxes.
-      // / Its box ticks every file, or none when any are ticked. The arrow beside it opens a menu that ticks all, none, or every file of one kind.
+      // / Its box selects every file, or none when any are selected. The arrow beside it opens a menu that selects all, none, or every file of one kind.
       // / Only the kinds the list holds are offered, in the order the core names them.
       // / HRC2.bindSelection(), called below the list, binds the bar & draws the selection into it.
       $selectKinds = array('Document' => $Gui2Text114, 'Spreadsheet' => $Gui2Text115, 'Presentation' => $Gui2Text116, 'Image' => $Gui2Text117, 'Audio' => $Gui2Text118, 'Video' => $Gui2Text119, 'Archive' => $Gui2Text120,
@@ -454,7 +462,8 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
         <div class='file-details'><?php if (isset($FileDetails[$File]) && $FileDetails[$File]['SizeText'] !== '') echo '<bdi>'.htmlspecialchars($FileDetails[$File]['SizeText'], ENT_QUOTES, 'UTF-8').'</bdi> · <bdi>'.htmlspecialchars($FileDetails[$File]['ModifiedText'], ENT_QUOTES, 'UTF-8').'</bdi>'; ?> <span id='identifySummary<?php echo $ConvertGuiCounter1; ?>' class='identify-summary' dir='auto'></span></div>
         <br>
 
-        <div id='buttonDiv<?php echo $ConvertGuiCounter1; ?>' name='buttonDiv<?php echo $ConvertGuiCounter1; ?>' style='height:25px;'>
+        <?php // / A file's buttons may run onto a second line where it has many, so the row grows to hold them rather than spilling over the file below it. ?>
+        <div id='buttonDiv<?php echo $ConvertGuiCounter1; ?>' name='buttonDiv<?php echo $ConvertGuiCounter1; ?>' style='min-height:25px; display:flow-root;'>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;&nbsp;&nbsp;&nbsp;</a>
 
           <img id='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' name='downloadfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>download.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text5.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text5.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
@@ -468,6 +477,14 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
            onclick='toggle_visibility("deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deletefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text67.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text67.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>' name='deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deletefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("deleteXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text68, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text68, ENT_QUOTES, 'UTF-8'); ?>'/>
+
+          <?php if ($OfferedOperations['Rename']) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+          <img id='renamefileButton<?php echo $ConvertGuiCounter1; ?>' name='renamefileButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>rename.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
+           onclick='toggle_visibility("renamefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("renamefileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("renamefileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text201.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text201.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <img id='renamefileXButton<?php echo $ConvertGuiCounter1; ?>' name='renamefileXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
+           onclick='toggle_visibility("renamefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("renamefileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("renamefileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text202, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text202, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <?php } ?>
 
           <?php if ($AllowUserShare) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
@@ -503,6 +520,20 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
            onclick='toggle_visibility("extractfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("extractfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("extractfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text192.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text192.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='extractfileXButton<?php echo $ConvertGuiCounter1; ?>' name='extractfileXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
            onclick='toggle_visibility("extractfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("extractfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("extractfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text193, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text193, ENT_QUOTES, 'UTF-8'); ?>'/>
+
+          <?php } if ($OfferedOperations['StripMetadata'] && in_array($extension, $MetadataOperationArray)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+          <img id='stripfileButton<?php echo $ConvertGuiCounter1; ?>' name='stripfileButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>metadata.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
+           onclick='toggle_visibility("stripfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("stripfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("stripfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text206.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text206.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <img id='stripfileXButton<?php echo $ConvertGuiCounter1; ?>' name='stripfileXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
+           onclick='toggle_visibility("stripfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("stripfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("stripfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text207, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text207, ENT_QUOTES, 'UTF-8'); ?>'/>
+
+          <?php } if ($extension === 'pdf' && ($OfferedOperations['Merge'] or $OfferedOperations['Split'])) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+          <img id='pagesfileButton<?php echo $ConvertGuiCounter1; ?>' name='pagesfileButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>pages.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
+           onclick='toggle_visibility("pagesfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("pagesfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("pagesfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text212.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text212.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <img id='pagesfileXButton<?php echo $ConvertGuiCounter1; ?>' name='pagesfileXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
+           onclick='toggle_visibility("pagesfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("pagesfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("pagesfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text213, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text213, ENT_QUOTES, 'UTF-8'); ?>'/>
 
           <?php } if (in_array($extension, $PDFWorkArr) && $OfferedOperations['OCR']) { ?>          
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
@@ -676,7 +707,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
 
         <?php if ($OfferedOperations['Extract'] && in_array($extension, $ExtractOperationArray)) {
         // / What an archive holds joins the session, so the list is drawn again & nothing is downloaded.
-        // / A ticked selection of archives is extracted one after another, as a ticked selection is converted.
+        // / A selected selection of archives is extracted one after another, as a selected selection is converted.
         ?>
         <div id='extractfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='extractfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style='max-width:750px; display:none;'>
           <p style='max-width:<?php echo $GuiWidth; ?>;'></p>
@@ -686,6 +717,46 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
           <script type='text/javascript'>
             HRC2.bindExtract('extractfileSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>);
           </script>
+        </div>
+        <?php } ?>
+
+        <?php if ($OfferedOperations['StripMetadata'] && in_array($extension, $MetadataOperationArray)) {
+        // / A clean copy is made beside the file & downloaded, as a conversion is, & the file itself is kept.
+        // / A selected file's button cleans every selected file whose own row offers it, one after another.
+        ?>
+        <div id='stripfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='stripfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style='max-width:750px; display:none;'>
+          <p style='max-width:500px;'></p>
+          <p><strong><?php echo $Gui2Text208; ?></strong></p>
+          <p><?php echo $Gui2Text209; ?></p>
+          <input type='submit' id='stripfileSubmit<?php echo $ConvertGuiCounter1; ?>' name='stripfileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text206, ENT_QUOTES, 'UTF-8'); ?>'>
+          <script type='text/javascript'>
+            HRC2.bindRun('stripfileSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode(array('filesToStrip' => $File)); ?>, {});
+          </script>
+        </div>
+        <?php } ?>
+
+        <?php if ($extension === 'pdf' && ($OfferedOperations['Merge'] or $OfferedOperations['Split'])) {
+        // / Merge puts every selected PDF into one, in the order they were selected, & downloads it, as an archive of a selection is.
+        // / Split makes a PDF of each page, which stays in the session as what an archive holds does, because a PDF may have a great many pages.
+        ?>
+        <div id='pagesfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pagesfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style='max-width:750px; display:none;'>
+          <p style='max-width:500px;'></p>
+          <?php if ($OfferedOperations['Merge']) { ?>
+          <p><strong><?php echo $Gui2Text214; ?></strong></p>
+          <p><?php echo $Gui2Text215; ?></p>
+          <p><label for='mergefilename<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text17; ?></label><input type='text' id='mergefilename<?php echo $ConvertGuiCounter1; ?>' name='mergefilename<?php echo $ConvertGuiCounter1; ?>' value='Merged' maxlength='64' dir='auto'></p>
+          <p id='mergefileNote<?php echo $ConvertGuiCounter1; ?>' role='status'></p>
+          <input type='submit' id='mergefileSubmit<?php echo $ConvertGuiCounter1; ?>' name='mergefileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text210, ENT_QUOTES, 'UTF-8'); ?>'>
+          <script type='text/javascript'>
+            HRC2.bindMerge('mergefileSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>, 'mergefilename<?php echo $ConvertGuiCounter1; ?>', 'mergefileNote<?php echo $ConvertGuiCounter1; ?>');
+          </script>
+          <?php } if ($OfferedOperations['Split']) { ?>
+          <p><strong><?php echo $Gui2Text217; ?></strong></p>
+          <input type='submit' id='splitfileSubmit<?php echo $ConvertGuiCounter1; ?>' name='splitfileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text211, ENT_QUOTES, 'UTF-8'); ?>'>
+          <script type='text/javascript'>
+            HRC2.bindRun('splitfileSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode(array('filesToSplit' => $File)); ?>, {}, { download: false });
+          </script>
+          <?php } ?>
         </div>
         <?php } ?>
 
@@ -717,11 +788,30 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
         <div id='deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='deletefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
           <p><strong><?php echo $Gui2Text69; ?></strong></p>
+          <p id='deletefileNote<?php echo $ConvertGuiCounter1; ?>' role='status'></p>
           <input type='submit' id='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' name='confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text70, ENT_QUOTES, 'UTF-8'); ?>' onclick='toggle_visibility("loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>");'>
           <script type='text/javascript'>
-            HRC2.bindDelete('confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>);
+            HRC2.bindDelete('confirmdeletefilebutton<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>, 'deletefileNote<?php echo $ConvertGuiCounter1; ?>', 'deletefilebutton<?php echo $ConvertGuiCounter1; ?>');
           </script>
         </div>
+
+        <?php if ($OfferedOperations['Rename']) {
+        // / A file keeps what it holds & its extension, so the list is drawn again & nothing is downloaded.
+        // / The field starts with the file's name, without its extension, which a tar.gz has two of.
+        // / A selected file's Rename renames every selected file from the one pattern, & its panel says how many.
+        ?>
+        <div id='renamefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='renamefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style='max-width:750px; display:none;'>
+          <p style='max-width:500px;'></p>
+          <p><strong><?php echo $Gui2Text203; ?></strong></p>
+          <p><label for='renamepattern<?php echo $ConvertGuiCounter1; ?>'><?php echo $Gui2Text204; ?></label> <input type='text' id='renamepattern<?php echo $ConvertGuiCounter1; ?>' name='renamepattern<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars((string)preg_replace('/\.(tar\.(?:gz|bz2|xz|zst)|[^.]+)$/i', '', $File), ENT_QUOTES, 'UTF-8'); ?>' maxlength='64' dir='auto'></p>
+          <p><?php echo $Gui2Text205; ?></p>
+          <p id='renamefileNote<?php echo $ConvertGuiCounter1; ?>' role='status'></p>
+          <input type='submit' id='renamefileSubmit<?php echo $ConvertGuiCounter1; ?>' name='renamefileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text201, ENT_QUOTES, 'UTF-8'); ?>'>
+          <script type='text/javascript'>
+            HRC2.bindRename('renamefileSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>, 'renamepattern<?php echo $ConvertGuiCounter1; ?>', 'renamefileNote<?php echo $ConvertGuiCounter1; ?>', 'renamefileButton<?php echo $ConvertGuiCounter1; ?>');
+          </script>
+        </div>
+        <?php } ?>
 
         <?php if ($OfferedOperations['Scan']) { ?>
         <div id='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
@@ -743,7 +833,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
         if ($OfferedOperations['Identify']) {
         // / What Identify read about this file. Opening the panel asks for it once, & the button asks again.
         // / Every value is written into the page as text by the script, & never as markup.
-        // / A report is written only when the box is ticked, & the name beside it is greyed out until it is.
+        // / A report is written only when the box is checked, & the name beside it is greyed out until it is.
         ?>
         <div id='identifyOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='identifyOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;" data-identify-file='<?php echo htmlspecialchars($File, ENT_QUOTES, 'UTF-8'); ?>' data-identify-suffix='<?php echo $ConvertGuiCounter1; ?>'>
           <p style="max-width:500px;"></p>

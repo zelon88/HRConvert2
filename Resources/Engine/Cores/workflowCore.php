@@ -12,13 +12,14 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.6.
+// / v4.1.8.
 // / The Workflow Core, one of the Engine's cores.
 // / A workflow is a list of steps, & each step runs one of the application's operations on files a user selected or an earlier step made.
 // / This file reads, checks & runs workflows, & keeps the status a page reads while one runs.
 // / A workflow comes from a library, or is built in a page & handed over as a document, which is checked exactly as a library's is.
 // / Which operations exist is the application's, read through $EngineOperationProvider, so this file names none of them.
 // / Select is this file's own step. It reads the session's files again through the lister the application names, & runs nothing.
+// / An operation may say it consumes the files it takes, as one that deletes or renames them does, & a later step taking those files is refused.
 // / The application pins it exactly via $RequiredWorkflowCoreVersion & loads it only when a workflow is asked for.
 // / Error block 38000 through 38019 is reserved for workflows, & 38000 through 38006 are raised here.
 // / See Documentation/ABOUT_WORKFLOWS.txt for the format & the contract this file enforces.
@@ -38,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by the application without executing this file.
-$WorkflowCoreVersion = 'v4.1.6';
+$WorkflowCoreVersion = 'v4.1.8';
 // / -----------------------------------------------------------------------------------
 
 
@@ -79,20 +80,26 @@ function workflowSettings() {
 // / A function to check one operation the application declared.
 // / Accepts the operation's name & its entry. Returns whether it is usable & the entry as this core reads it, in that order.
 // / An operation names the function that runs it, the budget it takes, whether it is enabled, the extensions it reads, the modes it runs in & its options.
+// / An operation that takes no budget says so with a Budget of FALSE, as one that only deletes or renames files does, & this core reads its budget as empty.
+// / A budget that is missing or empty is a mistake rather than a choice, so that operation is left out.
 // / An empty list of extensions reads every file. A function named by Accepts decides for each file, given the step's options.
 // / The first mode is the one a step that names none runs in.
+// / Consumes says what becomes of the files an operation takes, deleted or renamed, & is empty for an operation that leaves them as they were.
 function validateOperationEntry($operationName, $operationEntry) {
   // / Set variables.
   global $EnableMemoryProtection;
   $EntryIsUsable = FALSE;
   $CleanEntry = array();
-  $modeName = $optionName = $optionType = $acceptsFunction = '';
+  $modeName = $optionName = $optionType = $acceptsFunction = $consumesValue = '';
   $cleanModes = $cleanOptions = $optionSpec = array();
   if (!is_string($operationName) or preg_match('/^[A-Za-z][A-Za-z0-9]{0,31}$/', $operationName) !== 1) warningEntry('The operation provider declared an operation whose name is not a plain word. It was left out.');
   else if (!is_array($operationEntry) or !isset($operationEntry['Invoke']) or !is_string($operationEntry['Invoke']) or !function_exists($operationEntry['Invoke'])) warningEntry('The '.$operationName.' operation names no function that exists. It was left out.');
-  else if (!isset($operationEntry['Budget']) or !is_string($operationEntry['Budget']) or trim($operationEntry['Budget']) === '') warningEntry('The '.$operationName.' operation names no budget. It was left out.');
+  else if (!isset($operationEntry['Budget']) or ($operationEntry['Budget'] !== FALSE && (!is_string($operationEntry['Budget']) or trim($operationEntry['Budget']) === ''))) warningEntry('The '.$operationName.' operation names no budget. One that takes none says so with a Budget of FALSE. It was left out.');
   else {
     if (isset($operationEntry['Accepts']) && is_string($operationEntry['Accepts'])) $acceptsFunction = $operationEntry['Accepts'];
+    // / A value this core does not know is read as leaving the files as they were, because a step it would wrongly refuse is worse than one skipped as it runs.
+    if (isset($operationEntry['Consumes']) && in_array($operationEntry['Consumes'], array('deleted', 'renamed'), TRUE)) $consumesValue = $operationEntry['Consumes'];
+    else if (isset($operationEntry['Consumes']) && $operationEntry['Consumes'] !== '') warningEntry('The '.$operationName.' operation says it consumes its files in a way this core does not know. It is read as leaving them as they were.');
     if (isset($operationEntry['Modes']) && is_array($operationEntry['Modes'])) foreach ($operationEntry['Modes'] as $modeName) if (in_array($modeName, array('each', 'together'), TRUE) && !in_array($modeName, $cleanModes, TRUE)) $cleanModes[] = $modeName;
     if (isset($operationEntry['Options']) && is_array($operationEntry['Options'])) foreach ($operationEntry['Options'] as $optionName => $optionSpec) {
       redeclare($optionType, (is_array($optionSpec) && isset($optionSpec['Type']) && is_string($optionSpec['Type'])) ? $optionSpec['Type'] : '');
@@ -101,13 +108,13 @@ function validateOperationEntry($operationName, $operationEntry) {
     if (empty($cleanModes)) warningEntry('The '.$operationName.' operation declares no mode it runs in. It was left out.');
     else if ($acceptsFunction !== '' && !function_exists($acceptsFunction)) warningEntry('The '.$operationName.' operation names '.$acceptsFunction.' to decide which files it reads, & no such function exists. It was left out.');
     else {
-      $CleanEntry = array('Name' => $operationName, 'Invoke' => $operationEntry['Invoke'], 'Budget' => trim($operationEntry['Budget']), 'Accepts' => $acceptsFunction,
+      $CleanEntry = array('Name' => $operationName, 'Invoke' => $operationEntry['Invoke'], 'Budget' => ($operationEntry['Budget'] === FALSE) ? '' : trim($operationEntry['Budget']), 'Accepts' => $acceptsFunction,
         'Enabled' => (isset($operationEntry['Enabled']) && $operationEntry['Enabled'] === TRUE),
         'Inputs' => (isset($operationEntry['Inputs']) && is_array($operationEntry['Inputs'])) ? array_values(array_unique(array_map('strtolower', array_filter($operationEntry['Inputs'], 'is_string')))) : array(),
-        'Modes' => $cleanModes, 'Options' => $cleanOptions);
+        'Modes' => $cleanModes, 'Options' => $cleanOptions, 'Consumes' => $consumesValue);
       $EntryIsUsable = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $modeName, $optionName, $optionType, $acceptsFunction, $cleanModes, $cleanOptions, $optionSpec, $operationName, $operationEntry);
+  purgeSensitiveMemory($EnableMemoryProtection, $modeName, $optionName, $optionType, $acceptsFunction, $consumesValue, $cleanModes, $cleanOptions, $optionSpec, $operationName, $operationEntry);
   return array($EntryIsUsable, $CleanEntry); }
 // / -----------------------------------------------------------------------------------
 
@@ -143,7 +150,7 @@ function readOperationRegistry() {
       if (!$RegistryIsUsable) warningEntry('The operation provider '.$providerName.' returned no usable operation, so no workflow can run.');
       $listerName = (isset($providerReply['SessionFiles']) && is_string($providerReply['SessionFiles'])) ? trim($providerReply['SessionFiles']) : '';
       if ($listerName !== '' && !function_exists($listerName)) warningEntry('The operation provider '.$providerName.' names '.$listerName.' to list a session\'s files, & no such function exists. Select is not offered.');
-      else if ($RegistryIsUsable && $listerName !== '') $Operations['Select'] = array('Name' => 'Select', 'BuiltIn' => TRUE, 'Lister' => $listerName, 'Invoke' => '', 'Budget' => '', 'Accepts' => '', 'Enabled' => TRUE, 'Inputs' => array(), 'Modes' => array('together'), 'Options' => array()); } }
+      else if ($RegistryIsUsable && $listerName !== '') $Operations['Select'] = array('Name' => 'Select', 'BuiltIn' => TRUE, 'Lister' => $listerName, 'Invoke' => '', 'Budget' => '', 'Accepts' => '', 'Enabled' => TRUE, 'Inputs' => array(), 'Modes' => array('together'), 'Options' => array(), 'Consumes' => ''); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $providerName, $operationName, $typeName, $listerName, $providerReply, $operationEntry, $typeExtensions, $cleanEntry, $entryIsUsable);
   return array($RegistryIsUsable, $Operations, $FileTypes); }
@@ -369,6 +376,33 @@ function normalizeWorkflowStep($stepNumber, $stepEntry, $operations, $fileTypes)
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to find each step that takes files an earlier step deleted or renamed.
+// / Accepts the steps as the runner reads them & the operations. Returns every problem found, which is none when no step takes such files.
+// / An operation that consumes the files it takes says so, deleted or renamed. Once it has run, those files are gone by the names it was given.
+// / So a later step taking the same files, the selection or what an earlier step made, would find none of them, & is refused here rather than skipped as it runs.
+// / A later step may take what the consuming step made, which for a renaming step is every file under its new name.
+// / A deleting step makes nothing, so a step taking what it made is refused too.
+// / A Select step reads the session again, finds whatever is left & is never refused.
+function findConsumedInputs($normalizedSteps, $operations) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ConsumedProblems = array();
+  $consumedBy = $normalizedStep = $referenceMatch = array();
+  $stepIndex = $earlierStep = 0;
+  $inputReference = $consumesValue = '';
+  foreach ((array)$normalizedSteps as $stepIndex => $normalizedStep) {
+    foreach ($normalizedStep['Input'] as $inputReference) {
+      redeclare($earlierStep, (preg_match('/^step ([0-9]+)$/', (string)$inputReference, $referenceMatch) === 1) ? (int)$referenceMatch[1] : 0);
+      if (isset($consumedBy[$inputReference])) $ConsumedProblems[] = 'Step '.($stepIndex + 1).' takes the files step '.$consumedBy[$inputReference][0].' '.$consumedBy[$inputReference][1].', so none of them is there to take.';
+      else if ($earlierStep > 0 && isset($normalizedSteps[$earlierStep - 1]) && (string)($operations[$normalizedSteps[$earlierStep - 1]['Operation']]['Consumes'] ?? '') === 'deleted') $ConsumedProblems[] = 'Step '.($stepIndex + 1).' takes what step '.$earlierStep.' made, & step '.$earlierStep.' deletes files & makes none.'; }
+    redeclare($consumesValue, (string)($operations[$normalizedStep['Operation']]['Consumes'] ?? ''));
+    if ($consumesValue !== '') foreach ($normalizedStep['Input'] as $inputReference) if (!isset($consumedBy[$inputReference])) $consumedBy[$inputReference] = array($stepIndex + 1, $consumesValue); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $consumedBy, $normalizedStep, $referenceMatch, $stepIndex, $earlierStep, $inputReference, $consumesValue, $normalizedSteps, $operations);
+  return $ConsumedProblems; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to check a workflow against the operations this application offers & the limits it sets.
 // / Accepts the document, the operations, the kinds of file & the settings, in that order.
 // / Returns whether it is valid, the workflow as the runner reads it & every problem found, in that order.
@@ -376,6 +410,7 @@ function normalizeWorkflowStep($stepNumber, $stepEntry, $operations, $fileTypes)
 // / A name is plain text of 1 to 80 characters, & a description is up to 500.
 // / A key this format does not know is a problem, because a misspelt key would otherwise be a setting silently ignored.
 // / Whether each operation is enabled is not checked here, because a valid workflow stays valid while an administrator turns one off.
+// / A step taking files an earlier step deleted or renamed is a problem, which findConsumedInputs() finds once every step is valid.
 function validateWorkflow($workflowDocument, $operations, $fileTypes, $workflowSettings) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -396,6 +431,7 @@ function validateWorkflow($workflowDocument, $operations, $fileTypes, $workflowS
     list ($stepIsValid, $normalizedStep, $stepProblems) = normalizeWorkflowStep($stepIndex + 1, $stepEntry, $operations, $fileTypes);
     if ($stepIsValid) $normalizedSteps[] = $normalizedStep;
     else redeclare($WorkflowProblems, array_merge($WorkflowProblems, $stepProblems)); }
+  if (empty($WorkflowProblems)) redeclare($WorkflowProblems, findConsumedInputs($normalizedSteps, $operations));
   if (empty($WorkflowProblems)) {
     $NormalizedWorkflow = array('Name' => $workflowName, 'Description' => $workflowDescription, 'Steps' => $normalizedSteps);
     $WorkflowIsValid = TRUE; }
@@ -484,7 +520,7 @@ function operationReadsExtension($operationEntry, $fileExtension, $stepOptions) 
 // / A file the operation does not read, & a file the filter refuses, are left out & counted.
 // / Selection order is the order the user chose the files in, & each step's output follows the order it was made.
 // / session is every file the application's lister finds in the session folder now, in the order it lists them.
-// / The lister is the one a page's file list comes from, so a Select step finds only what a user could see & tick.
+// / The lister is the one a page's file list comes from, so a Select step finds only what a user could see & select.
 function resolveStepInputs($normalizedStep, $selectedFiles, $stepOutputs, $sessionFolder, $operations, $fileTypes) {
   // / Set variables.
   global $DirSep, $EnableMemoryProtection;
@@ -641,14 +677,15 @@ function describeStepAccepts($normalizedStep, $operations, $fileTypes) {
 // / Accepts nothing. Returns the reply, holding Available, & Library when workflows are available.
 // / Only a usable workflow is described, as its identifier, name, description & steps, & what its first step reads.
 // / AcceptsAll is true when the first step reads every file, & Accepts otherwise lists the extensions it reads.
-// / NeedsSelection is false when a Select step finds files of its own, so the workflow may be run with no file ticked.
+// / NeedsSelection is false when a Select step finds files of its own, so the workflow may be run with no file selected.
+// / Deletes is true when a step deletes files, so a page asks before running it.
 // / Nothing is described that a user does not need, so no path & no problem with the library is ever sent to a browser.
 function describeWorkflowLibrary() {
   // / Set variables.
   global $EnableMemoryProtection;
   $LibraryReply = array('Available' => FALSE, 'Library' => array());
   $workflowSettings = $workflowLibrary = $operations = $fileTypes = $workflowRecord = $normalizedStep = $stepSummaries = $acceptedExtensions = array();
-  $libraryWasRead = $acceptsEveryFile = $needsSelection = FALSE;
+  $libraryWasRead = $acceptsEveryFile = $needsSelection = $deletesFiles = FALSE;
   $workflowId = '';
   $workflowSettings = workflowSettings();
   if ($workflowSettings['Enabled']) {
@@ -658,13 +695,15 @@ function describeWorkflowLibrary() {
       if (!$workflowRecord['Usable']) continue;
       redeclare($stepSummaries, array());
       $needsSelection = TRUE;
+      redeclare($deletesFiles, FALSE);
       foreach ($workflowRecord['Workflow']['Steps'] as $normalizedStep) {
         $stepSummaries[] = array('Operation' => $normalizedStep['Operation'], 'Mode' => $normalizedStep['Mode'], 'Options' => $normalizedStep['Options']);
+        if ((string)($operations[$normalizedStep['Operation']]['Consumes'] ?? '') === 'deleted') $deletesFiles = TRUE;
         if (in_array('session', $normalizedStep['Input'], TRUE)) $needsSelection = FALSE; }
       list ($acceptsEveryFile, $acceptedExtensions) = describeStepAccepts($workflowRecord['Workflow']['Steps'][0], $operations, $fileTypes);
-      $LibraryReply['Library'][] = array('Id' => (string)$workflowId, 'Name' => $workflowRecord['Workflow']['Name'], 'Description' => $workflowRecord['Workflow']['Description'], 'Steps' => $stepSummaries, 'AcceptsAll' => $acceptsEveryFile, 'Accepts' => $acceptedExtensions, 'NeedsSelection' => $needsSelection); } }
+      $LibraryReply['Library'][] = array('Id' => (string)$workflowId, 'Name' => $workflowRecord['Workflow']['Name'], 'Description' => $workflowRecord['Workflow']['Description'], 'Steps' => $stepSummaries, 'AcceptsAll' => $acceptsEveryFile, 'Accepts' => $acceptedExtensions, 'NeedsSelection' => $needsSelection, 'Deletes' => $deletesFiles); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $workflowLibrary, $operations, $fileTypes, $workflowRecord, $normalizedStep, $stepSummaries, $acceptedExtensions, $libraryWasRead, $acceptsEveryFile, $needsSelection, $workflowId);
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $workflowLibrary, $operations, $fileTypes, $workflowRecord, $normalizedStep, $stepSummaries, $acceptedExtensions, $libraryWasRead, $acceptsEveryFile, $needsSelection, $deletesFiles, $workflowId);
   return $LibraryReply; }
 // / -----------------------------------------------------------------------------------
 
@@ -1027,6 +1066,155 @@ function startWorkflowWorker($jobId, $sessionContext) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to keep the selected files a workflow may be given.
+// / Accepts the selected files, in the order they were selected. Returns each usable name once, in that order.
+// / A name is usable when it is text, names no folder & is valid UTF-8. The caller has already kept only names the session holds.
+function cleanWorkflowSelection($selectedFiles) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $CleanSelection = array();
+  $selectedName = NULL;
+  foreach ((array)$selectedFiles as $selectedName) if (is_string($selectedName) && $selectedName !== '' && basename($selectedName) === $selectedName && preg_match('//u', $selectedName) === 1 && !in_array($selectedName, $CleanSelection, TRUE)) $CleanSelection[] = $selectedName;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $selectedName, $selectedFiles);
+  return $CleanSelection; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether the files a user selected give a workflow something to run on.
+// / Accepts the settings, the workflow as the runner reads it, the selection as cleanWorkflowSelection() keeps it, the operations & the kinds of file, in that order.
+// / Returns why a run would be refused, files or nothing, or an empty string when it would not be.
+// / More files selected than one run may take is files.
+// / Only a step reading the selection, or a Select step reading the session, can find a file before the workflow runs, so only those are asked.
+// / A Select step that would find more files than one step may take is files too, because it would fail when it ran.
+// / A workflow none of whose steps would find a file is nothing, because it would run & do nothing.
+// / A run & a preview both ask this, so a preview says what a run would be refused for.
+function checkWorkflowSelection($workflowSettings, $normalizedWorkflow, $cleanSelection, $operations, $fileTypes) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $SelectionRefusal = '';
+  $normalizedStep = $stepInputs = array();
+  $anyStepHasInputs = $tooManyFound = $readsSession = $inputsWereResolved = FALSE;
+  $skippedCount = 0;
+  if (count((array)$cleanSelection) > (int)$workflowSettings['MaxFiles']) $SelectionRefusal = 'files';
+  else {
+    foreach ($normalizedWorkflow['Steps'] as $normalizedStep) {
+      redeclare($readsSession, in_array('session', $normalizedStep['Input'], TRUE));
+      if (!$readsSession && !in_array('selection', $normalizedStep['Input'], TRUE)) continue;
+      list ($inputsWereResolved, $stepInputs, $skippedCount) = resolveStepInputs(array_merge($normalizedStep, array('Input' => array($readsSession ? 'session' : 'selection'))), $cleanSelection, array(), $workflowSettings['SessionFolder'], $operations, $fileTypes);
+      if (count($stepInputs) > 0) $anyStepHasInputs = TRUE;
+      if ($readsSession && count($stepInputs) > (int)$workflowSettings['MaxFiles']) $tooManyFound = TRUE; }
+    if ($tooManyFound) $SelectionRefusal = 'files';
+    else if (!$anyStepHasInputs) $SelectionRefusal = 'nothing'; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $normalizedStep, $stepInputs, $anyStepHasInputs, $tooManyFound, $readsSession, $inputsWereResolved, $skippedCount, $workflowSettings, $normalizedWorkflow, $cleanSelection, $operations, $fileTypes);
+  return $SelectionRefusal; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the files each step of a workflow would take, were it run now on the files a user selected.
+// / Accepts the settings, the workflow as the runner reads it, the selection as cleanWorkflowSelection() keeps it, the operations & the kinds of file, in that order.
+// / Returns a list holding each step's Operation, From, Known, Takes, LeftOut, Unknown & Consumes, in the order the steps run.
+// / From lists the references a step takes, & Unknown those whose files cannot be known until the workflow runs. Known is true when Unknown is empty.
+// / The selection is known until a step that consumes files has run, because that step may have taken some of them by another reference.
+// / A Select step's files are known until an operation has run, because an operation may make files or take them away.
+// / A later step taking what a Select step found reads those files, so they are known while no step has consumed files. What an operation makes is never known before it runs.
+// / Takes names the files a step would take from what is known, in the order it would take them, & LeftOut counts those it would leave out.
+// / Consumes is deleted or renamed for a step that consumes what it takes, so a page can name the files a workflow would delete. Nothing is run & nothing is kept.
+function previewWorkflowSteps($workflowSettings, $normalizedWorkflow, $cleanSelection, $operations, $fileTypes) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PreviewSteps = array();
+  $normalizedStep = $knownOutputs = $knownReferences = $unknownReferences = $stepInputs = $referenceMatch = array();
+  $stepIndex = $earlierStep = $skippedCount = 0;
+  $inputReference = $consumesValue = '';
+  $inputsWereResolved = $anyOperationRan = $anyFilesConsumed = $referenceIsKnown = $isBuiltIn = FALSE;
+  foreach ($normalizedWorkflow['Steps'] as $stepIndex => $normalizedStep) {
+    redeclare($knownReferences, array());
+    redeclare($unknownReferences, array());
+    foreach ($normalizedStep['Input'] as $inputReference) {
+      redeclare($earlierStep, (preg_match('/^step ([0-9]+)$/', (string)$inputReference, $referenceMatch) === 1) ? (int)$referenceMatch[1] : 0);
+      if ($inputReference === 'selection') redeclare($referenceIsKnown, !$anyFilesConsumed);
+      else if ($inputReference === 'session') redeclare($referenceIsKnown, !$anyOperationRan);
+      else redeclare($referenceIsKnown, (!$anyFilesConsumed && $earlierStep > 0 && isset($knownOutputs[$earlierStep - 1])));
+      if ($referenceIsKnown) $knownReferences[] = $inputReference;
+      else $unknownReferences[] = $inputReference; }
+    redeclare($stepInputs, array());
+    redeclare($skippedCount, 0);
+    if (count($knownReferences) > 0) list ($inputsWereResolved, $stepInputs, $skippedCount) = resolveStepInputs(array_merge($normalizedStep, array('Input' => $knownReferences)), $cleanSelection, $knownOutputs, $workflowSettings['SessionFolder'], $operations, $fileTypes);
+    redeclare($isBuiltIn, !empty($operations[$normalizedStep['Operation']]['BuiltIn']));
+    redeclare($consumesValue, (string)($operations[$normalizedStep['Operation']]['Consumes'] ?? ''));
+    if ($isBuiltIn && count($unknownReferences) === 0) $knownOutputs[$stepIndex] = $stepInputs;
+    $PreviewSteps[] = array('Operation' => (string)$normalizedStep['Operation'], 'From' => array_values($normalizedStep['Input']), 'Known' => (count($unknownReferences) === 0), 'Takes' => array_values($stepInputs), 'LeftOut' => (int)$skippedCount, 'Unknown' => $unknownReferences, 'Consumes' => $consumesValue);
+    if (!$isBuiltIn) $anyOperationRan = TRUE;
+    if ($consumesValue !== '') $anyFilesConsumed = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $normalizedStep, $knownOutputs, $knownReferences, $unknownReferences, $stepInputs, $referenceMatch, $stepIndex, $earlierStep, $skippedCount, $inputReference, $consumesValue, $inputsWereResolved, $anyOperationRan, $anyFilesConsumed, $referenceIsKnown, $isBuiltIn, $workflowSettings, $normalizedWorkflow, $cleanSelection, $operations, $fileTypes);
+  return $PreviewSteps; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to preview a checked workflow on the files a user selected.
+// / Accepts the settings, the workflow as the runner reads it, the selected files, the operations & the kinds of file, in that order.
+// / Returns the reply, holding Previewed & Reason, & Steps when it was previewed, which previewWorkflowSteps() describes.
+// / More files selected than one run may take are not previewed, & Reason is files.
+// / Otherwise Reason is what a run would be refused for now, files or nothing, as checkWorkflowSelection() decides, & is empty when a run would start.
+// / Whether this session or the server is too busy to start a run is not asked, because that can change before a user presses Run.
+function describeWorkflowPreview($workflowSettings, $normalizedWorkflow, $selectedFiles, $operations, $fileTypes) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PreviewReply = array('Previewed' => FALSE, 'Reason' => '');
+  $cleanSelection = array();
+  $cleanSelection = cleanWorkflowSelection($selectedFiles);
+  if (count($cleanSelection) > (int)$workflowSettings['MaxFiles']) $PreviewReply['Reason'] = 'files';
+  else $PreviewReply = array('Previewed' => TRUE, 'Reason' => checkWorkflowSelection($workflowSettings, $normalizedWorkflow, $cleanSelection, $operations, $fileTypes),
+    'Steps' => previewWorkflowSteps($workflowSettings, $normalizedWorkflow, $cleanSelection, $operations, $fileTypes));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanSelection, $workflowSettings, $normalizedWorkflow, $selectedFiles, $operations, $fileTypes);
+  return $PreviewReply; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to find a workflow this session is offered in the library.
+// / Accepts the workflow's identifier & the settings. Returns whether it was found, the workflow as the runner reads it, the operations & the kinds of file, in that order.
+// / Only a usable workflow is found, so one the library holds as invalid, or as needing an operation that is turned off, is not.
+// / A run, a preview & an export each find a workflow here, so none of them can reach one the others cannot.
+function findLibraryWorkflow($workflowId, $workflowSettings) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $WorkflowWasFound = FALSE;
+  $NormalizedWorkflow = $Operations = $FileTypes = array();
+  $workflowLibrary = array();
+  $libraryWasRead = FALSE;
+  list ($libraryWasRead, $workflowLibrary, $Operations, $FileTypes) = readWorkflowLibrary($workflowSettings);
+  $WorkflowWasFound = (is_string($workflowId) && isset($workflowLibrary[$workflowId]) && $workflowLibrary[$workflowId]['Usable'] === TRUE);
+  if ($WorkflowWasFound) $NormalizedWorkflow = $workflowLibrary[$workflowId]['Workflow'];
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowLibrary, $libraryWasRead, $workflowId, $workflowSettings);
+  return array($WorkflowWasFound, $NormalizedWorkflow, $Operations, $FileTypes); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to check a workflow a page sent, against the operations this server offers.
+// / Accepts the text & the settings, in that order.
+// / Returns whether it is valid, the workflow as the runner reads it, every problem found, whether it is usable, the operations & the kinds of file, in that order.
+// / A run, a preview & a check of a workflow a page built each read it here, so each is held to the same rules.
+// / A server offering no operation can check nothing, & says so as the workflow's only problem.
+function checkSentWorkflow($workflowText, $workflowSettings) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $WorkflowIsValid = $WorkflowIsUsable = FALSE;
+  $NormalizedWorkflow = $WorkflowProblems = $Operations = $FileTypes = array();
+  $registryIsUsable = FALSE;
+  list ($registryIsUsable, $Operations, $FileTypes) = readOperationRegistry();
+  if ($registryIsUsable) list ($WorkflowIsValid, $NormalizedWorkflow, $WorkflowProblems, $WorkflowIsUsable) = checkWorkflowText($workflowText, $Operations, $FileTypes, $workflowSettings);
+  else $WorkflowProblems[] = 'This server offers no operation, so no workflow can be checked or run.';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $registryIsUsable, $workflowText, $workflowSettings);
+  return array($WorkflowIsValid, $NormalizedWorkflow, $WorkflowProblems, $WorkflowIsUsable, $Operations, $FileTypes); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to start a checked workflow on the files a user selected, in the background.
 // / Accepts the settings, the workflow's identifier, the workflow as the runner reads it, the selected files, the operations & the kinds of file, in that order.
 // / Returns the reply, holding Started, & JobId when it started or Reason when it did not.
@@ -1034,67 +1222,56 @@ function startWorkflowWorker($jobId, $sessionContext) {
 // / The caller has already kept only files that are the session's own, because which files a user may act on is the application's policy.
 // / One workflow runs in a session at a time, & no more than the application's limit run on the server at once.
 // / A session's own workflow is asked about before the server's count, because the count includes it & busy is the truer answer.
-// / A workflow that would find no file is refused before anything starts, because it would run & do nothing.
-// / Only a step reading the selection, or a Select step reading the session, can find a file before the workflow runs, so only those are asked.
-// / A Select step that would find more files than one step may take is refused here too, because it would fail when it ran.
+// / A workflow that would find no file is refused before anything starts, because it would run & do nothing. checkWorkflowSelection() decides, as it does for a preview.
 // / The worker is a process of its own, so the request returns as soon as it is started.
 // / Reason is busy, files, nothing, server or start.
 function launchWorkflowRun($workflowSettings, $workflowId, $normalizedWorkflow, $selectedFiles, $operations, $fileTypes) {
   // / Set variables.
   global $DirSep, $EnableMemoryProtection;
   $RunReply = array('Started' => FALSE, 'Reason' => '');
-  $cleanSelection = $normalizedStep = $stepInputs = $initialStatus = $jobRecord = $stepSummaries = array();
-  $anyStepHasInputs = $tooManyFound = $readsSession = $inputsWereResolved = $runsAreCounted = $sessionWasClaimed = $jobWasWritten = $runWasRecorded = $workerWasStarted = FALSE;
-  $selectedName = NULL;
-  $jobId = $claimRefusal = $startNotice = $sessionFolder = $workflowLabel = '';
-  $runningCount = $skippedCount = 0;
+  $cleanSelection = $normalizedStep = $initialStatus = $jobRecord = $stepSummaries = array();
+  $runsAreCounted = $sessionWasClaimed = $jobWasWritten = $runWasRecorded = $workerWasStarted = FALSE;
+  $jobId = $claimRefusal = $startNotice = $sessionFolder = $workflowLabel = $selectionRefusal = '';
+  $runningCount = 0;
   $runLock = FALSE;
   $sessionFolder = $workflowSettings['SessionFolder'];
   $workflowLabel = ((string)$workflowId !== '') ? 'workflow '.(string)$workflowId : 'a workflow built in a page';
   if (workflowSessionIsBusy($sessionFolder)) $RunReply['Reason'] = 'busy';
   else {
-    foreach ((array)$selectedFiles as $selectedName) if (is_string($selectedName) && $selectedName !== '' && basename($selectedName) === $selectedName && preg_match('//u', $selectedName) === 1 && !in_array($selectedName, $cleanSelection, TRUE)) $cleanSelection[] = $selectedName;
-    if (count($cleanSelection) > (int)$workflowSettings['MaxFiles']) $RunReply['Reason'] = 'files';
+    $cleanSelection = cleanWorkflowSelection($selectedFiles);
+    $selectionRefusal = checkWorkflowSelection($workflowSettings, $normalizedWorkflow, $cleanSelection, $operations, $fileTypes);
+    if ($selectionRefusal !== '') $RunReply['Reason'] = $selectionRefusal;
     else {
-      foreach ($normalizedWorkflow['Steps'] as $normalizedStep) {
-        $readsSession = in_array('session', $normalizedStep['Input'], TRUE);
-        if (!$readsSession && !in_array('selection', $normalizedStep['Input'], TRUE)) continue;
-        list ($inputsWereResolved, $stepInputs, $skippedCount) = resolveStepInputs(array_merge($normalizedStep, array('Input' => array($readsSession ? 'session' : 'selection'))), $cleanSelection, array(), $sessionFolder, $operations, $fileTypes);
-        if (count($stepInputs) > 0) $anyStepHasInputs = TRUE;
-        if ($readsSession && count($stepInputs) > (int)$workflowSettings['MaxFiles']) $tooManyFound = TRUE; }
-      if ($tooManyFound) $RunReply['Reason'] = 'files';
-      else if (!$anyStepHasInputs) $RunReply['Reason'] = 'nothing';
+      $runLock = lockWorkflowRuns($workflowSettings['RunFolder']);
+      if ($runLock !== FALSE) list ($runsAreCounted, $runningCount) = countRunningWorkflows($workflowSettings['RunFolder']);
+      if ($runsAreCounted && $runningCount >= (int)$workflowSettings['MaxConcurrent']) $RunReply['Reason'] = 'server';
       else {
-        $runLock = lockWorkflowRuns($workflowSettings['RunFolder']);
-        if ($runLock !== FALSE) list ($runsAreCounted, $runningCount) = countRunningWorkflows($workflowSettings['RunFolder']);
-        if ($runsAreCounted && $runningCount >= (int)$workflowSettings['MaxConcurrent']) $RunReply['Reason'] = 'server';
+        $jobId = bin2hex(random_bytes(12));
+        foreach ($normalizedWorkflow['Steps'] as $normalizedStep) $stepSummaries[] = array('Operation' => $normalizedStep['Operation'], 'State' => 'waiting', 'Inputs' => 0, 'Skipped' => 0, 'Produced' => 0, 'Errors' => FALSE);
+        // / The status holds the workflow in canonical form, written once here, so a page loaded again while it runs can draw what is running.
+        // / The worker writes its progress over this status & keeps every key it does not change, so the document stays until the status is cleared.
+        $initialStatus = array('JobId' => $jobId, 'WorkflowId' => (string)$workflowId, 'Name' => $normalizedWorkflow['Name'], 'State' => 'starting', 'Reason' => '', 'Created' => time(), 'Started' => 0, 'Ended' => 0, 'Heartbeat' => time(),
+          'WorkerPid' => 0, 'WorkerStart' => 0, 'StepCount' => count($stepSummaries), 'StepNumber' => 0, 'Operation' => '', 'FilesDone' => 0, 'FilesTotal' => 0, 'Waiting' => FALSE, 'Steps' => $stepSummaries, 'Produced' => array(),
+          'Document' => canonicalWorkflowText($normalizedWorkflow, $operations));
+        list ($sessionWasClaimed, $claimRefusal) = claimWorkflowSession($sessionFolder, $initialStatus);
+        if (!$sessionWasClaimed) $RunReply['Reason'] = $claimRefusal;
         else {
-          $jobId = bin2hex(random_bytes(12));
-          foreach ($normalizedWorkflow['Steps'] as $normalizedStep) $stepSummaries[] = array('Operation' => $normalizedStep['Operation'], 'State' => 'waiting', 'Inputs' => 0, 'Skipped' => 0, 'Produced' => 0, 'Errors' => FALSE);
-          // / The status holds the workflow in canonical form, written once here, so a page loaded again while it runs can draw what is running.
-          // / The worker writes its progress over this status & keeps every key it does not change, so the document stays until the status is cleared.
-          $initialStatus = array('JobId' => $jobId, 'WorkflowId' => (string)$workflowId, 'Name' => $normalizedWorkflow['Name'], 'State' => 'starting', 'Reason' => '', 'Created' => time(), 'Started' => 0, 'Ended' => 0, 'Heartbeat' => time(),
-            'WorkerPid' => 0, 'WorkerStart' => 0, 'StepCount' => count($stepSummaries), 'StepNumber' => 0, 'Operation' => '', 'FilesDone' => 0, 'FilesTotal' => 0, 'Waiting' => FALSE, 'Steps' => $stepSummaries, 'Produced' => array(),
-            'Document' => canonicalWorkflowText($normalizedWorkflow, $operations));
-          list ($sessionWasClaimed, $claimRefusal) = claimWorkflowSession($sessionFolder, $initialStatus);
-          if (!$sessionWasClaimed) $RunReply['Reason'] = $claimRefusal;
-          else {
-            $jobRecord = array('JobId' => $jobId, 'WorkflowId' => (string)$workflowId, 'Workflow' => $normalizedWorkflow, 'Selection' => $cleanSelection, 'Created' => time());
-            $jobWasWritten = writeWorkflowFile(workflowFolderPath($sessionFolder).$DirSep.'job.json', (string)json_encode($jobRecord, JSON_UNESCAPED_SLASHES), FALSE);
-            if ($runsAreCounted) $runWasRecorded = recordRunningWorkflow($workflowSettings['RunFolder'], $jobId, 0, 0); } }
-        // / The lock is held only while the count & the record are made, so a worker that is slow to start holds nobody up.
-        unlockWorkflowRuns($runLock);
-        if ($sessionWasClaimed && $jobWasWritten) list ($workerWasStarted, $startNotice) = startWorkflowWorker($jobId, $workflowSettings['SessionContext']);
-        if ($sessionWasClaimed && (!$jobWasWritten or !$workerWasStarted)) {
-          errorEntry('A workflow could not be started. '.($jobWasWritten ? $startNotice : 'Its job could not be written.'), 38002, FALSE);
-          releaseWorkflowSession($sessionFolder);
-          if ($runWasRecorded) forgetRunningWorkflow($workflowSettings['RunFolder'], $jobId);
-          $RunReply['Reason'] = 'start'; }
-        else if ($workerWasStarted) {
-          $RunReply = array('Started' => TRUE, 'JobId' => $jobId, 'Reason' => '');
-          logEntry('Started '.$workflowLabel.' as job '.$jobId.' on '.count($cleanSelection).' selected file(s).'); } } } }
+          $jobRecord = array('JobId' => $jobId, 'WorkflowId' => (string)$workflowId, 'Workflow' => $normalizedWorkflow, 'Selection' => $cleanSelection, 'Created' => time());
+          $jobWasWritten = writeWorkflowFile(workflowFolderPath($sessionFolder).$DirSep.'job.json', (string)json_encode($jobRecord, JSON_UNESCAPED_SLASHES), FALSE);
+          if ($runsAreCounted) $runWasRecorded = recordRunningWorkflow($workflowSettings['RunFolder'], $jobId, 0, 0); } }
+      // / The lock is held only while the count & the record are made, so a worker that is slow to start holds nobody up.
+      unlockWorkflowRuns($runLock);
+      if ($sessionWasClaimed && $jobWasWritten) list ($workerWasStarted, $startNotice) = startWorkflowWorker($jobId, $workflowSettings['SessionContext']);
+      if ($sessionWasClaimed && (!$jobWasWritten or !$workerWasStarted)) {
+        errorEntry('A workflow could not be started. '.($jobWasWritten ? $startNotice : 'Its job could not be written.'), 38002, FALSE);
+        releaseWorkflowSession($sessionFolder);
+        if ($runWasRecorded) forgetRunningWorkflow($workflowSettings['RunFolder'], $jobId);
+        $RunReply['Reason'] = 'start'; }
+      else if ($workerWasStarted) {
+        $RunReply = array('Started' => TRUE, 'JobId' => $jobId, 'Reason' => '');
+        logEntry('Started '.$workflowLabel.' as job '.$jobId.' on '.count($cleanSelection).' selected file(s).'); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cleanSelection, $normalizedStep, $stepInputs, $initialStatus, $jobRecord, $stepSummaries, $anyStepHasInputs, $tooManyFound, $readsSession, $inputsWereResolved, $runsAreCounted, $sessionWasClaimed, $jobWasWritten, $runWasRecorded, $workerWasStarted, $selectedName, $jobId, $claimRefusal, $startNotice, $sessionFolder, $workflowLabel, $runningCount, $skippedCount, $runLock, $workflowSettings, $workflowId, $normalizedWorkflow, $selectedFiles, $operations, $fileTypes);
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanSelection, $normalizedStep, $initialStatus, $jobRecord, $stepSummaries, $runsAreCounted, $sessionWasClaimed, $jobWasWritten, $runWasRecorded, $workerWasStarted, $jobId, $claimRefusal, $startNotice, $sessionFolder, $workflowLabel, $selectionRefusal, $runningCount, $runLock, $workflowSettings, $workflowId, $normalizedWorkflow, $selectedFiles, $operations, $fileTypes);
   return $RunReply; }
 // / -----------------------------------------------------------------------------------
 
@@ -1108,16 +1285,16 @@ function startWorkflowRun($workflowId, $selectedFiles) {
   // / Set variables.
   global $EnableMemoryProtection;
   $RunReply = array('Started' => FALSE, 'Reason' => '');
-  $workflowSettings = $workflowLibrary = $operations = $fileTypes = array();
-  $libraryWasRead = FALSE;
+  $workflowSettings = $normalizedWorkflow = $operations = $fileTypes = array();
+  $workflowWasFound = FALSE;
   $workflowSettings = workflowSettings();
   if (!$workflowSettings['Enabled']) $RunReply['Reason'] = 'disabled';
   else {
-    list ($libraryWasRead, $workflowLibrary, $operations, $fileTypes) = readWorkflowLibrary($workflowSettings);
-    if (!is_string($workflowId) or !isset($workflowLibrary[$workflowId]) or !$workflowLibrary[$workflowId]['Usable']) $RunReply['Reason'] = 'unknown';
-    else $RunReply = launchWorkflowRun($workflowSettings, $workflowId, $workflowLibrary[$workflowId]['Workflow'], $selectedFiles, $operations, $fileTypes); }
+    list ($workflowWasFound, $normalizedWorkflow, $operations, $fileTypes) = findLibraryWorkflow($workflowId, $workflowSettings);
+    if (!$workflowWasFound) $RunReply['Reason'] = 'unknown';
+    else $RunReply = launchWorkflowRun($workflowSettings, $workflowId, $normalizedWorkflow, $selectedFiles, $operations, $fileTypes); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $workflowLibrary, $operations, $fileTypes, $libraryWasRead, $workflowId, $selectedFiles);
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $normalizedWorkflow, $operations, $fileTypes, $workflowWasFound, $workflowId, $selectedFiles);
   return $RunReply; }
 // / -----------------------------------------------------------------------------------
 
@@ -1133,19 +1310,68 @@ function startWorkflowDocumentRun($workflowText, $selectedFiles) {
   global $EnableMemoryProtection;
   $RunReply = array('Started' => FALSE, 'Reason' => '');
   $workflowSettings = $operations = $fileTypes = $normalizedWorkflow = $workflowProblems = array();
-  $registryIsUsable = $workflowIsValid = $workflowIsUsable = FALSE;
+  $workflowIsValid = $workflowIsUsable = FALSE;
   $workflowSettings = workflowSettings();
   if (!$workflowSettings['Enabled']) $RunReply['Reason'] = 'disabled';
   else if (!$workflowSettings['Builder']) $RunReply['Reason'] = 'builder';
   else {
-    list ($registryIsUsable, $operations, $fileTypes) = readOperationRegistry();
-    if ($registryIsUsable) list ($workflowIsValid, $normalizedWorkflow, $workflowProblems, $workflowIsUsable) = checkWorkflowText($workflowText, $operations, $fileTypes, $workflowSettings);
-    else $workflowProblems[] = 'This server offers no operation, so no workflow can run.';
+    list ($workflowIsValid, $normalizedWorkflow, $workflowProblems, $workflowIsUsable, $operations, $fileTypes) = checkSentWorkflow($workflowText, $workflowSettings);
     if (!$workflowIsValid or !$workflowIsUsable) $RunReply = array('Started' => FALSE, 'Reason' => 'invalid', 'Problems' => $workflowProblems);
     else $RunReply = launchWorkflowRun($workflowSettings, '', $normalizedWorkflow, $selectedFiles, $operations, $fileTypes); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $operations, $fileTypes, $normalizedWorkflow, $workflowProblems, $registryIsUsable, $workflowIsValid, $workflowIsUsable, $workflowText, $selectedFiles);
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $operations, $fileTypes, $normalizedWorkflow, $workflowProblems, $workflowIsValid, $workflowIsUsable, $workflowText, $selectedFiles);
   return $RunReply; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to preview a workflow from the library on the files a user selected, naming the files each step would take.
+// / Accepts the workflow's identifier & the selected files, in the order they were selected.
+// / Returns the reply, holding Previewed & Reason, & Steps when it was previewed, which describeWorkflowPreview() describes.
+// / Only a usable workflow from the library is previewed, so an identifier this session is not offered is unknown.
+// / Reason is disabled, unknown, files or nothing, & is empty when a run would start. Nothing is run, nothing is kept & no budget is taken.
+function previewLibraryWorkflow($workflowId, $selectedFiles) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PreviewReply = array('Previewed' => FALSE, 'Reason' => '');
+  $workflowSettings = $normalizedWorkflow = $operations = $fileTypes = array();
+  $workflowWasFound = FALSE;
+  $workflowSettings = workflowSettings();
+  if (!$workflowSettings['Enabled']) $PreviewReply['Reason'] = 'disabled';
+  else {
+    list ($workflowWasFound, $normalizedWorkflow, $operations, $fileTypes) = findLibraryWorkflow($workflowId, $workflowSettings);
+    if (!$workflowWasFound) $PreviewReply['Reason'] = 'unknown';
+    else {
+      $PreviewReply = describeWorkflowPreview($workflowSettings, $normalizedWorkflow, $selectedFiles, $operations, $fileTypes);
+      if ($PreviewReply['Previewed']) logEntry('Previewed workflow '.(string)$workflowId.' on '.count((array)$selectedFiles).' selected file(s).'); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $normalizedWorkflow, $operations, $fileTypes, $workflowWasFound, $workflowId, $selectedFiles);
+  return $PreviewReply; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to preview a workflow a page built on the files a user selected, naming the files each step would take.
+// / Accepts the workflow, as the text the page sent, & the selected files, in the order they were selected.
+// / Returns the reply, holding Previewed & Reason, & Steps when it was previewed, & Problems when the workflow is not one this server can run.
+// / The text is checked exactly as a run checks it, so a workflow that previews is one that would start.
+// / Reason is disabled, builder, invalid, files or nothing, & is empty when a run would start. Nothing is run, nothing is kept & no budget is taken.
+function previewWorkflowDocument($workflowText, $selectedFiles) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PreviewReply = array('Previewed' => FALSE, 'Reason' => '');
+  $workflowSettings = $operations = $fileTypes = $normalizedWorkflow = $workflowProblems = array();
+  $workflowIsValid = $workflowIsUsable = FALSE;
+  $workflowSettings = workflowSettings();
+  if (!$workflowSettings['Enabled']) $PreviewReply['Reason'] = 'disabled';
+  else if (!$workflowSettings['Builder']) $PreviewReply['Reason'] = 'builder';
+  else {
+    list ($workflowIsValid, $normalizedWorkflow, $workflowProblems, $workflowIsUsable, $operations, $fileTypes) = checkSentWorkflow($workflowText, $workflowSettings);
+    if (!$workflowIsValid or !$workflowIsUsable) $PreviewReply = array('Previewed' => FALSE, 'Reason' => 'invalid', 'Problems' => $workflowProblems);
+    else {
+      $PreviewReply = describeWorkflowPreview($workflowSettings, $normalizedWorkflow, $selectedFiles, $operations, $fileTypes);
+      if ($PreviewReply['Previewed']) logEntry('Previewed a workflow built in a page on '.count((array)$selectedFiles).' selected file(s).'); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $operations, $fileTypes, $normalizedWorkflow, $workflowProblems, $workflowIsValid, $workflowIsUsable, $workflowText, $selectedFiles);
+  return $PreviewReply; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1215,18 +1441,16 @@ function checkWorkflowDocument($workflowText) {
   global $EnableMemoryProtection;
   $CheckReply = array('Available' => FALSE, 'Allowed' => FALSE);
   $workflowSettings = $operations = $fileTypes = $normalizedWorkflow = $workflowProblems = array();
-  $registryIsUsable = $workflowIsValid = $workflowIsUsable = FALSE;
+  $workflowIsValid = $workflowIsUsable = FALSE;
   $workflowSettings = workflowSettings();
   if ($workflowSettings['Enabled']) {
     $CheckReply = array('Available' => TRUE, 'Allowed' => ($workflowSettings['Builder'] or $workflowSettings['ImportExport']));
     if ($CheckReply['Allowed']) {
-      list ($registryIsUsable, $operations, $fileTypes) = readOperationRegistry();
-      if ($registryIsUsable) list ($workflowIsValid, $normalizedWorkflow, $workflowProblems, $workflowIsUsable) = checkWorkflowText($workflowText, $operations, $fileTypes, $workflowSettings);
-      else $workflowProblems[] = 'This server offers no operation, so no workflow can be checked.';
+      list ($workflowIsValid, $normalizedWorkflow, $workflowProblems, $workflowIsUsable, $operations, $fileTypes) = checkSentWorkflow($workflowText, $workflowSettings);
       $CheckReply = array_merge($CheckReply, array('Valid' => $workflowIsValid, 'Usable' => $workflowIsUsable, 'Problems' => $workflowProblems,
         'Document' => $workflowIsValid ? canonicalWorkflowText($normalizedWorkflow, $operations) : '', 'FileName' => $workflowIsValid ? workflowFileName($normalizedWorkflow['Name']) : '')); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $operations, $fileTypes, $normalizedWorkflow, $workflowProblems, $registryIsUsable, $workflowIsValid, $workflowIsUsable, $workflowText);
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $operations, $fileTypes, $normalizedWorkflow, $workflowProblems, $workflowIsValid, $workflowIsUsable, $workflowText);
   return $CheckReply; }
 // / -----------------------------------------------------------------------------------
 
@@ -1240,25 +1464,45 @@ function exportWorkflowDocument($workflowId) {
   // / Set variables.
   global $EnableMemoryProtection;
   $ExportReply = array('Available' => FALSE, 'Allowed' => FALSE);
-  $workflowSettings = $workflowLibrary = $operations = $fileTypes = array();
-  $libraryWasRead = $workflowWasFound = FALSE;
+  $workflowSettings = $normalizedWorkflow = $operations = $fileTypes = array();
+  $workflowWasFound = FALSE;
   $workflowSettings = workflowSettings();
   if ($workflowSettings['Enabled']) {
     $ExportReply = array('Available' => TRUE, 'Allowed' => ($workflowSettings['Builder'] or $workflowSettings['ImportExport']));
     if ($ExportReply['Allowed']) {
-      list ($libraryWasRead, $workflowLibrary, $operations, $fileTypes) = readWorkflowLibrary($workflowSettings);
-      $workflowWasFound = (is_string($workflowId) && isset($workflowLibrary[$workflowId]) && $workflowLibrary[$workflowId]['Usable']);
-      $ExportReply = array_merge($ExportReply, array('Found' => $workflowWasFound, 'Document' => $workflowWasFound ? canonicalWorkflowText($workflowLibrary[$workflowId]['Workflow'], $operations) : '', 'FileName' => $workflowWasFound ? $workflowId.'-workflow.json' : '')); } }
+      list ($workflowWasFound, $normalizedWorkflow, $operations, $fileTypes) = findLibraryWorkflow($workflowId, $workflowSettings);
+      $ExportReply = array_merge($ExportReply, array('Found' => $workflowWasFound, 'Document' => $workflowWasFound ? canonicalWorkflowText($normalizedWorkflow, $operations) : '', 'FileName' => $workflowWasFound ? $workflowId.'-workflow.json' : '')); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $workflowLibrary, $operations, $fileTypes, $libraryWasRead, $workflowWasFound, $workflowId);
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $normalizedWorkflow, $operations, $fileTypes, $workflowWasFound, $workflowId);
   return $ExportReply; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to describe the groups a long list of choices is sorted into.
+// / Accepts the groups an option declares & the choices it offers. Returns a list of groups, each holding a Name & its Choices.
+// / A group is named by a plain word, such as Image, & a page shows its choices together, one group at a time.
+// / A choice the option does not offer is left out of its group, & a group left holding nothing is left out, so a group never offers what a step could not name.
+// / A list is returned rather than an object, so the order the application gave reaches a page whatever reads it.
+function describeChoiceGroups($choiceGroups, $offeredChoices) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $GroupSummaries = array();
+  $groupName = '';
+  $groupChoices = $keptChoices = array();
+  foreach ((array)$choiceGroups as $groupName => $groupChoices) {
+    redeclare($keptChoices, is_array($groupChoices) ? array_values(array_intersect(array_values(array_unique(array_map('strtolower', array_map('strval', array_filter($groupChoices, 'is_scalar'))))), (array)$offeredChoices)) : array());
+    if (is_string($groupName) && preg_match('/^[A-Za-z][A-Za-z0-9]{0,31}$/', $groupName) === 1 && count($keptChoices) > 0) $GroupSummaries[] = array('Name' => $groupName, 'Choices' => $keptChoices); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $groupName, $groupChoices, $keptChoices, $choiceGroups, $offeredChoices);
+  return $GroupSummaries; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to describe what a page's builder may build a workflow from.
 // / Accepts nothing. Returns the reply, holding Available, Builder, ImportExport, MaxSteps & MaxFiles, & Operations & Kinds, which are empty unless the builder is on.
-// / Each operation is described by its name, whether it is this core's own, its modes & its options.
+// / Each operation is described by its name, whether it is this core's own, its modes, its options & what becomes of the files it takes.
 // / Each option is described by its name, its type, & its choices, default, bounds & whether it is required where it has them. A choice is described as a step names it.
+// / An option whose choices are sorted into groups is described with its groups, which describeChoiceGroups() checks.
 // / Only an operation this server has turned on is described, because a step using any other could not run here.
 // / Kinds names the kinds of file a filter may name. Nothing else about this server is described.
 function describeWorkflowOperations() {
@@ -1279,8 +1523,9 @@ function describeWorkflowOperations() {
         foreach ($operationEntry['Options'] as $optionName => $optionSpec) {
           redeclare($optionSummary, array_merge(array('Name' => (string)$optionName), array_intersect_key($optionSpec, array_flip(array('Type', 'Default', 'Required', 'Minimum', 'Maximum')))));
           if (isset($optionSpec['Choices']) && is_array($optionSpec['Choices'])) $optionSummary['Choices'] = array_values(array_unique(array_map('strtolower', array_map('strval', $optionSpec['Choices']))));
+          if (isset($optionSummary['Choices']) && isset($optionSpec['Groups']) && is_array($optionSpec['Groups'])) $optionSummary['Groups'] = describeChoiceGroups($optionSpec['Groups'], $optionSummary['Choices']);
           $optionSummaries[] = $optionSummary; }
-        $OperationsReply['Operations'][] = array('Name' => (string)$operationName, 'BuiltIn' => !empty($operationEntry['BuiltIn']), 'Modes' => $operationEntry['Modes'], 'Options' => $optionSummaries); }
+        $OperationsReply['Operations'][] = array('Name' => (string)$operationName, 'BuiltIn' => !empty($operationEntry['BuiltIn']), 'Modes' => $operationEntry['Modes'], 'Options' => $optionSummaries, 'Consumes' => (string)($operationEntry['Consumes'] ?? '')); }
       $OperationsReply['Kinds'] = array_map('strval', array_keys($fileTypes)); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $operations, $fileTypes, $operationEntry, $optionSpec, $optionSummary, $optionSummaries, $registryIsUsable, $operationName, $optionName);
@@ -1411,10 +1656,11 @@ function workflowStopIsRequested($sessionFolder, $jobId) {
 // / Returns whether the budget was taken & why it was not, in that order. The reason is stopped, runtime or budget.
 // / A request refused a budget fails at once, & a workflow in the background waits instead, about four & a half minutes in all.
 // / The status says it is waiting, & a stop is noticed within a second of being asked for.
+// / An operation that takes no budget names an empty one, & is given its turn at once, so a workflow that only cleans up runs even while the server refuses every budget.
 function takeWorkflowBudget($budgetName, $sessionFolder, $workflowStatus, $runDeadline) {
   // / Set variables.
   global $EnableMemoryProtection;
-  $BudgetWasTaken = FALSE;
+  $BudgetWasTaken = ((string)$budgetName === '');
   $BudgetRefusal = '';
   $waitSeconds = array(0, 5, 10, 20, 30, 30, 30, 30, 30, 30, 30, 30);
   $waitSecond = $secondsWaited = 0;
@@ -1479,6 +1725,24 @@ function invokeWorkflowOperation($operationEntry, $inputFiles, $stepOptions, $se
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to keep the names of the files that are still in a session.
+// / Accepts the session folder & the names. Returns the names of those that are still plain files there, in the order given.
+// / A step that deletes or renames files takes away names an earlier step made, so what a workflow made is read again after every operation.
+function filesStillPresent($sessionFolder, $fileNames) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $PresentFiles = array();
+  $fileName = $filePath = '';
+  foreach ((array)$fileNames as $fileName) {
+    redeclare($filePath, rtrim((string)$sessionFolder, $DirSep).$DirSep.basename((string)$fileName));
+    clearstatcache(TRUE, $filePath);
+    if (is_string($fileName) && $fileName !== '' && basename($fileName) === $fileName && is_file($filePath) && !is_link($filePath)) $PresentFiles[] = $fileName; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $fileName, $filePath, $sessionFolder, $fileNames);
+  return $PresentFiles; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to run one step of a workflow, as its worker.
 // / Accepts the step's index, the step, the job, what each earlier step produced, the status, the operations, the kinds of file, the session folder & the time the workflow must end by, in that order.
 // / Returns whether the step was attempted, its result & the status as it now stands, in that order.
@@ -1486,7 +1750,10 @@ function invokeWorkflowOperation($operationEntry, $inputFiles, $stepOptions, $se
 // / A step in each mode calls its operation once for every file, & in together mode once for all of them.
 // / Before every call it reads whether it was asked to stop & whether it has run too long, & takes the operation's budget.
 // / A step whose files all fail ends the workflow, because every later step would build on nothing.
+// / A step that deletes files does not run once an earlier step has had errors, & ends the workflow, as incomplete.
+// / The files it would delete may be the only copies of what that step failed to make, so every one of them is kept.
 // / A Select step calls nothing & takes no budget. The files it found are what the steps after it read, & are not counted as files made.
+// / What the workflow made is read again after every operation, so a file a later step deleted or renamed is not named as made.
 function runWorkflowStep($stepIndex, $normalizedStep, $jobRecord, $stepOutputs, $workflowStatus, $operations, $fileTypes, $sessionFolder, $runDeadline) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -1502,6 +1769,9 @@ function runWorkflowStep($stepIndex, $normalizedStep, $jobRecord, $stepOutputs, 
   $StepStatus['Steps'][$stepIndex]['State'] = 'running';
   writeWorkflowStatus($sessionFolder, $StepStatus, TRUE);
   if (empty($operationEntry) or !$operationEntry['Enabled']) list ($StepResult['EndState'], $StepResult['EndReason'], $stepState) = array('failed', 'unavailable', 'failed');
+  else if ((string)$operationEntry['Consumes'] === 'deleted' && in_array(TRUE, array_column(array_slice((array)$StepStatus['Steps'], 0, (int)$stepIndex), 'Errors'), TRUE)) {
+    list ($StepResult['EndState'], $StepResult['EndReason'], $stepState) = array('failed', 'incomplete', 'failed');
+    warningEntry('Workflow job '.(string)$jobRecord['JobId'].' did not run step '.($stepIndex + 1).', '.$normalizedStep['Operation'].', because an earlier step had errors. The files it would have deleted are kept.'); }
   else {
     $StepWasAttempted = TRUE;
     list ($inputsWereResolved, $inputFiles, $skippedCount) = resolveStepInputs($normalizedStep, $jobRecord['Selection'], $stepOutputs, $sessionFolder, $operations, $fileTypes);
@@ -1524,12 +1794,12 @@ function runWorkflowStep($stepIndex, $normalizedStep, $jobRecord, $stepOutputs, 
           if (!$budgetWasTaken) list ($StepResult['EndState'], $StepResult['EndReason']) = ($budgetRefusal === 'stopped') ? array('stopped', 'stopped') : array('failed', $budgetRefusal);
           else {
             list ($operationSucceeded, $operationErrors, $producedFiles, $haltReason) = invokeWorkflowOperation($operationEntry, $batchFiles, $normalizedStep['Options'], $sessionFolder);
-            giveBackOperationBudget($operationEntry['Budget']);
+            if ($operationEntry['Budget'] !== '') giveBackOperationBudget($operationEntry['Budget']);
             if ($operationSucceeded) $anySucceeded = TRUE;
             if ($operationErrors or !$operationSucceeded) $anyErrors = TRUE;
             redeclare($StepResult['Produced'], array_values(array_unique(array_merge($StepResult['Produced'], $producedFiles))));
             $filesDone = $filesDone + count($batchFiles);
-            $StepStatus = array_merge($StepStatus, array('FilesDone' => $filesDone, 'Waiting' => FALSE, 'Heartbeat' => time(), 'Produced' => array_values(array_unique(array_merge((array)$StepStatus['Produced'], $producedFiles)))));
+            $StepStatus = array_merge($StepStatus, array('FilesDone' => $filesDone, 'Waiting' => FALSE, 'Heartbeat' => time(), 'Produced' => filesStillPresent($sessionFolder, array_values(array_unique(array_merge((array)$StepStatus['Produced'], $producedFiles))))));
             if ($haltReason !== '') list ($StepResult['EndState'], $StepResult['EndReason']) = array('failed', $haltReason);
             writeWorkflowStatus($sessionFolder, $StepStatus, TRUE); } } }
       if ($StepResult['EndState'] === '' && !$anySucceeded) list ($StepResult['EndState'], $StepResult['EndReason']) = array('failed', 'operation');

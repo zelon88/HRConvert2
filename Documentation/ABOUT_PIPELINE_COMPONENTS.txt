@@ -31,19 +31,22 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 --Vocabulary--
 
 A PIPELINE is the complete path a file takes through the core during one request.
-There are several. Upload, Delete, Download, Conversion, Archive, OCR, Identify, Stream & Scan.
+There are several. Upload, Delete, Rename, Download, Conversion, Archive, Extract, OCR, Identify,
+Strip Metadata, Merge & Split, Stream & Scan.
 
 A BUILTIN PIPELINE is one the core owns & that no installation may replace.
-Upload, Delete & Download are builtin. They are guaranteed identical on every install.
+Upload, Delete, Rename & Download are builtin. They are guaranteed identical on every install.
 They are not detachable & are not intended to be modified by anybody but a core developer.
 An installation that modified them would no longer behave like HRConvert2, & the failure
 would appear as a data handling bug rather than as a missing feature.
 The core still owns each of those paths. The operation on disk underneath an upload, a
-delete & a file listing is done by the Files pipeline, a pipeline of the file kind, so the
+delete, a rename & a file listing is done by the Files pipeline, a pipeline of the file kind, so the
 decisions stay in the core & only the filesystem work is dispatched.
 
 A DETACHABLE PIPELINE is a pipeline supplied as a versioned component folder.
-Conversion, Archive, OCR, Identify, Stream & Scan are detachable.
+Conversion, Archive, Extract, OCR, Identify, Strip Metadata, Merge & Split, Stream & Scan are
+detachable. Extract is the Extractor's, Strip Metadata is the Metadata pipeline's, & Merge & Split
+are the PDF pipeline's.
 These are the pipelines the community is invited to write, extend & replace.
 
 A PIPELINE FAMILY is the name a detachable pipeline converts under. Document, Image, SVG,
@@ -67,8 +70,8 @@ on demand by the application. A converter owns neither & is dispatched to.
 See ABOUT_COMPONENTS.txt for what a Core is.
 
 A CONVERSION PIPELINE takes one file, returns the six value contract, & is dispatched by
-convert(). Every family is one of these except OCR, Identify, the Archiver, Scan & the Extractor,
-which are operations, & ClamAV, ScanCore & Files, which are the scanner & file kinds.
+convert(). Every family is one of these except OCR, Identify, the Archiver, Scan, the Extractor,
+Metadata & PDF, which are operations, & ClamAV, ScanCore & Files, which are the scanner & file kinds.
 
 AN OPERATION PIPELINE takes a SELECTION of files, decides its own route per file, returns
 its own shape, & is dispatched from wherever the core handles that operation. OCR was the
@@ -87,6 +90,13 @@ The Extractor is the fifth, from v4.1.7. It puts every file a selection of archi
 the session, flat, under the file's own name or the next free one, & returns the name of every
 file it placed. It serves the Extract family. It declares the archives it reads & no output,
 because it converts nothing, & what it places is held to the names & formats an upload is.
+The Metadata pipeline makes a copy of each file it is handed without the metadata it carries, with
+mat2, beside the file, & returns the name of every copy. The PDF pipeline serves two operations,
+& the method it is handed says which. merge puts a selection of PDFs into one & split makes a PDF
+of each page. Each places what it makes through the core's placeSessionFile(), as the Extractor
+does, so nothing in the session is written over & every name is held to what an upload's is.
+The Files pipeline, of kind file, renames a file as well as listing, placing & removing one, &
+Delete & Rename hand their work to it rather than to an operation pipeline of their own.
 Both kinds are verified, pinned, ordered & loaded identically. ONLY DISPATCH DIFFERS.
 
 A SHARED MODULE is a file two or more pipelines both need & neither can own. It is not a
@@ -363,6 +373,8 @@ Contracts 1 through 3 are unchanged & still live in CREATING_CONVERSION_PIPELINE
         file was found infected, Report, where the report it wrote is, & ReportName, its name.
         The Extractor returns the name of every file it placed, & an interface draws its list
         again rather than downloading them, because an archive may hold a great many.
+        The Metadata pipeline returns the name of every clean copy it made, & the PDF pipeline
+        the name of what a merge made or of every page a split made.
     6i. An operation pipeline offers only what it declares it writes. The core offers a format
         for archiving a selection only where both config.php & the Archiver's Output name it, &
         the Archiver refuses any other before it touches a file. Until v4.1.6 every bootable

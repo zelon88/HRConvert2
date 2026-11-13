@@ -33,10 +33,10 @@ A WORKFLOW is a list of steps. Each step runs one operation on files, & a step a
 may work on what an earlier step made. Convert every document to PDF, then put the PDFs in
 one zip, is a workflow of two steps.
 
-An OPERATION is something a user can already do with a button. Convert, Archive, Extract,
-OCR, Identify & Virus Scan are HRConvert2's. A workflow does nothing a user could not do by hand,
-because every step runs the same code that button runs, under the same budget & the same
-limits. A workflow only saves the clicking.
+An OPERATION is something a user can already do with a button. Convert, Archive, Extract, OCR,
+Identify, Virus Scan, Delete, Rename, Strip Metadata, Merge & Split are HRConvert2's. A workflow
+does nothing a user could not do by hand, because every step runs the same code that button
+runs, under the same budget & the same limits. A workflow only saves the clicking.
 
 The pieces, & where each one lives.
   Resources/Engine/Cores/workflowCore.php   The Workflow Core. It reads, checks & runs workflows, & keeps their status.
@@ -133,7 +133,9 @@ at any of the three is counted, & the status says how many each step left out.
 --The Operations HRConvert2 Offers--
 
 Each operation names the budget it takes from the Resource Manager, which is the budget its
-button takes, so a workflow waits its turn as a button does.
+button takes, so a workflow waits its turn as a button does. Delete & Rename take none, as their
+buttons take none, so a workflow that only cleans up still runs while the Resource Manager refuses
+every budget, as it does once a disk is within --Storage Reserve--.
 
   Convert    Modes: each. Budget: conversion.
              Reads a file when a family reads its extension & writes the format asked for, so
@@ -160,6 +162,35 @@ button takes, so a workflow waits its turn as a button does.
              Options: Scanner, all by default, or clamav or scancore. Needs --User Virus Scanning--.
              The report is kept in the session as User_Virus_Scan_Report.txt, or the next free
              name. A file found infected ENDS THE WORKFLOW, so nothing is made from it.
+  Delete     Modes: together. Budget: none. Reads every file. Options: none.
+             Deletes the files it takes, as a file's Delete button does, & makes none.
+             It CONSUMES what it takes, so a later step taking the same files is refused.
+             It does not run once an earlier step has had errors. See --Running A Workflow--.
+             No workflow in the shipped library deletes, & a page asks before it runs one that does.
+  Rename     Modes: together. Budget: none. Reads every file. It consumes what it takes.
+             Options: Pattern, {name}-{n} by default. {name} is a file's name without its
+             extension, {n} its place among the files the step takes, counting from 1, & {date}
+             the day it runs, as 2026-11-13. The extension is never changed, & a tar.gz keeps both.
+             Each file is handed on under its new name, which is the next free one when it is taken.
+  StripMetadata  Modes: each. Budget: metadata. Reads the formats the Metadata pipeline lists,
+             photos, PDFs, office documents, ebooks, audio & video. Options: Filename, empty for
+             each file's own. A clean copy is made beside each file, & the file itself is kept,
+             so a copy of photo.jpg is photo_1.jpg unless the step names it.
+  Merge      Modes: together. Budget: merge. Reads PDFs. Options: Filename, Merged by default.
+             Puts every PDF it takes into one, in the order it takes them.
+  Split      Modes: each. Budget: split. Reads PDFs. Options: none. Makes a PDF of each page,
+             report-1.pdf, report-2.pdf & so on, held to --Maximum Extracted Files-- &
+             --Maximum Extracted Size-- as an extraction is.
+
+A STEP THAT TAKES FILES AN EARLIER STEP CONSUMED IS REFUSED. Delete & Rename each say they
+consume what they take, because once either has run those files are gone by the names it was
+given. A later step taking the same Input, the selection or step N, would find none of them, so
+the workflow is refused with the step named, rather than run with a step that skips everything.
+A later step may take what a Rename step made, which is every file under its new name. A Delete
+step makes nothing, so taking what it made is refused too. A Select step reads the session again
+& finds whatever is left, so it is never refused for this.
+What a workflow made is read again after every operation, so a file a later step deleted or
+renamed is not named among the files it made.
 
 An operation the server has switched off is still a valid step, because a valid workflow stays
 valid while an administrator turns a feature off & on. A workflow using one is not offered, &
@@ -176,13 +207,13 @@ name a user types, & a name already taken is given the next free one, as it is f
 SELECT IS THE WORKFLOW CORE'S OWN STEP. It runs nothing. When the workflow reaches it, it reads
 the files in the session again, keeps the ones its Filter passes, in its Order, & hands them to
 the steps after it, which take them as previous or step N, as they take any step's files. So a
-workflow can convert the ticked files to PDF & then select every PDF in the session, the new
+workflow can convert the selected files to PDF & then select every PDF in the session, the new
 ones included, & put them in one zip.
 
   { "Operation": "Select", "Filter": { "Extensions": ["pdf"] }, "Order": "name" }
 
 It takes no Input, because it reads the session, & no Mode & no Options. A workflow holding one
-needs no file ticked, because Select finds files of its own. It finds only what a page's file
+needs no file selected, because Select finds files of its own. It finds only what a page's file
 list shows, because it reads the session through the function the application names for that,
 so a file the application never shows a user is never selected. It takes no budget, & what it
 finds is not counted as made. One that would find more files than --Maximum Workflow Files-- is
@@ -194,7 +225,7 @@ Application Built On The Engine--.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Kinds Of File--
 
-A filter's Types names kinds of file, & the interfaces tick the files of one kind by the same
+A filter's Types names kinds of file, & the interfaces select the files of one kind by the same
 names. HRConvert2 declares these, each from the lists of extensions config.php keeps. A kind
 whose list is empty is not declared, because its family is switched off.
 
@@ -224,7 +255,7 @@ next one. It ships seven.
   scan-and-identify       Scans the selected files for viruses, then identifies them with a report.
   scan-every-file         Finds every file in the session & scans them all with every scanner.
 The three every-file workflows & extract-every-archive begin with a Select step, so they need no
-ticked file. The three every-file workflows do what the Bulk File Options panel did until v4.1.6,
+selected file. The three every-file workflows do what the Bulk File Options panel did until v4.1.6,
 & a user changes what any of them does in the builder.
 
 THE INSTALLED LIBRARY is the Workflows folder in the data root, beside Logs & Sessions. It is
@@ -277,7 +308,8 @@ check cannot be installed. Neither command touches the shipped library.
    starts once. A worker that holds no key for its job does nothing.
 
 5. The worker runs each step in turn. Before every operation it reads whether a stop was asked
-   for & whether --Maximum Workflow Runtime-- has passed, & takes the operation's budget. A
+   for & whether --Maximum Workflow Runtime-- has passed, & takes the operation's budget, where
+   the operation takes one. A
    budget the server cannot give yet is asked for again after 5, 10 & 20 seconds & then every 30,
    for about four & a half minutes in all, & the status says it is waiting meanwhile. A budget
    still not given by then fails the workflow, with the reason budget.
@@ -285,6 +317,11 @@ check cannot be installed. Neither command touches the shipped library.
 6. A step ends the workflow when every one of its files failed, because each later step would
    build on nothing. A file found infected ends it too. A step whose files all fall out of its
    filter is skipped, & the workflow goes on.
+   A STEP THAT DELETES FILES DOES NOT RUN ONCE AN EARLIER STEP HAS HAD ERRORS. A step that made
+   some of its files & failed others goes on, & a Delete step after it could delete the only copy
+   of a file that failed. So the workflow ends there instead, as failed & incomplete, & every file
+   that step would have deleted is kept. A step that renames still runs, because a renamed file is
+   still there.
 
 7. When the last step ends the status says the workflow finished, with every file it made.
 
@@ -301,6 +338,32 @@ cleared, & another started.
 
 If the worker halts part way, as a fatal error halts a process, its shutdown handler marks the
 status failed & logs error 38004, so the page is not left waiting.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Previewing A Workflow--
+
+A PREVIEW names the files each step would take were the workflow run now, & runs nothing. A page
+or a caller asks for one with the workflow & the files a run would be given. The Workflow Core
+checks the workflow as a run checks it, & takes no budget, starts no worker & keeps nothing.
+
+  Previewed   true when the steps were described.
+  Reason      What a run would be refused for now, files or nothing, & empty when it would start.
+              More files selected than --Maximum Workflow Files-- are not previewed, & say files.
+              A preview that is not made says disabled, unknown, builder or invalid, as a run would.
+  Steps       Each step's Operation, From, Known, Takes, LeftOut, Unknown & Consumes, in order.
+
+From lists what a step takes, selection or step N, or session for a Select step. Takes names
+the files it would take, in the order it would take them, & LeftOut counts those its operation
+or its filter would leave out. What an operation makes is not known until it runs, so a step
+taking it lists that reference under Unknown, & Known is false. The selection is known until a
+step that consumes files has run, because that step may have taken some of it by another
+reference. A Select step's files are known until an operation has run, because an operation may
+make files or take them away, & a step taking what a known Select step found takes those files.
+Consumes is deleted or renamed for a step that consumes what it takes, so a page can name every
+file a workflow would delete before it asks whether to run it.
+Whether this session or the server is too busy to start a run is not asked, because that can
+change before a user presses Run.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -323,7 +386,7 @@ What a page or a caller is told. Nothing else in the file leaves the server.
   Available     true when workflows are on.
   State         none, starting, running, finished, stopped, failed or interrupted.
   Reason        Why it ended, when it did not finish.
-                  failed       operation, threat, runtime, files, budget, unavailable or halted.
+                  failed       operation, threat, runtime, files, budget, unavailable, incomplete or halted.
                   interrupted  start, worker or unreadable.
   JobId         The job, 24 hexadecimal digits.
   WorkflowId    The workflow's identifier, empty for one a page built, & Name, its name.
@@ -345,6 +408,7 @@ The reasons.
   files        A step was handed more files than --Maximum Workflow Files--.
   budget       The server could not give a budget before the runtime passed.
   unavailable  An operation a step needs is switched off or missing.
+  incomplete   A step that deletes files was reached after a step had errors, so it did not run.
   halted       The worker stopped before the workflow ended. See error 38004.
   start        The worker never took the job up.
   worker       The worker is gone, as a restart of the web server leaves it.
@@ -376,24 +440,27 @@ the files, the workflow & running it, with the Status panel under them. The box 
 attention next is outlined. Files first, then the workflow, then running it. Like every menu a
 button opens, the panel has no divider before or after it, & no heading repeating its button.
 
-THE FILES are the ones ticked in the list. Every file has a box, & a ticked box shows its place
-in the order it was ticked, which is the order a workflow takes them in. The box at the top of
-the column ticks every file, or none when any are ticked, & the arrow beside it ticks every file
+THE FILES are the ones selected in the list. Every file has a box, & a selected box shows its place
+in the order it was selected, which is the order a workflow takes them in. The box at the top of
+the column selects every file, or none when any are selected, & the arrow beside it selects every file
 of one kind. The menu opens toward the side a line starts on, in a language read either way.
-Select By Name ticks the files whose names match what is typed. Text between slashes is a
+Select By Name selects the files whose names match what is typed. Text between slashes is a
 regular expression, & anything else is a pattern where * & ? are wildcards.
 
 THE WORKFLOW box lists the workflows offered, & says what the chosen one does, its steps & how
-many of the ticked files it can use. That count is a hint taken from the first step's
+many of the selected files it can use. That count is a hint taken from the first step's
 operation & filter, & the server decides.
 
-THE BOX THAT RUNS THE WORKFLOW holds its Run button, & a Stop button while one runs. Where the
-box has a row of its own, each button is named beside it, & where it has more room the two sit
-side by side. A name is a label, so pressing it presses the button.
+THE BOX THAT RUNS THE WORKFLOW holds its Preview & Run buttons, & a Stop button while one runs.
+Where the box has a row of its own, each button is named beside it, & where it has more room
+they sit side by side. A name is a label, so pressing it presses the button. Preview asks the
+server which files each step would take, & the Status panel names them, step by step, until the
+workflow or the selected files change. See --Previewing A Workflow--.
 
 THE STATUS PANEL says no workflow is running, or that one is, with the step, the file & a bar.
 When it ends the panel says how, names every file it made, each of which can be fetched, & the
-list is drawn again. It also names why a workflow was refused, & every problem the server found.
+list is drawn again. It also names why a workflow was refused, & every problem the server found,
+& shows a preview & the question a workflow that deletes files asks before it runs.
 It is always there while the panel is open, so what it says never appears from nowhere.
 
 A PAGE LOADED AGAIN WHILE A WORKFLOW RUNS opens the panel, & draws the running workflow from the
@@ -418,21 +485,32 @@ Where the builder is on, the workflow's box is replaced by the builder. See --Th
 --The Builder--
 
 Where --Enable Workflow Builder-- is on, the Workflows panel builds workflows as well as running
-them. A PIPELINES section sits above the boxes, with a tab for the library & one for each
-operation the server has on, & each tab lists its choices. Convert's lists every format it
-writes, Archive's every archive it makes, OCR's every format it writes, Scan's each scanner, &
-Extract's & Identify's themselves. Select's lists every file, & every file of one kind. The library's lists its
-workflows, & choosing one opens it in the builder from the document the server gives for it.
+them. An AVAILABLE PIPELINES section sits above the boxes, with a tab for the library, named
+Library, & one for each operation the server has on, & each tab lists its choices. Convert's
+lists every format it writes, Archive's every archive it makes, OCR's every format it writes,
+Scan's each scanner, & Extract's, Identify's, Delete's, Rename's, Strip Metadata's, Merge's &
+Split's themselves.
+Select's lists every file, & every file of one kind. The library's lists its workflows, &
+choosing one opens it in the builder from the document the server gives for it.
+Convert's formats are GROUPED by the kind of file each is, so a row of smaller tabs under
+Convert's, Documents, Images, Audio & the rest, each named as the kind is, shows one group at a
+time. A format a kind of file shares is in each of their groups, so pdf is under Documents,
+Presentations & E-Books alike. The server describes the groups, & a page draws them only where
+every format is in one, so no format is ever out of reach.
 
 The workflow's box becomes a BOX FOR EACH STEP, between the files & the box that runs them. A
 choice goes into the box waiting for one, which says Select a pipeline above..., or into a new
-box at the end. Each box names its step & what it does, with a line under its heading. Its options
+box at the end. Each box names its step & what it does, with a line under its heading. What it
+does starts with where its files come from, from Selected Files or from Step 1, named as the
+boxes are. A step that writes a format says so as where its files go, to png, rather than png
+alone, so the boxes read in order as Available Pipelines, Selected Files, Step 1 Convert, from
+Selected Files, to png & so on. Its options
 button opens the step's options in its place, across the whole row, & a back arrow takes the
 options button's place, beside the button that takes the step out, so a step is opened & closed
 in one place. A step after one taken out that took its files takes what
 came before it instead.
 
-A step's OPTIONS are its nouns & then its verbs. The nouns are which files it takes, the ticked
+A step's OPTIONS are its nouns & then its verbs. The nouns are which files it takes, the selected
 files or what any earlier step made, whether it runs once for each file or once for all of them,
 which kinds of file it keeps, a name pattern, extensions, the smallest & the largest size, & the
 order. A name pattern is a wildcard pattern, or a regular expression between slashes. The verbs
@@ -442,6 +520,16 @@ The box that runs the workflow is SPLIT. Its add button adds a box to its left, 
 it is Select Pipeline..., a box waiting for a choice from the tabs, or Select Files..., a Select
 step, whose options open at once. The menu opens toward the boxes it adds to. Below the tabs are the workflow's name, New, which starts
 again, & Import & Export where the server allows them.
+
+A WORKFLOW THAT DELETES FILES ASKS FIRST. Pressing run asks the server for a preview, & then
+names the files the workflow deletes & says a deleted file cannot be brought back, with a button
+that deletes & runs it & one that does not. A step whose files are not known until an earlier
+one has run is named by whose files it takes, as the files step 1 made. Where the server names
+no file, or its answer cannot be read, the question says only that the workflow deletes files,
+& a workflow the server would refuse is refused there, as a run would be. Nothing runs until
+the button is pressed, & then only what was asked about, so a workflow or a selection changed
+while it asks is asked about again. It asks before every such run. A built workflow deletes when
+a step's operation consumes as deleted, & a library's says so with Deletes.
 
 A workflow from the library left as it was runs & exports by its identifier. Anything built,
 changed or imported is sent whole, & the server checks it before it runs. A workflow that does
@@ -482,21 +570,21 @@ in it, & export does not, because a workflow from the library can be exported wi
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
---Ticked Files & The Buttons--
+--Selected Files & The Buttons--
 
-Converting any ticked file converts every eligible ticked file. Ineligible files are skipped.
+Converting any selected file converts every eligible selected file. Ineligible files are skipped.
 
-A ticked file is eligible when its own row offers the same control, which the core drew for it
+A selected file is eligible when its own row offers the same control, which the core drew for it
 by the same test that drew the one pressed. A conversion leaves out a file already in the
 format asked for. Each eligible file is converted by a request of its own, one after another,
 & named by its own row's name box, so every output keeps the name its row shows. What they made
 is downloaded once all have answered, & the line beside the box at the top says how many of the
-ticked files could be used, until the selection changes.
+selected files could be used, until the selection changes.
 
-The same holds for OCR. Archiving a ticked file puts every ticked file into one archive, under
+The same holds for OCR. Archiving a selected file puts every selected file into one archive, under
 the name typed, because an archive is one file made from many.
 
-A control whose file is not ticked, or is the only file ticked, acts on its own file as before.
+A control whose file is not selected, or is the only file selected, acts on its own file as before.
 To act on every file, run one of the every-file workflows. See --Libraries--.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -525,7 +613,8 @@ An operation is an entry under Operations, keyed by a plain word.
             the files it made in the session & what it found, in that order.
             What it found may hold Halt, a short lower case word that ends the workflow, which
             is how Scan ends one with threat.
-  Budget    The budget it takes, named as the Resource Manager names it.
+  Budget    The budget it takes, named as the Resource Manager names it, or FALSE for one that
+            takes none, as Delete & Rename do. A missing or empty budget leaves it out.
   Enabled   Whether this server allows it now.
   Inputs    The extensions it reads. Empty reads every file.
   Accepts   A function deciding whether it reads an extension, given the step's options.
@@ -533,6 +622,9 @@ An operation is an entry under Operations, keyed by a plain word.
   Modes     each, together or both. The first is the default.
   Options   Each option's Type, choice, name, integer or boolean, & its Default, Required,
             Choices, Minimum & Maximum where they apply.
+  Consumes  What becomes of the files it takes, deleted or renamed, & empty for an operation that
+            leaves them as they were. A later step taking what it consumed is refused, & a step
+            that deletes does not run once an earlier step has had errors.
 An entry that is not usable is left out & named in a warning, so one bad entry costs that
 operation & nothing else.
 
@@ -571,7 +663,8 @@ ERROR_DESCRIPTIONS.txt lists every warning the Workflow Core raises, after its e
 
 v4.1.4 was the first round, which chose a workflow from the libraries & ran it. v4.1.5 added the
 builder, import & export, & Select, which reads the session again part way through a workflow.
+v4.1.8 added Delete, Rename, Strip Metadata, Merge & Split, & a preview of what each step takes.
 These are planned & are not in this version.
-  Operations that serve workflows, such as Hash, Diff, Grep & Replace, Combine & Split.
+  Operations that serve workflows, such as Hash, Diff, Grep & Replace.
   An operation's own estimate of what it will cost, compiled into what a whole workflow needs.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

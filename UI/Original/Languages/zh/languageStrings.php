@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -406,8 +406,8 @@ $Gui2Text126 = 'OpenSCAD 文件';
 $Gui2Text127 = '流媒体';
 // / 'Workflows'
 $Gui2Text128 = '工作流';
-// / 'Files'
-$Gui2Text129 = '文件';
+// / 'Selected Files'
+$Gui2Text129 = '已选择的文件';
 // / 'Select files in the list below.'
 $Gui2Text130 = '请在下方列表中选择文件。';
 // / 'Select By Name: '
@@ -471,8 +471,8 @@ $Gui2Text159 = '此工作流所需的某项操作不可用。';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = '工作流意外停止。';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = '管道';
+// / 'Available Pipelines'
+$Gui2Text161 = '可用管道';
 // / 'Select a pipeline above...'
 $Gui2Text162 = '请在上方选择一个管道...';
 // / 'Select Pipeline...'
@@ -487,8 +487,8 @@ $Gui2Text166 = '选项';
 $Gui2Text167 = '返回';
 // / 'Take: '
 $Gui2Text168 = '取用：';
-// / 'the ticked files'
-$Gui2Text169 = '已勾选的文件';
+// / 'the selected files'
+$Gui2Text169 = '已选择的文件';
 // / 'the files step {step} made'
 $Gui2Text170 = '步骤 {step} 生成的文件';
 // / 'each file on its own'
@@ -543,6 +543,72 @@ $Gui2Text194 = '解压此存档';
 $Gui2Text195 = '其中的每个文件都会以原名或下一个可用名称加入您的文件。';
 // / 'Extract Files'
 $Gui2Text196 = '解压文件';
+// / 'to {format}'
+$Gui2Text197 = '转为 {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = '此工作流会删除文件。删除的文件无法恢复。';
+// / 'Delete & Run'
+$Gui2Text199 = '删除并运行';
+// / 'Cancel'
+$Gui2Text200 = '取消';
+// / 'Rename'
+$Gui2Text201 = '重命名';
+// / 'Close Rename Options'
+$Gui2Text202 = '关闭重命名选项';
+// / 'Rename This File'
+$Gui2Text203 = '重命名此文件';
+// / 'New Name'
+$Gui2Text204 = '新名称';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = '用 {name} 表示现有名称，{n} 表示它在所选文件中的位置，{date} 表示今天的日期。扩展名保持不变。';
+// / 'Strip Metadata'
+$Gui2Text206 = '清除元数据';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = '关闭元数据选项';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = '清除此文件的元数据';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = '在旁边生成一份副本，去掉作者、地点、日期和创建它的软件。显示的内容保持不变。';
+// / 'Merge PDFs'
+$Gui2Text210 = '合并 PDF';
+// / 'Split PDF'
+$Gui2Text211 = '拆分 PDF';
+// / 'Merge Or Split'
+$Gui2Text212 = '合并或拆分';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = '关闭合并与拆分选项';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = '将所选 PDF 合并为一个';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = '各页按选择 PDF 的顺序依次排列。';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = '请选择两个或更多 PDF 进行合并。';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = '每页生成一个 PDF';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = '所有已选择的文件都会一并删除：{count} 个。';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = '所有已选择的文件都会一并重命名：{count} 个。';
+// / 'Library'
+$Gui2Text220 = '库';
+// / 'from Selected Files'
+$Gui2Text221 = '来自已选择的文件';
+// / 'from Step {step}'
+$Gui2Text222 = '来自步骤 {step}';
+// / 'Preview'
+$Gui2Text223 = '预览';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = '如果现在运行工作流，每个步骤将取用：';
+// / 'Left out: '
+$Gui2Text225 = '已排除：';
+// / 'No files.'
+$Gui2Text226 = '没有文件。';
+// / 'every file in the list when it runs'
+$Gui2Text227 = '该步骤运行时列表中的所有文件';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = '此工作流会删除以下文件。删除的文件无法恢复。';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = '某个步骤出现错误，因此工作流在删除文件的步骤之前停止。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

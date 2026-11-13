@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -411,8 +411,8 @@ $Gui2Text126 = 'Файли OpenSCAD';
 $Gui2Text127 = 'Потоки';
 // / 'Workflows'
 $Gui2Text128 = 'Робочі процеси';
-// / 'Files'
-$Gui2Text129 = 'Файли';
+// / 'Selected Files'
+$Gui2Text129 = 'Вибрані файли';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'Виберіть файли у списку нижче.';
 // / 'Select By Name: '
@@ -476,8 +476,8 @@ $Gui2Text159 = 'Операція, потрібна цьому робочому �
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Робочий процес несподівано зупинився.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'Конвеєри';
+// / 'Available Pipelines'
+$Gui2Text161 = 'Доступні конвеєри';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'Виберіть конвеєр вище...';
 // / 'Select Pipeline...'
@@ -492,8 +492,8 @@ $Gui2Text166 = 'Параметри';
 $Gui2Text167 = 'Назад';
 // / 'Take: '
 $Gui2Text168 = 'Взяти: ';
-// / 'the ticked files'
-$Gui2Text169 = 'позначені файли';
+// / 'the selected files'
+$Gui2Text169 = 'вибрані файли';
 // / 'the files step {step} made'
 $Gui2Text170 = 'файли, створені кроком {step}';
 // / 'each file on its own'
@@ -548,6 +548,72 @@ $Gui2Text194 = 'Видобути цей архів';
 $Gui2Text195 = 'Кожен файл із нього додається до ваших файлів під власною назвою або під наступною вільною.';
 // / 'Extract Files'
 $Gui2Text196 = 'Видобути файли';
+// / 'to {format}'
+$Gui2Text197 = 'у {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'Цей робочий процес видаляє файли. Видалений файл неможливо відновити.';
+// / 'Delete & Run'
+$Gui2Text199 = 'Видалити й запустити';
+// / 'Cancel'
+$Gui2Text200 = 'Скасувати';
+// / 'Rename'
+$Gui2Text201 = 'Перейменувати';
+// / 'Close Rename Options'
+$Gui2Text202 = 'Закрити параметри перейменування';
+// / 'Rename This File'
+$Gui2Text203 = 'Перейменувати цей файл';
+// / 'New Name'
+$Gui2Text204 = 'Нова назва';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'Використовуйте {name} для поточної назви, {n} для його місця серед вибраних файлів і {date} для сьогоднішньої дати. Розширення зберігається.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'Видалити метадані';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'Закрити параметри метаданих';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'Видалити метадані з цього файлу';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'Поруч створюється копія без авторів, місць, дат і програми, яка його створила. Те, що він показує, залишається незмінним.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'Об\'єднати PDF';
+// / 'Split PDF'
+$Gui2Text211 = 'Розділити PDF';
+// / 'Merge Or Split'
+$Gui2Text212 = 'Об\'єднати або розділити';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'Закрити параметри об\'єднання й розділення';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'Об\'єднати вибрані PDF в один';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'Їхні сторінки йдуть одна за одною в тому порядку, у якому вибрано PDF.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'Виберіть два або більше PDF, щоб об\'єднати їх.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'Зробити PDF з кожної сторінки';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'Разом із ним видаляється кожен вибраний файл: {count}.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'Разом із ним перейменовується кожен вибраний файл: {count}.';
+// / 'Library'
+$Gui2Text220 = 'Бібліотека';
+// / 'from Selected Files'
+$Gui2Text221 = 'з вибраних файлів';
+// / 'from Step {step}'
+$Gui2Text222 = 'з кроку {step}';
+// / 'Preview'
+$Gui2Text223 = 'Попередній перегляд';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'Якби запустити робочий процес зараз, кожен крок узяв би:';
+// / 'Left out: '
+$Gui2Text225 = 'Пропущено: ';
+// / 'No files.'
+$Gui2Text226 = 'Немає файлів.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'усі файли списку на момент запуску кроку';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'Цей робочий процес видаляє ці файли. Видалений файл неможливо відновити.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'В одному з кроків були помилки, тому робочий процес зупинився перед кроком, що видаляє файли.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

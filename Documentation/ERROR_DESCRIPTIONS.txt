@@ -65,6 +65,7 @@ The Archiver raises the 4000 block & 13012, & 13006 through 13010 with the Archi
 17000, 19000 & 20000 blocks. No number changed value.
 The archiveExtraction.php shared module reserves 39000 through 39019 & the Extractor pipeline 39100 through 39119, from v4.1.7.
 The Archive pipeline raises 39000 through 39003 too, because it extracts an archive through that module.
+Renaming in convertCore.php reserves 23100 through 23119, the Metadata pipeline 41000 through 41019 & the PDF pipeline 42000 through 42019.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -974,6 +975,94 @@ ERROR DESCRIPTION
   The device where data is stored has an insufficient amount of storage space available.
   Extracting changes no archive, so nothing a user holds is lost when this error fires.
   Until v4.1.7 this number was unused.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-33, <SESSION_IDENTIFIER>: Rename Failed!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A selection of files was sent to be renamed & no file has its new name.
+  The pattern could not be sanitized, or held nothing once it was. ERROR 23100 precedes this one.
+  Every file was refused or could not be renamed. A warning or ERROR 23102 or 23103 before this one names each file & why.
+  The Files pipeline could not be loaded. ERROR 23101 precedes this one.
+  The user asked to rename a file that does not exist, or one deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
+  Renaming never writes over a file, so nothing a user holds is lost when this error fires.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34, <SESSION_IDENTIFIER>: Strip Metadata Failed!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A selection of files was sent to have their metadata stripped & no clean copy was made of any of them.
+  The Metadata pipeline raised one of 41000 through 41008, or a warning names each file & why it was refused.
+  No Metadata pipeline could be reached. ERROR 34006 precedes this one.
+  A clean copy is made beside each file, so nothing a user holds is changed when this error fires.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-35, <SESSION_IDENTIFIER>: Merge Failed!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A selection of PDFs was sent to be merged into one & no PDF was made.
+  A PDF in the selection was not a PDF, could not be read or held a virus, so nothing was merged. A warning before this one says which.
+  The PDF pipeline raised one of 42000 through 42008.
+  No PDF pipeline could be reached. ERROR 34006 precedes this one.
+  A PDF locked with a password cannot be merged, & is ERROR 42006.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-36, <SESSION_IDENTIFIER>: Split Failed!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A selection of PDFs was sent to be split into one PDF for each page & no page was made from any of them.
+  A PDF had more pages than --Maximum Extracted Files-- allows, or its pages held more than --Maximum Extracted Size-- allows, & a warning before this one says which.
+  A PDF that is damaged or locked with a password has no pages that can be counted, & a warning before this one names it.
+  The PDF pipeline raised one of 42000 through 42008.
+  No PDF pipeline could be reached. ERROR 34006 precedes this one.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -4196,6 +4285,131 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23100, <SESSION_IDENTIFIER>: The pattern new names are made from could not be sanitized or is empty, so nothing was renamed!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The pattern held a control character, was longer than 64 characters, or was left with nothing once sanitized.
+  A pattern is text & the tokens {name}, {n} & {date}. A token is kept & the rest is sanitized as a typed filename is.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23101, <SESSION_IDENTIFIER>: The Files pipeline is not available, so nothing was renamed!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Files pipeline renames a file & could not be loaded.
+  Run  php convertCore.php -v  to see which pipeline is missing or refused, & why.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23102, <SESSION_IDENTIFIER>: Could not sanitize the input file!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A file named in a rename request could not be sanitized.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-23103, <SESSION_IDENTIFIER>: Could not rename file <FILE_NAME> to <NEW_NAME>!
+
+FILE
+  convertCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Files pipeline could not give the file its new name, or every free name it tried was taken in the meantime.
+  The file keeps the name it had, & no other file is written over.
+  The web server account needs read & write access to the session folder.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  23100 through 23119 are reserved for renaming in convertCore.php, & 23104 through 23119 are currently unused.
+  23100 through 23103 are raised by renameFiles(), & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT FILES
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Files pipeline does the work on disk under listing, placing, renaming & deleting a session's files, & is handed the one
+  directory it may touch. It refuses anything that resolves outside that directory, so a refusal here is the guard working.
+  The Files pipeline raises these, from Resources/Pipelines/Files/pipeline.php.
+    WARNING!!! A file listing was requested for a directory that does not resolve.
+    WARNING!!! A file description was requested for a directory that does not resolve.
+    WARNING!!! A file placement was requested in a directory that does not resolve.
+    WARNING!!! A file rename was requested in a directory that does not resolve. Nothing was renamed.
+    WARNING!!! A file removal was requested in a directory that does not resolve. Nothing was removed.
+      The session folder, or the temporary folder beside it, does not exist or cannot be reached. A session swept away while a
+      page was still open does this, & the next request starts a new one. Anything else is the permissions of the data location.
+    WARNING!!! A directory resolved & could not be read. The permissions may not allow it.
+      The web server account needs read access to the session folder. Run  sudo php convertCore.php -fp .
+    WARNING!!! A file placement named a source that is not a readable file.
+      What an operation made was gone, or unreadable, before it could be placed in the session. Nothing was placed.
+    WARNING!!! A file placement named something that could not be sanitized. It was refused.
+    WARNING!!! A file rename named something that could not be sanitized. It was refused.
+    WARNING!!! A file removal named something that could not be sanitized. It was refused.
+      A name that changes under sanitize() was built rather than picked from the list, so nothing was done with it.
+    WARNING!!! A file placement resolved outside the directory it was permitted. It was refused.
+    WARNING!!! A file removal resolved outside the directory it was permitted. It was refused.
+      The name was a link, or the directory itself is one, leading somewhere else. Nothing outside the directory is touched.
+      From v4.1.8 a name with nothing under it in the directory is passed over quietly, because a delete asks in the session &
+      in the temporary folder & a file is usually in only one of them. Before v4.1.8 every delete raised this warning for the
+      folder its file was never in.
+    WARNING!!! A file rename named something that is not a file in the directory it was permitted. It was refused.
+    WARNING!!! A file removal named something that is not a file. It was refused.
+      The name was a folder, a link or something other than a plain file, so it was left as it is.
+    WARNING!!! A file could not be placed. The permissions or the disk may not allow it.
+    WARNING!!! A file could not be renamed. The permissions or the mount may not allow it.
+    WARNING!!! A file could not be removed. The permissions or the mount may not allow it.
+      The web server account needs read & write access to the session folder, & the disk must have room & be writable.
+    WARNING!!! The Files pipeline was asked for an operation it does not have: <OPERATION>.
+      The core asked for something this version of the pipeline does not do. The pipeline & the core are from different
+      releases. Unpack the release again, & run  sudo php convertCore.php -fp .
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-24000, <SESSION_IDENTIFIER>: Could not process the HRConvert2 Version Information file (versionInfo.php)!
 
 FILE
@@ -6959,6 +7173,9 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Identify was requested but no Identify pipeline is installed!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Archive was requested but no Archiver pipeline is installed!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: A virus scan was requested but no Scan pipeline is installed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Strip Metadata was requested but no Metadata pipeline is installed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Merge was requested but no PDF pipeline is installed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Split was requested but no PDF pipeline is installed!
 
 FILE
   /convertCore.php
@@ -7477,11 +7694,16 @@ WARNINGS ABOUT WORKFLOWS
   The Workflow Core raises these, from Resources/Engine/Cores/workflowCore.php.
     WARNING!!! The operation provider declared an operation whose name is not a plain word. It was left out.
     WARNING!!! The <OPERATION> operation names no function that exists. It was left out.
-    WARNING!!! The <OPERATION> operation names no budget. It was left out.
+    WARNING!!! The <OPERATION> operation names no budget. One that takes none says so with a Budget of FALSE. It was left out.
     WARNING!!! The <OPERATION> operation declares an option that is not usable. It was left out of the operation.
     WARNING!!! The <OPERATION> operation declares no mode it runs in. It was left out.
     WARNING!!! The <OPERATION> operation names <FUNCTION_NAME> to decide which files it reads, & no such function exists. It was left out.
       An entry the operation provider declared cannot be used. That operation is left out, & every other one is offered.
+      From v4.1.8 an operation that takes no budget declares a Budget of FALSE, as HRConvert2's Delete & Rename do. A budget that
+      is missing or empty is still a mistake, & leaves that operation out.
+    WARNING!!! The <OPERATION> operation says it consumes its files in a way this core does not know. It is read as leaving them as they were.
+      From v4.1.8. Consumes is deleted, renamed or empty. Any other value is read as empty, so the operation is offered & a step
+      taking the files it took is not refused, which is the safer mistake. The operation provider should be corrected.
     WARNING!!! The operation provider <FUNCTION_NAME> declared Select, which is the Workflow Core's own step. It was left out.
       From v4.1.5. The name Select is the Workflow Core's, so an application's operation of that name is never run.
     WARNING!!! The operation provider <FUNCTION_NAME> names <FUNCTION_NAME> to list a session's files, & no such function exists. Select is not offered.
@@ -7494,15 +7716,19 @@ WARNINGS ABOUT WORKFLOWS
     WARNING!!! The <OPERATION> operation reported a file that is not in the session, so the workflow does not pass it on.
     WARNING!!! Detached worker <PROCESS_IDENTIFIER> was killed before it finished, so the workflow goes on without its output.
     WARNING!!! A workflow worker was refused. <REASON>
-  The core raises these, from convertCore.php.
+    WARNING!!! Workflow job <JOB_ID> did not run step <STEP_NUMBER>, <OPERATION>, because an earlier step had errors. The files it would have deleted are kept.
+      From v4.1.8. A step that deletes files does not run once an earlier step of the same workflow has had errors, because the
+      files it would delete may be the only copies of what that step failed to make. The workflow ends as failed, with the reason
+      incomplete, & nothing is deleted. The entries before this one name each error. Fix what failed & run the workflow again.
     WARNING!!! The Workflow Core is unavailable. No workflow can run until it is repaired.
     WARNING!!! A workflow was requested & the Workflow Core is unavailable.
     WARNING!!! A workflow was requested & workflows are disabled.
     WARNING!!! A workflow worker was started without a session it can continue.
     WARNING!!! A workflow's virus scan report could not be kept beside the files it scanned.
     WARNING!!! A request carried <INPUT> as something other than text, & it was refused.
-      From v4.1.5. streamBaseURL, userURLDownload, workflowDocument & workflowCheck are read as text, & a list sent in
-      place of one is read as nothing. No page this server draws sends one, so a request that does was made by hand.
+      From v4.1.5. streamBaseURL, userURLDownload, workflowDocument & workflowCheck are read as text, & so is
+      workflowPreviewDocument from v4.1.8. A list sent in place of one is read as nothing. No page this server draws sends
+      one, so a request that does was made by hand.
   The Engine raises this, from Resources/Engine/engine.php.
     WARNING!!! The command <COMMAND> was refused because the Workflow Core is unavailable.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -7820,4 +8046,367 @@ ERROR DESCRIPTION
   It is passed to errorEntry with a FALSE fatal flag so that control returns for the print & the
   close. Execution is halted immediately afterwards, so the error is fatal despite that flag.
   If this error occurs before the logging environment exists it is written to the server error log.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41000, <SESSION_IDENTIFIER>: mat2 is missing, unidentifiable, or too old, so no metadata was stripped!
+
+FILE
+  Resources/Pipelines/Metadata/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The Metadata pipeline strips metadata with mat2, & the manifest could not verify it.
+  mat2 0.13 is the floor. Run  sudo php convertCore.php --setup --install-depends --subsystem=Metadata  to install it.
+  A host whose python3 is not the one its mat2 package was built for cannot run mat2, & -v reports it as missing.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41001, <SESSION_IDENTIFIER>: Could not sanitize the input file!
+
+FILE
+  Resources/Pipelines/Metadata/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A file named in a request to strip metadata could not be sanitized.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41002, <SESSION_IDENTIFIER>: A video's metadata is stripped with FFMPEG, which is missing, unidentifiable, or too old!
+
+FILE
+  Resources/Pipelines/Metadata/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  mat2 strips the metadata of a video with FFMPEG, & the manifest could not verify it.
+  Every other file in the request is still stripped.
+  Run  php convertCore.php -v  to see what is wrong with FFMPEG.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41003, <SESSION_IDENTIFIER>: Could not verify the input file.
+
+FILE
+  Resources/Pipelines/Metadata/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The file is not in the session, or it could not be staged to be stripped.
+  The user asked to strip a file that does not exist, or one deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
+  The web server account needs read & write access to the session folder.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41004, <SESSION_IDENTIFIER>: Could not perform a virus scan of <FILE_NAME>, so no clean copy was made!
+
+FILE
+  Resources/Pipelines/Metadata/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  --Virus Scanning-- is on in config.php & the scanner could not finish a scan of the file.
+  Run  php convertCore.php -v  to see what is wrong with the scanner.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41005, <SESSION_IDENTIFIER>: A folder to strip the metadata of <FILE_NAME> in could not be made, so no clean copy was made!
+
+FILE
+  Resources/Pipelines/Metadata/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Each file is stripped in a folder of its own inside the session, & the folder could not be made or the file could not be copied into it.
+  The web server account needs read & write access to the session folder.
+  The device where data is stored may have an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41006, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so metadata cannot be stripped in isolation!
+
+FILE
+  Resources/Pipelines/Metadata/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  mat2 runs in the sandbox, & the sandbox could not be built while --Require Sandbox-- is on.
+  Run  php convertCore.php -v  to see what is wrong with Bubblewrap.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41007, <SESSION_IDENTIFIER>: Could not strip the metadata from <FILE_NAME>!
+
+FILE
+  Resources/Pipelines/Metadata/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  mat2 ran & wrote no clean copy. With --Enhanced Logging Verbosity-- on, what mat2 printed is logged before this error.
+  The file may be damaged, or not be the format its extension says it is.
+  mat2 fails when it tries to start a sandbox of its own inside this one. The Metadata pipeline keeps it from doing so for every release it knows.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41008, <SESSION_IDENTIFIER>: Could not place the clean copy of <FILE_NAME> in the session!
+
+FILE
+  Resources/Pipelines/Metadata/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The clean copy was made & could not be moved into the session under its name or the next free one.
+  The web server account needs read & write access to the session folder.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  41000 through 41019 are reserved for the Metadata pipeline, & 41009 through 41019 are currently unused.
+  41000 through 41008 are raised by the Metadata pipeline, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-42000, <SESSION_IDENTIFIER>: PDFUnite is missing, unidentifiable, or too old, so nothing was merged!
+
+FILE
+  Resources/Pipelines/PDF/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The PDF pipeline merges PDFs with PDFUnite, & the manifest could not verify it.
+  The same number is raised as  PDFSeparate or PDFInfo is missing, unidentifiable, or too old, so nothing was split!  when a split cannot run.
+  All three come in the poppler-utils package. Run  php convertCore.php -v  to see which is missing.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-42001, <SESSION_IDENTIFIER>: Could not sanitize the input file!
+
+FILE
+  Resources/Pipelines/PDF/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A file named in a request to merge or split PDFs could not be sanitized.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-42002, <SESSION_IDENTIFIER>: Could not verify the input file.
+
+FILE
+  Resources/Pipelines/PDF/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The PDF is not in the session, or it could not be staged to be merged or split.
+  The user asked for a file that does not exist, or one deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-42003, <SESSION_IDENTIFIER>: Could not perform a virus scan of <FILE_NAME>, so its pages were left alone!
+
+FILE
+  Resources/Pipelines/PDF/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  --Virus Scanning-- is on in config.php & the scanner could not finish a scan of the PDF.
+  Run  php convertCore.php -v  to see what is wrong with the scanner.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-42004, <SESSION_IDENTIFIER>: A folder to merge or split PDFs in could not be made, so nothing was made!
+
+FILE
+  Resources/Pipelines/PDF/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A merge & each split is made in a folder of its own inside the session, & the folder could not be made.
+  The web server account needs read & write access to the session folder.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-42005, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so PDFs cannot be merged or split in isolation!
+
+FILE
+  Resources/Pipelines/PDF/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  PDFUnite, PDFSeparate & PDFInfo run in the sandbox, & the sandbox could not be built while --Require Sandbox-- is on.
+  Run  php convertCore.php -v  to see what is wrong with Bubblewrap.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-42006, <SESSION_IDENTIFIER>: Could not merge the PDFs into <FILE_NAME>!
+
+FILE
+  Resources/Pipelines/PDF/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  PDFUnite ran & wrote no PDF. A PDF in the selection may be damaged or locked with a password.
+  With --Enhanced Logging Verbosity-- on, what PDFUnite printed is logged before this error.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-42007, <SESSION_IDENTIFIER>: Could not split <FILE_NAME> into one PDF for each page!
+
+FILE
+  Resources/Pipelines/PDF/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  PDFSeparate ran & did not write a PDF for every page PDFInfo counted, so none of them was kept.
+  With --Enhanced Logging Verbosity-- on, what PDFSeparate printed is logged before this error.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-42008, <SESSION_IDENTIFIER>: Could not place <FILE_NAME> in the session!
+
+FILE
+  Resources/Pipelines/PDF/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A merged PDF or a page was made & could not be moved into the session under its name or the next free one.
+  The same number is raised as  Could not place page <PAGE> of <FILE_NAME> in the session!  for a page of a split.
+  The web server account needs read & write access to the session folder.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  42000 through 42019 are reserved for the PDF pipeline, & 42009 through 42019 are currently unused.
+  42000 through 42008 are raised by the PDF pipeline, & are documented above.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

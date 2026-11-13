@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.7.
+// / v4.1.8.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -105,11 +105,14 @@ $EngineAcceptedPipelines = array(
   'Archiver' => 'v4.1.6',
   'Scan' => 'v4.1.6',
   // / The fifth, from v4.1.7. The Extractor puts every file an archive holds into the session beside it.
-  'Extractor' => 'v4.1.7',
+  'Extractor' => 'v4.1.8',
+  // / The sixth & seventh, from v4.1.8. The Metadata pipeline makes a copy of a file without its metadata, & the PDF pipeline merges PDFs & splits them into pages.
+  'Metadata' => 'v4.1.8',
+  'PDF' => 'v4.1.8',
   // / Scanner pipelines. They declare no formats & are chosen by name.
   'ClamAV' => 'v4.0.8',
   // / The first pipeline of kind file. Operations that do not care what is in a file.
-  'Files' => 'v4.1.2',
+  'Files' => 'v4.1.8',
   'ScanCore' => 'v4.0.8');
 
 // / The shared modules a pipeline may load & the exact version each must report.

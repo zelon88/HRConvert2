@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.7.
+// / v4.1.8.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -1312,7 +1312,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.1.7';
+  $HRConvertVersion = 'v4.1.8';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -1326,13 +1326,13 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.1.7';
+  $RequiredGuiVersion = 'v4.1.8';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A Language Pack version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v4.1.7';
+  $RequiredLanguageVersion = 'v4.1.8';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / No Core Manager version is pinned here. Every manager role is a subcomponent of the
   // / Engine & getAcceptedManagers() inside the Engine pins each one exactly.
@@ -1349,7 +1349,7 @@ function verifyInstallation() {
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v4.1.7';
+  $RequiredDependsVersion = 'v4.1.8';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
   // / The Pipeline Core component version this core requires.
   // / This is an exact match, because a component built for another core may declare an entry point whose arguments have moved, or capabilities this core cannot honour.
@@ -1361,7 +1361,7 @@ function verifyInstallation() {
   // / The Workflow Core component version this core requires.
   // / This is an exact match, because a component built for another core may call an operation with arguments that have moved.
   // / Raise this when the Workflow Core itself changes & for nothing else. It is an Engine core, at Resources/Engine/Cores/workflowCore.php.
-  $RequiredWorkflowCoreVersion = 'v4.1.6';
+  $RequiredWorkflowCoreVersion = 'v4.1.8';
   $RequiredWorkflowCoreVersion = ltrim($RequiredWorkflowCoreVersion, 'vV');
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
@@ -1667,108 +1667,6 @@ function verifySesHash($Token1) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to open the logfile this process writes.
-// / Accepts nothing. Returns whether a logfile is in use & its path.
-// / It decides what the logfile is, which is the role it is named for, the folder it is in & the rest of its name.
-// / The kernel opens it, because how a logfile is opened, named in turn & protected is the same in every application.
-// / Root's logfile is in Engine, & root writes to standard error until that folder exists, for the reason given below.
-// / On a terminal root also repeats its warnings & errors there.
-// / The log hash suffix is assembled before any filename that uses it is built.
-function verifyLogs() {
-  // / Set variables.
-  global $EnginePerManagerLogFiles, $EnginePerWorkerLogFiles, $LogWorkerIdentifier, $LogRole, $RunningFromCLI, $LogDir, $LogFile, $MaxLogSize, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Date, $ApplicationName, $ConvertLoc, $EngineDir, $AppendLogHashToLogFiles, $EnableMemoryProtection, $RunningAsRoot;
-  $LogExists = FALSE;
-  $logHashAppend = $roleArgument = $workerArgument = $namePrefix = $nameSuffix = $rootLogFolder = $logPath = $logFolder = '';
-  // / The role is part of the filename & that is the main defence against interleaving.
-  // / Several processes append to one logfile. A web request, four manager processes & any
-  // / worker they supervise all write to the same place at the same time.
-  // / An append shorter than the pipe buffer is atomic & most entries are.
-  // / A stream inspection dump, a compiler log or an FFMPEG failure is not, & those are the
-  // / entries worth not corrupting.
-  // / LOCK_EX in emitLogEntry closes the remaining gap & costs nothing at this volume.
-  // / Separating by role also makes a log readable. A manager writing every few seconds
-  // / for a week buried every web request that happened alongside it.
-  // / Web is the default, because a request is what this application mostly is.
-  // / The role is decided here rather than in the kernel, because the kernel holds no list of commands.
-  if (!isset($LogRole) or (string)$LogRole === '') {
-    $LogRole = 'Web';
-    if (isset($RunningFromCLI) && $RunningFromCLI) {
-      $LogRole = 'Cli';
-      // / This list names the same commands as the Engine's dispatcher, which is not loaded yet.
-      // / A workflow's worker writes a log of its own, so what it did is read apart from every request.
-      if (isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === '--run-workflow') $LogRole = 'Workflow';
-      if (isset($_SERVER['argv'][1]) && in_array($_SERVER['argv'][1], array('--start-core-manager', '--start-manager', '--run-core-manager'), TRUE)) {
-        $LogRole = 'Manager';
-        // / A manager may have a file of its own when the Engine configuration asks for it.
-        // / The role it is running under is the second argument & is already sanitized by
-        // / the dispatcher that reads it, so only the characters a filename may carry are
-        // / kept here rather than trusting that.
-        if (isset($EnginePerManagerLogFiles) && $EnginePerManagerLogFiles) {
-          $roleArgument = isset($_SERVER['argv'][2]) ? preg_replace('/[^A-Za-z0-9-]/', '', (string)$_SERVER['argv'][2]) : '';
-          if ($roleArgument !== '') $LogRole = $roleArgument;
-          else $LogRole = 'core-manager'; } } }
-    // / A worker may have a file of its own for the same reason.
-    // / The identifier is supplied by the application before this function runs, because
-    // / only the application knows what a unit of work is called.
-    // / An application that enables this & supplies nothing keeps the role it had, rather
-    // / than writing every worker to a file called nothing.
-    if (isset($EnginePerWorkerLogFiles) && $EnginePerWorkerLogFiles && isset($LogWorkerIdentifier)) {
-      $workerArgument = preg_replace('/[^A-Za-z0-9-]/', '', (string)$LogWorkerIdentifier);
-      if ($workerArgument !== '') $LogRole = 'Worker-'.$workerArgument; } }
-  $DefaultLogDir = $ConvertLoc.'/Logs';
-  $DefaultLogSize = 1048576;
-  // / Build the hash suffix before it is used in any filename.
-  if ($AppendLogHashToLogFiles) $logHashAppend = '_'.$SesHash4;
-  if (!is_numeric($MaxLogSize)) $MaxLogSize = $DefaultLogSize;
-  // / A logfile is named for the application & the role, then its count, then the date & the hash suffix.
-  $namePrefix = $ApplicationName.'_'.$LogRole;
-  $nameSuffix = $Date.$logHashAppend;
-  // / Root logs to a folder of its own, Engine, inside the data root.
-  // / The web server account's log folder is that account's, so root will not write there, because that account can swap the whole folder for a link.
-  // / Engine is root:root inside a data root owned by root, so no other account can swap it.
-  if ($RunningAsRoot) {
-    if (isset($EngineDir) && is_string($EngineDir)) $rootLogFolder = $EngineDir;
-    list ($LogExists, $logPath) = openLogFileForRoot($rootLogFolder, $namePrefix, $nameSuffix, $MaxLogSize); }
-  // / Every other account logs to the folder config.php names, & to Logs in the data location when that one cannot be made.
-  // / An index.html is placed in the folder used as document root protection.
-  else {
-    list ($LogExists, $logPath, $logFolder) = openLogFileByName(array($LogDir, $DefaultLogDir), 'index.html', $namePrefix, $nameSuffix, $MaxLogSize);
-    // / The folder in use is the one the rest of the application reads, such as for a dependency report.
-    if ($logFolder !== '') $LogDir = $logFolder; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $logHashAppend, $roleArgument, $workerArgument, $namePrefix, $nameSuffix, $rootLogFolder, $logPath, $logFolder);
-  return array($LogExists, $LogFile); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to move a process that runs for days on to the logfile it should be writing now.
-// / Accepts nothing. Returns whether a logfile is in use & its path, as verifyLogs() does.
-// / The Engine calls this from every manager loop, through $EngineLogProvider, once a minute.
-// / A logfile is named for the date & moves on once it reaches --Maximum Log File Size--, & a request names its logfile as it starts.
-// / Root runs nothing for days & writes through a handle it already holds, so root is left as it is.
-// / What PHP remembers of a file's size is forgotten first, because a process that has run for days would otherwise measure the logfile it opened.
-function refreshLogFile() {
-  // / Set variables.
-  global $RunningAsRoot, $LogFile, $EnableMemoryProtection;
-  $LogExists = FALSE;
-  $LogPath = '';
-  $timeIsSet = FALSE;
-  $refreshedDate = $refreshedTime = '';
-  $refreshedEpoch = 0;
-  // / Each branch sets the path once, so the one it held is never written over.
-  if ($RunningAsRoot) {
-    $LogPath = (string)$LogFile;
-    $LogExists = ($LogPath !== ''); }
-  else {
-    clearstatcache();
-    list ($timeIsSet, $refreshedDate, $refreshedTime, $refreshedEpoch) = verifyTime();
-    list ($LogExists, $LogPath) = verifyLogs(); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $timeIsSet, $refreshedDate, $refreshedTime, $refreshedEpoch);
-  return array($LogExists, $LogPath); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to set or validate the token pair used to identify a session.
 // / Token1 is the session credential & carries the entropy. It is an 18 digit random number.
 // / Token2 is an HMAC signature over Token1, keyed with the per-install $SecretKey.
@@ -1826,8 +1724,8 @@ function verifyInputs() {
   // / Set variables.
   global $ShowGUI, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $StreamBaseURL, $UserURLDownload, $LogoURL, $ResolvedLogoURL, $SupportedLanguages, $SupportedColors, $SupportedGuis;
   $InputsAreVerified = TRUE;
-  $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $IdentifyReport = $IdentifyFilename = $Sort = $WorkflowName = $WorkflowDocument = $WorkflowCheck = $WorkflowExport = $var = $rawInput = '';
-  $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = $FilesToIdentify = $FilesToExtract = $WorkflowFiles = $logoParts = $logoQuery = array();
+  $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $IdentifyReport = $IdentifyFilename = $Sort = $WorkflowName = $WorkflowDocument = $WorkflowCheck = $WorkflowExport = $WorkflowPreview = $WorkflowPreviewDocument = $RenamePattern = $var = $rawInput = '';
+  $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = $FilesToIdentify = $FilesToExtract = $FilesToRename = $FilesToStrip = $FilesToMerge = $FilesToSplit = $WorkflowFiles = $logoParts = $logoQuery = array();
   $key = 0;
   // / Determine whether or not to display a full GUI or a minimalized GUI.
   // / The default action is set in config.php. The user can opt for less than the default, but never more.
@@ -1925,8 +1823,9 @@ function verifyInputs() {
   // / A name it gives what an operation makes is sanitized where the operation uses it, as a name a user types for a button is.
   if (isset($_POST['workflowDocument']) && is_string($_POST['workflowDocument'])) $WorkflowDocument = $_POST['workflowDocument'];
   if (isset($_POST['workflowCheck']) && is_string($_POST['workflowCheck'])) $WorkflowCheck = $_POST['workflowCheck'];
+  if (isset($_POST['workflowPreviewDocument']) && is_string($_POST['workflowPreviewDocument'])) $WorkflowPreviewDocument = $_POST['workflowPreviewDocument'];
   // / A raw input is read only when it is text. Anything else is refused & named, because casting a list to text is a PHP warning, & no page sends one.
-  foreach (array('streamBaseURL', 'userURLDownload', 'workflowDocument', 'workflowCheck') as $rawInput) if (isset($_POST[$rawInput]) && !is_string($_POST[$rawInput])) warningEntry('A request carried '.$rawInput.' as something other than text, & it was refused.');
+  foreach (array('streamBaseURL', 'userURLDownload', 'workflowDocument', 'workflowCheck', 'workflowPreviewDocument') as $rawInput) if (isset($_POST[$rawInput]) && !is_string($_POST[$rawInput])) warningEntry('A request carried '.$rawInput.' as something other than text, & it was refused.');
   if (isset($_POST['pdfextension'])) list ($UserExtension, $variableIsSanitized[$key++]) = sanitize($_POST['pdfextension'], TRUE);
   if (isset($_POST['userpdfconvertfilename'])) list ($UserFilename, $variableIsSanitized[$key++]) = sanitize($_POST['userpdfconvertfilename'], TRUE);
   if (isset($_POST['scantype'])) list ($UserScanType, $variableIsSanitized[$key++]) = sanitize($_POST['scantype'], TRUE);
@@ -1937,8 +1836,16 @@ function verifyInputs() {
   if (isset($_POST['identifyfilename'])) list ($IdentifyFilename, $variableIsSanitized[$key++]) = sanitize($_POST['identifyfilename'], TRUE);
   // / Extract reads the archives to extract & nothing else, because every file is named as its archive names it.
   if (isset($_POST['filesToExtract'])) list ($FilesToExtract, $variableIsSanitized[$key++]) = sanitize($_POST['filesToExtract'], TRUE);
-  // / A workflow run reads the workflow to run & the files, in the order a user selected them.
+  // / Rename reads the files to rename & the pattern their new names are made from, which sanitizeNamePattern() sanitizes, keeping its tokens.
+  if (isset($_POST['filesToRename'])) list ($FilesToRename, $variableIsSanitized[$key++]) = sanitize($_POST['filesToRename'], TRUE);
+  if (isset($_POST['renamepattern'])) list ($RenamePattern, $variableIsSanitized[$key++]) = sanitizeNamePattern($_POST['renamepattern']);
+  // / Strip Metadata, Merge & Split read the files they work on. A name Merge gives what it makes arrives as userfilename.
+  if (isset($_POST['filesToStrip'])) list ($FilesToStrip, $variableIsSanitized[$key++]) = sanitize($_POST['filesToStrip'], TRUE);
+  if (isset($_POST['filesToMerge'])) list ($FilesToMerge, $variableIsSanitized[$key++]) = sanitize($_POST['filesToMerge'], TRUE);
+  if (isset($_POST['filesToSplit'])) list ($FilesToSplit, $variableIsSanitized[$key++]) = sanitize($_POST['filesToSplit'], TRUE);
+  // / A workflow run reads the workflow to run & the files, in the order a user selected them. A preview of a library's workflow names it as a run does.
   if (isset($_POST['workflowRun'])) list ($WorkflowName, $variableIsSanitized[$key++]) = sanitize($_POST['workflowRun'], TRUE);
+  if (isset($_POST['workflowPreview'])) list ($WorkflowPreview, $variableIsSanitized[$key++]) = sanitize($_POST['workflowPreview'], TRUE);
   if (isset($_POST['workflowFiles'])) list ($WorkflowFiles, $variableIsSanitized[$key++]) = sanitize($_POST['workflowFiles'], TRUE);
   // / An export names a workflow in the library by its identifier.
   if (isset($_POST['workflowExport'])) list ($WorkflowExport, $variableIsSanitized[$key++]) = sanitize($_POST['workflowExport'], TRUE);
@@ -1946,7 +1853,7 @@ function verifyInputs() {
   foreach ($variableIsSanitized as $var) if (!$var) ($InputsAreVerified = FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $logoParts, $logoQuery, $variableIsSanitized, $key, $var, $rawInput);
-  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport, $FilesToExtract); }
+  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport, $FilesToExtract, $FilesToRename, $RenamePattern, $FilesToStrip, $FilesToMerge, $FilesToSplit, $WorkflowPreview, $WorkflowPreviewDocument); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2642,6 +2549,7 @@ function showVersionInfo() {
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
   $fileBinary = $probeBinary = $pdfInfoBinary = FALSE;
+  $pdfUniteBinary = $pdfSeparateBinary = $mat2Binary = FALSE;
   $listenerIsRunning = $bwrapBinary = $listenerIsAsked = FALSE;
   $sandboxLauncher = $secretLabel = '';
   $listenerStatus = array();
@@ -2692,6 +2600,11 @@ function showVersionInfo() {
   $fileBinary = toolPath('File');
   $probeBinary = toolPath('FFprobe');
   $pdfInfoBinary = toolPath('PDFInfo');
+  // / Merge runs PDFUnite, Split runs PDFSeparate, & Strip Metadata runs MAT2.
+  // / Each operation is offered while its pipeline is installed, so a missing tool is named here before a request fails on it.
+  $pdfUniteBinary = toolPath('PDFUnite');
+  $pdfSeparateBinary = toolPath('PDFSeparate');
+  $mat2Binary = toolPath('MAT2');
   // / The sandbox probe lives in the Engine, so with no Engine the honest answer is not functional.
   // / The launcher says whether a sandbox runs the application's own copy of bubblewrap, which is how a kernel restricting unprivileged namespaces is kept restricted.
   if (function_exists('verifySandboxLauncher')) list ($bwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
@@ -2784,7 +2697,10 @@ function showVersionInfo() {
     'Calibre, e-books' => array($ebookBinary !== FALSE, toolRequirement('Calibre'), TRUE),
     'File, identification' => array($fileBinary !== FALSE, toolRequirement('File'), FALSE),
     'FFprobe, identification' => array($probeBinary !== FALSE, toolRequirement('FFprobe'), FALSE),
-    'PDFInfo, identification' => array($pdfInfoBinary !== FALSE, toolRequirement('PDFInfo'), FALSE));
+    'PDFInfo, identification' => array($pdfInfoBinary !== FALSE, toolRequirement('PDFInfo'), FALSE),
+    'PDFUnite, merging' => array($pdfUniteBinary !== FALSE, toolRequirement('PDFUnite'), FALSE),
+    'PDFSeparate, splitting' => array($pdfSeparateBinary !== FALSE, toolRequirement('PDFSeparate'), FALSE),
+    'MAT2, metadata' => array($mat2Binary !== FALSE, toolRequirement('MAT2'), FALSE));
   foreach ($dependencyChecks as $dependencyName => $dependencyState) {
     if ($dependencyState[0]) print('  '.str_pad($dependencyName, 28).'OK'.($dependencyState[2] ? '' : ', optional').$Lol);
     else {
@@ -3024,7 +2940,7 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $listenerIsAsked, $secretLabel, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $secretShown, $olderSecretFile, $topCopyMode, $topCopyOwner, $secretGroup, $topCopyGroup, $secretGroupExpected, $webAccountNumber, $secretPasses, $secretsState, $secretsMode, $secretsOwnership, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $fileBinary, $probeBinary, $pdfInfoBinary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $secretOwner, $secretExpected, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $listenerIsAsked, $secretLabel, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $secretShown, $olderSecretFile, $topCopyMode, $topCopyOwner, $secretGroup, $topCopyGroup, $secretGroupExpected, $webAccountNumber, $secretPasses, $secretsState, $secretsMode, $secretsOwnership, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $fileBinary, $probeBinary, $pdfInfoBinary, $pdfUniteBinary, $pdfSeparateBinary, $mat2Binary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $secretOwner, $secretExpected, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -3407,7 +3323,7 @@ function verifySort($requestedSort) {
 // / Accepts the session folder, the names of the files in it & the sort code, in that order.
 // / Returns the names in order & a record for each, keyed by name, in that order.
 // / A record holds Size in bytes, SizeText, Modified as a Unix time, ModifiedText, Type, which is the extension, & Kinds.
-// / Kinds lists the kinds of file applicationFileTypes() says it is, which is how an interface ticks the files of one kind.
+// / Kinds lists the kinds of file applicationFileTypes() says it is, which is how an interface selects the files of one kind.
 // / A file can be more than one kind, as an rtf file is a document & an e-book.
 // / The Files pipeline reads the sizes & the times, because it is what touches the session folder.
 // / A file it could not describe keeps its place in the list, sorted as if it were empty & oldest, & shows no size or time.
@@ -3537,6 +3453,23 @@ function operationPipelineIsInstalled($operationFamily) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to say whether the Files pipeline is installed & verified.
+// / Accepts nothing. Returns TRUE when the Pipeline Core holds the pipeline of kind file that deletes & renames a session's files.
+// / Delete & Rename are offered to a workflow only where it is, as an operation whose pipeline is missing is offered to none.
+function filesPipelineIsInstalled() {
+  // / Set variables.
+  global $PipelineCoreActive, $Pipelines, $EnableMemoryProtection;
+  $PipelineIsInstalled = FALSE;
+  $folderName = '';
+  $pipelineRecord = array();
+  if (!empty($PipelineCoreActive) && is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
+    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'file' && (string)($pipelineRecord['Family'] ?? '') === 'Files') $PipelineIsInstalled = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderName, $pipelineRecord);
+  return $PipelineIsInstalled; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to list the formats an archive of a selection of files may be made in.
 // / Accepts nothing. Returns the formats config.php offers that the installed Archiver pipeline says it can write, with zip first.
 // / config.php's list serves the Archive pipeline as well, which converts one archive into another & makes a bootable disk
@@ -3575,6 +3508,22 @@ function extractOperationFormats() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to list the formats metadata may be stripped from.
+// / Accepts nothing. Returns the formats the installed Metadata pipeline says it reads, & none without it.
+function metadataOperationFormats() {
+  // / Set variables.
+  global $PipelineCoreActive, $Pipelines, $EnableMemoryProtection;
+  $MetadataFormats = $pipelineRecord = array();
+  $folderName = '';
+  if (!empty($PipelineCoreActive) && is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
+    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'operation' && (string)($pipelineRecord['Family'] ?? '') === 'Metadata' && is_array($pipelineRecord['Input'] ?? NULL)) redeclare($MetadataFormats, array_merge($MetadataFormats, $pipelineRecord['Input'])); }
+  $MetadataFormats = array_values(array_unique(array_map('strtolower', $MetadataFormats)));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $pipelineRecord, $folderName);
+  return $MetadataFormats; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to declare the operations a workflow may run, & the kinds of file a step may name.
 // / Accepts nothing. Returns an array holding Operations & FileTypes. It is $EngineOperationProvider.
 // / Each operation names the function that runs it, the budget it takes, whether this server allows it, what it reads, its modes & its options.
@@ -3585,23 +3534,30 @@ function extractOperationFormats() {
 // / Archive, OCR, Identify & Scan are each an operation pipeline's, & one whose pipeline is missing is not offered, from v4.1.6.
 // / Extract is the Extractor pipeline's, from v4.1.7. It reads the archives extractOperationFormats() lists, one at a time, & names no option, because every file is named as its archive names it.
 // / What it places joins the session beside the archive, so the step after it reads those files as it reads any other.
-// / SessionFiles names getFiles(), which lists a session's files as a page lists them, so the Workflow Core's Select step finds only what a user could see & tick.
+// / Delete & Rename hand their work to the Files pipeline, through deleteFiles() & renameFiles(). Each says it consumes the files it takes, so the Workflow Core refuses a later step taking them.
+// / Neither takes a budget, as neither button does, so a workflow that cleans up still runs while the Resource Manager refuses every budget, as it does once storage is spent.
+// / Rename's Pattern makes each new name from {name}, {n} & {date}, & never changes an extension.
+// / StripMetadata is the Metadata pipeline's, & reads the formats metadataOperationFormats() lists. It makes a clean copy beside each file, named as OCR names what it makes.
+// / Merge & Split are the PDF pipeline's. Merge puts every PDF it is given into one, named by Filename, & Split makes a PDF of each page of every PDF it is given.
+// / Convert's Extension sorts its formats into groups by the kind of file each is, which convertOperationGroups() lists, so a page can show them a group at a time.
+// / SessionFiles names getFiles(), which lists a session's files as a page lists them, so the Workflow Core's Select step finds only what a user could see & select.
 // / See Documentation/ABOUT_WORKFLOWS.txt.
 function applicationOperations() {
   // / Set variables.
   global $SupportedConversionTypes, $AllowUserIdentify, $AllowUserVirusScan, $DocumentArray, $PDFWorkArr, $EnableMemoryProtection;
   $OperationRegistry = array();
-  $convertOutputs = $archiveFormats = $extractFormats = $ocrFormats = $familyFormats = array();
+  $convertOutputs = $archiveFormats = $extractFormats = $ocrFormats = $metadataFormats = $familyFormats = array();
   $familyName = '';
   foreach (applicationConversionFamilies() as $familyName => $familyFormats) if (is_array($familyFormats[1])) redeclare($convertOutputs, array_merge($convertOutputs, $familyFormats[1]));
   redeclare($convertOutputs, array_values(array_unique(array_map('strtolower', $convertOutputs))));
   $archiveFormats = archiveOperationFormats();
   $extractFormats = extractOperationFormats();
+  $metadataFormats = metadataOperationFormats();
   $ocrFormats = array_values(array_unique(array_merge(array('pdf'), (array)$DocumentArray)));
   $OperationRegistry = array(
     'Operations' => array(
       'Convert' => array('Invoke' => 'invokeConvertOperation', 'Budget' => 'conversion', 'Enabled' => (count($convertOutputs) > 0), 'Accepts' => 'convertOperationAccepts', 'Modes' => array('each'),
-        'Options' => array('Extension' => array('Type' => 'choice', 'Required' => TRUE, 'Choices' => $convertOutputs), 'Filename' => array('Type' => 'name', 'Default' => ''),
+        'Options' => array('Extension' => array('Type' => 'choice', 'Required' => TRUE, 'Choices' => $convertOutputs, 'Groups' => convertOperationGroups()), 'Filename' => array('Type' => 'name', 'Default' => ''),
           'Height' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 65535), 'Width' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 65535),
           'Rotate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => -360, 'Maximum' => 360), 'Bitrate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 100000))),
       'Archive' => array('Invoke' => 'invokeArchiveOperation', 'Budget' => 'archive', 'Enabled' => (in_array('Archive', (array)$SupportedConversionTypes, TRUE) && in_array('zip', $archiveFormats, TRUE)), 'Inputs' => array(), 'Modes' => array('together', 'each'),
@@ -3612,11 +3568,19 @@ function applicationOperations() {
       'Identify' => array('Invoke' => 'invokeIdentifyOperation', 'Budget' => 'Identify', 'Enabled' => ($AllowUserIdentify === TRUE && operationPipelineIsInstalled('Identify')), 'Inputs' => array(), 'Modes' => array('together'),
         'Options' => array('Report' => array('Type' => 'boolean', 'Default' => TRUE), 'Filename' => array('Type' => 'name', 'Default' => 'User_Identify_Report'))),
       'Scan' => array('Invoke' => 'invokeScanOperation', 'Budget' => 'user virus scan', 'Enabled' => ($AllowUserVirusScan === TRUE && operationPipelineIsInstalled('Scan')), 'Inputs' => array(), 'Modes' => array('together'),
-        'Options' => array('Scanner' => array('Type' => 'choice', 'Default' => 'all', 'Choices' => array('all', 'clamav', 'scancore'))))),
+        'Options' => array('Scanner' => array('Type' => 'choice', 'Default' => 'all', 'Choices' => array('all', 'clamav', 'scancore')))),
+      'Delete' => array('Invoke' => 'invokeDeleteOperation', 'Budget' => FALSE, 'Enabled' => filesPipelineIsInstalled(), 'Inputs' => array(), 'Modes' => array('together'), 'Consumes' => 'deleted', 'Options' => array()),
+      'Rename' => array('Invoke' => 'invokeRenameOperation', 'Budget' => FALSE, 'Enabled' => filesPipelineIsInstalled(), 'Inputs' => array(), 'Modes' => array('together'), 'Consumes' => 'renamed',
+        'Options' => array('Pattern' => array('Type' => 'name', 'Default' => '{name}-{n}'))),
+      'StripMetadata' => array('Invoke' => 'invokeStripMetadataOperation', 'Budget' => 'metadata', 'Enabled' => (count($metadataFormats) > 0), 'Inputs' => $metadataFormats, 'Modes' => array('each'),
+        'Options' => array('Filename' => array('Type' => 'name', 'Default' => ''))),
+      'Merge' => array('Invoke' => 'invokeMergeOperation', 'Budget' => 'merge', 'Enabled' => operationPipelineIsInstalled('PDF'), 'Inputs' => array('pdf'), 'Modes' => array('together'),
+        'Options' => array('Filename' => array('Type' => 'name', 'Default' => 'Merged'))),
+      'Split' => array('Invoke' => 'invokeSplitOperation', 'Budget' => 'split', 'Enabled' => operationPipelineIsInstalled('PDF'), 'Inputs' => array('pdf'), 'Modes' => array('each'), 'Options' => array())),
     'FileTypes' => applicationFileTypes(),
     'SessionFiles' => 'getFiles');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $convertOutputs, $archiveFormats, $extractFormats, $ocrFormats, $familyFormats, $familyName);
+  purgeSensitiveMemory($EnableMemoryProtection, $convertOutputs, $archiveFormats, $extractFormats, $ocrFormats, $metadataFormats, $familyFormats, $familyName);
   return $OperationRegistry; }
 // / -----------------------------------------------------------------------------------
 
@@ -3638,6 +3602,27 @@ function convertOperationAccepts($fileExtension, $operationOptions) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $outputExtension, $inputExtension, $familyName, $familyFormats, $fileExtension, $operationOptions);
   return $OperationAccepts; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to sort the formats Convert writes into groups, each named for a kind of file.
+// / Accepts nothing. Returns each kind's name & the formats written as that kind, in the order applicationFileTypes() names the kinds.
+// / A page shows a long list of formats a group at a time, as tabs beneath Convert's own, & names each group as it names the kind.
+// / A format written as more than one kind is in each of their groups, so pdf is a Document, a Presentation & an Ebook alike.
+// / The groups are drawn from the lists the families are, so every format Convert writes is in at least one of them.
+function convertOperationGroups() {
+  // / Set variables.
+  global $DocumentArray, $XPSOutputArray, $SpreadsheetArray, $PresentationOutputArray, $ImageOutputArray, $MediaOutputArray, $VideoOutputArray, $ArchiveArray, $EbookOutputArray, $ModelOutputArray, $DrawingOutputArray, $SVGOutputArray, $SubtitleOutputArray, $SCADOutputArray, $StreamArray, $EnableMemoryProtection;
+  $ConvertGroups = array();
+  $groupName = '';
+  $groupFormats = $groupLists = array();
+  $groupLists = array('Document' => array_merge((array)$DocumentArray, (array)$XPSOutputArray), 'Spreadsheet' => $SpreadsheetArray, 'Presentation' => $PresentationOutputArray, 'Image' => $ImageOutputArray,
+    'Audio' => $MediaOutputArray, 'Video' => $VideoOutputArray, 'Archive' => $ArchiveArray, 'Ebook' => $EbookOutputArray, 'Model' => $ModelOutputArray, 'Drawing' => $DrawingOutputArray,
+    'Vector' => $SVGOutputArray, 'Subtitle' => $SubtitleOutputArray, 'Scad' => $SCADOutputArray, 'Stream' => $StreamArray);
+  foreach ($groupLists as $groupName => $groupFormats) if (is_array($groupFormats) && count($groupFormats) > 0) $ConvertGroups[$groupName] = array_values(array_unique(array_map('strtolower', array_map('strval', $groupFormats))));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $groupName, $groupFormats, $groupLists);
+  return $ConvertGroups; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -3776,6 +3761,108 @@ function invokeScanOperation($selectedFiles, $operationOptions) {
       warningEntry('A workflow\'s virus scan report could not be kept beside the files it scanned.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $threatWasFound, $nameWasFound, $reportPath, $reportName, $keptPath, $keptName, $selectedFiles, $operationOptions);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run Delete, as a button & a workflow both run it.
+// / Accepts the files & the options, which are none.
+// / Returns whether any file was deleted, whether anything went wrong, the files it made, which are none, & what it found, which is nothing, in that order.
+// / deleteFiles() decides what may be deleted & the Files pipeline removes it, as for a button.
+// / A file it deletes is gone by its name, so the registry says Delete consumes what it takes.
+function invokeDeleteOperation($selectedFiles, $operationOptions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $OperationFindings = array();
+  list ($OperationSucceeded, $OperationErrors) = deleteFiles($selectedFiles);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $selectedFiles, $operationOptions);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run Rename, as a button & a workflow both run it.
+// / Accepts the files & the options, which are Pattern.
+// / Returns whether any file has its new name, whether anything went wrong, the name each file now has & what it found, which is nothing, in that order.
+// / The names it returns are what a workflow's next step reads. A file is gone by the name it had, so the registry says Rename consumes what it takes.
+function invokeRenameOperation($selectedFiles, $operationOptions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $OperationFindings = array();
+  list ($OperationSucceeded, $OperationErrors, $ProducedFiles) = renameFiles($selectedFiles, (string)($operationOptions['Pattern'] ?? ''));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $selectedFiles, $operationOptions);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to dispatch an operation to the operation pipeline of a family, & keep the names it made.
+// / Accepts the operation's name, the family, the files, the name to give what it makes, the extension & the method, in that order.
+// / Returns whether it succeeded, whether anything went wrong & the names it made, in that order.
+// / A missing pipeline is reported rather than read as an operation that made nothing, because nothing in this core can do its work.
+function dispatchOperationPipeline($operationName, $operationFamily, $selectedFiles, $userFilename, $userExtension, $operationMethod) {
+  // / Set variables.
+  global $PipelineCoreActive, $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $operationOutput = array();
+  if (!$PipelineCoreActive or !function_exists('runOperationPipeline')) {
+    $OperationErrors = TRUE;
+    errorEntry($operationName.' was requested but no '.$operationFamily.' pipeline is installed!', 34006, FALSE); }
+  else {
+    list ($OperationSucceeded, $OperationErrors, $operationOutput) = runOperationPipeline($operationFamily, $selectedFiles, (string)$userFilename, (string)$userExtension, (string)$operationMethod);
+    if (is_array($operationOutput)) $ProducedFiles = array_values(array_filter($operationOutput, 'is_string')); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $operationOutput, $operationName, $operationFamily, $selectedFiles, $userFilename, $userExtension, $operationMethod);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run Strip Metadata, as a button & a workflow both run it.
+// / Accepts the files & the options, which are Filename.
+// / Returns whether any file was cleaned, whether anything went wrong, the clean copies it made & what it found, which is nothing, in that order.
+// / Stripping metadata is the Metadata pipeline's. It makes a clean copy beside each file, under the Filename given or the file's own name, & the next free name when that is taken, as OCR does.
+function invokeStripMetadataOperation($selectedFiles, $operationOptions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $OperationFindings = array();
+  list ($OperationSucceeded, $OperationErrors, $ProducedFiles) = dispatchOperationPipeline('Strip Metadata', 'Metadata', $selectedFiles, (string)($operationOptions['Filename'] ?? ''), '', '');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $selectedFiles, $operationOptions);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run Merge, as a button & a workflow both run it.
+// / Accepts the PDFs, in the order their pages are to follow one another, & the options, which are Filename.
+// / Returns whether a PDF was made, whether anything went wrong, the PDF it made & what it found, which is nothing, in that order.
+// / Merging is the PDF pipeline's. An empty Filename names what it makes Merged.
+function invokeMergeOperation($selectedFiles, $operationOptions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $OperationFindings = array();
+  list ($OperationSucceeded, $OperationErrors, $ProducedFiles) = dispatchOperationPipeline('Merge', 'PDF', $selectedFiles, (string)($operationOptions['Filename'] ?? ''), 'pdf', 'merge');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $selectedFiles, $operationOptions);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run Split, as a button & a workflow both run it.
+// / Accepts the PDFs & the options, which are none.
+// / Returns whether any page was made, whether anything went wrong, the PDF made of each page & what it found, which is nothing, in that order.
+// / Splitting is the PDF pipeline's. Each page of a PDF named report.pdf becomes report-1.pdf, report-2.pdf & so on.
+function invokeSplitOperation($selectedFiles, $operationOptions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $OperationFindings = array();
+  list ($OperationSucceeded, $OperationErrors, $ProducedFiles) = dispatchOperationPipeline('Split', 'PDF', $selectedFiles, '', 'pdf', 'split');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $selectedFiles, $operationOptions);
   return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
 // / -----------------------------------------------------------------------------------
 
@@ -3939,6 +4026,9 @@ function getSandboxProfiles() {
     'ffmpeg' => array('OperationType' => 'Video'),
     'archive' => array('OperationType' => 'Archive'),
     'poppler' => array('OperationType' => 'Document'),
+    // / mat2 is a Python program reading what the base sandbox shows, & renders a PDF with the fonts it shows too.
+    // / The Metadata pipeline keeps it from starting a sandbox of its own, because this one allows no namespace inside it.
+    'mat2' => array('OperationType' => 'Document'),
     'generic' => array('OperationType' => 'Generic'));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SandboxProfiles is not purged, because it is the return value.
@@ -4446,6 +4536,53 @@ function findFreeOutputName($directory, $baseName, $extension) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to put a file an operation made into the session, under the name given or the next free one.
+// / Accepts the file's path & the name to give it, in that order.
+// / Returns whether it was placed, the name it was placed under & whether its name or its format was refused, in that order.
+// / A name is held to what an upload's is. It is sanitized, & a name or a format this application refuses to show or to handle is refused here too.
+// / A name already taken is given _1 before its extension, then _2, & so on, by findFreeOutputName(), as an output is.
+// / Nothing in the session is ever written over. A name is taken by linking the file to it, which fails rather than replaces when the name was taken in the meantime.
+// / A filesystem that cannot link falls back to a rename, once the name is found to be free.
+// / The Extractor, Metadata & PDF pipelines each place what they make through it, from a folder of their own inside the session.
+function placeSessionFile($sourcePath, $fileName) {
+  // / Set variables.
+  global $ConvertDir, $Allowed, $DangerousFiles, $PermissionLevels, $EnableMemoryProtection;
+  $FileWasPlaced = $NameWasRefused = FALSE;
+  $PlacedName = '';
+  $cleanName = $fileExtension = $baseName = $candidateName = $candidatePath = $freePath = '';
+  $nameIsSanitized = $nameWasFound = FALSE;
+  $attemptNumber = 0;
+  list ($cleanName, $nameIsSanitized) = sanitize((string)$fileName, TRUE);
+  if ($nameIsSanitized && is_string($cleanName)) $fileExtension = getExtension($cleanName);
+  if (!$nameIsSanitized or !is_string($cleanName) or $cleanName === '' or $cleanName === '.' or $cleanName === '..' or strtolower($cleanName) === 'index.html' or in_array(strtolower($cleanName), (array)$DangerousFiles) or extensionIsDangerous($fileExtension) or !in_array($fileExtension, (array)$Allowed)) $NameWasRefused = TRUE;
+  else {
+    $baseName = (string)pathinfo($cleanName, PATHINFO_FILENAME);
+    $candidateName = $cleanName;
+    for ($attemptNumber = 0; $attemptNumber < 3 && !$FileWasPlaced; $attemptNumber++) {
+      redeclare($candidatePath, $ConvertDir.$candidateName);
+      clearstatcache(TRUE, $candidatePath);
+      // / A name that is taken, or that a link holds, is passed over for the next free one.
+      if (file_exists($candidatePath) or is_link($candidatePath)) {
+        // / The name before it is shredded first, as redeclare() would, because a list() cannot pass through redeclare().
+        purgeSensitiveMemory($EnableMemoryProtection, $candidateName, $freePath);
+        list ($nameWasFound, $freePath, $candidateName) = findFreeOutputName($ConvertDir, $baseName, $fileExtension);
+        if (!$nameWasFound) break;
+        redeclare($candidatePath, $freePath); }
+      if (@link((string)$sourcePath, $candidatePath)) {
+        @unlink((string)$sourcePath);
+        $FileWasPlaced = TRUE; }
+      else {
+        clearstatcache(TRUE, $candidatePath);
+        if (!file_exists($candidatePath) && !is_link($candidatePath) && @rename((string)$sourcePath, $candidatePath)) $FileWasPlaced = TRUE; } }
+    if ($FileWasPlaced) {
+      @chmod($candidatePath, $PermissionLevels);
+      $PlacedName = $candidateName; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanName, $fileExtension, $baseName, $candidateName, $candidatePath, $freePath, $nameIsSanitized, $nameWasFound, $attemptNumber, $sourcePath, $fileName);
+  return array($FileWasPlaced, $PlacedName, $NameWasRefused); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to verify files before performing operations on them.
 // / Accepts the file, the output name & extension the user asked for, & three switches.
 // / $clean removes a stale staged copy & gives an output whose name is taken the next free one.
@@ -4526,7 +4663,7 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
-  $Files = $FileDetails = $ArchiveOperationArray = $ExtractOperationArray = $OfferedOperations = array();
+  $Files = $FileDetails = $ArchiveOperationArray = $ExtractOperationArray = $MetadataOperationArray = $OfferedOperations = array();
   $FileCount = 0;
   // / Make sure the $guiType is valid.
   // / A non numeric type cannot be compared against a range, so it is replaced outright.
@@ -4555,11 +4692,15 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   $ArchiveOperationArray = archiveOperationFormats();
   // / The formats an archive may be extracted from, which an interface draws a file's Extract button for.
   $ExtractOperationArray = extractOperationFormats();
+  // / The formats metadata may be stripped from, which an interface draws a file's Strip Metadata button for.
+  $MetadataOperationArray = metadataOperationFormats();
   // / Which of a file's operations an interface offers. Each is an operation pipeline's, & one whose pipeline is missing is not offered, as a workflow does not offer it.
   // / A button that could only fail is not drawn, & -v names the pipeline that is missing.
+  // / Rename is the Files pipeline's, & Merge & Split are the PDF pipeline's, each drawn only for a PDF.
   $OfferedOperations = array('Scan' => ($AllowUserVirusScan === TRUE && operationPipelineIsInstalled('Scan')), 'Identify' => ($AllowUserIdentify === TRUE && operationPipelineIsInstalled('Identify')),
     'OCR' => (in_array('OCR', (array)$SupportedConversionTypes, TRUE) && operationPipelineIsInstalled('OCR')), 'Archive' => (count($ArchiveOperationArray) > 0),
-    'Extract' => (in_array('Archive', (array)$SupportedConversionTypes, TRUE) && count($ExtractOperationArray) > 0));
+    'Extract' => (in_array('Archive', (array)$SupportedConversionTypes, TRUE) && count($ExtractOperationArray) > 0),
+    'Rename' => filesPipelineIsInstalled(), 'StripMetadata' => (count($MetadataOperationArray) > 0), 'Merge' => operationPipelineIsInstalled('PDF'), 'Split' => operationPipelineIsInstalled('PDF'));
   // / An interface that renders an empty list has either been handed the wrong directory
   // / or a directory with nothing in it, & those are different faults with different
   // / fixes. Saying which directory was read, & whether this was the framed request, is
@@ -4846,6 +4987,118 @@ function deleteFiles($FilesToDelete) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $filesPipelineIsReady, $filesEntryPoint, $permittedDirectory, $file, $fileExtension, $variableIsSanitized, $filesAttempted, $filesDeleted, $permittedNames, $removalSucceeded, $namesAttempted, $namesRemoved);
   return array($DeleteComplete, $DeleteErrors); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to sanitize the pattern a selection of new names is made from, keeping its tokens.
+// / Accepts the pattern as a user typed it. Returns the pattern & whether it was sanitized, in that order, as sanitize() does.
+// / A pattern holds text & the tokens {name}, {n} & {date}, which renameFiles() fills in for each file.
+// / sanitize() removes braces, so each token is held as a control character while sanitize() runs, & put back after.
+// / A pattern holding a control character of its own is refused before that, so a token can never be forged.
+// / A pattern is at most 64 characters, as a name a workflow's option gives is.
+function sanitizeNamePattern($rawPattern) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $NamePattern = '';
+  $PatternIsSanitized = FALSE;
+  $heldPattern = '';
+  $tokenNames = array('{name}', '{n}', '{date}');
+  $tokenHolders = array(chr(1), chr(2), chr(3));
+  if (is_string($rawPattern) && strlen($rawPattern) <= 64 && preg_match('/[\x00-\x1F\x7F]/', $rawPattern) !== 1) {
+    list ($heldPattern, $PatternIsSanitized) = sanitize(str_replace($tokenNames, $tokenHolders, $rawPattern), TRUE);
+    if ($PatternIsSanitized && is_string($heldPattern)) $NamePattern = str_replace($tokenHolders, $tokenNames, $heldPattern);
+    else $PatternIsSanitized = FALSE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $heldPattern, $tokenNames, $tokenHolders, $rawPattern);
+  return array($NamePattern, $PatternIsSanitized); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to rename a selection of files in the session.
+// / Accepts the files & the pattern their new names are made from.
+// / Returns whether any file has its new name, whether anything went wrong & the name each file now has, in that order.
+// / {name} is a file's name without its extension, {n} its place in the selection, counting from 1, & {date} the day it is renamed, written as 2026-11-13.
+// / A pattern holding none of them gives every file the same name, so each file after the first is given the next free one, as an output is.
+// / The extension is never changed, so a rename never makes a file look like a format it is not. A tar.gz, tar.bz2, tar.xz or tar.zst keeps both of its extensions.
+// / A new name is sanitized as an upload's is, & a name this application refuses to show is refused.
+// / Nothing in the session is ever written over. The Files pipeline renames by linking, which fails rather than replaces when the name was taken in the meantime.
+// / A file whose new name is its own keeps it, & is named among the renamed, so a workflow passes it on.
+function renameFiles($FilesToRename, $NamePattern) {
+  // / Set variables.
+  global $Verbose, $ConvertDir, $DangerousFiles, $EnableMemoryProtection;
+  $RenameComplete = $RenameErrors = FALSE;
+  $RenamedFiles = array();
+  $file = $filePath = $extensionPart = $baseName = $newBase = $newName = $candidateName = $freePath = $todaysDate = $cleanPattern = $filesEntryPoint = '';
+  $variableIsSanitized = $patternIsSanitized = $renameIsPossible = $baseIsSanitized = $nameWasFound = $fileWasRenamed = $nameWasTaken = $filesPipelineIsReady = FALSE;
+  $fileNumber = $attemptNumber = 0;
+  $extensionMatch = array();
+  if (!is_array($FilesToRename)) $FilesToRename = array($FilesToRename);
+  list ($cleanPattern, $patternIsSanitized) = sanitizeNamePattern($NamePattern);
+  if (!$patternIsSanitized or $cleanPattern === '') {
+    $RenameErrors = TRUE;
+    errorEntry('The pattern new names are made from could not be sanitized or is empty, so nothing was renamed!', 23100, FALSE); }
+  else {
+    list ($filesPipelineIsReady, $filesEntryPoint) = loadFilesPipeline();
+    if (!$filesPipelineIsReady or !function_exists('renameFileInDirectory')) {
+      $RenameErrors = TRUE;
+      errorEntry('The Files pipeline is not available, so nothing was renamed!', 23101, FALSE); }
+    else $renameIsPossible = TRUE; }
+  // / Every file in a selection is given the same date, so a selection renamed at midnight is not split across two days.
+  $todaysDate = date('Y-m-d');
+  if ($renameIsPossible) foreach ($FilesToRename as $file) {
+    // / A file's place counts every file given, so a file that fails does not change the number of the files after it.
+    $fileNumber++;
+    redeclare($fileWasRenamed, FALSE);
+    list ($file, $variableIsSanitized) = sanitize($file, TRUE);
+    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
+      $RenameErrors = TRUE;
+      errorEntry('Could not sanitize the input file!', 23102, FALSE);
+      continue; }
+    redeclare($filePath, $ConvertDir.$file);
+    clearstatcache(TRUE, $filePath);
+    if (!is_file($filePath) or is_link($filePath) or extensionIsDangerous(getExtension($file))) {
+      $RenameErrors = TRUE;
+      warningEntry('The file '.$file.' is not a file in the session this server handles, so it was not renamed.');
+      continue; }
+    if ($Verbose) logEntry('User selected to Rename file '.$file.'.');
+    // / The extension a file had is the one it keeps, spelt as it was.
+    redeclare($extensionPart, (preg_match('/\.(tar\.(?:gz|bz2|xz|zst))$/i', $file, $extensionMatch) === 1) ? $extensionMatch[1] : (string)pathinfo($file, PATHINFO_EXTENSION));
+    redeclare($baseName, substr($file, 0, -(strlen($extensionPart) + 1)));
+    // / The tokens are filled in before the name is sanitized, so what a file's own name brings is held to the same rules as what the pattern brings.
+    // / The name before it is shredded first, as redeclare() would, because a list() cannot pass through redeclare().
+    purgeSensitiveMemory($EnableMemoryProtection, $newBase, $baseIsSanitized);
+    list ($newBase, $baseIsSanitized) = sanitize(str_replace(array('{name}', '{n}', '{date}'), array($baseName, (string)$fileNumber, $todaysDate), $cleanPattern), TRUE);
+    redeclare($newName, (string)$newBase.'.'.$extensionPart);
+    if (!$baseIsSanitized or !is_string($newBase) or $newBase === '' or strtolower($newName) === 'index.html' or in_array(strtolower($newName), (array)$DangerousFiles)) {
+      $RenameErrors = TRUE;
+      warningEntry('The pattern gave '.$file.' a name this server does not accept, so it was not renamed.');
+      continue; }
+    if ($newName === $file) {
+      $RenamedFiles[] = $file;
+      if ($Verbose) logEntry('The file '.$file.' already has the name it was given.');
+      continue; }
+    redeclare($candidateName, $newName);
+    for ($attemptNumber = 0; $attemptNumber < 3 && !$fileWasRenamed; $attemptNumber++) {
+      clearstatcache(TRUE, $ConvertDir.$candidateName);
+      // / A name that is taken, or that a link holds, is passed over for the next free one.
+      if (file_exists($ConvertDir.$candidateName) or is_link($ConvertDir.$candidateName)) {
+        purgeSensitiveMemory($EnableMemoryProtection, $candidateName, $freePath, $nameWasFound);
+        list ($nameWasFound, $freePath, $candidateName) = findFreeOutputName($ConvertDir, (string)$newBase, $extensionPart);
+        if (!$nameWasFound) break; }
+      purgeSensitiveMemory($EnableMemoryProtection, $fileWasRenamed, $nameWasTaken);
+      list ($fileWasRenamed, $nameWasTaken) = renameFileInDirectory($ConvertDir, $file, $candidateName);
+      // / A rename that failed for any reason but a taken name is not tried again, because trying again would fail the same way.
+      if (!$fileWasRenamed && !$nameWasTaken) break; }
+    if ($fileWasRenamed) {
+      $RenamedFiles[] = $candidateName;
+      if ($Verbose) logEntry('Renamed file '.$file.' to '.$candidateName.'.'); }
+    else {
+      $RenameErrors = TRUE;
+      errorEntry('Could not rename file '.$file.' to '.$newName.'!', 23103, FALSE); } }
+  if (count($RenamedFiles) > 0) $RenameComplete = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $filePath, $extensionPart, $baseName, $newBase, $newName, $candidateName, $freePath, $todaysDate, $cleanPattern, $filesEntryPoint, $variableIsSanitized, $patternIsSanitized, $renameIsPossible, $baseIsSanitized, $nameWasFound, $fileWasRenamed, $nameWasTaken, $filesPipelineIsReady, $fileNumber, $attemptNumber, $extensionMatch, $FilesToRename, $NamePattern);
+  return array($RenameComplete, $RenameErrors, $RenamedFiles); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -5221,7 +5474,7 @@ function askOperator($promptText) {
 // / kernel is never executed, the same guarantee a mismatched Engine gets.
 // / The build cannot write this pin or the Engine's, because it runs inside both. Move them
 // / by hand, with the version each file declares.
-$RequiredKernelVersion = 'v4.1.2';
+$RequiredKernelVersion = 'v4.1.8';
 $KernelFile = dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Kernel'.DIRECTORY_SEPARATOR.'kernel.php';
 $KernelVersionMatch = array();
 if (!is_readable($KernelFile)) {
@@ -5253,7 +5506,7 @@ list ($InstallationIsVerified, $ConfigFile, $Version, $CoreLoaded) = verifyInsta
 if (!$InstallationIsVerified) quickDie('Could not verify installation!', 5);
 
 // / The following code verifies that string inputs to the core are properly sanitized.
-list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport, $FilesToExtract) = verifyInputs();
+list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport, $FilesToExtract, $FilesToRename, $RenamePattern, $FilesToStrip, $FilesToMerge, $FilesToSplit, $WorkflowPreview, $WorkflowPreviewDocument) = verifyInputs();
 if (!$InputsAreVerified) quickDie('Could not verify inputs!', 6);
 
 // / The following code verifies enough user information to generate a unique session identifier.
@@ -5441,7 +5694,7 @@ if (!$CommandLineHandled && $UserType === 'web') {
     // / A caller can tell a failure from a success only by reading the body, & a whole page carries the script literal that recognises a core error.
     // / A file operation returns a filename or an error, & never a page.
     // / An upload is known by its files, because Dropzone sends the file & the two tokens & no upload field.
-    if (!isset($_POST['filesToArchive']) && !isset($_POST['filesToExtract']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete']) && !isset($_POST['filesToIdentify']) && !isset($_POST['workflowLibrary']) && !isset($_POST['workflowRun']) && !isset($_POST['workflowDocument']) && !isset($_POST['workflowStatus']) && !isset($_POST['workflowStop']) && !isset($_POST['workflowOperations']) && !isset($_POST['workflowCheck']) && !isset($_POST['workflowExport'])) {
+    if (!isset($_POST['filesToArchive']) && !isset($_POST['filesToExtract']) && !isset($_POST['filesToRename']) && !isset($_POST['filesToStrip']) && !isset($_POST['filesToMerge']) && !isset($_POST['filesToSplit']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete']) && !isset($_POST['filesToIdentify']) && !isset($_POST['workflowLibrary']) && !isset($_POST['workflowRun']) && !isset($_POST['workflowDocument']) && !isset($_POST['workflowStatus']) && !isset($_POST['workflowStop']) && !isset($_POST['workflowOperations']) && !isset($_POST['workflowCheck']) && !isset($_POST['workflowExport']) && !isset($_POST['workflowPreview']) && !isset($_POST['workflowPreviewDocument'])) {
 
       // / The following code sets the GUI for the session.
       list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
@@ -5544,6 +5797,61 @@ if (!$CommandLineHandled && $UserType === 'web') {
           if ($ExtractErrors) logEntry('Extract finished with errors.');
           if ($Verbose) logEntry('Extract Complete.'); }
         $BudgetWasReleased = giveBackOperationBudget('extract'); }
+
+      // / The following code is performed when a user renames a selection of files.
+      // / The name each file now has is printed one per line, as an extraction names what it placed, & an interface draws its file list again.
+      // / Renaming reads nothing inside a file, so it takes no budget, as a deletion takes none.
+      if (isset($_POST['filesToRename'])) {
+        logEntry('Initiating Renamer.');
+        list ($RenameComplete, $RenameErrors, $RenamedFiles, $RenameFindings) = invokeRenameOperation($FilesToRename, array('Pattern' => $RenamePattern));
+        // / The core prints, & the operation returned, as contract 6 says. The interface reads one line per file.
+        foreach ($RenamedFiles as $RenamedFile) print($RenamedFile.$Lol);
+        if (!$RenameComplete) errorEntry('Rename Failed!', 33, TRUE);
+        if ($RenameErrors) logEntry('Rename finished with errors.');
+        if ($Verbose) logEntry('Rename Complete.'); }
+
+      // / The following code is performed when a user strips the metadata from a selection of files.
+      // / The clean copy made of each file is printed one per line, & an interface draws its file list again.
+      // / A refusal prints the alert a refused archive request prints, for the same reason.
+      if (isset($_POST['filesToStrip'])) {
+        if (!takeOperationBudget('metadata')) print($Alert3.$Lol);
+        else {
+          logEntry('Initiating Metadata Scrubber.');
+          list ($StripComplete, $StripErrors, $StrippedFiles, $StripFindings) = invokeStripMetadataOperation($FilesToStrip, array('Filename' => $UserFilename));
+          // / The core prints, & the operation returned, as contract 6 says. The interface reads one line per file.
+          foreach ($StrippedFiles as $StrippedFile) print($StrippedFile.$Lol);
+          if (!$StripComplete) errorEntry('Strip Metadata Failed!', 34, TRUE);
+          if ($StripErrors) logEntry('Strip Metadata finished with errors.');
+          if ($Verbose) logEntry('Strip Metadata Complete.'); }
+        $BudgetWasReleased = giveBackOperationBudget('metadata'); }
+
+      // / The following code is performed when a user merges a selection of PDFs into one.
+      // / The PDF it made is printed on a line of its own, & an interface draws its file list again.
+      if (isset($_POST['filesToMerge'])) {
+        if (!takeOperationBudget('merge')) print($Alert3.$Lol);
+        else {
+          logEntry('Initiating PDF Merger.');
+          list ($MergeComplete, $MergeErrors, $MergedFiles, $MergeFindings) = invokeMergeOperation($FilesToMerge, array('Filename' => $UserFilename));
+          // / The core prints, & the operation returned, as contract 6 says. The interface reads one line per file.
+          foreach ($MergedFiles as $MergedFile) print($MergedFile.$Lol);
+          if (!$MergeComplete) errorEntry('Merge Failed!', 35, TRUE);
+          if ($MergeErrors) logEntry('Merge finished with errors.');
+          if ($Verbose) logEntry('Merge Complete.'); }
+        $BudgetWasReleased = giveBackOperationBudget('merge'); }
+
+      // / The following code is performed when a user splits a selection of PDFs into one PDF for each page.
+      // / Every page it made is printed one per line, & an interface draws its file list again.
+      if (isset($_POST['filesToSplit'])) {
+        if (!takeOperationBudget('split')) print($Alert3.$Lol);
+        else {
+          logEntry('Initiating PDF Splitter.');
+          list ($SplitComplete, $SplitErrors, $SplitFiles, $SplitFindings) = invokeSplitOperation($FilesToSplit, array());
+          // / The core prints, & the operation returned, as contract 6 says. The interface reads one line per file.
+          foreach ($SplitFiles as $SplitFile) print($SplitFile.$Lol);
+          if (!$SplitComplete) errorEntry('Split Failed!', 36, TRUE);
+          if ($SplitErrors) logEntry('Split finished with errors.');
+          if ($Verbose) logEntry('Split Complete.'); }
+        $BudgetWasReleased = giveBackOperationBudget('split'); }
 
       // / The following code is performed when a user converts a selection of files.
       if (isset($_POST['convertSelected'])) {
@@ -5649,12 +5957,15 @@ if (!$CommandLineHandled && $UserType === 'web') {
       // / Each answer is one line of JSON under the key Workflow, as Identify answers under its own.
       // / The work is the Workflow Core's. A workflow runs in a worker of its own, so a request here lists, starts, reads or stops one.
       // / A page's builder asks what it may build from, has a workflow checked or a library's workflow given as a document, & runs what it built.
-      // / Which files a user may name is this application's policy, so a run is handed only files this session lists.
+      // / Which files a user may name is this application's policy, so a run & a preview are handed only files this session lists.
+      // / A preview names the files each step would take & runs nothing. It is answered before a run is looked for, so a request naming both runs nothing.
       // / A server with workflows off, or without the Workflow Core, answers that none are available, & says why in its log.
-      if (isset($_POST['workflowLibrary']) or isset($_POST['workflowRun']) or isset($_POST['workflowDocument']) or isset($_POST['workflowStatus']) or isset($_POST['workflowStop']) or isset($_POST['workflowOperations']) or isset($_POST['workflowCheck']) or isset($_POST['workflowExport'])) {
+      if (isset($_POST['workflowLibrary']) or isset($_POST['workflowRun']) or isset($_POST['workflowDocument']) or isset($_POST['workflowStatus']) or isset($_POST['workflowStop']) or isset($_POST['workflowOperations']) or isset($_POST['workflowCheck']) or isset($_POST['workflowExport']) or isset($_POST['workflowPreview']) or isset($_POST['workflowPreviewDocument'])) {
         if (!$EnableWorkflows or !$WorkflowCoreActive or !function_exists('encodeWorkflowReply')) {
           warningEntry('A workflow was requested & '.($EnableWorkflows ? 'the Workflow Core is unavailable.' : 'workflows are disabled.'));
           print('{"Workflow":{"Available":false}}'.$Lol); }
+        else if (isset($_POST['workflowPreview'])) print(encodeWorkflowReply(previewLibraryWorkflow($WorkflowPreview, array_values(array_intersect((array)$WorkflowFiles, getFiles($ConvertDir))))).$Lol);
+        else if (isset($_POST['workflowPreviewDocument'])) print(encodeWorkflowReply(previewWorkflowDocument($WorkflowPreviewDocument, array_values(array_intersect((array)$WorkflowFiles, getFiles($ConvertDir))))).$Lol);
         else if (isset($_POST['workflowRun'])) print(encodeWorkflowReply(startWorkflowRun($WorkflowName, array_values(array_intersect((array)$WorkflowFiles, getFiles($ConvertDir))))).$Lol);
         else if (isset($_POST['workflowDocument'])) print(encodeWorkflowReply(startWorkflowDocumentRun($WorkflowDocument, array_values(array_intersect((array)$WorkflowFiles, getFiles($ConvertDir))))).$Lol);
         else if (isset($_POST['workflowStop'])) print(encodeWorkflowReply(stopWorkflowRun()).$Lol);

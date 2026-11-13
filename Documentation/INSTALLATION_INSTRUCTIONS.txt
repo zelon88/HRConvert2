@@ -259,6 +259,12 @@ without them, & a note on each file names the tool it went without. It installs 
 package manager. FFprobe is made by the FFMPEG build, so where FFMPEG came without it, it runs
 that whole build again. PDFInfo comes in the same package as Poppler Utils.
 
+RUN  'sudo php convertCore.php --setup --install-depends --subsystem=Metadata'  AFTER UPDATING TO
+v4.1.8. It installs mat2 from the package manager, which brings ExifTool with it, & 0.13 is the
+oldest it accepts. Until it is installed, Strip Metadata fails with error 41000 & -v says FAILED
+beside MAT2. Merge & Split need nothing new, because PDFUnite & PDFSeparate come in the same
+package as Poppler Utils, & -v names each.
+
 DO NOT HAND THE INSTALLATION TO THE WEB SERVER USER WITH chown. Root runs that code. A
 command run as root no longer leaves a logfile or a secret the web server user cannot use.
 

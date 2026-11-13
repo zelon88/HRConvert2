@@ -37,7 +37,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -417,8 +417,8 @@ $Gui2Text126 = 'Berkas OpenSCAD';
 $Gui2Text127 = 'Strim';
 // / 'Workflows'
 $Gui2Text128 = 'Alur Kerja';
-// / 'Files'
-$Gui2Text129 = 'Berkas';
+// / 'Selected Files'
+$Gui2Text129 = 'Berkas Terpilih';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'Pilih berkas pada daftar di bawah.';
 // / 'Select By Name: '
@@ -482,8 +482,8 @@ $Gui2Text159 = 'Operasi yang dibutuhkan alur kerja ini tidak tersedia.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Alur kerja berhenti secara tak terduga.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'Pipeline';
+// / 'Available Pipelines'
+$Gui2Text161 = 'Pipeline Yang Tersedia';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'Pilih pipeline di atas...';
 // / 'Select Pipeline...'
@@ -498,8 +498,8 @@ $Gui2Text166 = 'Opsi';
 $Gui2Text167 = 'Kembali';
 // / 'Take: '
 $Gui2Text168 = 'Ambil: ';
-// / 'the ticked files'
-$Gui2Text169 = 'berkas yang dicentang';
+// / 'the selected files'
+$Gui2Text169 = 'berkas yang dipilih';
 // / 'the files step {step} made'
 $Gui2Text170 = 'berkas yang dibuat langkah {step}';
 // / 'each file on its own'
@@ -554,6 +554,72 @@ $Gui2Text194 = 'Ekstrak Arsip Ini';
 $Gui2Text195 = 'Setiap berkas di dalamnya ditambahkan ke berkas Anda, dengan namanya sendiri atau nama bebas berikutnya.';
 // / 'Extract Files'
 $Gui2Text196 = 'Ekstrak Berkas';
+// / 'to {format}'
+$Gui2Text197 = 'ke {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'Alur kerja ini menghapus berkas. Berkas yang dihapus tidak dapat dikembalikan.';
+// / 'Delete & Run'
+$Gui2Text199 = 'Hapus Dan Jalankan';
+// / 'Cancel'
+$Gui2Text200 = 'Batal';
+// / 'Rename'
+$Gui2Text201 = 'Ganti Nama';
+// / 'Close Rename Options'
+$Gui2Text202 = 'Tutup Opsi Ganti Nama';
+// / 'Rename This File'
+$Gui2Text203 = 'Ganti Nama Berkas Ini';
+// / 'New Name'
+$Gui2Text204 = 'Nama Baru';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'Gunakan {name} untuk namanya sekarang, {n} untuk urutannya di antara berkas yang dipilih, dan {date} untuk tanggal hari ini. Ekstensinya tetap.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'Hapus Metadata';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'Tutup Opsi Metadata';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'Hapus Metadata Dari Berkas Ini';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'Salinan dibuat di sampingnya tanpa penulis, tempat, tanggal, dan perangkat lunak yang membuatnya. Apa yang ditampilkannya tetap seperti semula.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'Gabungkan PDF';
+// / 'Split PDF'
+$Gui2Text211 = 'Pisahkan PDF';
+// / 'Merge Or Split'
+$Gui2Text212 = 'Gabungkan Atau Pisahkan';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'Tutup Opsi Gabungkan Dan Pisahkan';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'Gabungkan PDF Terpilih Menjadi Satu';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'Halaman-halamannya berurutan sesuai urutan PDF dipilih.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'Pilih dua PDF atau lebih untuk menggabungkannya.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'Buat PDF Dari Setiap Halaman';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'Setiap berkas yang dipilih ikut dihapus: {count} berkas.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'Setiap berkas yang dipilih ikut diganti namanya: {count} berkas.';
+// / 'Library'
+$Gui2Text220 = 'Pustaka';
+// / 'from Selected Files'
+$Gui2Text221 = 'dari Berkas Terpilih';
+// / 'from Step {step}'
+$Gui2Text222 = 'dari Langkah {step}';
+// / 'Preview'
+$Gui2Text223 = 'Pratinjau';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'Jika alur kerja dijalankan sekarang, setiap langkah akan mengambil:';
+// / 'Left out: '
+$Gui2Text225 = 'Tidak diambil: ';
+// / 'No files.'
+$Gui2Text226 = 'Tidak ada berkas.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'semua berkas di daftar saat langkah itu berjalan';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'Alur kerja ini menghapus berkas-berkas ini. Berkas yang dihapus tidak dapat dikembalikan.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'Sebuah langkah mengalami kesalahan, jadi alur kerja berhenti sebelum langkah yang menghapus berkas.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

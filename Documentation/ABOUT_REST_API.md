@@ -145,6 +145,17 @@ POST inputs are organized into distinct functional operational blocks based on p
   * Every file each archive holds is placed in the session, under its own name or the next free one, & the reply names every file placed, one per line.
   * An archive refused for a password, its size, its count of files or its format places nothing & is named in a warning. A request that placed nothing ends with error 32.
 
+### ✏️ F3. Rename, Strip Metadata, Merge & Split Operations
+* `filesToRename` *(String or JSON Array)* & `renamepattern` *(String, up to 64 characters)*
+  * Renames each file from the pattern. `{name}` is its name without its extension, `{n}` its place in `filesToRename` counting from 1, & `{date}` the day it is renamed, as 2026-11-13.
+  * The extension is never changed, a taken name is given the next free one, & no file is ever written over. The reply names the name each file now has, one per line. A request that renamed nothing ends with error 33.
+* `filesToStrip` *(String or JSON Array)*
+  * Makes a copy of each file beside it without its metadata, named by `userfilename` or the file's own name, & the next free name when that is taken. The reply names every copy, one per line. A request that made nothing ends with error 34.
+* `filesToMerge` *(String or JSON Array)*
+  * Puts the PDFs named into one, in the order given, named by `userfilename` or `Merged`. The reply names it. A request that merged nothing ends with error 35.
+* `filesToSplit` *(String or JSON Array)*
+  * Makes a PDF of each page, `report-1.pdf`, `report-2.pdf` & so on, held to `--Maximum Extracted Files--` & `--Maximum Extracted Size--`. The reply names every page made. A request that made nothing ends with error 36.
+
 ### 🔍 G. Optical Character Recognition (OCR) Operations
 * `pdfworkSelected` *(String or JSON Array)*
   * Targets documents for data scanning and textual processing layers.
@@ -198,7 +209,7 @@ POST inputs are organized into distinct functional operational blocks based on p
 ### 🧭 K. Workflow Operations
 Every reply is one line of JSON under the key `Workflow`, after the doctype line that opens every reply. A server with `--Enable Workflows--` off, or without the Workflow Core, answers every one of them with `{"Workflow":{"Available":false}}` and says why only in its log. `ABOUT_WORKFLOWS.txt` describes the format, the operations and how a workflow runs.
 * `workflowLibrary` *(1)*
-  * Lists the workflows this session may run, each with `Id`, `Name`, `Description`, `Steps`, `AcceptsAll` and `Accepts`, the extensions its first step reads, and `NeedsSelection`, which is `false` when a Select step finds files of its own.
+  * Lists the workflows this session may run, each with `Id`, `Name`, `Description`, `Steps`, `AcceptsAll` and `Accepts`, the extensions its first step reads, `NeedsSelection`, which is `false` when a Select step finds files of its own, and `Deletes`, which is `true` when a step deletes files, so a page asks before it runs the workflow.
 * `workflowRun` *(String)* with `workflowFiles[]` *(one for each file)*
   * Starts the workflow with that identifier on those files, in that order, and returns as soon as its worker starts: `{"Workflow":{"Started":true,"JobId":"...","Reason":""}}`.
   * A run that does not start says why in `Reason`, asked in this order: `disabled`, `unknown`, `busy`, `files`, `nothing`, `server` or `start`.
@@ -210,8 +221,13 @@ Every reply is one line of JSON under the key `Workflow`, after the doctype line
   * Asks the running workflow to stop before its next operation. `Stop` is `stopping`, `cleared` or `none`. Read `workflowStatus` until it says `stopped`.
 * `workflowDocument` *(String)* with `workflowFiles[]` *(one for each file)*
   * Starts a workflow a page built, sent as its JSON text, and replies as `workflowRun` does. It is checked exactly as a library's workflow is and held to every limit. `Reason` may also be `builder`, when the builder is off, or `invalid`, with `Problems` naming everything to fix in the server's words, which are English.
+* `workflowPreview` *(String)* with `workflowFiles[]` *(one for each file)*
+  * Names the files each step of that workflow would take were it run now on those files, and runs nothing, takes no budget and keeps nothing: `{"Workflow":{"Previewed":true,"Reason":"","Steps":[{"Operation":"Convert","From":["selection"],"Known":true,"Takes":["notes.docx"],"LeftOut":1,"Unknown":[],"Consumes":""}]}}`.
+  * `Reason` is what a run would be refused for now, `files` or `nothing`, and is empty when it would start. A preview that is not made says `disabled`, `unknown` or `files`. A step taking what an operation makes is not `Known` until it runs, and `Unknown` names those references. `Consumes` is `deleted` for a step that deletes what it takes.
+* `workflowPreviewDocument` *(String)* with `workflowFiles[]` *(one for each file)*
+  * Previews a workflow a page built, sent as its JSON text, and replies as `workflowPreview` does, with `builder` and `invalid` as `workflowDocument` gives them. A request naming a preview and a run is answered as the preview and runs nothing.
 * `workflowOperations` *(1)*
-  * Describes what a page's builder may build from: `Builder`, `ImportExport`, `MaxSteps`, `MaxFiles`, the `Operations` this server has on, each with its `Modes` and `Options`, and the `Kinds` a filter may name. `Operations` and `Kinds` are empty unless the builder is on.
+  * Describes what a page's builder may build from: `Builder`, `ImportExport`, `MaxSteps`, `MaxFiles`, the `Operations` this server has on, each with its `Modes`, its `Options` and `Consumes`, which is `deleted` for Delete, `renamed` for Rename & empty otherwise, and the `Kinds` a filter may name. An option whose choices are sorted by kind of file carries `Groups`, a list of `Name` & `Choices`. `Operations` and `Kinds` are empty unless the builder is on.
 * `workflowCheck` *(String)*
   * Checks a workflow sent as JSON text, and runs and keeps nothing: `Allowed`, `Valid`, `Usable`, `Problems`, and the workflow in canonical form as `Document`, with the `FileName` an export saves it under.
 * `workflowExport` *(String)*

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility chec takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -408,8 +408,8 @@ $Gui2Text126 = 'File OpenSCAD';
 $Gui2Text127 = 'Flussi';
 // / 'Workflows'
 $Gui2Text128 = 'Flussi Di Lavoro';
-// / 'Files'
-$Gui2Text129 = 'File';
+// / 'Selected Files'
+$Gui2Text129 = 'File Selezionati';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'Seleziona i file nell’elenco qui sotto.';
 // / 'Select By Name: '
@@ -473,8 +473,8 @@ $Gui2Text159 = 'Un’operazione necessaria a questo flusso di lavoro non è disp
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Il flusso di lavoro si è fermato inaspettatamente.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'Pipeline';
+// / 'Available Pipelines'
+$Gui2Text161 = 'Pipeline Disponibili';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'Seleziona una pipeline qui sopra...';
 // / 'Select Pipeline...'
@@ -489,8 +489,8 @@ $Gui2Text166 = 'Opzioni';
 $Gui2Text167 = 'Indietro';
 // / 'Take: '
 $Gui2Text168 = 'Prendi: ';
-// / 'the ticked files'
-$Gui2Text169 = 'i file spuntati';
+// / 'the selected files'
+$Gui2Text169 = 'i file selezionati';
 // / 'the files step {step} made'
 $Gui2Text170 = 'i file creati dal passaggio {step}';
 // / 'each file on its own'
@@ -545,6 +545,72 @@ $Gui2Text194 = 'Estrai Questo Archivio';
 $Gui2Text195 = 'Ogni file che contiene si aggiunge ai tuoi file, con il proprio nome o con il prossimo nome libero.';
 // / 'Extract Files'
 $Gui2Text196 = 'Estrai File';
+// / 'to {format}'
+$Gui2Text197 = 'in {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'Questo flusso di lavoro elimina dei file. Un file eliminato non può essere recuperato.';
+// / 'Delete & Run'
+$Gui2Text199 = 'Elimina Ed Esegui';
+// / 'Cancel'
+$Gui2Text200 = 'Annulla';
+// / 'Rename'
+$Gui2Text201 = 'Rinomina';
+// / 'Close Rename Options'
+$Gui2Text202 = 'Chiudi Opzioni Di Rinomina';
+// / 'Rename This File'
+$Gui2Text203 = 'Rinomina Questo File';
+// / 'New Name'
+$Gui2Text204 = 'Nuovo Nome';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'Usa {name} per il nome che ha, {n} per la sua posizione tra i file selezionati e {date} per la data di oggi. La sua estensione viene mantenuta.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'Rimuovi Metadati';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'Chiudi Opzioni Dei Metadati';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'Rimuovi I Metadati Da Questo File';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'Accanto viene creata una copia senza autori, luoghi, date e il software che l\'ha creato. Ciò che mostra resta com\'era.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'Unisci PDF';
+// / 'Split PDF'
+$Gui2Text211 = 'Dividi PDF';
+// / 'Merge Or Split'
+$Gui2Text212 = 'Unisci O Dividi';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'Chiudi Opzioni Di Unione E Divisione';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'Unisci I PDF Selezionati In Uno';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'Le loro pagine si susseguono nell\'ordine in cui i PDF sono stati selezionati.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'Seleziona due o più PDF per unirli.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'Crea Un PDF Per Ogni Pagina';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'Ogni file selezionato viene eliminato con esso: {count} file.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'Ogni file selezionato viene rinominato con esso: {count} file.';
+// / 'Library'
+$Gui2Text220 = 'Libreria';
+// / 'from Selected Files'
+$Gui2Text221 = 'da File Selezionati';
+// / 'from Step {step}'
+$Gui2Text222 = 'dal Passo {step}';
+// / 'Preview'
+$Gui2Text223 = 'Anteprima';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'Se il flusso di lavoro venisse eseguito ora, ogni passo prenderebbe:';
+// / 'Left out: '
+$Gui2Text225 = 'Esclusi: ';
+// / 'No files.'
+$Gui2Text226 = 'Nessun file.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'tutti i file dell’elenco al momento in cui il passo viene eseguito';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'Questo flusso di lavoro elimina questi file. Un file eliminato non può essere recuperato.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'Un passo ha avuto errori, quindi il flusso di lavoro si è fermato prima del passo che elimina i file.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

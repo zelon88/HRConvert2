@@ -35,7 +35,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -415,8 +415,8 @@ $Gui2Text126 = 'OpenSCAD ファイル';
 $Gui2Text127 = 'ストリーム';
 // / 'Workflows'
 $Gui2Text128 = 'ワークフロー';
-// / 'Files'
-$Gui2Text129 = 'ファイル';
+// / 'Selected Files'
+$Gui2Text129 = '選択したファイル';
 // / 'Select files in the list below.'
 $Gui2Text130 = '下の一覧からファイルを選択してください。';
 // / 'Select By Name: '
@@ -480,8 +480,8 @@ $Gui2Text159 = 'このワークフローに必要な操作が利用できませ�
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'ワークフローが予期せず停止しました。';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'パイプライン';
+// / 'Available Pipelines'
+$Gui2Text161 = '利用できるパイプライン';
 // / 'Select a pipeline above...'
 $Gui2Text162 = '上からパイプラインを選択してください...';
 // / 'Select Pipeline...'
@@ -496,8 +496,8 @@ $Gui2Text166 = 'オプション';
 $Gui2Text167 = '戻る';
 // / 'Take: '
 $Gui2Text168 = '対象：';
-// / 'the ticked files'
-$Gui2Text169 = 'チェックしたファイル';
+// / 'the selected files'
+$Gui2Text169 = '選択したファイル';
 // / 'the files step {step} made'
 $Gui2Text170 = 'ステップ {step} が作成したファイル';
 // / 'each file on its own'
@@ -552,6 +552,72 @@ $Gui2Text194 = 'このアーカイブを展開';
 $Gui2Text195 = '中のファイルはすべて、元の名前か次に空いている名前で、あなたのファイルに加わります。';
 // / 'Extract Files'
 $Gui2Text196 = 'ファイルを展開';
+// / 'to {format}'
+$Gui2Text197 = '{format} へ';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'このワークフローはファイルを削除します。削除したファイルは元に戻せません。';
+// / 'Delete & Run'
+$Gui2Text199 = '削除して実行';
+// / 'Cancel'
+$Gui2Text200 = 'キャンセル';
+// / 'Rename'
+$Gui2Text201 = '名前を変更';
+// / 'Close Rename Options'
+$Gui2Text202 = '名前の変更オプションを閉じる';
+// / 'Rename This File'
+$Gui2Text203 = 'このファイルの名前を変更';
+// / 'New Name'
+$Gui2Text204 = '新しい名前';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = '{name} は今の名前、{n} は選択したファイルの中での順番、{date} は今日の日付になります。拡張子はそのまま残ります。';
+// / 'Strip Metadata'
+$Gui2Text206 = 'メタデータを削除';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'メタデータのオプションを閉じる';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'このファイルのメタデータを削除';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = '作成者、場所、日時、作成したソフトウェアを除いたコピーを隣に作ります。表示される内容は変わりません。';
+// / 'Merge PDFs'
+$Gui2Text210 = 'PDF を結合';
+// / 'Split PDF'
+$Gui2Text211 = 'PDF を分割';
+// / 'Merge Or Split'
+$Gui2Text212 = '結合または分割';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = '結合と分割のオプションを閉じる';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = '選択した PDF を 1 つに結合';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'ページは PDF を選択した順に並びます。';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = '結合するには PDF を 2 つ以上選択してください。';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = '各ページを PDF にする';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = '選択したファイルもすべて削除されます：{count} 件。';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = '選択したファイルもすべて名前が変わります：{count} 件。';
+// / 'Library'
+$Gui2Text220 = 'ライブラリ';
+// / 'from Selected Files'
+$Gui2Text221 = '選択したファイルから';
+// / 'from Step {step}'
+$Gui2Text222 = 'ステップ {step} から';
+// / 'Preview'
+$Gui2Text223 = 'プレビュー';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = '今ワークフローを実行すると、各ステップが対象にするファイル：';
+// / 'Left out: '
+$Gui2Text225 = '除外：';
+// / 'No files.'
+$Gui2Text226 = 'ファイルはありません。';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'ステップの実行時に一覧にあるすべてのファイル';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'このワークフローは次のファイルを削除します。削除したファイルは元に戻せません。';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'ステップでエラーが発生したため、ファイルを削除するステップの前でワークフローを停止しました。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

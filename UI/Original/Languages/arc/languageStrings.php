@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -410,8 +410,8 @@ $Gui2Text126 = 'ܦܬܩ̈ܐ ܕ-OpenSCAD';
 $Gui2Text127 = 'ܪ̈ܕܝܬܐ';
 // / 'Workflows'
 $Gui2Text128 = 'ܡܪ̈ܕܝܬܐ ܕܦܘܠܚܢܐ';
-// / 'Files'
-$Gui2Text129 = 'ܦܬܩ̈ܐ';
+// / 'Selected Files'
+$Gui2Text129 = 'ܦܬܩ̈ܐ ܓܒܝ̈ܐ';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'ܓܒܝ ܦܬܩ̈ܐ ܒܪܫܝܡܬܐ ܕܠܬܚܬ.';
 // / 'Select By Name: '
@@ -475,8 +475,8 @@ $Gui2Text159 = 'ܦܘܠܚܢܐ ܕܣܢܝܩܐ ܠܗ ܗܕܐ ܡܪܕܝܬܐ ܠܐ ܡܛܝܒ
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܐܬܟܠܝܬ ܕܠܐ ܣܘܟܝܐ.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'ܩܢܝ̈ܐ';
+// / 'Available Pipelines'
+$Gui2Text161 = 'ܩܢܝ̈ܐ ܕܐܝܬ';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'ܓܒܝ ܩܢܝܐ ܠܥܠ...';
 // / 'Select Pipeline...'
@@ -491,8 +491,8 @@ $Gui2Text166 = 'ܓܒܝܘܬ̈ܐ';
 $Gui2Text167 = 'ܠܒܣܬܪܐ';
 // / 'Take: '
 $Gui2Text168 = 'ܣܒ: ';
-// / 'the ticked files'
-$Gui2Text169 = 'ܦܬܩ̈ܐ ܪܫܝܡ̈ܐ';
+// / 'the selected files'
+$Gui2Text169 = 'ܦܬܩ̈ܐ ܓܒܝ̈ܐ';
 // / 'the files step {step} made'
 $Gui2Text170 = 'ܦܬܩ̈ܐ ܕܥܒܕ ܕܪܓܐ {step}';
 // / 'each file on its own'
@@ -547,6 +547,72 @@ $Gui2Text194 = 'ܐܦܩ ܗܢܐ ܓܙܐ';
 $Gui2Text195 = 'ܟܠ ܦܬܩܐ ܕܐܝܬ ܒܗ ܡܬܬܘܣܦ ܠܦܬܩ̈ܐ ܕܝܠܟ ܒܫܡܗ ܐܘ ܒܫܡܐ ܚܐܪܐ ܕܒܬܪܗ.';
 // / 'Extract Files'
 $Gui2Text196 = 'ܐܦܩ ܦܬܩ̈ܐ';
+// / 'to {format}'
+$Gui2Text197 = 'ܠܘܬ {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'ܗܕܐ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܛܠܩܐ ܦܬܩ̈ܐ. ܦܬܩܐ ܛܠܝܩܐ ܠܐ ܡܫܟܚ ܕܢܗܦܟ.';
+// / 'Delete & Run'
+$Gui2Text199 = 'ܛܠܘܩ ܘܪܗܛ';
+// / 'Cancel'
+$Gui2Text200 = 'ܒܛܠ';
+// / 'Rename'
+$Gui2Text201 = 'ܫܚܠܦ ܫܡܐ';
+// / 'Close Rename Options'
+$Gui2Text202 = 'ܐܚܕ ܓܘܒܝ̈ܐ ܕܫܘܚܠܦ ܫܡܐ';
+// / 'Rename This File'
+$Gui2Text203 = 'ܫܚܠܦ ܫܡܐ ܕܗܢܐ ܦܬܩܐ';
+// / 'New Name'
+$Gui2Text204 = 'ܫܡܐ ܚܕܬܐ';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'ܦܠܚ {name} ܠܫܡܐ ܕܐܝܬ ܠܗ، {n} ܠܕܘܟܬܗ ܒܝܬ ܦܬܩ̈ܐ ܓܒܝ̈ܐ ܘ {date} ܠܝܘܡܐ ܕܝܘܡܢܐ. ܫܘܓܪܗ ܦܐܫ ܐܝܟ ܕܐܝܬܘܗܝ.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'ܫܩܘܠ ܡܝܛܕܬܐ';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'ܐܚܕ ܓܘܒܝ̈ܐ ܕܡܝܛܕܬܐ';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'ܫܩܘܠ ܡܝܛܕܬܐ ܡܢ ܗܢܐ ܦܬܩܐ';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'ܢܘܣܚܐ ܡܬܒܪܐ ܥܠ ܓܢܒܗ ܕܠܐ ܟܬܘܒ̈ܐ، ܕܘܟ̈ܝܬܐ، ܙܒܢ̈ܐ ܘܡܢܓܢܘܢܘܬܐ ܕܒܪܬܗ. ܡܐ ܕܡܚܘܐ ܦܐܫ ܐܝܟ ܕܐܝܬܘܗܝ.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'ܚܒܫ ܦܬܩ̈ܐ ܕPDF';
+// / 'Split PDF'
+$Gui2Text211 = 'ܦܠܓ PDF';
+// / 'Merge Or Split'
+$Gui2Text212 = 'ܚܒܫ ܐܘ ܦܠܓ';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'ܐܚܕ ܓܘܒܝ̈ܐ ܕܚܒܫܐ ܘܦܠܓܐ';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'ܚܒܫ ܦܬܩ̈ܐ ܕPDF ܓܒܝ̈ܐ ܠܚܕ';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'ܦܐܬ̈ܐ ܕܝܠܗܘܢ ܐܬܝ̈ܢ ܚܕܐ ܒܬܪ ܚܕܐ ܐܝܟ ܛܘܟܣܐ ܕܐܬܓܒܝܘ.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'ܓܒܝ ܬܪܝܢ ܐܘ ܝܬܝܪ ܦܬܩ̈ܐ ܕPDF ܕܬܚܒܫ ܐܢܘܢ.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'ܥܒܕ ܚܕ PDF ܡܢ ܟܠ ܦܐܬܐ';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'ܟܠ ܦܬܩܐ ܓܒܝܐ ܡܬܛܠܩ ܥܡܗ: {count}.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'ܫܡܐ ܕܟܠ ܦܬܩܐ ܓܒܝܐ ܡܫܬܚܠܦ ܥܡܗ: {count}.';
+// / 'Library'
+$Gui2Text220 = 'ܒܝܬ ܟܬܒ̈ܐ';
+// / 'from Selected Files'
+$Gui2Text221 = 'ܡܢ ܦܬܩ̈ܐ ܓܒܝ̈ܐ';
+// / 'from Step {step}'
+$Gui2Text222 = 'ܡܢ ܕܪܓܐ {step}';
+// / 'Preview'
+$Gui2Text223 = 'ܚܙܝܬܐ ܩܕܡܝܬܐ';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'ܐܢ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܫܪܝܐ ܗܫܐ، ܟܠ ܕܪܓܐ ܢܣܒ:';
+// / 'Left out: '
+$Gui2Text225 = 'ܫܒܝܩ̈ܐ: ';
+// / 'No files.'
+$Gui2Text226 = 'ܠܝܬ ܦܬܩ̈ܐ.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'ܟܠ ܦܬܩܐ ܕܒܣܕܪܐ ܡܐ ܕܕܪܓܐ ܫܪܐ';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'ܗܕܐ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܛܠܩܐ ܗܠܝܢ ܦܬܩ̈ܐ. ܦܬܩܐ ܛܠܝܩܐ ܠܐ ܡܫܟܚ ܕܢܗܦܟ.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'ܚܕ ܕܪܓܐ ܗܘܘ ܠܗ ܦܘܕ̈ܢܐ، ܘܡܛܠ ܗܢܐ ܐܬܟܠܝܬ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܩܕܡ ܕܪܓܐ ܕܛܠܩ ܦܬܩ̈ܐ.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

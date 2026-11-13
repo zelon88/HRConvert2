@@ -122,7 +122,8 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
         </form>
       </div>
       <?php if ($FileCount > 0) { ?>
-      <div id='startOverOptionsDiv' name='startOverOptionsDiv' class='file-operation-panel' style='display:none; max-width:450px; margin-left:auto; margin-right:auto; text-align:center;'>
+      <?php // / The question Start Over asks is a panel, as every menu a button opens is, so it is drawn in the scheme's colours as the file list is. ?>
+      <div id='startOverOptionsDiv' name='startOverOptionsDiv' class='hrc2-panel hrc2-confirm' style='display:none; max-width:450px; margin-left:auto; margin-right:auto; text-align:center;'>
         <p><strong><?php echo isset($Gui1Text35) ? $Gui1Text35 : 'Delete every uploaded file &amp; start a new session?'; ?></strong></p>
         <input type='submit' id='startOverConfirm' name='startOverConfirm' class='info-button' value='<?php echo htmlspecialchars(isset($Gui1Text36) ? $Gui1Text36 : 'Start Over', ENT_QUOTES, 'UTF-8'); ?>'>
       </div>
@@ -369,9 +370,10 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
       // / grew past it.
       // / A ceiling in both places would give two nested scrollbars, which is worse than
       // / the overflow it was meant to fix.
+      // / The form is a panel, so it is drawn in the scheme's colours as the file list is, & each file dropped on it is a card.
       ?>
       <div id='dropzone' style='max-width:<?php echo $GuiWidth; ?>; margin:25px;'>
-        <form action='convertCore.php' class='dropzone' id='filesToUpload' name='filesToUpload' method='post' enctype='multipart/form-data'>
+        <form action='convertCore.php' class='dropzone hrc2-panel' id='filesToUpload' name='filesToUpload' method='post' enctype='multipart/form-data'>
         <input type='hidden' id='token1' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
         <input type='hidden' id='token2' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
         </form>

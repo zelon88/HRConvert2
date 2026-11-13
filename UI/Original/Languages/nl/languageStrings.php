@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -410,8 +410,8 @@ $Gui2Text126 = 'OpenSCAD-bestanden';
 $Gui2Text127 = 'Streams';
 // / 'Workflows'
 $Gui2Text128 = 'Workflows';
-// / 'Files'
-$Gui2Text129 = 'Bestanden';
+// / 'Selected Files'
+$Gui2Text129 = 'Geselecteerde Bestanden';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'Selecteer bestanden in de lijst hieronder.';
 // / 'Select By Name: '
@@ -475,8 +475,8 @@ $Gui2Text159 = 'Een bewerking die deze workflow nodig heeft, is niet beschikbaar
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'De workflow is onverwacht gestopt.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'Pijplijnen';
+// / 'Available Pipelines'
+$Gui2Text161 = 'Beschikbare Pijplijnen';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'Selecteer hierboven een pijplijn...';
 // / 'Select Pipeline...'
@@ -491,8 +491,8 @@ $Gui2Text166 = 'Opties';
 $Gui2Text167 = 'Terug';
 // / 'Take: '
 $Gui2Text168 = 'Neem: ';
-// / 'the ticked files'
-$Gui2Text169 = 'de aangevinkte bestanden';
+// / 'the selected files'
+$Gui2Text169 = 'de geselecteerde bestanden';
 // / 'the files step {step} made'
 $Gui2Text170 = 'de bestanden die stap {step} maakte';
 // / 'each file on its own'
@@ -547,6 +547,72 @@ $Gui2Text194 = 'Pak Dit Archief Uit';
 $Gui2Text195 = 'Elk bestand erin komt bij je bestanden, onder zijn eigen naam of de volgende vrije naam.';
 // / 'Extract Files'
 $Gui2Text196 = 'Pak Bestanden Uit';
+// / 'to {format}'
+$Gui2Text197 = 'naar {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'Deze workflow verwijdert bestanden. Een verwijderd bestand kan niet worden teruggehaald.';
+// / 'Delete & Run'
+$Gui2Text199 = 'Verwijderen En Uitvoeren';
+// / 'Cancel'
+$Gui2Text200 = 'Annuleren';
+// / 'Rename'
+$Gui2Text201 = 'Hernoemen';
+// / 'Close Rename Options'
+$Gui2Text202 = 'Hernoemopties Sluiten';
+// / 'Rename This File'
+$Gui2Text203 = 'Dit Bestand Hernoemen';
+// / 'New Name'
+$Gui2Text204 = 'Nieuwe Naam';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'Gebruik {name} voor de naam die het heeft, {n} voor zijn plaats tussen de geselecteerde bestanden en {date} voor vandaag. De extensie blijft behouden.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'Metadata Verwijderen';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'Metadata-opties Sluiten';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'De Metadata Uit Dit Bestand Verwijderen';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'Ernaast wordt een kopie gemaakt zonder de auteurs, plaatsen, datums en de software waarmee het is gemaakt. Wat het toont blijft zoals het was.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'PDF\'s Samenvoegen';
+// / 'Split PDF'
+$Gui2Text211 = 'PDF Splitsen';
+// / 'Merge Or Split'
+$Gui2Text212 = 'Samenvoegen Of Splitsen';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'Opties Voor Samenvoegen En Splitsen Sluiten';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'De Geselecteerde PDF\'s Samenvoegen Tot Eén';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'Hun pagina\'s volgen elkaar op in de volgorde waarin de PDF\'s zijn geselecteerd.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'Selecteer twee of meer PDF\'s om ze samen te voegen.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'Van Elke Pagina Een PDF Maken';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'Elk geselecteerd bestand wordt mee verwijderd: {count} bestanden.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'Elk geselecteerd bestand wordt mee hernoemd: {count} bestanden.';
+// / 'Library'
+$Gui2Text220 = 'Bibliotheek';
+// / 'from Selected Files'
+$Gui2Text221 = 'uit Geselecteerde Bestanden';
+// / 'from Step {step}'
+$Gui2Text222 = 'uit Stap {step}';
+// / 'Preview'
+$Gui2Text223 = 'Voorbeeld';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'Als de workflow nu werd uitgevoerd, zou elke stap nemen:';
+// / 'Left out: '
+$Gui2Text225 = 'Weggelaten: ';
+// / 'No files.'
+$Gui2Text226 = 'Geen bestanden.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'elk bestand in de lijst wanneer de stap wordt uitgevoerd';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'Deze workflow verwijdert deze bestanden. Een verwijderd bestand kan niet worden teruggehaald.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'Een stap had fouten, dus de workflow stopte vóór de stap die bestanden verwijdert.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

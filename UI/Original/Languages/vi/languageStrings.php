@@ -38,7 +38,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -418,8 +418,8 @@ $Gui2Text126 = 'Tệp OpenSCAD';
 $Gui2Text127 = 'Luồng';
 // / 'Workflows'
 $Gui2Text128 = 'Quy Trình';
-// / 'Files'
-$Gui2Text129 = 'Tệp';
+// / 'Selected Files'
+$Gui2Text129 = 'Tệp Đã Chọn';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'Chọn tệp trong danh sách bên dưới.';
 // / 'Select By Name: '
@@ -483,8 +483,8 @@ $Gui2Text159 = 'Một thao tác mà quy trình này cần không khả dụng.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Quy trình đã dừng bất ngờ.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'Đường Ống';
+// / 'Available Pipelines'
+$Gui2Text161 = 'Đường Ống Có Sẵn';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'Chọn một đường ống ở trên...';
 // / 'Select Pipeline...'
@@ -499,8 +499,8 @@ $Gui2Text166 = 'Tùy chọn';
 $Gui2Text167 = 'Quay lại';
 // / 'Take: '
 $Gui2Text168 = 'Lấy: ';
-// / 'the ticked files'
-$Gui2Text169 = 'các tệp đã đánh dấu';
+// / 'the selected files'
+$Gui2Text169 = 'các tệp đã chọn';
 // / 'the files step {step} made'
 $Gui2Text170 = 'các tệp do bước {step} tạo ra';
 // / 'each file on its own'
@@ -555,6 +555,72 @@ $Gui2Text194 = 'Giải Nén Tệp Nén Này';
 $Gui2Text195 = 'Mọi tệp bên trong được thêm vào tệp của bạn, với tên riêng của nó hoặc tên trống kế tiếp.';
 // / 'Extract Files'
 $Gui2Text196 = 'Giải Nén Tệp';
+// / 'to {format}'
+$Gui2Text197 = 'sang {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'Quy trình này xóa tệp. Tệp đã xóa không thể khôi phục.';
+// / 'Delete & Run'
+$Gui2Text199 = 'Xóa Và Chạy';
+// / 'Cancel'
+$Gui2Text200 = 'Hủy';
+// / 'Rename'
+$Gui2Text201 = 'Đổi Tên';
+// / 'Close Rename Options'
+$Gui2Text202 = 'Đóng Tùy Chọn Đổi Tên';
+// / 'Rename This File'
+$Gui2Text203 = 'Đổi Tên Tệp Này';
+// / 'New Name'
+$Gui2Text204 = 'Tên Mới';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'Dùng {name} cho tên hiện tại, {n} cho vị trí của nó trong các tệp đã chọn và {date} cho ngày hôm nay. Phần mở rộng được giữ nguyên.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'Xóa Siêu Dữ Liệu';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'Đóng Tùy Chọn Siêu Dữ Liệu';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'Xóa Siêu Dữ Liệu Khỏi Tệp Này';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'Một bản sao được tạo bên cạnh, không có tác giả, địa điểm, ngày tháng và phần mềm đã tạo ra nó. Nội dung hiển thị vẫn giữ nguyên.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'Gộp PDF';
+// / 'Split PDF'
+$Gui2Text211 = 'Tách PDF';
+// / 'Merge Or Split'
+$Gui2Text212 = 'Gộp Hoặc Tách';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'Đóng Tùy Chọn Gộp Và Tách';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'Gộp Các PDF Đã Chọn Thành Một';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'Các trang nối tiếp nhau theo thứ tự các PDF được chọn.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'Chọn hai PDF trở lên để gộp chúng.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'Tạo Một PDF Cho Mỗi Trang';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'Mọi tệp đã chọn đều bị xóa cùng: {count} tệp.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'Mọi tệp đã chọn đều được đổi tên cùng: {count} tệp.';
+// / 'Library'
+$Gui2Text220 = 'Thư Viện';
+// / 'from Selected Files'
+$Gui2Text221 = 'từ Tệp Đã Chọn';
+// / 'from Step {step}'
+$Gui2Text222 = 'từ Bước {step}';
+// / 'Preview'
+$Gui2Text223 = 'Xem Trước';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'Nếu chạy quy trình ngay bây giờ, mỗi bước sẽ lấy:';
+// / 'Left out: '
+$Gui2Text225 = 'Bỏ qua: ';
+// / 'No files.'
+$Gui2Text226 = 'Không có tệp.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'mọi tệp trong danh sách khi bước đó chạy';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'Quy trình này xóa các tệp sau. Tệp đã xóa không thể khôi phục.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'Một bước gặp lỗi, nên quy trình đã dừng trước bước xóa tệp.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

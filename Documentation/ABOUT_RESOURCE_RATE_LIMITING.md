@@ -135,7 +135,7 @@ System assets are measured in arbitrary cost units. The host is polled every `--
 
 ## ⏱️ Lifecycle of a Job Request
 
-Six operation types consume budget: conversion, archiving, OCR, Identify, a fetch from a URL, and the user virus scan. Originally only conversion consumed budget; archiving, OCR and scanning were unmetered and under-represented the real load.
+Ten operation types consume budget: conversion, archiving, extraction, stripping metadata, merging, splitting, OCR, Identify, a fetch from a URL, and the user virus scan. Originally only conversion consumed budget; archiving, OCR and scanning were unmetered and under-represented the real load. Deleting and renaming consume none, because deleting is how space is freed and a rename writes nothing new, and a workflow's Delete and Rename steps take none either.
 
 Each operation declares `--Default Conversion Cost--` and `--Default Expected Runtime--`. These are not weighted against one another because exact measurements are not available.
 

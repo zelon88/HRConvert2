@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -408,8 +408,8 @@ $Gui2Text126 = 'OpenSCAD-Dateien';
 $Gui2Text127 = 'Streams';
 // / 'Workflows'
 $Gui2Text128 = 'Workflows';
-// / 'Files'
-$Gui2Text129 = 'Dateien';
+// / 'Selected Files'
+$Gui2Text129 = 'Ausgewählte Dateien';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'Wählen Sie Dateien in der Liste unten aus.';
 // / 'Select By Name: '
@@ -473,8 +473,8 @@ $Gui2Text159 = 'Eine Operation, die dieser Workflow benötigt, ist nicht verfüg
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Der Workflow wurde unerwartet angehalten.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'Pipelines';
+// / 'Available Pipelines'
+$Gui2Text161 = 'Verfügbare Pipelines';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'Wählen Sie oben eine Pipeline aus...';
 // / 'Select Pipeline...'
@@ -489,8 +489,8 @@ $Gui2Text166 = 'Optionen';
 $Gui2Text167 = 'Zurück';
 // / 'Take: '
 $Gui2Text168 = 'Verwenden: ';
-// / 'the ticked files'
-$Gui2Text169 = 'die markierten Dateien';
+// / 'the selected files'
+$Gui2Text169 = 'die ausgewählten Dateien';
 // / 'the files step {step} made'
 $Gui2Text170 = 'die Dateien aus Schritt {step}';
 // / 'each file on its own'
@@ -545,6 +545,72 @@ $Gui2Text194 = 'Dieses Archiv Entpacken';
 $Gui2Text195 = 'Jede Datei darin kommt zu Ihren Dateien, unter ihrem eigenen Namen oder dem nächsten freien.';
 // / 'Extract Files'
 $Gui2Text196 = 'Dateien Entpacken';
+// / 'to {format}'
+$Gui2Text197 = 'in {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'Dieser Workflow löscht Dateien. Eine gelöschte Datei lässt sich nicht wiederherstellen.';
+// / 'Delete & Run'
+$Gui2Text199 = 'Löschen Und Ausführen';
+// / 'Cancel'
+$Gui2Text200 = 'Abbrechen';
+// / 'Rename'
+$Gui2Text201 = 'Umbenennen';
+// / 'Close Rename Options'
+$Gui2Text202 = 'Umbenennungsoptionen Schließen';
+// / 'Rename This File'
+$Gui2Text203 = 'Diese Datei Umbenennen';
+// / 'New Name'
+$Gui2Text204 = 'Neuer Name';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'Verwenden Sie {name} für ihren bisherigen Namen, {n} für ihre Stelle unter den ausgewählten Dateien und {date} für das heutige Datum. Die Dateiendung bleibt erhalten.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'Metadaten Entfernen';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'Metadatenoptionen Schließen';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'Metadaten Aus Dieser Datei Entfernen';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'Daneben wird eine Kopie ohne Autoren, Orte, Daten und die Software angelegt, mit der sie erstellt wurde. Was sie zeigt, bleibt unverändert.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'PDFs Zusammenführen';
+// / 'Split PDF'
+$Gui2Text211 = 'PDF Aufteilen';
+// / 'Merge Or Split'
+$Gui2Text212 = 'Zusammenführen Oder Aufteilen';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'Optionen Zum Zusammenführen Und Aufteilen Schließen';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'Die Ausgewählten PDFs Zu Einer Zusammenführen';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'Ihre Seiten folgen in der Reihenfolge aufeinander, in der die PDFs ausgewählt wurden.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'Wählen Sie zwei oder mehr PDFs aus, um sie zusammenzuführen.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'Aus Jeder Seite Eine PDF Erstellen';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'Jede ausgewählte Datei wird mit gelöscht: {count} Dateien.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'Jede ausgewählte Datei wird mit umbenannt: {count} Dateien.';
+// / 'Library'
+$Gui2Text220 = 'Bibliothek';
+// / 'from Selected Files'
+$Gui2Text221 = 'aus den ausgewählten Dateien';
+// / 'from Step {step}'
+$Gui2Text222 = 'aus Schritt {step}';
+// / 'Preview'
+$Gui2Text223 = 'Vorschau';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'Würde der Workflow jetzt ausgeführt, würde jeder Schritt Folgendes verwenden:';
+// / 'Left out: '
+$Gui2Text225 = 'Ausgelassen: ';
+// / 'No files.'
+$Gui2Text226 = 'Keine Dateien.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'jede Datei der Liste, sobald der Schritt ausgeführt wird';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'Dieser Workflow löscht diese Dateien. Eine gelöschte Datei lässt sich nicht wiederherstellen.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'Ein Schritt hatte Fehler, daher wurde der Workflow vor dem Schritt angehalten, der Dateien löscht.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

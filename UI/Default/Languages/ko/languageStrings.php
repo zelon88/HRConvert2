@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -405,8 +405,8 @@ $Gui2Text126 = 'OpenSCAD 파일';
 $Gui2Text127 = '스트림';
 // / 'Workflows'
 $Gui2Text128 = '워크플로';
-// / 'Files'
-$Gui2Text129 = '파일';
+// / 'Selected Files'
+$Gui2Text129 = '선택한 파일';
 // / 'Select files in the list below.'
 $Gui2Text130 = '아래 목록에서 파일을 선택하세요.';
 // / 'Select By Name: '
@@ -470,8 +470,8 @@ $Gui2Text159 = '이 워크플로에 필요한 작업을 사용할 수 없습니�
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = '워크플로가 예기치 않게 중지되었습니다.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = '파이프라인';
+// / 'Available Pipelines'
+$Gui2Text161 = '사용 가능한 파이프라인';
 // / 'Select a pipeline above...'
 $Gui2Text162 = '위에서 파이프라인을 선택하세요...';
 // / 'Select Pipeline...'
@@ -486,8 +486,8 @@ $Gui2Text166 = '옵션';
 $Gui2Text167 = '뒤로';
 // / 'Take: '
 $Gui2Text168 = '대상: ';
-// / 'the ticked files'
-$Gui2Text169 = '체크한 파일';
+// / 'the selected files'
+$Gui2Text169 = '선택한 파일';
 // / 'the files step {step} made'
 $Gui2Text170 = '{step}단계에서 만든 파일';
 // / 'each file on its own'
@@ -542,6 +542,72 @@ $Gui2Text194 = '이 아카이브 압축 풀기';
 $Gui2Text195 = '안에 든 모든 파일이 원래 이름이나 다음으로 비어 있는 이름으로 내 파일에 추가됩니다.';
 // / 'Extract Files'
 $Gui2Text196 = '파일 압축 풀기';
+// / 'to {format}'
+$Gui2Text197 = '{format}(으)로';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = '이 워크플로는 파일을 삭제합니다. 삭제한 파일은 되돌릴 수 없습니다.';
+// / 'Delete & Run'
+$Gui2Text199 = '삭제하고 실행';
+// / 'Cancel'
+$Gui2Text200 = '취소';
+// / 'Rename'
+$Gui2Text201 = '이름 바꾸기';
+// / 'Close Rename Options'
+$Gui2Text202 = '이름 바꾸기 옵션 닫기';
+// / 'Rename This File'
+$Gui2Text203 = '이 파일 이름 바꾸기';
+// / 'New Name'
+$Gui2Text204 = '새 이름';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = '{name}은 지금 이름, {n}은 선택한 파일 중의 순서, {date}는 오늘 날짜입니다. 확장자는 그대로 유지됩니다.';
+// / 'Strip Metadata'
+$Gui2Text206 = '메타데이터 제거';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = '메타데이터 옵션 닫기';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = '이 파일의 메타데이터 제거';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = '작성자, 장소, 날짜, 만든 소프트웨어를 뺀 사본을 옆에 만듭니다. 보이는 내용은 그대로입니다.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'PDF 병합';
+// / 'Split PDF'
+$Gui2Text211 = 'PDF 분할';
+// / 'Merge Or Split'
+$Gui2Text212 = '병합 또는 분할';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = '병합 및 분할 옵션 닫기';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = '선택한 PDF를 하나로 병합';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = '페이지는 PDF를 선택한 순서대로 이어집니다.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = '병합하려면 PDF를 두 개 이상 선택하세요.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = '페이지마다 PDF 만들기';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = '선택한 파일도 모두 함께 삭제됩니다: {count}개.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = '선택한 파일도 모두 함께 이름이 바뀝니다: {count}개.';
+// / 'Library'
+$Gui2Text220 = '라이브러리';
+// / 'from Selected Files'
+$Gui2Text221 = '선택한 파일에서';
+// / 'from Step {step}'
+$Gui2Text222 = '{step}단계에서';
+// / 'Preview'
+$Gui2Text223 = '미리 보기';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = '지금 워크플로를 실행하면 각 단계가 가져갈 파일:';
+// / 'Left out: '
+$Gui2Text225 = '제외: ';
+// / 'No files.'
+$Gui2Text226 = '파일 없음.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = '단계가 실행될 때 목록에 있는 모든 파일';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = '이 워크플로는 다음 파일을 삭제합니다. 삭제한 파일은 되돌릴 수 없습니다.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = '한 단계에서 오류가 발생하여 파일을 삭제하는 단계 전에 워크플로가 멈췄습니다.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

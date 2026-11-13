@@ -39,7 +39,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -422,8 +422,8 @@ $Gui2Text126 = 'OpenSCAD Dosyaları';
 $Gui2Text127 = 'Akışlar';
 // / 'Workflows'
 $Gui2Text128 = 'İş Akışları';
-// / 'Files'
-$Gui2Text129 = 'Dosyalar';
+// / 'Selected Files'
+$Gui2Text129 = 'Seçili Dosyalar';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'Aşağıdaki listeden dosya seçin.';
 // / 'Select By Name: '
@@ -487,8 +487,8 @@ $Gui2Text159 = 'Bu iş akışının ihtiyaç duyduğu bir işlem kullanılamıyo
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'İş akışı beklenmedik şekilde durdu.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'İşlem Hatları';
+// / 'Available Pipelines'
+$Gui2Text161 = 'Kullanılabilir İşlem Hatları';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'Yukarıdan bir işlem hattı seçin...';
 // / 'Select Pipeline...'
@@ -503,8 +503,8 @@ $Gui2Text166 = 'Seçenekler';
 $Gui2Text167 = 'Geri';
 // / 'Take: '
 $Gui2Text168 = 'Al: ';
-// / 'the ticked files'
-$Gui2Text169 = 'işaretli dosyalar';
+// / 'the selected files'
+$Gui2Text169 = 'seçili dosyalar';
 // / 'the files step {step} made'
 $Gui2Text170 = '{step}. adımın oluşturduğu dosyalar';
 // / 'each file on its own'
@@ -559,6 +559,72 @@ $Gui2Text194 = 'Bu Arşivi Çıkart';
 $Gui2Text195 = 'İçindeki her dosya, kendi adıyla ya da sıradaki boş adla dosyalarınıza eklenir.';
 // / 'Extract Files'
 $Gui2Text196 = 'Dosyaları Çıkart';
+// / 'to {format}'
+$Gui2Text197 = '{format} biçimine';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'Bu iş akışı dosyaları siler. Silinen bir dosya geri getirilemez.';
+// / 'Delete & Run'
+$Gui2Text199 = 'Sil Ve Çalıştır';
+// / 'Cancel'
+$Gui2Text200 = 'İptal';
+// / 'Rename'
+$Gui2Text201 = 'Yeniden Adlandır';
+// / 'Close Rename Options'
+$Gui2Text202 = 'Yeniden Adlandırma Seçeneklerini Kapat';
+// / 'Rename This File'
+$Gui2Text203 = 'Bu Dosyayı Yeniden Adlandır';
+// / 'New Name'
+$Gui2Text204 = 'Yeni Ad';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'Mevcut adı için {name}, seçili dosyalar arasındaki sırası için {n} ve bugünün tarihi için {date} kullanın. Uzantısı korunur.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'Üst Verileri Kaldır';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'Üst Veri Seçeneklerini Kapat';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'Bu Dosyanın Üst Verilerini Kaldır';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'Yanına yazarları, yerleri, tarihleri ve onu oluşturan yazılım olmadan bir kopya oluşturulur. Gösterdiği şey olduğu gibi kalır.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'PDF\'leri Birleştir';
+// / 'Split PDF'
+$Gui2Text211 = 'PDF\'yi Böl';
+// / 'Merge Or Split'
+$Gui2Text212 = 'Birleştir Veya Böl';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'Birleştirme Ve Bölme Seçeneklerini Kapat';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'Seçili PDF\'leri Tek Dosyada Birleştir';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'Sayfaları, PDF\'lerin seçildiği sırayla birbirini izler.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'Birleştirmek için iki veya daha fazla PDF seçin.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'Her Sayfadan Bir PDF Oluştur';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'Seçili her dosya onunla birlikte silinir: {count} dosya.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'Seçili her dosya onunla birlikte yeniden adlandırılır: {count} dosya.';
+// / 'Library'
+$Gui2Text220 = 'Kitaplık';
+// / 'from Selected Files'
+$Gui2Text221 = 'Seçili Dosyalardan';
+// / 'from Step {step}'
+$Gui2Text222 = '{step}. adımdan';
+// / 'Preview'
+$Gui2Text223 = 'Önizleme';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'İş akışı şimdi çalışsaydı her adımın alacağı dosyalar:';
+// / 'Left out: '
+$Gui2Text225 = 'Dışarıda bırakılan: ';
+// / 'No files.'
+$Gui2Text226 = 'Dosya yok.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'adım çalıştığında listedeki tüm dosyalar';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'Bu iş akışı bu dosyaları siler. Silinen bir dosya geri getirilemez.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'Bir adımda hatalar oldu, bu yüzden iş akışı dosyaları silen adımdan önce durdu.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

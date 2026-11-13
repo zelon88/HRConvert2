@@ -386,17 +386,20 @@ This GUI only has access to certain variables. Variables that are available to t
   $EnableMemoryProtection, $Verbose, $LanguageBaselineFile, $ImageOutputArray, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL,
   $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $WorkflowsJsPath,
   $EnableWorkflowBuilder, $EnableWorkflowImportExport, $ArchiveOperationArray, $OfferedOperations,
-  $ExtractOperationArray
+  $ExtractOperationArray, $MetadataOperationArray
 This list is the whole contract & it is the list buildGUI() declares.
 $ArchiveOperationArray is the formats a file or a selection may be archived in, which the Archiver
 pipeline writes & config.php allows. Offer it for archiving a file, & keep $ArchiveArray for converting
 an archive, because $ArchiveArray holds the bootable disk images only an archive can be made into.
-$OfferedOperations says which of a file's operations to draw, as Scan, Identify, OCR, Archive &
-Extract, each TRUE or FALSE. Each is an operation pipeline's, & one whose pipeline is missing is FALSE,
+$OfferedOperations says which of a file's operations to draw, as Scan, Identify, OCR, Archive,
+Extract, Rename, StripMetadata, Merge & Split, each TRUE or FALSE. Rename is the Files pipeline's,
+& Merge & Split are the PDF pipeline's, which a page draws for a PDF alone. Each is an operation pipeline's, & one whose pipeline is missing is FALSE,
 so a page draws no button that could only fail, as a workflow offers no step for it. Both are from
 v4.1.6, & Extract is from v4.1.7.
 $ExtractOperationArray is the archives a file may be extracted from, which config.php's $DearchiveArray
 & the Extractor pipeline both name. Draw a file's Extract control only where its extension is in it.
+$MetadataOperationArray is the formats metadata may be stripped from, which the Metadata pipeline
+names. Draw a file's Strip Metadata control only where its extension is in it.
 Until v4.1.2 it named $ImageArray twice & left out seven that buildGUI() already declared. A GUI that reads
 anything not named here is reading a variable that does not exist in its scope, which is a
 PHP warning printed into the page & an empty string where the value should have been.
@@ -423,7 +426,7 @@ The code for each color is contained in styleCore.php.
 The loading spinner will change color as well. There is one spinner .gif file for each style & supported color.
 
 Each colour's code begins by naming the colours every panel is drawn with, as custom properties on :root.
-  --hrc2-accent        The scheme's own colour. A tab in force, a ticked box, a step's number, a focus ring.
+  --hrc2-accent        The scheme's own colour. A tab in force, a selected box, a step's number, a focus ring.
   --hrc2-accent-rgb    The accent again as three numbers, so a wash of it can be drawn at any strength.
   --hrc2-on-accent     What is written on the accent.
   --hrc2-frame         The frame of a panel that stays where it is.
@@ -438,6 +441,9 @@ of the stylesheet. Every one is a colour the buttons, the card or the list alrea
 Two kinds of box are drawn from them. A panel, with class hrc2-panel, stays where it is, & is drawn in
 the frame with a deep shadow. A card comes & goes, as a file, a step & a file's own options do, & has a
 light edge & a light shadow. A menu a button opens is a panel, & has no divider before or after it.
+A question a button opens, such as Start Over's, is a panel of class hrc2-panel hrc2-confirm, & the
+dropzone's form carries hrc2-panel beside dropzone, so the box files are dropped on is drawn in the
+scheme's colours as the file list is. A file dropped on it is still a card.
 A GUI must define a button code variable for every supported colour in styleCore.php.
 The core reads $greenButtonCode, $blueButtonCode, $redButtonCode, $orangeButtonCode, $purpleButtonCode, $darkButtonCode & $defaultButtonCode.
 A GUI that omits any of them will fail colour verification.
@@ -519,7 +525,7 @@ PHP warning would come first.
                   conversion does, & writes the summary into identifySummary with it.
     fileName      The file.
     reportId      The box that asks for a report.
-    nameId        The report's name, which is greyed out unless the box is ticked.
+    nameId        The report's name, which is greyed out unless the box is checked.
   HRC2.configure({ identifyText: { yes, no, unknown, failure } }), The words it writes. They come
     from the language pack, as every word a user sees does.
 A panel is any element with data-identify-file, naming its file, & data-identify-suffix.
@@ -533,37 +539,55 @@ writes it into the panels the new list draws.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
---About Ticking Files & Workflows--
+--About Selecting Files & Workflows--
 
-A file list may give every file a box, & the script library keeps which are ticked, by name, in
-the order they were ticked, so the selection survives the list being drawn again. Each box is
+A file list may give every file a box, & the script library keeps which are selected, by name, in
+the order they were selected, so the selection survives the list being drawn again. Each box is
   <input type='checkbox' class='hrc2-pick-box' data-hrc2-file='NAME' data-hrc2-row='ROW' data-hrc2-kinds='KINDS'>
 NAME is the file, escaped for an attribute. ROW is the number the row's elements are suffixed
 with, as ConvertGuiCounter1 numbers them. KINDS is $FileDetails[NAME]['Kinds'] joined by spaces.
 An element with class hrc2-pick-mark beside it, in the same parent, is where the library writes the
 box's place in the order. The included GUIs lay the real box over that square & hide it.
 The bar above the column is optional, & the library finds each part by its id.
-  hrc2SelectAll          A box that ticks every file, or none when any are ticked. It shows all,
+  hrc2SelectAll          A box that selects every file, or none when any are selected. It shows all,
                          some or none, & its own hrc2-pick-mark draws which.
   hrc2SelectMenuWrap     Holds the arrow & its menu. A click outside it closes the menu.
   hrc2SelectMenuButton   The arrow that opens hrc2SelectMenu.
   hrc2SelectMenu         Holds buttons with data-hrc2-select of all, none or kind:NAME.
-  hrc2SelectionCount     Where the library writes how many are ticked.
+  hrc2SelectionCount     Where the library writes how many are selected.
 Call HRC2.bindSelection with no arguments below the last row, every time the list is drawn. It binds the boxes &
 the bar & draws the selection into them, & lets go of a file the list no longer holds.
-HRC2.configure({ selectionText: { selected, usable } }) supplies the words. usable carries {fit} &
-{count}, which the library fills in.
+HRC2.configure({ selectionText: { selected, usable, deleteCount, renameCount, mergeNeeds } }) supplies
+the words. usable carries {fit} & {count}, & deleteCount & renameCount carry {count}, which the library
+fills in. mergeNeeds says a merge needs two or more selected PDFs.
 Draw the arrow's menu so it opens toward the side a line starts on. The included GUIs anchor it to
 the left, & to the right where the page is dir rtl.
 
 HRC2.bindExtract(buttonId, suffix, fileName) binds a file's Extract control, from v4.1.7. It sends
-filesToExtract, & where its archive is ticked among others it extracts every ticked archive whose own
+filesToExtract, & where its archive is selected among others it extracts every selected archive whose own
 row has the control, one request each. Nothing is downloaded, because an archive may hold a great many
 files, & the list is drawn again when the last request ends, holding everything that was placed.
 
-A ticked file converts every eligible ticked file. HRC2.bindRun does it for any control whose
-static values name convertSelected, pdfworkSelected or filesToArchive, when its file is ticked among
-others. A file is eligible when its own row has the same control, by the same id with its own row
+HRC2.bindRename(buttonId, suffix, fileName, patternId, noteId, openerId) binds a file's Rename
+control. It sends filesToRename & the pattern in patternId as renamepattern, & where its file is
+selected among others it renames every selected file whose own row has the control, from the one
+pattern, in one request. Nothing is downloaded & the list is drawn again. Pressing openerId, the
+button that opens the panel, writes into noteId how many files the control renames.
+HRC2.bindMerge(buttonId, suffix, fileName, nameId, noteId) binds a PDF's Merge control. It sends every
+selected PDF whose own row has the control as filesToMerge, in the order they were selected, & the name
+in nameId as userfilename, & downloads what it made. With fewer than two selected it sends nothing &
+writes mergeNeeds into noteId.
+HRC2.bindDelete(buttonId, suffix, fileName, noteId, openerId) binds a file's Delete confirmation. A
+file selected among others deletes every selected file whose own row has the control, in one request,
+& pressing openerId writes into noteId how many that is. noteId & openerId are optional.
+HRC2.bindRun(buttonId, suffix, staticPayload, fieldMap, settings) takes settings as run() does, so a
+control whose settings say download false keeps what it made in the session, as Split does. Strip
+Metadata names filesToStrip & Split names filesToSplit in staticPayload, & each is sent once for every
+eligible selected file.
+
+A selected file converts every eligible selected file. HRC2.bindRun does it for any control whose
+static values name convertSelected, pdfworkSelected, filesToArchive, filesToStrip or filesToSplit, when
+its file is selected among others. A file is eligible when its own row has the same control, by the same id with its own row
 number, so give every control & every name box an id ending in its row. Each eligible file is sent
 in a request of its own, named by its own row's name box, & an archive is sent once holding them all.
 
@@ -576,9 +600,13 @@ these ids unless elements names others.
   hrc2WfBoxes           The three boxes, hidden until the library has drawn them.
   hrc2WfFilesBox, hrc2WfPickBox, hrc2WfRunBox
                         The boxes. The library adds hrc2-wf-attention to the one that needs it.
-  hrc2WfFiles, hrc2WfPattern, hrc2WfSelect, hrc2WfAbout, hrc2WfRun, hrc2WfStop, hrc2WfStatus
+  hrc2WfFiles, hrc2WfPattern, hrc2WfSelect, hrc2WfAbout, hrc2WfPreview, hrc2WfRun, hrc2WfStop, hrc2WfStatus
                         Where it writes the files, reads a name pattern, lists the workflows,
-                        describes one, runs, stops & reports.
+                        describes one, previews, runs, stops & reports. hrc2WfPreview goes before
+                        hrc2WfRun, & is offered whenever Run is.
+settings carries preview, previewHeadline, leftOut, nothingTaken & sessionFiles, the words a preview
+is drawn into hrc2WfStatus with, & incomplete among the failed reasons. step, which carries {step},
+{steps} & {operation}, names each step of a preview as it names the step that runs.
 Put the words for workflows being unavailable into hrc2WfStatus as the page draws it, so a page
 whose library did not load still says something true. The library replaces them once it runs, &
 says no workflow is running whenever it has nothing else to say. The included GUIs put hrc2WfStatus
@@ -595,8 +623,17 @@ The builder needs these too. settings carries builder & importExport, as $Enable
 $EnableWorkflowImportExport say, & the server's answer decides whether either is drawn. It also
 carries kinds, optionLabels & choiceLabels, the names of the kinds of file, of each option & of
 each choice an option offers, by the names the server gives them. Anything not named is shown as
-the server names it.
-  hrc2WfPipelines       The Pipelines section, hidden until the library draws the builder.
+the server names it. It may carry optionHints, a sentence for an option's field, such as the tokens
+Rename's Pattern holds. text carries toFormat, which holds {format} & is how a closed step says the
+format it writes, & fromSelection & fromStep, which holds {step}, how a closed step says where its
+files come from. library names the library's tab. confirmDelete, confirmDeleteFiles, confirmRun &
+cancel are the question a workflow that deletes files asks before it runs & its two answers, which
+the library draws into hrc2WfStatus with the ids hrc2WfConfirmRun & hrc2WfConfirmCancel.
+confirmDeleteFiles is asked where the server named the files it deletes, & confirmDelete where it
+named none.
+A choice option the server groups is drawn a group at a time, under a row of tabs of class
+hrc2-wf-subtab, each named as its kind of file is & with the id hrc2WfGroup-OPERATION-GROUP.
+  hrc2WfPipelines       The Available Pipelines section, hidden until the library draws the builder.
   hrc2WfTabs            Where it draws the tabs. Give it role tablist.
   hrc2WfTabPanel        Where it draws a tab's choices. Give it role tabpanel.
   hrc2WfTools           Where it draws the workflow's name, New, Import & Export.

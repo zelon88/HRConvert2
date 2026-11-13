@@ -477,6 +477,7 @@ $AllowUserURLDownload = FALSE;
 // /   may say anything about itself. A gzip names its size in four bytes & a bzip2 not at all.
 // /   It applies to every extraction, by a file's Extract button, by a workflow's Extract step &
 // /   by an archive converted into another. An extraction still running after an hour is stopped.
+// /   It holds a PDF split into its pages too, & a split whose pages hold more keeps none of them.
 // /   0 means no ceiling. Do not use 0 on anything a stranger can reach.
 // /   Valid options are integers 0 and larger.
 // /   Default is 1024, which is one gigabyte.
@@ -487,6 +488,7 @@ $MaxExtractedSize = 1024;
 // /   folder it sits in.
 // /   An archive holding more is refused before it is extracted, & stopped if it makes more while
 // /   it is extracted. It applies wherever --Maximum Extracted Size-- does.
+// /   A PDF with more pages than this is not split.
 // /   0 means no limit. Do not use 0 on anything a stranger can reach.
 // /   Valid options are integers 0 and larger.
 // /   Default is 1000.

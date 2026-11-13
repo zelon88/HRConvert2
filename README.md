@@ -51,8 +51,8 @@ Free online converters are paid for with your files. Upload a contract, a medica
 <td valign="top">
 
 1. **Drop files in.** Any number, any mix of types. Archives, photos, documents, 3D models, video.
-2. **Choose what to do with each one.** Convert, compress, extract, run OCR, identify, virus scan, share or delete. Only the options that make sense for that file appear.
-3. **Download the result.** Tick several files to convert or archive them all at once, or run or build a **workflow** that chains steps, such as every document to PDF and then one zip.
+2. **Choose what to do with each one.** Convert, compress, extract, run OCR, identify, virus scan, strip metadata, merge or split PDFs, rename, share or delete. Only the options that make sense for that file appear.
+3. **Download the result.** Select several files to convert or archive them all at once, or run or build a **workflow** that chains steps, such as every document to PDF and then one zip, and preview which files each step would take before it runs.
 4. **Walk away.** Files expire on their own and nothing about the visit is kept.
 
 </td>
@@ -122,7 +122,10 @@ sudo php convertCore.php -fp    # Repair permissions & the web server setup
 | **Bootable Disk Images** | x86, ARM, UEFI and MBR/GPT hybrid ISOs |
 | **OCR** | Extract text from images and PDFs |
 | **Identify** | Size, type, character set & hashes of any file, and whether its name matches what it holds |
-| **Workflows** | Choose or build a chain of conversions, archives, extractions, OCR, scans & identification, export & import it, and watch it run in the background |
+| **Strip Metadata** | A copy of a photo, PDF, office document, ebook, song or video without its authors, places, dates or the software that made it |
+| **Merge & Split PDFs** | Put several PDFs into one, or make a PDF of each page |
+| **Rename & Delete** | Rename one file or every selected file from a pattern, keeping each extension, or delete a selection |
+| **Workflows** | Choose or build a chain of conversions, archives, extractions, OCR, scans, identification, metadata stripping, merges, splits, renames & deletions, preview the files each step would take, export & import it, and watch it run in the background |
 | **Live Streams** | Capture and convert m3u8 playlists |
 | **Remote Files** | Fetch a file from a URL. Off by default. |
 

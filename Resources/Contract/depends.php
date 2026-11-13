@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File information ...
-// / v4.1.7.
+// / v4.1.8.
 // / HRConvert2 Dependency Manifest.
 // / This file is data. It defines nothing & does nothing.
 // / dependencyCore.php reads it. Nothing else may.
@@ -114,7 +114,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v4.1.7';
+$DependsVersion = 'v4.1.8';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -270,6 +270,16 @@ $DependsManifest = array(
     'MinimumVersion' => '20.09', 'VersionCommand' => 'pdfinfo -v', 'VersionPattern' => '/pdfinfo version (\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => 'Documents & OCR', 'Requires' => array(),
     'License' => 'GPL-2.0', 'Source' => 'https://poppler.freedesktop.org', 'Purpose' => 'Reads the page count, the version & the encryption of a PDF for Identify.'),
+  // / PDFUnite & PDFSeparate come in the same package as well, & are entries of their own so that the PDF pipeline asks for each by name.
+  // / They share Poppler Utils' subsystem & requirements, for the reason PDFInfo does.
+  array('Name' => 'PDFUnite', 'Binary' => 'pdfunite', 'Type' => 'apt', 'Package' => 'poppler-utils',
+    'MinimumVersion' => '20.09', 'VersionCommand' => 'pdfunite -v', 'VersionPattern' => '/pdfunite version (\d+\.\d+)/',
+    'Required' => FALSE, 'Subsystem' => 'Documents & OCR', 'Requires' => array(),
+    'License' => 'GPL-2.0', 'Source' => 'https://poppler.freedesktop.org', 'Purpose' => 'Puts several PDFs into one for Merge.'),
+  array('Name' => 'PDFSeparate', 'Binary' => 'pdfseparate', 'Type' => 'apt', 'Package' => 'poppler-utils',
+    'MinimumVersion' => '20.09', 'VersionCommand' => 'pdfseparate -v', 'VersionPattern' => '/pdfseparate version (\d+\.\d+)/',
+    'Required' => FALSE, 'Subsystem' => 'Documents & OCR', 'Requires' => array(),
+    'License' => 'GPL-2.0', 'Source' => 'https://poppler.freedesktop.org', 'Purpose' => 'Makes a PDF of each page of a PDF for Split.'),
 
   // / ---- Images. ----
   // / ImageMagick is built from source rather than installed from a repository.
@@ -483,6 +493,18 @@ $DependsManifest = array(
     'MinimumVersion' => '5.43', 'VersionCommand' => 'file --version', 'VersionPattern' => '/file-(\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => 'Identification', 'Requires' => array('Bubblewrap'),
     'License' => 'BSD-2-Clause', 'Source' => 'https://www.darwinsys.com/file', 'Purpose' => 'Tells what a file holds & its character set from its content for Identify.'),
+
+  // / ---- Metadata. ----
+  // / mat2 removes the metadata a file carries, such as its author, the place a photo was taken & the software that made it.
+  // / It is run in lightweight mode, which leaves what a file shows as it was. Its other mode turns every page of a PDF into a picture & encodes a photo again.
+  // / It reads a photo's metadata through ExifTool, which its package depends on, & a video's through FFMPEG.
+  // / 0.13 is the floor. Every release before 0.13 writes outside its folder when it cleans a zip, CVE-2022-35410, & every office document is a zip.
+  // / Ubuntu 24.04 carries 0.13.4 & Debian's bookworm carries 0.13.3, so neither needs a build of its own.
+  // / The Metadata pipeline runs it in the sandbox, because it parses whatever a user uploaded.
+  array('Name' => 'MAT2', 'Binary' => 'mat2', 'Type' => 'apt', 'Package' => 'mat2',
+    'MinimumVersion' => '0.13', 'VersionCommand' => 'mat2 --version', 'VersionPattern' => '/mat2 (\d+\.\d+)/',
+    'Required' => FALSE, 'Subsystem' => 'Metadata', 'Requires' => array('Bubblewrap'),
+    'License' => 'LGPL-3.0', 'Source' => 'https://0xacab.org/jvoisin/mat2', 'Purpose' => 'Strips the metadata a file carries for Strip Metadata.'),
 
   // / ---- Ebooks. ----
   array('Name' => 'Calibre', 'Binary' => 'ebook-convert', 'Type' => 'apt', 'Package' => 'calibre',

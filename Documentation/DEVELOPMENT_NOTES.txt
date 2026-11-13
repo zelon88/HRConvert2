@@ -667,13 +667,15 @@ A PROCESS HOLDING $LogHandle NEVER WRITES ITS LOGFILE BY NAME.
 A write by name follows a link planted in a folder another account owns. Debian's nginx package was
 rooted exactly that way in 2016, as CVE-2016-1247.
 
-THE KERNEL OPENS THE LOGFILE, & THE APPLICATION DECIDES WHAT IT IS.
-Until v4.1.1 verifyLogs() did both & built the same filename in five places. Moving it into the
-Engine was considered & refused, because the logfile is opened before the Engine is verified, & an
-Engine that cannot load is a warning that needs somewhere to be written. The role stays with the
-application, because a manager is told apart by the command it was started with & the kernel holds
-no list of commands. Until v4.1.1 a log folder that could not be made, & a logfile root could not
-open in Engine, both fell back in silence.
+THE KERNEL DECIDES WHAT THE LOGFILE IS & OPENS IT.
+Until v4.1.1 verifyLogs() did both in convertCore.php & built the same filename in five places.
+Moving it into the Engine was considered & refused, because the logfile is opened before the Engine
+is verified, & an Engine that cannot load is a warning that needs somewhere to be written. At v4.1.1
+the opening moved into the kernel, & verifyLogs() & refreshLogFile() stayed in convertCore.php on
+the reasoning that the kernel holds no list of commands. That reasoning was wrong, because the
+commands that name a role are the Engine's & every application on the Engine shares them. Both
+functions moved into the kernel at v4.1.8. Until v4.1.1 a log folder that could not be made, & a
+logfile root could not open in Engine, both fell back in silence.
 
 A LOG LINE'S TIME IS TAKEN WHEN IT IS WRITTEN.
 $Time is set once during boot. A listener started at three in the morning once stamped every entry
@@ -1439,7 +1441,7 @@ list when it finished. Start Over still reads them.
 BULK FILE OPTIONS WAS RETIRED. v4.1.6.
 Scan All, Identify All & Archive All did what a workflow does, in a second panel with its own
 controls & its own dividers. The library ships a workflow for each, beginning with a Select step so
-it needs no ticked file, & a user changes one in the builder where the panel offered fixed choices.
+it needs no selected file, & a user changes one in the builder where the panel offered fixed choices.
 Nine strings went from every language pack with it.
 
 EVERY COLOUR IS A SCHEME'S, NAMED ONCE. v4.1.6.
@@ -1560,20 +1562,20 @@ where the core is not. HRC2-Workflows.js needs no other library & speaks only th
 workflows are unavailable whenever it cannot read an answer. It never says why, because a reason
 from the server is the administrator's business & not a visitor's.
 
-TICKED FILES ARE KEPT BY NAME, IN THE ORDER THEY WERE TICKED.
+SELECTED FILES ARE KEPT BY NAME, IN THE ORDER THEY WERE SELECTED.
 The list is drawn again after every operation & a file's row number changes with it, & a workflow
 takes its files in the order a user chose them. Nothing is stored, because there are no cookies &
 no storage, so the selection lasts as long as the page.
 
-A TICKED FILE CONVERTS EVERY ELIGIBLE TICKED FILE, ONE REQUEST AT A TIME.
+A SELECTED FILE CONVERTS EVERY ELIGIBLE SELECTED FILE, ONE REQUEST AT A TIME.
 One request for many files would take one budget for all of them & run as long as all of them.
 One at a time, each takes its own budget, can fail on its own & keeps its own name. A file is
 eligible when its own row offers the same control, because the core drew that control by the
 same test, so the page cannot offer a conversion the core would refuse.
 
 THE MENU REPLACES THE SELECTION.
-Choosing a kind from the arrow beside the top box ticks exactly the files of that kind, as such a
-menu does everywhere else, so what is ticked is never a surprise.
+Choosing a kind from the arrow beside the top box selects exactly the files of that kind, as such a
+menu does everywhere else, so what is selected is never a surprise.
 
 EVERY ELEMENT A PAGE OPENS IS CLOSED. v4.1.4.
 Each row of the file list was left open, so every row held every row after it, & the card the
@@ -1595,13 +1597,13 @@ changed, imported or built is sent whole & has no identifier.
 SELECT READS THE SESSION THROUGH THE APPLICATION'S OWN LISTER.
 A step that read the folder itself would see what the application never shows a user, such as a
 file of a dangerous extension. The provider names the function its pages list files with, so
-Select finds exactly what a user could see & tick. Select is the Workflow Core's own, because a
+Select finds exactly what a user could see & select. Select is the Workflow Core's own, because a
 step that runs nothing & takes no budget needs no adapter, & an application has it by naming its
 lister. Rescan, as v4.1.4 planned it, is this.
 
 A SELECT STEP IS ASKED ABOUT BEFORE THE WORKFLOW STARTS.
 A run is refused when no step would find a file, so a Select step is resolved against the
-session as the ticked files are, & a workflow holding one needs none ticked. One that would find
+session as the selected files are, & a workflow holding one needs none selected. One that would find
 more than a step may take is refused before anything starts, rather than failing when it gets
 there with every step before it spent.
 
@@ -1633,6 +1635,126 @@ lines. The status now holds the workflow in canonical form, written once when it
 reports it while it runs, so the page opens it in the builder, locked, & a library's workflow is
 shown as chosen. It is the status & not the job that holds it, because the status is already what
 a page reads, & the job holds every file the user selected.
+
+A STEP THAT CONSUMES FILES IS CHECKED BEFORE IT RUNS. v4.1.8.
+Delete & Rename take files away by the names they were given, so a later step taking the same
+selection or the same step's files finds none of them. A runner skips a file that is gone, which
+would have run the workflow & done nothing. An operation says what becomes of what it takes, as
+Consumes, & the Workflow Core refuses such a step when the workflow is checked, naming both steps.
+What a workflow made is read again after every operation, so a file a later step deleted or renamed
+is not named as made.
+
+CONVERT'S FORMATS ARE SORTED BY KIND. v4.1.8.
+Convert's tab listed every format it writes, well over a hundred, as one row of chips. The core
+sorts them into groups named for the kinds of file a filter names, & the Workflow Core passes the
+groups to a page, which draws a row of tabs under Convert's. A format is in each group of a kind
+that writes it, because a user converting a presentation looks for pdf under Presentations. A page
+draws the groups only when every format is in one, so a server whose groups leave one out still
+offers every format, as one row.
+
+THE BOXES READ AS A SENTENCE. v4.1.8.
+The headings read Pipelines, Files, Step 1 Convert & png. They read Available Pipelines, Selected
+Files, Step 1 Convert & to png, so a user skimming them reads where the files come from & go. The
+word ticked became selected everywhere, in the packs, the documents & the comments, because a
+selection is what a user makes & a tick is only how one box shows it.
+
+A STEP SAYS WHERE ITS FILES COME FROM. v4.1.8.
+A closed step said where its files went, to png, & said which files it took only when they were
+not the files of the step before it. Every closed step now starts with where they come from, from
+Selected Files or from Step 1, named as the boxes are, so the boxes read Selected Files, Step 1
+Convert, from Selected Files, to png. The library's tab was named Workflows, as the button that
+opens the panel is, & is named Library, because it is the library inside that panel.
+
+DELETE & RENAME TAKE NO BUDGET. v4.1.8.
+A step took the budget its operation named, & Delete & Rename named budgets their buttons never
+take. The Resource Manager refuses every budget once a disk is within --Storage Reserve--, which is
+when deleting is needed most, so a workflow that cleaned up waited four & a half minutes & failed.
+An operation declares a Budget of FALSE to take none. A missing or empty budget is still a
+mistake, so a provider that forgot one is told, rather than left unmetered.
+
+A WORKFLOW DELETES ONLY AFTER STEPS WITH NO ERRORS. v4.1.8.
+A step ends a workflow only when every one of its files failed, so a conversion that made nine
+files of ten goes on. Converting the selection & then deleting it would delete the tenth original,
+the one file with no copy. A step that deletes does not run once an earlier step has had errors,
+& the workflow ends as incomplete with every file kept. A rename keeps every file, so it runs.
+
+A PREVIEW HAS NAMES OF ITS OWN. v4.1.8.
+A preview could have been a run with a flag. A server that did not know the flag would run the
+workflow, & a preview of one that deletes would delete. workflowPreview & workflowPreviewDocument
+mean nothing to an older server, which answers with a page & runs nothing. A request naming a
+preview & a run is answered as the preview for the same reason.
+
+A PREVIEW NAMES ONLY WHAT IS KNOWN. v4.1.8.
+What an operation makes is not known until it runs, so a preview says whose files a step takes
+rather than guessing their names. The selection is known until a step consumes files, because that
+step may have taken some of it by another reference, & a Select step's files are known until an
+operation has run.
+
+THE QUESTION RUNS WHAT IT ASKED ABOUT. v4.1.8.
+The question a workflow that deletes asks named no file, & its button ran whatever the page held
+when it was pressed. Once it names files, a selection changed while it asks would run on files it
+never named. The page keeps what it asked about, runs that only while it is still what the page
+would run, & asks again otherwise. A preview & a question are taken back as soon as the workflow
+or the selection changes.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--File Operations--
+
+DELETE & RENAME ARE THE FILES PIPELINE'S. v4.1.8.
+Removing a file was already the Files pipeline's work, & deleteFiles() in the core decides what may
+be deleted. A Delete operation pipeline would have wrapped one pipeline in another & moved nothing.
+So Delete is an operation of the registry that calls deleteFiles(), as the button does, & Rename is
+renameFiles() in the core calling a new rename in the Files pipeline. The policy, which names are
+allowed & which name is free, stays in the core, & the Files pipeline still knows no session.
+
+A NAME THAT WAS NEVER IN A FOLDER IS NOT A WARNING. v4.1.8.
+deleteFiles() removes a name from the session & from the temporary folder, because a file may be in
+either. The Files pipeline resolved each path to compare it against its folder, & a path to nothing
+resolves to nothing, which it read as a path leading out. So every delete warned that a removal
+resolved outside its folder. A name with nothing under it is passed over quietly now. A link is
+never passed over, so a link leading anywhere is still resolved & refused.
+
+A RENAME NEVER WRITES OVER A FILE.
+PHP's rename() replaces a file of the new name. The Files pipeline links the file to its new name,
+which fails rather than replaces when the name is taken, & then removes the old name. A filesystem
+that cannot link falls back to a rename once the name is found to be free. The extension is never
+changed, so a rename never makes a file look like a format it is not, & a tar.gz keeps both parts.
+
+A PATTERN KEEPS ITS TOKENS THROUGH sanitize().
+sanitize() removes braces, which every token is written with. Each token is held as a control
+character while sanitize() runs, & a pattern holding a control character of its own is refused
+first, so a token can never be forged. The name each file is given is sanitized again whole.
+
+STRIP METADATA IS MAT2 IN LIGHTWEIGHT MODE. v4.1.8.
+mat2 strips more formats than any other tool on a server, photos, PDFs, office documents, ebooks,
+audio & video. Its normal mode draws every page of a PDF as a picture & encodes a photo again. On
+a test photo 91825 pixels changed, & a test PDF lost every word of its text. Lightweight mode left
+both exactly as they were & removed every author, place, serial number & date the test files
+carried. ExifTool alone writes no office document & no mp3, & an edit it makes to a PDF can be
+undone by anyone, because it appends to the file rather than rewriting it.
+The copy is made beside the file, as OCR's is, so the file itself is never changed.
+A format is listed only once a file of it was stripped & checked. HEIC was not, because nothing
+here could write one to test.
+
+MAT2'S --no-sandbox HAS MEANT THREE THINGS.
+Before 0.13.5 it turned mat2's own sandbox on, & mat2 started none without it. In 0.13.5 it turned
+the sandbox off, & mat2 started one without it. From 0.14 mat2 has no sandbox, & the argument does
+nothing. mat2 cannot start a sandbox inside the one it runs in here, so the pipeline reads mat2's
+own program, which is text, & passes the argument only where it says it turns the sandbox off.
+Ubuntu 24.04 carries 0.13.4 & Debian's bookworm 0.13.3, & both failed under Apache while the
+argument was always passed.
+
+A MERGE NAMES ITS PDFS RELATIVE TO ITS FOLDER.
+The sandbox rewrites the one input & the one output it is given into the paths it mounts, & a
+merge reads many. Each PDF is copied into the merge's own folder as part-1.pdf, part-2.pdf & so
+on, & PDFUnite is run in that folder with names relative to it, which mean the same file inside
+the sandbox & outside it.
+
+A SPLIT IS HELD AS AN EXTRACTION IS.
+A split makes a great many files from one, as an extraction does, so it is held to the same two
+settings. A PDF with more pages than --Maximum Extracted Files-- is refused before it is split, &
+pages holding more than --Maximum Extracted Size-- are measured before any is placed, & none is.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

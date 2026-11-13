@@ -186,7 +186,7 @@ window.HRC2 = {
   // / It has no prototype, so a file named after a property every object has is still just a file.
   identifyRecords: Object.create(null),
   isConfigured: false,
-  // / The files a user has ticked, by name, in the order they were ticked.
+  // / The files a user has selected, by name, in the order they were selected.
   selection: [],
   // / What wants to know when the selection changes. Each is called with a copy of it, & the Workflows panel is one.
   selectionListeners: [],
@@ -195,7 +195,9 @@ window.HRC2 = {
   // / Whether the menu beside the box at the top has been bound to the document, which happens once.
   selectMenuIsBound: false,
   // / What the selection bar says. The page supplies them from the language pack. The English defaults are a last resort.
-  selectionText: { selected: 'Selected: ', usable: 'Selected files that can be used: {fit} of {count}.' },
+  selectionText: { selected: 'Selected: ', usable: 'Selected files that can be used: {fit} of {count}.',
+    deleteCount: 'Every selected file is deleted with it: {count} files.', renameCount: 'Every selected file is renamed with it: {count} files.',
+    mergeNeeds: 'Select two or more PDFs to merge them.' },
   // / The controls a selection applies to, by the key that names the file they act on.
   // / A mode of each sends a request per file & names each output from that file's own name box, & together sends every file at once.
   // / formatKey names the format asked for, so a file that is already in it is left out.
@@ -203,7 +205,12 @@ window.HRC2 = {
     convertSelected: { mode: 'each', nameKey: 'userconvertfilename', formatKey: 'extension' },
     pdfworkSelected: { mode: 'each', nameKey: 'userpdfconvertfilename', formatKey: '' },
     filesToArchive: { mode: 'together', nameKey: '', formatKey: '' },
-    filesToExtract: { mode: 'each', nameKey: '', formatKey: '' } },
+    filesToExtract: { mode: 'each', nameKey: '', formatKey: '' },
+    filesToStrip: { mode: 'each', nameKey: '', formatKey: '' },
+    filesToSplit: { mode: 'each', nameKey: '', formatKey: '' },
+    filesToMerge: { mode: 'together', nameKey: '', formatKey: '' },
+    filesToRename: { mode: 'together', nameKey: '', formatKey: '' },
+    filesToDelete: { mode: 'together', nameKey: '', formatKey: '' } },
 
   // / Accept the page's values. Every key is optional so a page supplies only what it uses.
   // / The upload page has no jQuery & no file list, & supplies neither.
@@ -255,7 +262,7 @@ window.HRC2 = {
     return element ? element.value : '';
   },
 
-  // / Whether a checkbox is ticked. A missing checkbox is not ticked.
+  // / Whether a checkbox is checked. A missing checkbox is not checked.
   checked: function (elementId) {
     var element = document.getElementById(elementId);
     return element ? !!element.checked : false;
@@ -470,7 +477,7 @@ window.HRC2 = {
 
   // / -------------------------------------------------------------------------------
   // / Selection.
-  // / A user ticks files in the list, & the order they were ticked in is shown inside each box.
+  // / A user selects files in the list, & the order they were selected in is shown inside each box.
   // / The selection is kept by name, because the list is drawn again after every operation & a file keeps its name when its row changes.
   // / A file the list no longer holds leaves the selection.
   // / Each box carries its file's name, its row & its kinds as data. Nothing here reads a filename the page wrote into a script.
@@ -490,7 +497,7 @@ window.HRC2 = {
   },
 
   // / Draw the selection into the list.
-  // / Each ticked box shows its place in the order. The box at the top is ticked for all, half ticked for some & clear for none.
+  // / Each checked box shows its place in the order. The box at the top is checked for all, half checked for some & clear for none.
   // / The line beside it counts the selection & repeats what the last operation on it said.
   showSelection: function () {
     var self = this;
@@ -530,15 +537,15 @@ window.HRC2 = {
     this.announceSelection();
   },
 
-  // / Tick or untick one file. A file ticked goes to the end of the order, & a file unticked leaves it.
+  // / Select or deselect one file. A file selected goes to the end of the order, & a file deselected leaves it.
   setSelected: function (fileName, isSelected) {
     var kept = this.selection.filter(function (name) { return name !== fileName; });
     if (isSelected) kept.push(fileName);
     this.changeSelection(kept);
   },
 
-  // / Tick the files one choice names, in the order the list shows them, & untick the rest.
-  // / all ticks every file, none ticks nothing & kind:<name> ticks every file of that kind.
+  // / Select the files one choice names, in the order the list shows them, & deselect the rest.
+  // / all selects every file, none selects nothing & kind:<name> selects every file of that kind.
   selectWhere: function (choice) {
     var kind = (String(choice).indexOf('kind:') === 0) ? String(choice).slice(5) : '';
     var picked = [];
@@ -548,7 +555,7 @@ window.HRC2 = {
     this.changeSelection(picked);
   },
 
-  // / Tick exactly these files, in this order, & untick the rest. A name the list does not hold is left out.
+  // / Select exactly these files, in this order, & deselect the rest. A name the list does not hold is left out.
   selectNames: function (fileNames) {
     var listed = this.selectionBoxes().map(function (box) { return box.getAttribute('data-hrc2-file'); });
     var picked = [];
@@ -624,10 +631,10 @@ window.HRC2 = {
     return copy;
   },
 
-  // / The requests a control sends when its own file is ticked among others.
-  // / Returns null when the control acts on its own file alone. That is when its file is not ticked, is the only file ticked,
-  // / or the control is not one a selection applies to. Otherwise returns the requests, how many files they use & how many are ticked.
-  // / A ticked file is eligible when its own row offers the same control, which the core drew for it by the same test that drew this one.
+  // / The requests a control sends when its own file is selected among others.
+  // / Returns null when the control acts on its own file alone. That is when its file is not selected, is the only file selected,
+  // / or the control is not one a selection applies to. Otherwise returns the requests, how many files they use & how many are selected.
+  // / A selected file is eligible when its own row offers the same control, which the core drew for it by the same test that drew this one.
   // / A conversion leaves out a file already in the format asked for, because there is nothing to convert. An ineligible file is skipped.
   // / Each request named in selectionKeys as each is sent once per file, & named by that file's own name box, so every output keeps the name its row shows.
   // / One named as together is sent once, holding every eligible file, because an archive is one file made from many.
@@ -676,8 +683,9 @@ window.HRC2 = {
   // / Bind a conversion control. staticPayload carries values PHP already knows, such as
   // / the input filename. fieldMap maps a POST name to the id of the input holding it, &
   // / is read at click time so the user's latest choice is the one that is sent.
-  // / A control whose file is ticked among others acts on every eligible ticked file, & says how many it could use.
-  bindRun: function (buttonId, suffix, staticPayload, fieldMap) {
+  // / A control whose file is selected among others acts on every eligible selected file, & says how many it could use.
+  // / settings is optional, & is handed on to run() & runBatch() as it is. One whose download is false keeps what was made in the session.
+  bindRun: function (buttonId, suffix, staticPayload, fieldMap, settings) {
     var self = this;
     $(function () {
       $('#' + buttonId).click(function () {
@@ -688,8 +696,59 @@ window.HRC2 = {
         for (key in fieldMap) { if (fieldMap.hasOwnProperty(key)) payload[key] = self.value(fieldMap[key]); }
         batch = self.selectionRequests(buttonId, suffix, staticPayload, fieldMap, payload);
         if (!batch) {
-          self.run(payload, suffix);
+          self.run(payload, suffix, settings);
           return; }
+        self.selectionNote = self.selectionText.usable.replace('{fit}', String(batch.used)).replace('{count}', String(batch.count));
+        self.showSelection();
+        self.runBatch(batch.requests, suffix, settings);
+      });
+    });
+  },
+
+  // / Say in a panel how many selected files its control acts on, or nothing when it acts on its own file alone.
+  // / template holds {count}. A note is text, so a file's name can never be read as markup.
+  showCount: function (noteId, template, count) {
+    var note = document.getElementById(noteId);
+    if (note) note.textContent = (count > 1) ? String(template).replace('{count}', String(count)) : '';
+  },
+
+  // / Bind a file's Rename control.
+  // / A file keeps its content & its extension, so the list is drawn again & nothing is downloaded.
+  // / A control whose file is selected among others renames every selected file from the one pattern, in the order they were selected, & its panel says how many.
+  bindRename: function (buttonId, suffix, fileName, patternId, noteId, openerId) {
+    var self = this;
+    var batchFor = function (payload) { return self.selectionRequests(buttonId, suffix, { filesToRename: fileName }, {}, payload); };
+    $(function () {
+      if (openerId) $('#' + openerId).click(function () {
+        var batch = batchFor({ filesToRename: fileName });
+        self.showCount(noteId, self.selectionText.renameCount, batch ? batch.used : 1); });
+      $('#' + buttonId).click(function () {
+        var payload = { filesToRename: fileName, renamepattern: self.value(patternId) };
+        var batch = batchFor(payload);
+        if (!batch) {
+          self.run(payload, suffix, { download: false });
+          return; }
+        self.selectionNote = self.selectionText.usable.replace('{fit}', String(batch.used)).replace('{count}', String(batch.count));
+        self.showSelection();
+        self.runBatch(batch.requests, suffix, { download: false });
+      });
+    });
+  },
+
+  // / Bind a PDF's Merge control.
+  // / Merge puts every selected PDF into one, in the order they were selected, & downloads it, as an archive of a selection is downloaded.
+  // / One PDF is not merged with anything, so a control whose file is not selected among other PDFs says so & sends nothing.
+  bindMerge: function (buttonId, suffix, fileName, nameId, noteId) {
+    var self = this;
+    $(function () {
+      $('#' + buttonId).click(function () {
+        var payload = { filesToMerge: fileName, userfilename: self.value(nameId) };
+        var batch = self.selectionRequests(buttonId, suffix, { filesToMerge: fileName }, {}, payload);
+        var note = document.getElementById(noteId);
+        if (!batch || batch.used < 2) {
+          if (note) note.textContent = self.selectionText.mergeNeeds;
+          return; }
+        if (note) note.textContent = '';
         self.selectionNote = self.selectionText.usable.replace('{fit}', String(batch.used)).replace('{count}', String(batch.count));
         self.showSelection();
         self.runBatch(batch.requests, suffix);
@@ -699,7 +758,7 @@ window.HRC2 = {
 
   // / Bind a file's Extract control.
   // / What an archive holds joins the session, so the list is drawn again & nothing is downloaded, because an archive may hold a great many files.
-  // / A control whose archive is ticked among others extracts every ticked archive, one after another, & says how many it could use.
+  // / A control whose archive is selected among others extracts every selected archive, one after another, & says how many it could use.
   bindExtract: function (buttonId, suffix, fileName) {
     var self = this;
     $(function () {
@@ -741,12 +800,18 @@ window.HRC2 = {
   // / Bind the per file delete confirmation control.
   // / The list is refreshed in place rather than reloading the document, because the list
   // / is fetched into the page & a reload would close every panel the user had open.
-  bindDelete: function (buttonId, suffix, fileName) {
+  // / A file selected among others is deleted with every selected file, in one request, & opening its panel says how many files that is.
+  // / noteId & openerId are optional. A page that names neither deletes the selection all the same, & says nothing before it does.
+  bindDelete: function (buttonId, suffix, fileName, noteId, openerId) {
     var self = this;
+    var namesToDelete = function () {
+      var batch = self.selectionRequests(buttonId, suffix, { filesToDelete: fileName }, {}, { filesToDelete: fileName });
+      return batch ? batch.requests[0].payload.filesToDelete : [fileName]; };
     $(function () {
+      if (openerId && noteId) $('#' + openerId).click(function () { self.showCount(noteId, self.selectionText.deleteCount, namesToDelete().length); });
       $('#' + buttonId).click(function () {
         self.spinner('loadingCommandDiv' + suffix, true);
-        self.post({ filesToDelete: fileName }).then(function (replyText) {
+        self.post({ filesToDelete: namesToDelete() }).then(function (replyText) {
           self.spinner('loadingCommandDiv' + suffix, false);
           if (self.isError(replyText)) {
             self.flash('failureCommandDiv' + suffix);
@@ -962,7 +1027,7 @@ window.HRC2 = {
 
   // / Bind one file's Identify panel.
   // / Opening the panel identifies the file the first time, so its details are there when it opens.
-  // / The button identifies it again, with a report when the box is ticked.
+  // / The button identifies it again, with a report when the box is checked.
   bindIdentify: function (spec) {
     var self = this;
     $(function () {

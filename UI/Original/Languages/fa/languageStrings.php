@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -410,8 +410,8 @@ $Gui2Text126 = 'فایل‌های OpenSCAD';
 $Gui2Text127 = 'استریم‌ها';
 // / 'Workflows'
 $Gui2Text128 = 'گردش‌کارها';
-// / 'Files'
-$Gui2Text129 = 'فایل‌ها';
+// / 'Selected Files'
+$Gui2Text129 = 'فایل‌های انتخاب‌شده';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'فایل‌ها را از فهرست زیر انتخاب کنید.';
 // / 'Select By Name: '
@@ -475,8 +475,8 @@ $Gui2Text159 = 'عملیاتی که این گردش‌کار به آن نیاز 
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'گردش‌کار به‌طور غیرمنتظره متوقف شد.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'پایپ‌لاین‌ها';
+// / 'Available Pipelines'
+$Gui2Text161 = 'پایپ‌لاین‌های در دسترس';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'یک پایپ‌لاین را از بالا انتخاب کنید...';
 // / 'Select Pipeline...'
@@ -491,8 +491,8 @@ $Gui2Text166 = 'گزینه‌ها';
 $Gui2Text167 = 'بازگشت';
 // / 'Take: '
 $Gui2Text168 = 'ورودی: ';
-// / 'the ticked files'
-$Gui2Text169 = 'فایل‌های علامت‌خورده';
+// / 'the selected files'
+$Gui2Text169 = 'فایل‌های انتخاب‌شده';
 // / 'the files step {step} made'
 $Gui2Text170 = 'فایل‌هایی که مرحله {step} ساخت';
 // / 'each file on its own'
@@ -547,6 +547,72 @@ $Gui2Text194 = 'استخراج این بایگانی';
 $Gui2Text195 = 'هر فایلی که در آن است به فایل‌های شما افزوده می‌شود، با نام خودش یا نخستین نام آزاد پس از آن.';
 // / 'Extract Files'
 $Gui2Text196 = 'استخراج فایل‌ها';
+// / 'to {format}'
+$Gui2Text197 = 'به {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'این گردش‌کار فایل‌ها را حذف می‌کند. فایل حذف‌شده را نمی‌توان بازگرداند.';
+// / 'Delete & Run'
+$Gui2Text199 = 'حذف و اجرا';
+// / 'Cancel'
+$Gui2Text200 = 'لغو';
+// / 'Rename'
+$Gui2Text201 = 'تغییر نام';
+// / 'Close Rename Options'
+$Gui2Text202 = 'بستن گزینه‌های تغییر نام';
+// / 'Rename This File'
+$Gui2Text203 = 'تغییر نام این فایل';
+// / 'New Name'
+$Gui2Text204 = 'نام جدید';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'از {name} برای نام فعلی، از {n} برای جایگاه آن در میان فایل‌های انتخاب‌شده و از {date} برای تاریخ امروز استفاده کنید. پسوند آن حفظ می‌شود.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'حذف فراداده';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'بستن گزینه‌های فراداده';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'حذف فراداده از این فایل';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'یک نسخه در کنار آن ساخته می‌شود، بدون نویسندگان، مکان‌ها، تاریخ‌ها و نرم‌افزاری که آن را ساخته است. آنچه نشان می‌دهد همان‌طور می‌ماند.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'ادغام PDF‌ها';
+// / 'Split PDF'
+$Gui2Text211 = 'تقسیم PDF';
+// / 'Merge Or Split'
+$Gui2Text212 = 'ادغام یا تقسیم';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'بستن گزینه‌های ادغام و تقسیم';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'ادغام PDF‌های انتخاب‌شده در یک فایل';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'صفحه‌ها به همان ترتیبی می‌آیند که PDF‌ها انتخاب شده‌اند.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'برای ادغام، دو PDF یا بیشتر انتخاب کنید.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'ساخت یک PDF از هر صفحه';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'هر فایل انتخاب‌شده نیز همراه آن حذف می‌شود: {count} فایل.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'نام هر فایل انتخاب‌شده نیز همراه آن تغییر می‌کند: {count} فایل.';
+// / 'Library'
+$Gui2Text220 = 'کتابخانه';
+// / 'from Selected Files'
+$Gui2Text221 = 'از فایل‌های انتخاب‌شده';
+// / 'from Step {step}'
+$Gui2Text222 = 'از مرحله {step}';
+// / 'Preview'
+$Gui2Text223 = 'پیش‌نمایش';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'اگر گردش‌کار الان اجرا شود، هر مرحله این فایل‌ها را برمی‌دارد:';
+// / 'Left out: '
+$Gui2Text225 = 'کنار گذاشته‌شده: ';
+// / 'No files.'
+$Gui2Text226 = 'هیچ فایلی نیست.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'همه فایل‌های فهرست هنگام اجرای مرحله';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'این گردش‌کار این فایل‌ها را حذف می‌کند. فایل حذف‌شده را نمی‌توان بازگرداند.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'یکی از مراحل خطا داشت، پس گردش‌کار پیش از مرحله‌ای که فایل‌ها را حذف می‌کند متوقف شد.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

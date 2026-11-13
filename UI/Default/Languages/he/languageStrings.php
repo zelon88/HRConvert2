@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.7';
+$LanguageVersion = 'v4.1.8';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -410,8 +410,8 @@ $Gui2Text126 = 'קובצי OpenSCAD';
 $Gui2Text127 = 'סטרימינג';
 // / 'Workflows'
 $Gui2Text128 = 'תהליכי עבודה';
-// / 'Files'
-$Gui2Text129 = 'קבצים';
+// / 'Selected Files'
+$Gui2Text129 = 'קבצים נבחרים';
 // / 'Select files in the list below.'
 $Gui2Text130 = 'בחר קבצים ברשימה שלמטה.';
 // / 'Select By Name: '
@@ -475,8 +475,8 @@ $Gui2Text159 = 'פעולה שתהליך עבודה זה זקוק לה אינה �
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'תהליך העבודה נעצר באופן בלתי צפוי.';
 // / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
-// / 'Pipelines'
-$Gui2Text161 = 'צינורות';
+// / 'Available Pipelines'
+$Gui2Text161 = 'צינורות זמינים';
 // / 'Select a pipeline above...'
 $Gui2Text162 = 'בחר צינור למעלה...';
 // / 'Select Pipeline...'
@@ -491,8 +491,8 @@ $Gui2Text166 = 'אפשרויות';
 $Gui2Text167 = 'חזרה';
 // / 'Take: '
 $Gui2Text168 = 'קלט: ';
-// / 'the ticked files'
-$Gui2Text169 = 'הקבצים המסומנים';
+// / 'the selected files'
+$Gui2Text169 = 'הקבצים הנבחרים';
 // / 'the files step {step} made'
 $Gui2Text170 = 'הקבצים ששלב {step} יצר';
 // / 'each file on its own'
@@ -547,6 +547,72 @@ $Gui2Text194 = 'חלץ ארכיון זה';
 $Gui2Text195 = 'כל קובץ שבו מצטרף לקבצים שלך, בשמו שלו או בשם הפנוי הבא.';
 // / 'Extract Files'
 $Gui2Text196 = 'חלץ קבצים';
+// / 'to {format}'
+$Gui2Text197 = 'אל {format}';
+// / 'This workflow deletes files. A deleted file cannot be brought back.'
+$Gui2Text198 = 'תהליך עבודה זה מוחק קבצים. אי אפשר לשחזר קובץ שנמחק.';
+// / 'Delete & Run'
+$Gui2Text199 = 'מחק והפעל';
+// / 'Cancel'
+$Gui2Text200 = 'ביטול';
+// / 'Rename'
+$Gui2Text201 = 'שנה שם';
+// / 'Close Rename Options'
+$Gui2Text202 = 'סגור אפשרויות שינוי שם';
+// / 'Rename This File'
+$Gui2Text203 = 'שנה את שם הקובץ';
+// / 'New Name'
+$Gui2Text204 = 'שם חדש';
+// / 'Use {name} for the name it has, {n} for its place among the selected files & {date} for today. Its extension is kept.'
+$Gui2Text205 = 'השתמש ב־{name} לשמו הנוכחי, ב־{n} למקומו בין הקבצים הנבחרים וב־{date} לתאריך של היום. הסיומת שלו נשמרת.';
+// / 'Strip Metadata'
+$Gui2Text206 = 'הסר מטא־נתונים';
+// / 'Close Strip Metadata Options'
+$Gui2Text207 = 'סגור אפשרויות מטא־נתונים';
+// / 'Strip The Metadata From This File'
+$Gui2Text208 = 'הסר את המטא־נתונים מקובץ זה';
+// / 'A copy is made beside it without its authors, places, dates & the software that made it. What it shows is left as it was.'
+$Gui2Text209 = 'לצדו נוצר עותק בלי מחברים, מקומות, תאריכים והתוכנה שיצרה אותו. מה שהוא מציג נשאר כפי שהיה.';
+// / 'Merge PDFs'
+$Gui2Text210 = 'מזג קובצי PDF';
+// / 'Split PDF'
+$Gui2Text211 = 'פצל PDF';
+// / 'Merge Or Split'
+$Gui2Text212 = 'מזג או פצל';
+// / 'Close Merge & Split Options'
+$Gui2Text213 = 'סגור אפשרויות מיזוג ופיצול';
+// / 'Merge The Selected PDFs Into One'
+$Gui2Text214 = 'מזג את קובצי ה־PDF הנבחרים לאחד';
+// / 'Their pages follow one another in the order the PDFs were selected.'
+$Gui2Text215 = 'הדפים שלהם באים זה אחר זה לפי הסדר שבו נבחרו קובצי ה־PDF.';
+// / 'Select two or more PDFs to merge them.'
+$Gui2Text216 = 'בחר שני קובצי PDF או יותר כדי למזג אותם.';
+// / 'Make A PDF Of Each Page'
+$Gui2Text217 = 'צור PDF מכל דף';
+// / 'Every selected file is deleted with it: {count} files.'
+$Gui2Text218 = 'כל קובץ נבחר נמחק יחד איתו: {count} קבצים.';
+// / 'Every selected file is renamed with it: {count} files.'
+$Gui2Text219 = 'שמו של כל קובץ נבחר משתנה יחד איתו: {count} קבצים.';
+// / 'Library'
+$Gui2Text220 = 'ספרייה';
+// / 'from Selected Files'
+$Gui2Text221 = 'מתוך הקבצים הנבחרים';
+// / 'from Step {step}'
+$Gui2Text222 = 'משלב {step}';
+// / 'Preview'
+$Gui2Text223 = 'תצוגה מקדימה';
+// / 'If the workflow ran now, each step would take:'
+$Gui2Text224 = 'אם תהליך העבודה היה רץ עכשיו, כל שלב היה לוקח:';
+// / 'Left out: '
+$Gui2Text225 = 'הושמטו: ';
+// / 'No files.'
+$Gui2Text226 = 'אין קבצים.';
+// / 'every file in the list when it runs'
+$Gui2Text227 = 'כל קובץ ברשימה בזמן שהשלב רץ';
+// / 'This workflow deletes these files. A deleted file cannot be brought back.'
+$Gui2Text228 = 'תהליך עבודה זה מוחק את הקבצים האלה. אי אפשר לשחזר קובץ שנמחק.';
+// / 'A step had errors, so the workflow stopped before the step that deletes files.'
+$Gui2Text229 = 'בשלב אחד היו שגיאות, ולכן תהליך העבודה נעצר לפני השלב שמוחק קבצים.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

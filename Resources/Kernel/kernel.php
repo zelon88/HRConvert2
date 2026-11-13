@@ -13,7 +13,7 @@
 // / command line, finds executables & loads components, the Engine among them.
 // /
 // / File Information ...
-// / v4.1.2.
+// / v4.1.8.
 // / The kernel. An application's entry point requires it first & pins it exactly via $RequiredKernelVersion.
 // / Error 35000 is the direct load guard every component shares.
 // / It is a file of its own, so every application runs identical kernel code & compares it by version.
@@ -31,14 +31,27 @@
 // /   $RunningAsRoot           Whether this process is root. Only root prepares a root folder.
 // /   $CoreLoaded              Set TRUE by the application before it loads any component.
 // /   $LogFile                 The logfile. Until it exists, lines are buffered rather than lost.
-// /                            An application sets it itself, or decides the folder & the name
-// /                            & has openLogFileForRoot or openLogFileByName open it & set it.
+// /                            An application has verifyLogs decide & open it, sets it itself, or
+// /                            decides the folder & the name & has openLogFileForRoot or
+// /                            openLogFileByName open it & set it.
 // /   $LogHandle               Optional. An open handle written through rather than by name.
 // /                            Root holds one, standard error until it has a log folder of
 // /                            its own, & nothing else needs to. openLogFileForRoot sets it.
 // /   $SesHash3                Optional. A session label for every log line. Absent reads as
 // /                            No Session, which is correct for an application without sessions.
-// / The time globals are set by verifyTime. The log buffer & sequence are managed here.
+// / What verifyLogs reads besides, to decide the logfile.
+// /   $ConvertLoc              The data location. Logs inside it is used when $LogDir cannot be made.
+// /   $LogDir                  The folder an account other than root logs to. It is set to the folder in use.
+// /   $MaxLogSize              The largest size a logfile may reach. 1048576 when it is not a number.
+// /   $AppendLogHashToLogFiles Whether $SesHash4 ends every logfile's name.
+// /   $SesHash4                The suffix that setting appends.
+// /   $EngineDir               The folder root logs to, which only root can change.
+// /   $LogRole                 Optional. The role a logfile is named for. Decided from the command when empty.
+// /   $LogWorkerIdentifier     Optional. Names a worker's logfile when workers have their own.
+// /   $EnginePerManagerLogFiles & $EnginePerWorkerLogFiles come from the Engine configuration.
+// /                            Each gives a manager or a worker a logfile of its own.
+// / The time globals are set by verifyTime, & $DefaultLogDir & $DefaultLogSize by verifyLogs.
+// / The log buffer & sequence are managed here.
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -53,7 +66,7 @@ if (count(get_included_files()) < 2) die('ERROR!!! Kernel-35000, The kernel cann
 // / The version of this kernel.
 // / The application reads it with a pattern BEFORE requiring this file, so a mismatched
 // / kernel is never executed. It cannot use readComponentVersion for that, which is below.
-$KernelVersion = 'v4.1.2';
+$KernelVersion = 'v4.1.8';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -634,6 +647,108 @@ function openLogFileByName($logFolders, $guardFile, $namePrefix, $nameSuffix, $m
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $headerWasWritten, $candidateFolder, $guardName, $logFolders, $guardFile, $namePrefix, $nameSuffix, $maximumSize);
   return array($LogIsOpen, $LogPath, $LogFolder); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to open the logfile this process writes.
+// / Accepts nothing. Returns whether a logfile is in use & its path.
+// / It decides what the logfile is, which is the role it is named for, the folder it is in & the rest of its name.
+// / openLogFileForRoot() or openLogFileByName() opens it, & findCurrentLogFile() names it in turn.
+// / Root's logfile is in Engine, & root writes to standard error until that folder exists, for the reason given below.
+// / On a terminal root also repeats its warnings & errors there.
+// / The log hash suffix is assembled before any filename that uses it is built.
+function verifyLogs() {
+  // / Set variables.
+  global $EnginePerManagerLogFiles, $EnginePerWorkerLogFiles, $LogWorkerIdentifier, $LogRole, $RunningFromCLI, $LogDir, $LogFile, $MaxLogSize, $SesHash4, $DefaultLogDir, $DefaultLogSize, $Date, $ApplicationName, $ConvertLoc, $EngineDir, $AppendLogHashToLogFiles, $EnableMemoryProtection, $RunningAsRoot;
+  $LogExists = FALSE;
+  $logHashAppend = $roleArgument = $workerArgument = $namePrefix = $nameSuffix = $rootLogFolder = $logPath = $logFolder = '';
+  // / The role is part of the filename & that is the main defence against interleaving.
+  // / Several processes append to one logfile. A web request, four manager processes & any
+  // / worker they supervise all write to the same place at the same time.
+  // / An append shorter than the pipe buffer is atomic & most entries are.
+  // / A stream inspection dump, a compiler log or an FFMPEG failure is not, & those are the
+  // / entries worth not corrupting.
+  // / LOCK_EX in emitLogEntry closes the remaining gap & costs nothing at this volume.
+  // / Separating by role also makes a log readable. A manager writing every few seconds
+  // / for a week buried every web request that happened alongside it.
+  // / Web is the default, because a request is what this application mostly is.
+  // / The commands that name a role are the Engine's, which every application on the Engine shares.
+  if (!isset($LogRole) or (string)$LogRole === '') {
+    $LogRole = 'Web';
+    if (isset($RunningFromCLI) && $RunningFromCLI) {
+      $LogRole = 'Cli';
+      // / This list names the same commands as the Engine's dispatcher, which is not loaded yet.
+      // / A workflow's worker writes a log of its own, so what it did is read apart from every request.
+      if (isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === '--run-workflow') $LogRole = 'Workflow';
+      if (isset($_SERVER['argv'][1]) && in_array($_SERVER['argv'][1], array('--start-core-manager', '--start-manager', '--run-core-manager'), TRUE)) {
+        $LogRole = 'Manager';
+        // / A manager may have a file of its own when the Engine configuration asks for it.
+        // / The role it is running under is the second argument & is already sanitized by
+        // / the dispatcher that reads it, so only the characters a filename may carry are
+        // / kept here rather than trusting that.
+        if (isset($EnginePerManagerLogFiles) && $EnginePerManagerLogFiles) {
+          $roleArgument = isset($_SERVER['argv'][2]) ? preg_replace('/[^A-Za-z0-9-]/', '', (string)$_SERVER['argv'][2]) : '';
+          if ($roleArgument !== '') $LogRole = $roleArgument;
+          else $LogRole = 'core-manager'; } } }
+    // / A worker may have a file of its own for the same reason.
+    // / The identifier is supplied by the application before this function runs, because
+    // / only the application knows what a unit of work is called.
+    // / An application that enables this & supplies nothing keeps the role it had, rather
+    // / than writing every worker to a file called nothing.
+    if (isset($EnginePerWorkerLogFiles) && $EnginePerWorkerLogFiles && isset($LogWorkerIdentifier)) {
+      $workerArgument = preg_replace('/[^A-Za-z0-9-]/', '', (string)$LogWorkerIdentifier);
+      if ($workerArgument !== '') $LogRole = 'Worker-'.$workerArgument; } }
+  $DefaultLogDir = $ConvertLoc.'/Logs';
+  $DefaultLogSize = 1048576;
+  // / Build the hash suffix before it is used in any filename.
+  if ($AppendLogHashToLogFiles) $logHashAppend = '_'.$SesHash4;
+  if (!is_numeric($MaxLogSize)) $MaxLogSize = $DefaultLogSize;
+  // / A logfile is named for the application & the role, then its count, then the date & the hash suffix.
+  $namePrefix = $ApplicationName.'_'.$LogRole;
+  $nameSuffix = $Date.$logHashAppend;
+  // / Root logs to a folder of its own, Engine, inside the data root.
+  // / The web server account's log folder is that account's, so root will not write there, because that account can swap the whole folder for a link.
+  // / Engine is root:root inside a data root owned by root, so no other account can swap it.
+  if ($RunningAsRoot) {
+    if (isset($EngineDir) && is_string($EngineDir)) $rootLogFolder = $EngineDir;
+    list ($LogExists, $logPath) = openLogFileForRoot($rootLogFolder, $namePrefix, $nameSuffix, $MaxLogSize); }
+  // / Every other account logs to the folder config.php names, & to Logs in the data location when that one cannot be made.
+  // / An index.html is placed in the folder used as document root protection.
+  else {
+    list ($LogExists, $logPath, $logFolder) = openLogFileByName(array($LogDir, $DefaultLogDir), 'index.html', $namePrefix, $nameSuffix, $MaxLogSize);
+    // / The folder in use is the one the rest of the application reads, such as for a dependency report.
+    if ($logFolder !== '') $LogDir = $logFolder; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $logHashAppend, $roleArgument, $workerArgument, $namePrefix, $nameSuffix, $rootLogFolder, $logPath, $logFolder);
+  return array($LogExists, $LogFile); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to move a process that runs for days on to the logfile it should be writing now.
+// / Accepts nothing. Returns whether a logfile is in use & its path, as verifyLogs() does.
+// / The Engine calls this from every manager loop, through $EngineLogProvider, once a minute.
+// / A logfile is named for the date & moves on once it reaches --Maximum Log File Size--, & a request names its logfile as it starts.
+// / Root runs nothing for days & writes through a handle it already holds, so root is left as it is.
+// / What PHP remembers of a file's size is forgotten first, because a process that has run for days would otherwise measure the logfile it opened.
+function refreshLogFile() {
+  // / Set variables.
+  global $RunningAsRoot, $LogFile, $EnableMemoryProtection;
+  $LogExists = FALSE;
+  $LogPath = '';
+  $timeIsSet = FALSE;
+  $refreshedDate = $refreshedTime = '';
+  $refreshedEpoch = 0;
+  // / Each branch sets the path once, so the one it held is never written over.
+  if ($RunningAsRoot) {
+    $LogPath = (string)$LogFile;
+    $LogExists = ($LogPath !== ''); }
+  else {
+    clearstatcache();
+    list ($timeIsSet, $refreshedDate, $refreshedTime, $refreshedEpoch) = verifyTime();
+    list ($LogExists, $LogPath) = verifyLogs(); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $timeIsSet, $refreshedDate, $refreshedTime, $refreshedEpoch);
+  return array($LogExists, $LogPath); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

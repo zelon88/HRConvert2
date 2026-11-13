@@ -146,19 +146,23 @@ The role exists in the naming for when HRProtect dispatches workers of its own.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Opening The Logfile--
 
-THE APPLICATION DECIDES WHAT THE LOGFILE IS & THE KERNEL OPENS IT.
+THE KERNEL DECIDES WHAT THE LOGFILE IS & OPENS IT, FROM WHAT THE APPLICATION SUPPLIES.
 
+  verifyLogs()           Decides the role, the folders & the rest of the name, & has the logfile opened.
+  refreshLogFile()       Reads the date again & runs verifyLogs(), for a process that runs for days.
   findCurrentLogFile()   Builds a logfile's name & moves on past one that is full.
   openLogFileForRoot()   Opens root's logfile in Engine without following a link, or standard error.
   openLogFileByName()    Makes the folder another account logs to when it is missing & creates its logfile.
 
 verifyLogs() decides the role the logfile is named for, the folders it may be in, the file placed in
-that folder & the rest of its name. How a logfile is named in turn, opened & protected is the same
-in every application, so the kernel does that. Until v4.1.1 verifyLogs() did all of it, & built the
-same filename in five places.
+that folder & the rest of its name, from the folders, the size & the name the application supplies.
+How a logfile is named in turn, opened & protected is the same in every application. Until v4.1.1
+verifyLogs() did all of it, & built the same filename in five places. Until v4.1.8 verifyLogs() &
+refreshLogFile() were defined in convertCore.php.
 
-The role stays with the application. A manager is told apart by the command it was started with,
-& the kernel holds no list of commands, which is part of why it can be identical in every application.
+A manager & a workflow's worker are told apart by the command each was started with. Those commands
+are the Engine's, which every application on the Engine shares, so the kernel names them & is still
+identical in every application.
 
 A FOLDER THAT CANNOT BE USED IS PASSED OVER, & THAT IS REPORTED.
 An account other than root logs to the folder --Log Storage Directory-- names, & to Logs in the data
@@ -246,7 +250,7 @@ The Engine is verified late on purpose, because a failure to verify it is worth 
 that has somewhere to be written.
 
 Opening the logfile was considered for the Engine at v4.1.1 & refused for the same reasons, so it
-moved into the kernel instead. The application still decides what the logfile is, as Opening The
+moved into the kernel instead. Deciding what the logfile is followed it at v4.1.8, as Opening The
 Logfile says.
 
 The Engine may call logEntry, warningEntry, errorEntry & quickDie freely.

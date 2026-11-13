@@ -8,10 +8,10 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.2.
+// / v4.1.8.
 // / The Files pipeline. Operations on a file that do not care what is inside it.
 // /
-// / It is the first pipeline of kind file. Deleting, listing & moving a file is the same work
+// / It is the first pipeline of kind file. Deleting, listing, moving & renaming a file is the same work
 // / whatever the extension says, which is why it declares no formats.
 // / An application that stores files needs this. An application that converts them needs it
 // / too, which is why it was living inside convertCore.php before it was a component.
@@ -28,7 +28,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The version this pipeline reports. Pinned in getAcceptedPipelines.
-$PipelineVersion = 'v4.1.2';
+$PipelineVersion = 'v4.1.8';
 
 // / What this pipeline does. A file operation rather than a conversion or a scan.
 $PipelineKind = 'file';

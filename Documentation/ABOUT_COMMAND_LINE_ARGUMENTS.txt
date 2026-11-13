@@ -138,7 +138,7 @@ code that root then runs. To correct anything, run -fp instead.
   --config <argument>         An entire suite of commands for configuring HRConvert2 installations.
   --setup <argument>          An entire suite of commands for installing & managing HRConvert2 installations.
   --pipeline <argument>       Inspect & verify the installed pipelines.
-  --workflow <argument>       List, check, install & remove workflows.
+  --workflow <argument>       List, check, export, install & remove workflows.
   --build --pins              Check every version pin against what ships. A developer step.
   --build --pins --write      Rewrite every version pin that differs from what ships.
   --app<name>                 Handed to the application untouched. See --About --app.
@@ -153,7 +153,7 @@ prompt, & --rotate-secret, at the terminal first. --status is relayed from that 
 same reason, & --rotate-secret stops & restarts the listener through it. See the sections below.
 Root refuses an installation another account could change, & only the repairs run on one.
 See --CLI User Account Considerations--.
-The -v, -h, --status & --pipeline arguments work when run as any user, & so do --workflow --list & --check.
+The -v, -h, --status & --pipeline arguments work when run as any user, & so do --workflow --list, --check & --export.
 --workflow --install & --remove require root.
 --build needs write access to the source tree & nothing more. It is the developer's build
 step. It rewrites source files, & an operator never has a reason to run it.
@@ -179,7 +179,8 @@ to. --status needs the Engine to build its report, so without one it is refused 
 A check exits 1 when it finds a fault. --setup --check-depends exits 1 when a REQUIRED
 dependency is missing or too old. An optional one costs a feature & does not fail the check.
 --pipeline --verify exits 1 when a pinned pipeline did not load.
---workflow --list exits 1 when a workflow in either library is not valid, & --check when the file is not.
+--workflow --list exits 1 when a workflow in either library is not valid, --check when the file is not, & --export
+when no valid workflow in either library has the identifier named.
 --build --pins exits 1 when a pin differs from what ships or cannot be built. With --write
 it exits 1 only when a pin could not be built or could not be written.
 
@@ -232,7 +233,8 @@ A RELEASE THAT ADDS A SETTING IS FOLLOWED BY  --config --repair.
 Every other command refuses with error 28000 while config.php lacks a setting the core reads,
 because a missing setting reads as nothing & silently changes what the application does.
 --config --repair adds each missing setting at the default the release ships, & changes no
-setting already there. -u does this as part of an update. After a drop in, run it before -fp.
+setting already there. Each goes at the end of its section, after the one before it, in the order
+the release lists them. -u does this as part of an update. After a drop in, run it before -fp.
 Once every setting is present it raises the file's stamp, $ConfigVersion, to the version the core
 requires. A stamp that is already that version or newer is left alone. With nothing missing & the
 stamp current it says so & succeeds, & asks nothing. A setting it cannot add, because the file has
@@ -343,14 +345,18 @@ syntactically valid & still never load, & nothing else reports it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About   --workflow----
 
-Lists, checks, installs & removes workflows. See ABOUT_WORKFLOWS.txt.
+Lists, checks, exports, installs & removes workflows. See ABOUT_WORKFLOWS.txt.
 
-Requires the Workflow Core component. --list & --check need no privileges & change nothing.
+Requires the Workflow Core component. --list, --check & --export need no privileges & change nothing.
 
   --workflow --list                        Every workflow in the shipped & the installed library,
                                            whether it is usable, disabled or invalid, & why.
   --workflow --check=<file>                Check a workflow file against this installation, & name
-                                           every problem with it.
+                                           every problem with it. A valid workflow whose operation is
+                                           off here is named with each step that uses one.
+  --workflow --export=<id>                 Print a valid workflow from either library in canonical form,
+                                           the form a page exports & imports, & print nothing else, so
+                                           it can be written to a file with >.
   --workflow --install=<file>              Check a workflow & install the text that was checked
                                            into the installed library. Requires root.
   --workflow --remove=<id>                 Remove an installed workflow. Requires root.

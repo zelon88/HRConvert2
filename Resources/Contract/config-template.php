@@ -29,7 +29,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / File information ...
-// / v4.1.4.
+// / v4.1.5.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -59,7 +59,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. An update & --config --repair keep it current.
-$ConfigVersion = 'v4.1.4';
+$ConfigVersion = 'v4.1.5';
 // / ------------------------------
 
 // / ------------------------------
@@ -776,6 +776,28 @@ $AllowUserIdentify = TRUE;
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $EnableWorkflows = TRUE;
+// /  --Enable Workflow Builder--
+// /   Provide users with a builder in the Workflows panel, where a workflow is put together from the operations this server offers & run.
+// /   A workflow a page builds is checked exactly as a library's is, & is held to every limit a library's workflow is held to.
+// /   It may use Select, which reads the files in a user's session again at that step, so a step after it can take what earlier steps made.
+// /   If set to TRUE the Workflows panel offers the builder, & a page may run a workflow it built.
+// /   If set to FALSE only the workflows in the libraries are offered.
+// /   Requires --Enable Workflows--.
+// /   See Documentation/ABOUT_WORKFLOWS.txt.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$EnableWorkflowBuilder = TRUE;
+// /  --Enable Workflow Import & Export--
+// /   Let users save a workflow as a file, & open a workflow file in the builder.
+// /   A file holds the workflow alone, as generic JSON naming no file of a user's & no path, so it can be shared, & --workflow --install installs it as it is.
+// /   Opening a file needs --Enable Workflow Builder-- too, because a workflow is opened in the builder. Saving one from the libraries does not.
+// /   If set to TRUE the Workflows panel offers Export, & Import when the builder is on.
+// /   If set to FALSE neither is offered.
+// /   Requires --Enable Workflows--.
+// /   See Documentation/ABOUT_WORKFLOWS.txt.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$EnableWorkflowImportExport = TRUE;
 // /  --Allowed Conversion Types--
 // /   The list of supported conversion types.
 // /   Only conversion types contained in this list will be processed.

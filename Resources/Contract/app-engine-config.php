@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.4.
+// / v4.1.5.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -210,6 +210,7 @@ $EngineUnwantedApacheConfs = array('javascript-common');
 // / that a data location is filling, & StorageReserveMegabytes is the free space it keeps on every
 // / disk holding one. An application that maps nothing is warned at 10% & keeps 1024 megabytes.
 // / EnableWorkflows & the four workflow limits are the Workflow Core's, & an application that maps none has no workflows.
+// / EnableWorkflowBuilder & EnableWorkflowImportExport are the Workflow Core's too, & an application that maps neither has no builder & no import or export.
 // / SessionFolder is the folder a session's files are in, SessionContext is the name a worker is handed to continue it,
 // / & WorkflowLibrary is the installed library.
 $EngineSettingNames = array(
@@ -225,6 +226,8 @@ $EngineSettingNames = array(
   'StorageWarningPercentage' => 'LowStorageWarning',
   'StorageReserveMegabytes' => 'StorageReserve',
   'EnableWorkflows' => 'EnableWorkflows',
+  'EnableWorkflowBuilder' => 'EnableWorkflowBuilder',
+  'EnableWorkflowImportExport' => 'EnableWorkflowImportExport',
   'MaxWorkflowSteps' => 'MaxWorkflowSteps',
   'MaxWorkflowFiles' => 'MaxWorkflowFiles',
   'MaxWorkflowRuntime' => 'MaxWorkflowRuntime',

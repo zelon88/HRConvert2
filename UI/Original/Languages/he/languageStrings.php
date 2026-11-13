@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -492,6 +492,63 @@ $Gui2Text158 = 'השרת היה עסוק מכדי להשלים את תהליך �
 $Gui2Text159 = 'פעולה שתהליך עבודה זה זקוק לה אינה זמינה.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'תהליך העבודה נעצר באופן בלתי צפוי.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'צינורות';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'בחר צינור למעלה...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'בחירת צינור...';
+// / 'Select Files...'
+$Gui2Text164 = 'בחירת קבצים...';
+// / 'Add a step'
+$Gui2Text165 = 'הוסף שלב';
+// / 'Options'
+$Gui2Text166 = 'אפשרויות';
+// / 'Back'
+$Gui2Text167 = 'חזרה';
+// / 'Take: '
+$Gui2Text168 = 'קלט: ';
+// / 'the ticked files'
+$Gui2Text169 = 'הקבצים המסומנים';
+// / 'the files step {step} made'
+$Gui2Text170 = 'הקבצים ששלב {step} יצר';
+// / 'each file on its own'
+$Gui2Text171 = 'כל קובץ בנפרד';
+// / 'all files together'
+$Gui2Text172 = 'כל הקבצים יחד';
+// / 'Only these kinds: '
+$Gui2Text173 = 'רק הסוגים האלה: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'רק הסיומות האלה: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'גודל מינימלי: ';
+// / 'Largest size: '
+$Gui2Text176 = 'גודל מרבי: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'לפי סדר ההגעה';
+// / 'all files'
+$Gui2Text178 = 'כל הקבצים';
+// / 'all {kind}'
+$Gui2Text179 = 'כל הקבצים: {kind}';
+// / 'Width: '
+$Gui2Text180 = 'רוחב: ';
+// / 'Height: '
+$Gui2Text181 = 'גובה: ';
+// / 'My workflow'
+$Gui2Text182 = 'תהליך העבודה שלי';
+// / 'New'
+$Gui2Text183 = 'חדש';
+// / 'Import'
+$Gui2Text184 = 'ייבוא';
+// / 'Export'
+$Gui2Text185 = 'ייצוא';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'שרת זה אינו יכול להריץ את תהליך העבודה הזה.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'לא ניתן היה לקרוא את הקובץ.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'בונה תהליכי העבודה אינו זמין בשרת זה.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

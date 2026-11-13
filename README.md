@@ -52,7 +52,7 @@ Free online converters are paid for with your files. Upload a contract, a medica
 
 1. **Drop files in.** Any number, any mix of types. Archives, photos, documents, 3D models, video.
 2. **Choose what to do with each one.** Convert, compress, extract, run OCR, identify, virus scan, share or delete. Only the options that make sense for that file appear.
-3. **Download the result.** Tick several files to convert or archive them all at once, or run a **workflow** that chains steps, such as every document to PDF and then one zip.
+3. **Download the result.** Tick several files to convert or archive them all at once, or run or build a **workflow** that chains steps, such as every document to PDF and then one zip.
 4. **Walk away.** Files expire on their own and nothing about the visit is kept.
 
 </td>
@@ -121,7 +121,7 @@ sudo php convertCore.php -fp    # Repair permissions & the web server setup
 | **Bootable Disk Images** | x86, ARM, UEFI and MBR/GPT hybrid ISOs |
 | **OCR** | Extract text from images and PDFs |
 | **Identify** | Size, type, character set & hashes of any file, and whether its name matches what it holds |
-| **Workflows** | Chain conversions, archives, OCR, scans & identification, and watch them run in the background |
+| **Workflows** | Choose or build a chain of conversions, archives, OCR, scans & identification, export & import it, and watch it run in the background |
 | **Live Streams** | Capture and convert m3u8 playlists |
 | **Remote Files** | Fetch a file from a URL. Off by default. |
 
@@ -186,6 +186,7 @@ php convertCore.php --config --repair         # Add any setting the configuratio
 php convertCore.php --setup --check-depends   # Audit every dependency
 php convertCore.php --pipeline --verify       # Confirm every pipeline loaded
 php convertCore.php --workflow --list         # List the workflows users can run, & why one is not offered
+php convertCore.php --workflow --export=ID    # Print a workflow as a file a page can import
 php convertCore.php -u=latest                 # Update to the newest release
 php convertCore.php -c=now                    # Clean every expired session now
 ```

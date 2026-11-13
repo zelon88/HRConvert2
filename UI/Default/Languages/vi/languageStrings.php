@@ -38,7 +38,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -500,6 +500,63 @@ $Gui2Text158 = 'Máy chủ quá bận nên không thể hoàn tất quy trình.'
 $Gui2Text159 = 'Một thao tác mà quy trình này cần không khả dụng.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Quy trình đã dừng bất ngờ.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'Đường Ống';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'Chọn một đường ống ở trên...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'Chọn Đường Ống...';
+// / 'Select Files...'
+$Gui2Text164 = 'Chọn Tệp...';
+// / 'Add a step'
+$Gui2Text165 = 'Thêm một bước';
+// / 'Options'
+$Gui2Text166 = 'Tùy chọn';
+// / 'Back'
+$Gui2Text167 = 'Quay lại';
+// / 'Take: '
+$Gui2Text168 = 'Lấy: ';
+// / 'the ticked files'
+$Gui2Text169 = 'các tệp đã đánh dấu';
+// / 'the files step {step} made'
+$Gui2Text170 = 'các tệp do bước {step} tạo ra';
+// / 'each file on its own'
+$Gui2Text171 = 'từng tệp riêng lẻ';
+// / 'all files together'
+$Gui2Text172 = 'tất cả tệp cùng lúc';
+// / 'Only these kinds: '
+$Gui2Text173 = 'Chỉ các loại này: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'Chỉ các phần mở rộng này: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'Kích thước nhỏ nhất: ';
+// / 'Largest size: '
+$Gui2Text176 = 'Kích thước lớn nhất: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'Theo thứ tự đến';
+// / 'all files'
+$Gui2Text178 = 'tất cả tệp';
+// / 'all {kind}'
+$Gui2Text179 = 'tất cả {kind}';
+// / 'Width: '
+$Gui2Text180 = 'Chiều rộng: ';
+// / 'Height: '
+$Gui2Text181 = 'Chiều cao: ';
+// / 'My workflow'
+$Gui2Text182 = 'Quy trình của tôi';
+// / 'New'
+$Gui2Text183 = 'Mới';
+// / 'Import'
+$Gui2Text184 = 'Nhập';
+// / 'Export'
+$Gui2Text185 = 'Xuất';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'Máy chủ này không thể chạy quy trình này.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'Không thể đọc tệp.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'Trình tạo quy trình không khả dụng trên máy chủ này.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

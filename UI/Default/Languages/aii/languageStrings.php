@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -492,6 +492,63 @@ $Gui2Text158 = 'ܡܫܲܡܫܵܢܵܐ ܛܪܝܼܕܵܐ ܝܘܵܐ ܛܲܒ ܩܵܐ ܡܫܲ�
 $Gui2Text159 = 'ܦܘܼܠܚܵܢܵܐ ܕܣܢܝܼܩܵܐ ܠܹܗ ܗܵܕܹܐ ܡܲܪܕܝܼܬܵܐ ܠܵܐ ܝܠܹܗ ܡܛܲܝܒܵܐ.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'ܡܲܪܕܝܼܬܵܐ ܕܦܘܼܠܚܵܢܵܐ ܟܠܝܼܠܵܗ̇ ܕܠܵܐ ܣܘܼܟܵܝܵܐ.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'ܩܲܢܝܹܐ';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'ܓܒܝܼ ܩܲܢܝܵܐ ܠܥܸܠ...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'ܓܒܝܼ ܩܲܢܝܵܐ...';
+// / 'Select Files...'
+$Gui2Text164 = 'ܓܒܝܼ ܦܸܬܩܹܐ...';
+// / 'Add a step'
+$Gui2Text165 = 'ܐܵܘܣܸܦ ܕܲܪܓܵܐ';
+// / 'Options'
+$Gui2Text166 = 'ܓܒܝܼܵܬܹ̈ܐ';
+// / 'Back'
+$Gui2Text167 = 'ܠܒܸܣܬܪܵܐ';
+// / 'Take: '
+$Gui2Text168 = 'ܫܩܘܿܠ: ';
+// / 'the ticked files'
+$Gui2Text169 = 'ܦܸܬܩܹܐ ܕܪܫܝܼܡܹܐ';
+// / 'the files step {step} made'
+$Gui2Text170 = 'ܦܸܬܩܹܐ ܕܥܒ݂ܸܕܠܹܗ ܕܲܪܓܵܐ {step}';
+// / 'each file on its own'
+$Gui2Text171 = 'ܟܠ ܦܸܬܩܵܐ ܒܓܵܢܹܗ';
+// / 'all files together'
+$Gui2Text172 = 'ܟܠ ܦܸܬܩܹܐ ܐܲܟ݂ܚܕܵܐ';
+// / 'Only these kinds: '
+$Gui2Text173 = 'ܗܵܠܝܼܢ ܐܕ݂ܫܹܐ ܒܲܣ: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'ܗܵܠܝܼܢ ܐܘܼܪܟܵܢܹܐ ܒܲܣ: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'ܪܲܒܘܼܬܵܐ ܙܥܘܿܪܬܵܐ: ';
+// / 'Largest size: '
+$Gui2Text176 = 'ܪܲܒܘܼܬܵܐ ܪܲܒܬܵܐ: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'ܐܲܝܟ ܛܲܟ݂ܣܵܐ ܕܡܵܛܝܼ';
+// / 'all files'
+$Gui2Text178 = 'ܟܠ ܦܸܬܩܹܐ';
+// / 'all {kind}'
+$Gui2Text179 = 'ܟܠ {kind}';
+// / 'Width: '
+$Gui2Text180 = 'ܦܸܬܘܵܐ: ';
+// / 'Height: '
+$Gui2Text181 = 'ܪܵܡܘܼܬܵܐ: ';
+// / 'My workflow'
+$Gui2Text182 = 'ܡܲܪܕܝܼܬܵܐ ܕܦܘܼܠܚܵܢܵܐ ܕܝܼܝܼ';
+// / 'New'
+$Gui2Text183 = 'ܚܲܕܬܵܐ';
+// / 'Import'
+$Gui2Text184 = 'ܡܲܥܠܵܢܘܼܬܵܐ';
+// / 'Export'
+$Gui2Text185 = 'ܡܲܦܩܵܢܘܼܬܵܐ';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'ܗܵܢܵܐ ܡܫܲܡܫܵܢܵܐ ܠܵܐ ܡܵܨܹܐ ܠܡܲܪܗܵܛܵܐ ܠܗܵܕܹܐ ܡܲܪܕܝܼܬܵܐ ܕܦܘܼܠܚܵܢܵܐ.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'ܦܸܬܩܵܐ ܠܵܐ ܡܨܹܐ ܠܡܸܬܩܪܵܝܵܐ.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'ܒܵܢܝܵܐ ܕܡܲܪܕܝܵܬ݂ܵܐ ܕܦܘܼܠܚܵܢܵܐ ܠܵܐ ܝܠܹܗ ܡܛܲܝܒܵܐ ܥܲܠ ܗܵܢܵܐ ܡܫܲܡܫܵܢܵܐ.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

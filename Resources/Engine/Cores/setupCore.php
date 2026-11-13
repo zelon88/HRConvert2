@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.1.4.
+// / v4.1.5.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.1.4';
+$SetupCoreVersion = 'v4.1.5';
 // / -----------------------------------------------------------------------------------
 
 
@@ -282,6 +282,58 @@ function writeConfigFile($configPath, $configContents) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to find the line a setting added to a configuration file goes after.
+// / Accepts the file lines, the name of the section the setting belongs to & the detected sections, in that order.
+// / Returns the index of the line the setting is added after.
+// / The end of a section is the last line of its last setting, so a file keeps the shape its author gave it.
+// / A section with no settings, or no section at all, means the end of the file.
+// / The end of the file is not the end of the php block, & a setting written after the closing tag is text the interpreter never reads.
+function configAdditionIndex($configLines, $sectionName, $detectedSections) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $InsertIndex = $lineIndex = 0;
+  $variableRecord = array();
+  if (isset($detectedSections[$sectionName]) && isset($detectedSections[$sectionName]['Variables'])) {
+    foreach ($detectedSections[$sectionName]['Variables'] as $variableRecord) {
+      if (isset($variableRecord['EndLine']) && (int)$variableRecord['EndLine'] > $InsertIndex) $InsertIndex = (int)$variableRecord['EndLine']; } }
+  if ($InsertIndex === 0) {
+    $InsertIndex = count($configLines) - 1;
+    for ($lineIndex = count($configLines) - 1; $lineIndex >= 0; $lineIndex--) {
+      if (strpos((string)$configLines[$lineIndex], '?>') !== FALSE) {
+        $InsertIndex = $lineIndex - 1;
+        break; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $lineIndex, $variableRecord, $configLines, $sectionName, $detectedSections);
+  return $InsertIndex; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to keep a reading of a configuration file true after a setting is added to it.
+// / Accepts the detected sections, the index the setting was added after, the number of lines added, the setting's name, its value & its section, in that order.
+// / Returns the detected sections, moved to match the file as it now stands.
+// / Every line after the ones added moves down by their count, & the setting joins its section, as its last line.
+// / So the next setting added to that section goes after it, & a change made after an addition lands on the line it was read from.
+// / A section the file did not hold is held from then on, so the settings added to it after the first go after the first & bring no header of their own.
+function noteConfigAddition($detectedSections, $insertIndex, $linesAdded, $variableName, $newValue, $sectionName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $MovedSections = $detectedSections;
+  $sectionKey = $variableKey = '';
+  $sectionRecord = $variableRecord = array();
+  foreach ($detectedSections as $sectionKey => $sectionRecord) {
+    if (isset($sectionRecord['FirstLine']) && (int)$sectionRecord['FirstLine'] > (int)$insertIndex) $MovedSections[$sectionKey]['FirstLine'] = (int)$sectionRecord['FirstLine'] + (int)$linesAdded;
+    foreach ($sectionRecord['Variables'] as $variableKey => $variableRecord) {
+      if (isset($variableRecord['StartLine']) && (int)$variableRecord['StartLine'] > (int)$insertIndex) $MovedSections[$sectionKey]['Variables'][$variableKey]['StartLine'] = (int)$variableRecord['StartLine'] + (int)$linesAdded;
+      if (isset($variableRecord['EndLine']) && (int)$variableRecord['EndLine'] > (int)$insertIndex) $MovedSections[$sectionKey]['Variables'][$variableKey]['EndLine'] = (int)$variableRecord['EndLine'] + (int)$linesAdded; } }
+  // / The assignment is the last of the lines added.
+  if (!isset($MovedSections[$sectionName])) $MovedSections[$sectionName] = array('Variables' => array(), 'FirstLine' => (int)$insertIndex + 1);
+  $MovedSections[$sectionName]['Variables'][$variableName] = array('Value' => $newValue, 'Raw' => '$'.$variableName.' = '.$newValue.';', 'Comment' => '', 'StartLine' => (int)$insertIndex + (int)$linesAdded, 'EndLine' => (int)$insertIndex + (int)$linesAdded);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $sectionKey, $variableKey, $sectionRecord, $variableRecord, $detectedSections, $insertIndex, $linesAdded, $variableName, $newValue, $sectionName);
+  return $MovedSections; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to ADD a setting that the configuration file does not contain.
 // / Accepts the file lines by reference, the setting name, its formatted value & the name
 // / of the section it belongs to. Returns whether the line was added.
@@ -297,6 +349,8 @@ function writeConfigFile($configPath, $configContents) {
 // / shape its author gave it. A section that is not in the file gets one, appended at the
 // / end with its own header, because a setting written into no section reads as though it
 // / belongs to whichever section happens to precede it.
+// / The header is three dashes either side of the name, which is the form parseConfigFile reads as a section.
+// / The sections passed in must match the file as it stands, & applyConfigChanges keeps them so with noteConfigAddition().
 // / The default is written with a comment saying it was added & when. A value that appeared
 // / on its own with no explanation is the thing an administrator finds a year later &
 // / cannot account for.
@@ -304,26 +358,15 @@ function appendConfigAssignment(&$configLines, $variableName, $newValue, $sectio
   // / Set variables.
   global $EnableMemoryProtection;
   $AssignmentWasAdded = FALSE;
-  $insertIndex = $lineIndex = 0;
-  $variableRecord = $newLines = array();
+  $insertIndex = 0;
+  $newLines = array();
   $sectionExists = FALSE;
   $sectionExists = isset($detectedSections[$sectionName]) && isset($detectedSections[$sectionName]['Variables']);
-  if ($sectionExists) {
-    // / The end of the section is the last line of its last setting.
-    foreach ($detectedSections[$sectionName]['Variables'] as $variableRecord) {
-      if (isset($variableRecord['EndLine']) && (int)$variableRecord['EndLine'] > $insertIndex) $insertIndex = (int)$variableRecord['EndLine']; } }
-  // / A section with no settings, or no section at all, means the end of the file.
-  // / The end of the file is not the end of the php block, & a setting written after the closing tag is text the interpreter never reads.
-  if ($insertIndex === 0) {
-    $insertIndex = count($configLines) - 1;
-    for ($lineIndex = count($configLines) - 1; $lineIndex >= 0; $lineIndex--) {
-      if (strpos((string)$configLines[$lineIndex], '?>') !== FALSE) {
-        $insertIndex = $lineIndex - 1;
-        break; } } }
+  $insertIndex = configAdditionIndex($configLines, $sectionName, $detectedSections);
   $newLines[] = '';
   if (!$sectionExists) {
-    $newLines[] = '// / -----------------------------------------------------------------------------------';
-    $newLines[] = '// /  --'.$sectionName.'--'; }
+    $newLines[] = '// / ------------------------------';
+    $newLines[] = '// / ---'.$sectionName.'---'; }
   $newLines[] = '// /   Added automatically on '.date('F j, Y').' because this release requires it.';
   $newLines[] = '// /   The value below is the shipped default. Read the documentation for this setting';
   $newLines[] = '// /   before relying on it.';
@@ -332,7 +375,7 @@ function appendConfigAssignment(&$configLines, $variableName, $newValue, $sectio
   array_splice($configLines, $insertIndex + 1, 0, $newLines);
   $AssignmentWasAdded = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $insertIndex, $lineIndex, $variableRecord, $newLines, $sectionExists, $variableName, $newValue, $sectionName, $detectedSections);
+  purgeSensitiveMemory($EnableMemoryProtection, $insertIndex, $newLines, $sectionExists, $variableName, $newValue, $sectionName, $detectedSections);
   return $AssignmentWasAdded; }
 // / -----------------------------------------------------------------------------------
 
@@ -570,11 +613,15 @@ function configVariableCase($typedName, $sectionModel, $detectedVariables) {
 // / Returns a success boolean & the number of assignments replaced, in that order.
 // / A backup is taken first, always, without being asked for. An operator who wanted this
 // / to be reversible & did not think to ask is the operator who most needs it to be.
+// / Every change is placed by the file as it stands when it is made, not as it was read.
+// / A setting added moves every line after it, so the reading moves with it, & the next setting added
+// / to the same section goes after it, in the order the change set holds them.
 function applyConfigChanges($configPath, $detectedSections, $pendingChanges) {
   // / Set variables.
   global $Lol, $EnableMemoryProtection;
   $ChangesWereApplied = FALSE;
   $ChangesApplied = 0;
+  $insertIndex = $lineCount = 0;
   $configLines = array();
   $variableName = $backupPath = $newContents = '';
   $changeRecord = array();
@@ -590,8 +637,15 @@ function applyConfigChanges($configPath, $detectedSections, $pendingChanges) {
         // / A change with no record names a setting the file does not contain, & it is
         // / ADDED rather than skipped. Skipping it is what made a repair do nothing.
         if (!isset($changeRecord['Record']) or !isset($changeRecord['Record']['StartLine'])) {
-          if (appendConfigAssignment($configLines, $variableName, $changeRecord['Value'], $changeRecord['Section'], $detectedSections)) $ChangesApplied++; }
-        else if (replaceConfigAssignment($configLines, $changeRecord['Record'], $variableName, $changeRecord['Value'])) $ChangesApplied++; }
+          $insertIndex = configAdditionIndex($configLines, $changeRecord['Section'], $detectedSections);
+          $lineCount = count($configLines);
+          if (appendConfigAssignment($configLines, $variableName, $changeRecord['Value'], $changeRecord['Section'], $detectedSections)) {
+            $ChangesApplied++;
+            $detectedSections = noteConfigAddition($detectedSections, $insertIndex, count($configLines) - $lineCount, $variableName, $changeRecord['Value'], $changeRecord['Section']); } }
+        else {
+          // / The setting is changed where the file holds it now, which a setting added above it has moved.
+          if (isset($detectedSections[$changeRecord['Section']]['Variables'][$variableName]['StartLine'])) $changeRecord['Record'] = $detectedSections[$changeRecord['Section']]['Variables'][$variableName];
+          if (replaceConfigAssignment($configLines, $changeRecord['Record'], $variableName, $changeRecord['Value'])) $ChangesApplied++; } }
       // / A blanked continuation line is dropped here rather than during the replacement,
       // / so every line number stayed correct while the replacements were being made.
       $newContents = implode(PHP_EOL, array_filter($configLines, function($lineText) { return $lineText !== NULL; })).PHP_EOL;
@@ -601,7 +655,7 @@ function applyConfigChanges($configPath, $detectedSections, $pendingChanges) {
         print('The previous configuration is at '.$backupPath.'.'.$Lol); }
       else print($Lol.'The configuration could not be written. The original is untouched.'.$Lol); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $configLines, $variableName, $backupPath, $newContents, $changeRecord, $backupSucceeded, $configPath, $detectedSections, $pendingChanges);
+  purgeSensitiveMemory($EnableMemoryProtection, $configLines, $variableName, $backupPath, $newContents, $changeRecord, $backupSucceeded, $insertIndex, $lineCount, $configPath, $detectedSections, $pendingChanges);
   return array($ChangesWereApplied, $ChangesApplied); }
 // / -----------------------------------------------------------------------------------
 

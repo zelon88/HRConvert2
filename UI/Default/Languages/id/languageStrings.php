@@ -37,7 +37,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -499,6 +499,63 @@ $Gui2Text158 = 'Server terlalu sibuk untuk menyelesaikan alur kerja.';
 $Gui2Text159 = 'Operasi yang dibutuhkan alur kerja ini tidak tersedia.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Alur kerja berhenti secara tak terduga.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'Pipeline';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'Pilih pipeline di atas...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'Pilih Pipeline...';
+// / 'Select Files...'
+$Gui2Text164 = 'Pilih Berkas...';
+// / 'Add a step'
+$Gui2Text165 = 'Tambah langkah';
+// / 'Options'
+$Gui2Text166 = 'Opsi';
+// / 'Back'
+$Gui2Text167 = 'Kembali';
+// / 'Take: '
+$Gui2Text168 = 'Ambil: ';
+// / 'the ticked files'
+$Gui2Text169 = 'berkas yang dicentang';
+// / 'the files step {step} made'
+$Gui2Text170 = 'berkas yang dibuat langkah {step}';
+// / 'each file on its own'
+$Gui2Text171 = 'setiap berkas secara terpisah';
+// / 'all files together'
+$Gui2Text172 = 'semua berkas sekaligus';
+// / 'Only these kinds: '
+$Gui2Text173 = 'Hanya jenis ini: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'Hanya ekstensi ini: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'Ukuran terkecil: ';
+// / 'Largest size: '
+$Gui2Text176 = 'Ukuran terbesar: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'Sesuai urutan kedatangan';
+// / 'all files'
+$Gui2Text178 = 'semua berkas';
+// / 'all {kind}'
+$Gui2Text179 = 'semua {kind}';
+// / 'Width: '
+$Gui2Text180 = 'Lebar: ';
+// / 'Height: '
+$Gui2Text181 = 'Tinggi: ';
+// / 'My workflow'
+$Gui2Text182 = 'Alur kerja saya';
+// / 'New'
+$Gui2Text183 = 'Baru';
+// / 'Import'
+$Gui2Text184 = 'Impor';
+// / 'Export'
+$Gui2Text185 = 'Ekspor';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'Server ini tidak dapat menjalankan alur kerja ini.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'Berkas tidak dapat dibaca.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'Penyusun alur kerja tidak tersedia di server ini.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

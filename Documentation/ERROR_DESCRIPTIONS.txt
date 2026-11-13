@@ -7384,6 +7384,43 @@ ERROR NUMBER RESERVATION
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT WORKFLOWS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Workflow Core raises these, from Resources/Engine/Cores/workflowCore.php.
+    WARNING!!! The operation provider declared an operation whose name is not a plain word. It was left out.
+    WARNING!!! The <OPERATION> operation names no function that exists. It was left out.
+    WARNING!!! The <OPERATION> operation names no budget. It was left out.
+    WARNING!!! The <OPERATION> operation declares an option that is not usable. It was left out of the operation.
+    WARNING!!! The <OPERATION> operation declares no mode it runs in. It was left out.
+    WARNING!!! The <OPERATION> operation names <FUNCTION_NAME> to decide which files it reads, & no such function exists. It was left out.
+      An entry the operation provider declared cannot be used. That operation is left out, & every other one is offered.
+    WARNING!!! The operation provider <FUNCTION_NAME> declared Select, which is the Workflow Core's own step. It was left out.
+      From v4.1.5. The name Select is the Workflow Core's, so an application's operation of that name is never run.
+    WARNING!!! The operation provider <FUNCTION_NAME> names <FUNCTION_NAME> to list a session's files, & no such function exists. Select is not offered.
+      From v4.1.5. Every other operation is offered, & a workflow with a Select step does not check until the function exists.
+    WARNING!!! The operation provider <FUNCTION_NAME> returned no usable operation, so no workflow can run.
+    WARNING!!! The <LIBRARY> workflow <FILE_NAME> is not valid & is not offered. Run --workflow --list to read why.
+    WARNING!!! A session's workflow folder could not be made ready, so no workflow can run in it.
+    WARNING!!! The folder running workflows are counted in could not be locked, so the limit on running workflows is not applied to this one.
+    WARNING!!! A workflow was asked to stop & the request could not be recorded.
+    WARNING!!! The <OPERATION> operation reported a file that is not in the session, so the workflow does not pass it on.
+    WARNING!!! Detached worker <PROCESS_IDENTIFIER> was killed before it finished, so the workflow goes on without its output.
+    WARNING!!! A workflow worker was refused. <REASON>
+  The core raises these, from convertCore.php.
+    WARNING!!! The Workflow Core is unavailable. No workflow can run until it is repaired.
+    WARNING!!! A workflow was requested & the Workflow Core is unavailable.
+    WARNING!!! A workflow was requested & workflows are disabled.
+    WARNING!!! A workflow worker was started without a session it can continue.
+    WARNING!!! A workflow's virus scan report could not be kept beside the files it scanned.
+    WARNING!!! A request carried <INPUT> as something other than text, & it was refused.
+      From v4.1.5. streamBaseURL, userURLDownload, workflowDocument & workflowCheck are read as text, & a list sent in
+      place of one is read as nothing. No page this server draws sends one, so a request that does was made by hand.
+  The Engine raises this, from Resources/Engine/engine.php.
+    WARNING!!! The command <COMMAND> was refused because the Workflow Core is unavailable.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-40000, <SESSION_IDENTIFIER>: Cannot purge sensitive memory for the <FUNCTION_NAME> function! Memory protection is Enabled. Execution cannot continue!
 

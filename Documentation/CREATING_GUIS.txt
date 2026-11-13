@@ -384,7 +384,8 @@ This GUI only has access to certain variables. Variables that are available to t
   $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed,
   $GuiJSDir, $GuiImageDir, $EbookInputArray, $EbookOutputArray, $BootableIsoArray, $AllowBootableIsoImage, $ShowFiles, $FileListOnly, $NoGui,
   $EnableMemoryProtection, $Verbose, $LanguageBaselineFile, $ImageOutputArray, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL,
-  $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $WorkflowsJsPath
+  $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $WorkflowsJsPath,
+  $EnableWorkflowBuilder, $EnableWorkflowImportExport
 This list is the whole contract & it is the list buildGUI() declares.
 Until v4.1.2 it named $ImageArray twice & left out seven that buildGUI() already declared. A GUI that reads
 anything not named here is reading a variable that does not exist in its scope, which is a
@@ -551,6 +552,22 @@ these ids unless elements names others.
 Put the words for workflows being unavailable into hrc2WfStatus as the page draws it, so a page
 whose library did not load still says something true. The library replaces them once it runs.
 Draw the panel only while $EnableWorkflows is on. See ABOUT_WORKFLOWS.txt.
+
+The builder needs these too. settings carries builder & importExport, as $EnableWorkflowBuilder &
+$EnableWorkflowImportExport say, & the server's answer decides whether either is drawn. It also
+carries kinds, optionLabels & choiceLabels, the names of the kinds of file, of each option & of
+each choice an option offers, by the names the server gives them. Anything not named is shown as
+the server names it.
+  hrc2WfPipelines       The Pipelines section, hidden until the library draws the builder.
+  hrc2WfTabs            Where it draws the tabs. Give it role tablist.
+  hrc2WfTabPanel        Where it draws a tab's choices. Give it role tabpanel.
+  hrc2WfTools           Where it draws the workflow's name, New, Import & Export.
+  hrc2WfAdd             The add button, in hrc2WfRunBox above hrc2WfRun, hidden until the builder is drawn.
+  hrc2WfAddMenu         Its menu, hidden, holding two buttons with data-hrc2-add of pipeline & files.
+                        The library places the menu under the button & keeps it on the screen.
+The library draws a box for each step into hrc2WfBoxes, before hrc2WfRunBox, & hides hrc2WfPickBox
+while the builder is drawn. Give hrc2WfRunBox position relative, so the menu is placed against it.
+The included GUIs style what it draws by the hrc2-wf- classes in HRConvert2.css.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

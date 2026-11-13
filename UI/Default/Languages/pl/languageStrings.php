@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -529,6 +529,63 @@ $Gui2Text158 = 'Serwer był zbyt zajęty, aby ukończyć przepływ pracy.';
 $Gui2Text159 = 'Operacja wymagana przez ten przepływ pracy jest niedostępna.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Przepływ pracy nieoczekiwanie się zatrzymał.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'Potoki';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'Wybierz potok powyżej...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'Wybierz Potok...';
+// / 'Select Files...'
+$Gui2Text164 = 'Wybierz Pliki...';
+// / 'Add a step'
+$Gui2Text165 = 'Dodaj krok';
+// / 'Options'
+$Gui2Text166 = 'Opcje';
+// / 'Back'
+$Gui2Text167 = 'Wstecz';
+// / 'Take: '
+$Gui2Text168 = 'Weź: ';
+// / 'the ticked files'
+$Gui2Text169 = 'zaznaczone pliki';
+// / 'the files step {step} made'
+$Gui2Text170 = 'pliki utworzone w kroku {step}';
+// / 'each file on its own'
+$Gui2Text171 = 'każdy plik osobno';
+// / 'all files together'
+$Gui2Text172 = 'wszystkie pliki razem';
+// / 'Only these kinds: '
+$Gui2Text173 = 'Tylko te rodzaje: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'Tylko te rozszerzenia: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'Najmniejszy rozmiar: ';
+// / 'Largest size: '
+$Gui2Text176 = 'Największy rozmiar: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'W kolejności, w jakiej przychodzą';
+// / 'all files'
+$Gui2Text178 = 'wszystkie pliki';
+// / 'all {kind}'
+$Gui2Text179 = 'wszystkie pliki: {kind}';
+// / 'Width: '
+$Gui2Text180 = 'Szerokość: ';
+// / 'Height: '
+$Gui2Text181 = 'Wysokość: ';
+// / 'My workflow'
+$Gui2Text182 = 'Mój przepływ pracy';
+// / 'New'
+$Gui2Text183 = 'Nowy';
+// / 'Import'
+$Gui2Text184 = 'Importuj';
+// / 'Export'
+$Gui2Text185 = 'Eksportuj';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'Ten serwer nie może uruchomić tego przepływu pracy.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'Nie można odczytać pliku.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'Edytor przepływów pracy nie jest dostępny na tym serwerze.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

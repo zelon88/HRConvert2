@@ -342,3 +342,256 @@ select::-ms-expand {
   font: inherit;
   text-decoration: underline;
   cursor: pointer; }
+
+/* / -----------------------------------------------------------------------------------
+   / The workflow builder, drawn where a server allows it.
+   / The Pipelines section holds a tab for the library & one for each operation, & each tab lists its choices.
+   / Each step is a box of its own in the row of boxes, & a box whose options are open takes the whole row.
+   / The box that runs the workflow is split, with the add button above the run button.
+   / Spacing & corners are logical, so everything falls on the right side whichever way a language reads.
+   / Colours are inherited where they can be, & the menu's are fixed, as the select menu's are, so it reads over anything.
+   / ----------------------------------------------------------------------------------- */
+.hrc2-wf-pipelines {
+  box-sizing: border-box;
+  margin: 6px 0;
+  padding: 8px;
+  border: 2px solid rgba(127, 127, 127, 0.45);
+  border-radius: 8px;
+  text-align: start;
+  font-size: 13px; }
+.hrc2-wf-pipelines[hidden] {
+  display: none; }
+.hrc2-wf-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.45); }
+.hrc2-wf-tab {
+  padding: 4px 10px;
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer; }
+.hrc2-wf-tab[aria-selected='true'] {
+  border-bottom-color: #3d71b3;
+  font-weight: 700; }
+.hrc2-wf-tab:focus-visible,
+.hrc2-wf-chip:focus-visible,
+.hrc2-wf-icon:focus-visible,
+.hrc2-wf-tool:focus-visible {
+  outline: 2px solid #3d71b3;
+  outline-offset: 1px; }
+.hrc2-wf-tab-panel {
+  padding: 6px 0;
+  overflow-wrap: anywhere; }
+.hrc2-wf-tab-panel p {
+  margin: 4px 0 0 0;
+  font-size: 12px; }
+.hrc2-wf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-height: 9em;
+  overflow: auto; }
+.hrc2-wf-chip {
+  padding: 2px 8px;
+  background: none;
+  border: 1px solid rgba(127, 127, 127, 0.7);
+  border-radius: 12px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer; }
+.hrc2-wf-chip:hover:not(:disabled) {
+  background-color: rgba(61, 113, 179, 0.18); }
+.hrc2-wf-chip[aria-pressed='true'] {
+  border-color: #3d71b3;
+  background-color: rgba(61, 113, 179, 0.28); }
+.hrc2-wf-chip:disabled,
+.hrc2-wf-tool:disabled,
+.hrc2-wf-icon:disabled,
+.hrc2-wf-add:disabled {
+  opacity: 0.4;
+  cursor: default; }
+.hrc2-wf-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(127, 127, 127, 0.3); }
+.hrc2-wf-name {
+  display: flex;
+  flex: 1 1 14em;
+  align-items: center;
+  gap: 6px;
+  min-width: 0; }
+.hrc2-wf-name input {
+  flex: 1 1 auto;
+  min-width: 0; }
+.hrc2-wf-tool {
+  padding: 2px 10px;
+  background: none;
+  border: 1px solid rgba(127, 127, 127, 0.7);
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer; }
+.hrc2-wf-about .hrc2-wf-tool {
+  margin-top: 4px; }
+.hrc2-wf-box[hidden] {
+  display: none; }
+.hrc2-wf-step {
+  position: relative; }
+.hrc2-wf-step-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px; }
+.hrc2-wf-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 3px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  background-color: #3d71b3;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700; }
+.hrc2-wf-step-controls {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+  margin-inline-start: auto;
+  margin-inline-end: 0; }
+[dir='rtl'] .hrc2-wf-step-controls {
+  margin-left: 0;
+  margin-right: auto; }
+.hrc2-wf-icon {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer; }
+.hrc2-wf-icon:hover:not(:disabled) {
+  border-color: rgba(127, 127, 127, 0.7); }
+.hrc2-wf-summary {
+  margin: 0 0 2px 0;
+  font-size: 12px;
+  overflow-wrap: anywhere; }
+.hrc2-wf-step-empty {
+  border-style: dashed; }
+/* / A box whose options are open takes the whole row, & its back button sits in the corner a line of this language starts from. */
+.hrc2-wf-step-open {
+  flex: 1 1 100%;
+  padding-top: 34px; }
+.hrc2-wf-back {
+  position: absolute;
+  top: 6px;
+  left: 6px; }
+[dir='rtl'] .hrc2-wf-back {
+  left: auto;
+  right: 6px;
+  transform: scaleX(-1); }
+.hrc2-wf-form {
+  display: grid;
+  grid-template-columns: minmax(8em, max-content) minmax(0, 1fr);
+  gap: 6px 10px;
+  align-items: center;
+  margin-top: 6px; }
+.hrc2-wf-row {
+  display: contents; }
+.hrc2-wf-row-label {
+  font-weight: 700;
+  overflow-wrap: anywhere; }
+.hrc2-wf-row-control {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box; }
+select.hrc2-wf-row-control,
+input.hrc2-wf-row-control[type='text'],
+input.hrc2-wf-row-control[type='number'] {
+  width: 100%;
+  max-width: 24em; }
+/* / The colour scheme draws the arrow inside the end of every select, so the text stops short of it, as it does in the workflow's own list. */
+select.hrc2-wf-row-control {
+  padding-right: 36px;
+  padding-inline-end: 36px;
+  padding-inline-start: 5px;
+  text-overflow: ellipsis; }
+[dir='rtl'] select.hrc2-wf-row-control {
+  padding-left: 36px;
+  padding-right: 5px; }
+.hrc2-wf-field {
+  font-family: monospace; }
+.hrc2-wf-row-control[aria-invalid='true'] {
+  border-color: #c0392b;
+  outline: 1px solid #c0392b; }
+.hrc2-wf-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px; }
+.hrc2-wf-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer; }
+/* / On a narrow screen each label sits above what it labels. */
+@media (max-width: 520px) {
+  .hrc2-wf-form {
+    grid-template-columns: minmax(0, 1fr); } }
+/* / The box that runs the workflow is split. The add button is above the run button, & its menu opens toward the boxes it adds to. */
+.hrc2-wf-run-box {
+  position: relative; }
+.hrc2-wf-add {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid #3d71b3;
+  border-radius: 50%;
+  background: none;
+  color: #3d71b3;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer; }
+.hrc2-wf-add[hidden] {
+  display: none; }
+.hrc2-wf-add-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 11em;
+  padding: 4px 0;
+  background-color: #ffffff;
+  color: #222222;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  text-align: start; }
+.hrc2-wf-add-menu[hidden] {
+  display: none; }
+.hrc2-wf-add-menu button {
+  display: block;
+  width: 100%;
+  padding: 4px 12px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer; }
+.hrc2-wf-add-menu button:hover,
+.hrc2-wf-add-menu button:focus-visible {
+  background-color: rgba(61, 113, 179, 0.18); }

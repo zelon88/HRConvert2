@@ -211,8 +211,11 @@ Plural selection is the common case. $FCPlural1 & $FCPlural2 exist for languages
 Languages that do not inflect leave both empty & write the sentence so it reads correctly for any count.
 A string the page fills in carries placeholders in braces, such as {fit} & {count}. A translation keeps
 every placeholder its English carries, in whatever order the language needs, because each is replaced by
-its name. $Gui2Text137, $Gui2Text138 & $Gui2Text139 carry them, from v4.1.4. A sentence with a count in it
-is written so it reads correctly for any count, as a plural helper would otherwise be needed.
+its name. $Gui2Text137, $Gui2Text138 & $Gui2Text139 carry them, from v4.1.4, & $Gui2Text170 &
+$Gui2Text179, from v4.1.5. A sentence with a count in it is written so it reads correctly for any count, as
+a plural helper would otherwise be needed. {kind} is the name of a kind of file, as $Gui2Text114 through
+$Gui2Text127 give it, so a language whose words for all agree with the noun writes the sentence around
+it, as all files: {kind}.
 Do not repeat a closing HTML tag that footer.php already supplies. $GuiFooterText1 ends without its final closing anchor tag for this reason.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 

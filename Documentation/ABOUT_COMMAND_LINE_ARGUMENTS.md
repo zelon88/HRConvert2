@@ -124,7 +124,7 @@ sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -fp
 | `--config <argument>` | Configure, view, verify, repair & back up `config.php`. | root, except `--backup` |
 | `--setup <argument>` | Install, check & audit dependencies. | root |
 | `--pipeline <argument>` | List, describe & verify the installed pipelines. | any user |
-| `--workflow --list` / `--check=<file>` | List every workflow & why one is not usable, or check a workflow file. | any user |
+| `--workflow --list` / `--check=<file>` / `--export=<id>` | List every workflow & why one is not usable, check a workflow file, or print a workflow from the library as a file a page can import. | any user |
 | `--workflow --install=<file>` / `--remove=<id>` | Install a checked workflow into the installed library, or remove one. | root |
 | `--build --pins [--write]` | Check every version pin against what ships, or rewrite every pin that differs. A developer step that rewrites source files. | write access to the tree |
 | `--app<name>` | Handed to the application untouched. HRConvert2 declares none yet. | — |

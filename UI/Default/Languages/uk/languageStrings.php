@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -493,6 +493,63 @@ $Gui2Text158 = 'Сервер був надто зайнятий, щоб заве
 $Gui2Text159 = 'Операція, потрібна цьому робочому процесу, недоступна.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Робочий процес несподівано зупинився.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'Конвеєри';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'Виберіть конвеєр вище...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'Вибрати конвеєр...';
+// / 'Select Files...'
+$Gui2Text164 = 'Вибрати файли...';
+// / 'Add a step'
+$Gui2Text165 = 'Додати крок';
+// / 'Options'
+$Gui2Text166 = 'Параметри';
+// / 'Back'
+$Gui2Text167 = 'Назад';
+// / 'Take: '
+$Gui2Text168 = 'Взяти: ';
+// / 'the ticked files'
+$Gui2Text169 = 'позначені файли';
+// / 'the files step {step} made'
+$Gui2Text170 = 'файли, створені кроком {step}';
+// / 'each file on its own'
+$Gui2Text171 = 'кожен файл окремо';
+// / 'all files together'
+$Gui2Text172 = 'усі файли разом';
+// / 'Only these kinds: '
+$Gui2Text173 = 'Лише ці види: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'Лише ці розширення: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'Найменший розмір: ';
+// / 'Largest size: '
+$Gui2Text176 = 'Найбільший розмір: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'У порядку надходження';
+// / 'all files'
+$Gui2Text178 = 'усі файли';
+// / 'all {kind}'
+$Gui2Text179 = 'усі файли: {kind}';
+// / 'Width: '
+$Gui2Text180 = 'Ширина: ';
+// / 'Height: '
+$Gui2Text181 = 'Висота: ';
+// / 'My workflow'
+$Gui2Text182 = 'Мій робочий процес';
+// / 'New'
+$Gui2Text183 = 'Новий';
+// / 'Import'
+$Gui2Text184 = 'Імпорт';
+// / 'Export'
+$Gui2Text185 = 'Експорт';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'Цей сервер не може виконати цей робочий процес.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'Не вдалося прочитати файл.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'Редактор робочих процесів недоступний на цьому сервері.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -935,6 +935,19 @@ there & one for a setting that was not, so a repair queued nothing & reported su
 asked whether a setting was in the section the model puts it in, so a setting an administrator moved
 looked absent & a second copy was appended.
 
+A REPAIR PLACES EACH SETTING BY THE FILE AS IT STANDS. v4.1.5.
+Until v4.1.5 a repair placed every setting it added by the file as it was read, before anything was
+added. Each went in after the last line of its section as read, so several added to one section
+came out in reverse, & updated from v4.1.3, --Enable Workflows-- would have followed the two
+switches that need it. The lines added to one section moved every later line, so a setting added to
+a later section landed early by that many lines, between a setting & its comments, or inside an
+array, which does not parse, & the repair then failed. A change after an addition, such as the
+stamp, would have landed early the same way, & only did not because the stamp is read above every
+section. The reading now moves with every line added, & the setting joins its section as its last
+line. A section the file lacked was given a header in the label form, which a reading takes for a
+comment, & every setting added to it brought another. It is given one header, in the form a reading
+takes for a section.
+
 A DATA ROOT HOLDS ONLY WHAT BELONGS THERE.
 Until v4.0.6 any folder at a data root was moved into Sessions, so a release unpacked into a data
 root had its folders moved there as root's, where the sweep, which runs as the web server account,
@@ -1223,6 +1236,12 @@ Until v4.1.0 convertFiles() & the OCR pipeline handed the scanner the output pat
 existed, & ScanCore skips a path that does not exist & reports the scan complete. With --Virus
 Scanning-- on, nothing a conversion read was scanned, & with --User Virus Scanning-- also on an
 upload is not scanned on arrival either.
+
+A RAW INPUT IS READ ONLY AS TEXT. v4.1.5.
+A workflow a page sends is JSON, which sanitize() would destroy, so it is read raw, as a stream's
+base & a URL to fetch are, & the Workflow Core checks it more strictly than sanitize() could. Each
+of the four is read only when PHP hands it over as text. A list sent in place of one was cast to
+text before, which is a PHP warning, & is now refused & named in a warning of the core's own.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1308,6 +1327,21 @@ a list drawn again after a conversion fills its panels in again without asking.
 A VALUE IN A LANGUAGE READ FROM RIGHT TO LEFT IS ISOLATED.
 A size, a time & a hash read left to right in every language. Without isolation, an Arabic page
 moved the number of 3.8 KB to the far end of the line & turned a date & its time around.
+
+A STEP'S OPTIONS OPEN IN ITS OWN BOX. v4.1.5.
+The box grows across the row, so a step's options sit where the step is, & its back arrow is in the
+corner a line starts from, pointing the way a line is read back. Each change is kept as it is
+made, & the box is drawn again only once it closes, so typing is never interrupted.
+
+THE ADD MENU IS PLACED BY THE LIBRARY.
+The box that runs a workflow is at the end of the row, or alone at the start of the next one on a
+narrow screen, so a menu anchored to one side of it left the screen on the other. The library
+opens it under the button, from the side a line starts on, & moves it back onto the screen.
+
+A PATTERN'S TEST IS LINEAR.
+The builder marks an extensions box whose text cannot be a list of extensions. Its test requires
+a separator between two extensions, because a test that lets a run of letters be split into
+extensions every way it can takes exponential time on a long word that fails.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1390,6 +1424,51 @@ file list page opens was left for the footer to close, which it never did. Brows
 which is why neither was noticed. The upload page also wrote an ampersand bare in an address, &
 the orange, purple & dark schemes named select arrows neither interface shipped, so every
 visible select in them asked for a file that answered 404.
+
+THE BUILDER SENDS A WORKFLOW, & THE SERVER DECIDES. v4.1.5.
+A workflow a page built is sent as the text of the format, & the Workflow Core reads it through
+the check a library's file passes & starts it through the launch a library's workflow takes. So
+the builder holds no rules of its own, & a workflow sent by hand is held to exactly what one built
+in the page is. The job keeps the workflow as the runner reads it, & nothing as the page sent it.
+
+A LIBRARY'S WORKFLOW LEFT AS IT WAS RUNS BY ITS IDENTIFIER.
+So the workflow an administrator installed is the one that runs, & the status names it. Anything
+changed, imported or built is sent whole & has no identifier.
+
+SELECT READS THE SESSION THROUGH THE APPLICATION'S OWN LISTER.
+A step that read the folder itself would see what the application never shows a user, such as a
+file of a dangerous extension. The provider names the function its pages list files with, so
+Select finds exactly what a user could see & tick. Select is the Workflow Core's own, because a
+step that runs nothing & takes no budget needs no adapter, & an application has it by naming its
+lister. Rescan, as v4.1.4 planned it, is this.
+
+A SELECT STEP IS ASKED ABOUT BEFORE THE WORKFLOW STARTS.
+A run is refused when no step would find a file, so a Select step is resolved against the
+session as the ticked files are, & a workflow holding one needs none ticked. One that would find
+more than a step may take is refused before anything starts, rather than failing when it gets
+there with every step before it spent.
+
+THE CANONICAL FORM IS THE ONE THE SERVER WRITES.
+An export & the builder both read a workflow as the Workflow Core writes it, so the page reads one
+form only, & a workflow exported, imported & exported again is the same text. Mode & every option
+are written, because the defaults belong to the application & another server's could differ, & a
+reference is written as step N, so a reader need not count steps to follow one.
+
+A CHECK, A RUN & A LIBRARY'S FILE ARE ONE READING.
+checkWorkflowText() parses, validates & asks whether each operation is on, & a library, the
+command line, an import & a built workflow's run all call it. --workflow --check names a valid
+workflow's turned off operations as a result, & --workflow --list names them for one that is
+disabled, where both said less before.
+
+A PATTERN A USER TYPES IS BOUNDED BY PCRE & BY THE RUNTIME.
+A built workflow puts a user's regular expression in front of preg_match. PCRE stops a match at
+pcre.backtrack_limit, which ends a catastrophic pattern against a file's name within milliseconds
+& reads as no match, & a workflow is bounded by --Maximum Workflow Runtime-- besides. fnmatch
+stayed linear for every wildcard pattern tried against long names.
+
+NOTHING THE BUILDER HOLDS IS STORED.
+There are no cookies & no storage, so a page loaded again starts with an empty builder, & a
+workflow worth keeping is exported.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

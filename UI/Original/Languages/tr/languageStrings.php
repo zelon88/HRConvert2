@@ -39,7 +39,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -504,6 +504,63 @@ $Gui2Text158 = 'Sunucu, iş akışını bitiremeyecek kadar meşguldü.';
 $Gui2Text159 = 'Bu iş akışının ihtiyaç duyduğu bir işlem kullanılamıyor.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'İş akışı beklenmedik şekilde durdu.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'İşlem Hatları';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'Yukarıdan bir işlem hattı seçin...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'İşlem Hattı Seç...';
+// / 'Select Files...'
+$Gui2Text164 = 'Dosya Seç...';
+// / 'Add a step'
+$Gui2Text165 = 'Adım ekle';
+// / 'Options'
+$Gui2Text166 = 'Seçenekler';
+// / 'Back'
+$Gui2Text167 = 'Geri';
+// / 'Take: '
+$Gui2Text168 = 'Al: ';
+// / 'the ticked files'
+$Gui2Text169 = 'işaretli dosyalar';
+// / 'the files step {step} made'
+$Gui2Text170 = '{step}. adımın oluşturduğu dosyalar';
+// / 'each file on its own'
+$Gui2Text171 = 'her dosya ayrı ayrı';
+// / 'all files together'
+$Gui2Text172 = 'tüm dosyalar birlikte';
+// / 'Only these kinds: '
+$Gui2Text173 = 'Yalnızca bu türler: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'Yalnızca bu uzantılar: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'En küçük boyut: ';
+// / 'Largest size: '
+$Gui2Text176 = 'En büyük boyut: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'Geliş sırasına göre';
+// / 'all files'
+$Gui2Text178 = 'tüm dosyalar';
+// / 'all {kind}'
+$Gui2Text179 = 'tüm {kind}';
+// / 'Width: '
+$Gui2Text180 = 'Genişlik: ';
+// / 'Height: '
+$Gui2Text181 = 'Yükseklik: ';
+// / 'My workflow'
+$Gui2Text182 = 'İş akışım';
+// / 'New'
+$Gui2Text183 = 'Yeni';
+// / 'Import'
+$Gui2Text184 = 'İçe Aktar';
+// / 'Export'
+$Gui2Text185 = 'Dışa Aktar';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'Bu sunucu bu iş akışını çalıştıramaz.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'Dosya okunamadı.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'İş akışı düzenleyicisi bu sunucuda kullanılamıyor.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

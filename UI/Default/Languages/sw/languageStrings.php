@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -492,6 +492,63 @@ $Gui2Text158 = 'Seva ilikuwa na shughuli nyingi mno kumaliza mtiririko wa kazi.'
 $Gui2Text159 = 'Operesheni inayohitajika na mtiririko huu wa kazi haipatikani.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Mtiririko wa kazi umesimama bila kutarajiwa.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'Mikondo ya Uchakataji';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'Chagua mkondo hapo juu...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'Chagua Mkondo...';
+// / 'Select Files...'
+$Gui2Text164 = 'Chagua Faili...';
+// / 'Add a step'
+$Gui2Text165 = 'Ongeza hatua';
+// / 'Options'
+$Gui2Text166 = 'Chaguo';
+// / 'Back'
+$Gui2Text167 = 'Rudi';
+// / 'Take: '
+$Gui2Text168 = 'Chukua: ';
+// / 'the ticked files'
+$Gui2Text169 = 'faili zilizowekwa alama';
+// / 'the files step {step} made'
+$Gui2Text170 = 'faili zilizoundwa na hatua {step}';
+// / 'each file on its own'
+$Gui2Text171 = 'kila faili peke yake';
+// / 'all files together'
+$Gui2Text172 = 'faili zote pamoja';
+// / 'Only these kinds: '
+$Gui2Text173 = 'Aina hizi tu: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'Viendelezi hivi tu: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'Ukubwa wa chini: ';
+// / 'Largest size: '
+$Gui2Text176 = 'Ukubwa wa juu: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'Kwa mpangilio zinavyofika';
+// / 'all files'
+$Gui2Text178 = 'faili zote';
+// / 'all {kind}'
+$Gui2Text179 = '{kind} zote';
+// / 'Width: '
+$Gui2Text180 = 'Upana: ';
+// / 'Height: '
+$Gui2Text181 = 'Urefu: ';
+// / 'My workflow'
+$Gui2Text182 = 'Mtiririko wangu wa kazi';
+// / 'New'
+$Gui2Text183 = 'Mpya';
+// / 'Import'
+$Gui2Text184 = 'Leta';
+// / 'Export'
+$Gui2Text185 = 'Hamisha';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'Seva hii haiwezi kuendesha mtiririko huu wa kazi.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'Faili haikuweza kusomwa.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'Kiunda mtiririko wa kazi hakipatikani kwenye seva hii.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

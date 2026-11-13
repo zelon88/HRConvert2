@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -487,6 +487,63 @@ $Gui2Text158 = '서버가 너무 바빠 워크플로를 완료하지 못했습�
 $Gui2Text159 = '이 워크플로에 필요한 작업을 사용할 수 없습니다.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = '워크플로가 예기치 않게 중지되었습니다.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = '파이프라인';
+// / 'Select a pipeline above...'
+$Gui2Text162 = '위에서 파이프라인을 선택하세요...';
+// / 'Select Pipeline...'
+$Gui2Text163 = '파이프라인 선택...';
+// / 'Select Files...'
+$Gui2Text164 = '파일 선택...';
+// / 'Add a step'
+$Gui2Text165 = '단계 추가';
+// / 'Options'
+$Gui2Text166 = '옵션';
+// / 'Back'
+$Gui2Text167 = '뒤로';
+// / 'Take: '
+$Gui2Text168 = '대상: ';
+// / 'the ticked files'
+$Gui2Text169 = '체크한 파일';
+// / 'the files step {step} made'
+$Gui2Text170 = '{step}단계에서 만든 파일';
+// / 'each file on its own'
+$Gui2Text171 = '파일마다 따로';
+// / 'all files together'
+$Gui2Text172 = '모든 파일을 함께';
+// / 'Only these kinds: '
+$Gui2Text173 = '이 종류만: ';
+// / 'Only these extensions: '
+$Gui2Text174 = '이 확장자만: ';
+// / 'Smallest size: '
+$Gui2Text175 = '최소 크기: ';
+// / 'Largest size: '
+$Gui2Text176 = '최대 크기: ';
+// / 'In the order they arrive'
+$Gui2Text177 = '도착한 순서대로';
+// / 'all files'
+$Gui2Text178 = '모든 파일';
+// / 'all {kind}'
+$Gui2Text179 = '모든 {kind}';
+// / 'Width: '
+$Gui2Text180 = '너비: ';
+// / 'Height: '
+$Gui2Text181 = '높이: ';
+// / 'My workflow'
+$Gui2Text182 = '내 워크플로';
+// / 'New'
+$Gui2Text183 = '새로 만들기';
+// / 'Import'
+$Gui2Text184 = '가져오기';
+// / 'Export'
+$Gui2Text185 = '내보내기';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = '이 서버에서는 이 워크플로를 실행할 수 없습니다.';
+// / 'The file could not be read.'
+$Gui2Text187 = '파일을 읽을 수 없습니다.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = '이 서버에서는 워크플로 빌더를 사용할 수 없습니다.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

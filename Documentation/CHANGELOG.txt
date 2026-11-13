@@ -27,6 +27,27 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 --------------------
 COMMIT 11/12/2026
+v4.1.5 - A workflow can be built in the page, run, exported & imported, & Select reads the session part way through one.
+
+-v4.1.5.
+-New workflow builder in both interfaces, under the new --Enable Workflow Builder--. A Pipelines section has a tab for the library & one for each operation, each step is a box holding its options, & the box that runs the workflow is split to add a step.
+-A workflow a page built is sent as workflowDocument with workflowFiles[], checked exactly as a library's is & held to every limit. A refusal may say builder, or invalid with Problems.
+-New Select step, the Workflow Core's own. It reads the session again through the application's lister, keeps what its filter passes & hands it on, so a workflow holding one needs no ticked file. A run whose Select step would find too many files is refused before it starts.
+-New export & import, under the new --Enable Workflow Import & Export--. A workflow is saved in canonical form, naming no file & no path, under a name --workflow --install accepts. Import needs the builder.
+-New POST inputs workflowDocument, workflowOperations, workflowCheck & workflowExport. workflowLibrary says NeedsSelection.
+-New command --workflow --export=ID, which any account may run.
+-New contract names SessionFiles, which applicationOperations() gives as getFiles, & EnableWorkflowBuilder & EnableWorkflowImportExport in $EngineSettingNames. After unpacking a drop in, run --config --repair before -fp.
+-A library's file, --workflow --check, a page's check & a built workflow's run share one reading. --workflow --check & --list name each step whose operation is turned off.
+-New functions checkWorkflowText, launchWorkflowRun, startWorkflowDocumentRun, canonicalWorkflowText, workflowFileName, checkWorkflowDocument, exportWorkflowDocument & describeWorkflowOperations in the Workflow Core, & configAdditionIndex & noteConfigAddition in Setup Core.
+-FIX. streamBaseURL & userURLDownload sent as a list were cast to text, which is a PHP warning. Each is read only as text, & a list is refused & named.
+-FIX. --config --repair placed each setting it added by the file as first read. Several added to one section came out in reverse, & one added to a later section landed early by the lines added above it, which could part a setting from its comments or break an array, & then the repair failed. Each now goes at the end of its section, after the one before it.
+-FIX. A setting added for a section config.php lacks was given a header the configuration utility reads as a comment, & each setting added to it brought another. The section is given one header, which reads as a section.
+-28 new strings in every language pack, in all 26 languages.
+-ABOUT_WORKFLOWS describes the builder, Select, import & export, as do README, ABOUT_REST_API, ABOUT_COMMAND_LINE_ARGUMENTS, ABOUT_ENGINE_CONTRACT, CREATING_GUIS, CREATING_LANGUAGE_PACKS & DEVELOPMENT_NOTES. ERROR_DESCRIPTIONS lists every warning workflows raise.
+-The core, the Engine, Setup Core, the Workflow Core, both interfaces, every language pack, config.php, config-template.php & the contract are v4.1.5, & every pin to them requires v4.1.5.
+
+--------------------
+COMMIT 11/12/2026
 v4.1.4 - Workflows chain operations on the files a user ticks, & a ticked file converts every eligible ticked file.
 
 -v4.1.4.

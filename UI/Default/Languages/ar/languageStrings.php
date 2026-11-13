@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -495,6 +495,63 @@ $Gui2Text158 = 'كان الخادم مشغولًا جدًا لإكمال سير 
 $Gui2Text159 = 'إحدى العمليات التي يحتاجها سير العمل هذا غير متاحة.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'توقف سير العمل بشكل غير متوقع.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'خطوط المعالجة';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'اختر خط معالجة من الأعلى...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'اختيار خط معالجة...';
+// / 'Select Files...'
+$Gui2Text164 = 'اختيار الملفات...';
+// / 'Add a step'
+$Gui2Text165 = 'إضافة خطوة';
+// / 'Options'
+$Gui2Text166 = 'الخيارات';
+// / 'Back'
+$Gui2Text167 = 'رجوع';
+// / 'Take: '
+$Gui2Text168 = 'المدخلات: ';
+// / 'the ticked files'
+$Gui2Text169 = 'الملفات المؤشر عليها';
+// / 'the files step {step} made'
+$Gui2Text170 = 'الملفات التي أنشأتها الخطوة {step}';
+// / 'each file on its own'
+$Gui2Text171 = 'كل ملف على حدة';
+// / 'all files together'
+$Gui2Text172 = 'كل الملفات معًا';
+// / 'Only these kinds: '
+$Gui2Text173 = 'هذه الأنواع فقط: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'هذه الامتدادات فقط: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'أصغر حجم: ';
+// / 'Largest size: '
+$Gui2Text176 = 'أكبر حجم: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'بترتيب الوصول';
+// / 'all files'
+$Gui2Text178 = 'كل الملفات';
+// / 'all {kind}'
+$Gui2Text179 = 'كل الملفات: {kind}';
+// / 'Width: '
+$Gui2Text180 = 'العرض: ';
+// / 'Height: '
+$Gui2Text181 = 'الارتفاع: ';
+// / 'My workflow'
+$Gui2Text182 = 'سير عملي';
+// / 'New'
+$Gui2Text183 = 'جديد';
+// / 'Import'
+$Gui2Text184 = 'استيراد';
+// / 'Export'
+$Gui2Text185 = 'تصدير';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'لا يستطيع هذا الخادم تشغيل سير العمل هذا.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'تعذرت قراءة الملف.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'منشئ سير العمل غير متاح على هذا الخادم.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

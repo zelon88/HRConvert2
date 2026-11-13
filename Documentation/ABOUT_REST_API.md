@@ -191,7 +191,7 @@ POST inputs are organized into distinct functional operational blocks based on p
 ### 🧭 K. Workflow Operations
 Every reply is one line of JSON under the key `Workflow`, after the doctype line that opens every reply. A server with `--Enable Workflows--` off, or without the Workflow Core, answers every one of them with `{"Workflow":{"Available":false}}` and says why only in its log. `ABOUT_WORKFLOWS.txt` describes the format, the operations and how a workflow runs.
 * `workflowLibrary` *(1)*
-  * Lists the workflows this session may run, each with `Id`, `Name`, `Description`, `Steps`, `AcceptsAll` and `Accepts`, the extensions its first step reads.
+  * Lists the workflows this session may run, each with `Id`, `Name`, `Description`, `Steps`, `AcceptsAll` and `Accepts`, the extensions its first step reads, and `NeedsSelection`, which is `false` when a Select step finds files of its own.
 * `workflowRun` *(String)* with `workflowFiles[]` *(one for each file)*
   * Starts the workflow with that identifier on those files, in that order, and returns as soon as its worker starts: `{"Workflow":{"Started":true,"JobId":"...","Reason":""}}`.
   * A run that does not start says why in `Reason`, asked in this order: `disabled`, `unknown`, `busy`, `files`, `nothing`, `server` or `start`.
@@ -200,5 +200,14 @@ Every reply is one line of JSON under the key `Workflow`, after the doctype line
   * **An ended workflow is reported once.** The request that reads it removes it, so the session may start another.
 * `workflowStop` *(1)*
   * Asks the running workflow to stop before its next operation. `Stop` is `stopping`, `cleared` or `none`. Read `workflowStatus` until it says `stopped`.
+* `workflowDocument` *(String)* with `workflowFiles[]` *(one for each file)*
+  * Starts a workflow a page built, sent as its JSON text, and replies as `workflowRun` does. It is checked exactly as a library's workflow is and held to every limit. `Reason` may also be `builder`, when the builder is off, or `invalid`, with `Problems` naming everything to fix in the server's words, which are English.
+* `workflowOperations` *(1)*
+  * Describes what a page's builder may build from: `Builder`, `ImportExport`, `MaxSteps`, `MaxFiles`, the `Operations` this server has on, each with its `Modes` and `Options`, and the `Kinds` a filter may name. `Operations` and `Kinds` are empty unless the builder is on.
+* `workflowCheck` *(String)*
+  * Checks a workflow sent as JSON text, and runs and keeps nothing: `Allowed`, `Valid`, `Usable`, `Problems`, and the workflow in canonical form as `Document`, with the `FileName` an export saves it under.
+* `workflowExport` *(String)*
+  * Gives a workflow from the library as a `Document` in canonical form, with its `FileName`. Only a workflow this session is offered is `Found`.
+* `workflowCheck` and `workflowExport` are `Allowed` when the builder or import and export is on. `ABOUT_WORKFLOWS.txt` describes the canonical form.
 
 > ℹ️ Every character that means something in HTML is escaped in every reply, and so is the exclamation mark.

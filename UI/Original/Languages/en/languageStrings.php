@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -492,6 +492,63 @@ $Gui2Text158 = 'The server was too busy to finish the workflow.';
 $Gui2Text159 = 'An operation this workflow needs is not available.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'The workflow stopped unexpectedly.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'Pipelines';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'Select a pipeline above...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'Select Pipeline...';
+// / 'Select Files...'
+$Gui2Text164 = 'Select Files...';
+// / 'Add a step'
+$Gui2Text165 = 'Add a step';
+// / 'Options'
+$Gui2Text166 = 'Options';
+// / 'Back'
+$Gui2Text167 = 'Back';
+// / 'Take: '
+$Gui2Text168 = 'Take: ';
+// / 'the ticked files'
+$Gui2Text169 = 'the ticked files';
+// / 'the files step {step} made'
+$Gui2Text170 = 'the files step {step} made';
+// / 'each file on its own'
+$Gui2Text171 = 'each file on its own';
+// / 'all files together'
+$Gui2Text172 = 'all files together';
+// / 'Only these kinds: '
+$Gui2Text173 = 'Only these kinds: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'Only these extensions: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'Smallest size: ';
+// / 'Largest size: '
+$Gui2Text176 = 'Largest size: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'In the order they arrive';
+// / 'all files'
+$Gui2Text178 = 'all files';
+// / 'all {kind}'
+$Gui2Text179 = 'all {kind}';
+// / 'Width: '
+$Gui2Text180 = 'Width: ';
+// / 'Height: '
+$Gui2Text181 = 'Height: ';
+// / 'My workflow'
+$Gui2Text182 = 'My workflow';
+// / 'New'
+$Gui2Text183 = 'New';
+// / 'Import'
+$Gui2Text184 = 'Import';
+// / 'Export'
+$Gui2Text185 = 'Export';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'This workflow is not one this server can run.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'The file could not be read.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'The workflow builder is not available on this server.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

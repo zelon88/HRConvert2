@@ -332,6 +332,7 @@ The following is a list of supported POST inputs, organized into sections based 
             "Steps":[{"Operation":"Convert","Mode":"each","Options":{...}}, ...],"AcceptsAll":false,"Accepts":["doc","docx", ...]}]}}
           Only a usable workflow is listed. AcceptsAll is true when its first step reads every file, & Accepts
           otherwise lists the extensions its first step reads. It is a hint, & the server decides.
+          NeedsSelection is false when a Select step finds files of its own, so it may be run with none named.
       workflowRun
           String.
           Starts the workflow with that identifier on the files named in workflowFiles[], in the order given.
@@ -345,9 +346,17 @@ The following is a list of supported POST inputs, organized into sections based 
             nothing    No step would take any of the files.
             server     The server already runs --Maximum Concurrent Workflows--.
             start      The worker could not be started. See error 38002.
+      workflowDocument
+          String. A workflow, as the JSON text of the format in ABOUT_WORKFLOWS.txt, which a page built.
+          Starts it on the files named in workflowFiles[], as workflowRun starts one from the library, &
+          replies as workflowRun does. It is checked exactly as a library's workflow is, & held to every limit.
+          Two reasons are asked before the others, & unknown is never given, because it has no identifier.
+            builder    --Enable Workflow Builder-- is off.
+            invalid    The workflow does not check, or names an operation this server has off. Problems lists
+                       every problem, in the server's words, which are English.
       workflowFiles
           JSON Array, sent as workflowFiles[] once for each file.
-          The files workflowRun runs on.
+          The files workflowRun & workflowDocument run on.
       workflowStatus
           1.
           Reports this session's workflow.
@@ -364,4 +373,30 @@ The following is a list of supported POST inputs, organized into sections based 
           {"Workflow":{"Available":true,"Stop":"stopping"}}
           Stop is stopping for a workflow that runs, cleared for one that had ended, which is removed unread,
           & none when there was nothing. Read workflowStatus until it says stopped.
+      workflowOperations
+          1.
+          Describes what a page's builder may build from.
+          {"Workflow":{"Available":true,"Builder":true,"ImportExport":true,"MaxSteps":16,"MaxFiles":100,
+            "Operations":[{"Name":"Convert","BuiltIn":false,"Modes":["each"],"Options":[{"Name":"Extension",
+            "Type":"choice","Required":true,"Choices":["pdf", ...]}, ...]}, ...],"Kinds":["Document", ...]}}
+          Builder & ImportExport say whether each is on. Operations & Kinds are empty unless the builder is.
+          Only an operation this server has on is described, & BuiltIn is true for Select, the Workflow Core's
+          own. Each option has its Name & Type, & its Choices, Default, Required, Minimum & Maximum where it
+          has them. A choice is described in lower case, as a step names it.
+      workflowCheck
+          String. A workflow, as JSON text.
+          Checks it, & runs nothing & keeps nothing.
+          {"Workflow":{"Available":true,"Allowed":true,"Valid":true,"Usable":true,"Problems":[],
+            "Document":"{...}","FileName":"My-workflow-workflow.json"}}
+          Allowed is true when the builder or import & export is on, & nothing else is said when it is not.
+          Usable is true when it is valid & every operation it names is on here, & Problems names everything
+          to fix. Document is the workflow in canonical form, as text, & FileName the name an export saves it
+          under. Both are empty when it is not valid.
+      workflowExport
+          String. A workflow's identifier.
+          Gives a workflow from the library as a document.
+          {"Workflow":{"Available":true,"Allowed":true,"Found":true,"Document":"{...}",
+            "FileName":"documents-to-pdf-zip-workflow.json"}}
+          Allowed is true when the builder or import & export is on. Only a workflow this session is offered is
+          found. Document is the workflow in canonical form, as text. See ABOUT_WORKFLOWS.txt for that form.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

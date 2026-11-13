@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -488,6 +488,63 @@ $Gui2Text158 = '服务器过于繁忙，无法完成工作流。';
 $Gui2Text159 = '此工作流所需的某项操作不可用。';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = '工作流意外停止。';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = '管道';
+// / 'Select a pipeline above...'
+$Gui2Text162 = '请在上方选择一个管道...';
+// / 'Select Pipeline...'
+$Gui2Text163 = '选择管道...';
+// / 'Select Files...'
+$Gui2Text164 = '选择文件...';
+// / 'Add a step'
+$Gui2Text165 = '添加步骤';
+// / 'Options'
+$Gui2Text166 = '选项';
+// / 'Back'
+$Gui2Text167 = '返回';
+// / 'Take: '
+$Gui2Text168 = '取用：';
+// / 'the ticked files'
+$Gui2Text169 = '已勾选的文件';
+// / 'the files step {step} made'
+$Gui2Text170 = '步骤 {step} 生成的文件';
+// / 'each file on its own'
+$Gui2Text171 = '逐个处理每个文件';
+// / 'all files together'
+$Gui2Text172 = '一起处理所有文件';
+// / 'Only these kinds: '
+$Gui2Text173 = '仅这些类型：';
+// / 'Only these extensions: '
+$Gui2Text174 = '仅这些扩展名：';
+// / 'Smallest size: '
+$Gui2Text175 = '最小大小：';
+// / 'Largest size: '
+$Gui2Text176 = '最大大小：';
+// / 'In the order they arrive'
+$Gui2Text177 = '按到达顺序';
+// / 'all files'
+$Gui2Text178 = '所有文件';
+// / 'all {kind}'
+$Gui2Text179 = '所有{kind}';
+// / 'Width: '
+$Gui2Text180 = '宽度：';
+// / 'Height: '
+$Gui2Text181 = '高度：';
+// / 'My workflow'
+$Gui2Text182 = '我的工作流';
+// / 'New'
+$Gui2Text183 = '新建';
+// / 'Import'
+$Gui2Text184 = '导入';
+// / 'Export'
+$Gui2Text185 = '导出';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = '此服务器无法运行此工作流。';
+// / 'The file could not be read.'
+$Gui2Text187 = '无法读取该文件。';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = '此服务器上不提供工作流生成器。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

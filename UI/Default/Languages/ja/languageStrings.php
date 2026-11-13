@@ -35,7 +35,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -497,6 +497,63 @@ $Gui2Text158 = 'サーバーが混み合っていたため、ワークフロー�
 $Gui2Text159 = 'このワークフローに必要な操作が利用できません。';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'ワークフローが予期せず停止しました。';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'パイプライン';
+// / 'Select a pipeline above...'
+$Gui2Text162 = '上からパイプラインを選択してください...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'パイプラインを選択...';
+// / 'Select Files...'
+$Gui2Text164 = 'ファイルを選択...';
+// / 'Add a step'
+$Gui2Text165 = 'ステップを追加';
+// / 'Options'
+$Gui2Text166 = 'オプション';
+// / 'Back'
+$Gui2Text167 = '戻る';
+// / 'Take: '
+$Gui2Text168 = '対象：';
+// / 'the ticked files'
+$Gui2Text169 = 'チェックしたファイル';
+// / 'the files step {step} made'
+$Gui2Text170 = 'ステップ {step} が作成したファイル';
+// / 'each file on its own'
+$Gui2Text171 = 'ファイルごとに個別に';
+// / 'all files together'
+$Gui2Text172 = 'すべてのファイルをまとめて';
+// / 'Only these kinds: '
+$Gui2Text173 = 'これらの種類のみ：';
+// / 'Only these extensions: '
+$Gui2Text174 = 'これらの拡張子のみ：';
+// / 'Smallest size: '
+$Gui2Text175 = '最小サイズ：';
+// / 'Largest size: '
+$Gui2Text176 = '最大サイズ：';
+// / 'In the order they arrive'
+$Gui2Text177 = '届いた順';
+// / 'all files'
+$Gui2Text178 = 'すべてのファイル';
+// / 'all {kind}'
+$Gui2Text179 = 'すべての{kind}';
+// / 'Width: '
+$Gui2Text180 = '幅：';
+// / 'Height: '
+$Gui2Text181 = '高さ：';
+// / 'My workflow'
+$Gui2Text182 = 'マイ ワークフロー';
+// / 'New'
+$Gui2Text183 = '新規';
+// / 'Import'
+$Gui2Text184 = 'インポート';
+// / 'Export'
+$Gui2Text185 = 'エクスポート';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'このサーバーではこのワークフローを実行できません。';
+// / 'The file could not be read.'
+$Gui2Text187 = 'ファイルを読み取れませんでした。';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'このサーバーではワークフロー ビルダーを利用できません。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

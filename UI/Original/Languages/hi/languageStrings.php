@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -491,6 +491,63 @@ $Gui2Text158 = 'सर्वर वर्कफ़्लो पूरा कर�
 $Gui2Text159 = 'इस वर्कफ़्लो के लिए आवश्यक एक कार्रवाई उपलब्ध नहीं है।';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'वर्कफ़्लो अप्रत्याशित रूप से रुक गया।';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'पाइपलाइन';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'ऊपर एक पाइपलाइन चुनें...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'पाइपलाइन चुनें...';
+// / 'Select Files...'
+$Gui2Text164 = 'फ़ाइलें चुनें...';
+// / 'Add a step'
+$Gui2Text165 = 'एक चरण जोड़ें';
+// / 'Options'
+$Gui2Text166 = 'विकल्प';
+// / 'Back'
+$Gui2Text167 = 'वापस';
+// / 'Take: '
+$Gui2Text168 = 'लें: ';
+// / 'the ticked files'
+$Gui2Text169 = 'चिह्नित फ़ाइलें';
+// / 'the files step {step} made'
+$Gui2Text170 = 'चरण {step} द्वारा बनाई गई फ़ाइलें';
+// / 'each file on its own'
+$Gui2Text171 = 'हर फ़ाइल अलग से';
+// / 'all files together'
+$Gui2Text172 = 'सभी फ़ाइलें एक साथ';
+// / 'Only these kinds: '
+$Gui2Text173 = 'केवल ये प्रकार: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'केवल ये एक्सटेंशन: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'न्यूनतम आकार: ';
+// / 'Largest size: '
+$Gui2Text176 = 'अधिकतम आकार: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'जिस क्रम में वे आती हैं';
+// / 'all files'
+$Gui2Text178 = 'सभी फ़ाइलें';
+// / 'all {kind}'
+$Gui2Text179 = 'सभी {kind}';
+// / 'Width: '
+$Gui2Text180 = 'चौड़ाई: ';
+// / 'Height: '
+$Gui2Text181 = 'ऊंचाई: ';
+// / 'My workflow'
+$Gui2Text182 = 'मेरा वर्कफ़्लो';
+// / 'New'
+$Gui2Text183 = 'नया';
+// / 'Import'
+$Gui2Text184 = 'आयात करें';
+// / 'Export'
+$Gui2Text185 = 'निर्यात करें';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'यह सर्वर इस वर्कफ़्लो को नहीं चला सकता।';
+// / 'The file could not be read.'
+$Gui2Text187 = 'फ़ाइल पढ़ी नहीं जा सकी।';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'इस सर्वर पर वर्कफ़्लो बिल्डर उपलब्ध नहीं है।';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

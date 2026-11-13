@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -492,6 +492,63 @@ $Gui2Text158 = 'سرور برای تمام کردن گردش‌کار بیش ا�
 $Gui2Text159 = 'عملیاتی که این گردش‌کار به آن نیاز دارد در دسترس نیست.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'گردش‌کار به‌طور غیرمنتظره متوقف شد.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'پایپ‌لاین‌ها';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'یک پایپ‌لاین را از بالا انتخاب کنید...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'انتخاب پایپ‌لاین...';
+// / 'Select Files...'
+$Gui2Text164 = 'انتخاب فایل‌ها...';
+// / 'Add a step'
+$Gui2Text165 = 'افزودن یک مرحله';
+// / 'Options'
+$Gui2Text166 = 'گزینه‌ها';
+// / 'Back'
+$Gui2Text167 = 'بازگشت';
+// / 'Take: '
+$Gui2Text168 = 'ورودی: ';
+// / 'the ticked files'
+$Gui2Text169 = 'فایل‌های علامت‌خورده';
+// / 'the files step {step} made'
+$Gui2Text170 = 'فایل‌هایی که مرحله {step} ساخت';
+// / 'each file on its own'
+$Gui2Text171 = 'هر فایل جداگانه';
+// / 'all files together'
+$Gui2Text172 = 'همه فایل‌ها با هم';
+// / 'Only these kinds: '
+$Gui2Text173 = 'فقط این انواع: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'فقط این پسوندها: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'کمترین اندازه: ';
+// / 'Largest size: '
+$Gui2Text176 = 'بیشترین اندازه: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'به ترتیب رسیدن';
+// / 'all files'
+$Gui2Text178 = 'همه فایل‌ها';
+// / 'all {kind}'
+$Gui2Text179 = 'همهٔ {kind}';
+// / 'Width: '
+$Gui2Text180 = 'عرض: ';
+// / 'Height: '
+$Gui2Text181 = 'ارتفاع: ';
+// / 'My workflow'
+$Gui2Text182 = 'گردش‌کار من';
+// / 'New'
+$Gui2Text183 = 'جدید';
+// / 'Import'
+$Gui2Text184 = 'وارد کردن';
+// / 'Export'
+$Gui2Text185 = 'صادر کردن';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'این سرور نمی‌تواند این گردش‌کار را اجرا کند.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'فایل خوانده نشد.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'سازنده گردش‌کار در این سرور در دسترس نیست.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

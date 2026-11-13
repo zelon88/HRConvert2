@@ -12,7 +12,7 @@ This application is designed to provide a web-interface for converting file form
 FILE INFORMATION ...
 v4.1.4.
 This file documents workflows. What one is, the format it is written in, how one runs & what a page or a caller of the API is told while it does.
-It describes the Workflow Core component, the operations HRConvert2 offers it & the Workflows panel in both interfaces.
+It describes the Workflow Core component, the operations HRConvert2 offers it, & the Workflows panel & its builder in both interfaces.
 For the requests themselves, see ABOUT_REST_API.txt. For the commands, see ABOUT_COMMAND_LINE_ARGUMENTS.txt.
 For what another application must supply, see ABOUT_ENGINE_CONTRACT.txt. For why it is shaped the way it is, see DEVELOPMENT_NOTES.txt.
 
@@ -54,9 +54,15 @@ A workflow runs in a WORKER, a process of its own started for that workflow alon
 that starts it returns as soon as it is started, & a page asks how it is doing until it ends.
 That is why a long workflow is not bound by the time a web request may take.
 
+A user may also BUILD a workflow in the page, from the operations the server offers, & run it,
+export it to a file or import one. A workflow a page builds is checked exactly as a library's
+is, & held to every limit a library's is, because the page only sends it & the Workflow Core
+decides. See --The Builder-- & --Import & Export--.
+
 Workflows are on by default. --Enable Workflows-- in config.php turns them off, & then every
 request about one is answered that workflows are unavailable, & the interfaces draw no
-Workflows button.
+Workflows button. The builder & import & export are on by default too, &
+--Enable Workflow Builder-- & --Enable Workflow Import & Export-- turn each of them off.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -86,11 +92,13 @@ The workflow.
   Steps         Required. A list of at least one step, & no more than --Maximum Workflow Steps--.
 
 Each step.
-  Operation     Required. The operation it runs, by the name the application gives it.
+  Operation     Required. The operation it runs, by the name the application gives it, or Select,
+                which is the Workflow Core's own. See --Select--.
   Input         Which files it takes. selection, previous or step N, or a list of up to 8 of them.
                 selection is the files the user selected. previous is the step before, & for
                 the first step it is the selection. step N is what step N made, & N must be a
                 step before this one. A file named twice is taken once. The default is previous.
+                A Select step takes no Input, because it reads the session.
   Filter        An object narrowing the files. A file must pass every test it names, & a filter
                 that names none passes every file.
                   Glob          A shell pattern of up to 128 characters, matched against the name
@@ -159,6 +167,27 @@ name a user types, & a name already taken is given the next free one, as it is f
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Select--
+
+SELECT IS THE WORKFLOW CORE'S OWN STEP. It runs nothing. When the workflow reaches it, it reads
+the files in the session again, keeps the ones its Filter passes, in its Order, & hands them to
+the steps after it, which take them as previous or step N, as they take any step's files. So a
+workflow can convert the ticked files to PDF & then select every PDF in the session, the new
+ones included, & put them in one zip.
+
+  { "Operation": "Select", "Filter": { "Extensions": ["pdf"] }, "Order": "name" }
+
+It takes no Input, because it reads the session, & no Mode & no Options. A workflow holding one
+needs no file ticked, because Select finds files of its own. It finds only what a page's file
+list shows, because it reads the session through the function the application names for that,
+so a file the application never shows a user is never selected. It takes no budget, & what it
+finds is not counted as made. One that would find more files than --Maximum Workflow Files-- is
+refused before the workflow starts, & fails the workflow, as files, if it finds that many when
+it runs. An application gives its workflows Select by naming SessionFiles. See --For An
+Application Built On The Engine--.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Kinds Of File--
 
 A filter's Types names kinds of file, & the interfaces tick the files of one kind by the same
@@ -182,7 +211,7 @@ A file can be more than one kind. An rtf file is a Document & an Ebook, & a txt 
 Two folders hold workflows, & a user is offered every usable workflow in either.
 
 THE SHIPPED LIBRARY is Resources/Workflows. It comes with the release & is replaced by the
-next one. v4.1.4 ships three.
+next one. It ships three.
   documents-to-pdf-zip    Converts documents, spreadsheets & presentations to PDF, then zips them.
   images-to-jpg-zip       Converts images to JPG, then zips them.
   scan-and-identify       Scans the selected files for viruses, then identifies them with a report.
@@ -210,8 +239,8 @@ check cannot be installed. Neither command touches the shipped library.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Running A Workflow--
 
-1. A page or a caller asks to run a workflow on files the user selected, in the order they
-   were selected. The core keeps only the files the session holds, because which files a user
+1. A page or a caller asks to run a workflow from the library, or one a page built, on files the
+   user selected, in the order they were selected. The core keeps only the files the session holds, because which files a user
    may act on is the application's decision, & hands the rest to the Workflow Core.
 
 2. The Workflow Core refuses the run, & says why, when workflows are off, the workflow is not
@@ -219,6 +248,11 @@ check cannot be installed. Neither command touches the shipped library.
    than --Maximum Workflow Files--, no step would take any selected file, or the server already
    runs --Maximum Concurrent Workflows--. It asks in that order, so a session whose own workflow
    is running is told so, rather than that the server is busy.
+   A workflow a page built is refused before any of these when the builder is off, & then when
+   it does not check or names an operation this server has off, with every problem named. It
+   has no identifier, so it is never unknown. A Select step is asked about with the rest, so a
+   workflow whose Select step finds a file needs none selected, & one whose Select step would
+   find more than --Maximum Workflow Files-- is refused as too many files.
 
 3. Otherwise it claims the session by creating its status file, which only one request can
    create, writes the job beside it & starts the worker. The reply carries the job.
@@ -281,12 +315,13 @@ What a page or a caller is told. Nothing else in the file leaves the server.
                   failed       operation, threat, runtime, files, budget, unavailable or halted.
                   interrupted  start, worker or unreadable.
   JobId         The job, 24 hexadecimal digits.
-  WorkflowId    The workflow's identifier, & Name, its name.
+  WorkflowId    The workflow's identifier, empty for one a page built, & Name, its name.
   StepCount     How many steps it has, StepNumber the one running, & Operation that step's operation.
   FilesDone     How many of the step's files are done, & FilesTotal how many it has.
   Waiting       true while it waits for a budget.
   Steps         Each step's Operation, State, Inputs, Skipped, Produced & whether it had Errors.
                 A step's State is waiting, running, done, skipped, stopped or failed.
+                A Select step's Inputs is how many files it found, & its Produced is 0.
   Produced      Every file the workflow made, in the order it made them.
   Elapsed       Seconds since it started, or how long it ran once it ended.
 
@@ -314,6 +349,8 @@ the application calls it. After unpacking a drop in, run --config --repair befor
   --Maximum Workflow Files--          $MaxWorkflowFiles = 100. The most files a run, or one step, may take.
   --Maximum Workflow Runtime--        $MaxWorkflowRuntime = 30. Minutes a workflow may run.
   --Maximum Concurrent Workflows--    $MaxConcurrentWorkflows = 4. Workflows the server runs at once.
+  --Enable Workflow Builder--         $EnableWorkflowBuilder = TRUE. Whether a page may build & run a workflow.
+  --Enable Workflow Import & Export-- $EnableWorkflowImportExport = TRUE. Whether a page may export & import one.
 
 A limit below one is taken as one.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -350,6 +387,73 @@ Until the library has drawn the panel it says the same, so a page whose copy of 
 not load still says something true.
 Everything a server or a workflow supplies is written into the page as text, never as markup.
 A workflow's name & description are shown as its author wrote them, in the language they wrote.
+Where the builder is on, the workflow's box is replaced by the builder. See --The Builder--.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Builder--
+
+Where --Enable Workflow Builder-- is on, the Workflows panel builds workflows as well as running
+them. A PIPELINES section sits above the boxes, with a tab for the library & one for each
+operation the server has on, & each tab lists its choices. Convert's lists every format it
+writes, Archive's every archive it makes, OCR's every format it writes, Scan's each scanner &
+Identify's itself. Select's lists every file, & every file of one kind. The library's lists its
+workflows, & choosing one opens it in the builder from the document the server gives for it.
+
+The workflow's box becomes a BOX FOR EACH STEP, between the files & the box that runs them. A
+choice goes into the box waiting for one, which says Select a pipeline above..., or into a new
+box at the end. Each box names its step & what it does. Its options button opens the step's
+options in its place, across the whole row, with a back arrow in the corner a line starts from,
+& its other button takes the step out. A step after one taken out that took its files takes what
+came before it instead.
+
+A step's OPTIONS are its nouns & then its verbs. The nouns are which files it takes, the ticked
+files or what any earlier step made, whether it runs once for each file or once for all of them,
+which kinds of file it keeps, a name pattern, extensions, the smallest & the largest size, & the
+order. A name pattern is a wildcard pattern, or a regular expression between slashes. The verbs
+are what its operation is told, such as the format & the name of what it makes.
+
+The box that runs the workflow is SPLIT. Its add button adds a box to its left, & asks whether
+it is Select Pipeline..., a box waiting for a choice from the tabs, or Select Files..., a Select
+step, whose options open at once. Below the tabs are the workflow's name, New, which starts
+again, & Import & Export where the server allows them.
+
+A workflow from the library left as it was runs & exports by its identifier. Anything built,
+changed or imported is sent whole, & the server checks it before it runs. A workflow that does
+not check is not run, & the panel names every problem the server found, in the server's words,
+which are English. A change to the steps drops the description, because the description was its
+author's, of the steps they wrote. Nothing is kept in the browser, so a page loaded again
+starts with an empty builder.
+
+The builder offers only what the server describes, & only an operation the server has on. A
+step can take no more than eight inputs, which is the format's limit, & the panel adds no more
+steps than --Maximum Workflow Steps--. The server holds a built workflow to every other limit.
+Where the builder is off, the panel is the one v4.1.4 drew, & where export is on, the chosen
+workflow can be exported from its box.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Import & Export--
+
+A workflow is EXPORTED as the Workflow Core writes it, in CANONICAL FORM. Reading it back gives
+the same workflow, so a workflow exported, imported & exported again is the same text.
+  Every reference is written as selection or step N, never as previous.
+  Input is one reference, or a list of them, & a Select step has none.
+  A filter keeps only the tests it makes, & a size is written in bytes. A step that filters nothing has no Filter.
+  Mode & every option are written, because the defaults are the application's & another server's could differ.
+  Order is written only when it is name.
+The file holds the workflow alone. It names no file of a user's, no session & no path, so it can
+be shared. It is named for an identifier followed by -workflow.json, so --workflow --install
+installs it as it is. A workflow from the library is named for its identifier, & one a page built
+for its name, with every run of characters an identifier cannot hold made a single dash.
+  php convertCore.php --workflow --export=ID > ID-workflow.json
+writes a workflow from the library in the same form, & any account may run it.
+
+A file is IMPORTED into the builder. The page reads a file of at most 64 KiB & sends its text to
+the server, which checks it & runs nothing. It is opened only when it is valid & every operation
+it names is on here, & otherwise the page names every problem. It opens with no identifier, so it
+runs & exports as a workflow a page built. Import needs the builder, because a workflow is opened
+in it, & export does not, because a workflow from the library can be exported without it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -378,11 +482,14 @@ The Workflow Core is version pinned like every Engine core, by $RequiredWorkflow
 an application loads it only when a workflow is asked for. It names no operation of its own.
 
 An application supplies three things, in Resources/Contract/app-engine-config.php.
-  $EngineOperationProvider   The name of a function returning an array holding Operations & FileTypes.
+  $EngineOperationProvider   The name of a function returning an array holding Operations & FileTypes,
+                             & SessionFiles where its workflows may use Select.
   $EngineShippedWorkflows    Its shipped library, relative to the installation, or empty for none.
   $EngineSettingNames        The names of its settings for EnableWorkflows, MaxWorkflowSteps,
                              MaxWorkflowFiles, MaxWorkflowRuntime, MaxConcurrentWorkflows,
-                             SessionFolder, SessionContext & WorkflowLibrary.
+                             EnableWorkflowBuilder, EnableWorkflowImportExport, SessionFolder,
+                             SessionContext & WorkflowLibrary. An application that maps neither
+                             switch has no builder & no import or export.
 SessionFolder is the folder of the session a request serves. SessionContext names that session
 in a form the application can adopt again in a worker, & HRConvert2 gives its two halves.
 WorkflowLibrary is the installed library, a location of the library role.
@@ -406,6 +513,11 @@ operation & nothing else.
 
 FileTypes maps a kind of file, a plain word, to the extensions it covers.
 
+SessionFiles names a function that lists a session folder's files as the application's pages
+list them. It is called with the folder & returns the names. Naming it gives the application's
+workflows the Select step, & HRConvert2 names getFiles(). An operation the application declares
+under the name Select is left out & named in a warning, because the name is the Workflow Core's.
+
 An application that starts workers must also adopt the session a worker is handed, before it
 reads any input. HRConvert2 does that in adoptWorkflowSession(), & the worker's startup key is
 checked against that session before anything is acted on.
@@ -426,15 +538,15 @@ Workflow Core & are described in ERROR_DESCRIPTIONS.txt. None is fatal to the pa
 
 Every warning a workflow raises is logged under the session it serves. A worker logs under the
 role Workflow, so its entries are kept in a log of their own beside the web server's.
+ERROR_DESCRIPTIONS.txt lists every warning the Workflow Core raises, after its errors.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Not Yet--
 
-v4.1.4 is the first round. A workflow is chosen from the libraries & run.
+v4.1.4 was the first round, which chose a workflow from the libraries & ran it. v4.1.5 added the
+builder, import & export, & Select, which reads the session again part way through a workflow.
 These are planned & are not in this version.
-  A builder, under $EnableWorkflowBuilder, for assembling a workflow from operations in the page.
-  Import & export, under $EnableWorkflowImport, of workflows as anonymous, generic JSON files.
-  Operations that serve workflows, such as Rescan, Hash, Diff, Grep & Replace, Combine & Split.
+  Operations that serve workflows, such as Hash, Diff, Grep & Replace, Combine & Split.
   An operation's own estimate of what it will cost, compiled into what a whole workflow needs.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

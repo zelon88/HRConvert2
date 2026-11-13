@@ -212,7 +212,7 @@ RequireResourceAwareness,
 HostedLocation, ServerURL & DocumentRoot, & from v4.1.3 StorageWarningPercentage &
 StorageReserveMegabytes. From v4.1.4 the Workflow Core reads EnableWorkflows, MaxWorkflowSteps,
 MaxWorkflowFiles, MaxWorkflowRuntime, MaxConcurrentWorkflows, SessionFolder, SessionContext &
-WorkflowLibrary. HostedLocation, ServerURL, DocumentRoot, SessionFolder & SessionContext name
+WorkflowLibrary, & from v4.1.5 EnableWorkflowBuilder & EnableWorkflowImportExport. HostedLocation, ServerURL, DocumentRoot, SessionFolder & SessionContext name
 values the application works out as it starts, which the map reads the same way. LiftNamespaceRestriction, from v4.0.5, says
 whether -fp may lift the kernel's AppArmor restriction on unprivileged namespaces where
 bubblewrap, run through the application's own copy & the profile attached to it, refuses a
@@ -391,7 +391,9 @@ application ships, relative to the installation, & WorkflowLibrary in $EngineSet
 installed one, a location of the library role. An application that names no provider runs no
 workflow, logs error 38000 & loses nothing else. A worker is the application's own entry point,
 & the application adopts the session it is handed before it reads any input, as HRConvert2 does in
-adoptWorkflowSession(). See ABOUT_WORKFLOWS.txt.
+adoptWorkflowSession(). From v4.1.5 the provider may also name SessionFiles, a function listing a
+session's files as the application's pages list them, which gives its workflows the Workflow Core's
+Select step. HRConvert2 names getFiles(). See ABOUT_WORKFLOWS.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

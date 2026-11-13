@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.1.4.
+// / v4.1.5.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -41,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.1.4';
+$EngineVersion = 'v4.1.5';
 // / -----------------------------------------------------------------------------------
 
 
@@ -4306,8 +4306,8 @@ function engineSubOptionOwners() {
     // / dependencies & --config reaches into settings. Same shape, same place.
     '--list' => '--pipeline', '--describe' => '--pipeline', '--verify' => '--pipeline',
     '--check-depends' => '--pipeline',
-    // / --workflow reads, checks & installs workflows, the way --pipeline reads pipelines.
-    '--check' => '--workflow', '--install' => '--workflow', '--remove' => '--workflow');
+    // / --workflow reads, checks, exports & installs workflows, the way --pipeline reads pipelines.
+    '--check' => '--workflow', '--export' => '--workflow', '--install' => '--workflow', '--remove' => '--workflow');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection);
   return $SubOptionOwners; }

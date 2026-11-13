@@ -294,10 +294,18 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
       // / The boxes stay hidden, & the panel says workflows are unavailable, until the library has drawn it.
       // / So a page whose library did not load still says something true, & so does a server without the Workflow Core.
       // / A pattern is code in any language, so the box it is typed into reads left to right.
+      // / Where the builder is on, the Pipelines section offers a tab for the library & one for each operation, & the workflow's box becomes a box for each step.
+      // / The box that runs them is split, & its add button adds a step to its left. The library draws the tabs, the steps & their options.
       ?>
       <div id='hrc2Workflows' name='hrc2Workflows' class='hrc2-workflows' style='display:none;'>
         <hr style='width: 50%;'/>
         <p><strong><?php echo $Gui2Text128; ?></strong></p>
+        <div id='hrc2WfPipelines' class='hrc2-wf-pipelines' hidden>
+          <p class='hrc2-wf-label'><?php echo $Gui2Text161; ?></p>
+          <div id='hrc2WfTabs' class='hrc2-wf-tabs' role='tablist' aria-label='<?php echo htmlspecialchars($Gui2Text161, ENT_QUOTES, 'UTF-8'); ?>'></div>
+          <div id='hrc2WfTabPanel' class='hrc2-wf-tab-panel' role='tabpanel'></div>
+          <div id='hrc2WfTools' class='hrc2-wf-tools'></div>
+        </div>
         <div id='hrc2WfBoxes' class='hrc2-wf-boxes' hidden>
           <div id='hrc2WfFilesBox' class='hrc2-wf-box'>
             <p class='hrc2-wf-label'><?php echo $Gui2Text129; ?></p>
@@ -310,6 +318,11 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             <div id='hrc2WfAbout' class='hrc2-wf-about'></div>
           </div>
           <div id='hrc2WfRunBox' class='hrc2-wf-box hrc2-wf-run-box'>
+            <button type='button' id='hrc2WfAdd' name='hrc2WfAdd' class='hrc2-wf-add' title='<?php echo htmlspecialchars($Gui2Text165, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text165, ENT_QUOTES, 'UTF-8'); ?>' aria-haspopup='menu' aria-expanded='false' aria-controls='hrc2WfAddMenu' hidden>+</button>
+            <div id='hrc2WfAddMenu' class='hrc2-wf-add-menu' role='menu' hidden>
+              <button type='button' role='menuitem' data-hrc2-add='pipeline'><?php echo $Gui2Text163; ?></button>
+              <button type='button' role='menuitem' data-hrc2-add='files'><?php echo $Gui2Text164; ?></button>
+            </div>
             <button type='button' id='hrc2WfRun' name='hrc2WfRun' class='hrc2-wf-run' title='<?php echo htmlspecialchars($Gui2Text135, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text135, ENT_QUOTES, 'UTF-8'); ?>' disabled>&#9654;</button>
             <button type='button' id='hrc2WfStop' name='hrc2WfStop' class='hrc2-wf-stop' title='<?php echo htmlspecialchars($Gui2Text136, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text136, ENT_QUOTES, 'UTF-8'); ?>' hidden>&#9632;</button>
           </div>
@@ -317,12 +330,26 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         <div id='hrc2WfStatus' class='hrc2-wf-status' role='status' aria-live='polite'><p><?php echo $Gui2Text146; ?></p></div>
         <script type='text/javascript'>
           HRC2.startWorkflows(<?php echo json_encode(array(
+            'builder' => ($EnableWorkflowBuilder === TRUE), 'importExport' => ($EnableWorkflowImportExport === TRUE),
             'text' => array('selected' => $Gui2Text113, 'pickFiles' => $Gui2Text130, 'choose' => $Gui2Text134, 'usable' => $Gui2Text137, 'step' => $Gui2Text138, 'file' => $Gui2Text139,
               'waiting' => $Gui2Text140, 'starting' => $Gui2Text141, 'finished' => $Gui2Text142, 'stopping' => $Gui2Text143, 'stopped' => $Gui2Text144, 'made' => $Gui2Text145,
               'unavailable' => $Gui2Text146, 'empty' => $Gui2Text147,
-              'refused' => array('disabled' => $Gui2Text146, 'unknown' => $Gui2Text148, 'nothing' => $Gui2Text149, 'files' => $Gui2Text150, 'server' => $Gui2Text151, 'busy' => $Gui2Text152, 'start' => $Gui2Text153),
+              'library' => $Gui2Text128, 'pickPipeline' => $Gui2Text162, 'options' => $Gui2Text166, 'back' => $Gui2Text167, 'remove' => $Gui2Text67,
+              'take' => $Gui2Text168, 'ticked' => $Gui2Text169, 'stepFiles' => $Gui2Text170, 'each' => $Gui2Text171, 'together' => $Gui2Text172,
+              'kinds' => $Gui2Text173, 'extensions' => $Gui2Text174, 'byName' => $Gui2Text131, 'patternHint' => $Gui2Text132, 'smallest' => $Gui2Text175, 'largest' => $Gui2Text176,
+              'sortBy' => $Gui2Text104, 'arrival' => $Gui2Text177, 'nameOrder' => $Gui2Text105, 'allFiles' => $Gui2Text178, 'allKind' => $Gui2Text179,
+              'name' => $Gui2Text105, 'untitled' => $Gui2Text182, 'newWorkflow' => $Gui2Text183, 'importFile' => $Gui2Text184, 'exportFile' => $Gui2Text185,
+              'notWorkflow' => $Gui2Text186, 'unreadable' => $Gui2Text187,
+              'refused' => array('disabled' => $Gui2Text146, 'unknown' => $Gui2Text148, 'nothing' => $Gui2Text149, 'files' => $Gui2Text150, 'server' => $Gui2Text151, 'busy' => $Gui2Text152, 'start' => $Gui2Text153, 'builder' => $Gui2Text188, 'invalid' => $Gui2Text186),
               'failed' => array('operation' => $Gui2Text154, 'threat' => $Gui2Text155, 'runtime' => $Gui2Text156, 'files' => $Gui2Text157, 'budget' => $Gui2Text158, 'unavailable' => $Gui2Text159, 'halted' => $Gui2Text160, 'stopped' => $Gui2Text144)),
-            'operations' => array('Convert' => $Gui2Text14, 'Archive' => $Gui2Text10, 'OCR' => $Gui2Text12, 'Identify' => $Gui2Text86, 'Scan' => $Gui2Text8))); ?>);
+            'operations' => array('Convert' => $Gui2Text14, 'Archive' => $Gui2Text10, 'OCR' => $Gui2Text12, 'Identify' => $Gui2Text86, 'Scan' => $Gui2Text8, 'Select' => $Gui2Text109),
+            'kinds' => array('Document' => $Gui2Text114, 'Spreadsheet' => $Gui2Text115, 'Presentation' => $Gui2Text116, 'Image' => $Gui2Text117, 'Audio' => $Gui2Text118, 'Video' => $Gui2Text119, 'Archive' => $Gui2Text120,
+              'Ebook' => $Gui2Text121, 'Model' => $Gui2Text122, 'Drawing' => $Gui2Text123, 'Vector' => $Gui2Text124, 'Subtitle' => $Gui2Text125, 'Scad' => $Gui2Text126, 'Stream' => $Gui2Text127),
+            'optionLabels' => array('Extension' => $Gui2Text18, 'Filename' => $Gui2Text17, 'Width' => $Gui2Text180, 'Height' => $Gui2Text181, 'Rotate' => $Gui2Text65, 'Bitrate' => $Gui2Text66,
+              'Method' => $Gui2Text39, 'Report' => $Gui2Text97, 'Scanner' => $Gui2Text8),
+            // / OCR's methods are named as the OCR button names them, & each scanner as the button that scans with it.
+            'choiceLabels' => array('Method' => array('0' => $Gui2Text39, '1' => $Gui2Text39.' 1 ('.$Gui2Text40.')', '2' => $Gui2Text39.' 2 ('.$Gui2Text41.')'),
+              'Scanner' => array('all' => $Gui2Text37, 'clamav' => $Gui2Text36, 'scancore' => $Gui2Text35)))); ?>);
         </script>
       </div>
       <?php } ?>

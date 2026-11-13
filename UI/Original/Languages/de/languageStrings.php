@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -490,6 +490,63 @@ $Gui2Text158 = 'Der Server war zu ausgelastet, um den Workflow abzuschließen.';
 $Gui2Text159 = 'Eine Operation, die dieser Workflow benötigt, ist nicht verfügbar.';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'Der Workflow wurde unerwartet angehalten.';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'Pipelines';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'Wählen Sie oben eine Pipeline aus...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'Pipeline Auswählen...';
+// / 'Select Files...'
+$Gui2Text164 = 'Dateien Auswählen...';
+// / 'Add a step'
+$Gui2Text165 = 'Schritt hinzufügen';
+// / 'Options'
+$Gui2Text166 = 'Optionen';
+// / 'Back'
+$Gui2Text167 = 'Zurück';
+// / 'Take: '
+$Gui2Text168 = 'Verwenden: ';
+// / 'the ticked files'
+$Gui2Text169 = 'die markierten Dateien';
+// / 'the files step {step} made'
+$Gui2Text170 = 'die Dateien aus Schritt {step}';
+// / 'each file on its own'
+$Gui2Text171 = 'jede Datei einzeln';
+// / 'all files together'
+$Gui2Text172 = 'alle Dateien zusammen';
+// / 'Only these kinds: '
+$Gui2Text173 = 'Nur diese Arten: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'Nur diese Endungen: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'Mindestgröße: ';
+// / 'Largest size: '
+$Gui2Text176 = 'Höchstgröße: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'In der Reihenfolge des Eingangs';
+// / 'all files'
+$Gui2Text178 = 'alle Dateien';
+// / 'all {kind}'
+$Gui2Text179 = 'alle {kind}';
+// / 'Width: '
+$Gui2Text180 = 'Breite: ';
+// / 'Height: '
+$Gui2Text181 = 'Höhe: ';
+// / 'My workflow'
+$Gui2Text182 = 'Mein Workflow';
+// / 'New'
+$Gui2Text183 = 'Neu';
+// / 'Import'
+$Gui2Text184 = 'Importieren';
+// / 'Export'
+$Gui2Text185 = 'Exportieren';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'Diesen Workflow kann dieser Server nicht ausführen.';
+// / 'The file could not be read.'
+$Gui2Text187 = 'Die Datei konnte nicht gelesen werden.';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'Der Workflow-Editor ist auf diesem Server nicht verfügbar.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

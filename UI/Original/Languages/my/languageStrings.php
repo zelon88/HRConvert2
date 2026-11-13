@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.4';
+$LanguageVersion = 'v4.1.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -492,6 +492,63 @@ $Gui2Text158 = 'ဆာဗာ အလွန်အလုပ်များနေသ
 $Gui2Text159 = 'ဤလုပ်ငန်းစဉ် လိုအပ်သော လုပ်ဆောင်ချက်တစ်ခုကို အသုံးမပြုနိုင်ပါ။';
 // / 'The workflow stopped unexpectedly.'
 $Gui2Text160 = 'လုပ်ငန်းစဉ် မမျှော်လင့်ဘဲ ရပ်သွားပါသည်။';
+// / The words in braces, such as {step} & {kind}, are filled in by the page. Each translation keeps every one of them.
+// / 'Pipelines'
+$Gui2Text161 = 'ပိုက်လိုင်းများ';
+// / 'Select a pipeline above...'
+$Gui2Text162 = 'အထက်တွင် ပိုက်လိုင်းတစ်ခု ရွေးပါ...';
+// / 'Select Pipeline...'
+$Gui2Text163 = 'ပိုက်လိုင်း ရွေးရန်...';
+// / 'Select Files...'
+$Gui2Text164 = 'ဖိုင်များ ရွေးရန်...';
+// / 'Add a step'
+$Gui2Text165 = 'အဆင့်တစ်ခု ထည့်ရန်';
+// / 'Options'
+$Gui2Text166 = 'ရွေးချယ်စရာများ';
+// / 'Back'
+$Gui2Text167 = 'နောက်သို့';
+// / 'Take: '
+$Gui2Text168 = 'ယူရန်: ';
+// / 'the ticked files'
+$Gui2Text169 = 'အမှန်ခြစ်ထားသော ဖိုင်များ';
+// / 'the files step {step} made'
+$Gui2Text170 = 'အဆင့် {step} မှ ပြုလုပ်ခဲ့သော ဖိုင်များ';
+// / 'each file on its own'
+$Gui2Text171 = 'ဖိုင်တစ်ခုချင်းစီ သီးခြား';
+// / 'all files together'
+$Gui2Text172 = 'ဖိုင်အားလုံး အတူတကွ';
+// / 'Only these kinds: '
+$Gui2Text173 = 'ဤအမျိုးအစားများသာ: ';
+// / 'Only these extensions: '
+$Gui2Text174 = 'ဤတိုးချဲ့အမည်များသာ: ';
+// / 'Smallest size: '
+$Gui2Text175 = 'အငယ်ဆုံး အရွယ်အစား: ';
+// / 'Largest size: '
+$Gui2Text176 = 'အကြီးဆုံး အရွယ်အစား: ';
+// / 'In the order they arrive'
+$Gui2Text177 = 'ရောက်ရှိသည့် အစီအစဉ်အတိုင်း';
+// / 'all files'
+$Gui2Text178 = 'ဖိုင်အားလုံး';
+// / 'all {kind}'
+$Gui2Text179 = '{kind} အားလုံး';
+// / 'Width: '
+$Gui2Text180 = 'အကျယ်: ';
+// / 'Height: '
+$Gui2Text181 = 'အမြင့်: ';
+// / 'My workflow'
+$Gui2Text182 = 'ကျွန်ုပ်၏ လုပ်ငန်းစဉ်';
+// / 'New'
+$Gui2Text183 = 'အသစ်';
+// / 'Import'
+$Gui2Text184 = 'တင်သွင်းရန်';
+// / 'Export'
+$Gui2Text185 = 'ထုတ်ယူရန်';
+// / 'This workflow is not one this server can run.'
+$Gui2Text186 = 'ဤဆာဗာသည် ဤလုပ်ငန်းစဉ်ကို မလုပ်ဆောင်နိုင်ပါ။';
+// / 'The file could not be read.'
+$Gui2Text187 = 'ဖိုင်ကို ဖတ်၍ မရပါ။';
+// / 'The workflow builder is not available on this server.'
+$Gui2Text188 = 'ဤဆာဗာတွင် လုပ်ငန်းစဉ် တည်ဆောက်ကိရိယာ မရရှိနိုင်ပါ။';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

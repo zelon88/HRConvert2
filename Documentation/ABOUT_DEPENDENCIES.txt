@@ -127,6 +127,10 @@ A refusal caused by a gate is a warning carrying a reason, not an error. Nothing
   sudo php convertCore.php --setup --uninstall-depends  Remove what this application installed.
   sudo php convertCore.php --pipeline --check-depends   The same test, per pipeline.
 
+A BUILD THAT FAILED IS NOT RUN AGAIN IN THE SAME INSTALL, from v4.1.7. FFMPEG & FFprobe come
+from one build, & FFprobe is skipped & named when the build already failed for FFMPEG, rather
+than failing the same way after as long again. Correct the cause & run the install again.
+
 An install can take hours on a slow connection, because some dependencies are large downloads
 rather than quick package installs. A status line is printed every minute while one runs, with
 the elapsed time & the last thing the installer said, so a slow install is distinguishable

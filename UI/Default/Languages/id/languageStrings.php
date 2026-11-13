@@ -37,7 +37,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.6';
+$LanguageVersion = 'v4.1.7';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -544,6 +544,16 @@ $Gui2Text189 = 'Status';
 $Gui2Text190 = 'Sebuah alur kerja sedang berjalan.';
 // / 'No workflow is running.'
 $Gui2Text191 = 'Tidak ada alur kerja yang berjalan.';
+// / 'Extract'
+$Gui2Text192 = 'Ekstrak';
+// / 'Close Extract Options'
+$Gui2Text193 = 'Tutup Opsi Ekstrak';
+// / 'Extract This Archive'
+$Gui2Text194 = 'Ekstrak Arsip Ini';
+// / 'Every file it holds is added to your files, under its own name or the next free one.'
+$Gui2Text195 = 'Setiap berkas di dalamnya ditambahkan ke berkas Anda, dengan namanya sendiri atau nama bebas berikutnya.';
+// / 'Extract Files'
+$Gui2Text196 = 'Ekstrak Berkas';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

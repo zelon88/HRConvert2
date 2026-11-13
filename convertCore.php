@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.6.
+// / v4.1.7.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -105,7 +105,8 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'ResourcePollInterval', 'WorkerReapInterval', 'WorkerStaleGracePeriod', 'TotalResourceBudget',
     'ReserveResourcePercentage', 'MaxConcurrentWorkers', 'MaxExpectedRuntime', 'MaxRuntimeExtensions',
     'DefaultConversionCost', 'DefaultExpectedRuntime', 'LowStorageWarning', 'StorageReserve', 'MaintainHTAccess',
-    'MaxWorkflowSteps', 'MaxWorkflowFiles', 'MaxWorkflowRuntime', 'MaxConcurrentWorkflows', 'EnableWorkflowBuilder', 'EnableWorkflowImportExport');
+    'MaxWorkflowSteps', 'MaxWorkflowFiles', 'MaxWorkflowRuntime', 'MaxConcurrentWorkflows', 'EnableWorkflowBuilder', 'EnableWorkflowImportExport',
+    'MaxExtractedSize', 'MaxExtractedFiles');
   // / Check that every required setting actually exists in the global scope.
   // / config.php is required at global scope, so every setting it defines lands in $GLOBALS.
   foreach ($requiredConfigVars as $requiredConfigVar) {
@@ -1232,7 +1233,7 @@ function verifyCodeIsTrustedByRoot($treePath) {
 // / Any other combination gets no secret at all & fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $AllowUserIdentify, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $LowStorageWarning, $StorageReserve, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $WorkflowLoc, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $MaxWorkflowSteps, $MaxWorkflowFiles, $MaxWorkflowRuntime, $MaxConcurrentWorkflows, $RequiredWorkflowCoreVersion,
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $AllowUserIdentify, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $LowStorageWarning, $StorageReserve, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $WorkflowLoc, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $MaxWorkflowSteps, $MaxWorkflowFiles, $MaxWorkflowRuntime, $MaxConcurrentWorkflows, $MaxExtractedSize, $MaxExtractedFiles, $RequiredWorkflowCoreVersion,
     $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $EngineApplicationVersion, $CodeIsTrusted, $HostedLoc, $ApplicationLoc, $SecretPlacesWereOpen;
   $rootRecord = array();
   $legacyWasRemoved = FALSE;
@@ -1311,7 +1312,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.1.6';
+  $HRConvertVersion = 'v4.1.7';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -1319,44 +1320,43 @@ function verifyInstallation() {
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v4.1.5';
+  $RequiredConfigVersion = 'v4.1.7';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.1.6';
+  $RequiredGuiVersion = 'v4.1.7';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A Language Pack version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v4.1.6';
+  $RequiredLanguageVersion = 'v4.1.7';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / No Core Manager version is pinned here. Every manager role is a subcomponent of the
   // / Engine & getAcceptedManagers() inside the Engine pins each one exactly.
   // / The Setup Core component version this core requires.
-  // / This is an EXACT match. A component built for another core may not be called safely.
-  // / Setup Core holds the configuration model, so this MUST be raised whenever
-  // / $RequiredConfigVersion is raised. Forgetting does not break anything immediately.
-  // / The utility reports a variable it does not know as unaccounted & carries on.
-  $RequiredSetupCoreVersion = 'v4.1.5';
+  // / This is an exact match. A component built for another core may not be called safely.
+  // / Raise this when the Setup Core itself changes.
+  // / The configuration model is applicationConfigModel() in this file & its defaults are the template, so a new setting raises nothing here.
+  $RequiredSetupCoreVersion = 'v4.1.7';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v4.0.8';
+  $RequiredDependencyCoreVersion = 'v4.1.7';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v4.1.2';
+  $RequiredDependsVersion = 'v4.1.7';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
   // / The Pipeline Core component version this core requires.
   // / This is an exact match, because a component built for another core may declare an entry point whose arguments have moved, or capabilities this core cannot honour.
   // / Raise this when the Pipeline Core itself changes & for nothing else.
   // / It is an Engine core, at Resources/Engine/Cores/pipelineCore.php.
   // / The pipelines this application accepts are listed in its contract, in app-engine-config.php, so adding a pipeline or moving one to a new version raises nothing here.
-  $RequiredPipelineCoreVersion = 'v4.1.6';
+  $RequiredPipelineCoreVersion = 'v4.1.7';
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The Workflow Core component version this core requires.
   // / This is an exact match, because a component built for another core may call an operation with arguments that have moved.
@@ -1370,7 +1370,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.1.5';
+  $RequiredEngineVersion = 'v4.1.7';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -1827,7 +1827,7 @@ function verifyInputs() {
   global $ShowGUI, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $StreamBaseURL, $UserURLDownload, $LogoURL, $ResolvedLogoURL, $SupportedLanguages, $SupportedColors, $SupportedGuis;
   $InputsAreVerified = TRUE;
   $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $IdentifyReport = $IdentifyFilename = $Sort = $WorkflowName = $WorkflowDocument = $WorkflowCheck = $WorkflowExport = $var = $rawInput = '';
-  $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = $FilesToIdentify = $WorkflowFiles = $logoParts = $logoQuery = array();
+  $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = $FilesToIdentify = $FilesToExtract = $WorkflowFiles = $logoParts = $logoQuery = array();
   $key = 0;
   // / Determine whether or not to display a full GUI or a minimalized GUI.
   // / The default action is set in config.php. The user can opt for less than the default, but never more.
@@ -1935,6 +1935,8 @@ function verifyInputs() {
   if (isset($_POST['filesToIdentify'])) list ($FilesToIdentify, $variableIsSanitized[$key++]) = sanitize($_POST['filesToIdentify'], TRUE);
   if (isset($_POST['identifyreport'])) list ($IdentifyReport, $variableIsSanitized[$key++]) = sanitize($_POST['identifyreport'], TRUE);
   if (isset($_POST['identifyfilename'])) list ($IdentifyFilename, $variableIsSanitized[$key++]) = sanitize($_POST['identifyfilename'], TRUE);
+  // / Extract reads the archives to extract & nothing else, because every file is named as its archive names it.
+  if (isset($_POST['filesToExtract'])) list ($FilesToExtract, $variableIsSanitized[$key++]) = sanitize($_POST['filesToExtract'], TRUE);
   // / A workflow run reads the workflow to run & the files, in the order a user selected them.
   if (isset($_POST['workflowRun'])) list ($WorkflowName, $variableIsSanitized[$key++]) = sanitize($_POST['workflowRun'], TRUE);
   if (isset($_POST['workflowFiles'])) list ($WorkflowFiles, $variableIsSanitized[$key++]) = sanitize($_POST['workflowFiles'], TRUE);
@@ -1944,7 +1946,7 @@ function verifyInputs() {
   foreach ($variableIsSanitized as $var) if (!$var) ($InputsAreVerified = FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $logoParts, $logoQuery, $variableIsSanitized, $key, $var, $rawInput);
-  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport); }
+  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport, $FilesToExtract); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2958,7 +2960,8 @@ function showVersionInfo() {
     print('  '.str_pad('Hosted location', 28).strtoupper($hostedStatus).', '.$HostedLoc.'. '.$hostedDetail.$Lol); }
   print('  '.str_pad('Current user', 28).$CurrentUser.($RunningAsRoot ? ', running as root' : '').$Lol);
   print('  '.str_pad('Container detected', 28).($RunningInContainer ? 'YES' : 'NO').$Lol);
-  print('  '.str_pad('Sandbox required', 28).(($RunningInContainer ? $RequireSandboxOnDocker : $RequireSandbox) ? 'YES' : 'NO').$Lol);
+  // / The Engine's rule is the one sandboxCommand() follows, so the line says what a conversion meets. Without the Engine it is worked out the same way.
+  print('  '.str_pad('Sandbox required', 28).((function_exists('sandboxIsRequired') ? sandboxIsRequired() : ($RunningInContainer ? $RequireSandboxOnDocker : $RequireSandbox)) ? 'YES' : 'NO').$Lol);
 
   // / The data directory. The exposure line is the only one here that is evidence.
   // / A protection file being present proves nothing, because a .htaccess is read only where
@@ -3554,6 +3557,24 @@ function archiveOperationFormats() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to list the formats an archive may be extracted from.
+// / Accepts nothing. Returns the formats config.php lists as archives this server reads that the installed Extractor pipeline says it reads.
+// / config.php's list is the one a file's other archive controls are drawn from, so an archive this server would not read is never offered for extraction.
+// / A .tar.gz is listed by its last extension, gz, as every file is. With Archive conversions off, config.php lists none, & nothing is offered.
+function extractOperationFormats() {
+  // / Set variables.
+  global $PipelineCoreActive, $Pipelines, $DearchiveArray, $EnableMemoryProtection;
+  $ExtractFormats = $readableFormats = $pipelineRecord = array();
+  $folderName = '';
+  if (!empty($PipelineCoreActive) && is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
+    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'operation' && (string)($pipelineRecord['Family'] ?? '') === 'Extract' && is_array($pipelineRecord['Input'] ?? NULL)) redeclare($readableFormats, array_merge($readableFormats, $pipelineRecord['Input'])); }
+  $ExtractFormats = array_values(array_intersect(array_values(array_unique(array_map('strtolower', (array)$DearchiveArray))), $readableFormats));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $readableFormats, $pipelineRecord, $folderName);
+  return $ExtractFormats; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to declare the operations a workflow may run, & the kinds of file a step may name.
 // / Accepts nothing. Returns an array holding Operations & FileTypes. It is $EngineOperationProvider.
 // / Each operation names the function that runs it, the budget it takes, whether this server allows it, what it reads, its modes & its options.
@@ -3562,17 +3583,20 @@ function archiveOperationFormats() {
 // / Archive's Filename names the one archive every file goes into, & an empty one archives each file under its own name.
 // / Archive offers the formats archiveOperationFormats() lists, which the Archiver pipeline can write, & none without it, so it is offered only where the Archiver is installed.
 // / Archive, OCR, Identify & Scan are each an operation pipeline's, & one whose pipeline is missing is not offered, from v4.1.6.
+// / Extract is the Extractor pipeline's, from v4.1.7. It reads the archives extractOperationFormats() lists, one at a time, & names no option, because every file is named as its archive names it.
+// / What it places joins the session beside the archive, so the step after it reads those files as it reads any other.
 // / SessionFiles names getFiles(), which lists a session's files as a page lists them, so the Workflow Core's Select step finds only what a user could see & tick.
 // / See Documentation/ABOUT_WORKFLOWS.txt.
 function applicationOperations() {
   // / Set variables.
   global $SupportedConversionTypes, $AllowUserIdentify, $AllowUserVirusScan, $DocumentArray, $PDFWorkArr, $EnableMemoryProtection;
   $OperationRegistry = array();
-  $convertOutputs = $archiveFormats = $ocrFormats = $familyFormats = array();
+  $convertOutputs = $archiveFormats = $extractFormats = $ocrFormats = $familyFormats = array();
   $familyName = '';
   foreach (applicationConversionFamilies() as $familyName => $familyFormats) if (is_array($familyFormats[1])) redeclare($convertOutputs, array_merge($convertOutputs, $familyFormats[1]));
   redeclare($convertOutputs, array_values(array_unique(array_map('strtolower', $convertOutputs))));
   $archiveFormats = archiveOperationFormats();
+  $extractFormats = extractOperationFormats();
   $ocrFormats = array_values(array_unique(array_merge(array('pdf'), (array)$DocumentArray)));
   $OperationRegistry = array(
     'Operations' => array(
@@ -3582,6 +3606,7 @@ function applicationOperations() {
           'Rotate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => -360, 'Maximum' => 360), 'Bitrate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 100000))),
       'Archive' => array('Invoke' => 'invokeArchiveOperation', 'Budget' => 'archive', 'Enabled' => (in_array('Archive', (array)$SupportedConversionTypes, TRUE) && in_array('zip', $archiveFormats, TRUE)), 'Inputs' => array(), 'Modes' => array('together', 'each'),
         'Options' => array('Extension' => array('Type' => 'choice', 'Default' => 'zip', 'Choices' => $archiveFormats), 'Filename' => array('Type' => 'name', 'Default' => 'Workflow_Files'))),
+      'Extract' => array('Invoke' => 'invokeExtractOperation', 'Budget' => 'extract', 'Enabled' => (in_array('Archive', (array)$SupportedConversionTypes, TRUE) && count($extractFormats) > 0), 'Inputs' => $extractFormats, 'Modes' => array('each'), 'Options' => array()),
       'OCR' => array('Invoke' => 'invokeOcrOperation', 'Budget' => 'OCR', 'Enabled' => (in_array('OCR', (array)$SupportedConversionTypes, TRUE) && in_array('Document', (array)$SupportedConversionTypes, TRUE) && operationPipelineIsInstalled('OCR')), 'Inputs' => (array)$PDFWorkArr, 'Modes' => array('each'),
         'Options' => array('Extension' => array('Type' => 'choice', 'Default' => 'pdf', 'Choices' => $ocrFormats), 'Method' => array('Type' => 'choice', 'Default' => '0', 'Choices' => array('0', '1', '2')), 'Filename' => array('Type' => 'name', 'Default' => ''))),
       'Identify' => array('Invoke' => 'invokeIdentifyOperation', 'Budget' => 'Identify', 'Enabled' => ($AllowUserIdentify === TRUE && operationPipelineIsInstalled('Identify')), 'Inputs' => array(), 'Modes' => array('together'),
@@ -3591,7 +3616,7 @@ function applicationOperations() {
     'FileTypes' => applicationFileTypes(),
     'SessionFiles' => 'getFiles');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $convertOutputs, $archiveFormats, $ocrFormats, $familyFormats, $familyName);
+  purgeSensitiveMemory($EnableMemoryProtection, $convertOutputs, $archiveFormats, $extractFormats, $ocrFormats, $familyFormats, $familyName);
   return $OperationRegistry; }
 // / -----------------------------------------------------------------------------------
 
@@ -3652,6 +3677,29 @@ function invokeArchiveOperation($selectedFiles, $operationOptions) {
     errorEntry('Archive was requested but no Archiver pipeline is installed!', 34006, FALSE); }
   else {
     list ($OperationSucceeded, $OperationErrors, $operationOutput) = runOperationPipeline('Archive', $selectedFiles, (string)($operationOptions['Filename'] ?? ''), strtolower((string)($operationOptions['Extension'] ?? 'zip')), '');
+    if (is_array($operationOutput)) $ProducedFiles = array_values(array_filter($operationOutput, 'is_string')); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $operationOutput, $selectedFiles, $operationOptions);
+  return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run Extract, as a button & a workflow both run it.
+// / Accepts the archives & the options, which are none, because every file is named as its archive names it.
+// / Extracting an archive is the Extractor pipeline's, from v4.1.7, & this dispatches to it as the Archive adapter dispatches to the Archiver.
+// / Returns whether any file was extracted, whether anything went wrong, the files it placed & what it found, which is nothing, in that order.
+// / What it placed sits beside the archive in the session, so a workflow's next step reads it from there as it reads any file.
+function invokeExtractOperation($selectedFiles, $operationOptions) {
+  // / Set variables.
+  global $PipelineCoreActive, $EnableMemoryProtection;
+  $OperationSucceeded = $OperationErrors = FALSE;
+  $ProducedFiles = $OperationFindings = array();
+  $operationOutput = array();
+  if (!$PipelineCoreActive or !function_exists('runOperationPipeline')) {
+    $OperationErrors = TRUE;
+    errorEntry('Extract was requested but no Extractor pipeline is installed!', 34006, FALSE); }
+  else {
+    list ($OperationSucceeded, $OperationErrors, $operationOutput) = runOperationPipeline('Extract', $selectedFiles, '', '', '');
     if (is_array($operationOutput)) $ProducedFiles = array_values(array_filter($operationOutput, 'is_string')); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $operationOutput, $selectedFiles, $operationOptions);
@@ -3918,6 +3966,7 @@ function getSandboxProfiles() {
 // /   Type          bool, int, string, array, path, expression or version.
 // /   Default       The value a reset writes. An empty string means there is no default.
 // /   Depends       Another variable this one is meaningless without. Empty when free standing.
+// /   Conflict      Optional. What follows when this is on & the variable it depends on is off, for a variable that is not ignored then.
 // /   Description   The label config.php gives it. The comment block is shown alongside.
 // /
 // / A section that is not writable is shown & never touched, because its contents are
@@ -3942,10 +3991,10 @@ function applicationConfigModel() {
       'UpdateConnectionTimeout' => array('Type' => 'int', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Update Connection Timeout'),
       'SupportedGuis' => array('Type' => 'array', 'Default' => 'array(\'Default\', \'Original\')', 'Depends' => '', 'Description' => 'Supported GUIs'),
       'DefaultGui' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default GUI'),
-      'AllowUserSelectableGui' => array('Type' => 'bool', 'Depends' => 'SupportedGuis', 'Description' => 'Allow User Selectable GUI'),
+      'AllowUserSelectableGui' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow User Selectable GUI'),
       'SupportedLanguages' => array('Type' => 'array', 'Default' => 'array( \'en\' => \'English\',   \'fr\' => \'Français\',    \'es\' => \'Español\', \'zh\' => \'中文\',      \'hi\' => \'हिन्दी\',        \'ar\' => \'العربية\', \'ru\' => \'Русский\',   \'uk\' => \'Українська\',  \'bn\' => \'বাংলা\', \'de\' => \'Deutsch\',   \'ko\' => \'한국어\',        \'it\' => \'Italiano\', \'pt\' => \'Português\', \'vi\' => \'Tiếng Việt\',  \'tr\' => \'Türkçe\', \'ja\' => \'日本語\',     \'id\' => \'Bahasa Indonesia\', \'pl\' => \'Polski\',    \'nl\' => \'Nederlands\',  \'sw\' => \'Kiswahili\', \'my\' => \'မြန်မာ\',      \'ur\' => \'اردو\',         \'fa\' => \'فارسی\', \'he\' => \'עברית\',     \'aii\' => \'ܣܘܪܝܝܐ\',     \'arc\' => \'ܐܪܡܝܐ\')', 'Depends' => '', 'Description' => 'Supported Languages'),
       'DefaultLanguage' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default Language'),
-      'AllowUserSelectableLanguage' => array('Type' => 'bool', 'Depends' => 'SupportedLanguages', 'Description' => 'Allow User Selectable Language'),
+      'AllowUserSelectableLanguage' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow User Selectable Language'),
       'AllowUserShare' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User Shareable File Links'),
       'AllowUserIdentify' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User File Identification'),
       'EnableWorkflows' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Workflows'),
@@ -3957,13 +4006,13 @@ function applicationConfigModel() {
       'Verbose' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enhanced Logging Verbosity'),
       'MaxLogSize' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Maximum Log File Size'),
       'Font' => array('Type' => 'string', 'Depends' => '', 'Description' => 'UI Element Font'),
-      'AllowUserSelectableColor' => array('Type' => 'bool', 'Depends' => 'SupportedColors', 'Description' => 'Allow User Selectable Colors'),
+      'AllowUserSelectableColor' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow User Selectable Colors'),
       'SupportedColors' => array('Type' => 'array', 'Default' => 'array(\'red\', \'green\', \'blue\', \'grey\', \'orange\', \'purple\', \'dark\')', 'Depends' => '', 'Description' => 'Supported Colors'),
       'ButtonStyle' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Button Color'),
       'SpinnerStyle' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Spinner Style'),
       'SpinnerColor' => array('Type' => 'expression', 'Depends' => '', 'Description' => 'Spinner Color'),
       'ShowGUI' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Show Full GUI'),
-      'ShowFinePrint' => array('Type' => 'bool', 'Depends' => 'ShowGUI', 'Description' => 'Show Fine Print'),
+      'ShowFinePrint' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Show Fine Print'),
       'TOSURL' => array('Type' => 'string', 'Depends' => 'ShowFinePrint', 'Description' => 'Terms of Service URL'),
       'PPURL' => array('Type' => 'string', 'Depends' => 'ShowFinePrint', 'Description' => 'Privacy Policy URL'),
       'RARArchiveMethod' => array('Type' => 'string', 'Depends' => '', 'Description' => 'RAR Archive Method'),
@@ -3979,9 +4028,9 @@ function applicationConfigModel() {
       'ConvertLoc' => array('Type' => 'path', 'Depends' => '', 'Description' => 'Data Storage Directory'),
       'LogDir' => array('Type' => 'expression', 'Default' => '$ConvertLoc.\'/Logs\'', 'Depends' => '', 'Description' => 'Log Storage Directory'),
       'HomeLoc' => array('Type' => 'expression', 'Default' => '$ConvertLoc.\'/Cache\'', 'Depends' => '', 'Description' => 'Home Directory'),
-      'BackupLoc' => array('Type' => 'expression', 'Default' => '$ConvertLoc.\'/Last-Installed-Version\'', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Backup Location'),
-      'AppendLogHashToLogFiles' => array('Type' => 'bool', 'Depends' => 'UniqueDailyLogHash', 'Description' => 'Append Log Hash To Log Files'),
-      'UniqueDailyLogHash' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Unique Daily Log Hash Rotation'),
+      'BackupLoc' => array('Type' => 'expression', 'Default' => '$ConvertLoc.\'/Last-Installed-Version\'', 'Depends' => '', 'Description' => 'Backup Location'),
+      'AppendLogHashToLogFiles' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Append Log Hash To Log Files'),
+      'UniqueDailyLogHash' => array('Type' => 'bool', 'Depends' => 'AppendLogHashToLogFiles', 'Description' => 'Unique Daily Log Hash Rotation'),
       'AdditionalConvertLocs' => array('Type' => 'array', 'Default' => 'array()', 'Depends' => '', 'Description' => 'Additional Data Locations'),
       'StorageCleanupInterval' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Storage Cleanup Interval'))),
     'Security Informations' => array('Writable' => TRUE, 'Variables' => array(
@@ -3989,7 +4038,7 @@ function applicationConfigModel() {
       'URL' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Server URL'),
       'EnableMemoryProtection' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Memory Protection'),
       'VirusScan' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Virus Scanning'),
-      'AllowUserVirusScan' => array('Type' => 'bool', 'Depends' => 'VirusScan', 'Description' => 'User Virus Scanning'),
+      'AllowUserVirusScan' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User Virus Scanning'),
       'ScanCoreMemoryLimit' => array('Type' => 'int', 'Depends' => '', 'Description' => 'User Virus Scanning ScanCore Memory Limit'),
       'ScanCoreChunkSize' => array('Type' => 'int', 'Depends' => '', 'Description' => 'User Virus Scanning ScanCore Chunk Size'),
       'ScanCoreDebug' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User Virus Scanning ScanCore Debug Mode'),
@@ -3998,7 +4047,7 @@ function applicationConfigModel() {
       'DeleteDevelopmentDocumentation' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Delete Development Documentation'),
       'AllowUnprivilegedNamespaces' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow Unprivileged Namespaces'),
       'RequireSandbox' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Require Sandbox'),
-      'RequireSandboxOnDocker' => array('Type' => 'bool', 'Depends' => 'RequireSandbox', 'Description' => 'Require Sandbox On Docker'),
+      'RequireSandboxOnDocker' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Require Sandbox On Docker'),
       // / The Environment Manager settings belong to the model as well as to config.php, because a repair can only add a setting this utility knows about.
       'EnvironmentManagerMayRepair' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Environment Manager May Repair'),
       'EnvironmentManagerMayRewriteConfigs' => array('Type' => 'bool', 'Depends' => 'EnvironmentManagerMayRepair', 'Description' => 'Environment Manager May Rewrite Configs'),
@@ -4008,7 +4057,7 @@ function applicationConfigModel() {
       'AllowStreamOverHTTP' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow Streams Over HTTP'),
       'StreamInspectionLayers' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Stream Inspection Layers'),
       'StreamInspectionFilesPerLayer' => array('Type' => 'int', 'Depends' => 'StreamInspectionLayers', 'Description' => 'Stream Inspection Files Per Layer'),
-      'DefaultStreamInspectionForfeitAction' => array('Type' => 'string', 'Depends' => 'StreamInspectionLayers', 'Description' => 'Default Stream Inspection Forfeit Action'),
+      'DefaultStreamInspectionForfeitAction' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default Stream Inspection Forfeit Action'),
       'MaxStreamInspectionFileSize' => array('Type' => 'int', 'Depends' => 'StreamInspectionLayers', 'Description' => 'Maximum Stream Inspection Size'),
       'AllowSCADIncludeResolution' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow SCAD Include Resolution'),
       'SCADConversionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'SCAD Conversion Timeout'),
@@ -4017,6 +4066,8 @@ function applicationConfigModel() {
       'ScanURLDownloads' => array('Type' => 'bool', 'Depends' => 'AllowUserURLDownload', 'Description' => 'Scan URL Downloads'),
       'URLDownloadMaximumBytes' => array('Type' => 'int', 'Depends' => 'AllowUserURLDownload', 'Description' => 'URL Download Maximum Bytes'),
       'URLDownloadsPerSession' => array('Type' => 'int', 'Depends' => 'AllowUserURLDownload', 'Description' => 'URL Downloads Per Session'),
+      'MaxExtractedSize' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Maximum Extracted Size'),
+      'MaxExtractedFiles' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Maximum Extracted Files'),
       'DefaultVirusScanner' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default Virus Scanner'),
       'PermittedPrivateRanges' => array('Type' => 'array', 'Depends' => '', 'Description' => 'Permitted Private Ranges'))),
     'Resource Management Information' => array('Writable' => TRUE, 'Variables' => array(
@@ -4025,7 +4076,7 @@ function applicationConfigModel() {
       'DefaultPerConversionResources' => array('Type' => 'string', 'Depends' => 'EnablePerConversionLimits', 'Description' => 'Default Per Conversion Resources'),
       'MinimumPerConversionResources' => array('Type' => 'string', 'Depends' => 'EnablePerConversionLimits', 'Description' => 'Minimum Per Conversion Resources'),
       'EnableResourceAwareness' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Resource Awareness'),
-      'RequireResourceAwareness' => array('Type' => 'bool', 'Depends' => 'EnableResourceAwareness', 'Description' => 'Require Resource Awareness'),
+      'RequireResourceAwareness' => array('Type' => 'bool', 'Depends' => 'EnableResourceAwareness', 'Conflict' => 'so every request & every command but --config is refused with error 31013.', 'Description' => 'Require Resource Awareness'),
       'CoreManagerSubprocessPollInterval' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Core Manager Subprocess Poll Interval'),
       'ResourcePollInterval' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Resource Poll Interval'),
       'WorkerReapInterval' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Worker Reap Interval'),
@@ -4039,7 +4090,7 @@ function applicationConfigModel() {
       'DefaultExpectedRuntime' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Default Expected Runtime'),
       'LowStorageWarning' => array('Type' => 'int', 'Depends' => 'EnableResourceAwareness', 'Description' => 'Low Storage Warning'),
       'StorageReserve' => array('Type' => 'int', 'Depends' => 'EnableResourceAwareness', 'Description' => 'Storage Reserve'),
-      'MaxWorkflowSteps' => array('Type' => 'int', 'Depends' => 'EnableWorkflows', 'Description' => 'Maximum Workflow Steps'),
+      'MaxWorkflowSteps' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Maximum Workflow Steps'),
       'MaxWorkflowFiles' => array('Type' => 'int', 'Depends' => 'EnableWorkflows', 'Description' => 'Maximum Workflow Files'),
       'MaxWorkflowRuntime' => array('Type' => 'int', 'Depends' => 'EnableWorkflows', 'Description' => 'Maximum Workflow Runtime'),
       'MaxConcurrentWorkflows' => array('Type' => 'int', 'Depends' => 'EnableWorkflows', 'Description' => 'Maximum Concurrent Workflows'))),
@@ -4475,7 +4526,7 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
-  $Files = $FileDetails = $ArchiveOperationArray = $OfferedOperations = array();
+  $Files = $FileDetails = $ArchiveOperationArray = $ExtractOperationArray = $OfferedOperations = array();
   $FileCount = 0;
   // / Make sure the $guiType is valid.
   // / A non numeric type cannot be compared against a range, so it is replaced outright.
@@ -4502,10 +4553,13 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / The formats a file or a selection may be archived in, which an interface offers instead of $ArchiveArray.
   // / $ArchiveArray holds the bootable disk images the Archive pipeline converts an archive into, & archiving a file makes none of them.
   $ArchiveOperationArray = archiveOperationFormats();
+  // / The formats an archive may be extracted from, which an interface draws a file's Extract button for.
+  $ExtractOperationArray = extractOperationFormats();
   // / Which of a file's operations an interface offers. Each is an operation pipeline's, & one whose pipeline is missing is not offered, as a workflow does not offer it.
   // / A button that could only fail is not drawn, & -v names the pipeline that is missing.
   $OfferedOperations = array('Scan' => ($AllowUserVirusScan === TRUE && operationPipelineIsInstalled('Scan')), 'Identify' => ($AllowUserIdentify === TRUE && operationPipelineIsInstalled('Identify')),
-    'OCR' => (in_array('OCR', (array)$SupportedConversionTypes, TRUE) && operationPipelineIsInstalled('OCR')), 'Archive' => (count($ArchiveOperationArray) > 0));
+    'OCR' => (in_array('OCR', (array)$SupportedConversionTypes, TRUE) && operationPipelineIsInstalled('OCR')), 'Archive' => (count($ArchiveOperationArray) > 0),
+    'Extract' => (in_array('Archive', (array)$SupportedConversionTypes, TRUE) && count($ExtractOperationArray) > 0));
   // / An interface that renders an empty list has either been handed the wrong directory
   // / or a directory with nothing in it, & those are different faults with different
   // / fixes. Saying which directory was read, & whether this was the framed request, is
@@ -5199,7 +5253,7 @@ list ($InstallationIsVerified, $ConfigFile, $Version, $CoreLoaded) = verifyInsta
 if (!$InstallationIsVerified) quickDie('Could not verify installation!', 5);
 
 // / The following code verifies that string inputs to the core are properly sanitized.
-list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport) = verifyInputs();
+list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport, $FilesToExtract) = verifyInputs();
 if (!$InputsAreVerified) quickDie('Could not verify inputs!', 6);
 
 // / The following code verifies enough user information to generate a unique session identifier.
@@ -5279,7 +5333,11 @@ else {
 // / An administrator may refuse to run rather than accept work they cannot account for.
 // / This is tested here rather than in verifyInstallation, because what it tests for does
 // / not exist until the Engine has been verified.
-if ($RequireResourceAwareness && !$ResourceAwarenessActive) errorEntry('Resource awareness is required by config.php & the Engine is unavailable!', 31010, TRUE);
+// / The two causes are two numbers. 31013 is a configuration that contradicts itself & 31010 is an Engine that did not load.
+// / The configuration utility does no work & is what shows & repairs the contradiction, so it is let through.
+if ($RequireResourceAwareness && !$ResourceAwarenessActive && !($RunningFromCLI && isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === '--config')) {
+  if (!$EnableResourceAwareness) errorEntry('Resource awareness is required by config.php but --Enable Resource Awareness-- is FALSE!', 31013, TRUE);
+  else errorEntry('Resource awareness is required by config.php & the Engine is unavailable!', 31010, TRUE); }
 
 // / A workflow's worker continues a session a request handed it, rather than one a browser presented.
 // / It is adopted here, after the Engine has loaded & before the globals that hang off a session are built.
@@ -5383,7 +5441,7 @@ if (!$CommandLineHandled && $UserType === 'web') {
     // / A caller can tell a failure from a success only by reading the body, & a whole page carries the script literal that recognises a core error.
     // / A file operation returns a filename or an error, & never a page.
     // / An upload is known by its files, because Dropzone sends the file & the two tokens & no upload field.
-    if (!isset($_POST['filesToArchive']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete']) && !isset($_POST['filesToIdentify']) && !isset($_POST['workflowLibrary']) && !isset($_POST['workflowRun']) && !isset($_POST['workflowDocument']) && !isset($_POST['workflowStatus']) && !isset($_POST['workflowStop']) && !isset($_POST['workflowOperations']) && !isset($_POST['workflowCheck']) && !isset($_POST['workflowExport'])) {
+    if (!isset($_POST['filesToArchive']) && !isset($_POST['filesToExtract']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete']) && !isset($_POST['filesToIdentify']) && !isset($_POST['workflowLibrary']) && !isset($_POST['workflowRun']) && !isset($_POST['workflowDocument']) && !isset($_POST['workflowStatus']) && !isset($_POST['workflowStop']) && !isset($_POST['workflowOperations']) && !isset($_POST['workflowCheck']) && !isset($_POST['workflowExport'])) {
 
       // / The following code sets the GUI for the session.
       list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
@@ -5470,6 +5528,22 @@ if (!$CommandLineHandled && $UserType === 'web') {
           if ($ArchiveErrors) logEntry('Archive finished with errors.');
           if ($Verbose) logEntry('Archive Complete.'); }
         $BudgetWasReleased = giveBackOperationBudget('archive'); }
+
+      // / The following code is performed when a user extracts a selection of archives.
+      // / Extracting is the Extractor pipeline's, from v4.1.7, & what it placed is named one file per line, as an archive request names what it made.
+      // / An interface draws its file list again rather than downloading anything, because an archive may hold a great many files.
+      // / A refusal prints the alert a refused archive request prints, for the same reason.
+      if (isset($_POST['filesToExtract'])) {
+        if (!takeOperationBudget('extract')) print($Alert3.$Lol);
+        else {
+          logEntry('Initiating Extractor.');
+          list ($ExtractComplete, $ExtractErrors, $ExtractedFiles, $ExtractFindings) = invokeExtractOperation($FilesToExtract, array());
+          // / The core prints, & the operation returned, as contract 6 says. The interface reads one line per file.
+          foreach ($ExtractedFiles as $ExtractedFile) print($ExtractedFile.$Lol);
+          if (!$ExtractComplete) errorEntry('Extract Failed!', 32, TRUE);
+          if ($ExtractErrors) logEntry('Extract finished with errors.');
+          if ($Verbose) logEntry('Extract Complete.'); }
+        $BudgetWasReleased = giveBackOperationBudget('extract'); }
 
       // / The following code is performed when a user converts a selection of files.
       if (isset($_POST['convertSelected'])) {

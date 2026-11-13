@@ -12,10 +12,11 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.6.
+// / v4.1.7.
 // / The Archive pipeline's converter. pipelineCore.php loads it only to dispatch an Archive conversion.
 // / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13108 belongs to this pipeline.
 // / The Archiver pipeline raises 13012, & shares 13006, 13008, 13009 & 13010 with this one.
+// / It also raises 39000 through 39003, which belong to the archiveExtraction.php shared module it extracts with, from v4.1.7.
 // / verifyIsoBootloaders() & generateBootableIsoCommand() live here, because only this converter calls them.
 // / Its tools come from verifiedToolPath(), as the Archiver pipeline's do & as the core's showVersionInfo() asks for them.
 // / This is the only pipeline that renames its own output.
@@ -215,7 +216,7 @@ function pruneEscapingLinks($stagingPath, $approvedRoot) {
   $WalkCompleted = TRUE;
   $LinksRemoved = 0;
   $defaultApps = array('.', '..');
-  $directoryContents = array();
+  $directoryListing = $directoryContents = array();
   $directoryEntry = $childPath = '';
   $resolvedTarget = $resolvedRoot = FALSE;
   $childIsContained = FALSE;
@@ -223,9 +224,11 @@ function pruneEscapingLinks($stagingPath, $approvedRoot) {
   $childLinksRemoved = 0;
   $resolvedRoot = realpath($approvedRoot);
   // / A root that will not resolve is not a root this walk may act under.
-  if ($resolvedRoot === FALSE or !is_dir($stagingPath)) $WalkCompleted = FALSE;
+  // / A folder that cannot be read is a walk that did not finish. scandir() returns FALSE for one, & handing FALSE to array_diff() is a fatal error in PHP 8.
+  if ($resolvedRoot !== FALSE && is_dir($stagingPath)) $directoryListing = @scandir($stagingPath);
+  if ($resolvedRoot === FALSE or !is_dir($stagingPath) or !is_array($directoryListing)) $WalkCompleted = FALSE;
   else {
-    $directoryContents = array_diff(scandir($stagingPath), $defaultApps);
+    $directoryContents = array_diff($directoryListing, $defaultApps);
     foreach ($directoryContents as $directoryEntry) {
       $childPath = $stagingPath.$DirSep.$directoryEntry;
       // / A link is judged by where it resolves & is never followed by this walk.
@@ -242,7 +245,7 @@ function pruneEscapingLinks($stagingPath, $approvedRoot) {
         if (!$childWalkCompleted) $WalkCompleted = FALSE;
         $LinksRemoved = $LinksRemoved + $childLinksRemoved; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $stagingPath, $approvedRoot, $defaultApps, $directoryContents, $directoryEntry, $childPath, $resolvedTarget, $resolvedRoot, $childIsContained, $childWalkCompleted, $childLinksRemoved);
+  purgeSensitiveMemory($EnableMemoryProtection, $stagingPath, $approvedRoot, $defaultApps, $directoryListing, $directoryContents, $directoryEntry, $childPath, $resolvedTarget, $resolvedRoot, $childIsContained, $childWalkCompleted, $childLinksRemoved);
   return array($WalkCompleted, $LinksRemoved); }
 // / -----------------------------------------------------------------------------------
 
@@ -250,6 +253,9 @@ function pruneEscapingLinks($stagingPath, $approvedRoot) {
 // / A function to convert archive & disk image formats.
 // / The source is extracted into a staging folder & the staging folder is re-archived.
 // / 7-Zip is the only extractor, so every input format depends on it.
+// / The extraction is extractArchiveContained(), in the archiveExtraction.php shared module, which the Extractor pipeline uses too, from v4.1.7.
+// / It lists the archive first, holds it to --Maximum Extracted Size-- & --Maximum Extracted Files-- as it is written, & gives up the files a .tar.gz holds rather than the tar.
+// / The staging folder is the archive's own name, inside a folder of its own whose name begins with a dot & holds a random part.
 // / Each output format gates on its own creator alone, so a missing mkisofs does not stop a zip conversion.
 // / An extraction that produces nothing is refused, because an empty folder would re-archive & pass.
 // / A bootable ISO carries its architecture in the extension, such as iso_gpt-boot-x86-64.
@@ -264,75 +270,71 @@ function convertArchives($pathname, $newPathname, $extension) {
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $archiveToolsAreValid = $bootloadersAreValid = FALSE;
-  $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
-  $returnData = $extractCommand = $extractTarget = $archiveCommand = $hybridCommand = $UserFilename = '';
-  $stopper = 0;
+  $limitsAreConfigured = $extractionSucceeded = $stagingIsRemoved = FALSE;
+  $sevenZipBinary = $rarBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
+  $returnData = $archiveCommand = $hybridCommand = $extractionRefusal = $UserFilename = '';
+  $stopper = $byteLimit = $entryLimit = $extractedBytes = $extractedEntries = 0;
   $linkWalkCompleted = TRUE;
   $linksRemoved = 0;
   $sleepTime = $SleepTimer;
   $oldExtension = getExtension($pathname);
   $archiveError = 13000;
-  $filename = pathinfo($pathname, PATHINFO_FILENAME);
-  $safedir2 = $ConvertDir.$filename;
-  $array7zo = array('7z', 'cbz', 'cbr');
+  $filename = (string)pathinfo($pathname, PATHINFO_FILENAME);
+  if ($filename === '') $filename = 'archive';
+  // / The folder a name of the archive's is made in, & the folder a compressed tar is unwrapped in.
+  // / No sanitized name begins with a dot, so .unwrap is never the archive's own name.
+  $stagingRoot = $ConvertDir.'.archive-'.bin2hex(random_bytes(8));
+  $safedir2 = $stagingRoot.$DirSep.$filename;
+  $unwrapFolder = $stagingRoot.$DirSep.'.unwrap';
+  $array7zo = array('7z', 'cbz', 'cbr', 'wim');
   $arrayzipo = array('zip');
   $array7zo2 = array('vhd', 'vdi', 'iso');
-  $arraytaro = array('tar.gz', 'tar.bz2', 'tar');
+  // / Each tar this pipeline writes, & the flags that write it. A tar is written uncompressed, & each other one compressed as its extension names.
+  $arraytaro = array('tar' => '-cf', 'gz' => '-czf', 'tgz' => '-czf', 'bz2' => '-cjf', 'xz' => '-cJf');
   $arrayraro = array('rar');
   $array7zo3 = array();
   // / Only populate the list of supported bootable iso formats if config.php enables it.
   if ($AllowBootableIsoImage) $array7zo3 = $BootableIsoArray;
   // / Verify every archive utility before anything is read or written.
-  // / Each tool by its manifest name. RAR is fetched & is deliberately NOT part of validity:
-  // / it is optional, & an installation without it still archives. This matches the check it
-  // / replaces, which required 7-Zip, zip, tar & mkisofs & nothing more.
+  // / Each tool by its manifest name. RAR is fetched & is not part of validity, because it is optional & an installation without it still archives.
+  // / Zip is not fetched, because 7-Zip writes this pipeline's zip archives.
   $sevenZipBinary = verifiedToolPath('7-Zip');
   $rarBinary = verifiedToolPath('RAR');
-  $zipBinary = verifiedToolPath('Zip');
   $tarBinary = verifiedToolPath('Tar');
   $mkisofsBinary = verifiedToolPath('Genisoimage');
-  $archiveToolsAreValid = ($sevenZipBinary !== FALSE && $zipBinary !== FALSE && $tarBinary !== FALSE && $mkisofsBinary !== FALSE);
+  $archiveToolsAreValid = ($sevenZipBinary !== FALSE && $tarBinary !== FALSE && $mkisofsBinary !== FALSE);
   if ($sevenZipBinary === FALSE) {
     $ConversionErrors = TRUE;
     errorEntry('The installed 7-Zip version is missing, unidentifiable, or too old!', 13008, FALSE); }
   else {
     // / Create a folder to contain extracted files.
-    @mkdir($safedir2, $PermissionLevels);
-    if (!is_dir($safedir2)) $ConversionErrors = TRUE;
-    // / Extract the source archive into the staging folder.
-    // / The extractor is handed the staging folder's own entry, the folder followed by a dot, so its
-    // / sandbox mounts that folder writable & nothing else. sandboxCommand() mounts the folder an output
-    // / path is named in, & naming the staging folder itself mounted the whole conversion folder, where
-    // / an extractor a crafted archive had fooled could write files & plant links beside everything else
-    // / the session holds. The folder holding the archive is mounted read only, so everything the
-    // / extractor can write is inside the folder pruneEscapingLinks() walks next.
-    $extractTarget = $safedir2.$DirSep.'.';
+    // / A folder that could not be made is reported by the extraction, which refuses anything but an empty folder of its own.
+    if (!@mkdir($safedir2, $PermissionLevels, TRUE)) $ConversionErrors = TRUE;
+    // / Extract the source archive into the staging folder, within the limits config.php sets.
+    // / The extraction mounts the staging folder writable & nothing else, & the folder holding the archive read only,
+    // / so everything 7-Zip can write is inside the folder pruneEscapingLinks() walks next.
+    // / Why an archive was refused is logged where it was decided, & the conversion then fails with error 13000 below.
+    list ($limitsAreConfigured, $byteLimit, $entryLimit) = extractionLimits();
     if ($Verbose) logEntry('Extracting file '.$pathname.' to '.$safedir2.'.');
-    if (in_array(strtolower($oldExtension), $array7zo2)) $extractCommand = escapeshellarg($sevenZipBinary).' x -y '.escapeshellarg($pathname).' -o'.escapeshellarg($extractTarget);
-    else if (in_array(strtolower($oldExtension), $arrayzipo) or in_array(strtolower($oldExtension), $array7zo) or in_array(strtolower($oldExtension), $arrayraro) or in_array(strtolower($oldExtension), $arraytaro)) $extractCommand = escapeshellarg($sevenZipBinary).' x -aoa '.escapeshellarg($pathname).' -o'.escapeshellarg($extractTarget);
-    if ($extractCommand !== '') {
-      list ($commandMayRun, $extractCommand) = sandboxCommand($extractCommand, $pathname, $extractTarget, FALSE, 'archive');
-      if (!$commandMayRun) {
-        $ConversionErrors = TRUE;
-        errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
-      else $returnData = shell_exec($extractCommand); }
-    // / Log the output of the extract operation to the logfile, if it is not blank.
-    if ($Verbose && trim($returnData) !== '') logEntry('The extractor returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
+    list ($extractionSucceeded, $extractionRefusal, $extractedBytes, $extractedEntries) = extractArchiveContained($pathname, $safedir2, $unwrapFolder, $byteLimit, $entryLimit);
+    if ($Verbose && $extractionSucceeded) logEntry('Extracted '.$extractedEntries.' file(s) & folder(s) holding '.describeByteCount($extractedBytes).' from '.basename($pathname).'.');
     // / Links are pruned before anything else reads the staging folder, because every later
     // / step follows them. The archiver copies the bytes of whatever a link points at, & the
     // / cleanup that follows this conversion cannot remove a link that resolves nowhere.
     // / This runs before the empty test below on purpose. An archive whose only member was an
     // / unsafe link leaves an empty folder & is then refused as an extraction that produced nothing.
-    if ($extractCommand !== '' && is_dir($safedir2)) {
+    if ($extractionSucceeded) {
       list ($linkWalkCompleted, $linksRemoved) = pruneEscapingLinks($safedir2, $safedir2);
       if ($linksRemoved > 0) warningEntry('Removed '.$linksRemoved.' link(s) from the extracted archive because they did not resolve to a file inside it.'); }
+    // / An archive the extraction refused is not re-archived.
+    if (!$extractionSucceeded) $ConversionErrors = TRUE;
     // / A walk that could not finish leaves links this conversion cannot account for, so the
     // / archive is refused rather than packaged while it may still reach outside the folder.
-    if ($extractCommand !== '' && !$linkWalkCompleted) {
+    else if (!$linkWalkCompleted) {
       $ConversionErrors = TRUE;
       errorEntry('The extracted archive could not be checked for unsafe links, so it was not re-archived!', 13014, FALSE); }
     // / An extraction that produced nothing must not be re-archived.
-    else if ($extractCommand !== '' && is_dir_empty($safedir2)) {
+    else if (is_dir_empty($safedir2)) {
       $ConversionErrors = TRUE;
       errorEntry('The extractor produced no files from the source archive!', 13007, FALSE); }
     else {
@@ -365,13 +367,13 @@ function convertArchives($pathname, $newPathname, $extension) {
         if ($mkisofsBinary === FALSE) errorEntry('Mkisofs is missing, unidentifiable, or too old!', 13009, FALSE);
         else $archiveCommand = escapeshellarg($mkisofsBinary).' -o '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
         $archiveError = 13002; }
+      // / 7-Zip writes a zip as it writes a 7z, so the folders an archive held are kept, & two files of one name in different folders are both kept.
       else if (in_array($extension, $arrayzipo)) {
-        if ($zipBinary === FALSE) errorEntry('Zip is missing, unidentifiable, or too old!', 13010, FALSE);
-        else $archiveCommand = escapeshellarg($zipBinary).' -r -j '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
+        $archiveCommand = escapeshellarg($sevenZipBinary).' a -tzip '.escapeshellarg($newPathname).' '.escapeshellarg($safedir2);
         $archiveError = 13003; }
-      else if (in_array($extension, $arraytaro)) {
+      else if (isset($arraytaro[$extension])) {
         if ($tarBinary === FALSE) errorEntry('Tar is missing, unidentifiable, or too old!', 13011, FALSE);
-        else $archiveCommand = escapeshellarg($tarBinary).' -cjf '.escapeshellarg($newPathname).' -C '.escapeshellarg($safedir2).' .';
+        else $archiveCommand = escapeshellarg($tarBinary).' '.$arraytaro[$extension].' '.escapeshellarg($newPathname).' -C '.escapeshellarg($safedir2).' .';
         $archiveError = 13004; }
       else if (in_array($extension, $arrayraro)) {
         // / 7-Zip cannot create rar archives. RAR compression is proprietary & 7-Zip reads
@@ -432,9 +434,13 @@ function convertArchives($pathname, $newPathname, $extension) {
   if ($UserFilename === '') $UserFilename = basename($newPathname);
   // / Code to clean up temporary files & directories.
   // / The second argument is the list of roots this call may clean under & is required.
-  cleanFiles($safedir2, array($safedir2));
+  // / The session is the root, so the staging folder goes as well as everything in it.
+  // / A folder that was never made has nothing to remove.
+  clearstatcache(TRUE, $stagingRoot);
+  $stagingIsRemoved = (!file_exists($stagingRoot) or cleanFiles($stagingRoot, array($ConvertDir)));
+  if (!$stagingIsRemoved) warningEntry('The folder '.basename($pathname).' was extracted into could not be removed. It is removed with the session.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $linkWalkCompleted, $linksRemoved, $filename, $safedir2, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $extractCommand, $extractTarget, $archiveCommand, $hybridCommand, $archiveError, $commandMayRun, $archiveToolsAreValid, $bootloadersAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $linkWalkCompleted, $linksRemoved, $filename, $stagingRoot, $safedir2, $unwrapFolder, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $archiveCommand, $hybridCommand, $archiveError, $commandMayRun, $archiveToolsAreValid, $bootloadersAreValid, $limitsAreConfigured, $extractionSucceeded, $extractionRefusal, $stagingIsRemoved, $byteLimit, $entryLimit, $extractedBytes, $extractedEntries, $sevenZipBinary, $rarBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $UserFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

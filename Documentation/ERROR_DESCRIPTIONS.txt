@@ -63,6 +63,8 @@ The Identify pipeline reserves 37000 through 37004. It is the first pipeline to 
 The Archiver & Scan pipelines took archiving & scanning for a user out of convertCore.php at v4.1.6, & every number came with them.
 The Archiver raises the 4000 block & 13012, & 13006 through 13010 with the Archive pipeline. The Scan pipeline raises the 16000,
 17000, 19000 & 20000 blocks. No number changed value.
+The archiveExtraction.php shared module reserves 39000 through 39019 & the Extractor pipeline 39100 through 39119, from v4.1.7.
+The Archive pipeline raises 39000 through 39003 too, because it extracts an archive through that module.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -949,6 +951,34 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32, <SESSION_IDENTIFIER>: Extract Failed!
+
+FILE
+  convertCore.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A selection of archives was sent to be extracted & no file was placed from any of them.
+  The name of every file that was placed is printed before this error, one per line, so an interface still lists what it can.
+  The user asked to extract a file that does not exist, or one deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+  Every archive was refused before anything was placed. A warning before this one names each archive & why, such as a password,
+  no files, more files & folders than --Maximum Extracted Files-- allows, more than --Maximum Extracted Size-- allows, or a damaged archive.
+  The Extractor pipeline raised one of 39100 through 39104, or the archiveExtraction.php shared module one of 39000 through 39003.
+  No Extractor pipeline could be reached. ERROR 34006 precedes this one.
+  The device where data is stored has an insufficient amount of storage space available.
+  Extracting changes no archive, so nothing a user holds is lost when this error fires.
+  Until v4.1.7 this number was unused.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-300, <SESSION_IDENTIFIER>: Could not process extension for file <FILE_PATH>!
 
 FILE
@@ -1330,8 +1360,8 @@ LOGGED
 
 ERROR DESCRIPTION
   Bubblewrap is missing or non functional & sandboxing is required by config.php.
-  This error only occurs if --Require Sandbox-- is set to TRUE in config.php.
-  This error only occurs if --Require Sandbox On Docker-- is set to TRUE when running in a container.
+  Outside a container this error only occurs if --Require Sandbox-- is set to TRUE in config.php.
+  In a container it only occurs if --Require Sandbox On Docker-- is set to TRUE, & --Require Sandbox-- is not read.
   A document is the single most dangerous input this application accepts.
   LibreOffice will resolve a linked image, an INCLUDEPICTURE field & an external relationship
   target by fetching the URL, which turns a document upload into a request made by this server.
@@ -1358,8 +1388,8 @@ LOGGED
 
 ERROR DESCRIPTION
   Bubblewrap is missing or non functional & sandboxing is required by config.php.
-  This error only occurs if --Require Sandbox-- is set to TRUE in config.php.
-  This error only occurs if --Require Sandbox On Docker-- is set to TRUE when running in a container.
+  Outside a container this error only occurs if --Require Sandbox-- is set to TRUE in config.php.
+  In a container it only occurs if --Require Sandbox On Docker-- is set to TRUE, & --Require Sandbox-- is not read.
   An XPS or OXPS file is converted by xpstopdf, which parses a document format from an untrusted upload.
   The sandbox removes the network namespace, which is what stops a linked resource being fetched.
   This error was previously reported as 2004 & was separated so the two conversions can be told apart.
@@ -2494,6 +2524,7 @@ LOGGED
 
 ERROR DESCRIPTION
   An archive no archiver was run for. One that ran & left nothing raises its format's own number, 13001 through 13005 or 13100, & from v4.0.6 not this one as well.
+  An archive the extraction refused raises it, after the warning that says why, such as a password, no files, or more than --Maximum Extracted Size-- or --Maximum Extracted Files-- allows.
   One or more of the following dependencies are not responding: Rar, Unar, Tar, Zip, Unzip, or 7zipper.
   The conversion operation failed to produce an output file.
   The user submitted a request to convert a file that does not exist.
@@ -2570,9 +2601,10 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Zip ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  7-Zip ran as many times as --File Operation Retry Count-- allows to write a zip archive, & no attempt left an archive.
   Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
-  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Zip printed, which usually names the cause.
+  Until v4.1.7 Zip wrote it, & dropped every folder the archive held.
+  With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what 7-Zip printed, which usually names the cause.
   Error 13000 follows it, because the operation produced nothing.
   A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2760,8 +2792,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13010, <SESSION_IDENTIFIER>: Zip is missing, unidentifiable, or too old!
 
 FILE
-  Resources/Pipelines/Archive/pipeline.php
-  /Resources/Pipelines/Archiver/pipeline.php
+  Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   NO
@@ -2770,9 +2801,10 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Zip could not be verified, so zip archives cannot be created.
-  This affects OUTPUT only, both when converting an archive & when archiving a single file.
-  Zip archives can still be READ as input, because 7-Zip performs every extraction.
+  Zip could not be verified, so a file cannot be archived as zip.
+  This affects archiving a selection of files only. An archive converted to zip is written by 7-Zip,
+  & zip archives can still be READ as input, because 7-Zip performs every extraction.
+  Until v4.1.7 the Archive pipeline raised it too, because Zip wrote an archive converted to zip.
   Install it with  sudo apt install zip
   The minimum is the MinimumVersion of its entry in Resources/Contract/depends.php.
   Check the installed version by running  zip -v  in a terminal.
@@ -2797,8 +2829,8 @@ LOGGED
 
 ERROR DESCRIPTION
   Tar could not be verified, so tar archives cannot be created.
-  This affects tar, tar.gz & tar.bz2 OUTPUT only. Those formats can still be read as input,
-  because 7-Zip performs every extraction.
+  This affects tar, gz, tgz, bz2 & xz OUTPUT only, each of which is a tar, compressed as its name says
+  but for tar. Those formats can still be read as input, because 7-Zip performs every extraction.
   Tar is part of the base system on every supported distribution, so a failure here usually
   means something is wrong with the installation rather than that a package is missing.
   The minimum is the MinimumVersion of its entry in Resources/Contract/depends.php.
@@ -3959,6 +3991,9 @@ ERROR DESCRIPTION
   The file may reference plain http while --Allow Streams Over HTTP-- is disabled in config.php.
   The file may contain more references than --Stream Inspection Files Per Layer-- permits.
   The file may nest playlists deeper than --Stream Inspection Layers-- permits.
+  With --Stream Inspection Layers-- at 0 nothing a file references is fetched, so one that references anything is refused,
+  unless --Default Stream Inspection Forfeit Action-- is ALLOW. The uploaded file itself is always inspected.
+  An address in a range --Permitted Private Ranges-- names is not refused, whether the file names it as a host or as an address.
   The file may be a playlist disguised with a .ts extension, or content of an unrecognized type.
   A relative reference in an uploaded playlist cannot be resolved, because an upload has no source URL to inherit from.
   Playlists downloaded from a content delivery network commonly use relative references and must be edited to use absolute URLs.
@@ -5413,7 +5448,7 @@ ERROR DESCRIPTION
   reading one is exactly the case a sandbox exists for. The conversion is refused rather than
   run unprotected.
   Run -v & read the Bubblewrap line. Run --setup --install-depends as root to install it.
-  Setting --Require Sandbox-- to FALSE would allow this conversion & is not advised.
+  Setting --Require Sandbox-- to FALSE, or --Require Sandbox On Docker-- in a container, would allow this conversion & is not advised.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -5666,7 +5701,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31010, <SESSION_IDENTIFIER>: Resource awareness is required by config.php & the Core Manager component is unavailable!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31010, <SESSION_IDENTIFIER>: Resource awareness is required by config.php & the Engine is unavailable!
 
 FILE
   /convertCore.php
@@ -5678,15 +5713,15 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The coreManager.php component is missing, unreadable, or reports no version.
-  The component version does not exactly match the version this core requires.
-  This error only occurs if --Require Resource Awareness-- is set to TRUE in config.php.
-  A second wording of this error is raised when --Enable Resource Awareness-- is FALSE, or when
-  no install secret is available, while --Require Resource Awareness-- is TRUE.
+  Resource awareness belongs to the Engine, & the Engine did not load while --Require Resource Awareness-- is TRUE.
+  Resources/Engine/engine.php is missing or unreadable, or does not match the version this core requires.
+  Run  php convertCore.php -v  & read the Engine line. Install or repair the Engine to run with resource awareness.
+  A configuration that requires resource awareness & turns it off is ERROR 31013, & so is a missing install secret.
   Set --Require Resource Awareness-- to FALSE to run without resource awareness instead of refusing.
-  Install or repair the component to run with it.
   This error halts the application, because the administrator has declared that this server must
   never accept work it cannot account for.
+  The configuration utility is let through, so  sudo php convertCore.php --config  still runs.
+  Until v4.1.7 this error was also raised for a configuration that turned resource awareness off, & named the Core Manager.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -5742,7 +5777,8 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31013, <SESSION_IDENTIFIER>: Resource awareness is required by config.php but is disabled or has no install secret!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31013, <SESSION_IDENTIFIER>: Resource awareness is required by config.php but --Enable Resource Awareness-- is FALSE!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31013, <SESSION_IDENTIFIER>: Resource awareness is required by config.php but there is no install secret!
 
 FILE
   /convertCore.php
@@ -5756,11 +5792,11 @@ LOGGED
 ERROR DESCRIPTION
   --Require Resource Awareness-- is TRUE while --Enable Resource Awareness-- is FALSE.
   These two settings contradict each other & the application refuses rather than guessing which was meant.
-  No install secret is available, so the component could not be loaded even if it were enabled.
-  A secret is unavailable when the secret file belongs to another account, which -fp corrects.
-  This error was previously reported as 31010 & was separated so the two causes can be told apart.
-  ERROR 31010 is raised when the component itself is missing or does not match this core.
   Set --Enable Resource Awareness-- to TRUE, or set --Require Resource Awareness-- to FALSE.
+  The configuration utility is let through, so  sudo php convertCore.php --config  shows the contradiction & can repair it.
+  The second wording means no install secret is available, so resource awareness could not work even if it were enabled.
+  A secret is unavailable when the secret file belongs to another account, which -fp corrects.
+  ERROR 31010 is raised when the Engine itself did not load.
   This error halts the application, because the administrator has declared that this server must
   never accept work it cannot account for.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -7469,6 +7505,292 @@ WARNINGS ABOUT WORKFLOWS
       place of one is read as nothing. No page this server draws sends one, so a request that does was made by hand.
   The Engine raises this, from Resources/Engine/engine.php.
     WARNING!!! The command <COMMAND> was refused because the Workflow Core is unavailable.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39000, <SESSION_IDENTIFIER>: The installed 7-Zip version is missing, unidentifiable, or too old, so <ARCHIVE_NAME> was not extracted!
+
+FILE
+  Resources/Pipelines/Shared/archiveExtraction.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  No 7-Zip this application accepts was found, so the archive was not opened at all.
+  This application builds its own 7-Zip where the packaged one is older than depends.php accepts.
+  Run  php convertCore.php -v  & read the 7-Zip line. Run  sudo php convertCore.php --setup --install-depends  to install it.
+  The Extractor & the Archive pipeline both raise this, through the archiveExtraction.php shared module.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39001, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so <ARCHIVE_NAME> could not be extracted in isolation!
+
+FILE
+  Resources/Pipelines/Shared/archiveExtraction.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  An archive is listed & extracted only inside the sandbox, & no sandbox could be built while one is required.
+  Outside a container this error only occurs if --Require Sandbox-- is set to TRUE in config.php.
+  In a container it only occurs if --Require Sandbox On Docker-- is set to TRUE, & --Require Sandbox-- is not read.
+  Nothing was written. Run  php convertCore.php -v  & read the Sandbox line.
+  An archive is a file a stranger wrote for 7-Zip to parse, which is the case the sandbox exists for.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39002, <SESSION_IDENTIFIER>: 7-Zip could not be started to extract <ARCHIVE_NAME>. PHP may have proc_open disabled!
+
+FILE
+  Resources/Pipelines/Shared/archiveExtraction.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  7-Zip runs under a watchdog that measures what it writes while it writes, & the watchdog needs proc_open.
+  proc_open may be listed in disable_functions in the php.ini the web server reads.
+  The process table may be full, or the web server account may be refused new processes.
+  Nothing was written.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39003, <SESSION_IDENTIFIER>: A file could not be written while <ARCHIVE_NAME> was extracted, so nothing was extracted from it!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39003, <SESSION_IDENTIFIER>: The folder <ARCHIVE_NAME> was to be extracted into was not an empty folder of its own, so nothing was extracted!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39003, <SESSION_IDENTIFIER>: A folder could not be made to decompress <ARCHIVE_NAME>, so nothing was extracted from it!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39003, <SESSION_IDENTIFIER>: The file decompressed from <ARCHIVE_NAME> could not be moved beside what else it held, so nothing was extracted from it!
+
+FILE
+  Resources/Pipelines/Shared/archiveExtraction.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The folder an archive is extracted into could not be written, or was not the new, empty folder the caller made for it.
+  Each wording names the step that failed. A gzip, bzip2 or xz file is decompressed into a folder of its own first.
+  The web server account needs read & write access to the session folder & everything below it.
+  The device where data is stored has an insufficient amount of storage space available.
+  A folder that is not empty is refused rather than written into, because what is in it is not the archive's.
+  Whatever was written is removed with the folder.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  39000 through 39019 are reserved for the archiveExtraction.php shared module, & 39004 through 39019 are currently unused.
+  39000 through 39003 are raised by the module for whichever pipeline extracts through it, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39100, <SESSION_IDENTIFIER>: Could not sanitize the input file!
+
+FILE
+  Resources/Pipelines/Extractor/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The name of an archive sent to be extracted could not be sanitized, so it was not opened.
+  The user submitted a request that was incorrect, malformed, or corrupt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39101, <SESSION_IDENTIFIER>: Could not verify the input file.
+
+FILE
+  Resources/Pipelines/Extractor/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The archive is not in the session, or it could not be staged for extraction.
+  The user asked to extract a file that does not exist, or one deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
+  The web server account needs read & write access to the session folder.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39102, <SESSION_IDENTIFIER>: Could not perform a virus scan of <FILE_NAME>, so nothing was extracted from it!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39102, <SESSION_IDENTIFIER>: Could not perform a virus scan of what <FILE_NAME> held, so nothing was extracted from it!
+
+FILE
+  Resources/Pipelines/Extractor/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  This error only occurs if --Virus Scanning-- is set to TRUE in config.php.
+  The archive is scanned before it is opened, & what it held is scanned before any of it is placed.
+  A scan that reached no verdict is not a clean scan, so nothing from the archive is placed.
+  The scanner's own warning, or  php convertCore.php -v , says why it could not scan.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39103, <SESSION_IDENTIFIER>: A folder to extract <FILE_NAME> into could not be made, so nothing was extracted from it!
+
+FILE
+  Resources/Pipelines/Extractor/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  Each archive is extracted into a new folder of its own inside the session, & that folder could not be made.
+  The web server account needs read & write access to the session folder.
+  The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-39104, <SESSION_IDENTIFIER>: Could not place <NAME> from <FILE_NAME> in the session!
+
+FILE
+  Resources/Pipelines/Extractor/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A file the archive held was extracted & could not be moved into the session under its own name or the next free one.
+  Every other file from the archive is still placed, & this one is removed with the folder it was extracted into.
+  The web server account needs read & write access to the session folder.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  39100 through 39119 are reserved for the Extractor pipeline, & 39105 through 39119 are currently unused.
+  39100 through 39104 are raised by the Extractor, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT EXTRACTING ARCHIVES
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  An archive is a file a stranger wrote, so each refusal of one is a warning. Nothing was wrong with this server.
+  The archiveExtraction.php shared module raises these for the Extractor & the Archive pipeline, from Resources/Pipelines/Shared/archiveExtraction.php.
+    WARNING!!! --Maximum Extracted Size-- in config.php is missing or is not a whole number of 0 or more, so an extraction is held to <MEGABYTES> megabytes.
+    WARNING!!! --Maximum Extracted Files-- in config.php is missing or is not a whole number of 0 or more, so an extraction is held to <COUNT> files & folders.
+      A missing or unreadable limit is the default, & never no limit. Run  sudo php convertCore.php --config --repair .
+    WARNING!!! The archive <ARCHIVE_NAME> is protected by a password, so nothing was extracted from it.
+    WARNING!!! The archive <ARCHIVE_NAME> holds no files, so nothing was extracted from it.
+    WARNING!!! The archive <ARCHIVE_NAME> holds <COUNT> files & folders, more than the <LIMIT> --Maximum Extracted Files-- allows, so nothing was extracted from it.
+    WARNING!!! The archive <ARCHIVE_NAME> holds <SIZE>, more than the <SIZE> --Maximum Extracted Size-- allows, so nothing was extracted from it.
+      An archive is listed before anything is written, & one that says it holds too much is refused on its own word.
+    WARNING!!! The archive <ARCHIVE_NAME> was not extracted, because the disk holding this session cannot take it. <REASON>
+      The Resource Manager refused the space the archive said it needs. This only occurs with resource awareness active.
+    WARNING!!! The archive <ARCHIVE_NAME> grew past the <SIZE> --Maximum Extracted Size-- allows as it was extracted, so it was stopped & nothing it wrote was kept.
+    WARNING!!! The archive <ARCHIVE_NAME> made more than the <LIMIT> files & folders --Maximum Extracted Files-- allows as it was extracted, so it was stopped & nothing it wrote was kept.
+    WARNING!!! The archive <ARCHIVE_NAME> was still being extracted after an hour, so it was stopped & nothing it wrote was kept.
+      An archive that lies about what it holds is measured while 7-Zip writes it & is stopped at the limit, which is what these say.
+    WARNING!!! 7-Zip reported a problem with the archive <ARCHIVE_NAME>, such as a damaged file or a link leading out of it, so nothing it wrote was kept.
+    WARNING!!! The archive <ARCHIVE_NAME> lists more than this server reads, so nothing was extracted from it.
+    WARNING!!! The archive <ARCHIVE_NAME> could not be listed within five minutes, so nothing was extracted from it.
+    WARNING!!! 7-Zip could not read <ARCHIVE_NAME> as an archive, so nothing was extracted from it.
+    WARNING!!! What 7-Zip extracted from <ARCHIVE_NAME> could not all be read back, so none of it was kept.
+    WARNING!!! The archive <ARCHIVE_NAME> held nothing 7-Zip could extract, so nothing was extracted from it.
+  The Extractor pipeline raises these, from Resources/Pipelines/Extractor/pipeline.php.
+    WARNING!!! The file <FILE_NAME> is not an archive this server extracts, so nothing was extracted from it.
+    WARNING!!! A virus was found in <FILE_NAME>, so nothing was extracted from it.
+    WARNING!!! A virus was found in what <FILE_NAME> held, so nothing was extracted from it.
+      An infected archive is refused & left where it is. What happens to it after is --User Virus Scanning--'s, which a pipeline cannot read.
+    WARNING!!! Left out <COUNT> link(s) or special file(s) <FILE_NAME> held, because only files are extracted.
+    WARNING!!! Left out <COUNT> file(s) <FILE_NAME> held, whose names or formats this server does not accept.
+      A file is placed only under a name & a format an upload could have, so a name such as index.html or a .php file is left out.
+    WARNING!!! What was extracted from <FILE_NAME> could not all be read back, so none of it was kept.
+    WARNING!!! The archive <FILE_NAME> held no files, so nothing was extracted from it.
+    WARNING!!! The folder <FILE_NAME> was extracted into could not be removed. It is removed with the session.
+  The Archive pipeline raises this, from Resources/Pipelines/Archive/pipeline.php.
+    WARNING!!! The folder <FILE_NAME> was extracted into could not be removed. It is removed with the session.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT FETCHING A URL FOR A USER
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  A user fetch is refused for an address a stranger chose, so each refusal is a warning. Nothing was wrong with this server.
+  The core raises these, from convertCore.php.
+    WARNING!!! A URL download was requested & the feature is disabled.
+    WARNING!!! A session reached its URL download limit of <COUNT>.
+    WARNING!!! A user requested download did not complete. <REASON>
+      <REASON> is what the user is shown. The address was refused because it resolves to a private, reserved or loopback
+      address, its name could not be resolved or it did not pass inspection. The address was accepted & nothing could be
+      fetched from it, which includes a server that answered with an error page, a redirect, or more than the ceiling.
+      The fetched file was refused by a scanner, could not be scanned, names no file type, is a type this server does not
+      handle, or could not be placed in the session. Or the address was not one, & says why in the words of a base address.
+  The Engine raises these, from Resources/Engine/engine.php.
+    WARNING!!! --URL Download Maximum Bytes-- is not a whole number of 0 or more, so the default of <BYTES> bytes is used.
+      From v4.1.7. 0 is no ceiling, as config.php says, & anything that is not a whole number is two gigabytes, & never no ceiling.
+    WARNING!!! A fetched file was refused. <FINDING>
+    WARNING!!! A private address was reached because <RANGE> is a permitted range.
+      --Permitted Private Ranges-- allowed it. Each is written, so an allowance an administrator forgot is seen in the log.
+    WARNING!!! An address in <RANGE> was refused. That range is never permitted, whatever is configured.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT INSTALLING DEPENDENCIES
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  Dependency Core raises these while --setup --install-depends runs, from Resources/Engine/Cores/dependencyCore.php.
+    WARNING!!! The package index could not be refreshed. Installs may fail or fetch stale versions.
+    WARNING!!! Refusing to install <NAME>. <REASON>
+    WARNING!!! Skipping <NAME>. <REASON> Nothing was changed.
+      The manifest entry is not one this release may act on. <REASON> says what it lacks.
+    WARNING!!! The source build for <NAME> exited with code <CODE>.
+    WARNING!!! Dependency <NAME> could not be installed. <OUTPUT>
+      <OUTPUT> is the end of what the install or the build printed. The whole of it is in the log.
+    WARNING!!! Dependency <NAME> was not built, because the build that makes it failed for <NAME> in this run.
+      From v4.1.7. FFMPEG & FFprobe come from one build, & a build that has just failed is not run a second time.
+      Correct whatever stopped the first build & run the install again.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.1.7.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v4.0.8';
+$DependencyCoreVersion = 'v4.1.7';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1598,7 +1598,7 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
   $DependenciesInstalled = 0;
   $dependsManifest = $dependencyEntry = $installedNames = $missingRequirements = $commandOutput = array();
   $commandExitCode = 1;
-  $confsBefore = $confsTurnedOff = array();
+  $confsBefore = $confsTurnedOff = $failedBuildCommands = array();
   $manifestIsAvailable = $dependencyIsPresent = $installOneSucceeded = $callerIsAuthorized = $sandboxBinaryIsReady = $sweepIsClean = FALSE;
   $itemsSwept = 0;
   $rawOutput = $detectedVersion = $dependencyStatus = $detectedDependsVersion = $packageManager = $returnData = $requirementName = $operatorChoice = '';
@@ -1665,6 +1665,13 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
             $installedNames[(string)$dependencyEntry['Name']] = TRUE;
             print('  '.str_pad((string)$dependencyEntry['Name'], 20).'bundled, ships with this application'.$Lol);
             continue; }
+          // / A build that failed in this run is not run again for another entry it also makes.
+          // / FFMPEG & FFprobe come from one build, & a build that has just failed fails the same way a second time, after as long again.
+          if ((string)$dependencyEntry['Type'] === 'source' && isset($dependencyEntry['BuildCommand'], $failedBuildCommands[(string)$dependencyEntry['BuildCommand']])) {
+            print('  '.str_pad((string)$dependencyEntry['Name'], 20).'SKIPPED, the build that makes it failed for '.$failedBuildCommands[(string)$dependencyEntry['BuildCommand']].' in this run'.$Lol);
+            if ($dependencyEntry['Required']) $InstallSucceeded = FALSE;
+            warningEntry('Dependency '.(string)$dependencyEntry['Name'].' was not built, because the build that makes it failed for '.$failedBuildCommands[(string)$dependencyEntry['BuildCommand']].' in this run.');
+            continue; }
           list ($installOneSucceeded, $returnData) = installOneDependency($dependencyEntry, $packageManager);
           if ($installOneSucceeded) {
             $DependenciesInstalled++;
@@ -1675,6 +1682,7 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
             print('  '.str_pad((string)$dependencyEntry['Name'], 20).'FAILED'.((string)$dependencyEntry['Type'] === 'manual' ? ', install by hand' : '').$Lol);
             if ($Verbose && trim($returnData) !== '') print('      '.str_replace(PHP_EOL, PHP_EOL.'      ', trim($returnData)).$Lol);
             if ($dependencyEntry['Required']) $InstallSucceeded = FALSE;
+            if ((string)$dependencyEntry['Type'] === 'source' && isset($dependencyEntry['BuildCommand'])) $failedBuildCommands[(string)$dependencyEntry['BuildCommand']] = (string)$dependencyEntry['Name'];
             warningEntry('Dependency '.(string)$dependencyEntry['Name'].' could not be installed. '.trim($returnData)); } }
         // / What an interrupted run or a renamed entry left among this application's own builds is taken
         // / away. The answer is not acted on, because sweepOwnBuilds() has already warned about anything
@@ -1687,7 +1695,7 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
         $sandboxBinaryIsReady = refreshSandboxBinary($dependsManifest, $subsystemFilter);
         print($Lol.'Installed '.$DependenciesInstalled.' dependenc(ies).'.(count($confsTurnedOff) > 0 ? ' Turned off '.count($confsTurnedOff).' Apache configuration(s) the install turned on.' : '').$Lol.$Lol); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $confsBefore, $confsTurnedOff, $dependsManifest, $dependencyEntry, $installedNames, $manifestIsAvailable, $dependencyIsPresent, $installOneSucceeded, $callerIsAuthorized, $sandboxBinaryIsReady, $sweepIsClean, $itemsSwept, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $returnData, $requirementName, $operatorChoice, $missingRequirements, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
+  purgeSensitiveMemory($EnableMemoryProtection, $confsBefore, $confsTurnedOff, $failedBuildCommands, $dependsManifest, $dependencyEntry, $installedNames, $manifestIsAvailable, $dependencyIsPresent, $installOneSucceeded, $callerIsAuthorized, $sandboxBinaryIsReady, $sweepIsClean, $itemsSwept, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $returnData, $requirementName, $operatorChoice, $missingRequirements, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
   return array($InstallSucceeded, $DependenciesInstalled); }
 // / -----------------------------------------------------------------------------------
 

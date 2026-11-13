@@ -11,7 +11,7 @@
 # on a server for users of any web browser without authentication.
 #
 # FILE INFORMATION ...
-# v3.8.6.
+# v4.1.7.
 # This file contains the Docker build file for the project.
 #
 # Build this from the repository root, not from this directory.
@@ -52,8 +52,10 @@ FROM php:8.5-apache-bookworm
 # / ca-certificates so package fetches can verify, sudo & procps for the setup routines,
 # / curl for the health check. Every conversion dependency is installed by the manifest,
 # / so this list does not grow when the manifest does.
+# / libzip-dev is the one exception. This image builds a PHP extension with docker-php-ext-install,
+# / & the zip extension the manifest requires will not build without the libzip headers.
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      ca-certificates sudo procps curl \
+      ca-certificates sudo procps curl libzip-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # / THE WEB ROOT IS ROOT'S, because the official PHP image leaves it to www-data with mode 1777
@@ -93,6 +95,10 @@ COPY Resources/config.php ./Resources/config.php
 COPY Resources/Kernel ./Resources/Kernel
 COPY Resources/Contract ./Resources/Contract
 COPY Resources/Engine ./Resources/Engine
+# / THE BUILD SCRIPTS ARRIVE WITH THE MANIFEST, because the manifest runs them.
+# / FFMPEG, FFprobe, ImageMagick & this application's own 7-Zip are built by scripts in Documentation/Build.
+# / Without them every one of those builds fails here, & the full install below builds them again after the rest of the source.
+COPY Documentation/Build ./Documentation/Build
 
 RUN php ./convertCore.php --setup --install-depends -y \
     || echo "Dependency installation reported problems. The image will still build & -v will report what is missing."

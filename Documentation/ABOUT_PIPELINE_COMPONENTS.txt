@@ -67,8 +67,8 @@ on demand by the application. A converter owns neither & is dispatched to.
 See ABOUT_COMPONENTS.txt for what a Core is.
 
 A CONVERSION PIPELINE takes one file, returns the six value contract, & is dispatched by
-convert(). Every family is one of these except OCR, Identify, the Archiver & Scan, which are
-operations, & ClamAV, ScanCore & Files, which are the scanner & file kinds.
+convert(). Every family is one of these except OCR, Identify, the Archiver, Scan & the Extractor,
+which are operations, & ClamAV, ScanCore & Files, which are the scanner & file kinds.
 
 AN OPERATION PIPELINE takes a SELECTION of files, decides its own route per file, returns
 its own shape, & is dispatched from wherever the core handles that operation. OCR was the
@@ -83,6 +83,10 @@ into another, & the Archiver makes an archive from any file. Scan scans a select
 ScanCore or both, through runVirusScan(), & returns whether any file was found infected & where
 its report is. It is the user's way to reach the scanners, & names neither tool itself. Each
 carried its error numbers with it.
+The Extractor is the fifth, from v4.1.7. It puts every file a selection of archives holds into
+the session, flat, under the file's own name or the next free one, & returns the name of every
+file it placed. It serves the Extract family. It declares the archives it reads & no output,
+because it converts nothing, & what it places is held to the names & formats an upload is.
 Both kinds are verified, pinned, ordered & loaded identically. ONLY DISPATCH DIFFERS.
 
 A SHARED MODULE is a file two or more pipelines both need & neither can own. It is not a
@@ -192,8 +196,10 @@ Every administrator facing setting lives in config.php & is owned by Setup Core.
   $Capabilities          Array with Input & Output keys, each an array of extensions. Required.
                          The CEILING. Detection may narrow it & may never exceed it.
                          An operation that reads any file leaves Input empty, as Identify does.
-                         Its Output still names what it writes. A conversion that leaves either
-                         one empty is refused with a warning.
+                         Its Output still names what it writes. An operation that writes
+                         whatever its input holds leaves Output empty, as the Extractor does,
+                         & names what it reads. An operation that leaves both empty, & a
+                         conversion that leaves either one empty, is refused with a warning.
                          Read & write are judged separately, because reading a format is
                          not writing it. Assimp reads OFF & has no OFF exporter.
   $PipelineExclude       Array of 'input>output' pairs to remove from the cross product. Optional.
@@ -283,6 +289,17 @@ the core, one per tool, each carrying its own copy of a minimum. They were retir
 manifest became the only owner. verifyDocumentConversionEngine() lives in the shared module
 because it is not a version check. It starts & inspects an engine rather than reporting a
 version, & showVersionInfo() never calls it.
+
+archiveExtraction.php is the second module, from v4.1.7. The Archive pipeline & the Extractor
+both extract an archive a stranger wrote, & neither could own the rules for doing it safely.
+It lists an archive with 7-Zip before anything is written & refuses one that is encrypted,
+empty, or holds more files & folders or more bytes than --Maximum Extracted Files-- &
+--Maximum Extracted Size-- allow. It asks the Resource Manager for the space the archive says
+it needs. It then extracts inside the sandbox under a watchdog that measures what 7-Zip writes
+ten times a second & stops it at either limit, or after an hour, so an archive that lies about
+what it holds is stopped as it lies. A gzip, bzip2 or xz file is decompressed first by counting
+every byte, & a tar inside it is extracted in turn. A refusal is a warning, because the file is
+a stranger's. The module raises 39000 through 39003 for whichever pipeline called it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -344,6 +361,8 @@ Contracts 1 through 3 are unchanged & still live in CREATING_CONVERSION_PIPELINE
         line of JSON, because an interface fills in what it shows rather than downloading a file.
         The Archiver returns the name of every archive it made. Scan returns Threat, whether any
         file was found infected, Report, where the report it wrote is, & ReportName, its name.
+        The Extractor returns the name of every file it placed, & an interface draws its list
+        again rather than downloading them, because an archive may hold a great many.
     6i. An operation pipeline offers only what it declares it writes. The core offers a format
         for archiving a selection only where both config.php & the Archiver's Output name it, &
         the Archiver refuses any other before it touches a file. Until v4.1.6 every bootable

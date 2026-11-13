@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.1.7.
 // / The Stream pipeline's converter. pipelineCore.php loads it only to dispatch a Stream conversion.
 // / Error block 21000 through 21002 belongs to this pipeline.
 // / This is the reference implementation of a detached worker pipeline.
@@ -52,6 +52,10 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / A function to confirm a downloaded file is genuinely MPEG-TS & not something disguised as one.
 // / MPEG-TS is a fixed-size packet format: every packet is 188 bytes & begins with sync byte 0x47.
 // / Requiring the sync byte at EVERY expected boundary makes a coincidental match effectively impossible.
+// / The first five packets are checked, or every whole packet when there are fewer.
+// / A segment holds a PAT, a PMT & at least one packet of media, so fewer than three whole packets is not one.
+// / The last segment of a stream is often that short.
+// / Trailing bytes short of a packet are not judged, because an inspection reads only the start of a segment.
 // / Does NOT check the file extension. FFMPEG dispatches on content, so we must too.
 // / Note that $MaxStreamInspectionFileSize must stay above ($packetSize * $packetsToCheck).
 // / Otherwise every genuine segment will fail this check for the wrong reason.
@@ -60,23 +64,24 @@ function inspectTSFile($fileContents) {
   global $EnableMemoryProtection;
   $packetSize = 188;
   $packetsToCheck = 5;
+  $packetsRequired = 3;
   $syncByte = "\x47";
   $offset = 0;
-  $bytesRequired = 0;
+  $bytesToCheck = 0;
   $Check = FALSE;
-  $bytesRequired = $packetSize * $packetsToCheck;
-  // / A file too short to hold the packets we intend to check cannot be validated, so reject it.
+  $bytesToCheck = $packetSize * min($packetsToCheck, intdiv(strlen((string)$fileContents), $packetSize));
+  // / A file too short to hold the packets a segment needs cannot be validated, so reject it.
   // / This gate also prevents the loop below from reading past the end of the string.
-  if (strlen($fileContents) >= $bytesRequired) {
+  if ($bytesToCheck >= $packetSize * $packetsRequired) {
     // / Assume success, then let any single missing sync byte disprove it & stop immediately.
     $Check = TRUE;
     // / Walk the expected packet boundaries & confirm the sync byte appears at every one.
-    for ($offset = 0; $offset < $bytesRequired; $offset += $packetSize) {
+    for ($offset = 0; $offset < $bytesToCheck; $offset += $packetSize) {
       if ($fileContents[$offset] !== $syncByte) {
         $Check = FALSE;
         break; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $packetSize, $packetsToCheck, $syncByte, $offset, $bytesRequired, $fileContents);
+  purgeSensitiveMemory($EnableMemoryProtection, $packetSize, $packetsToCheck, $packetsRequired, $syncByte, $offset, $bytesToCheck, $fileContents);
   return $Check; }
 // / -----------------------------------------------------------------------------------
 
@@ -224,7 +229,9 @@ function streamFileWalker($StreamFile) {
     else warningEntry('A stream base address was supplied & refused. '.$baseReason); }
   $currentLayerFiles[] = array('LocalPath' => $StreamFile, 'SourceURL' => $normalizedBase);
   // / Walk one whole layer at a time until we run out of layers, work, or patience.
-  while (!$Halt && !empty($currentLayerFiles) && $LayerBudget > 0) {
+  // / Layer 0 is always walked, because the uploaded file is local & its inspection cannot be disabled.
+  // / With no layer to spend, nothing it references is fetched, & the budget check below ends the walk before any connection.
+  while (!$Halt && !empty($currentLayerFiles) && ($LayerBudget > 0 or $currentLayer === 0)) {
     $FileBudget = $StreamInspectionFilesPerLayer;
     $nextLayerFiles = array();
     foreach ($currentLayerFiles as $layerFile) {
@@ -246,7 +253,8 @@ function streamFileWalker($StreamFile) {
         break; }
       // / Early exit. If this file alone exceeds the per-layer budget, the walk can never complete.
       // / Deny now, before spending a single connection on a file that was never going to pass.
-      if (count($streamURIs) > $FileBudget) {
+      // / With no layer to spend there is no per-layer budget to exceed, so the first reference ends the walk below instead.
+      if ($LayerBudget > 0 && count($streamURIs) > $FileBudget) {
         $StreamBudgetExhausted = TRUE;
         $Halt = TRUE;
         $HaltReason = 'File references '.count($streamURIs).' URIs, exceeding the per-layer budget of '.$FileBudget;
@@ -285,10 +293,10 @@ function streamFileWalker($StreamFile) {
         $streamURIs[$index]['URLScheme'] = $urlScheme;
         $streamURIs[$index]['URLIP'] = $urlIP;
         // / Spend budget BEFORE connecting, never after.
-        if ($FileBudget < 1 or $TotalBudget < 1) {
+        if ($FileBudget < 1 or $TotalBudget < 1 or $LayerBudget < 1) {
           $StreamBudgetExhausted = TRUE;
           $Halt = TRUE;
-          $HaltReason = 'Budget exhausted before connecting (files remaining this layer: '.$FileBudget.', total remaining: '.$TotalBudget.')';
+          $HaltReason = ($LayerBudget < 1 ? 'No layer may be fetched, because --Stream Inspection Layers-- is '.(int)$StreamInspectionLayers.', & the uploaded file references '.$streamURIs[$index]['AbsoluteURL'] : 'Budget exhausted before connecting (files remaining this layer: '.$FileBudget.', total remaining: '.$TotalBudget.')');
           break; }
         $FileBudget--;
         $TotalBudget--;
@@ -418,17 +426,20 @@ function convertStreams($pathname, $newPathname) {
       foreach ($allStreamURIs as $streamRecord) {
         if (!isset($streamRecord['URLHost'], $streamRecord['URLIP'])) continue;
         if ((string)$streamRecord['URLHost'] === '' or (string)$streamRecord['URLIP'] === '') continue;
-        if (!isPubliclyRoutableIP((string)$streamRecord['URLIP'])) continue;
+        // / The address is judged by the rule the walker judged it by, so a range an administrator permitted is pinned too.
+        if (!addressMayBeReached((string)$streamRecord['URLIP'])[0]) continue;
         // / The host is checked again here against what a hostname may contain, & it has
         // / already been through sanitize() in the Engine.
         // / This file has LINE BASED syntax, so a newline inside a hostname would add a
         // / mapping nobody wrote & point any name at any address. The address is already
-        // / proven by isPubliclyRoutableIP above, so this is the half that was not.
+        // / proven by addressMayBeReached above, so this is the half that was not.
         // / A value crossing out of one component & into a file format another tool parses
         // / is worth proving where it lands rather than trusting where it came from.
         if (!preg_match('/^[a-z0-9]([a-z0-9.-]{0,252}[a-z0-9])?$/i', (string)$streamRecord['URLHost'])) continue;
-        $pinnedHosts = $pinnedHosts.(string)$streamRecord['URLIP'].' '.(string)$streamRecord['URLHost'].PHP_EOL; }
-      $pinnedHostsFile = dirname($newPathname).$DirSep.'pinned.hosts';
+        redeclare($pinnedHosts, $pinnedHosts.(string)$streamRecord['URLIP'].' '.(string)$streamRecord['URLHost'].PHP_EOL); }
+      // / The file is written to the fetch folder under a name of its own, so no file of the user's is overwritten & two conversions never share one.
+      // / bwrap reads it as it starts, which is after the shell has handed back the job's identifier, so it is left for the session's cleanup rather than removed here.
+      $pinnedHostsFile = networkPolicy()['FetchTemp'].$DirSep.'pinned-'.bin2hex(random_bytes(8)).'.hosts';
       @file_put_contents($pinnedHostsFile, $pinnedHosts);
       // / The playlist is the input & is bound read only.
       // / The segments it names are fetched over the granted network, by the addresses pinned above.
@@ -440,9 +451,6 @@ function convertStreams($pathname, $newPathname) {
       // / A command that may not run is not run, & the launch check below reports it.
       if ($commandMayRun) $returnData = shell_exec($ffmpegCommand);
       else warningEntry('The stream converter was not launched, because no sandbox could be built.');
-      // / bwrap has bound the file by the time the shell returns, so it may go. A bind holds
-      // / the file open inside the namespace whether or not it still exists outside it.
-      if (file_exists($pinnedHostsFile)) @unlink($pinnedHostsFile);
       $StreamPID = (int)trim($returnData);
       // / A PID of 0 means the process never started at all.
       if ($StreamPID > 0) {

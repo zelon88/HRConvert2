@@ -58,6 +58,11 @@ another, & a text pattern that matched one form let the other straight through.
 
 Twenty addresses are tested against the filter in Documentation/Build & every one of the
 bypasses above is among them. A range is added to the list in the function & nowhere else.
+
+addressMayBeReached() wraps it, & is what every check asks. It permits a private address only in
+a range --Permitted Private Ranges-- names, & never loopback or link local, whatever is named.
+From v4.1.7 the address scan of a stream file, the host check, the lookup & FFMPEG's pins all ask
+it, so an address a range permits is permitted wherever it appears, as a host or as an address.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -77,8 +82,37 @@ approved name resolves to an approved address. A name it never saw, including on
 redirect points at, cannot resolve at all. The real name is still used on the wire, so a
 certificate validates against it.
 
-The hosts file is written to the session directory, bound, & removed once the command has
-started. A bind holds the file open inside the namespace whether or not it exists outside.
+The hosts file is written to the session's fetch folder, under a name of its own, & bound.
+bwrap reads it as it starts, which is after the shell has handed back the job's identifier, so
+it is left for the session's cleanup. Until v4.1.7 it was removed as soon as the shell returned,
+which was before bwrap read it often enough that FFMPEG never started.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Fetch--
+
+ONE FUNCTION FETCHES, & BOTH THE STREAM INSPECTION & A USER'S FETCH CALL IT.
+downloadRemoteFileForInspection() runs curl inside the namespace, pinned as above, & keeps what
+came back only when curl exited 0 & the server answered 200 or 206. curl exits 0 for an error page
+& for a redirect it was not allowed to follow, & neither is the file. A fetch that fails leaves
+nothing behind.
+
+A URL IS JUDGED AS IT WAS WRITTEN. gatherRemoteHostInfo() refuses one holding anything a URL may
+not hold, such as a space, a quote, a backslash or a control character, & reads its scheme, host &
+port. A host sanitize() would change is refused, because the tool reads the host from the URL &
+a pin made for another name would not bind it. Until v4.1.7 the whole URL went through sanitize()
+first, which removed the colons & slashes a URL is made of, so every remote stream was refused &
+every user fetch failed.
+
+AN INSPECTION READS A PLAYLIST ONLY FAR ENOUGH TO UNDERSTAND IT. It asks for the first
+--Maximum Stream Inspection Size-- bytes with -r, & --max-filesize fails a server that ignores the
+range & sends more. A user's fetch is a file wanted whole, so it is held to --URL Download Maximum
+Bytes-- instead, & 0 there is no ceiling at all.
+
+THE UPLOADED STREAM FILE IS ALWAYS INSPECTED, from v4.1.7, & --Stream Inspection Layers-- counts
+the layers fetched beneath it. At 0 nothing it references is fetched, so a file that references
+anything was not inspected completely, & --Default Stream Inspection Forfeit Action-- decides it.
+Until v4.1.7 a setting of 0 skipped the uploaded file too.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

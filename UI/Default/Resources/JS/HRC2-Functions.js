@@ -202,7 +202,8 @@ window.HRC2 = {
   selectionKeys: {
     convertSelected: { mode: 'each', nameKey: 'userconvertfilename', formatKey: 'extension' },
     pdfworkSelected: { mode: 'each', nameKey: 'userpdfconvertfilename', formatKey: '' },
-    filesToArchive: { mode: 'together', nameKey: '', formatKey: '' } },
+    filesToArchive: { mode: 'together', nameKey: '', formatKey: '' },
+    filesToExtract: { mode: 'each', nameKey: '', formatKey: '' } },
 
   // / Accept the page's values. Every key is optional so a page supplies only what it uses.
   // / The upload page has no jQuery & no file list, & supplies neither.
@@ -355,16 +356,19 @@ window.HRC2 = {
   // / suffix is the ConvertGuiCounter1 value, or an empty string for a control at the top of
   // / the page, which has a spinner of its own there. Every element id is derived from it.
   // / One request is a batch of one, so it is handed to runBatch(), which is where the pattern lives.
-  run: function (payload, suffix) {
-    this.runBatch([{ payload: payload, row: suffix }], suffix);
+  // / settings is optional, & is handed on as it is.
+  run: function (payload, suffix, settings) {
+    this.runBatch([{ payload: payload, row: suffix }], suffix, settings);
   },
 
   // / Send requests one after another as one operation, & report them once.
   // / Each request is sent when the one before it has answered, so a batch never races itself & takes one operation's budget at a time.
   // / Each request names the row it is for. That row's spinner turns while it runs, & the spinner for suffix turns throughout.
   // / What every request made is downloaded once they have all answered, & the list is drawn again once.
-  runBatch: function (requests, suffix) {
+  // / settings is optional. One whose download is false keeps what was made in the session & downloads nothing, as an extraction does.
+  runBatch: function (requests, suffix, settings) {
     var self = this;
+    var keepInSession = !!(settings && settings.download === false);
     suffix = (suffix === undefined || suffix === null) ? '' : String(suffix);
     var loadingId = 'loadingCommandDiv' + suffix;
     var victoryId = 'victoryCommandDiv' + suffix;
@@ -436,6 +440,10 @@ window.HRC2 = {
         // / anything further. There is nothing to download.
         if (madeFiles.length === 0) {
           finish(problems.length > 0 ? problems : [self.failureText], false);
+          return; }
+        // / What stays in the session is shown in the list drawn again, & nothing is fetched.
+        if (keepInSession) {
+          finish(problems, true);
           return; }
         self.downloadAll(madeFiles).then(function (failedDownloads) {
           try {
@@ -685,6 +693,25 @@ window.HRC2 = {
         self.selectionNote = self.selectionText.usable.replace('{fit}', String(batch.used)).replace('{count}', String(batch.count));
         self.showSelection();
         self.runBatch(batch.requests, suffix);
+      });
+    });
+  },
+
+  // / Bind a file's Extract control.
+  // / What an archive holds joins the session, so the list is drawn again & nothing is downloaded, because an archive may hold a great many files.
+  // / A control whose archive is ticked among others extracts every ticked archive, one after another, & says how many it could use.
+  bindExtract: function (buttonId, suffix, fileName) {
+    var self = this;
+    $(function () {
+      $('#' + buttonId).click(function () {
+        var payload = { filesToExtract: fileName };
+        var batch = self.selectionRequests(buttonId, suffix, payload, {}, payload);
+        if (!batch) {
+          self.run(payload, suffix, { download: false });
+          return; }
+        self.selectionNote = self.selectionText.usable.replace('{fit}', String(batch.used)).replace('{count}', String(batch.count));
+        self.showSelection();
+        self.runBatch(batch.requests, suffix, { download: false });
       });
     });
   },

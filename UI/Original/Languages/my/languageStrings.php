@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.6';
+$LanguageVersion = 'v4.1.7';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -537,6 +537,16 @@ $Gui2Text189 = 'အခြေအနေ';
 $Gui2Text190 = 'လုပ်ငန်းစဉ်တစ်ခု လုပ်ဆောင်နေသည်။';
 // / 'No workflow is running.'
 $Gui2Text191 = 'လုပ်ဆောင်နေသော လုပ်ငန်းစဉ် မရှိပါ။';
+// / 'Extract'
+$Gui2Text192 = 'ထုတ်ယူပါ';
+// / 'Close Extract Options'
+$Gui2Text193 = 'ထုတ်ယူခြင်း ရွေးချယ်စရာများကို ပိတ်ပါ';
+// / 'Extract This Archive'
+$Gui2Text194 = 'ဤမော်ကွန်းကို ထုတ်ယူပါ';
+// / 'Every file it holds is added to your files, under its own name or the next free one.'
+$Gui2Text195 = 'ယင်းတွင်ပါဝင်သော ဖိုင်တိုင်းကို ၎င်း၏အမည် သို့မဟုတ် နောက်ထပ်လွတ်နေသော အမည်ဖြင့် သင့်ဖိုင်များထဲသို့ ထည့်ပေးပါသည်။';
+// / 'Extract Files'
+$Gui2Text196 = 'ဖိုင်များကို ထုတ်ယူပါ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

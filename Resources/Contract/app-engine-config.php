@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.6.
+// / v4.1.7.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -85,7 +85,7 @@ $EngineShippedWorkflows = 'Resources/Workflows';
 // / Accepting a pipeline, or moving one to a new version, is one line here, & no Engine version moves for it.
 // / The order is the order pipelines are enumerated & listed in.
 $EngineAcceptedPipelines = array(
-  'Stream' => 'v4.0.8',
+  'Stream' => 'v4.1.7',
   'Scad' => 'v4.0.8',
   'OCR' => 'v4.1.1',
   'Document' => 'v4.0.8',
@@ -97,13 +97,15 @@ $EngineAcceptedPipelines = array(
   'Video' => 'v4.0.8',
   'Ebook' => 'v4.0.8',
   'Audio' => 'v4.0.8',
-  'Archive' => 'v4.1.6',
+  'Archive' => 'v4.1.7',
   // / The second operation pipeline. It reads every file & changes none.
   'Identify' => 'v4.1.2',
   // / The third & fourth, from v4.1.6. The Archiver puts a selection of files into archives, & Scan scans the files a user asks it to.
   // / Each was code in convertCore.php until then.
   'Archiver' => 'v4.1.6',
   'Scan' => 'v4.1.6',
+  // / The fifth, from v4.1.7. The Extractor puts every file an archive holds into the session beside it.
+  'Extractor' => 'v4.1.7',
   // / Scanner pipelines. They declare no formats & are chosen by name.
   'ClamAV' => 'v4.0.8',
   // / The first pipeline of kind file. Operations that do not care what is in a file.
@@ -112,8 +114,10 @@ $EngineAcceptedPipelines = array(
 
 // / The shared modules a pipeline may load & the exact version each must report.
 // / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.
+// / archiveExtraction.php serves the Archive & Extractor pipelines alike, from v4.1.7, for the same reason.
 $EngineAcceptedSharedModules = array(
-  'libreOffice.php' => 'v4.1.1');
+  'libreOffice.php' => 'v4.1.1',
+  'archiveExtraction.php' => 'v4.1.7');
 
 // / Where each of this application's own pins reads its version from.
 // / php convertCore.php --build --pins --write writes every pin from the files named here,

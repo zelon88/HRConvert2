@@ -7,7 +7,7 @@
 # / https://www.gnu.org/licenses/gpl-3.0.html
 # /
 # / FILE INFORMATION ...
-# / v4.0.6.
+# / v4.1.7.
 # / This file builds & publishes the HRConvert2 Docker image automatically.
 # / Place it at .github/workflows/docker-build.yml in the repository root.
 # /
@@ -32,6 +32,13 @@
 # / A second registry publishing the same image earns nothing unless somebody pulls from
 # / it. Add it back deliberately, with a token that has the scope, rather than by default.
 # /
+# / EACH ARCHITECTURE BUILDS ON A RUNNER OF ITS OWN.
+# / amd64 builds on ubuntu-latest & arm64 on ubuntu-24.04-arm, so neither is emulated.
+# / Under QEMU an arm64 build of FFMPEG from source ran past the six hour limit of a job.
+# / Each runner pushes its image by digest, & one last job joins the two digests under the tags.
+# / Each architecture keeps a cache of its own, so one never evicts the other.
+# / A pull request builds & smoke tests both, & publishes neither.
+# /
 # / WHAT IT DOES NOT DO.
 # / It does not update the version stamps inside the source. Those are still edited by
 # / hand & the tag must match them, or the core will refuse to run against its own config.
@@ -54,9 +61,21 @@ env:
   DOCKERHUB_IMAGE: zelon88/hrconvert2
 
 jobs:
-  # --- STAGE 1: LOCAL BUILD AND SMOKE TEST ---
+  # --- STAGE 1: BUILD AND SMOKE TEST EACH ARCHITECTURE ON ITS OWN RUNNER ---
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            cache: linux-amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            cache: linux-arm64
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
@@ -69,22 +88,18 @@ jobs:
         with:
           context: .
           file: ./Documentation/Build/Dockerfile
-          platforms: linux/amd64
+          platforms: ${{ matrix.platform }}
           push: false
           load: true
           tags: temp-test-image
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.cache }}
+          cache-to: type=gha,scope=${{ matrix.cache }},mode=max
 
       # / The container is polled rather than slept at, & every diagnostic runs whatever
-      # / happened. The previous version slept for a fixed thirty seconds & then ran curl,
-      # / with docker logs on the line below it. The step runs under bash -e, so a failing
-      # / curl ended the script & the log line never executed. The one command that would
-      # / have explained the failure was downstream of it.
+      # / happened. The step runs under bash -e, so a failing command would end the script
+      # / before the diagnostics that explain it.
       # / A question asked of the container says whether it is running before it is asked, &
-      # / reports the answer's exit code. Until v4.0.6 any answer that did not end in 0, error
-      # / 28008 included, was followed by a line saying the container was not running, which the
-      # / container state above it showed was not so.
+      # / reports the answer's exit code.
       - name: Smoke test
         run: |
           docker run -d --name hrc2test -p 8080:80 --cap-add SYS_ADMIN temp-test-image
@@ -137,22 +152,86 @@ jobs:
         if: always()
         run: docker rm -f hrc2test || true
 
-  # --- STAGE 2: COMPILE MULTI-ARCH AND PUBLISH ---
+  # --- STAGE 2: PUSH EACH ARCHITECTURE BY DIGEST FROM ITS OWN RUNNER ---
+  # / The cache the test above filled is the one read here, so this build is the same image.
   publish:
     needs: test
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+            cache: linux-amd64
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            cache: linux-arm64
+    runs-on: ${{ matrix.runner }}
     # / The workflow reads the repository & publishes to Docker Hub with a token held in
     # / the repository secrets. It needs no permission over GitHub packages.
     permissions:
       contents: read
-
     steps:
       - name: Check out the repository
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Determine image labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.DOCKERHUB_IMAGE }}
+
+      - name: Build & push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Documentation/Build/Dockerfile
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.DOCKERHUB_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.cache }}
+          cache-to: type=gha,scope=${{ matrix.cache }},mode=max
+
+      - name: Keep the digest
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          mkdir -p "${RUNNER_TEMP}/digests"
+          touch "${RUNNER_TEMP}/digests/${IMAGE_DIGEST#sha256:}"
+
+      - name: Hand the digest to the merge
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.cache }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # --- STAGE 3: JOIN BOTH ARCHITECTURES UNDER THE TAGS ---
+  merge:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Collect the digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-*
+          merge-multiple: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -179,14 +258,20 @@ jobs:
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
             type=raw,value=edge,enable=${{ github.ref == 'refs/heads/master' }}
 
-      - name: Build & publish multi-arch
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Documentation/Build/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      # / Both digests must be present, so a merge never publishes one architecture under a tag that promises two.
+      - name: Publish the tags over both architectures
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          digestCount=$(find . -maxdepth 1 -type f | wc -l)
+          if [ "$digestCount" -ne 2 ]; then
+            echo "::error::Expected a digest from each of the 2 architectures & found ${digestCount}."
+            exit 1
+          fi
+          tagArguments=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON")
+          # shellcheck disable=SC2046,SC2086
+          docker buildx imagetools create $tagArguments $(printf "${DOCKERHUB_IMAGE}@sha256:%s " *)
+
+      - name: Inspect the published image
+        env:
+          IMAGE_VERSION: ${{ steps.meta.outputs.version }}
+        run: docker buildx imagetools inspect "${DOCKERHUB_IMAGE}:${IMAGE_VERSION}"

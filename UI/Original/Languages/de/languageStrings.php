@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.6';
+$LanguageVersion = 'v4.1.7';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -535,6 +535,16 @@ $Gui2Text189 = 'Status';
 $Gui2Text190 = 'Ein Workflow läuft.';
 // / 'No workflow is running.'
 $Gui2Text191 = 'Es läuft kein Workflow.';
+// / 'Extract'
+$Gui2Text192 = 'Entpacken';
+// / 'Close Extract Options'
+$Gui2Text193 = 'Entpackoptionen Schließen';
+// / 'Extract This Archive'
+$Gui2Text194 = 'Dieses Archiv Entpacken';
+// / 'Every file it holds is added to your files, under its own name or the next free one.'
+$Gui2Text195 = 'Jede Datei darin kommt zu Ihren Dateien, unter ihrem eigenen Namen oder dem nächsten freien.';
+// / 'Extract Files'
+$Gui2Text196 = 'Dateien Entpacken';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

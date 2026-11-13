@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.6';
+$LanguageVersion = 'v4.1.7';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -537,6 +537,16 @@ $Gui2Text189 = 'وضعیت';
 $Gui2Text190 = 'یک گردش‌کار در حال اجراست.';
 // / 'No workflow is running.'
 $Gui2Text191 = 'هیچ گردش‌کاری در حال اجرا نیست.';
+// / 'Extract'
+$Gui2Text192 = 'استخراج';
+// / 'Close Extract Options'
+$Gui2Text193 = 'بستن گزینه‌های استخراج';
+// / 'Extract This Archive'
+$Gui2Text194 = 'استخراج این بایگانی';
+// / 'Every file it holds is added to your files, under its own name or the next free one.'
+$Gui2Text195 = 'هر فایلی که در آن است به فایل‌های شما افزوده می‌شود، با نام خودش یا نخستین نام آزاد پس از آن.';
+// / 'Extract Files'
+$Gui2Text196 = 'استخراج فایل‌ها';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

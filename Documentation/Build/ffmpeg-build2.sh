@@ -13,7 +13,7 @@
 # on a server for users of any web browser without authentication.
 
 # FILE INFORMATION ...
-# v4.0.6.
+# v4.1.7.
 # This file builds FFMPEG from source to enable more advanced file operations.
 # ffmpeg-build.sh runs it in a folder of its own, which it removes when the build ends.
 
@@ -564,14 +564,26 @@ fi
 if $NONFREE_AND_GPL; then
   if build "x265" "3.5"; then
     download "https://github.com/videolan/x265/archive/Release_$CURRENT_PACKAGE_VERSION.tar.gz" "x265-$CURRENT_PACKAGE_VERSION.tar.gz" # This is actually 3.4 if looking at x265Version.txt
+    # x265 3.5 has aarch64 assembly for 8 bit only, so the 10 & 12 bit libraries are built without assembly on aarch64.
+    # Its HDR10+ library passes 32 bit ARM flags such as -mfpu=neon on aarch64, which an aarch64 compiler refuses.
+    # Both stop make on arm64 Linux, so both are corrected there & nowhere else.
+    X265_HIGH_BIT_DEPTH_OPTIONS=()
+    if [[ "$OSTYPE" != "darwin"* && "$(uname -m)" == "aarch64" ]]; then
+      X265_HIGH_BIT_DEPTH_OPTIONS=("-DENABLE_ASSEMBLY=OFF")
+      execute sed -i 's/^    elseif(ARM)$/    elseif(ARM AND NOT ARM64)/' source/dynamicHDR10/CMakeLists.txt
+      if ! grep -q '^    elseif(ARM AND NOT ARM64)$' source/dynamicHDR10/CMakeLists.txt; then
+        echo "The x265 HDR10+ build file does not hold the line this script corrects for aarch64." >&2
+        exit 1
+      fi
+    fi
     cd build/linux || exit
     rm -rf 8bit 10bit 12bit 2>/dev/null
     mkdir -p 8bit 10bit 12bit
     cd 12bit || exit
-    execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_HDR10_PLUS=ON -DEXPORT_C_API=OFF -DENABLE_CLI=OFF -DMAIN12=ON
+    execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_HDR10_PLUS=ON -DEXPORT_C_API=OFF -DENABLE_CLI=OFF -DMAIN12=ON "${X265_HIGH_BIT_DEPTH_OPTIONS[@]}"
     execute make -j $MJOBS
     cd ../10bit || exit
-    execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_HDR10_PLUS=ON -DEXPORT_C_API=OFF -DENABLE_CLI=OFF
+    execute cmake ../../../source -DCMAKE_INSTALL_PREFIX="${WORKSPACE}" -DENABLE_SHARED=OFF -DBUILD_SHARED_LIBS=OFF -DHIGH_BIT_DEPTH=ON -DENABLE_HDR10_PLUS=ON -DEXPORT_C_API=OFF -DENABLE_CLI=OFF "${X265_HIGH_BIT_DEPTH_OPTIONS[@]}"
     execute make -j $MJOBS
     cd ../8bit || exit
     ln -sf ../10bit/libx265.a libx265_main10.a

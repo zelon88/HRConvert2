@@ -146,5 +146,6 @@ and.....
 
 HRConvert2
 The Identify icon, identify.png, in the Default & Original interfaces. Drawn for this project in v4.1.2.
+The Extract icon, extract.png, in the Default & Original interfaces. Drawn for this project in v4.1.7.
 GPLv3, as the rest of this project is.
 https://github.com/zelon88/HRConvert2

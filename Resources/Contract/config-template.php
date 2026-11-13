@@ -29,7 +29,7 @@
 // / on a server for users of any web browser without authentication. 
 // /
 // / File information ...
-// / v4.1.5.
+// / v4.1.7.
 // / This file contains the configuration information for HRConvert2.
 // / Fill out this file completely & accurately before running the application.
 // / Serious filesystem damage could occur from incorrect directory settings.
@@ -59,7 +59,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. An update & --config --repair keep it current.
-$ConfigVersion = 'v4.1.5';
+$ConfigVersion = 'v4.1.7';
 // / ------------------------------
 
 // / ------------------------------
@@ -199,19 +199,16 @@ $MaintainHTAccess = TRUE;
 // /   If set to TRUE, a server without a working sandbox refuses every conversion that
 // /   depends on one. That is every type except documents.
 // /   If set to FALSE, those conversions run unprotected & every one writes a warning.
-// /   Bubblewrap needs unprivileged user namespaces, which a container blocks by default.
-// /   A container must be started with --security-opt seccomp=unconfined & on some hosts
-// /   also --security-opt apparmor=unconfined, or this must be set to FALSE.
+// /   In a container this setting is not read. --Require Sandbox On Docker-- decides there.
 // /   Run  php convertCore.php -v  to see whether this server has a working sandbox.
 // /   Valid options are TRUE or FALSE.
-// /   If running in docker, this must be set to FALSE.
-// /   Default is TRUE for bare metal, or VM.
-// /   Default is FALSE for Docker container.
+// /   Default is TRUE.
 $RequireSandbox = TRUE;
 // /  --Require Sandbox On Docker--
 // /   Whether a conversion that cannot be isolated is refused when running in a container.
 // /   This is the container equivalent of --Require Sandbox-- & exists because a container
 // /   cannot build a sandbox at all unless it was started with the correct options.
+// /   Outside a container this setting is not read. --Require Sandbox-- decides there.
 // /   Bubblewrap builds its sandbox from unprivileged user namespaces, & the default
 // /   container seccomp & AppArmor profiles both block the syscalls that requires.
 // /   A container started normally therefore has NO working sandbox, & requiring one would
@@ -431,9 +428,12 @@ $PermittedPrivateRanges = array();
 // /   The largest file this server will fetch on a user's behalf, in bytes.
 // /   A fetch is a stranger spending YOUR bandwidth & YOUR disk, so it needs a ceiling that
 // /   an upload does not, because an upload is bounded by what a browser will push.
-// /   The fetch stops at this figure rather than failing at it, so an oversized file is
-// /   truncated & reported rather than silently half written.
+// /   The fetch asks for no more than this figure. A server that honours the request stops
+// /   at it, & the file is placed & reported as truncated. A server that ignores the request
+// /   & sends more fails the fetch instead, & nothing is placed.
 // /   0 means no ceiling. Do not use 0 on anything a stranger can reach.
+// /   Valid options are integers 0 and larger.
+// /   Anything else is replaced with the default & a warning is written.
 // /   Default is 2147483648, which is two gigabytes.
 $URLDownloadMaximumBytes = 2147483648;
 // /  --URL Downloads Per Session--
@@ -468,6 +468,29 @@ $ScanURLDownloads = TRUE;
 // /   reach by link. Leave it off everywhere else.
 // /   Default is FALSE.
 $AllowUserURLDownload = FALSE;
+// /  --Maximum Extracted Size--
+// /   The most one archive may hold once it is extracted, in megabytes.
+// /   An archive is small & what it holds may not be. A few kilobytes can hold gigabytes of zeros,
+// /   so an archive extracted without a ceiling can fill the disk this server writes to.
+// /   An archive is listed before it is extracted, & refused when it says it holds more than this.
+// /   It is held to this while it is extracted too, & stopped once it passes it, because an archive
+// /   may say anything about itself. A gzip names its size in four bytes & a bzip2 not at all.
+// /   It applies to every extraction, by a file's Extract button, by a workflow's Extract step &
+// /   by an archive converted into another. An extraction still running after an hour is stopped.
+// /   0 means no ceiling. Do not use 0 on anything a stranger can reach.
+// /   Valid options are integers 0 and larger.
+// /   Default is 1024, which is one gigabyte.
+$MaxExtractedSize = 1024;
+// /  --Maximum Extracted Files--
+// /   The most files & folders one archive may hold once it is extracted, counted together.
+// /   A folder counts whether or not the archive lists it, because extracting a file makes every
+// /   folder it sits in.
+// /   An archive holding more is refused before it is extracted, & stopped if it makes more while
+// /   it is extracted. It applies wherever --Maximum Extracted Size-- does.
+// /   0 means no limit. Do not use 0 on anything a stranger can reach.
+// /   Valid options are integers 0 and larger.
+// /   Default is 1000.
+$MaxExtractedFiles = 1000;
 // /  --Default Virus Scanner--
 // /   Which scanner runs when this application scans a file on its own.
 // /   The name matches a scanner pipeline's family, case insensitively. Two ship with this

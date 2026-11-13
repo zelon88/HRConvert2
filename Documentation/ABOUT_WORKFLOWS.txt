@@ -33,8 +33,8 @@ A WORKFLOW is a list of steps. Each step runs one operation on files, & a step a
 may work on what an earlier step made. Convert every document to PDF, then put the PDFs in
 one zip, is a workflow of two steps.
 
-An OPERATION is something a user can already do with a button. Convert, Archive, OCR,
-Identify & Virus Scan are HRConvert2's. A workflow does nothing a user could not do by hand,
+An OPERATION is something a user can already do with a button. Convert, Archive, Extract,
+OCR, Identify & Virus Scan are HRConvert2's. A workflow does nothing a user could not do by hand,
 because every step runs the same code that button runs, under the same budget & the same
 limits. A workflow only saves the clicking.
 
@@ -146,6 +146,10 @@ button takes, so a workflow waits its turn as a button does.
              Options: Extension, zip by default, or any archive format the server writes.
              Filename, Workflow_Files by default. A Filename puts every file into one archive
              of that name, & an empty one archives each file under its own.
+  Extract    Modes: each. Budget: extract. Reads the archives both DearchiveArray & the Extractor
+             name. Options: none. Every file an archive holds is placed beside it, under its own
+             name or the next free one, & every one is handed on. Needs the Archive type on.
+             An archive refused for a password, its size or its count makes nothing, & says why.
   OCR        Modes: each. Budget: OCR. Reads what OCR reads, the formats PDFWorkArr lists.
              Options: Extension, pdf by default or a document format. Method, 0, 1 or 2.
              Filename, empty for each file's own. Needs the OCR & the Document types on.
@@ -211,15 +215,17 @@ A file can be more than one kind. An rtf file is a Document & an Ebook, & a txt 
 Two folders hold workflows, & a user is offered every usable workflow in either.
 
 THE SHIPPED LIBRARY is Resources/Workflows. It comes with the release & is replaced by the
-next one. It ships six.
+next one. It ships seven.
   archive-every-file      Finds every file in the session & puts them all into one zip.
   documents-to-pdf-zip    Converts documents, spreadsheets & presentations to PDF, then zips them.
+  extract-every-archive   Finds every archive in the session & puts every file each one holds beside it.
   identify-every-file     Finds every file in the session & identifies them all in one report.
   images-to-jpg-zip       Converts images to JPG, then zips them.
   scan-and-identify       Scans the selected files for viruses, then identifies them with a report.
   scan-every-file         Finds every file in the session & scans them all with every scanner.
-The three every-file workflows begin with a Select step, so they need no ticked file. They do
-what the Bulk File Options panel did until v4.1.6, & a user changes what they do in the builder.
+The three every-file workflows & extract-every-archive begin with a Select step, so they need no
+ticked file. The three every-file workflows do what the Bulk File Options panel did until v4.1.6,
+& a user changes what any of them does in the builder.
 
 THE INSTALLED LIBRARY is the Workflows folder in the data root, beside Logs & Sessions. It is
 where an administrator adds workflows, & an update leaves it alone. -fp creates it, owned by
@@ -414,8 +420,8 @@ Where the builder is on, the workflow's box is replaced by the builder. See --Th
 Where --Enable Workflow Builder-- is on, the Workflows panel builds workflows as well as running
 them. A PIPELINES section sits above the boxes, with a tab for the library & one for each
 operation the server has on, & each tab lists its choices. Convert's lists every format it
-writes, Archive's every archive it makes, OCR's every format it writes, Scan's each scanner &
-Identify's itself. Select's lists every file, & every file of one kind. The library's lists its
+writes, Archive's every archive it makes, OCR's every format it writes, Scan's each scanner, &
+Extract's & Identify's themselves. Select's lists every file, & every file of one kind. The library's lists its
 workflows, & choosing one opens it in the builder from the document the server gives for it.
 
 The workflow's box becomes a BOX FOR EACH STEP, between the files & the box that runs them. A

@@ -181,6 +181,13 @@ root.
 AN APPARMOR PROFILE WRITTEN NOW MAY NOT BE IN FORCE YET.
 The kernel honours a new profile once AppArmor reloads it, which can take a reload or a reboot.
 -fp says so when the sandbox is still unavailable after writing one.
+
+ONE RULE DECIDES WHETHER A SANDBOX IS REQUIRED. v4.1.7.
+sandboxIsRequired() reads --Require Sandbox On Docker-- in a container & --Require Sandbox--
+anywhere else, as sandboxCommand() always did. The environment check required both in a
+container, so with --Require Sandbox-- FALSE & --Require Sandbox On Docker-- TRUE it said
+conversions would run unprotected while sandboxCommand() refused every one. config.php also said
+--Require Sandbox-- must be FALSE in a container, where it is not read at all.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -329,6 +336,38 @@ FILE'S FLOOR IS 5.43.
 Every release before 5.38 overflows the heap reading a CDF document, CVE-2019-18218, & every
 release before 5.43 reads past a buffer on the stack copying a string, CVE-2022-48554. Ubuntu
 24.04 carries 5.45 & Debian's bookworm 5.44, so the floor costs neither a build of its own.
+
+A BUILD THAT FAILED IS NOT RUN AGAIN IN THE SAME INSTALL. v4.1.7.
+The v4.1.3 Docker publish built arm64 under QEMU. x265 did not compile for aarch64, so FFMPEG's
+build failed, & FFprobe, which names the same build, ran it again from the start. The image's first
+install also ran before Documentation/Build was copied in, so every source build failed there & ran
+again in the full install. Builds of FFMPEG under emulation ran past GitHub's six hour limit.
+Each architecture now builds on a runner of its own, the build scripts arrive with the manifest, &
+a build that failed is not run again for another entry it also makes.
+
+x265 3.5 ON AARCH64. v4.1.7.
+Its aarch64 assembly is 8 bit only, so the 10 & 12 bit libraries do not compile with it, & its
+HDR10+ library hands -mfpu=neon, -mfloat-abi=hard & -marm to an aarch64 compiler, which refuses all
+three. Both were reproduced with an aarch64 cross compiler, & with both corrected the 12 bit, 10 bit
+& 8 bit libraries & the library joining them all build. Only Linux on aarch64 is corrected.
+
+PHP PCNTL & POSIX ARE ENTRIES OF THEIR OWN. v4.1.7.
+runAsAccount() forks & drops to the web server account, & refuses rather than run a command as root
+without both extensions. A distribution's command line PHP has both. The official PHP container
+image has posix & not pcntl, & cannot build its zip extension without libzip-dev, so the Dockerfile
+installs that one header package before the manifest takes over.
+
+THE IMAGEMAGICK BUILD'S DELEGATE REPORT NEVER FAILS. v4.1.7.
+The script runs under set -e & its report returned 1 for a delegate it did not find. AVIF is read &
+written by the HEIC coder through libheif, so it is never listed as a delegate, & the script ended
+with an error after every good install. AVIF is now looked for among the formats.
+
+THE BUNDLED SCANCORE KEEPS HRCONVERT2'S OWN FILES. v4.1.7.
+ScanCore's application update replaces every file its subscriptions name. HRConvert2's copy of
+ScanCore_Config.php carries a command line guard upstream's does not, & its index.html is
+HRConvert2's page, so neither is subscribed. A ScanCore release that adds a configuration entry is
+refused by ScanCore until the entry is merged by hand, which is the signal to merge it. ScanCore
+1.8, the release bundled, is the manifest's minimum.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -527,6 +566,56 @@ A REPORT IS CREATED, NEVER REPLACED.
 It takes the next free name as a conversion output does, & it is opened exclusively, so a name
 taken in the moment between choosing it & writing it fails rather than being written through.
 A report written in part is removed, because it would read as a complete one.
+
+AN ARCHIVE IS LISTED BEFORE IT IS EXTRACTED, & MEASURED WHILE IT IS. v4.1.7.
+The Archive pipeline extracted with 7-Zip & no limit, so a small archive could fill the disk. The
+archiveExtraction.php shared module lists an archive first & refuses one that says it is encrypted,
+empty, or larger than --Maximum Extracted Size-- or --Maximum Extracted Files-- allow. An archive can
+lie about its sizes, so 7-Zip writes under a watchdog that measures what it wrote ten times a second
+& stops it at either limit or after an hour. The shell 7-Zip runs under does not exec it, so the
+watchdog kills the whole tree beneath it, deepest first. A gzip, bzip2 or xz file says nothing true
+about its size, so it is decompressed by counting every byte as it arrives, & a tar inside it is
+then extracted under the same watchdog. 7-Zip is handed a password that opens nothing, so an
+encrypted archive is refused rather than waiting for somebody to type one.
+
+THE ARCHIVE PIPELINE STAGES IN A FOLDER OF ITS OWN. v4.1.7.
+It extracted into a folder named as the archive, in the session, so an archive named Workflow
+extracted into the session's workflow folder & then emptied it. That folder was also the root it was
+cleaned under, so an empty one was left behind every conversion, & a .tar.gz converted to zip gave a
+zip holding the tar. The staging folder is the archive's name inside a dot folder with a random part,
+the session is the root it is cleaned under, & a compressed tar gives up the files it holds.
+
+AN ARCHIVE CONVERTED TO ZIP KEEPS ITS FOLDERS. v4.1.7.
+Zip wrote it with -j, because zip has no way to name entries from inside a folder & would otherwise
+have named them by the sandbox's path. -j dropped every folder, & zip refuses two entries of one name,
+so an archive holding a README in two folders could not be converted at all. 7-Zip names entries from
+the folder it is handed, so it writes the zip as it writes a 7z, the archive's own name as the top
+folder. A tar was written with -j as well, which is bzip2, & gz, tgz, bz2, xz & wim were declared &
+had no command. Each tar is now written compressed as its name says, & 7-Zip writes wim.
+
+AN OPERATION MAY DECLARE NO OUTPUTS. v4.1.7.
+The Pipeline Core refused an operation that did not declare what it writes. The Extractor writes
+whatever the archives it reads hold, which no list can name, so an empty output list is how an
+operation says so. An operation that declares no inputs & no outputs is still refused.
+
+THE EXTRACTOR PLACES FILES FLAT, AS AN UPLOAD WOULD. v4.1.7.
+Each archive is extracted into a dot folder of its own in the session, so moving a file out is a
+rename, & the folder is removed whatever happens. Only regular files are kept, & a link or special
+file is left out & counted. A file keeps its own name or takes the next free one, & is held to the
+names & formats an upload is, so index.html & a .php file are left out. With --Virus Scanning-- on,
+the archive is scanned before it is opened & what it held before any of it is placed, & a threat in
+either refuses the whole archive. A button extracts without downloading, because an archive may
+hold a great many files, & draws the list again.
+
+STREAM INSPECTION NEVER REACHED A REMOTE HOST. v4.1.7.
+gatherRemoteHostInfo() passed every URL through sanitize() first, which removes the colons &
+slashes a URL is made of, so every stream file that referenced anything was refused, & every user
+fetch failed, from the day each arrived. Once URLs reached curl, five more faults showed. A setting
+of 0 for --Stream Inspection Layers-- skipped the uploaded file too, so ALLOW handed it to FFMPEG
+uninspected. A last segment shorter than five packets was refused, which refused the stream. An
+address a permitted range allows was refused when a stream file named it as an address, & FFMPEG
+was not pinned to it. The pinned hosts file was removed as soon as the shell returned, which was
+before bwrap read it, so FFMPEG never started. A fetch kept an error page or a redirect as the file.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -763,6 +852,17 @@ application's identity, & engineConfig.php's guard named HRConvert2. Before the 
 meant reading engineConfig.php line by line to find the application's values. The accepted pipeline
 list was written into Pipeline Core, so the Engine carried one application's pipelines & accepting
 one meant a new Pipeline Core. Pipeline Core read HRConvert2's three settings by their own names.
+
+CLEANING A FOLDER FOLLOWS ITS CHILDREN BY THEIR OWN NAMES. v4.1.7.
+cleanFiles() sanitized the path of every child it recursed into, so a folder named My Photos was
+looked for as My_Photos, was never found, & the folder holding it was never removed. A session
+holding such a folder was never swept. The path given is sanitized once & every child is followed by
+the name the folder holds.
+
+A USER FETCH WITH NO CEILING IS FETCHED WHOLE. v4.1.7.
+config.php says 0 is no ceiling for --URL Download Maximum Bytes--, & the fetch read 0 as the
+inspection ceiling, 8191 bytes. A negative ceiling now lifts the limit, & the core hands one over
+for 0.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1263,6 +1363,17 @@ A workflow a page sends is JSON, which sanitize() would destroy, so it is read r
 base & a URL to fetch are, & the Workflow Core checks it more strictly than sanitize() could. Each
 of the four is read only when PHP hands it over as text. A list sent in place of one was cast to
 text before, which is a PHP warning, & is now refused & named in a warning of the core's own.
+
+THE CONFIGURATION MODEL NAMES A DEPENDENCY ONLY WHERE THE CODE HAS ONE. v4.1.7.
+--config said ten settings needed another they do not need. The three selectable choices did not
+need their lists, the fine print did not need the interface, a backup location is used by an
+install as well as an update, a user's scan does not need upload scanning, --Require Sandbox On
+Docker-- is read alone in a container, the forfeit action decides most when there are no layers, &
+--workflow --check reads the step limit with workflows off. The log hash pair was the wrong way
+round. An int that was 0 was called FALSE, & a bool that was FALSE was said to be set.
+--Require Resource Awareness-- is not ignored when resource awareness is off, it refuses everything,
+so its model carries a Conflict & --config lists it apart. It was raised as 31010, the number for
+an Engine that did not load, & ERROR_DESCRIPTIONS already gave the contradiction 31013.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

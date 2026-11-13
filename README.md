@@ -116,12 +116,13 @@ sudo php convertCore.php -fp    # Repair permissions & the web server setup
 | **Subtitles** | srt, vtt, ass, sub, sbv, ttml, and more |
 | **E-Books** | epub, mobi, azw, azw3, azw4 |
 | **Archives** | zip, rar, 7z, tar, gz, bz2 |
+| **Extract** | Every file an archive holds, placed beside it, within the size & count limits you set |
 | **3D Models** | obj, stl, ply, collada, and OpenSCAD sources |
 | **Drawings & Vectors** | dxf, dia, vdx, svg |
 | **Bootable Disk Images** | x86, ARM, UEFI and MBR/GPT hybrid ISOs |
 | **OCR** | Extract text from images and PDFs |
 | **Identify** | Size, type, character set & hashes of any file, and whether its name matches what it holds |
-| **Workflows** | Choose or build a chain of conversions, archives, OCR, scans & identification, export & import it, and watch it run in the background |
+| **Workflows** | Choose or build a chain of conversions, archives, extractions, OCR, scans & identification, export & import it, and watch it run in the background |
 | **Live Streams** | Capture and convert m3u8 playlists |
 | **Remote Files** | Fetch a file from a URL. Off by default. |
 
@@ -132,7 +133,7 @@ sudo php convertCore.php -fp    # Repair permissions & the web server setup
 HRConvert2 assumes every tool that parses a hostile file can be exploited. So the sandbox is the security boundary, and everything else is a layer on top of it.
 
 - **🧱 Sandboxed converters.** ImageMagick, FFmpeg, LibreOffice, Inkscape, OpenSCAD and every other converter run inside bubblewrap. Each sees only its own input and output, with no network at all.
-- **🧼 Hostile inputs disarmed.** OpenSCAD sources are rewritten before they render. Archive links are pruned before they reach anything. Stream URLs are inspected before FFmpeg sees them. Fetched files are checked before they are placed.
+- **🧼 Hostile inputs disarmed.** OpenSCAD sources are rewritten before they render. Archives are listed before they are opened & measured while they are extracted, & their links are pruned before they reach anything. Stream URLs are inspected before FFmpeg sees them. Fetched files are checked before they are placed.
 - **📋 An audited supply chain.** Every dependency is declared in one manifest with minimum and maximum versions. Every pipeline carries an approval record for the dependencies it uses, and approvals expire every year.
 - **🏆 Reports are welcome and credited.** Every advisory is accepted, and every reporter is credited publicly once the fix ships. Two were credited in v4.0.0. See the [Security Policy](Documentation/SECURITY.md).
 - **🔍 Checked by machine as well as by hand.** Two independent linters, in Python and Bash, check every change, and each check is proven against faults planted on purpose. Every error the application can raise is documented with its cause and its fix.

@@ -223,6 +223,16 @@ The following is a list of supported POST inputs, organized into sections based 
           This input is used during Archive Operations (excluding conversions).
           Set this input to a name or list of names to use for input files.
 
+  Extract Operations
+      filesToExtract
+          String or JSON Array.
+          This input is used during Extract Operations, from v4.1.7.
+          Set this input to the name or list of names of archives in the session.
+          Every file each archive holds is placed in the session, under its own name or the
+          next free one, & the reply names every file placed, one per line.
+          An archive refused for a password, its size, its count of files or its format places
+          nothing & is named in a warning. A request that placed nothing ends with error 32.
+
   Optical Character Recognition (OCR) Operations
       pdfworkSelected
           String or JSON Array.

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File information ...
-// / v4.1.2.
+// / v4.1.7.
 // / HRConvert2 Dependency Manifest.
 // / This file is data. It defines nothing & does nothing.
 // / dependencyCore.php reads it. Nothing else may.
@@ -114,7 +114,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v4.1.2';
+$DependsVersion = 'v4.1.7';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -142,6 +142,17 @@ $DependsManifest = array(
     'MinimumVersion' => '', 'VersionCommand' => 'php -r "exit(extension_loaded(\'zip\') ? 0 : 1);"', 'VersionPattern' => '',
     'Required' => TRUE, 'Subsystem' => 'Documents', 'Requires' => array('PHP'),
     'License' => 'PHP-3.01', 'Source' => 'https://www.php.net/manual/en/book.zip.php', 'Purpose' => 'Opens OOXML documents so external references can be stripped before LibreOffice sees them. Without it the sandbox is the only protection.'),
+  // / Root hands a command to the web server account by forking & dropping to it, which takes pcntl & posix.
+  // / Without either, such a command is refused rather than run as root, so -fp & the listener commands root hands over fail.
+  // / The command line PHP of a distribution carries both. The official PHP container image carries posix & not pcntl.
+  array('Name' => 'PHP Pcntl', 'Binary' => '', 'Type' => 'php-extension', 'Package' => 'pcntl',
+    'MinimumVersion' => '', 'VersionCommand' => 'php -r "exit(extension_loaded(\'pcntl\') ? 0 : 1);"', 'VersionPattern' => '',
+    'Required' => FALSE, 'Subsystem' => 'Core', 'Requires' => array('PHP'),
+    'License' => 'PHP-3.01', 'Source' => 'https://www.php.net/manual/en/book.pcntl.php', 'Purpose' => 'Lets root run a command as the web server account. Without it that command is refused.'),
+  array('Name' => 'PHP Posix', 'Binary' => '', 'Type' => 'php-extension', 'Package' => 'posix',
+    'MinimumVersion' => '', 'VersionCommand' => 'php -r "exit(extension_loaded(\'posix\') ? 0 : 1);"', 'VersionPattern' => '',
+    'Required' => FALSE, 'Subsystem' => 'Core', 'Requires' => array('PHP'),
+    'License' => 'PHP-3.01', 'Source' => 'https://www.php.net/manual/en/book.posix.php', 'Purpose' => 'Names accounts & lets root run a command as the web server account. Without it that command is refused.'),
   array('Name' => 'Apache', 'Binary' => 'apache2', 'Type' => 'apt', 'Package' => 'apache2 libapache2-mod-php',
     'MinimumVersion' => '2.4', 'VersionCommand' => 'apache2 -v', 'VersionPattern' => '/Apache\/(\d+\.\d+)/',
     'Required' => TRUE, 'Subsystem' => 'Core', 'Requires' => array('PHP'),
@@ -493,8 +504,9 @@ $DependsManifest = array(
   // / verify supplied arguments, & a probe after that read the version out of the file with
   // / grep. Reading rather than running was defensible & was not necessary. The interface
   // / exists & asking the thing itself is the honest answer.
+  // / The minimum is the release this one bundles & is tested with, so a copy an older ScanCore replaced is reported rather than trusted.
   array('Name' => 'ScanCore', 'Binary' => '', 'Type' => 'bundled', 'Package' => '',
-    'MinimumVersion' => '', 'VersionCommand' => 'php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'ScanCore'.DIRECTORY_SEPARATOR.'ScanCore.php').' -version', 'VersionPattern' => '/ScanCore v([0-9]+\\.[0-9]+)/',
+    'MinimumVersion' => '1.8', 'VersionCommand' => 'php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'ScanCore'.DIRECTORY_SEPARATOR.'ScanCore.php').' -version', 'VersionPattern' => '/ScanCore v([0-9]+\\.[0-9]+)/',
     'Required' => FALSE, 'Subsystem' => 'Virus Scanning', 'Requires' => array('PHP'),
     'License' => 'GPL-3.0', 'Source' => 'Bundled at Resources/ScanCore', 'Purpose' => 'Scans every uploaded file. Written & distributed by this project.'),
   array('Name' => 'ClamAV', 'Binary' => 'clamscan', 'Type' => 'apt', 'Package' => 'clamav clamav-daemon',

@@ -12,7 +12,7 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v4.0.6.
+# / v4.1.7.
 # / This file is the ImageMagick 7 source build for HRConvert2.
 # / It removes the packaged ImageMagick & any earlier source build, then builds & installs
 # / version 7 under /usr/local with HEIC, AVIF & JPEG XL support, which the packaged build
@@ -144,7 +144,7 @@ echo ""
 echo ""
 echo "=== Compiling ImageMagick v7 ==="
 echo "Using $(nproc) CPU cores for parallel compilation..."
-make -j$(nproc)
+make -j"$(nproc)"
 
 echo ""
 echo "=== Installing to system ==="
@@ -176,24 +176,29 @@ DELEGATES=$(magick --version | grep "Delegates (built-in):")
 echo "$DELEGATES"
 echo ""
 
-# Function to check if a delegate is present
+# Function to report whether a delegate is present.
+# It reports & never fails, because ImageMagick is installed by now, & under set -e a missing delegate would end the script with an error.
 check_delegate() {
     local format=$1
     local friendly=$2
     if echo "$DELEGATES" | grep -q "$format"; then
         echo "  ✓ $friendly"
-        return 0
     else
         echo "  ✗ $friendly (NOT FOUND - dependency may be missing)"
-        return 1
     fi
+    return 0
 }
 
 echo "Modern Format Support:"
 check_delegate "heic" "HEIC/HEIF (iPhone photos, iPhone video thumbnails)"
 check_delegate "jxl" "JPEG-XL (next-generation image compression)"
 check_delegate "jp2" "JPEG2000 (high-quality archival format)"
-check_delegate "avif" "AVIF (AV1 image format, modern codec)"
+# AVIF is read & written by the HEIC coder through libheif, so it is listed as a format & never as a delegate.
+if magick -list format | grep -qi "^ *AVIF"; then
+    echo "  ✓ AVIF (AV1 image format, modern codec)"
+else
+    echo "  ✗ AVIF (AV1 image format, modern codec) (NOT FOUND - libheif may lack an AV1 codec)"
+fi
 
 echo ""
 echo "========================================="

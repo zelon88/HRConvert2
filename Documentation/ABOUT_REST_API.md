@@ -138,6 +138,13 @@ POST inputs are organized into distinct functional operational blocks based on p
   * Selects specific items to pack inside the container matrix.
   * *Value*: A target name or structured string list of filenames to use for input files.
 
+### 📂 F2. Extract Operations
+* `filesToExtract` *(String or JSON Array)*, from v4.1.7.
+  * The archives in the session to extract.
+  * *Value*: A name or list of names of archives in the session.
+  * Every file each archive holds is placed in the session, under its own name or the next free one, & the reply names every file placed, one per line.
+  * An archive refused for a password, its size, its count of files or its format places nothing & is named in a warning. A request that placed nothing ends with error 32.
+
 ### 🔍 G. Optical Character Recognition (OCR) Operations
 * `pdfworkSelected` *(String or JSON Array)*
   * Targets documents for data scanning and textual processing layers.

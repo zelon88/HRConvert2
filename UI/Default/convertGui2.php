@@ -306,7 +306,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
               'notWorkflow' => $Gui2Text186, 'unreadable' => $Gui2Text187,
               'refused' => array('disabled' => $Gui2Text146, 'unknown' => $Gui2Text148, 'nothing' => $Gui2Text149, 'files' => $Gui2Text150, 'server' => $Gui2Text151, 'busy' => $Gui2Text152, 'start' => $Gui2Text153, 'builder' => $Gui2Text188, 'invalid' => $Gui2Text186),
               'failed' => array('operation' => $Gui2Text154, 'threat' => $Gui2Text155, 'runtime' => $Gui2Text156, 'files' => $Gui2Text157, 'budget' => $Gui2Text158, 'unavailable' => $Gui2Text159, 'halted' => $Gui2Text160, 'stopped' => $Gui2Text144)),
-            'operations' => array('Convert' => $Gui2Text14, 'Archive' => $Gui2Text10, 'OCR' => $Gui2Text12, 'Identify' => $Gui2Text86, 'Scan' => $Gui2Text8, 'Select' => $Gui2Text109),
+            'operations' => array('Convert' => $Gui2Text14, 'Archive' => $Gui2Text10, 'Extract' => $Gui2Text192, 'OCR' => $Gui2Text12, 'Identify' => $Gui2Text86, 'Scan' => $Gui2Text8, 'Select' => $Gui2Text109),
             'kinds' => array('Document' => $Gui2Text114, 'Spreadsheet' => $Gui2Text115, 'Presentation' => $Gui2Text116, 'Image' => $Gui2Text117, 'Audio' => $Gui2Text118, 'Video' => $Gui2Text119, 'Archive' => $Gui2Text120,
               'Ebook' => $Gui2Text121, 'Model' => $Gui2Text122, 'Drawing' => $Gui2Text123, 'Vector' => $Gui2Text124, 'Subtitle' => $Gui2Text125, 'Scad' => $Gui2Text126, 'Stream' => $Gui2Text127),
             'optionLabels' => array('Extension' => $Gui2Text18, 'Filename' => $Gui2Text17, 'Width' => $Gui2Text180, 'Height' => $Gui2Text181, 'Rotate' => $Gui2Text65, 'Bitrate' => $Gui2Text66,
@@ -510,6 +510,13 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <img id='archfileXButton<?php echo $ConvertGuiCounter1; ?>' name='archfileXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text11, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text11, ENT_QUOTES, 'UTF-8'); ?>'/>
 
+          <?php } if ($OfferedOperations['Extract'] && in_array($extension, $ExtractOperationArray)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+          <img id='extractfileButton<?php echo $ConvertGuiCounter1; ?>' name='extractfileButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>extract.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
+           onclick='toggle_visibility("extractfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("extractfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("extractfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text192.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text192.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <img id='extractfileXButton<?php echo $ConvertGuiCounter1; ?>' name='extractfileXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
+           onclick='toggle_visibility("extractfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("extractfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("extractfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text193, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text193, ENT_QUOTES, 'UTF-8'); ?>'/>
+
           <?php } if (in_array($extension, $PDFWorkArr) && $OfferedOperations['OCR']) { ?>          
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
           
@@ -676,6 +683,21 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
             HRC2.bindRun('archfileSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
               <?php echo json_encode(array('archive' => $File, 'filesToArchive' => $File)); ?>,
               <?php echo json_encode(array('archextension' => 'archfileextension'.$ConvertGuiCounter1, 'userfilename' => 'userarchfilefilename'.$ConvertGuiCounter1)); ?>);
+          </script>
+        </div>
+        <?php } ?>
+
+        <?php if ($OfferedOperations['Extract'] && in_array($extension, $ExtractOperationArray)) {
+        // / What an archive holds joins the session, so the list is drawn again & nothing is downloaded.
+        // / A ticked selection of archives is extracted one after another, as a ticked selection is converted.
+        ?>
+        <div id='extractfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='extractfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style='max-width:750px; display:none;'>
+          <p style='max-width:500px;'></p>
+          <p><strong><?php echo $Gui2Text194; ?></strong></p>
+          <p><?php echo $Gui2Text195; ?></p>
+          <input type='submit' id='extractfileSubmit<?php echo $ConvertGuiCounter1; ?>' name='extractfileSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text196, ENT_QUOTES, 'UTF-8'); ?>'>
+          <script type='text/javascript'>
+            HRC2.bindExtract('extractfileSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>', <?php echo json_encode($File); ?>);
           </script>
         </div>
         <?php } ?>

@@ -38,7 +38,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.6';
+$LanguageVersion = 'v4.1.7';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -545,6 +545,16 @@ $Gui2Text189 = 'Trạng Thái';
 $Gui2Text190 = 'Một quy trình đang chạy.';
 // / 'No workflow is running.'
 $Gui2Text191 = 'Không có quy trình nào đang chạy.';
+// / 'Extract'
+$Gui2Text192 = 'Giải Nén';
+// / 'Close Extract Options'
+$Gui2Text193 = 'Đóng Tùy Chọn Giải Nén';
+// / 'Extract This Archive'
+$Gui2Text194 = 'Giải Nén Tệp Nén Này';
+// / 'Every file it holds is added to your files, under its own name or the next free one.'
+$Gui2Text195 = 'Mọi tệp bên trong được thêm vào tệp của bạn, với tên riêng của nó hoặc tên trống kế tiếp.';
+// / 'Extract Files'
+$Gui2Text196 = 'Giải Nén Tệp';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

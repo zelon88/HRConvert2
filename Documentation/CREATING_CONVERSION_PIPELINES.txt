@@ -216,7 +216,8 @@ Read these before writing code. They are preconditions, not steps.
       never widens it. See `ABOUT_CAPABILITY_DETECTION.txt` for how the layers compose.
   4j. Add each new setting to `applicationConfigModel()` in `convertCore.php`, with the label the
       template gives it as its Description. A setting the model does not know cannot be reset
-      by `--config` & is reported as unaccounted.
+      by `--config` & is reported as unaccounted. Give it a Depends only where the code does not
+      read it while that setting is off, or `--config` tells an administrator something untrue.
 
 5. In `convertCore.php` register the config so a missing setting is detected.
   5a. `verifyConfigVersion()` - add each setting name to `$requiredConfigVars`.

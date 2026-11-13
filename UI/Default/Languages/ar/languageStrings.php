@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.6';
+$LanguageVersion = 'v4.1.7';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -540,6 +540,16 @@ $Gui2Text189 = 'الحالة';
 $Gui2Text190 = 'يوجد سير عمل قيد التشغيل.';
 // / 'No workflow is running.'
 $Gui2Text191 = 'لا يوجد سير عمل قيد التشغيل.';
+// / 'Extract'
+$Gui2Text192 = 'استخراج';
+// / 'Close Extract Options'
+$Gui2Text193 = 'إغلاق خيارات الاستخراج';
+// / 'Extract This Archive'
+$Gui2Text194 = 'استخراج هذا الأرشيف';
+// / 'Every file it holds is added to your files, under its own name or the next free one.'
+$Gui2Text195 = 'يُضاف كل ملف يحتويه إلى ملفاتك، باسمه أو بأول اسم متاح بعده.';
+// / 'Extract Files'
+$Gui2Text196 = 'استخراج الملفات';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -240,6 +240,19 @@ requires. A stamp that is already that version or newer is left alone. With noth
 stamp current it says so & succeeds, & asks nothing. A setting it cannot add, because the file has
 no section for it, is named, & the repair fails.
 
+EVERY COMMAND BUT A BACKUP BEGINS WITH WHAT THE FILE SAYS ABOUT ITSELF.
+Sections gives each section's count of settings. Settings that contradict each other names a
+setting whose value, because of another's, changes what the application does. --Require Resource
+Awareness-- TRUE with --Enable Resource Awareness-- FALSE is one, & refuses every request & every
+command but --config with error 31013. Settings with no effect names a setting the code does not
+read while the setting it depends on is off. A bool is off when it is FALSE, & an int at 0 or
+below, & the line names the value it has. A bool that is itself FALSE is not named, because a
+feature left off is not being ignored. Neither list blocks anything.
+The [needs ...] beside a default, & the needs line of show, say what a setting needs, as
+$Setting to be TRUE or $Setting above 0.
+From v4.1.7 a setting is said to need another only where the code reads it that way. The notes
+an earlier release printed for ten settings, & the one it printed the wrong way round, were not.
+
 NOTHING IS WRITTEN IF ANY SECTION FAILS VALIDATION.
 A section holding fewer than half, or more than one and a half times, the settings the model
 expects is treated as a parse failure rather than as a configuration problem. A file that cannot

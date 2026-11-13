@@ -385,14 +385,18 @@ This GUI only has access to certain variables. Variables that are available to t
   $GuiJSDir, $GuiImageDir, $EbookInputArray, $EbookOutputArray, $BootableIsoArray, $AllowBootableIsoImage, $ShowFiles, $FileListOnly, $NoGui,
   $EnableMemoryProtection, $Verbose, $LanguageBaselineFile, $ImageOutputArray, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL,
   $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $WorkflowsJsPath,
-  $EnableWorkflowBuilder, $EnableWorkflowImportExport, $ArchiveOperationArray, $OfferedOperations
+  $EnableWorkflowBuilder, $EnableWorkflowImportExport, $ArchiveOperationArray, $OfferedOperations,
+  $ExtractOperationArray
 This list is the whole contract & it is the list buildGUI() declares.
 $ArchiveOperationArray is the formats a file or a selection may be archived in, which the Archiver
 pipeline writes & config.php allows. Offer it for archiving a file, & keep $ArchiveArray for converting
 an archive, because $ArchiveArray holds the bootable disk images only an archive can be made into.
-$OfferedOperations says which of a file's operations to draw, as Scan, Identify, OCR & Archive, each
-TRUE or FALSE. Each is an operation pipeline's, & one whose pipeline is missing is FALSE, so a page
-draws no button that could only fail, as a workflow offers no step for it. Both are from v4.1.6.
+$OfferedOperations says which of a file's operations to draw, as Scan, Identify, OCR, Archive &
+Extract, each TRUE or FALSE. Each is an operation pipeline's, & one whose pipeline is missing is FALSE,
+so a page draws no button that could only fail, as a workflow offers no step for it. Both are from
+v4.1.6, & Extract is from v4.1.7.
+$ExtractOperationArray is the archives a file may be extracted from, which config.php's $DearchiveArray
+& the Extractor pipeline both name. Draw a file's Extract control only where its extension is in it.
 Until v4.1.2 it named $ImageArray twice & left out seven that buildGUI() already declared. A GUI that reads
 anything not named here is reading a variable that does not exist in its scope, which is a
 PHP warning printed into the page & an empty string where the value should have been.
@@ -551,6 +555,11 @@ HRC2.configure({ selectionText: { selected, usable } }) supplies the words. usab
 {count}, which the library fills in.
 Draw the arrow's menu so it opens toward the side a line starts on. The included GUIs anchor it to
 the left, & to the right where the page is dir rtl.
+
+HRC2.bindExtract(buttonId, suffix, fileName) binds a file's Extract control, from v4.1.7. It sends
+filesToExtract, & where its archive is ticked among others it extracts every ticked archive whose own
+row has the control, one request each. Nothing is downloaded, because an archive may hold a great many
+files, & the list is drawn again when the last request ends, holding everything that was placed.
 
 A ticked file converts every eligible ticked file. HRC2.bindRun does it for any control whose
 static values name convertSelected, pdfworkSelected or filesToArchive, when its file is ticked among

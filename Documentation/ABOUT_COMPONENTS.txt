@@ -245,7 +245,9 @@ A SETTING ADDED TO config.php IS ADDED IN FOUR PLACES.
 config.php, Resources/Contract/config-template.php, applicationConfigModel() in convertCore.php,
 & the list verifyConfigVersion() in convertCore.php checks for. The template holds every default.
 The model holds what a configuration cannot say about itself, a type, a dependency between
-settings & a section an operator owns. The Engine finds both through $EngineConfigModelProvider
+settings & a section an operator owns. A dependency is named only where the code does not read
+the setting while the one it depends on is off, & a Conflict names what follows where it is read
+& contradicts it instead, as --Require Resource Awareness-- does. --config prints both. The Engine finds both through $EngineConfigModelProvider
 & $EngineConfigTemplate in Resources/Contract/app-engine-config.php.
 Forgetting the model does not break anything immediately, which is the point. A setting the
 model does not know is reported as unaccounted, can still be edited by hand, & simply cannot

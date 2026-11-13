@@ -67,7 +67,10 @@ $ApplicationBranchName = 'master';
 // /   A name containing two dots is refused, because it would write outside the installation.
 // /   Valid options are 'README.md', 'ScanCore.php', 'ScanCore_Config.php', 'index.html', 'Documentation/CHANGELOG.txt', 'Documentation/index.html'.
 // /   Default is 'README.md', 'ScanCore.php', 'ScanCore_Config.php', 'index.html', 'Documentation/CHANGELOG.txt', 'Documentation/index.html'.
-$ApplicationUpdateSubscriptions = array('README.md', 'ScanCore.php', 'ScanCore_Config.php', 'index.html', 'ScanCore_Classifiers.def', 'Documentation/CHANGELOG.txt', 'Documentation/index.html');
+// /   The copy HRConvert2 bundles leaves out ScanCore_Config.php & index.html, because HRConvert2 keeps its own copy of each.
+// /   An application update would otherwise replace the command line guard at the top of this file & the page this folder serves.
+// /   A ScanCore release that adds a configuration entry refuses this file until the entry is added here by hand.
+$ApplicationUpdateSubscriptions = array('README.md', 'ScanCore.php', 'ScanCore_Classifiers.def', 'Documentation/CHANGELOG.txt', 'Documentation/index.html');
 // /  --Allow Definition Updates--
 // /   Allow definition updates.
 // /   Valid options are TRUE or FALSE.

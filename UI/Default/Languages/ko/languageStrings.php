@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.6';
+$LanguageVersion = 'v4.1.7';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -532,6 +532,16 @@ $Gui2Text189 = '상태';
 $Gui2Text190 = '워크플로가 실행 중입니다.';
 // / 'No workflow is running.'
 $Gui2Text191 = '실행 중인 워크플로가 없습니다.';
+// / 'Extract'
+$Gui2Text192 = '압축 풀기';
+// / 'Close Extract Options'
+$Gui2Text193 = '압축 풀기 옵션 닫기';
+// / 'Extract This Archive'
+$Gui2Text194 = '이 아카이브 압축 풀기';
+// / 'Every file it holds is added to your files, under its own name or the next free one.'
+$Gui2Text195 = '안에 든 모든 파일이 원래 이름이나 다음으로 비어 있는 이름으로 내 파일에 추가됩니다.';
+// / 'Extract Files'
+$Gui2Text196 = '파일 압축 풀기';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

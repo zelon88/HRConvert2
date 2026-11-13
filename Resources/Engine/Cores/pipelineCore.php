@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.6.
+// / v4.1.7.
 // / The Pipeline Core, one of the Engine's cores.
 // / It verifies, describes & dispatches the pipelines under Resources/Pipelines, each at the exact version the application pins.
 // / Which pipelines are accepted is the application's decision, read from its contract, so this file names none of them.
@@ -37,7 +37,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v4.1.6';
+$PipelineCoreVersion = 'v4.1.7';
 // / -----------------------------------------------------------------------------------
 
 
@@ -224,8 +224,9 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
     // / scanner pipelines silently, so they were pinned, installed, syntactically valid &
     // / never enumerated, & the version report counted zero of them without saying why.
     // / An operation may read every file, as Identify does, & an empty input list is how it says so.
-    // / It must still say what it writes, so an operation that declares nothing at all is refused as a conversion is.
-  else if (!in_array($declaredKind, array('scanner', 'file'), TRUE) && (count($declaredCapabilities['Output']) === 0 or ($declaredKind !== 'operation' && count($declaredCapabilities['Input']) === 0))) warningEntry('The '.$pipelineFolderName.' pipeline declared an empty capability list & was refused.');
+    // / An operation may write whatever the files it reads hold, as the Extractor does, & an empty output list is how it says so.
+    // / It must still declare one of them, so an operation that declares nothing at all is refused as a conversion is.
+  else if (($declaredKind === 'operation' && count($declaredCapabilities['Input']) === 0 && count($declaredCapabilities['Output']) === 0) or (!in_array($declaredKind, array('scanner', 'file', 'operation'), TRUE) && (count($declaredCapabilities['Input']) === 0 or count($declaredCapabilities['Output']) === 0))) warningEntry('The '.$pipelineFolderName.' pipeline declared an empty capability list & was refused.');
   else {
     // / Extensions are compared lowercased everywhere else, so they are lowercased here once.
     $inputExtensions = array_map('strtolower', $declaredCapabilities['Input']);

@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.1.5.
+// / v4.1.7.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -41,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.1.5';
+$EngineVersion = 'v4.1.7';
 // / -----------------------------------------------------------------------------------
 
 
@@ -297,7 +297,7 @@ function validateStartupKey($keyPurpose, $suppliedKey, $singleUse = FALSE) {
 // / has drifted is reported & does not fail the check, because conversions still run.
 function validateOperatingEnvironment() {
   // / Set variables.
-  global $RequireSandbox, $RunningInContainer, $RequireSandboxOnDocker, $EngineEnvironmentProvider, $InstLoc, $ApplicationLoc, $RequiredSetupCoreVersion, $DirSep, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
+  global $EngineEnvironmentProvider, $InstLoc, $ApplicationLoc, $RequiredSetupCoreVersion, $DirSep, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
   $EnvironmentIsReady = TRUE;
   $EnvironmentFindings = array();
   $sandboxIsRequired = $providerIsReady = $scriptIsValid = $locationIsProtected = $setupIsAvailable = FALSE;
@@ -307,8 +307,8 @@ function validateOperatingEnvironment() {
   $kernelIsReady = $policyIsValid = $bwrapBinary = FALSE;
   $policyStatus = $sandboxLauncher = '';
   // / The sandbox is the one thing a conversion cannot proceed without when it is required.
-  $sandboxIsRequired = (bool)$RequireSandbox;
-  if ($RunningInContainer && !$RequireSandboxOnDocker) $sandboxIsRequired = FALSE;
+  // / sandboxIsRequired() is the rule sandboxCommand() follows, so this finding says what a conversion meets.
+  $sandboxIsRequired = sandboxIsRequired();
   // / The Engine checks what the ENGINE provides & nothing else.
   // / Bubblewrap is one of the things here that belong to it, because sandboxCommand is what
   // / builds the namespace & this is that namespace being proved.
@@ -733,23 +733,27 @@ function removeEmptiedSessionDir($sessionPath) {
 // / -----------------------------------------------------------------------------------
 // / A function to test if a folder is empty.
 // / Returns TRUE only when the folder exists & holds nothing at all.
-// / Returns FALSE when the folder holds anything, or when the path is not a folder.
+// / Returns FALSE when the folder holds anything, when it cannot be read, or when the path is not a folder.
 // / Every directory contains a . and a .. entry, so both are discarded before testing.
 function is_dir_empty($dir) {
   // / Set variables.
   global $EnableMemoryProtection;
   $Check = TRUE;
-  $contents = array();
+  $listing = $contents = array();
   // / Make sure the selected directory is actually a directory.
   if (is_dir($dir)) {
     // / Gather the contents of the directory, discarding the two entries every directory has.
-    $contents = array_diff(scandir($dir), array('.', '..'));
+    // / A folder that cannot be read is not known to be empty. scandir() returns FALSE for one,
+    // / & handing FALSE to array_diff() is a fatal error in PHP 8.
+    $listing = @scandir($dir);
+    if (!is_array($listing)) $Check = FALSE;
+    else $contents = array_diff($listing, array('.', '..'));
     // / Anything left over means the directory holds something.
     if (!empty($contents)) $Check = FALSE; }
   // / A path that is not a directory at all must never be reported as an empty one.
   else $Check = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dir, $contents);
+  purgeSensitiveMemory($EnableMemoryProtection, $dir, $listing, $contents);
   return $Check; }
 // / -----------------------------------------------------------------------------------
 
@@ -760,20 +764,38 @@ function is_dir_empty($dir) {
 // / Both sides of the comparison pass through realpath() first, so a path containing .. cannot walk out of an approved root.
 // / A wrong variable handed to it therefore does nothing & returns FALSE.
 // / The second argument is the list of roots this caller may clean under, so the cleaner knows no application's directories.
+// / The path a caller hands over is sanitized here, once, & cleanFolderTree() does the walk.
 function cleanFiles($path, $allowedRoots) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $CleanSuccess = $variableIsSanitized = FALSE;
+  list ($path, $variableIsSanitized) = sanitize($path, FALSE);
+  if ($variableIsSanitized) $CleanSuccess = cleanFolderTree($path, $allowedRoots);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $variableIsSanitized, $path, $allowedRoots);
+  return $CleanSuccess; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to empty & remove a folder, & every folder inside it, within the roots a caller named.
+// / Accepts the folder & the roots it may clean under, in that order. Returns TRUE when nothing is left of the folder.
+// / It is cleanFiles() without the sanitizing. cleanFiles() calls it once with the path it was handed,
+// / & it calls itself for every folder it finds, by the name that folder actually has.
+// / A name a folder listing returns is the folder's own, & sanitizing it would name a different folder or none.
+// / Every folder is still resolved & held to the roots, so a name cannot lead anywhere the roots do not.
+function cleanFolderTree($path, $allowedRoots) {
   // / Set variables.
   // / Every filesystem lists these two & neither is ever a file somebody uploaded.
   global $DirSep, $EnableMemoryProtection;
   $defaultApps = array('.', '..');
-  $variableIsSanitized = $CleanSuccess = $pathCheck = $pathIsContained = FALSE;
+  $CleanSuccess = $pathCheck = $pathIsContained = FALSE;
   $loopCheck = TRUE;
   // / $allowedRoots is a PARAMETER & is not initialized here. Listing it beside the locals
   // / emptied the caller's authorization before a single root was read, so nothing was ever
   // / contained & nothing was ever cleaned. The directory then failed its emptiness check &
   // / the caller reported a failure on work that had succeeded.
-  $dirContents = array();
+  $dirListing = $dirContents = array();
   $dirEntry = $childPath = $realPath = $realRoot = $allowedRoot = '';
-  list ($path, $variableIsSanitized) = sanitize($path, FALSE);
   // / Assemble every location this function is permitted to operate inside.
   // / The caller's list already holds every maintenance location it needs cleaned.
   // / Resolve the supplied path to its true location before any comparison is made.
@@ -792,10 +814,14 @@ function cleanFiles($path, $allowedRoots) {
       if ($realRoot !== FALSE && ($realPath === $realRoot or strpos($realPath, $realRoot.$DirSep) === 0)) {
         $pathIsContained = TRUE;
         break; } } }
-  // / Make sure the selected directory is contained, sanitized, & actually a directory.
-  if ($pathIsContained && $variableIsSanitized && is_dir($path)) {
+  // / Make sure the selected directory is contained & actually a directory.
+  if ($pathIsContained && is_dir($path)) {
     // / Iterate through each file object in the directory.
-    $dirContents = array_diff(scandir($path), array('..', '.'));
+    // / A folder that cannot be read is a failure rather than a fault. scandir() returns FALSE for one,
+    // / & handing FALSE to array_diff() is a fatal error in PHP 8, which would end the listener's sweep along with it.
+    $dirListing = @scandir($path);
+    if (!is_array($dirListing)) $loopCheck = FALSE;
+    else $dirContents = array_diff($dirListing, array('..', '.'));
     foreach ($dirContents as $dirEntry) {
       // / Build the full path to this child ONCE. Every check below refers to the CHILD,
       // / never to the parent. Testing the parent here would choose the wrong branch.
@@ -814,7 +840,7 @@ function cleanFiles($path, $allowedRoots) {
       // / If the selected file object is a directory with contents, recurse into it.
       // / A failure anywhere below must propagate up, so $loopCheck is never reset to TRUE here.
       elseif (is_dir($childPath)) {
-        if (!cleanFiles($childPath, $allowedRoots)) $loopCheck = FALSE; }
+        if (!cleanFolderTree($childPath, $allowedRoots)) $loopCheck = FALSE; }
       // / A file object that is neither a link, a file nor a directory is a FIFO, a socket or a
       // / device node. It is removed rather than skipped, so no such object can survive the sweep
       // / & leave the parent directory un-removable.
@@ -832,7 +858,7 @@ function cleanFiles($path, $allowedRoots) {
   // / An uncontained path is never a success. Nothing was cleaned & nothing should report otherwise.
   if (!$pathIsContained) $CleanSuccess = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $defaultApps, $path, $dirContents, $dirEntry, $childPath, $realPath, $realRoot, $allowedRoot, $allowedRoots, $variableIsSanitized, $pathCheck, $pathIsContained, $loopCheck);
+  purgeSensitiveMemory($EnableMemoryProtection, $defaultApps, $path, $dirListing, $dirContents, $dirEntry, $childPath, $realPath, $realRoot, $allowedRoot, $allowedRoots, $pathCheck, $pathIsContained, $loopCheck);
   return $CleanSuccess; }
 // / -----------------------------------------------------------------------------------
 
@@ -2864,7 +2890,7 @@ function countSessionURLDownloads($sessionDirectory, $recordOne = FALSE) {
 // / This is the one place an operator can make this server reach out on their behalf, so every existing protection is used.
 // / normalizeStreamBaseURL rebuilds the text into a URL, because sanitize() would return a filename rather than an address.
 // / gatherRemoteHostInfo resolves the name & refuses anything not publicly routable, as for a URL inside a playlist.
-// / downloadRemoteFileForInspection pins the address with curl --resolve, follows no redirect & stops at the byte ceiling.
+// / downloadRemoteFileForInspection pins the address with curl --resolve, follows no redirect, stops at the byte ceiling & keeps only a 200 or 206.
 // / It runs inside a namespace with a network & no resolver.
 // / The file is then moved into the session, so a fetch that failed leaves nothing behind.
 // / The name is taken from the URL path & passed through sanitize(), which is what sanitize() is for.
@@ -2883,6 +2909,9 @@ function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
   $scannerUsed = $scanFinding = '';
   $fetchedExtension = '';
   $urlParts = array();
+  $ceilingSetting = 0;
+  // / The default config.php documents for --URL Download Maximum Bytes--, which configuration cannot overwrite.
+  $defaultCeiling = 2147483648;
   list ($baseIsUsable, $cleanURL, $FetchReason) = normalizeStreamBaseURL($suppliedURL);
   if ($baseIsUsable) {
     list ($inspectionFailed, $resolutionFailed, $containsLAN, $lookupFailed, $urlHost, $urlPort, $urlScheme, $urlIP) = gatherRemoteHostInfo($cleanURL);
@@ -2890,7 +2919,13 @@ function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
     else {
       // / A user's fetch gets the ceiling an administrator set for user fetches, which is a
       // / different question from how much of a playlist is worth reading.
-      list ($downloadFailed, $temporaryPath, $wasTruncated) = downloadRemoteFileForInspection($cleanURL, $urlHost, $urlPort, $urlIP, $urlScheme, 'user-'.bin2hex(random_bytes(8)), (isset($URLDownloadMaximumBytes) ? (int)$URLDownloadMaximumBytes : 0));
+      // / config.php says 0 is no ceiling, which downloadRemoteFileForInspection() is told with -1, because its own 0 keeps the inspection ceiling.
+      // / A value that is not a whole number of 0 or more falls back to two gigabytes, the default config.php documents, & says so.
+      $ceilingSetting = filter_var((isset($URLDownloadMaximumBytes) ? $URLDownloadMaximumBytes : $defaultCeiling), FILTER_VALIDATE_INT, array('options' => array('min_range' => 0)));
+      if ($ceilingSetting === FALSE) {
+        warningEntry('--URL Download Maximum Bytes-- is not a whole number of 0 or more, so the default of '.$defaultCeiling.' bytes is used.');
+        $ceilingSetting = $defaultCeiling; }
+      list ($downloadFailed, $temporaryPath, $wasTruncated) = downloadRemoteFileForInspection($cleanURL, $urlHost, $urlPort, $urlIP, $urlScheme, 'user-'.bin2hex(random_bytes(8)), ($ceilingSetting === 0 ? -1 : $ceilingSetting));
       if ($downloadFailed or $temporaryPath === '') $FetchReason = 'The address was accepted & nothing could be fetched from it.';
       else {
         // / A fetched file is scanned before it is placed, as an upload is, so fetching is not a way around the scanner.
@@ -2937,7 +2972,7 @@ function fetchUserSuppliedURL($suppliedURL, $sessionDirectory) {
           $FetchSucceeded = TRUE;
           $FetchReason = 'Fetched '.basename($targetPath).' from '.$urlHost.'.'.($wasTruncated ? ' It reached the size ceiling & was truncated.' : ''); } } } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $fetchedExtension, $scanCompleted, $threatWasFound, $scanFindings, $scannerUsed, $scanFinding, $baseIsUsable, $inspectionFailed, $resolutionFailed, $containsLAN, $lookupFailed, $downloadFailed, $wasTruncated, $nameIsSanitized, $cleanURL, $urlHost, $urlPort, $urlScheme, $urlIP, $temporaryPath, $suggestedName, $targetPath, $urlParts, $suppliedURL, $sessionDirectory);
+  purgeSensitiveMemory($EnableMemoryProtection, $fetchedExtension, $scanCompleted, $threatWasFound, $scanFindings, $scannerUsed, $scanFinding, $baseIsUsable, $inspectionFailed, $resolutionFailed, $containsLAN, $lookupFailed, $downloadFailed, $wasTruncated, $nameIsSanitized, $cleanURL, $urlHost, $urlPort, $urlScheme, $urlIP, $temporaryPath, $suggestedName, $targetPath, $urlParts, $ceilingSetting, $defaultCeiling, $suppliedURL, $sessionDirectory);
   return array($FetchSucceeded, $FetchedPath, $FetchReason); }
 // / -----------------------------------------------------------------------------------
 
@@ -2959,24 +2994,29 @@ function gatherRemoteHostInfo($StreamURL) {
   $engineAllowPlainHTTP = $networkPolicy['AllowPlainHTTP'];
   $LookupFailed = $InspectionFailed = TRUE;
   $URLIP = $URLHost = $URLPort = $URLScheme = $StreamContainsLAN = $StreamDNSContainsLAN = $StreamURLResolutionFailed = FALSE;
-  $urlIsSanitized = $partsAreSanitized = $schemeIsSanitized = $hostIsSanitized = FALSE;
+  $urlIsWellFormed = $partsAreSanitized = $schemeIsSanitized = $hostIsSanitized = FALSE;
   $allowedSchemes = array('https');
   $urlParts = array();
-  // / Sanitize the supplied URL before anything else looks at it.
-  list ($StreamURL, $urlIsSanitized) = sanitize($StreamURL, TRUE);
-  if ($Verbose) logEntry('Inspecting Stream URL: '.$StreamURL.'.');
+  $parsedHost = '';
+  // / A URL is judged as it was given & is never passed through sanitize(), which removes the characters a URL is built from.
+  // / One holding anything a URL may not hold is refused, so nothing below meets a space, a quote, a backslash or a control character.
+  // / The parts parse_url() finds are sanitized below, one by one.
+  $urlIsWellFormed = (is_string($StreamURL) && $StreamURL !== '' && strlen($StreamURL) <= 2048 && preg_match('#^[A-Za-z0-9._~:/?\#\[\]@!$&()*+,;=%-]+\z#', $StreamURL) === 1);
+  if ($Verbose) logEntry('Inspecting Stream URL: '.($urlIsWellFormed ? $StreamURL : 'one holding characters a URL cannot').'.');
   // / Check if plain http stream URLs are allowed by config.php.
   if ($engineAllowPlainHTTP) array_push($allowedSchemes, 'http');
-  // / A URL that could not be sanitized is unresolvable before we even parse it.
-  if (!$urlIsSanitized) $StreamURLResolutionFailed = TRUE;
+  // / A URL that is not well formed is unresolvable before we even parse it.
+  if (!$urlIsWellFormed) $StreamURLResolutionFailed = TRUE;
   else {
     // / Parse the provided URL to gather DNS information.
     // / parse_url returns FALSE if the response was seriously malformed.
-    $urlParts = parse_url($StreamURL);
+    $urlParts = @parse_url($StreamURL);
     // / If the parse_url response is malformed, then consider the URL unresolvable.
-    if (!$urlParts) $StreamURLResolutionFailed = TRUE;
+    if (!is_array($urlParts)) $StreamURLResolutionFailed = TRUE;
     // / If the parse_url response makes sense, then keep going.
     else {
+      // / The host as the URL names it is kept, so a host sanitize() changes can be told apart below.
+      $parsedHost = isset($urlParts['host']) ? strtolower((string)$urlParts['host']) : '';
       list ($urlParts, $partsAreSanitized) = sanitize($urlParts, TRUE);
       // / If the parse_url response is incomplete, then consider the URL unresolvable.
       if (!$partsAreSanitized or empty($urlParts['scheme']) or empty($urlParts['host'])) $StreamURLResolutionFailed = TRUE;
@@ -2988,8 +3028,10 @@ function gatherRemoteHostInfo($StreamURL) {
         // / If the scheme is supported by config.php, then keep going.
         else {
           // / Detect the host.
+          // / A host sanitize() had to change is not the host the URL names, so it is refused rather than looked up.
+          // / curl & FFMPEG read the host from the URL itself, & a pin made for another name would not bind them.
           list ($URLHost, $hostIsSanitized) = sanitize(strtolower($urlParts['host']), TRUE);
-          if (!$hostIsSanitized) $StreamURLResolutionFailed = TRUE;
+          if (!$hostIsSanitized or $URLHost === '' or $URLHost !== $parsedHost) $StreamURLResolutionFailed = TRUE;
           // / Detect the port where applicable.
           // / Be very careful making changes to this code.
           // / This uses the port supplied by the request when available.
@@ -3021,7 +3063,7 @@ function gatherRemoteHostInfo($StreamURL) {
   // / Write the information obtained to the log file.
   if ($Verbose) logEntry('URL Inspection Result: '.($InspectionFailed ? 'FAILED' : 'PASSED').', Host: '.$URLHost.', Port: '.$URLPort.', Scheme: '.$URLScheme.', Contains LAN: '.($StreamContainsLAN ? 'TRUE' : 'FALSE').', URL Resolution Failed: '.($StreamURLResolutionFailed ? 'TRUE' : 'FALSE').', Lookup Failed: '.($LookupFailed ? 'TRUE' : 'FALSE').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $permittedByRange, $hostIsPublic, $networkPolicy, $engineAllowPlainHTTP, $allowedSchemes, $urlParts, $StreamDNSContainsLAN, $urlIsSanitized, $partsAreSanitized, $schemeIsSanitized, $hostIsSanitized);
+  purgeSensitiveMemory($EnableMemoryProtection, $permittedByRange, $hostIsPublic, $networkPolicy, $engineAllowPlainHTTP, $allowedSchemes, $urlParts, $parsedHost, $StreamDNSContainsLAN, $urlIsWellFormed, $partsAreSanitized, $schemeIsSanitized, $hostIsSanitized);
   return array($InspectionFailed, $StreamURLResolutionFailed, $StreamContainsLAN, $LookupFailed, $URLHost, $URLPort, $URLScheme, $URLIP); }
 // / -----------------------------------------------------------------------------------
 
@@ -3120,7 +3162,8 @@ function resolveRemoteURI($StreamURI, $ParentURL) {
 // / -----------------------------------------------------------------------------------
 // / A function to gather & validate IPv4 & IPv6 addresses from ANY block of content.
 // / Does not perform DNS or any remote validation.
-// / It validates only the syntax of each address & whether it sits in a reserved range.
+// / It validates only the syntax of each address & whether it may be reached.
+// / An address may be reached by the rule addressMayBeReached() applies everywhere else, so a range an administrator permitted is permitted here too.
 // / This is SSRF machinery, & it knows nothing about streams, playlists or any other format.
 // / A pipeline that must decide whether a reference is safe to follow calls this rather than writing its own.
 // / A pipeline must never own SSRF protection, so one that fetches something gets it & cannot opt out by accident.
@@ -3139,10 +3182,11 @@ function inspectContentForIPs($streamFileContents) {
   $ip6Pattern = '/(?<![0-9A-Fa-f:])(?:[0-9A-Fa-f]{0,4}:){2,7}[0-9A-Fa-f]{0,4}(?::[0-9]{1,3}(?:\.[0-9]{1,3}){3})?(?![0-9A-Fa-f:])/';
   // / Check if the $streamFile contains any IP addresses, if those addresses are valid, & if they fall into a private subnet.
   // / $ipMatchesTemp = flat array of every potential IP string matched by either pattern.
-  // / $IPMatches = flat array of every valid, publicly routable IP confirmed by filter_var.
+  // / $IPMatches = flat array of every valid address confirmed by filter_var that may be reached.
   preg_match_all($ip4Pattern, $streamFileContents, $ip4Temp);
   preg_match_all($ip6Pattern, $streamFileContents, $ip6Temp);
-  $ipMatchesTemp = array_merge($ip4Temp[0], $ip6Temp[0]);
+  // / Each address is judged once, so a playlist naming one permitted server a thousand times writes one warning & not a thousand.
+  $ipMatchesTemp = array_values(array_unique(array_merge($ip4Temp[0], $ip6Temp[0])));
   if (!empty($ipMatchesTemp)) {
     foreach ($ipMatchesTemp as $ipMatch) {
       // / Strip brackets from URL-form IPv6 (https://[::1]/) before validating.
@@ -3152,13 +3196,13 @@ function inspectContentForIPs($streamFileContents) {
       // / Set a flag if the entry that was found is a genuine raw IP address.
       $StreamContainsIP = TRUE;
       // / Check whether each extracted IP is on a local / private subnet, or something we should not be probing.
-      if (isPubliclyRoutableIP($ipMatch)) array_push($IPMatches, $ipMatch);
+      if (addressMayBeReached($ipMatch)[0]) array_push($IPMatches, $ipMatch);
       else {
         // / Set a flag if the IP address that was found appears to be on a local or private subnet.
         $StreamContainsLAN = TRUE;
         // / Stop as soon as we find a dangerous IP address. There is no need to continue validating a malicious file.
         break; } } }
-  // / Count the number of publicly routable IPs found before we stopped.
+  // / Count the number of addresses that may be reached found before we stopped.
   $IPCount = count($IPMatches);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $ipMatch, $ipMatchesTemp, $ip4Pattern, $ip6Pattern, $streamFileContents, $ip4Temp, $ip6Temp);
@@ -3199,7 +3243,7 @@ function inspectContentForDomains($streamFileContents) {
 // / A function to download a single remote file to local disk for inspection.
 // /
 // / This is the only place the application fetches a remote file for a pipeline.
-// / It pins the resolved address, refuses redirects & DNS rebinding, & reads a bounded number of bytes.
+// / It pins the resolved address, refuses redirects, error pages & DNS rebinding, & reads a bounded number of bytes.
 // / Every one of those is something a pipeline author writing their own curl call would forget.
 // / $engineAllowPlainHTTP, $engineConnectionTimeout, $engineMaxInspectionBytes & $engineFetchTemp govern every caller.
 // / A second pipeline that fetches remote files therefore shares them, which should be a deliberate decision.
@@ -3209,6 +3253,7 @@ function inspectContentForDomains($streamFileContents) {
 // / $engineConnectionTimeout is in seconds & used directly, & $engineWatchTimeout is in minutes & converted once here.
 // / $ByteCeiling overrides the inspection ceiling for a caller fetching a file rather than reading a playlist.
 // / Zero or absent keeps the inspection ceiling.
+// / A negative ceiling is no ceiling at all, so the whole file is fetched & is never reported as truncated.
 // / An inspection reads enough of a playlist to understand it, while a fetched file is only useful whole.
 function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP, $URLScheme, $FileNumber, $ByteCeiling = 0) {
   // / Set variables.
@@ -3217,8 +3262,9 @@ function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP,
   $networkPolicy = networkPolicy();
   $engineAllowPlainHTTP = $networkPolicy['AllowPlainHTTP'];
   $engineMaxInspectionBytes = $networkPolicy['MaxInspectionBytes'];
-  // / A caller that named its own ceiling gets it. A ceiling of zero means no limit, which
-  // / curl expresses by being given no limit rather than by being given nothing.
+  // / A caller that named its own ceiling gets it, & zero keeps the inspection ceiling.
+  // / A negative ceiling lifts the limit, which curl is told by being given no range & no size limit.
+  $ceilingIsLifted = ((int)$ByteCeiling < 0);
   if ((int)$ByteCeiling > 0) $engineMaxInspectionBytes = (int)$ByteCeiling;
   $engineConnectionTimeout = $networkPolicy['ConnectionTimeout'];
   $engineWatchTimeout = $networkPolicy['WatchTimeout'];
@@ -3229,7 +3275,8 @@ function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP,
   $curlCommand = '';
   $curlExitCode = 1;
   $commandMayRun = FALSE;
-  $downloadedBytes = 0;
+  $downloadedBytes = $httpStatus = 0;
+  $outputLine = '';
   // / Sequential name for every file saved to StreamTemp.
   // / This number never resets during a walk.
   // / A layer 2 file must never overwrite a layer 1 file.
@@ -3246,16 +3293,17 @@ function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP,
     // / Build the command with every user influenced value escaped.
     // / There is no -L flag, so redirects are never followed.
     // / The -r flag requests only the first chunk of the file.
-    // / The --max-filesize flag enforces the same ceiling when a host ignores -r.
+    // / The --max-filesize flag enforces the same ceiling when a host ignores -r, by failing the fetch.
+    // / A lifted ceiling passes neither flag.
     $curlCommand = 'curl'
       .' --resolve '.escapeshellarg($URLHost.':'.$URLPort.':'.$URLIP)
       .' --proto '.escapeshellarg('='.$protoString)
       .' --proto-redir '.escapeshellarg('='.$protoString)
-      .' -r '.escapeshellarg('0-'.((int)$engineMaxInspectionBytes - 1))
-      .' --max-filesize '.(int)$engineMaxInspectionBytes
+      .($ceilingIsLifted ? '' : ' -r '.escapeshellarg('0-'.((int)$engineMaxInspectionBytes - 1)).' --max-filesize '.(int)$engineMaxInspectionBytes)
       .' --connect-timeout '.(int)$engineConnectionTimeout
       .' -m '.((int)$engineWatchTimeout * 60)
       .' -sS -o '.escapeshellarg($LocalStreamPath)
+      .' -w '.escapeshellarg('\n%{http_code}\n')
       .' -- '.escapeshellarg($StreamURL).' 2>&1';
     // / The fetch runs inside the sandbox, with a network & without a resolver.
     // / curl needs no resolver, because --resolve above hands it the one address the application inspected.
@@ -3267,22 +3315,29 @@ function downloadRemoteFileForInspection($StreamURL, $URLHost, $URLPort, $URLIP,
     // / A command that may not run is not run, & the download counts as failed.
     if ($commandMayRun) exec($curlCommand, $curlOutput, $curlExitCode);
     else warningEntry('A stream download was not attempted, because no sandbox could be built.');
-    // / A successful download requires exit code 0 AND a file that exists with content.
-    // / Either one alone is not proof of success.
-    if ($curlExitCode === 0 && file_exists($LocalStreamPath)) {
+    // / -w printed the status the server answered with on a line of its own, & the body went to the file.
+    foreach ($curlOutput as $outputLine) if (preg_match('/^[0-9]{3}$/', trim((string)$outputLine)) === 1) redeclare($httpStatus, (int)trim((string)$outputLine));
+    // / A successful download requires exit code 0, a status of 200 or 206, AND a file that exists with content.
+    // / None of them alone is proof of success.
+    // / curl exits 0 for an error page & for a redirect it was not allowed to follow, & neither body is the file.
+    if ($curlExitCode === 0 && ($httpStatus === 200 or $httpStatus === 206) && file_exists($LocalStreamPath)) {
       $downloadedBytes = filesize($LocalStreamPath);
       if ($downloadedBytes > 0) $DownloadFailed = FALSE;
       // / A file that filled the entire budget was almost certainly cut short.
       // / We are only holding part of it, so we cannot claim to have inspected the whole thing.
-      if ($downloadedBytes < (int)$engineMaxInspectionBytes) $StreamFileTruncated = FALSE; }
-    else if ($Verbose) logEntry('Stream download failed for '.$StreamURL.'. CURL exit code: '.$curlExitCode.'.');
+      // / A fetch with no ceiling was never cut short.
+      if ($ceilingIsLifted or $downloadedBytes < (int)$engineMaxInspectionBytes) $StreamFileTruncated = FALSE; }
+    else if ($Verbose) logEntry('Stream download failed for '.$StreamURL.'. CURL exit code: '.$curlExitCode.', HTTP status: '.$httpStatus.'.');
     // / Log the outcome of this single download.
     if ($Verbose) logEntry('Stream Download Result: '.($DownloadFailed ? 'FAILED' : 'SUCCESS').', File: '.$FileNumber.', Bytes: '.$downloadedBytes.', Truncated: '.($StreamFileTruncated ? 'TRUE' : 'FALSE').'.'); }
   // / Never report a path we did not successfully write to.
   // / The caller reads this file immediately after this function returns.
-  if ($DownloadFailed) $LocalStreamPath = '';
+  // / Whatever a failed fetch wrote is removed, so a failure leaves nothing behind.
+  if ($DownloadFailed) {
+    if ($LocalStreamPath !== '' && file_exists($LocalStreamPath)) @unlink($LocalStreamPath);
+    $LocalStreamPath = ''; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $ByteCeiling, $networkPolicy, $engineAllowPlainHTTP, $engineMaxInspectionBytes, $engineConnectionTimeout, $engineWatchTimeout, $engineFetchTemp, $curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes, $pinIsComplete, $commandMayRun);
+  purgeSensitiveMemory($EnableMemoryProtection, $ByteCeiling, $ceilingIsLifted, $httpStatus, $outputLine, $networkPolicy, $engineAllowPlainHTTP, $engineMaxInspectionBytes, $engineConnectionTimeout, $engineWatchTimeout, $engineFetchTemp, $curlCommand, $curlOutput, $protoString, $curlExitCode, $downloadedBytes, $pinIsComplete, $commandMayRun);
   return array($DownloadFailed, $LocalStreamPath, $StreamFileTruncated); }
 // / -----------------------------------------------------------------------------------
 
@@ -4084,6 +4139,20 @@ function sandboxOverlayFlags($sandboxProfile, $readOnlyResourcePath) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to decide whether a conversion is refused when no sandbox can be built.
+// / Accepts nothing. Returns TRUE when a sandbox is required.
+// /
+// / In a container --Require Sandbox On Docker-- decides & --Require Sandbox-- is not read.
+// / Anywhere else --Require Sandbox-- decides & --Require Sandbox On Docker-- is not read.
+// / sandboxCommand(), the operating environment check & -v all ask this one function, so none of them can disagree.
+function sandboxIsRequired() {
+  // / Set variables.
+  global $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer;
+  $SandboxIsRequired = !empty($RunningInContainer) ? (bool)$RequireSandboxOnDocker : (bool)$RequireSandbox;
+  return $SandboxIsRequired; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to wrap a dependency invocation in a bubblewrap sandbox.
 // / Accepts a finished command, the real path of the input, the real path of the output,
 // / & a boolean granting network access.
@@ -4124,7 +4193,7 @@ function sandboxOverlayFlags($sandboxProfile, $readOnlyResourcePath) {
 // / validates, because the tool connects by the real name & only the address was pinned.
 function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile, $readOnlyResourcePath = '', $environmentVariables = array(), $pinnedHostsFile = '') {
   // / Set variables.
-  global $Verbose, $RequireSandbox, $RequireSandboxOnDocker, $ThrowSandboxWarning, $RunningInContainer, $EnableMemoryProtection;
+  global $Verbose, $ThrowSandboxWarning, $RunningInContainer, $EnableMemoryProtection;
   $CommandMayRun = FALSE;
   $bwrapBinary = FALSE;
   // / This initializes TRUE rather than FALSE, because for this variable TRUE is the safe
@@ -4143,7 +4212,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   $overlayFlags = sandboxOverlayFlags($sandboxProfile, $readOnlyResourcePath);
   // / A container that CAN build a sandbox still gets one. This only decides what happens
   // / when it cannot.
-  $sandboxIsRequired = $RunningInContainer ? $RequireSandboxOnDocker : $RequireSandbox;
+  $sandboxIsRequired = sandboxIsRequired();
   // / Resolve each path to the directory holding it.
   // / The output file does not exist yet, so its directory is used rather than the file.
   $inputDir = dirname($inputPath);

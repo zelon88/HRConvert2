@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.1.5.
+// / v4.1.7.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.1.5';
+$SetupCoreVersion = 'v4.1.7';
 // / -----------------------------------------------------------------------------------
 
 
@@ -180,7 +180,11 @@ function validateConfigSections($configModel, $detectedSections) {
 // / A function to check that dependent variables agree with one another.
 // / Accepts the model & the detected sections, in that order.
 // / Returns a coherence boolean & an array of findings, in that order.
-// / A setting that is meaningless without another is reported when the other is disabled.
+// / A setting that is meaningless without another is reported when the other is off.
+// / A bool is off when it is FALSE & an int is off at 0 or below, which is how the code reads each.
+// / A bool that is itself FALSE is not reported, because a feature left off is not being ignored.
+// / A setting whose model carries a Conflict is not ignored at all, so its finding is a contradiction & says what follows from it.
+// / Each finding carries a Kind of conflict or inert, so the two can be printed apart.
 // / This never blocks anything. It tells an administrator that a value they set is being
 // / ignored, which is otherwise invisible & is the single most common configuration
 // / mistake there is.
@@ -189,22 +193,62 @@ function validateConfigDependencies($configModel, $detectedSections) {
   global $EnableMemoryProtection;
   $ConfigIsCoherent = TRUE;
   $DependencyFindings = array();
-  $sectionName = $variableName = $dependsOn = $dependsValue = '';
+  $sectionName = $variableName = $dependsOn = $dependsValue = $variableValue = $conflictText = '';
   $sectionModel = $variableModel = array();
-  $flatValues = array();
+  $flatValues = $modelTypes = array();
+  $parentIsOff = FALSE;
   foreach ($detectedSections as $sectionName => $sectionModel) {
     foreach ($sectionModel['Variables'] as $variableName => $variableModel) $flatValues[$variableName] = $variableModel['Value']; }
+  // / The setting depended on may sit in another section, so its type is looked up across the whole model.
+  foreach ($configModel as $sectionName => $sectionModel) {
+    foreach ($sectionModel['Variables'] as $variableName => $variableModel) $modelTypes[$variableName] = (string)$variableModel['Type']; }
   foreach ($configModel as $sectionName => $sectionModel) {
     foreach ($sectionModel['Variables'] as $variableName => $variableModel) {
-      $dependsOn = (string)$variableModel['Depends'];
+      redeclare($dependsOn, (string)$variableModel['Depends']);
       if ($dependsOn === '' or !isset($flatValues[$variableName]) or !isset($flatValues[$dependsOn])) continue;
-      $dependsValue = strtoupper(trim((string)$flatValues[$dependsOn], " '\""));
-      if ($dependsValue === 'FALSE' or $dependsValue === '0') {
-        $ConfigIsCoherent = FALSE;
-        $DependencyFindings[] = array('Variable' => $variableName, 'Depends' => $dependsOn, 'Detail' => '$'.$variableName.' is set but $'.$dependsOn.' is FALSE, so it has no effect.'); } } }
+      // / Each value is read as the file writes it, so a finding names the parent's value exactly.
+      redeclare($dependsValue, strtoupper(trim((string)$flatValues[$dependsOn], " '\"")));
+      redeclare($variableValue, strtoupper(trim((string)$flatValues[$variableName], " '\"")));
+      if (isset($modelTypes[$dependsOn]) && $modelTypes[$dependsOn] === 'int') redeclare($parentIsOff, (is_numeric($dependsValue) && (float)$dependsValue <= 0));
+      else redeclare($parentIsOff, in_array($dependsValue, array('FALSE', '0', 'NULL', ''), TRUE));
+      if (!$parentIsOff) continue;
+      if ((string)$variableModel['Type'] === 'bool' && in_array($variableValue, array('FALSE', '0', 'NULL', ''), TRUE)) continue;
+      $ConfigIsCoherent = FALSE;
+      redeclare($conflictText, (isset($variableModel['Conflict']) ? trim((string)$variableModel['Conflict']) : ''));
+      if ($conflictText !== '') $DependencyFindings[] = array('Variable' => $variableName, 'Depends' => $dependsOn, 'Kind' => 'conflict', 'Detail' => '$'.$variableName.' is '.((string)$variableModel['Type'] === 'bool' ? 'TRUE' : 'set').' & $'.$dependsOn.' is '.$dependsValue.', '.$conflictText);
+      else $DependencyFindings[] = array('Variable' => $variableName, 'Depends' => $dependsOn, 'Kind' => 'inert', 'Detail' => '$'.$variableName.' has no effect, because $'.$dependsOn.' is '.$dependsValue.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $sectionName, $variableName, $dependsOn, $dependsValue, $sectionModel, $variableModel, $flatValues, $configModel, $detectedSections);
+  purgeSensitiveMemory($EnableMemoryProtection, $sectionName, $variableName, $dependsOn, $dependsValue, $variableValue, $conflictText, $sectionModel, $variableModel, $flatValues, $modelTypes, $parentIsOff, $configModel, $detectedSections);
   return array($ConfigIsCoherent, $DependencyFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to word what each setting needs from the setting it depends on.
+// / Accepts the model. Returns the model with a Needs text beside every Depends.
+// / The text follows the type of the setting depended on, which may sit in another section.
+// / A bool must be TRUE & an int must be above 0, which are the values validateConfigDependencies() reads as on.
+// / A setting depended on that the model does not hold is named & nothing more is said of it.
+// / showConfigSection() & updateConfigSection() print the text, & neither is handed the whole model.
+function describeConfigDependencies($configModel) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $DescribedModel = $configModel;
+  $modelTypes = $sectionModel = $variableModel = array();
+  $sectionName = $variableName = $dependsOn = $dependsType = '';
+  foreach ($configModel as $sectionName => $sectionModel) {
+    foreach ($sectionModel['Variables'] as $variableName => $variableModel) $modelTypes[$variableName] = (string)$variableModel['Type']; }
+  foreach ($configModel as $sectionName => $sectionModel) {
+    foreach ($sectionModel['Variables'] as $variableName => $variableModel) {
+      redeclare($dependsOn, (string)$variableModel['Depends']);
+      if ($dependsOn === '') continue;
+      redeclare($dependsType, (isset($modelTypes[$dependsOn]) ? $modelTypes[$dependsOn] : ''));
+      if ($dependsType === 'bool') $DescribedModel[$sectionName]['Variables'][$variableName]['Needs'] = '$'.$dependsOn.' to be TRUE';
+      else if ($dependsType === 'int') $DescribedModel[$sectionName]['Variables'][$variableName]['Needs'] = '$'.$dependsOn.' above 0';
+      else $DescribedModel[$sectionName]['Variables'][$variableName]['Needs'] = '$'.$dependsOn; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $DescribedModel is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $modelTypes, $sectionModel, $variableModel, $sectionName, $variableName, $dependsOn, $dependsType, $configModel);
+  return $DescribedModel; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -479,7 +523,7 @@ function showConfigSection($sectionName, $sectionModel, $detectedVariables) {
       $variableModel = $sectionModel['Variables'][$variableName];
       $statusNote = '';
       if ((string)$variableModel['Default'] !== '') $defaultValue = (string)$variableModel['Default'];
-      if ((string)$variableModel['Depends'] !== '') $dependsNote = ' [needs $'.$variableModel['Depends'].']'; }
+      if ((string)$variableModel['Depends'] !== '') $dependsNote = ' [needs '.(isset($variableModel['Needs']) ? $variableModel['Needs'] : '$'.$variableModel['Depends']).']'; }
     print('   $'.str_pad($variableName, 36).$currentValue.$statusNote.$Lol);
     print('   '.str_pad('', 36).'default: '.$defaultValue.$dependsNote.$Lol);
     $VariablesDisplayed++; }
@@ -534,7 +578,7 @@ function updateConfigSection($sectionName, $sectionModel, $detectedVariables, &$
           else {
             print('     type:    '.$sectionModel['Variables'][$variableName]['Type'].$Lol);
             print('     default: '.((string)$sectionModel['Variables'][$variableName]['Default'] === '' ? 'none known' : (string)$sectionModel['Variables'][$variableName]['Default']).$Lol);
-            if ((string)$sectionModel['Variables'][$variableName]['Depends'] !== '') print('     needs:   $'.$sectionModel['Variables'][$variableName]['Depends'].' to be TRUE'.$Lol); } } }
+            if ((string)$sectionModel['Variables'][$variableName]['Depends'] !== '') print('     needs:   '.(isset($sectionModel['Variables'][$variableName]['Needs']) ? $sectionModel['Variables'][$variableName]['Needs'] : '$'.$sectionModel['Variables'][$variableName]['Depends']).$Lol); } } }
       else if ($operatorChoice === 'show info') {
         foreach ($detectedVariables as $variableName => $variableRecord) {
           print($Lol.'   $'.$variableName.$Lol);
@@ -1358,6 +1402,7 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
   $formattedValue = '';
   $changesApplied = 0;
   $stampChange = $settingsLeftMissing = array();
+  $conflictLines = $inertLines = array();
   list ($targetWasResolved, $configTarget) = resolveConfigTarget($suppliedPath);
   // / A missing file is every setting missing, so repair is the mode that answers it, with a working default.
   // / Any other mode has nothing to work on & says so.
@@ -1383,7 +1428,8 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
     print($Lol.'A backup may be taken by any account that can write the destination.'.$Lol);
     print('  php '.engineApplicationEntryPoint().' --config --backup=/tmp/config.php.bak'.$Lol.$Lol); }
   else {
-    $configModel = collectConfigModel();
+    // / Every setting that depends on another carries a Needs text, so a section shown alone can say what it needs.
+    $configModel = describeConfigDependencies(collectConfigModel());
     list ($parseSucceeded, $detectedSections) = parseConfigFile($configTarget);
     if (!$parseSucceeded) print($Lol.'The configuration file could not be parsed. Nothing was done.'.$Lol.$Lol);
     else {
@@ -1402,9 +1448,13 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
         print($Lol.'Sections'.$Lol);
         foreach ($validationFindings as $finding) print('  '.str_pad($finding['Status'], 13).str_pad($finding['Section'], 36).$finding['Detail'].$Lol);
         list ($configIsCoherent, $dependencyFindings) = validateConfigDependencies($configModel, $detectedSections);
+        // / A contradiction is printed first & apart, because it changes what the application does, & a setting with no effect changes nothing.
         if (!$configIsCoherent) {
-          print($Lol.'Settings with no effect'.$Lol);
-          foreach ($dependencyFindings as $finding) print('  '.$finding['Detail'].$Lol); }
+          foreach ($dependencyFindings as $finding) {
+            if (isset($finding['Kind']) && $finding['Kind'] === 'conflict') $conflictLines[] = '  '.$finding['Detail'];
+            else $inertLines[] = '  '.$finding['Detail']; }
+          if (!empty($conflictLines)) print($Lol.'Settings that contradict each other'.$Lol.implode($Lol, $conflictLines).$Lol);
+          if (!empty($inertLines)) print($Lol.'Settings with no effect'.$Lol.implode($Lol, $inertLines).$Lol); }
         if (!$sectionsAreTrusted) {
           print($Lol.'ONE OR MORE SECTIONS FAILED VALIDATION.'.$Lol);
           print('This file does not have the expected shape. Nothing was written.'.$Lol);
@@ -1495,7 +1545,7 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
               if ($operatorChoice !== 'YES') print($Lol.'Cancelled. Nothing was written.'.$Lol.$Lol);
               else { list ($changesWereApplied, $changesApplied) = applyConfigChanges($configTarget, $detectedSections, $pendingChanges); $UtilityCompleted = $changesWereApplied; } } } } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $generatedOk, $generatedCount, $foundSection, $foundRecord, $changeName, $changeRecord, $configTarget, $detectedConfigVersion, $sectionName, $variableName, $operatorChoice, $configModel, $detectedSections, $validationFindings, $dependencyFindings, $pendingChanges, $sectionModel, $variableModel, $finding, $targetWasResolved, $parseSucceeded, $configIsAuthentic, $sectionsAreTrusted, $configIsCoherent, $valueIsValid, $changesWereApplied, $formattedValue, $changesApplied, $stampIsRaised, $stampChange, $settingsLeftMissing, $suppliedPath, $utilityMode, $modeTarget, $operatorConfirmed);
+  purgeSensitiveMemory($EnableMemoryProtection, $generatedOk, $generatedCount, $foundSection, $foundRecord, $changeName, $changeRecord, $configTarget, $detectedConfigVersion, $sectionName, $variableName, $operatorChoice, $configModel, $detectedSections, $validationFindings, $dependencyFindings, $pendingChanges, $sectionModel, $variableModel, $finding, $targetWasResolved, $parseSucceeded, $configIsAuthentic, $sectionsAreTrusted, $configIsCoherent, $valueIsValid, $changesWereApplied, $formattedValue, $changesApplied, $stampIsRaised, $stampChange, $settingsLeftMissing, $conflictLines, $inertLines, $suppliedPath, $utilityMode, $modeTarget, $operatorConfirmed);
   return $UtilityCompleted; }
 // / -----------------------------------------------------------------------------------
 // / A function to find a setting anywhere in a configuration file.

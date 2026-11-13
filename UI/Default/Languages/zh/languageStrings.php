@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.6';
+$LanguageVersion = 'v4.1.7';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -533,6 +533,16 @@ $Gui2Text189 = '状态';
 $Gui2Text190 = '有工作流正在运行。';
 // / 'No workflow is running.'
 $Gui2Text191 = '没有正在运行的工作流。';
+// / 'Extract'
+$Gui2Text192 = '解压';
+// / 'Close Extract Options'
+$Gui2Text193 = '关闭解压选项';
+// / 'Extract This Archive'
+$Gui2Text194 = '解压此存档';
+// / 'Every file it holds is added to your files, under its own name or the next free one.'
+$Gui2Text195 = '其中的每个文件都会以原名或下一个可用名称加入您的文件。';
+// / 'Extract Files'
+$Gui2Text196 = '解压文件';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

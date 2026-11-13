@@ -71,12 +71,15 @@ Publishing the official image is automatic. Pushing a version tag is the entire 
   3a. Run  'git tag v#.#.#'
   3b. Run  'git push origin v#.#.#'
 4. The workflow at .github/workflows/docker-build.yml takes over from there. It will;
-  4a. Build for linux/amd64 and linux/arm64.
-  4b. Publish to Docker Hub as v#.#.#, #.#, # and latest.
-  4c. Start the resulting container and confirm it serves a page before calling it good.
+  4a. Build linux/amd64 on ubuntu-latest and linux/arm64 on ubuntu-24.04-arm, each natively.
+  4b. Start each image and confirm it serves a page before calling it good.
+  4c. Push each image by its digest, then publish both under v#.#.#, #.#, # and latest.
 5. Watch the run in the Actions tab of the repository.
-  5a. A cold build takes a long time. The arm64 half is emulated and is the slow part.
+  5a. A cold build takes a long time, because FFMPEG & ImageMagick are built from source.
   5b. A build where only later layers changed reuses the cache and finishes much faster.
+      Each architecture keeps a cache of its own, so one never evicts the other.
+  5c. Until v4.1.7 the arm64 image was built under QEMU, which ran past GitHub's six hour
+      limit for a job. A native arm64 runner is free for a public repository.
 6. If the workflow fails, nothing is published. Fix the cause, delete the tag, and tag again.
   6a. Run  'git tag -d v#.#.#'
   6b. Run  'git push --delete origin v#.#.#'

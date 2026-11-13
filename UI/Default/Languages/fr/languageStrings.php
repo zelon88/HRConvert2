@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.6';
+$LanguageVersion = 'v4.1.7';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -534,6 +534,16 @@ $Gui2Text189 = 'État';
 $Gui2Text190 = 'Un flux de travail est en cours.';
 // / 'No workflow is running.'
 $Gui2Text191 = 'Aucun flux de travail en cours.';
+// / 'Extract'
+$Gui2Text192 = 'Extraire';
+// / 'Close Extract Options'
+$Gui2Text193 = 'Fermer Les Options D’Extraction';
+// / 'Extract This Archive'
+$Gui2Text194 = 'Extraire Cette Archive';
+// / 'Every file it holds is added to your files, under its own name or the next free one.'
+$Gui2Text195 = 'Chaque fichier qu’elle contient rejoint vos fichiers, sous son propre nom ou le prochain nom libre.';
+// / 'Extract Files'
+$Gui2Text196 = 'Extraire Les Fichiers';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

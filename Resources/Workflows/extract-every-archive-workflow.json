@@ -1,0 +1,10 @@
+{
+  "Format": "HRProprietary Workflow",
+  "Version": 1,
+  "Name": "Extract every archive",
+  "Description": "Finds every archive in this session & puts every file each one holds beside it, under its own name or the next free one. No file needs to be ticked.",
+  "Steps": [
+    { "Operation": "Select", "Filter": { "Types": ["Archive"] } },
+    { "Operation": "Extract" }
+  ]
+}

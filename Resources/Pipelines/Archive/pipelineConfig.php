@@ -12,11 +12,12 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.6.
+// / v4.1.7.
 // / This file declares what the Archive conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
-// / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13107 belongs to this pipeline.
+// / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13108 belongs to this pipeline.
+// / It also raises 39000 through 39003, which belong to the archiveExtraction.php shared module it extracts with.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for what each declaration means.
 // /
 // / <3 Open-Source
@@ -33,7 +34,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.1.6';
+$PipelineVersion = 'v4.1.7';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -62,8 +63,8 @@ $PipelineEntryPoint = 'convertArchives';
 $PipelineSubsystem = 'Archives';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.
-// / This pipeline needs none.
-$PipelineSharedModules = array();
+// / archiveExtraction.php lists, extracts & measures an archive within the limits config.php sets, & the Extractor pipeline uses it too.
+$PipelineSharedModules = array('archiveExtraction.php');
 
 // / The request fields this pipeline actually reads.
 // / The output extension decides the target. Nothing else is read.

@@ -26,6 +26,36 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 
 --------------------
+COMMIT 11/13/2026
+v4.1.7 - New Extractor pipeline & Extract step, the Docker image builds arm64 natively, --config's notes are true, & remote streams & URL fetches work.
+
+-v4.1.7.
+-New Extractor operation pipeline, which puts every file an archive holds into the session, under its own name or the next free one. New Extract button & panel on every archive in both interfaces, new Extract workflow step & new shipped workflow extract-every-archive. New POST input filesToExtract. 5 new strings in every language pack, in all 26 languages. New Extract icon.
+-New shared module archiveExtraction.php. It lists an archive first & refuses one that is encrypted, empty or over a limit, then extracts it in the sandbox under a watchdog that stops it at a byte, entry or time limit. The Archive pipeline extracts through it too. New errors 32, 39000 to 39003 & 39100 to 39104.
+-New settings --Maximum Extracted Size-- & --Maximum Extracted Files--. Run --config --repair before -fp.
+-An operation pipeline may declare no outputs.
+-FIX. cleanFiles() sanitized each child's path, so a folder holding My Photos was never removed & its session never swept.
+-FIX. --config said 10 settings needed one they do not need & named the log hash pair backwards. An int at 0 read as FALSE & a bool left FALSE was listed. A contradiction is listed apart & each [needs] says TRUE or above 0.
+-FIX. --Require Resource Awareness-- with --Enable Resource Awareness-- FALSE raised 31010, naming the Core Manager. It raises 31013, 31010 names the Engine, & --config still runs.
+-FIX. The environment check required --Require Sandbox-- in a container as well. sandboxIsRequired() is the one rule. config.php said --Require Sandbox-- must be FALSE in a container, where it is not read.
+-FIX. Every URL a stream file named & every user fetch went through sanitize(), which removed its colons & slashes, so every remote stream was refused & every fetch failed. A URL is checked as written, & a host sanitize() would change is refused.
+-FIX. A fetch kept an error page or a redirect as the file. Only a 200 or 206 is kept, & a failed fetch leaves nothing behind.
+-FIX. --URL Download Maximum Bytes-- 0 cut a fetch at 8191 bytes. 0 is no ceiling, & a value that is not a whole number is the default, with a warning.
+-FIX. --Stream Inspection Layers-- 0 skipped inspecting the uploaded stream file. It is always inspected.
+-FIX. A last segment under 5 packets refused the stream. FFMPEG's hosts file was removed before bwrap read it, so FFMPEG never started. A permitted private range was refused as an address in a stream file & not pinned for FFMPEG.
+-FIX. The Docker publish built arm64 under QEMU past GitHub's 6 hour limit. Each architecture builds & is smoke tested on a runner of its own, & the tags join both digests.
+-FIX. x265 3.5 did not build on arm64. Its 10 & 12 bit libraries build without assembly there, & its HDR10+ library is not handed 32 bit ARM flags.
+-FIX. A build that failed for FFMPEG ran again for FFprobe. A failed build is not run twice in one install.
+-FIX. The image's first dependency install had no build scripts, & PHP Zip could not build without libzip-dev.
+-FIX. The ImageMagick build exited with an error after a good install, because AVIF is never a delegate.
+-FIX. An archive converted to zip lost every folder it held, & one holding one name in two folders failed. 7-Zip writes it, as it writes a 7z.
+-FIX. An archive converted to tar was compressed with bzip2, & gz, tgz, bz2, xz & wim were declared & never written. Each is written as its name says.
+-New dependencies PHP Pcntl & PHP Posix, which root needs to run a command as the web server account.
+-ScanCore 1.8 is the minimum. The bundled copy's updater leaves HRConvert2's ScanCore_Config.php & index.html alone.
+-ERROR_DESCRIPTIONS adds 32, 39000 to 39003, 39100 to 39104 & warnings for extracting, fetching & installing, & corrects 31010, 31013, 21001, 13000, 13003, 13010, 13011 & the sandbox errors. ABOUT_PIPELINE_COMPONENTS, ABOUT_WORKFLOWS, ABOUT_REST_API, CREATING_GUIS, ABOUT_COMMAND_LINE_ARGUMENTS, ABOUT_NETWORK_ISOLATION, ABOUT_DEPENDENCIES, ABOUT_COMPONENTS, CREATING_CONVERSION_PIPELINES, DOCKER_BUILD_INSTRUCTIONS, ICON_CREDITS, README & DEVELOPMENT_NOTES describe the change.
+-The core, the configuration, the contract, the manifest, the Engine, the Pipeline Core, the Setup Core, the Dependency Core, the Archive & Stream pipelines, both interfaces & every language pack are v4.1.7, & every pin to them requires v4.1.7. The Extractor pipeline & archiveExtraction.php are new at v4.1.7.
+
+--------------------
 COMMIT 11/12/2026
 v4.1.6 - Archiving & scanning for a user are operation pipelines, every-file workflows replace Bulk File Options, & every panel takes its scheme's colours.
 

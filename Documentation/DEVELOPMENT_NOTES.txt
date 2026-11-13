@@ -358,6 +358,27 @@ A SCANNER CHANGES NOTHING & WRITES NOTHING A USER SEES.
 An earlier ScanCore wrote straight into the user facing report, so the scanner decided what a
 user saw, & the application could not filter, order or consolidate any of it.
 
+ARCHIVING A SELECTION & SCANNING FOR A USER ARE OPERATION PIPELINES. v4.1.6.
+archiveFiles & the user scan helpers were the last operations left in convertCore.php. The
+Archiver & Scan pipelines took them, with every error number they raised, & the core keeps a thin
+adapter for each, as it does for OCR & Identify. The Scan pipeline is the user's way to reach the
+scanners, & names neither tool itself. It asks the ClamAV & ScanCore pipelines through
+runVirusScan(), as everything else does. The Archiver shares the Archive pipeline's subsystem &
+tools, & the two are different things. The Archive pipeline converts one archive into another,
+& the Archiver makes an archive from any file.
+
+AN OPERATION PIPELINE OFFERS ONLY WHAT IT DECLARES IT WRITES.
+The core offered every format config.php allows for archiving a selection, the bootable disk
+images among them, & each of those failed with 4004, because only the Archive pipeline makes a
+bootable image, from an archive that already holds a bootloader. The Archiver declares what it
+writes, the core offers what both it & config.php name, & a format sent anyway is refused by 4006
+before any file is touched.
+
+AN INFECTED FILE IS REFUSED BY A PIPELINE, NOT DELETED.
+Whether an infected file is deleted is the application's policy, set by --User Virus Scanning--,
+which a pipeline cannot read. The core deletes one when it lands. The Archiver refuses one with
+4003 & leaves it where it is.
+
 CLAMAV'S LIMITS ARE SIZED TO THE FILE, & IT UNPACKS TO DISK.
 Until v3.9.9 an upload over ClamAV's 100M default was reported clean without being read.
 ClamAV unpacked into the sandbox's /tmp, which is memory, so a large archive was killed by the
@@ -531,7 +552,7 @@ convertGui2.php wiped the URL it was building & the settings links rendered with
 WHAT A LOOP REPLACES GOES THROUGH redeclare(), & A list() THAT CANNOT IS SHREDDED FIRST.
 Until v4.1.1 the code v4.1.0 added replaced a value in a loop, or a path in straight line code once
 a free name was found, without redeclare() or a second name, in findFreeOutputName(), verifyFile(),
-archiveFiles(), the LibreOffice module, the bootable image & OCR. OCR takes each file's name with a
+the archiver that is archiveSelection() since v4.1.6, the LibreOffice module, the bootable image & OCR. OCR takes each file's name with a
 list(), which cannot pass through redeclare(), so the name the file before it was given is shredded
 first.
 
@@ -1298,12 +1319,34 @@ finished unless it is told otherwise. Until v4.1.3 nothing told it, so an upload
 for a format it does not accept as much as for a full disk, looked uploaded & was simply missing
 from the list. The script library tests the reply as every other control does.
 
-A BULK CONTROL READS THE FILE LIST WHEN IT IS PRESSED.
+A BULK CONTROL READ THE FILE LIST WHEN IT WAS PRESSED.
 The file list publishes the session's files every time it is drawn, & Archive All & Scan All read
 them when pressed. Until v4.1.0 both were handed the files the page held when it was first drawn,
 so a file converted afterwards was left out & a deleted one was asked for, & neither refreshed the
-list when it finished. Archive All goes through run() like a conversion, so the archive downloaded
-is the one the core names, which is not the name typed when that name is taken.
+list when it finished. Start Over still reads them.
+
+BULK FILE OPTIONS WAS RETIRED. v4.1.6.
+Scan All, Identify All & Archive All did what a workflow does, in a second panel with its own
+controls & its own dividers. The library ships a workflow for each, beginning with a Select step so
+it needs no ticked file, & a user changes one in the builder where the panel offered fixed choices.
+Nine strings went from every language pack with it.
+
+EVERY COLOUR IS A SCHEME'S, NAMED ONCE. v4.1.6.
+The Workflows panel drew its accent, its washes & its edges in one fixed blue & a few greys in every
+scheme, & the file's own panels in a fixed pale blue, which put pale text on a pale panel in the
+dark scheme. Each scheme in styleCore.php now names eight colours as custom properties, each a
+colour it already had, & HRConvert2.css draws from them & names none of its own.
+
+A PANEL STAYS & A CARD COMES & GOES.
+The boxes of a workflow's steps & the boxes that never move looked alike. Every box is one of two
+kinds now. A panel is framed in the scheme & casts a deep shadow, & a card has a light edge & a
+light shadow, so what can be rearranged reads differently from what cannot. A menu a button opens
+is a panel, & no menu has a divider before or after it, because a frame already says where it ends.
+
+THE BOX THAT RUNS A WORKFLOW IS SIZED BY ITS ROW, NEVER BY ITS WORDS.
+It grows a third as fast as a card, so it keeps to its buttons beside them & fills a row of its
+own. It names its buttons once it is wide enough, measured as a container, & a box sized by its
+words would move onto another row the moment it named them, then lose the room to name them.
 
 THE ORDER OF THE FILE LIST IS TWO DIGITS IN THE ADDRESS.
 There are no cookies & no storage, so the order has to travel with the page. Four fields & two
@@ -1329,14 +1372,17 @@ A size, a time & a hash read left to right in every language. Without isolation,
 moved the number of 3.8 KB to the far end of the line & turned a date & its time around.
 
 A STEP'S OPTIONS OPEN IN ITS OWN BOX. v4.1.5.
-The box grows across the row, so a step's options sit where the step is, & its back arrow is in the
-corner a line starts from, pointing the way a line is read back. Each change is kept as it is
-made, & the box is drawn again only once it closes, so typing is never interrupted.
+The box grows across the row, so a step's options sit where the step is. Each change is kept as it
+is made, & the box is drawn again only once it closes, so typing is never interrupted.
+Until v4.1.6 the back arrow sat in the corner a line starts from, on a line of its own, which
+pushed the step's number onto the line below its name, & put the arrow across the box from the
+options button that opened it. It takes the options button's place now.
 
 THE ADD MENU IS PLACED BY THE LIBRARY.
 The box that runs a workflow is at the end of the row, or alone at the start of the next one on a
 narrow screen, so a menu anchored to one side of it left the screen on the other. The library
-opens it under the button, from the side a line starts on, & moves it back onto the screen.
+opens it under the button & moves it back onto the screen. Until v4.1.6 it opened from the side a
+line starts on, which is away from the boxes it adds to, & hung past the edge of the panel.
 
 A PATTERN'S TEST IS LINEAR.
 The builder marks an extensions box whose text cannot be a list of extensions. Its test requires
@@ -1469,6 +1515,13 @@ stayed linear for every wildcard pattern tried against long names.
 NOTHING THE BUILDER HOLDS IS STORED.
 There are no cookies & no storage, so a page loaded again starts with an empty builder, & a
 workflow worth keeping is exported.
+
+A RUNNING WORKFLOW IS DRAWN FROM ITS STATUS. v4.1.6.
+A page loaded again while a workflow ran reset the panel, & followed the run only in its status
+lines. The status now holds the workflow in canonical form, written once when it is launched, &
+reports it while it runs, so the page opens it in the builder, locked, & a library's workflow is
+shown as chosen. It is the status & not the job that holds it, because the status is already what
+a page reads, & the job holds every file the user selected.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

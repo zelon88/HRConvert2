@@ -211,10 +211,15 @@ A file can be more than one kind. An rtf file is a Document & an Ebook, & a txt 
 Two folders hold workflows, & a user is offered every usable workflow in either.
 
 THE SHIPPED LIBRARY is Resources/Workflows. It comes with the release & is replaced by the
-next one. It ships three.
+next one. It ships six.
+  archive-every-file      Finds every file in the session & puts them all into one zip.
   documents-to-pdf-zip    Converts documents, spreadsheets & presentations to PDF, then zips them.
+  identify-every-file     Finds every file in the session & identifies them all in one report.
   images-to-jpg-zip       Converts images to JPG, then zips them.
   scan-and-identify       Scans the selected files for viruses, then identifies them with a report.
+  scan-every-file         Finds every file in the session & scans them all with every scanner.
+The three every-file workflows begin with a Select step, so they need no ticked file. They do
+what the Bulk File Options panel did until v4.1.6, & a user changes what they do in the builder.
 
 THE INSTALLED LIBRARY is the Workflows folder in the data root, beside Logs & Sessions. It is
 where an administrator adds workflows, & an update leaves it alone. -fp creates it, owned by
@@ -316,6 +321,8 @@ What a page or a caller is told. Nothing else in the file leaves the server.
                   interrupted  start, worker or unreadable.
   JobId         The job, 24 hexadecimal digits.
   WorkflowId    The workflow's identifier, empty for one a page built, & Name, its name.
+  Document      The workflow in canonical form, as text, while it is starting or running, & empty once it ended.
+                A page loaded again while a workflow runs draws what is running from it. See --The Interface--.
   StepCount     How many steps it has, StepNumber the one running, & Operation that step's operation.
   FilesDone     How many of the step's files are done, & FilesTotal how many it has.
   Waiting       true while it waits for a budget.
@@ -358,9 +365,10 @@ A limit below one is taken as one.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --The Interface--
 
-Both interfaces draw a Workflows button beside Bulk File Options when workflows are on. It
-opens a panel of three boxes, the files, the workflow & running it. The box that needs
-attention next is outlined. Files first, then the workflow, then running it.
+Both interfaces draw a Workflows button when workflows are on. It opens a panel of three boxes,
+the files, the workflow & running it, with the Status panel under them. The box that needs
+attention next is outlined. Files first, then the workflow, then running it. Like every menu a
+button opens, the panel has no divider before or after it, & no heading repeating its button.
 
 THE FILES are the ones ticked in the list. Every file has a box, & a ticked box shows its place
 in the order it was ticked, which is the order a workflow takes them in. The box at the top of
@@ -373,9 +381,19 @@ THE WORKFLOW box lists the workflows offered, & says what the chosen one does, i
 many of the ticked files it can use. That count is a hint taken from the first step's
 operation & filter, & the server decides.
 
-RUNNING shows the step, the file & a bar while the workflow runs, & a Stop button. When it ends
-the panel says how, names every file it made, each of which can be fetched, & draws the list
-again.
+THE BOX THAT RUNS THE WORKFLOW holds its Run button, & a Stop button while one runs. Where the
+box has a row of its own, each button is named beside it, & where it has more room the two sit
+side by side. A name is a label, so pressing it presses the button.
+
+THE STATUS PANEL says no workflow is running, or that one is, with the step, the file & a bar.
+When it ends the panel says how, names every file it made, each of which can be fetched, & the
+list is drawn again. It also names why a workflow was refused, & every problem the server found.
+It is always there while the panel is open, so what it says never appears from nowhere.
+
+A PAGE LOADED AGAIN WHILE A WORKFLOW RUNS opens the panel, & draws the running workflow from the
+status, which holds it as a document while it runs. A workflow built in the page is drawn as it
+was built, & one from the library is shown as the one chosen. Everything is locked until it ends,
+& the Status panel follows it to the end as it would have, & the list is drawn again then.
 
 The panel is HRC2-Workflows.js, a library of its own that needs no other, not even jQuery. It
 speaks only the requests in ABOUT_REST_API.txt, so any interface that gives it somewhere to
@@ -402,9 +420,10 @@ workflows, & choosing one opens it in the builder from the document the server g
 
 The workflow's box becomes a BOX FOR EACH STEP, between the files & the box that runs them. A
 choice goes into the box waiting for one, which says Select a pipeline above..., or into a new
-box at the end. Each box names its step & what it does. Its options button opens the step's
-options in its place, across the whole row, with a back arrow in the corner a line starts from,
-& its other button takes the step out. A step after one taken out that took its files takes what
+box at the end. Each box names its step & what it does, with a line under its heading. Its options
+button opens the step's options in its place, across the whole row, & a back arrow takes the
+options button's place, beside the button that takes the step out, so a step is opened & closed
+in one place. A step after one taken out that took its files takes what
 came before it instead.
 
 A step's OPTIONS are its nouns & then its verbs. The nouns are which files it takes, the ticked
@@ -415,7 +434,7 @@ are what its operation is told, such as the format & the name of what it makes.
 
 The box that runs the workflow is SPLIT. Its add button adds a box to its left, & asks whether
 it is Select Pipeline..., a box waiting for a choice from the tabs, or Select Files..., a Select
-step, whose options open at once. Below the tabs are the workflow's name, New, which starts
+step, whose options open at once. The menu opens toward the boxes it adds to. Below the tabs are the workflow's name, New, which starts
 again, & Import & Export where the server allows them.
 
 A workflow from the library left as it was runs & exports by its identifier. Anything built,
@@ -423,7 +442,7 @@ changed or imported is sent whole, & the server checks it before it runs. A work
 not check is not run, & the panel names every problem the server found, in the server's words,
 which are English. A change to the steps drops the description, because the description was its
 author's, of the steps they wrote. Nothing is kept in the browser, so a page loaded again
-starts with an empty builder.
+starts with an empty builder, unless a workflow is running, which is drawn as it runs.
 
 The builder offers only what the server describes, & only an operation the server has on. A
 step can take no more than eight inputs, which is the format's limit, & the panel adds no more
@@ -472,7 +491,7 @@ The same holds for OCR. Archiving a ticked file puts every ticked file into one 
 the name typed, because an archive is one file made from many.
 
 A control whose file is not ticked, or is the only file ticked, acts on its own file as before.
-The All controls under Bulk File Options still act on every file.
+To act on every file, run one of the every-file workflows. See --Libraries--.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

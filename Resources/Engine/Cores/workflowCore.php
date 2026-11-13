@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.5.
+// / v4.1.6.
 // / The Workflow Core, one of the Engine's cores.
 // / A workflow is a list of steps, & each step runs one of the application's operations on files a user selected or an earlier step made.
 // / This file reads, checks & runs workflows, & keeps the status a page reads while one runs.
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by the application without executing this file.
-$WorkflowCoreVersion = 'v4.1.5';
+$WorkflowCoreVersion = 'v4.1.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -1071,8 +1071,11 @@ function launchWorkflowRun($workflowSettings, $workflowId, $normalizedWorkflow, 
         else {
           $jobId = bin2hex(random_bytes(12));
           foreach ($normalizedWorkflow['Steps'] as $normalizedStep) $stepSummaries[] = array('Operation' => $normalizedStep['Operation'], 'State' => 'waiting', 'Inputs' => 0, 'Skipped' => 0, 'Produced' => 0, 'Errors' => FALSE);
+          // / The status holds the workflow in canonical form, written once here, so a page loaded again while it runs can draw what is running.
+          // / The worker writes its progress over this status & keeps every key it does not change, so the document stays until the status is cleared.
           $initialStatus = array('JobId' => $jobId, 'WorkflowId' => (string)$workflowId, 'Name' => $normalizedWorkflow['Name'], 'State' => 'starting', 'Reason' => '', 'Created' => time(), 'Started' => 0, 'Ended' => 0, 'Heartbeat' => time(),
-            'WorkerPid' => 0, 'WorkerStart' => 0, 'StepCount' => count($stepSummaries), 'StepNumber' => 0, 'Operation' => '', 'FilesDone' => 0, 'FilesTotal' => 0, 'Waiting' => FALSE, 'Steps' => $stepSummaries, 'Produced' => array());
+            'WorkerPid' => 0, 'WorkerStart' => 0, 'StepCount' => count($stepSummaries), 'StepNumber' => 0, 'Operation' => '', 'FilesDone' => 0, 'FilesTotal' => 0, 'Waiting' => FALSE, 'Steps' => $stepSummaries, 'Produced' => array(),
+            'Document' => canonicalWorkflowText($normalizedWorkflow, $operations));
           list ($sessionWasClaimed, $claimRefusal) = claimWorkflowSession($sessionFolder, $initialStatus);
           if (!$sessionWasClaimed) $RunReply['Reason'] = $claimRefusal;
           else {
@@ -1288,22 +1291,26 @@ function describeWorkflowOperations() {
 // / A function to put a status in the form a page or a caller of the API is given.
 // / Accepts the status, the state it is in & the reason for it, in that order. Returns the public status.
 // / The worker's process & its start time are left out, because nothing outside the server needs them.
+// / Document is the workflow in canonical form while it is starting or running, & is empty once it has ended, because only a page drawing what runs needs it.
 function publicWorkflowStatus($workflowStatus, $derivedState, $derivedReason) {
   // / Set variables.
   global $EnableMemoryProtection;
   $PublicStatus = array();
   $startTime = $endTime = 0;
+  $isUnderway = FALSE;
   $startTime = (int)($workflowStatus['Started'] ?? 0) > 0 ? (int)$workflowStatus['Started'] : (int)($workflowStatus['Created'] ?? time());
   $endTime = (int)($workflowStatus['Ended'] ?? 0) > 0 ? (int)$workflowStatus['Ended'] : time();
+  $isUnderway = ($derivedState === 'starting' or $derivedState === 'running');
   $PublicStatus = array('Available' => TRUE, 'State' => (string)$derivedState, 'Reason' => (string)$derivedReason,
     'JobId' => (string)($workflowStatus['JobId'] ?? ''), 'WorkflowId' => (string)($workflowStatus['WorkflowId'] ?? ''), 'Name' => (string)($workflowStatus['Name'] ?? ''),
     'StepCount' => (int)($workflowStatus['StepCount'] ?? 0), 'StepNumber' => (int)($workflowStatus['StepNumber'] ?? 0), 'Operation' => (string)($workflowStatus['Operation'] ?? ''),
     'FilesDone' => (int)($workflowStatus['FilesDone'] ?? 0), 'FilesTotal' => (int)($workflowStatus['FilesTotal'] ?? 0), 'Waiting' => (($workflowStatus['Waiting'] ?? FALSE) === TRUE),
     'Steps' => (isset($workflowStatus['Steps']) && is_array($workflowStatus['Steps'])) ? array_values($workflowStatus['Steps']) : array(),
     'Produced' => (isset($workflowStatus['Produced']) && is_array($workflowStatus['Produced'])) ? array_values($workflowStatus['Produced']) : array(),
-    'Elapsed' => max(0, $endTime - $startTime));
+    'Elapsed' => max(0, $endTime - $startTime),
+    'Document' => ($isUnderway && isset($workflowStatus['Document']) && is_string($workflowStatus['Document'])) ? $workflowStatus['Document'] : '');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $startTime, $endTime, $workflowStatus, $derivedState, $derivedReason);
+  purgeSensitiveMemory($EnableMemoryProtection, $startTime, $endTime, $isUnderway, $workflowStatus, $derivedState, $derivedReason);
   return $PublicStatus; }
 // / -----------------------------------------------------------------------------------
 

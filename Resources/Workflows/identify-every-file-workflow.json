@@ -1,0 +1,10 @@
+{
+  "Format": "HRProprietary Workflow",
+  "Version": 1,
+  "Name": "Identify every file",
+  "Description": "Finds every file in this session & identifies them all in one report, which is kept beside them. No file needs to be ticked.",
+  "Steps": [
+    { "Operation": "Select" },
+    { "Operation": "Identify", "Options": { "Report": true, "Filename": "User_Identify_Report" } }
+  ]
+}

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -175,12 +175,6 @@ $Gui1Text37 = 'ပြန်လည်ဆန်းသစ်ပါ';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = 'ဖိုင်ပြောင်းလဲခြင်း ရွေးချယ်စရာများ';
-// / 'Bulk File Options'
-$Gui2Text2 = 'ဖိုင်အများအပြားအတွက် ရွေးချယ်စရာများ';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = 'ဖိုင်အားလုံးကို ဗိုင်းရပ်စ် ရှိမရှိ စစ်ဆေးပါ';
-// / 'Compress & Download All Files'
-$Gui2Text4 = 'ဖိုင်အားလုံးကို ချုံ့ပြီး ဒေါင်းလုဒ်လုပ်ပါ';
 // / 'Download'
 $Gui2Text5 = 'ဒေါင်းလုဒ်လုပ်ရန်';
 // / 'Share'
@@ -209,14 +203,6 @@ $Gui2Text16 = 'ဤဖိုင်ကို မော်ကွန်းတင်�
 $Gui2Text17 = 'ဖိုင်အမည် သတ်မှတ်ပါ: ';
 // / 'Format'
 $Gui2Text18 = 'ဖော်မတ်';
-// / 'Compress & Download'
-$Gui2Text19 = 'ချုံ့ပြီး ဒေါင်းလုဒ်လုပ်ပါ';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'ClamAV ဖြင့် စစ်ဆေးပါ: ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'ScanCore ဖြင့် စစ်ဆေးပါ: ';
-// / 'Scan All'
-$Gui2Text22 = 'အားလုံးကို စစ်ဆေးပါ';
 // / 'Share This File'
 $Gui2Text23 = 'ဤဖိုင်ကို မျှဝေပါ';
 // / 'Link Status: '
@@ -365,10 +351,6 @@ $Gui2Text95 = 'အသေးစိတ်: ';
 $Gui2Text96 = 'မှတ်ချက်များ: ';
 // / 'Save report as file'
 $Gui2Text97 = 'အစီရင်ခံစာကို ဖိုင်အဖြစ် သိမ်းဆည်းပါ';
-// / 'Identify All Files'
-$Gui2Text98 = 'ဖိုင်အားလုံးကို ခွဲခြားသတ်မှတ်ပါ';
-// / 'Identify All'
-$Gui2Text99 = 'အားလုံးကို ခွဲခြားသတ်မှတ်ပါ';
 // / 'Yes'
 $Gui2Text100 = 'ဟုတ်ကဲ့';
 // / 'No'
@@ -549,6 +531,12 @@ $Gui2Text186 = 'ဤဆာဗာသည် ဤလုပ်ငန်းစဉ်က
 $Gui2Text187 = 'ဖိုင်ကို ဖတ်၍ မရပါ။';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = 'ဤဆာဗာတွင် လုပ်ငန်းစဉ် တည်ဆောက်ကိရိယာ မရရှိနိုင်ပါ။';
+// / 'Status'
+$Gui2Text189 = 'အခြေအနေ';
+// / 'A workflow is running.'
+$Gui2Text190 = 'လုပ်ငန်းစဉ်တစ်ခု လုပ်ဆောင်နေသည်။';
+// / 'No workflow is running.'
+$Gui2Text191 = 'လုပ်ဆောင်နေသော လုပ်ငန်းစဉ် မရှိပါ။';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

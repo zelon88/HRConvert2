@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -175,12 +175,6 @@ $Gui1Text37 = 'Onyesha Upya';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = 'Chaguzi za Kubadilisha Faili';
-// / 'Bulk File Options'
-$Gui2Text2 = 'Chaguzi za Faili Nyingi';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = 'Changanua Faili Zote kwa Ajili ya Virusi';
-// / 'Compress & Download All Files'
-$Gui2Text4 = 'Kandamiza & Pakua Faili Zote';
 // / 'Download'
 $Gui2Text5 = 'Pakua';
 // / 'Share'
@@ -209,14 +203,6 @@ $Gui2Text16 = 'Hifadhi Faili Hili kwenye Kumbukumbu';
 $Gui2Text17 = 'Taja Jina la Faili: ';
 // / 'Format'
 $Gui2Text18 = 'Muundo';
-// / 'Compress & Download'
-$Gui2Text19 = 'Kandamiza & Pakua';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'Changanua kwa ClamAV: ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'Changanua kwa ScanCore: ';
-// / 'Scan All'
-$Gui2Text22 = 'Changanua Zote';
 // / 'Share This File'
 $Gui2Text23 = 'Shiriki Faili Hili';
 // / 'Link Status: '
@@ -365,10 +351,6 @@ $Gui2Text95 = 'Maelezo: ';
 $Gui2Text96 = 'Vidokezo: ';
 // / 'Save report as file'
 $Gui2Text97 = 'Hifadhi ripoti kama faili';
-// / 'Identify All Files'
-$Gui2Text98 = 'Tambua Faili Zote';
-// / 'Identify All'
-$Gui2Text99 = 'Tambua Zote';
 // / 'Yes'
 $Gui2Text100 = 'Ndiyo';
 // / 'No'
@@ -549,6 +531,12 @@ $Gui2Text186 = 'Seva hii haiwezi kuendesha mtiririko huu wa kazi.';
 $Gui2Text187 = 'Faili haikuweza kusomwa.';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = 'Kiunda mtiririko wa kazi hakipatikani kwenye seva hii.';
+// / 'Status'
+$Gui2Text189 = 'Hali';
+// / 'A workflow is running.'
+$Gui2Text190 = 'Mtiririko wa kazi unaendeshwa.';
+// / 'No workflow is running.'
+$Gui2Text191 = 'Hakuna mtiririko wa kazi unaoendeshwa.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

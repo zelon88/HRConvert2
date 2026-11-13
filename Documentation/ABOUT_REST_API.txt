@@ -362,8 +362,10 @@ The following is a list of supported POST inputs, organized into sections based 
           Reports this session's workflow.
           {"Workflow":{"Available":true,"State":"running","Reason":"","JobId":"...","WorkflowId":"...","Name":"...",
             "StepCount":2,"StepNumber":1,"Operation":"Convert","FilesDone":1,"FilesTotal":3,"Waiting":false,
-            "Steps":[...],"Produced":["notes.pdf"],"Elapsed":4}}
+            "Steps":[...],"Produced":["notes.pdf"],"Elapsed":4,"Document":"{...}"}}
           State is none, starting, running, finished, stopped, failed or interrupted.
+          Document is the workflow in canonical form, as text, while State is starting or running, & is empty
+          once it has ended. A page loaded again while a workflow runs draws what is running from it.
           AN ENDED WORKFLOW IS REPORTED ONCE. The request that reads a State of finished, stopped, failed or
           interrupted removes it, so the next one reads none & the session may start another.
           ABOUT_WORKFLOWS.txt describes every key & every Reason.

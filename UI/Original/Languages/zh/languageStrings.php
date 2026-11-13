@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -171,12 +171,6 @@ $Gui1Text37 = '刷新';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = '文件转换选项';
-// / 'Bulk File Options'
-$Gui2Text2 = '批量文件选项';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = '扫描所有文件是否存在病毒';
-// / 'Compress & Download All Files'
-$Gui2Text4 = '压缩并下载所有文件';
 // / 'Download'
 $Gui2Text5 = '下载';
 // / 'Share'
@@ -205,14 +199,6 @@ $Gui2Text16 = '存档此文件';
 $Gui2Text17 = '指定文件名： ';
 // / 'Format'
 $Gui2Text18 = '格式';
-// / 'Compress & Download'
-$Gui2Text19 = '压缩并下载';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = '使用 ClamAV 扫描： ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = '使用 ScanCore 扫描： ';
-// / 'Scan All'
-$Gui2Text22 = '扫描全部';
 // / 'Share This File'
 $Gui2Text23 = '分享此文件';
 // / 'Link Status: '
@@ -361,10 +347,6 @@ $Gui2Text95 = '详细信息：';
 $Gui2Text96 = '备注：';
 // / 'Save report as file'
 $Gui2Text97 = '将报告另存为文件';
-// / 'Identify All Files'
-$Gui2Text98 = '识别所有文件';
-// / 'Identify All'
-$Gui2Text99 = '全部识别';
 // / 'Yes'
 $Gui2Text100 = '是';
 // / 'No'
@@ -545,6 +527,12 @@ $Gui2Text186 = '此服务器无法运行此工作流。';
 $Gui2Text187 = '无法读取该文件。';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = '此服务器上不提供工作流生成器。';
+// / 'Status'
+$Gui2Text189 = '状态';
+// / 'A workflow is running.'
+$Gui2Text190 = '有工作流正在运行。';
+// / 'No workflow is running.'
+$Gui2Text191 = '没有正在运行的工作流。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

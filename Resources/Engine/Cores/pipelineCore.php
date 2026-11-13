@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.2.
+// / v4.1.6.
 // / The Pipeline Core, one of the Engine's cores.
 // / It verifies, describes & dispatches the pipelines under Resources/Pipelines, each at the exact version the application pins.
 // / Which pipelines are accepted is the application's decision, read from its contract, so this file names none of them.
@@ -37,7 +37,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v4.1.2';
+$PipelineCoreVersion = 'v4.1.6';
 // / -----------------------------------------------------------------------------------
 
 
@@ -780,6 +780,7 @@ function runVirusScan($pathsToScan, $requestedScanner) {
 // / An operation takes a selection of files, chooses a route per file & reports one verdict for the batch, which six values cannot hold.
 // / Fallback across implementations is not attempted, because a half completed batch has already written files & spent budget.
 // / The first installed pipeline of the family is the one that runs, & the family is the caller's to name.
+// / A family is any name a pipeline declares, so the messages name it after the word the, which reads for every name, Archive & Scan included.
 function runOperationPipeline($operationFamily, $selectedFiles, $userFilename, $userExtension, $operationMethod) {
   // / Set variables.
   global $Pipelines, $Verbose, $EnableMemoryProtection;
@@ -795,12 +796,12 @@ function runOperationPipeline($operationFamily, $selectedFiles, $userFilename, $
       break; } }
   if ($chosenFolder === '') {
     $OperationErrors = TRUE;
-    errorEntry('An '.$operationFamily.' operation was requested but no pipeline provides it!', 34006, FALSE); }
+    errorEntry('The '.$operationFamily.' operation was requested but no pipeline provides it!', 34006, FALSE); }
   else {
     list ($pipelineIsReady, $entryPointName) = loadPipelineCore($chosenFolder);
     if (!$pipelineIsReady) $OperationErrors = TRUE;
     else {
-      if ($Verbose) logEntry('Dispatching an '.$operationFamily.' operation to the '.$chosenFolder.' pipeline.');
+      if ($Verbose) logEntry('Dispatching the '.$operationFamily.' operation to the '.$chosenFolder.' pipeline.');
       list ($OperationSuccessful, $OperationErrors, $OperationOutput) = $entryPointName($selectedFiles, $userFilename, $userExtension, $operationMethod); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $selectedFiles is not purged, because the caller still holds the selection.

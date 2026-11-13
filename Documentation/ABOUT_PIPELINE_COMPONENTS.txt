@@ -67,14 +67,22 @@ on demand by the application. A converter owns neither & is dispatched to.
 See ABOUT_COMPONENTS.txt for what a Core is.
 
 A CONVERSION PIPELINE takes one file, returns the six value contract, & is dispatched by
-convert(). Every family is one of these except OCR & Identify, which are operations, & ClamAV,
-ScanCore & Files, which are the scanner & file kinds.
+convert(). Every family is one of these except OCR, Identify, the Archiver & Scan, which are
+operations, & ClamAV, ScanCore & Files, which are the scanner & file kinds.
 
 AN OPERATION PIPELINE takes a SELECTION of files, decides its own route per file, returns
 its own shape, & is dispatched from wherever the core handles that operation. OCR was the
 first. It reports one verdict for a whole batch plus the list of filenames it produced, & the
 six value conversion contract has nowhere to put either. Identify is the second, from v4.1.2.
 It changes no file, & reports a record of every file it read & the name of any report it wrote.
+The Archiver & Scan are the third & fourth, from v4.1.6, & were the last operations left in
+convertCore.php. The Archiver puts a selection of files into archives & returns the name of every
+archive it made. It serves the Archive family, as the Archive pipeline does, & the two never meet,
+because a conversion is never asked for as an operation. The Archive pipeline converts one archive
+into another, & the Archiver makes an archive from any file. Scan scans a selection with ClamAV,
+ScanCore or both, through runVirusScan(), & returns whether any file was found infected & where
+its report is. It is the user's way to reach the scanners, & names neither tool itself. Each
+carried its error numbers with it.
 Both kinds are verified, pinned, ordered & loaded identically. ONLY DISPATCH DIFFERS.
 
 A SHARED MODULE is a file two or more pipelines both need & neither can own. It is not a
@@ -334,6 +342,13 @@ Contracts 1 through 3 are unchanged & still live in CREATING_CONVERSION_PIPELINE
     6h. What the third value holds is the operation's own. OCR returns the filenames it wrote.
         Identify returns its records & the name of any report, & the core prints them as one
         line of JSON, because an interface fills in what it shows rather than downloading a file.
+        The Archiver returns the name of every archive it made. Scan returns Threat, whether any
+        file was found infected, Report, where the report it wrote is, & ReportName, its name.
+    6i. An operation pipeline offers only what it declares it writes. The core offers a format
+        for archiving a selection only where both config.php & the Archiver's Output name it, &
+        the Archiver refuses any other before it touches a file. Until v4.1.6 every bootable
+        disk image was offered for archiving a file, & each failed, because only the Archive
+        pipeline makes one, from an archive that already holds a bootloader.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -170,12 +170,6 @@ $Gui1Text37 = '새로 고침';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = '파일 변환 옵션';
-// / 'Bulk File Options'
-$Gui2Text2 = '대량 파일 옵션';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = '모든 파일에서 바이러스 검사';
-// / 'Compress & Download All Files'
-$Gui2Text4 = '모든 파일 압축 및 다운로드';
 // / 'Download'
 $Gui2Text5 = '다운로드';
 // / 'Share'
@@ -204,14 +198,6 @@ $Gui2Text16 = '이 파일 보관';
 $Gui2Text17 = '파일 이름 지정: ';
 // / 'Format'
 $Gui2Text18 = '체재';
-// / 'Compress & Download'
-$Gui2Text19 = '압축 및 다운로드';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'ClamAV로 스캔: ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'ScanCore로 스캔: ';
-// / 'Scan All'
-$Gui2Text22 = '모두 스캔';
 // / 'Share This File'
 $Gui2Text23 = '이 파일 공유';
 // / 'Link Status: '
@@ -360,10 +346,6 @@ $Gui2Text95 = '세부 정보: ';
 $Gui2Text96 = '참고: ';
 // / 'Save report as file'
 $Gui2Text97 = '보고서를 파일로 저장';
-// / 'Identify All Files'
-$Gui2Text98 = '모든 파일 식별';
-// / 'Identify All'
-$Gui2Text99 = '모두 식별';
 // / 'Yes'
 $Gui2Text100 = '예';
 // / 'No'
@@ -544,6 +526,12 @@ $Gui2Text186 = '이 서버에서는 이 워크플로를 실행할 수 없습니�
 $Gui2Text187 = '파일을 읽을 수 없습니다.';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = '이 서버에서는 워크플로 빌더를 사용할 수 없습니다.';
+// / 'Status'
+$Gui2Text189 = '상태';
+// / 'A workflow is running.'
+$Gui2Text190 = '워크플로가 실행 중입니다.';
+// / 'No workflow is running.'
+$Gui2Text191 = '실행 중인 워크플로가 없습니다.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

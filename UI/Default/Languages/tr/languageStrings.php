@@ -39,7 +39,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -184,12 +184,6 @@ $Gui1Text37 = 'Yenile';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = 'Dosya Dönüştürme Seçenekleri';
-// / 'Bulk File Options'
-$Gui2Text2 = 'Toplu Dosya Seçenekleri';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = 'Tüm Dosyaları Virüse Karşı Tara';
-// / 'Compress & Download All Files'
-$Gui2Text4 = 'Tüm Dosyaları Sıkıştır ve İndir';
 // / 'Download'
 $Gui2Text5 = 'İndir';
 // / 'Share'
@@ -218,14 +212,6 @@ $Gui2Text16 = 'Bu Dosyayı Arşivle';
 $Gui2Text17 = 'Dosya Adı Belirtin: ';
 // / 'Format'
 $Gui2Text18 = 'Biçim';
-// / 'Compress & Download'
-$Gui2Text19 = 'Sıkıştır ve İndir';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'ClamAV ile tara: ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'ScanCore ile tara: ';
-// / 'Scan All'
-$Gui2Text22 = 'Tümünü Tara';
 // / 'Share This File'
 $Gui2Text23 = 'Bu Dosyayı Paylaş';
 // / 'Link Status: '
@@ -377,10 +363,6 @@ $Gui2Text95 = 'Ayrıntılar: ';
 $Gui2Text96 = 'Notlar: ';
 // / 'Save report as file'
 $Gui2Text97 = 'Raporu dosya olarak kaydet';
-// / 'Identify All Files'
-$Gui2Text98 = 'Tüm Dosyaları Tanımla';
-// / 'Identify All'
-$Gui2Text99 = 'Tümünü Tanımla';
 // / 'Yes'
 $Gui2Text100 = 'Evet';
 // / 'No'
@@ -561,6 +543,12 @@ $Gui2Text186 = 'Bu sunucu bu iş akışını çalıştıramaz.';
 $Gui2Text187 = 'Dosya okunamadı.';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = 'İş akışı düzenleyicisi bu sunucuda kullanılamıyor.';
+// / 'Status'
+$Gui2Text189 = 'Durum';
+// / 'A workflow is running.'
+$Gui2Text190 = 'Bir iş akışı çalışıyor.';
+// / 'No workflow is running.'
+$Gui2Text191 = 'Çalışan bir iş akışı yok.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

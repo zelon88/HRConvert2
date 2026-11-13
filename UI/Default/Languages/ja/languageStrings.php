@@ -35,7 +35,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -178,12 +178,6 @@ $Gui1Text37 = '更新';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = 'ファイル変換オプション';
-// / 'Bulk File Options'
-$Gui2Text2 = '一括ファイル操作';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = 'すべてのファイルをウイルススキャン';
-// / 'Compress & Download All Files'
-$Gui2Text4 = 'すべてのファイルを圧縮してダウンロード';
 // / 'Download'
 $Gui2Text5 = 'ダウンロード';
 // / 'Share'
@@ -212,14 +206,6 @@ $Gui2Text16 = 'このファイルをアーカイブ';
 $Gui2Text17 = 'ファイル名を指定： ';
 // / 'Format'
 $Gui2Text18 = '形式';
-// / 'Compress & Download'
-$Gui2Text19 = '圧縮してダウンロード';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'ClamAV でスキャン： ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'ScanCore でスキャン： ';
-// / 'Scan All'
-$Gui2Text22 = 'すべてスキャン';
 // / 'Share This File'
 $Gui2Text23 = 'このファイルを共有';
 // / 'Link Status: '
@@ -370,10 +356,6 @@ $Gui2Text95 = '詳細：';
 $Gui2Text96 = '注記：';
 // / 'Save report as file'
 $Gui2Text97 = 'レポートをファイルとして保存';
-// / 'Identify All Files'
-$Gui2Text98 = 'すべてのファイルを識別';
-// / 'Identify All'
-$Gui2Text99 = 'すべて識別';
 // / 'Yes'
 $Gui2Text100 = 'はい';
 // / 'No'
@@ -554,6 +536,12 @@ $Gui2Text186 = 'このサーバーではこのワークフローを実行でき�
 $Gui2Text187 = 'ファイルを読み取れませんでした。';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = 'このサーバーではワークフロー ビルダーを利用できません。';
+// / 'Status'
+$Gui2Text189 = '状態';
+// / 'A workflow is running.'
+$Gui2Text190 = 'ワークフローを実行中です。';
+// / 'No workflow is running.'
+$Gui2Text191 = '実行中のワークフローはありません。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

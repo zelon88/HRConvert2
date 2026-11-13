@@ -60,6 +60,9 @@ An operator seeing one of those numbers may have been running either one. The lo
 The Pipeline Core reserves 34000 through 34019. It became an Engine core at v3.9.9 & none of its numbers changed.
 The 32000 and 33000 blocks were already taken by Setup Core and Dependency Core.
 The Identify pipeline reserves 37000 through 37004. It is the first pipeline to number its own errors.
+The Archiver & Scan pipelines took archiving & scanning for a user out of convertCore.php at v4.1.6, & every number came with them.
+The Archiver raises the 4000 block & 13012, & 13006 through 13010 with the Archive pipeline. The Scan pipeline raises the 16000,
+17000, 19000 & 20000 blocks. No number changed value.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1538,7 +1541,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   NO
@@ -1563,7 +1566,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   NO
@@ -1592,7 +1595,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4002, <SESSION_IDENTIFIER>: Could not perform a virus scan!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   YES
@@ -1601,11 +1604,11 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The application has become corrupt.
-  This error only occurs during virus scans.
-  This error only occurs if --Virus Scanning-- is enabled in config.php.
-  This error is in place to maintain syntactical integrity of the codebase.
-  Logically this error should never be triggered, because a scan that fails or finds a virus halts execution before this point.
+  A file selected to be archived is scanned first when --Virus Scanning-- is enabled in config.php, & this is what that scan said.
+  The scan reached no verdict, so the file was not archived & the request ended here.
+  The scanner's own entry above this one says why. Run  php convertCore.php -v  to see whether the default scanner is installed.
+  Until v4.1.6 a scan that failed or found a virus was reported by the core first, & this followed it. The Archiver pipeline asks
+  runVirusScan() itself now, so this is the entry that reports it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1614,7 +1617,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4003, <SESSION_IDENTIFIER>: Virus detected!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   YES
@@ -1623,11 +1626,12 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The application has become corrupt.
-  This error only occurs during virus scans.
-  This error only occurs if --Virus Scanning-- is enabled in config.php.
-  This error is in place to maintain syntactical integrity of the codebase.
-  Logically this error should never be triggered, because a scan that fails or finds a virus halts execution before this point.
+  A file selected to be archived is scanned first when --Virus Scanning-- is enabled in config.php, & this is what that scan said.
+  The file was found infected, so it was not archived & the request ended here.
+  The file is refused & left where it was. Whether an infected file is deleted is the application's policy, applied when a file
+  lands, & a pipeline never decides it. See --Virus Scanning-- & --User Virus Scanning-- in config.php.
+  Until v4.1.6 a scan that failed or found a virus was reported by the core first, & this followed it. The Archiver pipeline asks
+  runVirusScan() itself now, so this is the entry that reports it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1636,7 +1640,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4004, <SESSION_IDENTIFIER>: Could not archive <FILE_NAME> to <FILE_PATH>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   NO
@@ -1664,7 +1668,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4005, <SESSION_IDENTIFIER>: An iso image holds one file at a time, so a selection of files cannot be archived into one!
 
 FILE
-  convertCore.php
+  /Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   NO
@@ -1680,6 +1684,30 @@ ERROR DESCRIPTION
   the second file would leave an image holding only the last one.
   Archive the selection as zip, 7z, tar or rar, or archive one file at a time as iso.
   A single file to iso is unaffected & is not this error.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4006, <SESSION_IDENTIFIER>: No archiver here writes <FORMAT>, so nothing was archived!
+
+FILE
+  /Resources/Pipelines/Archiver/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A selection of files was sent to be archived in a format the Archiver pipeline cannot make, such as a bootable disk image.
+  Nothing was written. The core offers only the formats both config.php & the Archiver pipeline name, so a page this server
+  drew does not send one, & a request that does was made by hand or by a page drawn before the formats changed.
+  A bootable disk image is made by the Archive pipeline, from an archive that already holds a bootloader. See
+  ABOUT_CREATING_BOOTABLE_ISO_IMAGES.txt. Until v4.1.6 every bootable format was offered for archiving a file, & each failed
+  with error 4004 instead.
+  ERROR 20 follows this one, because nothing was archived.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2600,7 +2628,7 @@ ERROR MESSAGE
 
 FILE
   Resources/Pipelines/Archive/pipeline.php
-  /convertCore.php
+  /Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   NO
@@ -2660,7 +2688,7 @@ ERROR MESSAGE
 
 FILE
   Resources/Pipelines/Archive/pipeline.php
-  /convertCore.php
+  /Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   NO
@@ -2704,7 +2732,7 @@ ERROR MESSAGE
 
 FILE
   Resources/Pipelines/Archive/pipeline.php
-  /convertCore.php
+  /Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   NO
@@ -2733,7 +2761,7 @@ ERROR MESSAGE
 
 FILE
   Resources/Pipelines/Archive/pipeline.php
-  /convertCore.php
+  /Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   NO
@@ -2783,7 +2811,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13012, <SESSION_IDENTIFIER>: Rar output requires the rar utility, which is missing or too old!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Archiver/pipeline.php
 
 FATAL
   NO
@@ -2792,12 +2820,10 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  One of the archive dependencies is not responding.
-  This is contained in the archiveFiles() function.
-  The conversion operation was attempted 5 times but no output file could be created.
-  The user submitted a request to convert a file that does not exist.
-  The user submitted a request that was incorrect, malformed, or corrupt.
-  The user has requested to convert a file that was deleted for exceeding the --File Deletion Age Threshold-- specified in config.php.
+  A selection of files was asked to be archived as rar, & the rar utility is missing or older than depends.php requires.
+  7-Zip reads rar but cannot write it, so rar has no fallback. Nothing was written for that file.
+  Run  sudo php convertCore.php -fp  to install the RAR dependency, or archive the selection as zip, 7z or tar.
+  This is raised by archiveSelection(), the Archiver pipeline's entry point. The Archive pipeline raises 13013 for the same tool.
   The path to the Installation directory specified in the --Installation Directory-- section of the config.php file does not exist or cannot be accessed.
   The path to the Data directory specified in the --Data Storage Directory-- section of the config.php file does not exist or cannot be accessed.
   The web server account needs read access to the installation, & read & write access to DATA in the hosted location.
@@ -3575,7 +3601,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16000, <SESSION_IDENTIFIER>: Could not delete stale file <FILE_PATH>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scan/pipeline.php
 
 FATAL
   YES
@@ -3597,7 +3623,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16001, <SESSION_IDENTIFIER>: Could not create a file at <FILE_PATH>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scan/pipeline.php
 
 FATAL
   YES
@@ -3619,7 +3645,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16002, <SESSION_IDENTIFIER>: Could not delete stale file <FILE_PATH>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scan/pipeline.php
 
 FATAL
   YES
@@ -3641,7 +3667,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-16003, <SESSION_IDENTIFIER>: Could not create a file at <FILE_PATH>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scan/pipeline.php
 
 FATAL
   YES
@@ -3663,7 +3689,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scan/pipeline.php
 
 FATAL
   NO
@@ -3688,7 +3714,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scan/pipeline.php
 
 FATAL
   NO
@@ -3774,7 +3800,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19000, <SESSION_IDENTIFIER>: Could not sanitize the input file!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scan/pipeline.php
 
 FATAL
   NO
@@ -3799,7 +3825,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19001, <SESSION_IDENTIFIER>: Could not verify the input file!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scan/pipeline.php
 
 FATAL
   NO
@@ -3829,7 +3855,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20000, <SESSION_IDENTIFIER>: Could not delete stale file <FILE_PATH>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scan/pipeline.php
 
 FATAL
   YES
@@ -3851,7 +3877,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-20001, <SESSION_IDENTIFIER>: Could not create a file at <FILE_PATH>!
 
 FILE
-  /convertCore.php
+  /Resources/Pipelines/Scan/pipeline.php
 
 FATAL
   YES
@@ -3865,6 +3891,23 @@ ERROR DESCRIPTION
   This may be the result of incorrect file permission levels on the directory where the application is installed.
   This may be the result of incorrect user or group associations for the www-data user or group.
   The device where data is stored has an insufficient amount of storage space available.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT SCANNING FILES FOR A USER
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Scan pipeline raises these, from /Resources/Pipelines/Scan/pipeline.php.
+    WARNING!!! <SCANNER> could not scan <FILE_NAME> for a user.
+      The scanner reached no verdict on that file. The report says the file could not be scanned, & never that it is clean.
+      The scanner's own warning, or -v, says why. A scan that reached no verdict on any file ends with error 23.
+    WARNING!!! Potentially infected file detected at <FILE_NAME>!
+      The scanner found the file infected. The report says so, & the file is left where it is for the user to see.
+      A workflow's Scan step that finds one ends the workflow, so nothing is made from the file.
+    WARNING!!! A scan was asked to write a report under a name that is not a plain text file's name, so it was written as <FILE_NAME>.
+      From v4.1.6. The report is always a txt file, & a name for it that is not one is replaced rather than trusted.
+      The core names every report User_Consolidated_Virus_Scan_Report.txt, so this means something other than the core
+      dispatched the Scan pipeline with a name of its own.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6872,11 +6915,14 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: An OCR operation was requested but no pipeline provides it!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: The <OPERATION_FAMILY> operation was requested but no pipeline provides it!
   Until v3.9.9 the Pipeline Core worded this OCR was requested but no OCR pipeline is installed!, because it
-  could only dispatch OCR. It names whatever operation family was requested now.
+  could only dispatch OCR. It names whatever operation family was requested now. Until v4.1.6 it began An, as
+  An OCR operation, which read wrongly for every family but OCR.
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: OCR was requested but no OCR pipeline is installed & this core has no built in OCR!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Identify was requested but no Identify pipeline is installed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Archive was requested but no Archiver pipeline is installed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: A virus scan was requested but no Scan pipeline is installed!
 
 FILE
   /convertCore.php
@@ -6897,6 +6943,12 @@ ERROR DESCRIPTION
   Without this error, an OCR request on an installation with no OCR pipeline would produce an empty result and raise only error 22, which reports that the OCR operation failed and does not report that no OCR was ever attempted.
   OCR is an operation pipeline rather than a conversion pipeline. It accepts a selection of files, chooses a different route for each one depending on whether it is a PDF, a document or an image, and returns a single verdict for the whole batch along with the list of files it produced.
   Since v4.1.2 Identify is an operation pipeline too, & the same reasoning applies to it. Its folder is /Resources/Pipelines/Identify/ & ERROR 31 follows this one in its place.
+  Since v4.1.6 archiving a selection of files & scanning files for a user are operation pipelines as well, the Archiver pipeline in
+  /Resources/Pipelines/Archiver/ & the Scan pipeline in /Resources/Pipelines/Scan/. ERROR 20 follows the Archiver's & ERROR 23 the Scan's.
+  The core says which, by the second & third wordings above, when the Pipeline Core itself is unavailable, & the Pipeline Core says
+  which by the first when it is there & no pipeline of that family is installed.
+  Where the pipeline is missing, a page offers no button for it & a workflow offers no step for it, so a page this server drew does
+  not ask for it. A request made by hand, or a page drawn before the pipeline was removed, still can.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

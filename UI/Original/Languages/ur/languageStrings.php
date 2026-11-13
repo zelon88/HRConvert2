@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -175,12 +175,6 @@ $Gui1Text37 = 'تازہ کریں';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = 'فائل تبدیل کرنے کے اختیارات';
-// / 'Bulk File Options'
-$Gui2Text2 = 'بلک فائل اختیارات';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = 'وائرس کے لیے تمام فائلوں کو اسکین کریں';
-// / 'Compress & Download All Files'
-$Gui2Text4 = 'تمام فائلوں کو کمپریس اور ڈاؤن لوڈ کریں';
 // / 'Download'
 $Gui2Text5 = 'ڈاؤن لوڈ';
 // / 'Share'
@@ -209,14 +203,6 @@ $Gui2Text16 = 'اس فائل کو آرکائیو کریں';
 $Gui2Text17 = 'فائل کا نام درج کریں: ';
 // / 'Format'
 $Gui2Text18 = 'فارمیٹ';
-// / 'Compress & Download'
-$Gui2Text19 = 'کمپریس اور ڈاؤن لوڈ کریں';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'ClamAV کے ساتھ اسکین کریں: ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'ScanCore کے ساتھ اسکین کریں: ';
-// / 'Scan All'
-$Gui2Text22 = 'سب اسکین کریں';
 // / 'Share This File'
 $Gui2Text23 = 'اس فائل کو شیئر کریں';
 // / 'Link Status: '
@@ -365,10 +351,6 @@ $Gui2Text95 = 'تفصیلات: ';
 $Gui2Text96 = 'نوٹس: ';
 // / 'Save report as file'
 $Gui2Text97 = 'رپورٹ کو فائل کے طور پر محفوظ کریں';
-// / 'Identify All Files'
-$Gui2Text98 = 'تمام فائلوں کی شناخت کریں';
-// / 'Identify All'
-$Gui2Text99 = 'سب کی شناخت کریں';
 // / 'Yes'
 $Gui2Text100 = 'ہاں';
 // / 'No'
@@ -549,6 +531,12 @@ $Gui2Text186 = 'یہ سرور اس ورک فلو کو نہیں چلا سکتا۔
 $Gui2Text187 = 'فائل پڑھی نہیں جا سکی۔';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = 'اس سرور پر ورک فلو بلڈر دستیاب نہیں ہے۔';
+// / 'Status'
+$Gui2Text189 = 'حالت';
+// / 'A workflow is running.'
+$Gui2Text190 = 'ایک ورک فلو چل رہا ہے۔';
+// / 'No workflow is running.'
+$Gui2Text191 = 'کوئی ورک فلو نہیں چل رہا۔';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

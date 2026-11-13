@@ -1,0 +1,10 @@
+{
+  "Format": "HRProprietary Workflow",
+  "Version": 1,
+  "Name": "Scan every file",
+  "Description": "Finds every file in this session, scans them all for viruses with every scanner this server has, & keeps one report beside them. No file needs to be ticked.",
+  "Steps": [
+    { "Operation": "Select" },
+    { "Operation": "Scan", "Options": { "Scanner": "all" } }
+  ]
+}

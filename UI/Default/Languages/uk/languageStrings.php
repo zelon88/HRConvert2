@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -176,12 +176,6 @@ $Gui1Text37 = 'Оновити';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = 'Параметри перетворення файлів';
-// / 'Bulk File Options'
-$Gui2Text2 = 'Параметри масового файлу';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = 'Сканувати всі файли на наявність вірусів';
-// / 'Compress & Download All Files'
-$Gui2Text4 = 'Стисніть і завантажте всі файли';
 // / 'Download'
 $Gui2Text5 = 'Завантажити';
 // / 'Share'
@@ -210,14 +204,6 @@ $Gui2Text16 = 'Архівуйте цей файл';
 $Gui2Text17 = 'Вкажіть назву файлу: ';
 // / 'Format'
 $Gui2Text18 = 'Формат';
-// / 'Compress & Download'
-$Gui2Text19 = 'Стиснути та завантажити';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'Сканування за допомогою ClamAV: ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'Сканування за допомогою ScanCore: ';
-// / 'Scan All'
-$Gui2Text22 = 'Сканувати все';
 // / 'Share This File'
 $Gui2Text23 = 'Поділитися цим файлом';
 // / 'Link Status: '
@@ -366,10 +352,6 @@ $Gui2Text95 = 'Подробиці: ';
 $Gui2Text96 = 'Примітки: ';
 // / 'Save report as file'
 $Gui2Text97 = 'Зберегти звіт у файл';
-// / 'Identify All Files'
-$Gui2Text98 = 'Визначити всі файли';
-// / 'Identify All'
-$Gui2Text99 = 'Визначити все';
 // / 'Yes'
 $Gui2Text100 = 'Так';
 // / 'No'
@@ -550,6 +532,12 @@ $Gui2Text186 = 'Цей сервер не може виконати цей роб
 $Gui2Text187 = 'Не вдалося прочитати файл.';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = 'Редактор робочих процесів недоступний на цьому сервері.';
+// / 'Status'
+$Gui2Text189 = 'Стан';
+// / 'A workflow is running.'
+$Gui2Text190 = 'Виконується робочий процес.';
+// / 'No workflow is running.'
+$Gui2Text191 = 'Жоден робочий процес не виконується.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

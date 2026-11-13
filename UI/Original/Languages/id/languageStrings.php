@@ -37,7 +37,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -180,12 +180,6 @@ $Gui1Text37 = 'Segarkan';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = 'Opsi Konversi Berkas';
-// / 'Bulk File Options'
-$Gui2Text2 = 'Opsi Berkas Massal';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = 'Pindai Semua Berkas dari Virus';
-// / 'Compress & Download All Files'
-$Gui2Text4 = 'Mampatkan & Unduh Semua Berkas';
 // / 'Download'
 $Gui2Text5 = 'Unduh';
 // / 'Share'
@@ -214,14 +208,6 @@ $Gui2Text16 = 'Arsipkan Berkas Ini';
 $Gui2Text17 = 'Tentukan Nama Berkas: ';
 // / 'Format'
 $Gui2Text18 = 'Format';
-// / 'Compress & Download'
-$Gui2Text19 = 'Mampatkan & Unduh';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'Pindai dengan ClamAV: ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'Pindai dengan ScanCore: ';
-// / 'Scan All'
-$Gui2Text22 = 'Pindai Semua';
 // / 'Share This File'
 $Gui2Text23 = 'Bagikan Berkas Ini';
 // / 'Link Status: '
@@ -372,10 +358,6 @@ $Gui2Text95 = 'Rincian: ';
 $Gui2Text96 = 'Catatan: ';
 // / 'Save report as file'
 $Gui2Text97 = 'Simpan laporan sebagai berkas';
-// / 'Identify All Files'
-$Gui2Text98 = 'Identifikasi Semua Berkas';
-// / 'Identify All'
-$Gui2Text99 = 'Identifikasi Semua';
 // / 'Yes'
 $Gui2Text100 = 'Ya';
 // / 'No'
@@ -556,6 +538,12 @@ $Gui2Text186 = 'Server ini tidak dapat menjalankan alur kerja ini.';
 $Gui2Text187 = 'Berkas tidak dapat dibaca.';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = 'Penyusun alur kerja tidak tersedia di server ini.';
+// / 'Status'
+$Gui2Text189 = 'Status';
+// / 'A workflow is running.'
+$Gui2Text190 = 'Sebuah alur kerja sedang berjalan.';
+// / 'No workflow is running.'
+$Gui2Text191 = 'Tidak ada alur kerja yang berjalan.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

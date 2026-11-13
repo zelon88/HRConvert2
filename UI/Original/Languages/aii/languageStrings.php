@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -175,12 +175,6 @@ $Gui1Text37 = 'ܚܲܕܸܬ';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = 'ܓܘܼܒܵܝܹܐ ܕܫܘܼܚܠܵܦ ܦܸܬܩܹܐ';
-// / 'Bulk File Options'
-$Gui2Text2 = 'ܓܘܼܒܵܝܹܐ ܕܦܸܬܩܹܐ ܡܪܘܼܚܩܹܐ';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = 'ܒܨܝܼ ܟܠܗܘܿܢ ܦܸܬܩܹܐ ܠܒܝܼܪܘܼܣܹܐ';
-// / 'Compress & Download All Files'
-$Gui2Text4 = 'ܥܘܼܨ ܘܨܵܚܸܒ ܟܠܗܘܿܢ ܦܸܬܩܹܐ';
 // / 'Download'
 $Gui2Text5 = 'ܨܵܚܸܒ';
 // / 'Share'
@@ -209,14 +203,6 @@ $Gui2Text16 = 'ܓܙܝܼ ܗܵܢܵܐ ܦܸܬܩܵܐ';
 $Gui2Text17 = 'ܚܲܬܸܡ ܫܸܡܵܐ ܕܦܸܬܩܵܐ: ';
 // / 'Format'
 $Gui2Text18 = 'ܫܘܼܚܠܵܦܵܐ';
-// / 'Compress & Download'
-$Gui2Text19 = 'ܥܘܼܨ ܘܨܵܚܸܒ';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'ܒܨܝܼ ܒܝܲܕ ClamAV: ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'Ref ܒܝܲܕ ScanCore: ';
-// / 'Scan All'
-$Gui2Text22 = 'ܒܨܝܼ ܟܠ';
 // / 'Share This File'
 $Gui2Text23 = 'ܫܵܪܸܟ ܗܵܢܵܐ ܦܸܬܩܵܐ';
 // / 'Link Status: '
@@ -365,10 +351,6 @@ $Gui2Text95 = 'ܦܘܼܫܵܩܹ̈ܐ: ';
 $Gui2Text96 = 'ܥܘܼܗܕܵܢܹ̈ܐ: ';
 // / 'Save report as file'
 $Gui2Text97 = 'ܢܛܘܿܪ ܡܘܼܕܥܵܢܘܼܬܵܐ ܐܲܝܟ ܦܸܬܩܵܐ';
-// / 'Identify All Files'
-$Gui2Text98 = 'ܦܪܘܿܫ ܟܠܗܘܿܢ ܦܸܬܩܹܐ';
-// / 'Identify All'
-$Gui2Text99 = 'ܦܪܘܿܫ ܟܠ';
 // / 'Yes'
 $Gui2Text100 = 'ܐܝܼܢ';
 // / 'No'
@@ -549,6 +531,12 @@ $Gui2Text186 = 'ܗܵܢܵܐ ܡܫܲܡܫܵܢܵܐ ܠܵܐ ܡܵܨܹܐ ܠܡܲܪܗܵܛܵ
 $Gui2Text187 = 'ܦܸܬܩܵܐ ܠܵܐ ܡܨܹܐ ܠܡܸܬܩܪܵܝܵܐ.';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = 'ܒܵܢܝܵܐ ܕܡܲܪܕܝܵܬ݂ܵܐ ܕܦܘܼܠܚܵܢܵܐ ܠܵܐ ܝܠܹܗ ܡܛܲܝܒܵܐ ܥܲܠ ܗܵܢܵܐ ܡܫܲܡܫܵܢܵܐ.';
+// / 'Status'
+$Gui2Text189 = 'ܚܵܠܵܐ';
+// / 'A workflow is running.'
+$Gui2Text190 = 'ܚܕܵܐ ܡܲܪܕܝܼܬܵܐ ܕܦܘܼܠܚܵܢܵܐ ܟܹܐ ܪܵܗܛܵܐ.';
+// / 'No workflow is running.'
+$Gui2Text191 = 'ܠܲܝܬ݂ ܡܲܪܕܝܼܬܵܐ ܕܦܘܼܠܚܵܢܵܐ ܕܪܵܗܛܵܐ.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

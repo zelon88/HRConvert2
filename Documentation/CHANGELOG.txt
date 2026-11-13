@@ -27,6 +27,26 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 --------------------
 COMMIT 11/12/2026
+v4.1.6 - Archiving & scanning for a user are operation pipelines, every-file workflows replace Bulk File Options, & every panel takes its scheme's colours.
+
+-v4.1.6.
+-New Archiver operation pipeline, which archives a selection of files. It took the 4000 block & 13012 from convertCore.php. New error 4006 refuses a format it does not write.
+-New Scan operation pipeline, which scans files for a user through runVirusScan(). It took the 16000, 17000, 19000 & 20000 blocks from convertCore.php.
+-FIX. A bootable disk image was offered for archiving a file & always failed with 4004. Only the formats the Archiver writes are offered.
+-A file found infected while archiving is refused by 4003 & left where it is.
+-A file's Scan, Identify, OCR & Archive buttons are drawn only where that pipeline is installed, as a workflow offers only those. New GUI variables $OfferedOperations & $ArchiveOperationArray.
+-Retired Bulk File Options & 9 strings. New shipped workflows scan-every-file, identify-every-file & archive-every-file, each starting with a Select step, so none needs a ticked file.
+-New Status panel under the Workflows boxes, which says whether a workflow is running. 3 new strings in every language pack, in all 26 languages.
+-A page loaded again while a workflow runs draws it, locked, & draws the list again when it ends. workflowStatus says Document while one runs.
+-Every panel takes its colours from 8 each scheme names once in styleCore.php. A panel that stays is framed in the scheme with a deep shadow, & a step's card has a light edge. No menu has a divider before or after it.
+-FIX. A file's own option panels were a fixed pale blue in every scheme, & pale text on pale in the dark one.
+-The box that runs a workflow keeps to its steps' row, takes a row of its own when they fill theirs & names its buttons where it has room. Its menu opens toward the boxes it adds to. A step's back arrow takes its options button's place & its heading has a line under it. A select in the panel has a normal sized arrow.
+-34006 names the operation family as The <FAMILY> operation.
+-ERROR_DESCRIPTIONS names the new home of every moved number, corrects 4002, 4003 & 13012 & lists the warnings a user's scan raises. ABOUT_PIPELINE_COMPONENTS, ABOUT_WORKFLOWS, ABOUT_REST_API, CREATING_GUIS, ENGINE_MIGRATION_STATUS & DEVELOPMENT_NOTES describe the change. CREATING_LANGUAGE_PACKS counted three interfaces.
+-The core, the Pipeline Core, the Workflow Core, the Archive pipeline, both interfaces, every language pack & the contract are v4.1.6, & every pin to them requires v4.1.6. The Archiver & Scan pipelines are new at v4.1.6.
+
+--------------------
+COMMIT 11/12/2026
 v4.1.5 - A workflow can be built in the page, run, exported & imported, & Select reads the session part way through one.
 
 -v4.1.5.

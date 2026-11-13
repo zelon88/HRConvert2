@@ -328,9 +328,9 @@ use rather than testing a reply for itself:
   download_file($basePath, $fileName), Points the hidden anchor at a file & triggers it.
 
 A file list drawn again after each operation publishes the files it was drawn from, each time it is
-drawn, with HRC2.configure({ sessionFiles: [...], filesListed: true }). The included GUIs do this at
-the top of the list. Archive All & Scan All read those files when pressed, & without them they act
-on the files the page held when it was first drawn.
+drawn, with HRC2.configure({ sessionFiles: [...] }). The included GUIs do this at the top of the list.
+Start Over reads those files when pressed, & without them it empties the files the page held when
+it was first drawn. Until v4.1.6 the list also said filesListed, which the retired bulk controls read.
 
 AN INTERFACE MUST NOT DEPEND ON THE SCRIPT LIBRARY BEING THE CURRENT COPY.
 A GUI page is generated fresh on every request. The script library beside it is a static
@@ -385,8 +385,14 @@ This GUI only has access to certain variables. Variables that are available to t
   $GuiJSDir, $GuiImageDir, $EbookInputArray, $EbookOutputArray, $BootableIsoArray, $AllowBootableIsoImage, $ShowFiles, $FileListOnly, $NoGui,
   $EnableMemoryProtection, $Verbose, $LanguageBaselineFile, $ImageOutputArray, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL,
   $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $WorkflowsJsPath,
-  $EnableWorkflowBuilder, $EnableWorkflowImportExport
+  $EnableWorkflowBuilder, $EnableWorkflowImportExport, $ArchiveOperationArray, $OfferedOperations
 This list is the whole contract & it is the list buildGUI() declares.
+$ArchiveOperationArray is the formats a file or a selection may be archived in, which the Archiver
+pipeline writes & config.php allows. Offer it for archiving a file, & keep $ArchiveArray for converting
+an archive, because $ArchiveArray holds the bootable disk images only an archive can be made into.
+$OfferedOperations says which of a file's operations to draw, as Scan, Identify, OCR & Archive, each
+TRUE or FALSE. Each is an operation pipeline's, & one whose pipeline is missing is FALSE, so a page
+draws no button that could only fail, as a workflow offers no step for it. Both are from v4.1.6.
 Until v4.1.2 it named $ImageArray twice & left out seven that buildGUI() already declared. A GUI that reads
 anything not named here is reading a variable that does not exist in its scope, which is a
 PHP warning printed into the page & an empty string where the value should have been.
@@ -411,6 +417,23 @@ The $ButtonCode variable is set by the UI/<SELECTED_GUI>/styleCore.php file.
 There are 7 supported colors; red, green, blue, grey, orange, purple & dark.
 The code for each color is contained in styleCore.php.
 The loading spinner will change color as well. There is one spinner .gif file for each style & supported color.
+
+Each colour's code begins by naming the colours every panel is drawn with, as custom properties on :root.
+  --hrc2-accent        The scheme's own colour. A tab in force, a ticked box, a step's number, a focus ring.
+  --hrc2-accent-rgb    The accent again as three numbers, so a wash of it can be drawn at any strength.
+  --hrc2-on-accent     What is written on the accent.
+  --hrc2-frame         The frame of a panel that stays where it is.
+  --hrc2-tint          A panel's colour, & the file list's.
+  --hrc2-ink           What is written on the tint.
+  --hrc2-surface       What a panel sits on, which is the card in the Default GUI & the page in the Original.
+  --hrc2-shade-rgb     What a line or an edge is drawn in, black on a light scheme & white on the dark one.
+HRConvert2.css draws everything from these & names no colour of its own, apart from good & bad, which
+are the same in every scheme, & the grey scheme's values for a page drawn without a scheme.
+A new colour is therefore these eight lines, each a colour the scheme already has, rather than a copy
+of the stylesheet. Every one is a colour the buttons, the card or the list already use.
+Two kinds of box are drawn from them. A panel, with class hrc2-panel, stays where it is, & is drawn in
+the frame with a deep shadow. A card comes & goes, as a file, a step & a file's own options do, & has a
+light edge & a light shadow. A menu a button opens is a panel, & has no divider before or after it.
 A GUI must define a button code variable for every supported colour in styleCore.php.
 The core reads $greenButtonCode, $blueButtonCode, $redButtonCode, $orangeButtonCode, $purpleButtonCode, $darkButtonCode & $defaultButtonCode.
 A GUI that omits any of them will fail colour verification.
@@ -493,8 +516,6 @@ PHP warning would come first.
     fileName      The file.
     reportId      The box that asks for a report.
     nameId        The report's name, which is greyed out unless the box is ticked.
-  HRC2.bindIdentifyAll(spec), Every file the list shows. The same keys, with fileNames in
-    place of fileName & no openId. The files are read when it is pressed.
   HRC2.configure({ identifyText: { yes, no, unknown, failure } }), The words it writes. They come
     from the language pack, as every word a user sees does.
 A panel is any element with data-identify-file, naming its file, & data-identify-suffix.
@@ -550,7 +571,15 @@ these ids unless elements names others.
                         Where it writes the files, reads a name pattern, lists the workflows,
                         describes one, runs, stops & reports.
 Put the words for workflows being unavailable into hrc2WfStatus as the page draws it, so a page
-whose library did not load still says something true. The library replaces them once it runs.
+whose library did not load still says something true. The library replaces them once it runs, &
+says no workflow is running whenever it has nothing else to say. The included GUIs put hrc2WfStatus
+in a panel of its own, hrc2WfStatusBox, under the boxes, with a heading, so what it says is never
+drawn loose on the page. settings carries running & idle, the words for a workflow running & none.
+A page loaded again while a workflow runs is drawn as it runs. The library reads the running
+workflow from the status & draws it, locked, until it ends. An interface needs nothing more for it.
+Name each button in hrc2WfRunBox with a label for it, of class hrc2-wf-caption, straight after the
+button. The included GUIs show a label only where the box has room for it, & hide the label of a
+button that is hidden. A label for the add button is pressed as the button is.
 Draw the panel only while $EnableWorkflows is on. See ABOUT_WORKFLOWS.txt.
 
 The builder needs these too. settings carries builder & importExport, as $EnableWorkflowBuilder &
@@ -562,9 +591,10 @@ the server names it.
   hrc2WfTabs            Where it draws the tabs. Give it role tablist.
   hrc2WfTabPanel        Where it draws a tab's choices. Give it role tabpanel.
   hrc2WfTools           Where it draws the workflow's name, New, Import & Export.
-  hrc2WfAdd             The add button, in hrc2WfRunBox above hrc2WfRun, hidden until the builder is drawn.
+  hrc2WfAdd             The add button, in hrc2WfRunBox before hrc2WfRun, hidden until the builder is drawn.
   hrc2WfAddMenu         Its menu, hidden, holding two buttons with data-hrc2-add of pipeline & files.
-                        The library places the menu under the button & keeps it on the screen.
+                        The library places the menu under the button, opening toward the boxes it
+                        adds to, & keeps it on the screen.
 The library draws a box for each step into hrc2WfBoxes, before hrc2WfRunBox, & hides hrc2WfPickBox
 while the builder is drawn. Give hrc2WfRunBox position relative, so the menu is placed against it.
 The included GUIs style what it draws by the hrc2-wf- classes in HRConvert2.css.

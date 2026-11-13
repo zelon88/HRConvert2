@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.5.
+// / v4.1.6.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -97,9 +97,13 @@ $EngineAcceptedPipelines = array(
   'Video' => 'v4.0.8',
   'Ebook' => 'v4.0.8',
   'Audio' => 'v4.0.8',
-  'Archive' => 'v4.1.1',
+  'Archive' => 'v4.1.6',
   // / The second operation pipeline. It reads every file & changes none.
   'Identify' => 'v4.1.2',
+  // / The third & fourth, from v4.1.6. The Archiver puts a selection of files into archives, & Scan scans the files a user asks it to.
+  // / Each was code in convertCore.php until then.
+  'Archiver' => 'v4.1.6',
+  'Scan' => 'v4.1.6',
   // / Scanner pipelines. They declare no formats & are chosen by name.
   'ClamAV' => 'v4.0.8',
   // / The first pipeline of kind file. Operations that do not care what is in a file.

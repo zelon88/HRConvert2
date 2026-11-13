@@ -19,6 +19,61 @@ select::-ms-expand {
     padding: 5px\9; } }
 
 /* / -----------------------------------------------------------------------------------
+   / THE COLOURS EVERYTHING BELOW IS DRAWN WITH.
+   / Each colour scheme in styleCore.php names its own accent, frame, tint, ink, surface &
+   / shade, & these are the grey scheme's, for a page drawn without one.
+   / Good & bad are the same in every scheme, because they say what a control does rather
+   / than whose it is. Running is good & stopping is bad.
+   / The rest are made from the scheme's own, so a line, an edge, a wash or a shadow is the
+   / same strength in every scheme & no scheme carries a shade of its own for any of them.
+   / Nothing below names a colour of its own. A rule that needs one names one of these.
+   / ----------------------------------------------------------------------------------- */
+:root {
+  --hrc2-accent: #5B5B5B;
+  --hrc2-accent-rgb: 91, 91, 91;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #5B5B5B;
+  --hrc2-tint: #eef0f2;
+  --hrc2-ink: #3a3a3a;
+  --hrc2-surface: #ffffff;
+  --hrc2-shade-rgb: 0, 0, 0;
+  --hrc2-good: #27ae60;
+  --hrc2-bad: #c0392b;
+  --hrc2-hairline: rgba(var(--hrc2-shade-rgb), 0.15);
+  --hrc2-edge: rgba(var(--hrc2-shade-rgb), 0.3);
+  --hrc2-wash: rgba(var(--hrc2-accent-rgb), 0.16);
+  --hrc2-press: rgba(var(--hrc2-accent-rgb), 0.28);
+  --hrc2-glow: rgba(var(--hrc2-accent-rgb), 0.3);
+  --hrc2-lift: 0 1px 3px rgba(0, 0, 0, 0.14);
+  --hrc2-anchor: 0 3px 8px rgba(0, 0, 0, 0.32); }
+
+/* / -----------------------------------------------------------------------------------
+   / TWO KINDS OF BOX, & EVERY BOX IS ONE OF THEM.
+   / A panel stays where it is. The Pipelines panel, the box that runs a workflow, the Status
+   / panel, the settings & the file list are panels. Each is drawn in the scheme's frame with
+   / a deep shadow, so it reads as part of the page.
+   / A card comes & goes. A file, a step & a file's own options are cards. Each has a light
+   / edge & a light shadow, so it reads as something placed on a panel or beside one.
+   / A menu a button opens is a panel. It has no divider before or after it, because the frame
+   / already says where it starts & ends.
+   / ----------------------------------------------------------------------------------- */
+.hrc2-panel,
+.file-list-panel {
+  box-sizing: border-box;
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink);
+  border: 2px solid var(--hrc2-frame);
+  border-radius: 8px;
+  box-shadow: var(--hrc2-anchor); }
+.hrc2-panel[hidden] {
+  display: none; }
+/* / A menu a button opens is a panel in the column of buttons, with the same space above it as any panel.
+   / Its sides are narrow, so a row of its buttons fits as many as the column did before it was a panel. */
+.hrc2-menu {
+  margin: 12px auto 0 auto;
+  padding: 8px 4px; }
+
+/* / -----------------------------------------------------------------------------------
    / EVERY FILE OPERATION PANEL IS ONE CARD.
    / The image conversion panel carried this appearance as an inline style & no other
    / operation carried it at all, so one operation out of twenty looked designed & the rest
@@ -36,13 +91,17 @@ select::-ms-expand {
    /
    / Margins are symmetric rather than left only. The original indented with margin-left &
    / padding-left, which puts the inset on the wrong side of a right to left interface.
+   /
+   / It is drawn on the surface the list sits on, so it reads as a card on the list in every
+   / scheme. It was a fixed pale blue, which put pale text on a pale card in the dark one.
    / ----------------------------------------------------------------------------------- */
 .file-operation-panel {
   padding: 10px;
   margin: 3px 10px 10px 10px;
-  background-color: #edf9ff;
-  border: 1px solid #bfbfbf;
-  border-radius: 7px; }
+  background-color: var(--hrc2-surface);
+  border: 1px solid var(--hrc2-edge);
+  border-radius: 7px;
+  box-shadow: var(--hrc2-lift); }
 
 /* / -----------------------------------------------------------------------------------
    / The sort controls, the line under each file's name & what Identify read about a file.
@@ -63,7 +122,7 @@ select::-ms-expand {
   text-decoration: underline; }
 .sort-button.sort-current {
   font-weight: 700;
-  border-color: rgba(0, 0, 0, 0.3);
+  border-color: var(--hrc2-edge);
   text-decoration: none; }
 /* / The size & the time a file changed, under its name, & what Identify says it is once asked. */
 /* / Each is isolated in the markup, so a language read from right to left keeps each one whole & puts them in its own order. */
@@ -109,7 +168,7 @@ select::-ms-expand {
    / The boxes that tick files, & the bar at the top of their column.
    / A box is a real checkbox laid over the square a user sees, so it can still be reached, ticked & read by anything.
    / The square shows the file's place in the order it was ticked, & the box at the top shows a tick for all & a dash for some.
-   / The colours are fixed rather than inherited, so the number reads against its square in every scheme.
+   / A ticked square is the scheme's accent with its own colour written on it, so the number reads against it in every scheme.
    / Spacing is logical, so the gap after a box falls on the right side of it whichever way a language reads.
    / ----------------------------------------------------------------------------------- */
 .hrc2-pick {
@@ -138,7 +197,7 @@ select::-ms-expand {
   box-sizing: border-box;
   width: 22px;
   height: 22px;
-  border: 2px solid rgba(127, 127, 127, 0.9);
+  border: 2px solid var(--hrc2-edge);
   border-radius: 5px;
   font-size: 12px;
   font-weight: 700;
@@ -146,11 +205,11 @@ select::-ms-expand {
   pointer-events: none; }
 .hrc2-pick input:checked + .hrc2-pick-mark,
 .hrc2-pick input:indeterminate + .hrc2-pick-mark {
-  background-color: #3d71b3;
-  border-color: #3d71b3;
-  color: #ffffff; }
+  background-color: var(--hrc2-accent);
+  border-color: var(--hrc2-accent);
+  color: var(--hrc2-on-accent); }
 .hrc2-pick input:focus-visible + .hrc2-pick-mark {
-  outline: 2px solid #3d71b3;
+  outline: 2px solid var(--hrc2-accent);
   outline-offset: 2px; }
 .hrc2-pick-all:checked + .hrc2-pick-mark::after {
   content: '\2713'; }
@@ -172,12 +231,13 @@ select::-ms-expand {
   height: 22px;
   padding: 0 6px;
   background: none;
-  border: 1px solid rgba(127, 127, 127, 0.7);
+  border: 1px solid var(--hrc2-edge);
   border-radius: 4px;
   color: inherit;
   font: inherit;
   line-height: 1;
   cursor: pointer; }
+/* / A menu a button opens is drawn on the surface, with the deep shadow every panel has, so it reads over anything. */
 /* / The menu opens under its arrow & lines up with the side a line of this language starts on. */
 .hrc2-select-menu {
   position: absolute;
@@ -189,11 +249,11 @@ select::-ms-expand {
   min-width: 11em;
   margin-top: 2px;
   padding: 4px 0;
-  background-color: #ffffff;
-  color: #222222;
-  border: 1px solid rgba(0, 0, 0, 0.3);
+  background-color: var(--hrc2-surface);
+  color: var(--hrc2-ink);
+  border: 1px solid var(--hrc2-edge);
   border-radius: 6px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--hrc2-anchor);
   text-align: start; }
 [dir='rtl'] .hrc2-select-menu {
   left: auto;
@@ -213,7 +273,7 @@ select::-ms-expand {
   cursor: pointer; }
 .hrc2-select-menu button:hover,
 .hrc2-select-menu button:focus-visible {
-  background-color: rgba(61, 113, 179, 0.18); }
+  background-color: var(--hrc2-wash); }
 .hrc2-selection-count {
   margin: 0 0 0 6px;
   margin-inline-start: 6px;
@@ -221,41 +281,48 @@ select::-ms-expand {
   opacity: 0.85; }
 
 /* / -----------------------------------------------------------------------------------
-   / The Workflows panel. Three boxes, which are the files, the workflow & running it.
-   / The box that needs attention next is outlined. The boxes wrap onto new lines on a narrow screen.
-   / Colours are inherited where they can be, so the panel reads in every scheme, the dark one included.
+   / The Workflows panel. The Pipelines panel, the boxes in a row & the Status panel.
+   / The row holds the files, the workflow & the box that runs it, & wraps onto new lines on a narrow screen.
+   / The box that needs attention next is outlined in the accent.
    / ----------------------------------------------------------------------------------- */
+.hrc2-workflows {
+  margin-top: 12px; }
 .hrc2-wf-boxes {
   display: flex;
   flex-wrap: wrap;
   align-items: stretch;
   gap: 8px;
-  margin: 6px 0; }
+  margin: 10px 0; }
 .hrc2-wf-boxes[hidden] {
   display: none; }
+/* / A card in the row. It grows three times as fast as the box that runs the workflow, so the cards take the room a row has & that box keeps to its buttons.
+   / A card is never narrower than its heading needs in most languages, so a row holds fewer cards rather than cards too narrow to name their steps. */
 .hrc2-wf-box {
-  flex: 1 1 140px;
+  flex: 3 1 160px;
   min-width: 0;
   box-sizing: border-box;
   padding: 8px;
-  border: 2px solid rgba(127, 127, 127, 0.45);
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink);
+  border: 2px solid var(--hrc2-edge);
   border-radius: 8px;
+  box-shadow: var(--hrc2-lift);
   text-align: start;
   font-size: 13px;
   transition: border-color 0.2s, box-shadow 0.2s; }
-.hrc2-wf-run-box {
-  flex: 0 0 64px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px; }
 .hrc2-wf-attention {
-  border-color: #3d71b3;
-  box-shadow: 0 0 0 3px rgba(61, 113, 179, 0.3); }
+  border-color: var(--hrc2-accent);
+  box-shadow: 0 0 0 3px var(--hrc2-glow); }
+.hrc2-panel.hrc2-wf-attention {
+  box-shadow: 0 0 0 3px var(--hrc2-glow), var(--hrc2-anchor); }
 .hrc2-wf-label {
   margin: 0 0 4px 0;
   font-weight: 700; }
+/* / The line under a box's heading. It is the line under the tabs of the Pipelines panel, so a heading is parted from what it heads the same way everywhere. */
+.hrc2-wf-head {
+  margin: 0 0 6px 0;
+  padding: 0 0 6px 0;
+  border-bottom: 1px solid var(--hrc2-hairline); }
 .hrc2-wf-files {
   max-height: 10em;
   overflow: auto;
@@ -282,58 +349,31 @@ select::-ms-expand {
   box-sizing: border-box;
   margin-top: 2px;
   font-family: monospace; }
-.hrc2-wf-pattern input[aria-invalid='true'] {
-  border-color: #c0392b;
-  outline: 1px solid #c0392b; }
-/* / The colour scheme draws the arrow inside the end of every select, so the text stops short of it. */
-.hrc2-wf-select {
-  width: 100%;
-  max-width: 100%;
-  padding-right: 36px;
-  padding-inline-end: 36px;
+.hrc2-wf-pattern input[aria-invalid='true'],
+.hrc2-wf-row-control[aria-invalid='true'] {
+  border-color: var(--hrc2-bad);
+  outline: 1px solid var(--hrc2-bad); }
+/* / The colour scheme draws an arrow inside the end of every select, sized to a fraction of its width.
+   / A select in this panel can be as wide as the panel, so its arrow is drawn at the size a narrow one has, & its text stops short of it. */
+.hrc2-workflows select {
+  background-size: 18px 18px; }
+.hrc2-wf-select,
+select.hrc2-wf-row-control {
+  padding-right: 30px;
+  padding-inline-end: 30px;
   padding-inline-start: 5px;
   text-overflow: ellipsis; }
-[dir='rtl'] .hrc2-wf-select {
-  padding-left: 36px;
+[dir='rtl'] .hrc2-wf-select,
+[dir='rtl'] select.hrc2-wf-row-control {
+  padding-left: 30px;
   padding-right: 5px; }
+.hrc2-wf-select {
+  width: 100%;
+  max-width: 100%; }
 .hrc2-wf-about {
   margin-top: 6px;
   font-size: 12px;
   overflow-wrap: anywhere; }
-.hrc2-wf-run,
-.hrc2-wf-stop {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 2px solid rgba(127, 127, 127, 0.6);
-  border-radius: 50%;
-  background: none;
-  color: inherit;
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer; }
-.hrc2-wf-run:not(:disabled) {
-  border-color: #27ae60;
-  color: #27ae60; }
-.hrc2-wf-stop {
-  border-color: #c0392b;
-  color: #c0392b; }
-.hrc2-wf-run:disabled,
-.hrc2-wf-stop:disabled {
-  opacity: 0.4;
-  cursor: default; }
-.hrc2-wf-run[hidden],
-.hrc2-wf-stop[hidden] {
-  display: none; }
-.hrc2-wf-status {
-  min-height: 1.2em;
-  margin: 6px 0;
-  font-size: 13px; }
-.hrc2-wf-status p {
-  margin: 2px 0; }
-.hrc2-wf-status progress {
-  width: 100%;
-  max-width: 320px; }
 .hrc2-wf-made {
   padding: 0 2px;
   background: none;
@@ -344,28 +384,166 @@ select::-ms-expand {
   cursor: pointer; }
 
 /* / -----------------------------------------------------------------------------------
-   / The workflow builder, drawn where a server allows it.
-   / The Pipelines section holds a tab for the library & one for each operation, & each tab lists its choices.
-   / Each step is a box of its own in the row of boxes, & a box whose options are open takes the whole row.
-   / The box that runs the workflow is split, with the add button above the run button.
-   / Spacing & corners are logical, so everything falls on the right side whichever way a language reads.
-   / Colours are inherited where they can be, & the menu's are fixed, as the select menu's are, so it reads over anything.
+   / The box that runs the workflow. It is a panel, because it stays at the end of the row.
+   / It grows a third as fast as a card, so it keeps to its buttons while it shares a row & fills a row it has to itself.
+   / It is sized by the row & never by its words, so naming its buttons can never move it onto another row.
+   / Its buttons are named beside them once it has the room, & side by side once it has more. The names are labels, so pressing one presses its button.
+   / A browser that cannot measure the box shows the buttons alone, as every box did before.
+   / It sits above what follows it, so the add button's menu opens over the Status panel & the list.
    / ----------------------------------------------------------------------------------- */
-.hrc2-wf-pipelines {
-  box-sizing: border-box;
-  margin: 6px 0;
+.hrc2-wf-run-box {
+  position: relative;
+  z-index: 3;
+  flex: 1 1 64px;
+  min-width: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px;
-  border: 2px solid rgba(127, 127, 127, 0.45);
-  border-radius: 8px;
+  text-align: start;
+  font-size: 13px;
+  container-type: inline-size; }
+.hrc2-wf-run-actions {
+  display: grid;
+  grid-template-columns: auto;
+  justify-items: center;
+  align-items: center;
+  gap: 8px; }
+.hrc2-wf-caption {
+  display: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer; }
+.hrc2-wf-add[hidden] + .hrc2-wf-caption,
+.hrc2-wf-run[hidden] + .hrc2-wf-caption,
+.hrc2-wf-stop[hidden] + .hrc2-wf-caption {
+  display: none; }
+.hrc2-wf-add:disabled + .hrc2-wf-caption,
+.hrc2-wf-run:disabled + .hrc2-wf-caption,
+.hrc2-wf-stop:disabled + .hrc2-wf-caption {
+  opacity: 0.4;
+  cursor: default; }
+@container (min-width: 170px) {
+  .hrc2-wf-run-actions {
+    grid-template-columns: auto auto;
+    justify-items: start;
+    column-gap: 10px; }
+  .hrc2-wf-caption {
+    display: block; } }
+@container (min-width: 380px) {
+  .hrc2-wf-run-actions {
+    grid-template-columns: none;
+    grid-auto-flow: column; }
+  .hrc2-wf-run,
+  .hrc2-wf-stop {
+    margin-left: 26px;
+    margin-inline-start: 26px; }
+  [dir='rtl'] .hrc2-wf-run,
+  [dir='rtl'] .hrc2-wf-stop {
+    margin-left: 0;
+    margin-right: 26px; } }
+.hrc2-wf-add,
+.hrc2-wf-run,
+.hrc2-wf-stop {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid var(--hrc2-edge);
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  line-height: 1;
+  cursor: pointer; }
+.hrc2-wf-add {
+  border-color: var(--hrc2-accent);
+  color: var(--hrc2-accent);
+  font-size: 24px; }
+.hrc2-wf-run,
+.hrc2-wf-stop {
+  font-size: 18px; }
+.hrc2-wf-run:not(:disabled) {
+  border-color: var(--hrc2-good);
+  color: var(--hrc2-good); }
+.hrc2-wf-stop {
+  border-color: var(--hrc2-bad);
+  color: var(--hrc2-bad); }
+.hrc2-wf-add:disabled,
+.hrc2-wf-run:disabled,
+.hrc2-wf-stop:disabled {
+  opacity: 0.4;
+  cursor: default; }
+.hrc2-wf-add[hidden],
+.hrc2-wf-run[hidden],
+.hrc2-wf-stop[hidden] {
+  display: none; }
+/* / The add button's menu opens toward the boxes it adds to, & is drawn as the select menu is. */
+.hrc2-wf-add-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 11em;
+  padding: 4px 0;
+  background-color: var(--hrc2-surface);
+  color: var(--hrc2-ink);
+  border: 1px solid var(--hrc2-edge);
+  border-radius: 6px;
+  box-shadow: var(--hrc2-anchor);
+  text-align: start; }
+.hrc2-wf-add-menu[hidden] {
+  display: none; }
+.hrc2-wf-add-menu button {
+  display: block;
+  width: 100%;
+  padding: 4px 12px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer; }
+.hrc2-wf-add-menu button:hover,
+.hrc2-wf-add-menu button:focus-visible {
+  background-color: var(--hrc2-wash); }
+
+/* / -----------------------------------------------------------------------------------
+   / The Status panel. It is always there while the panel is open, so what it says never appears from nowhere.
+   / It says whether a workflow is running, how far it has got & how it ended, & why a workflow was refused.
+   / ----------------------------------------------------------------------------------- */
+.hrc2-wf-status-box {
+  margin: 10px 0 6px 0;
+  padding: 8px;
   text-align: start;
   font-size: 13px; }
-.hrc2-wf-pipelines[hidden] {
-  display: none; }
+.hrc2-wf-status {
+  min-height: 1.2em; }
+.hrc2-wf-status p {
+  margin: 2px 0; }
+.hrc2-wf-status progress {
+  width: 100%;
+  max-width: 320px;
+  accent-color: var(--hrc2-accent); }
+
+/* / -----------------------------------------------------------------------------------
+   / The workflow builder, drawn where a server allows it.
+   / The Pipelines panel holds a tab for the library & one for each operation, & each tab lists its choices.
+   / Each step is a card of its own in the row, & a card whose options are open takes the whole row.
+   / A step's heading is one line, its number, its name & its buttons, & the line under it parts it from what the step does.
+   / Spacing & corners are logical, so everything falls on the right side whichever way a language reads.
+   / ----------------------------------------------------------------------------------- */
+.hrc2-wf-pipelines {
+  margin: 0 0 6px 0;
+  padding: 8px;
+  text-align: start;
+  font-size: 13px; }
 .hrc2-wf-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
-  border-bottom: 1px solid rgba(127, 127, 127, 0.45); }
+  border-bottom: 1px solid var(--hrc2-hairline); }
 .hrc2-wf-tab {
   padding: 4px 10px;
   background: none;
@@ -375,13 +553,16 @@ select::-ms-expand {
   font: inherit;
   cursor: pointer; }
 .hrc2-wf-tab[aria-selected='true'] {
-  border-bottom-color: #3d71b3;
+  border-bottom-color: var(--hrc2-accent);
   font-weight: 700; }
 .hrc2-wf-tab:focus-visible,
 .hrc2-wf-chip:focus-visible,
 .hrc2-wf-icon:focus-visible,
-.hrc2-wf-tool:focus-visible {
-  outline: 2px solid #3d71b3;
+.hrc2-wf-tool:focus-visible,
+.hrc2-wf-add:focus-visible,
+.hrc2-wf-run:focus-visible,
+.hrc2-wf-stop:focus-visible {
+  outline: 2px solid var(--hrc2-accent);
   outline-offset: 1px; }
 .hrc2-wf-tab-panel {
   padding: 6px 0;
@@ -398,20 +579,19 @@ select::-ms-expand {
 .hrc2-wf-chip {
   padding: 2px 8px;
   background: none;
-  border: 1px solid rgba(127, 127, 127, 0.7);
+  border: 1px solid var(--hrc2-edge);
   border-radius: 12px;
   color: inherit;
   font: inherit;
   cursor: pointer; }
 .hrc2-wf-chip:hover:not(:disabled) {
-  background-color: rgba(61, 113, 179, 0.18); }
+  background-color: var(--hrc2-wash); }
 .hrc2-wf-chip[aria-pressed='true'] {
-  border-color: #3d71b3;
-  background-color: rgba(61, 113, 179, 0.28); }
+  border-color: var(--hrc2-accent);
+  background-color: var(--hrc2-press); }
 .hrc2-wf-chip:disabled,
 .hrc2-wf-tool:disabled,
-.hrc2-wf-icon:disabled,
-.hrc2-wf-add:disabled {
+.hrc2-wf-icon:disabled {
   opacity: 0.4;
   cursor: default; }
 .hrc2-wf-tools {
@@ -420,7 +600,7 @@ select::-ms-expand {
   align-items: center;
   gap: 6px;
   padding-top: 6px;
-  border-top: 1px solid rgba(127, 127, 127, 0.3); }
+  border-top: 1px solid var(--hrc2-hairline); }
 .hrc2-wf-name {
   display: flex;
   flex: 1 1 14em;
@@ -433,7 +613,7 @@ select::-ms-expand {
 .hrc2-wf-tool {
   padding: 2px 10px;
   background: none;
-  border: 1px solid rgba(127, 127, 127, 0.7);
+  border: 1px solid var(--hrc2-edge);
   border-radius: 4px;
   color: inherit;
   font: inherit;
@@ -442,13 +622,19 @@ select::-ms-expand {
   margin-top: 4px; }
 .hrc2-wf-box[hidden] {
   display: none; }
-.hrc2-wf-step {
-  position: relative; }
 .hrc2-wf-step-heading {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px; }
+  gap: 4px 6px;
+  min-height: 24px; }
+.hrc2-wf-step-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%; }
 .hrc2-wf-step-number {
+  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -457,12 +643,16 @@ select::-ms-expand {
   padding: 0 3px;
   box-sizing: border-box;
   border-radius: 9px;
-  background-color: #3d71b3;
-  color: #ffffff;
+  background-color: var(--hrc2-accent);
+  color: var(--hrc2-on-accent);
   font-size: 11px;
   font-weight: 700; }
+.hrc2-wf-step-name {
+  overflow-wrap: break-word; }
 .hrc2-wf-step-controls {
+  flex: none;
   display: inline-flex;
+  align-items: center;
   gap: 2px;
   margin-left: auto;
   margin-inline-start: auto;
@@ -482,25 +672,27 @@ select::-ms-expand {
   line-height: 1;
   cursor: pointer; }
 .hrc2-wf-icon:hover:not(:disabled) {
-  border-color: rgba(127, 127, 127, 0.7); }
+  border-color: var(--hrc2-edge); }
+/* / The back button of an open step stands where its options button stood, & is drawn a little larger & in the accent so it is found at once. */
+.hrc2-wf-back {
+  border-color: var(--hrc2-edge);
+  color: var(--hrc2-accent);
+  font-size: 18px;
+  font-weight: 700; }
+.hrc2-wf-back:hover:not(:disabled) {
+  border-color: var(--hrc2-accent);
+  background-color: var(--hrc2-wash); }
+[dir='rtl'] .hrc2-wf-back {
+  transform: scaleX(-1); }
 .hrc2-wf-summary {
   margin: 0 0 2px 0;
   font-size: 12px;
   overflow-wrap: anywhere; }
 .hrc2-wf-step-empty {
   border-style: dashed; }
-/* / A box whose options are open takes the whole row, & its back button sits in the corner a line of this language starts from. */
+/* / A card whose options are open takes the whole row. */
 .hrc2-wf-step-open {
-  flex: 1 1 100%;
-  padding-top: 34px; }
-.hrc2-wf-back {
-  position: absolute;
-  top: 6px;
-  left: 6px; }
-[dir='rtl'] .hrc2-wf-back {
-  left: auto;
-  right: 6px;
-  transform: scaleX(-1); }
+  flex: 1 1 100%; }
 .hrc2-wf-form {
   display: grid;
   grid-template-columns: minmax(8em, max-content) minmax(0, 1fr);
@@ -521,20 +713,8 @@ input.hrc2-wf-row-control[type='text'],
 input.hrc2-wf-row-control[type='number'] {
   width: 100%;
   max-width: 24em; }
-/* / The colour scheme draws the arrow inside the end of every select, so the text stops short of it, as it does in the workflow's own list. */
-select.hrc2-wf-row-control {
-  padding-right: 36px;
-  padding-inline-end: 36px;
-  padding-inline-start: 5px;
-  text-overflow: ellipsis; }
-[dir='rtl'] select.hrc2-wf-row-control {
-  padding-left: 36px;
-  padding-right: 5px; }
 .hrc2-wf-field {
   font-family: monospace; }
-.hrc2-wf-row-control[aria-invalid='true'] {
-  border-color: #c0392b;
-  outline: 1px solid #c0392b; }
 .hrc2-wf-checks {
   display: flex;
   flex-wrap: wrap;
@@ -548,50 +728,3 @@ select.hrc2-wf-row-control {
 @media (max-width: 520px) {
   .hrc2-wf-form {
     grid-template-columns: minmax(0, 1fr); } }
-/* / The box that runs the workflow is split. The add button is above the run button, & its menu opens toward the boxes it adds to. */
-.hrc2-wf-run-box {
-  position: relative; }
-.hrc2-wf-add {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 2px solid #3d71b3;
-  border-radius: 50%;
-  background: none;
-  color: #3d71b3;
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer; }
-.hrc2-wf-add[hidden] {
-  display: none; }
-.hrc2-wf-add-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  min-width: 11em;
-  padding: 4px 0;
-  background-color: #ffffff;
-  color: #222222;
-  border: 1px solid rgba(0, 0, 0, 0.3);
-  border-radius: 6px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
-  text-align: start; }
-.hrc2-wf-add-menu[hidden] {
-  display: none; }
-.hrc2-wf-add-menu button {
-  display: block;
-  width: 100%;
-  padding: 4px 12px;
-  background: none;
-  border: 0;
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  white-space: nowrap;
-  cursor: pointer; }
-.hrc2-wf-add-menu button:hover,
-.hrc2-wf-add-menu button:focus-visible {
-  background-color: rgba(61, 113, 179, 0.18); }

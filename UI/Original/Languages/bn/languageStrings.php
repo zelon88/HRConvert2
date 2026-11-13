@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -175,12 +175,6 @@ $Gui1Text37 = 'রিফ্রেশ';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = 'ফাইল রূপান্তর বিকল্প';
-// / 'Bulk File Options'
-$Gui2Text2 = 'বাল্ক ফাইল অপশন';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = 'ভাইরাসের জন্য সমস্ত ফাইল স্ক্যান করুন';
-// / 'Compress & Download All Files'
-$Gui2Text4 = 'কম্প্রেস করুন এবং সমস্ত ফাইল ডাউনলোড করুন';
 // / 'Download'
 $Gui2Text5 = 'ডাউনলোড করুন';
 // / 'Share'
@@ -209,14 +203,6 @@ $Gui2Text16 = 'এই ফাইলটি আর্কাইভ করুন';
 $Gui2Text17 = 'ফাইলের নাম উল্লেখ করুন:';
 // / 'Format'
 $Gui2Text18 = 'বিন্যাস';
-// / 'Compress & Download'
-$Gui2Text19 = 'কম্প্রেস এবং ডাউনলোড করুন';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'ClamAV দিয়ে স্ক্যান করুন:';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'ScanCore দিয়ে স্ক্যান করুন:';
-// / 'Scan All'
-$Gui2Text22 = 'সমস্ত স্ক্যান করুন';
 // / 'Share This File'
 $Gui2Text23 = 'এই ফাইল শেয়ার করুন';
 // / 'Link Status: '
@@ -365,10 +351,6 @@ $Gui2Text95 = 'বিস্তারিত: ';
 $Gui2Text96 = 'টীকা: ';
 // / 'Save report as file'
 $Gui2Text97 = 'প্রতিবেদন ফাইল হিসেবে সংরক্ষণ করুন';
-// / 'Identify All Files'
-$Gui2Text98 = 'সমস্ত ফাইল শনাক্ত করুন';
-// / 'Identify All'
-$Gui2Text99 = 'সমস্ত শনাক্ত করুন';
 // / 'Yes'
 $Gui2Text100 = 'হ্যাঁ';
 // / 'No'
@@ -549,6 +531,12 @@ $Gui2Text186 = 'এই সার্ভার এই ওয়ার্কফ্�
 $Gui2Text187 = 'ফাইলটি পড়া যায়নি।';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = 'এই সার্ভারে ওয়ার্কফ্লো নির্মাতা উপলব্ধ নয়।';
+// / 'Status'
+$Gui2Text189 = 'অবস্থা';
+// / 'A workflow is running.'
+$Gui2Text190 = 'একটি ওয়ার্কফ্লো চলছে।';
+// / 'No workflow is running.'
+$Gui2Text191 = 'কোনো ওয়ার্কফ্লো চলছে না।';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

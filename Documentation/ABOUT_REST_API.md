@@ -197,6 +197,7 @@ Every reply is one line of JSON under the key `Workflow`, after the doctype line
   * A run that does not start says why in `Reason`, asked in this order: `disabled`, `unknown`, `busy`, `files`, `nothing`, `server` or `start`.
 * `workflowStatus` *(1)*
   * Reports this session's workflow. `State` is `none`, `starting`, `running`, `finished`, `stopped`, `failed` or `interrupted`, with the step, the file, every file it made and the reason it ended.
+  * While it is `starting` or `running`, `Document` holds the workflow in canonical form, so a page loaded again can draw what is running. It is empty once the workflow has ended.
   * **An ended workflow is reported once.** The request that reads it removes it, so the session may start another.
 * `workflowStop` *(1)*
   * Asks the running workflow to stop before its next operation. `Stop` is `stopping`, `cleared` or `none`. Read `workflowStatus` until it says `stopped`.

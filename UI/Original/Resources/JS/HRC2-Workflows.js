@@ -26,7 +26,8 @@
 // / THE BUILDER ARRANGES STEPS, & THE SERVER DECIDES WHAT RUNS.
 // / A workflow the builder makes is sent to the server, which checks it exactly as it checks a library's.
 // / Nothing here decides whether a workflow is valid, & a problem the server names is shown as the server wrote it.
-// / Nothing is kept in the browser, so a page loaded again starts with an empty builder.
+// / Nothing is kept in the browser, so a page loaded again starts with an empty builder, unless a workflow runs in its session.
+// / The status holds a running workflow as a document, & a page loaded again draws it from that, locked until it ends.
 // / A server without the builder, or one whose answer this cannot read, is given the panel as it was before the builder.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -63,6 +64,7 @@ window.HRC2Workflows = {
     selected: 'Selected: ', pickFiles: 'Select files in the list below.', choose: 'Choose a workflow',
     usable: 'Selected files that can be used: {fit} of {count}.', step: 'Step {step} of {steps}: {operation}', file: 'File {done} of {total}',
     waiting: 'Waiting for the server.', starting: 'Starting.', finished: 'Finished.', stopping: 'Stopping.', stopped: 'Stopped.', made: 'Files made: ',
+    running: 'A workflow is running.', idle: 'No workflow is running.',
     unavailable: 'Workflows are not available on this server.', empty: 'No workflows are installed on this server.',
     library: 'Workflows', pickPipeline: 'Select a pipeline above...', options: 'Options', back: 'Back', remove: 'Delete',
     take: 'Take: ', ticked: 'the ticked files', stepFiles: 'the files step {step} made', each: 'each file on its own', together: 'all files together',
@@ -126,6 +128,10 @@ window.HRC2Workflows = {
   activeTab: '',
   menuIsOpen: false,
   importer: null,
+  // / What a workflow already running in this session is, when a page is loaded again while it runs.
+  // / runningId is its identifier in the library, or empty for one a page built, & runningDocument is the workflow in canonical form until the builder has drawn it.
+  runningId: '',
+  runningDocument: '',
 
   // / Note something worth keeping that is not worth interrupting a user for.
   warn: function (messageText) {
@@ -268,6 +274,9 @@ window.HRC2Workflows = {
       event.stopPropagation();
       if (self.menuIsOpen) self.closeMenu();
       else self.openMenu(); });
+    // / A label naming the add button presses it. Its own click goes no further, so the menu is opened & closed by the button alone, as a press of the button itself does.
+    if (add && add.id) Array.prototype.forEach.call(document.querySelectorAll('label[for="' + add.id + '"]'), function (caption) {
+      caption.addEventListener('click', function (event) { event.stopPropagation(); }); });
     if (addMenu) Array.prototype.forEach.call(addMenu.querySelectorAll('[data-hrc2-add]'), function (item) {
       item.addEventListener('click', function (event) {
         event.stopPropagation();
@@ -344,6 +353,8 @@ window.HRC2Workflows = {
       else {
         self.libraryState = 'ready';
         self.library = self.cleanLibrary(reply.Library); }
+      // / A library's workflow that is running is shown as the one chosen, so a panel without the builder says what runs.
+      if (self.libraryState === 'ready' && self.jobState !== 'idle' && self.runningId !== '') self.chosenId = self.runningId;
       if (self.libraryState === 'ready') self.loadOperations();
       self.drawAll();
     });
@@ -384,7 +395,7 @@ window.HRC2Workflows = {
         self.catalog = catalog;
         self.catalogKinds = self.isList(reply.Kinds) ? reply.Kinds.filter(function (kind) { return typeof kind === 'string' && kind !== ''; }) : [];
         self.maxSteps = Math.max(1, parseInt(reply.MaxSteps, 10) || 16);
-        self.startNewWorkflow(); }
+        if (!self.openRunning()) self.startNewWorkflow(); }
       else self.buildState = 'unavailable';
       self.drawAll();
     });
@@ -604,6 +615,24 @@ window.HRC2Workflows = {
     return true;
   },
 
+  // / Keep what the status says is running in this session, & draw it in the builder if the builder is ready.
+  // / A page loaded again while a workflow runs is given the workflow by the status, & draws its steps locked until it ends.
+  keepRunning: function (reply) {
+    this.runningId = (typeof reply.WorkflowId === 'string') ? reply.WorkflowId : '';
+    this.runningDocument = (typeof reply.Document === 'string') ? reply.Document : '';
+    if (this.libraryState === 'ready' && this.runningId !== '') this.chosenId = this.runningId;
+    if (this.isBuilding()) this.openRunning();
+  },
+
+  // / Open the running workflow in the builder, once. Returns whether it was opened.
+  // / A workflow that ended before the builder was ready, or that names an operation the builder cannot draw, is not opened.
+  openRunning: function () {
+    var documentText = this.runningDocument;
+    this.runningDocument = '';
+    if (documentText === '' || this.jobState === 'idle') return false;
+    return this.loadDocument(documentText, this.runningId);
+  },
+
   // / The workflow being built, as the text of a workflow the server reads.
   // / A filter holds only the tests it makes, & a reference is written as the builder keeps it, as selection or step N.
   documentText: function () {
@@ -737,7 +766,8 @@ window.HRC2Workflows = {
     if (status && this.jobState === 'idle') {
       if (this.libraryState === 'unavailable') this.showLines([this.text.unavailable]);
       else if (this.libraryState === 'ready' && this.library.length === 0 && this.buildState === 'unavailable') this.showLines([this.text.empty]);
-      else if (status.getAttribute('data-hrc2-result') !== 'true' && status.getAttribute('data-hrc2-notice') !== 'true') this.showLines([]); }
+      // / The idle line is written only when it is not already there, because the status is read aloud whenever it changes.
+      else if (status.getAttribute('data-hrc2-result') !== 'true' && status.getAttribute('data-hrc2-notice') !== 'true' && status.textContent !== this.text.idle) this.showLines([this.text.idle]); }
     this.drawFiles();
     this.drawChoices();
     this.drawWorkflow();
@@ -969,18 +999,23 @@ window.HRC2Workflows = {
   },
 
   // / One step's box. A box waiting for a pipeline says so. A closed box says what its step does, & an open one holds its options.
+  // / The heading is its number & its name, then its buttons, with a line under it that parts it from what the step does.
+  // / The number & the name are one piece, so the number is never parted from the name, & a name is never broken inside a word to make room.
+  // / Where a box is too narrow for both, its buttons go onto a line of their own, at the end a line of this language finishes on.
+  // / An open box's back button takes the place its options button had, beside the button that takes the step out, so opening & closing a step is two presses in one place.
   stepBox: function (step, stepIndex) {
     var self = this;
     var entry = self.catalogEntry(step.Operation);
     var box = self.make('div', null, 'hrc2-wf-box hrc2-wf-step');
-    var heading = self.make('p', null, 'hrc2-wf-label hrc2-wf-step-heading');
+    var heading = self.make('p', null, 'hrc2-wf-label hrc2-wf-head hrc2-wf-step-heading');
+    var title = self.make('span', null, 'hrc2-wf-step-title');
     var isIdle = (self.jobState === 'idle');
     var controls = self.make('span', null, 'hrc2-wf-step-controls');
-    var gear = null;
+    var toggle = null;
     var remove = self.makeButton('✕', 'hrc2-wf-icon hrc2-wf-remove', self.text.remove);
-    var back = null;
     box.setAttribute('data-hrc2-step', String(stepIndex));
-    heading.appendChild(self.make('span', String(stepIndex + 1), 'hrc2-wf-step-number'));
+    title.appendChild(self.make('span', String(stepIndex + 1), 'hrc2-wf-step-number'));
+    heading.appendChild(title);
     remove.disabled = !isIdle;
     remove.addEventListener('click', function () { self.removeStep(stepIndex); });
     if (!entry) {
@@ -990,28 +1025,28 @@ window.HRC2Workflows = {
       box.appendChild(heading);
       box.appendChild(self.make('p', self.text.pickPipeline, 'hrc2-wf-hint'));
       return box; }
-    heading.appendChild(self.make('strong', self.operationName(step.Operation)));
+    title.appendChild(self.make('strong', self.operationName(step.Operation), 'hrc2-wf-step-name'));
     if (self.openStep === stepIndex) {
       box.classList.add('hrc2-wf-step-open');
-      back = self.makeButton('←', 'hrc2-wf-icon hrc2-wf-back', self.text.back);
-      back.addEventListener('click', function () {
+      toggle = self.makeButton('←', 'hrc2-wf-icon hrc2-wf-back', self.text.back);
+      toggle.addEventListener('click', function () {
         self.openStep = -1;
         self.drawAll();
-        self.focusStep(stepIndex, '.hrc2-wf-gear'); });
-      box.appendChild(back);
-      box.appendChild(heading);
-      box.appendChild(self.optionsForm(step, stepIndex, entry, isIdle));
-      return box; }
-    gear = self.makeButton('⚙︎', 'hrc2-wf-icon hrc2-wf-gear', self.text.options);
-    gear.disabled = !isIdle;
-    gear.addEventListener('click', function () {
-      self.openStep = stepIndex;
-      self.drawAll();
-      self.focusStep(stepIndex, '.hrc2-wf-back'); });
-    controls.appendChild(gear);
+        self.focusStep(stepIndex, '.hrc2-wf-gear'); }); }
+    else {
+      toggle = self.makeButton('⚙︎', 'hrc2-wf-icon hrc2-wf-gear', self.text.options);
+      toggle.disabled = !isIdle;
+      toggle.addEventListener('click', function () {
+        self.openStep = stepIndex;
+        self.drawAll();
+        self.focusStep(stepIndex, '.hrc2-wf-back'); }); }
+    controls.appendChild(toggle);
     controls.appendChild(remove);
     heading.appendChild(controls);
     box.appendChild(heading);
+    if (self.openStep === stepIndex) {
+      box.appendChild(self.optionsForm(step, stepIndex, entry, isIdle));
+      return box; }
     self.summaryLines(step, stepIndex).forEach(function (line) {
       var paragraph = self.make('p', null, 'hrc2-wf-summary');
       paragraph.appendChild(self.make('bdi', line));
@@ -1230,8 +1265,10 @@ window.HRC2Workflows = {
   },
 
   // / Open & close the menu of what the add button adds.
-  // / The menu opens under the button, from the side a line of this language starts on, & is moved back onto the screen where it would leave it.
+  // / The menu opens under the button & toward the boxes it adds to, so its end lines up with the button's end, & it is moved back onto the screen where it would leave it.
+  // / The box that runs a workflow ends its row, so a menu opening the other way would hang past the edge of the panel.
   // / Its place is worked out against the box it is drawn in, so it stays under the button while the page scrolls.
+  // / That box's frame is inside its edges & outside where the menu is measured from, so the frame's width is taken off.
   openMenu: function () {
     var add = this.element('add');
     var addMenu = this.element('addMenu');
@@ -1251,10 +1288,10 @@ window.HRC2Workflows = {
       holderEdges = holder.getBoundingClientRect();
       menuWidth = addMenu.offsetWidth;
       isRightToLeft = (window.getComputedStyle(addMenu).direction === 'rtl');
-      wantedLeft = isRightToLeft ? (buttonEdges.right - menuWidth) : buttonEdges.left;
+      wantedLeft = isRightToLeft ? buttonEdges.left : (buttonEdges.right - menuWidth);
       wantedLeft = Math.max(4, Math.min(wantedLeft, screenWidth - menuWidth - 4));
-      addMenu.style.left = Math.round(wantedLeft - holderEdges.left) + 'px';
-      addMenu.style.top = Math.round(buttonEdges.bottom - holderEdges.top + 4) + 'px'; }
+      addMenu.style.left = Math.round(wantedLeft - holderEdges.left - holder.clientLeft) + 'px';
+      addMenu.style.top = Math.round(buttonEdges.bottom - holderEdges.top - holder.clientTop + 4) + 'px'; }
     add.setAttribute('aria-expanded', 'true');
     this.menuIsOpen = true;
     if (first) first.focus();
@@ -1322,7 +1359,7 @@ window.HRC2Workflows = {
     if (status) status.setAttribute('data-hrc2-notice', 'true');
   },
 
-  // / Show how far a running workflow has got.
+  // / Show how far a running workflow has got. The first line says a workflow is running, or that it is stopping.
   drawProgress: function (reply) {
     var self = this;
     var status = self.element('status');
@@ -1332,7 +1369,7 @@ window.HRC2Workflows = {
     var stepNumber = Math.max(0, parseInt(reply.StepNumber, 10) || 0);
     var filesDone = Math.max(0, parseInt(reply.FilesDone, 10) || 0);
     var filesTotal = Math.max(0, parseInt(reply.FilesTotal, 10) || 0);
-    if (self.jobState === 'stopping') lines.push(self.text.stopping);
+    lines.push((self.jobState === 'stopping') ? self.text.stopping : self.text.running);
     if (stepNumber > 0) lines.push(self.fill(self.text.step, { step: stepNumber, steps: stepCount, operation: self.operationName(reply.Operation) }));
     else lines.push(self.text.starting);
     if (filesTotal > 0) lines.push(self.fill(self.text.file, { done: Math.min(filesDone, filesTotal), total: filesTotal }));
@@ -1587,6 +1624,7 @@ window.HRC2Workflows = {
   // / An answer that cannot be read is asked again, less often each time, & after eight in a row the panel says workflows are unavailable.
   // / The first look at a page's load is not asked again, because nothing was waiting on it.
   // / The builder is drawn again whenever a workflow starts or ends, because its controls are locked while one runs.
+  // / A workflow this page did not start, as one running when the page was loaded again, is drawn from the document the status holds.
   takeStatus: function (reply, isFirstLook) {
     var self = this;
     var state = '';
@@ -1604,14 +1642,15 @@ window.HRC2Workflows = {
     state = String(reply.State || 'none');
     if (state === 'starting' || state === 'running') {
       if (self.jobState !== 'stopping') self.jobState = 'running';
+      if (!wasWaiting) self.keepRunning(reply);
       if (isFirstLook && !self.isOpen()) self.open();
-      if (!wasWaiting) {
-        self.drawPipelines();
-        self.drawSteps(); }
-      self.drawControls();
+      if (!wasWaiting) self.drawAll();
+      else self.drawControls();
       self.drawProgress(reply);
       self.schedulePoll(1500);
       return; }
+    self.runningId = '';
+    self.runningDocument = '';
     if (state === 'finished' || state === 'stopped' || state === 'failed' || state === 'interrupted') {
       self.jobState = 'idle';
       if (isFirstLook && !self.isOpen()) self.open();
@@ -1624,7 +1663,7 @@ window.HRC2Workflows = {
     // / No workflow. One this page was waiting on was cleared by something else, so the list is drawn again in case it made files.
     self.jobState = 'idle';
     if (wasWaiting) {
-      self.showLines([]);
+      self.showLines([self.text.idle]);
       self.drawPipelines();
       self.drawSteps();
       self.filesChanged(); }

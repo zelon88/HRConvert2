@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -174,12 +174,6 @@ $Gui1Text37 = 'Atualizar';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = 'Opções de Conversão de Arquivos';
-// / 'Bulk File Options'
-$Gui2Text2 = 'Opções de Arquivos em Massa';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = 'Verifique Todos os Arquivos em Busca de Vírus';
-// / 'Compress & Download All Files'
-$Gui2Text4 = 'Compactar e Baixar Todos os Arquivos';
 // / 'Download'
 $Gui2Text5 = 'Download';
 // / 'Share'
@@ -208,14 +202,6 @@ $Gui2Text16 = 'Arquivar este Arquivo';
 $Gui2Text17 = 'Especifique o Nome do Arquivo: ';
 // / 'Format'
 $Gui2Text18 = 'Formatar';
-// / 'Compress & Download'
-$Gui2Text19 = 'Compactar e Baixar';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'Digitalize com ClamAV: ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'Digitalize com ScanCore: ';
-// / 'Scan All'
-$Gui2Text22 = 'Digitalizar Tudo';
 // / 'Share This File'
 $Gui2Text23 = 'Compartilhe este Arquivo';
 // / 'Link Status: '
@@ -364,10 +350,6 @@ $Gui2Text95 = 'Detalhes: ';
 $Gui2Text96 = 'Notas: ';
 // / 'Save report as file'
 $Gui2Text97 = 'Salvar relatório como arquivo';
-// / 'Identify All Files'
-$Gui2Text98 = 'Identificar Todos os Arquivos';
-// / 'Identify All'
-$Gui2Text99 = 'Identificar Tudo';
 // / 'Yes'
 $Gui2Text100 = 'Sim';
 // / 'No'
@@ -548,6 +530,12 @@ $Gui2Text186 = 'Este servidor não pode executar este fluxo de trabalho.';
 $Gui2Text187 = 'Não foi possível ler o arquivo.';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = 'O editor de fluxos de trabalho não está disponível neste servidor.';
+// / 'Status'
+$Gui2Text189 = 'Estado';
+// / 'A workflow is running.'
+$Gui2Text190 = 'Há um fluxo de trabalho em execução.';
+// / 'No workflow is running.'
+$Gui2Text191 = 'Nenhum fluxo de trabalho em execução.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

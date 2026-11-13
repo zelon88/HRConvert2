@@ -31,14 +31,31 @@
 
 // / Grey color scheme (default).
 $defaultButtonCode = '
+/* / The colours this scheme draws every panel with, named once.
+   / HRConvert2.css draws every panel, box, menu & button from these & from nothing else, so a
+   / scheme is these few lines rather than a copy of the stylesheet.
+   / Each is a colour the scheme already had. The accent is its button colour, the frame its
+   / button border, the tint & the ink its file list panel, & the surface what a panel sits on.
+   / accent-rgb is the accent again as three numbers, so a wash of it can be drawn at any
+   / strength. shade-rgb is what a line or an edge is drawn in, black on a light scheme & white
+   / on the dark one, & on-accent is what is written on the accent. */
+:root {
+  --hrc2-accent: #5B5B5B;
+  --hrc2-accent-rgb: 91, 91, 91;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #5B5B5B;
+  --hrc2-tint: #ffffff;
+  --hrc2-ink: #333333;
+  --hrc2-surface: #F8F8F8;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / The file list panel, in a shade that belongs to this scheme.
    / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
    / on a page of an unrelated colour, & the dark scheme showed a bright one.
    / One step from the page background rather than the same as it, so the panel still
    / reads as a panel & still has an edge. */
 .file-list-panel {
-  background-color: #ffffff;
-  color: #333333; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 #uiSelectorOptions { width: 300px; }
 #uiSelectorOptions p { margin: 2px 0; }
 #uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
@@ -98,18 +115,28 @@ $defaultButtonCode = '
 select {
   background: url("'.$GuiImageDir.'darrowdefault.png") 96% / 15% no-repeat #eee; }
 body { 
-  background-color: #F8F8F8; }';
+  background-color: var(--hrc2-surface); }';
 
 // / Green color scheme.
 $greenButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #298040;
+  --hrc2-accent-rgb: 41, 128, 64;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #054d0c;
+  --hrc2-tint: #f6fff3;
+  --hrc2-ink: #2f4f2f;
+  --hrc2-surface: #E8FFE1;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / The file list panel, in a shade that belongs to this scheme.
    / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
    / on a page of an unrelated colour, & the dark scheme showed a bright one.
    / One step from the page background rather than the same as it, so the panel still
    / reads as a panel & still has an edge. */
 .file-list-panel {
-  background-color: #f6fff3;
-  color: #2f4f2f; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 #uiSelectorOptions { width: 300px; }
 #uiSelectorOptions p { margin: 2px 0; }
 #uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
@@ -169,18 +196,28 @@ $greenButtonCode = '
 select {
   background: url("'.$GuiImageDir.'darrowgreen.png") 96% / 15% no-repeat #eee; }
 body { 
-  background-color: #E8FFE1; }';
+  background-color: var(--hrc2-surface); }';
 
 // / Blue color scheme.
 $blueButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #2d60b2;
+  --hrc2-accent-rgb: 45, 96, 178;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #16537e;
+  --hrc2-tint: #f2f6fa;
+  --hrc2-ink: #22303c;
+  --hrc2-surface: #E1F7FF;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / The file list panel, in a shade that belongs to this scheme.
    / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
    / on a page of an unrelated colour, & the dark scheme showed a bright one.
    / One step from the page background rather than the same as it, so the panel still
    / reads as a panel & still has an edge. */
 .file-list-panel {
-  background-color: #f2f6fa;
-  color: #22303c; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 #uiSelectorOptions { width: 300px; }
 #uiSelectorOptions p { margin: 2px 0; }
 #uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
@@ -240,18 +277,28 @@ $blueButtonCode = '
 select {
   background: url("'.$GuiImageDir.'darrowblue.png") 96% / 15% no-repeat #eee; }
 body { 
-  background-color: #E1F7FF; }';
+  background-color: var(--hrc2-surface); }';
 
 // / Red color scheme.
 $redButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #c20e0e;
+  --hrc2-accent-rgb: 194, 14, 14;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #990000;
+  --hrc2-tint: #fff5f2;
+  --hrc2-ink: #4f2f2f;
+  --hrc2-surface: #FFE9E1;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / The file list panel, in a shade that belongs to this scheme.
    / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
    / on a page of an unrelated colour, & the dark scheme showed a bright one.
    / One step from the page background rather than the same as it, so the panel still
    / reads as a panel & still has an edge. */
 .file-list-panel {
-  background-color: #fff5f2;
-  color: #4f2f2f; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 #uiSelectorOptions { width: 300px; }
 #uiSelectorOptions p { margin: 2px 0; }
 #uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
@@ -311,18 +358,28 @@ $redButtonCode = '
 select {
   background: url("'.$GuiImageDir.'darrowred.png") 96% / 15% no-repeat #eee; }
 body { 
-  background-color: #FFE9E1; }';
+  background-color: var(--hrc2-surface); }';
 
 // / Orange color scheme.
 $orangeButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #b35900;
+  --hrc2-accent-rgb: 179, 89, 0;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #803300;
+  --hrc2-tint: #fffaf2;
+  --hrc2-ink: #4f3a1f;
+  --hrc2-surface: #fff4e6;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / The file list panel, in a shade that belongs to this scheme.
    / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
    / on a page of an unrelated colour, & the dark scheme showed a bright one.
    / One step from the page background rather than the same as it, so the panel still
    / reads as a panel & still has an edge. */
 .file-list-panel {
-  background-color: #fffaf2;
-  color: #4f3a1f; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 #uiSelectorOptions { width: 300px; }
 #uiSelectorOptions p { margin: 2px 0; }
 #uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
@@ -382,18 +439,28 @@ $orangeButtonCode = '
 select {
   background: url("'.$GuiImageDir.'darroworange.png") 96% / 15% no-repeat #eee; }
 body { 
-  background-color: #fff4e6; }';
+  background-color: var(--hrc2-surface); }';
 
 // / Purple color scheme.
 $purpleButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #8e44ad;
+  --hrc2-accent-rgb: 142, 68, 173;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #4a235a;
+  --hrc2-tint: #fbf7fd;
+  --hrc2-ink: #3f2f4f;
+  --hrc2-surface: #f5eef8;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / The file list panel, in a shade that belongs to this scheme.
    / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
    / on a page of an unrelated colour, & the dark scheme showed a bright one.
    / One step from the page background rather than the same as it, so the panel still
    / reads as a panel & still has an edge. */
 .file-list-panel {
-  background-color: #fbf7fd;
-  color: #3f2f4f; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 #uiSelectorOptions { width: 300px; }
 #uiSelectorOptions p { margin: 2px 0; }
 #uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
@@ -453,18 +520,28 @@ $purpleButtonCode = '
 select {
   background: url("'.$GuiImageDir.'darrowpurple.png") 96% / 15% no-repeat #eee; }
 body { 
-  background-color: #f5eef8; }';
+  background-color: var(--hrc2-surface); }';
 
 // / Dark / Night mode color scheme.
 $darkButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #e8e8e8;
+  --hrc2-accent-rgb: 232, 232, 232;
+  --hrc2-on-accent: #262626;
+  --hrc2-frame: #555555;
+  --hrc2-tint: #2e2e2e;
+  --hrc2-ink: #e8e8e8;
+  --hrc2-surface: #222222;
+  --hrc2-shade-rgb: 255, 255, 255; }
 /* / The file list panel, in a shade that belongs to this scheme.
    / It was a hardcoded cream in every scheme, so six of the seven showed a pale panel
    / on a page of an unrelated colour, & the dark scheme showed a bright one.
    / One step from the page background rather than the same as it, so the panel still
    / reads as a panel & still has an edge. */
 .file-list-panel {
-  background-color: #2e2e2e;
-  color: #e8e8e8; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 #uiSelectorOptions { width: 300px; }
 #uiSelectorOptions p { margin: 2px 0; }
 #uiSelectorOptions strong { font-size: 11px; text-transform: uppercase; color: #777; }
@@ -526,6 +603,6 @@ select {
   color: #ffffff;
   border: 1px solid #555; }
 body { 
-  background-color: #222222; 
+  background-color: var(--hrc2-surface); 
   color: #ffffff; }';
 // / -----------------------------------------------------------------------------------

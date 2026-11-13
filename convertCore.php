@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.5.
+// / v4.1.6.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -1311,7 +1311,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.1.5';
+  $HRConvertVersion = 'v4.1.6';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -1325,13 +1325,13 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.1.5';
+  $RequiredGuiVersion = 'v4.1.6';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A Language Pack version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v4.1.5';
+  $RequiredLanguageVersion = 'v4.1.6';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / No Core Manager version is pinned here. Every manager role is a subcomponent of the
   // / Engine & getAcceptedManagers() inside the Engine pins each one exactly.
@@ -1356,12 +1356,12 @@ function verifyInstallation() {
   // / Raise this when the Pipeline Core itself changes & for nothing else.
   // / It is an Engine core, at Resources/Engine/Cores/pipelineCore.php.
   // / The pipelines this application accepts are listed in its contract, in app-engine-config.php, so adding a pipeline or moving one to a new version raises nothing here.
-  $RequiredPipelineCoreVersion = 'v4.1.2';
+  $RequiredPipelineCoreVersion = 'v4.1.6';
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The Workflow Core component version this core requires.
   // / This is an exact match, because a component built for another core may call an operation with arguments that have moved.
   // / Raise this when the Workflow Core itself changes & for nothing else. It is an Engine core, at Resources/Engine/Cores/workflowCore.php.
-  $RequiredWorkflowCoreVersion = 'v4.1.5';
+  $RequiredWorkflowCoreVersion = 'v4.1.6';
   $RequiredWorkflowCoreVersion = ltrim($RequiredWorkflowCoreVersion, 'vV');
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
@@ -2173,7 +2173,7 @@ function verifyLanguage() {
 // / Converting here as well produced a fifteen hour watch timeout & a ten million second connect timeout.
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
-  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $ConsolidatedLogFileName, $ConsolidatedLogFile, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $UserClamLogFile, $UserClamLogFileName, $UserScanCoreLogFile, $UserScanCoreFileName, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
+  global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
     $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $HostedLoc, $ApplicationLoc, $WorkflowLoc;
   // / Application related variables.
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
@@ -2305,12 +2305,9 @@ function verifyGlobals() {
   // / The folders an older layout left inside the installation are looked for in the hosted location as well, because older releases were installed there.
   $RequiredCleanupFolders = array_values(array_unique(array($webRoot.$DirSep.'.cache', $webRoot.$DirSep.'.config', $InstLoc.$DirSep.'Logs', $InstLoc.$DirSep.'.cache', $InstLoc.$DirSep.'.config', $ProprietaryLoc.$DirSep.'.cache', $ProprietaryLoc.$DirSep.'.config', $InstLoc.$DirSep.'.github'.$DirSep.'workflows', $InstLoc.$DirSep.'.github', $InstLoc.$DirSep.'.git', $HostedLoc.$DirSep.'Logs', $HostedLoc.$DirSep.'.cache', $HostedLoc.$DirSep.'.config', $HostedLoc.$DirSep.'.github'.$DirSep.'workflows', $HostedLoc.$DirSep.'.github', $HostedLoc.$DirSep.'.git')));
   // / A/V related variables.
-  $UserClamLogFileName = 'User_ClamScan_Virus_Scan_Report.txt';
-  $UserClamLogFile = $ConvertDir.$UserClamLogFileName;
-  $UserScanCoreFileName = 'User_ScanCore_Virus_Scan_Report.txt';
-  $UserScanCoreLogFile = $ConvertDir.$UserScanCoreFileName;
+  // / The report a user's scan writes is named here, because a page asks for it by name to download it.
+  // / The Scan pipeline writes it, & keeps each scanner's own log beside a user's files, from v4.1.6.
   $ConsolidatedLogFileName = 'User_Consolidated_Virus_Scan_Report.txt';
-  $ConsolidatedLogFile = $ConvertTempDir.$ConsolidatedLogFileName;
   // / Format related variables.
   $ImageInputArray = $ImageOutputArray = $SCADInputArray = $SCADOutputArray = array();
   $DrawingInputArray = $DrawingOutputArray = array();
@@ -2587,7 +2584,7 @@ function verifySandboxPolicyAtStart() {
 // / A function to look up a tool's verified path by its manifest name.
 // / Accepts the manifest name. Returns the path, or FALSE when the tool is unusable.
 // / The manifest is the only owner of a tool's minimum. This asks it through verifiedToolPath,
-// / so -v, archiving & scanning get the same answer the pipelines & --check-depends get.
+// / so -v gets the same answer the pipelines & --check-depends get.
 // / verifiedToolPath lives in the Pipeline Core, which may have failed to load. -v is what an
 // / operator runs to find out why, so this must not fatal: a missing Pipeline Core reads as every
 // / tool unusable, & -v's own component check reports the Pipeline Core itself.
@@ -3520,23 +3517,62 @@ function applicationFileTypes() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to say whether an operation pipeline of a family is installed & verified.
+// / Accepts the family. Returns TRUE when the Pipeline Core holds an operation pipeline of that family.
+// / An operation whose pipeline is missing is offered to no workflow, so a workflow that needs it reads as turned off on this server rather than failing as it runs.
+function operationPipelineIsInstalled($operationFamily) {
+  // / Set variables.
+  global $PipelineCoreActive, $Pipelines, $EnableMemoryProtection;
+  $PipelineIsInstalled = FALSE;
+  $folderName = '';
+  $pipelineRecord = array();
+  if (!empty($PipelineCoreActive) && is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
+    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'operation' && (string)($pipelineRecord['Family'] ?? '') === (string)$operationFamily) $PipelineIsInstalled = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderName, $pipelineRecord, $operationFamily);
+  return $PipelineIsInstalled; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to list the formats an archive of a selection of files may be made in.
+// / Accepts nothing. Returns the formats config.php offers that the installed Archiver pipeline says it can write, with zip first.
+// / config.php's list serves the Archive pipeline as well, which converts one archive into another & makes a bootable disk
+// / image from an archive holding a bootloader. The Archiver makes neither, so a bootable image is not offered for a selection.
+// / Until v4.1.6 it was, & every file of such a request failed with error 4004.
+function archiveOperationFormats() {
+  // / Set variables.
+  global $PipelineCoreActive, $Pipelines, $ArchiveArray, $EnableMemoryProtection;
+  $ArchiveFormats = $writableFormats = $offeredFormats = $pipelineRecord = array();
+  $folderName = '';
+  if (!empty($PipelineCoreActive) && is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
+    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'operation' && (string)($pipelineRecord['Family'] ?? '') === 'Archive' && is_array($pipelineRecord['Output'] ?? NULL)) redeclare($writableFormats, array_merge($writableFormats, $pipelineRecord['Output'])); }
+  $offeredFormats = array_values(array_unique(array_map('strtolower', array_merge(array('zip'), (array)$ArchiveArray))));
+  $ArchiveFormats = array_values(array_intersect($offeredFormats, $writableFormats));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $writableFormats, $offeredFormats, $pipelineRecord, $folderName);
+  return $ArchiveFormats; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to declare the operations a workflow may run, & the kinds of file a step may name.
 // / Accepts nothing. Returns an array holding Operations & FileTypes. It is $EngineOperationProvider.
 // / Each operation names the function that runs it, the budget it takes, whether this server allows it, what it reads, its modes & its options.
 // / Every one runs the code a button in an interface runs, so a workflow does nothing a user could not do by hand.
 // / Convert decides what it reads from the extension it is asked to write, because a conversion to jpg reads an image & not a spreadsheet.
 // / Archive's Filename names the one archive every file goes into, & an empty one archives each file under its own name.
+// / Archive offers the formats archiveOperationFormats() lists, which the Archiver pipeline can write, & none without it, so it is offered only where the Archiver is installed.
+// / Archive, OCR, Identify & Scan are each an operation pipeline's, & one whose pipeline is missing is not offered, from v4.1.6.
 // / SessionFiles names getFiles(), which lists a session's files as a page lists them, so the Workflow Core's Select step finds only what a user could see & tick.
 // / See Documentation/ABOUT_WORKFLOWS.txt.
 function applicationOperations() {
   // / Set variables.
-  global $SupportedConversionTypes, $AllowUserIdentify, $AllowUserVirusScan, $ArchiveArray, $DocumentArray, $PDFWorkArr, $EnableMemoryProtection;
+  global $SupportedConversionTypes, $AllowUserIdentify, $AllowUserVirusScan, $DocumentArray, $PDFWorkArr, $EnableMemoryProtection;
   $OperationRegistry = array();
   $convertOutputs = $archiveFormats = $ocrFormats = $familyFormats = array();
   $familyName = '';
   foreach (applicationConversionFamilies() as $familyName => $familyFormats) if (is_array($familyFormats[1])) redeclare($convertOutputs, array_merge($convertOutputs, $familyFormats[1]));
   redeclare($convertOutputs, array_values(array_unique(array_map('strtolower', $convertOutputs))));
-  $archiveFormats = array_values(array_unique(array_merge(array('zip'), (array)$ArchiveArray)));
+  $archiveFormats = archiveOperationFormats();
   $ocrFormats = array_values(array_unique(array_merge(array('pdf'), (array)$DocumentArray)));
   $OperationRegistry = array(
     'Operations' => array(
@@ -3544,13 +3580,13 @@ function applicationOperations() {
         'Options' => array('Extension' => array('Type' => 'choice', 'Required' => TRUE, 'Choices' => $convertOutputs), 'Filename' => array('Type' => 'name', 'Default' => ''),
           'Height' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 65535), 'Width' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 65535),
           'Rotate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => -360, 'Maximum' => 360), 'Bitrate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 100000))),
-      'Archive' => array('Invoke' => 'invokeArchiveOperation', 'Budget' => 'archive', 'Enabled' => in_array('Archive', (array)$SupportedConversionTypes, TRUE), 'Inputs' => array(), 'Modes' => array('together', 'each'),
+      'Archive' => array('Invoke' => 'invokeArchiveOperation', 'Budget' => 'archive', 'Enabled' => (in_array('Archive', (array)$SupportedConversionTypes, TRUE) && in_array('zip', $archiveFormats, TRUE)), 'Inputs' => array(), 'Modes' => array('together', 'each'),
         'Options' => array('Extension' => array('Type' => 'choice', 'Default' => 'zip', 'Choices' => $archiveFormats), 'Filename' => array('Type' => 'name', 'Default' => 'Workflow_Files'))),
-      'OCR' => array('Invoke' => 'invokeOcrOperation', 'Budget' => 'OCR', 'Enabled' => (in_array('OCR', (array)$SupportedConversionTypes, TRUE) && in_array('Document', (array)$SupportedConversionTypes, TRUE)), 'Inputs' => (array)$PDFWorkArr, 'Modes' => array('each'),
+      'OCR' => array('Invoke' => 'invokeOcrOperation', 'Budget' => 'OCR', 'Enabled' => (in_array('OCR', (array)$SupportedConversionTypes, TRUE) && in_array('Document', (array)$SupportedConversionTypes, TRUE) && operationPipelineIsInstalled('OCR')), 'Inputs' => (array)$PDFWorkArr, 'Modes' => array('each'),
         'Options' => array('Extension' => array('Type' => 'choice', 'Default' => 'pdf', 'Choices' => $ocrFormats), 'Method' => array('Type' => 'choice', 'Default' => '0', 'Choices' => array('0', '1', '2')), 'Filename' => array('Type' => 'name', 'Default' => ''))),
-      'Identify' => array('Invoke' => 'invokeIdentifyOperation', 'Budget' => 'Identify', 'Enabled' => ($AllowUserIdentify === TRUE), 'Inputs' => array(), 'Modes' => array('together'),
+      'Identify' => array('Invoke' => 'invokeIdentifyOperation', 'Budget' => 'Identify', 'Enabled' => ($AllowUserIdentify === TRUE && operationPipelineIsInstalled('Identify')), 'Inputs' => array(), 'Modes' => array('together'),
         'Options' => array('Report' => array('Type' => 'boolean', 'Default' => TRUE), 'Filename' => array('Type' => 'name', 'Default' => 'User_Identify_Report'))),
-      'Scan' => array('Invoke' => 'invokeScanOperation', 'Budget' => 'user virus scan', 'Enabled' => ($AllowUserVirusScan === TRUE), 'Inputs' => array(), 'Modes' => array('together'),
+      'Scan' => array('Invoke' => 'invokeScanOperation', 'Budget' => 'user virus scan', 'Enabled' => ($AllowUserVirusScan === TRUE && operationPipelineIsInstalled('Scan')), 'Inputs' => array(), 'Modes' => array('together'),
         'Options' => array('Scanner' => array('Type' => 'choice', 'Default' => 'all', 'Choices' => array('all', 'clamav', 'scancore'))))),
     'FileTypes' => applicationFileTypes(),
     'SessionFiles' => 'getFiles');
@@ -3602,17 +3638,23 @@ function invokeConvertOperation($selectedFiles, $operationOptions) {
 // / -----------------------------------------------------------------------------------
 // / A function to run Archive, as a button & a workflow both run it.
 // / Accepts the files & the options, which are Extension & Filename.
+// / Archiving a selection is the Archiver pipeline's, from v4.1.6, & this dispatches to it as the OCR & Identify adapters dispatch to theirs.
 // / Returns whether any file was archived, whether anything went wrong, the archives it made & what it found, which is nothing, in that order.
 // / A Filename puts every file into one archive of that name, & an empty one archives each file under its own name.
 function invokeArchiveOperation($selectedFiles, $operationOptions) {
   // / Set variables.
-  global $EnableMemoryProtection;
+  global $PipelineCoreActive, $EnableMemoryProtection;
   $OperationSucceeded = $OperationErrors = FALSE;
   $ProducedFiles = $OperationFindings = array();
-  $archivePath = '';
-  list ($OperationSucceeded, $OperationErrors, $archivePath, $ProducedFiles) = archiveFiles($selectedFiles, (string)($operationOptions['Filename'] ?? ''), strtolower((string)($operationOptions['Extension'] ?? 'zip')));
+  $operationOutput = array();
+  if (!$PipelineCoreActive or !function_exists('runOperationPipeline')) {
+    $OperationErrors = TRUE;
+    errorEntry('Archive was requested but no Archiver pipeline is installed!', 34006, FALSE); }
+  else {
+    list ($OperationSucceeded, $OperationErrors, $operationOutput) = runOperationPipeline('Archive', $selectedFiles, (string)($operationOptions['Filename'] ?? ''), strtolower((string)($operationOptions['Extension'] ?? 'zip')), '');
+    if (is_array($operationOutput)) $ProducedFiles = array_values(array_filter($operationOutput, 'is_string')); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $archivePath, $selectedFiles, $operationOptions);
+  purgeSensitiveMemory($EnableMemoryProtection, $operationOutput, $selectedFiles, $operationOptions);
   return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
 // / -----------------------------------------------------------------------------------
 
@@ -4433,7 +4475,7 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
-  $Files = $FileDetails = array();
+  $Files = $FileDetails = $ArchiveOperationArray = $OfferedOperations = array();
   $FileCount = 0;
   // / Make sure the $guiType is valid.
   // / A non numeric type cannot be compared against a range, so it is replaced outright.
@@ -4457,6 +4499,13 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / The files arrive in the order the user chose, each with its size & the time it changed.
   list ($Files, $FileDetails) = arrangeFiles($ConvertDir, getFiles($ConvertDir), $SortToUse);
   $FileCount = count($Files);
+  // / The formats a file or a selection may be archived in, which an interface offers instead of $ArchiveArray.
+  // / $ArchiveArray holds the bootable disk images the Archive pipeline converts an archive into, & archiving a file makes none of them.
+  $ArchiveOperationArray = archiveOperationFormats();
+  // / Which of a file's operations an interface offers. Each is an operation pipeline's, & one whose pipeline is missing is not offered, as a workflow does not offer it.
+  // / A button that could only fail is not drawn, & -v names the pipeline that is missing.
+  $OfferedOperations = array('Scan' => ($AllowUserVirusScan === TRUE && operationPipelineIsInstalled('Scan')), 'Identify' => ($AllowUserIdentify === TRUE && operationPipelineIsInstalled('Identify')),
+    'OCR' => (in_array('OCR', (array)$SupportedConversionTypes, TRUE) && operationPipelineIsInstalled('OCR')), 'Archive' => (count($ArchiveOperationArray) > 0));
   // / An interface that renders an empty list has either been handed the wrong directory
   // / or a directory with nothing in it, & those are different faults with different
   // / fixes. Saying which directory was read, & whether this was the framed request, is
@@ -4646,7 +4695,7 @@ function downloadFiles($Download) {
     // / Make sure all iteration specific required variables are properly sanitized.
     list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $resolvedFilename) = verifyFile($file, FALSE, FALSE, $clean, $copy, $skip);
     if (!$fileIsVerified) {
-      // / This wrote to $ArchiveErrors, which belongs to archiveFiles(). A file that failed
+      // / This wrote to $ArchiveErrors, which belonged to archiveFiles(). A file that failed
       // / verification here reported success to the caller.
       $DownloadErrors = TRUE;
       errorEntry('Could not verify the input file.', 3001, FALSE);
@@ -4743,140 +4792,6 @@ function deleteFiles($FilesToDelete) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $filesPipelineIsReady, $filesEntryPoint, $permittedDirectory, $file, $fileExtension, $variableIsSanitized, $filesAttempted, $filesDeleted, $permittedNames, $removalSucceeded, $namesAttempted, $namesRemoved);
   return array($DeleteComplete, $DeleteErrors); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to archive a selection of files.
-// / Each file is archived on its own, so one input produces one output every time.
-// / Each output format gates on its own creator, so a missing mkisofs does not prevent a
-// / zip archive from being created.
-// / Every binary is supplied by toolPath(), which asks the manifest, rather than assumed, so
-// / the version that was verified is provably the version that runs.
-// / 7-Zip cannot create rar archives. RAR compression is proprietary & 7-Zip reads the
-// / format without being able to write it, so rar output has NO fallback.
-// / Returns whether any file was archived, whether anything went wrong, the last archive's path & the name of every archive it made, in that order.
-// / It prints nothing. The core prints what it made for a button, & a workflow passes it to the next step.
-function archiveFiles($FilesToArchive, $UserFilename, $UserExtension) {
-  // / Set variables.
-  global $Verbose, $VirusScan, $Lol, $Lolol, $EnableMemoryProtection;
-  $ArchiveComplete = $ArchiveErrors = $virusFound = $skip = $variableIsSanitized = FALSE;
-  $fileIsVerified = $scanComplete = $sandboxIsAvailable = $anyFileSucceeded = $loopCheck = FALSE;
-  $archiveToolsAreValid = $archiveWasStarted = FALSE;
-  $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = FALSE;
-  $clean = $copy = TRUE;
-  $returnData = $file = $pathname = $oldPathname = $oldExtension = $NewPathname = $archiveCommand = $resolvedFilename = '';
-  $ArchivedFiles = array();
-  // / The name every file is archived under, once the first file has settled it.
-  $archiveName = $UserFilename;
-  $rararr = array('rar');
-  $ziparr = array('zip');
-  $tararr = array('7z', 'tar', 'tar.gz', 'tar.bz2');
-  $isoarr = array('iso');
-  // / Locate & verify every archive utility before anything is written.
-  $sevenZipBinary = toolPath('7-Zip');
-  $rarBinary = toolPath('RAR');
-  $zipBinary = toolPath('Zip');
-  $tarBinary = toolPath('Tar');
-  $mkisofsBinary = toolPath('Genisoimage');
-  $archiveToolsAreValid = ($sevenZipBinary !== FALSE && $zipBinary !== FALSE && $tarBinary !== FALSE && $mkisofsBinary !== FALSE);
-  // / Make sure the input files are formatted into an array.
-  if (!is_array($FilesToArchive)) $FilesToArchive = array($FilesToArchive);
-  // / Every other archiver here adds a file to an archive that already exists, which is how a
-  // / selection of files becomes one archive. Mkisofs replaces the image it is given instead,
-  // / so a second file would leave an image holding only the last one. That is refused rather
-  // / than written, because an image quietly missing most of its files is worse than none.
-  if (count($FilesToArchive) > 1 && in_array($UserExtension, $isoarr)) {
-    $ArchiveErrors = TRUE;
-    $FilesToArchive = array();
-    errorEntry('An iso image holds one file at a time, so a selection of files cannot be archived into one!', 4005, FALSE); }
-  // / Iterate through the array of input files.
-  foreach ($FilesToArchive as $file) {
-    $loopCheck = FALSE;
-    $archiveCommand = '';
-    // / Make sure the file is sanitized before processing it.
-    list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
-      $ArchiveErrors = TRUE;
-      errorEntry('Could not sanitize the input file!', 4000, FALSE);
-      continue; }
-    // / Set the $clean & $copy arguments for the verifyFile() function as needed.
-    // / The first file asks for a clean output, so an archive name that is taken is given the next free one.
-    // / Every file after it adds to the archive the first file started, so it keeps that archive's name.
-    // / Without a name, each file is archived under its own, so each asks for a clean output.
-    $clean = ($UserFilename === '' or $archiveWasStarted === FALSE);
-    $copy = TRUE;
-    if ($Verbose) logEntry('User selected to Archive file '.$file.'.');
-    // / Verify the file before performing any operations on it.
-    // / verifyFile returns the name with the extension appended, so the name carried to the next file has it taken off again.
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $NewPathname, $resolvedFilename) = verifyFile($file, $archiveName, $UserExtension, $clean, $copy, $skip);
-    if (!$fileIsVerified) {
-      $ArchiveErrors = TRUE;
-      errorEntry('Could not verify the input file.', 4001, FALSE);
-      continue; }
-    else if ($Verbose) logEntry('Verified file '.$NewPathname.'.');
-    // / redeclare() replaces the name, because a file that failed before the archive was started leaves the next one to settle it again.
-    if ($clean && $UserFilename !== '') redeclare($archiveName, preg_replace('/\.'.preg_quote((string)$UserExtension, '/').'$/', '', (string)$resolvedFilename));
-    // / Scan with the default scanner if $VirusScan is set to TRUE in config.php.
-    if ($VirusScan) {
-      if ($Verbose) logEntry('Starting virus scan.');
-      list ($scanComplete, $virusFound) = virusScan($pathname);
-      if (!$scanComplete) errorEntry('Could not perform a virus scan!', 4002, TRUE);
-      if ($virusFound) errorEntry('Virus detected!', 4003, TRUE);
-      if ($Verbose) logEntry('Virus scan complete.'); }
-    // / Select the archiver for the requested output format & confirm it is usable.
-    // / Handle archiving of rar compatible files.
-    if (in_array($UserExtension, $rararr)) {
-      if ($rarBinary === FALSE) {
-        $ArchiveErrors = TRUE;
-        errorEntry('Rar output requires the rar utility, which is missing or too old!', 13012, FALSE); }
-      else $archiveCommand = escapeshellarg($rarBinary).' a -ep '.escapeshellarg($NewPathname).' '.escapeshellarg($pathname); }
-    // / Handle archiving of zip compatible files.
-    else if (in_array($UserExtension, $ziparr)) {
-      if ($zipBinary === FALSE) {
-        $ArchiveErrors = TRUE;
-        errorEntry('Zip is missing, unidentifiable, or too old!', 13010, FALSE); }
-      else $archiveCommand = escapeshellarg($zipBinary).' -j '.escapeshellarg($NewPathname).' '.escapeshellarg($pathname); }
-    // / Handle archiving of 7-Zip compatible files.
-    else if (in_array($UserExtension, $tararr)) {
-      if ($sevenZipBinary === FALSE) {
-        $ArchiveErrors = TRUE;
-        errorEntry('The installed 7-Zip version is missing, unidentifiable, or too old!', 13008, FALSE); }
-      else $archiveCommand = escapeshellarg($sevenZipBinary).' a '.escapeshellarg($NewPathname).' '.escapeshellarg($pathname); }
-    // / Handle archiving of mkisofs compatible files.
-    else if (in_array($UserExtension, $isoarr)) {
-      if ($mkisofsBinary === FALSE) {
-        $ArchiveErrors = TRUE;
-        errorEntry('Mkisofs is missing, unidentifiable, or too old!', 13009, FALSE); }
-      else $archiveCommand = escapeshellarg($mkisofsBinary).' -o '.escapeshellarg($NewPathname).' '.escapeshellarg($pathname); }
-    // / Perform the archive operation inside a sandbox.
-    // / An archiver reads a file the user supplied & writes a structure it controls, so it
-    // / is isolated for the same reason every other dependency is.
-    if ($archiveCommand !== '') {
-      list ($sandboxIsAvailable, $archiveCommand) = sandboxCommand($archiveCommand, $pathname, $NewPathname, FALSE, 'archive');
-      if (!$sandboxIsAvailable) {
-        $ArchiveErrors = TRUE;
-        errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
-      else $returnData = shell_exec($archiveCommand); }
-    // / Log the output of the archive operation to the logfile, if it is not blank.
-    if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
-    // / The output file is the only verdict on whether the operation produced anything.
-    if (!file_exists($NewPathname)) {
-      $ArchiveErrors = TRUE;
-      errorEntry('Could not archive file '.$pathname.' to '.$NewPathname.'!', 4004, FALSE); }
-    else {
-      $loopCheck = TRUE;
-      $archiveWasStarted = TRUE;
-      // / An archive several files went into is named once.
-      if (!in_array($resolvedFilename, $ArchivedFiles, TRUE)) $ArchivedFiles[] = $resolvedFilename;
-      if ($Verbose) logEntry('Archived file '.$pathname.' to '.$NewPathname.'.'); }
-    // / Record that at least one file in this request succeeded.
-    // / $loopCheck is reset on every iteration, so without this the result would reflect
-    // / only the LAST file rather than the whole request.
-    if ($loopCheck) $anyFileSucceeded = TRUE; }
-  if ($anyFileSucceeded) $ArchiveComplete = TRUE;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $archiveWasStarted, $archiveName, $resolvedFilename, $file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $scanComplete, $virusFound, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $archiveToolsAreValid, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $FilesToArchive, $UserFilename, $UserExtension);
-  return array($ArchiveComplete, $ArchiveErrors, $NewPathname, $ArchivedFiles); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -4979,269 +4894,30 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to create the user virus logfiles if required.
-// / Type can be 'clamav', 'scancore' or 'all'.
-function verifyUserVirusLogs($type) {
-  // / Set variables.
-  global $Verbose, $Time, $UserClamLogFile, $UserScanCoreLogFile, $SesHash3, $Lol, $Append, $UserScanCoreFileName, $EnableMemoryProtection;
-  $LogsExist = FALSE;
-  $userClamLogFileName = $userScanCoreLogFileName = '';
-  // / Verify the User Clam Log File if needed.
-  // / A scan with every scanner resets both logs, so its report carries no earlier scan's lines.
-  if ($type === 'clamav' or $type === 'all') {
-    // / Remove the old User ClamAV Virus Log file if one already exists.
-    if (file_exists($UserClamLogFile)) {
-      if ($Verbose) logEntry('Deleting stale file '.$UserClamLogFile.'.');
-      @unlink($UserClamLogFile); }
-    // / Make sure that the stale file was deleted if required or creating a new one will cause problems.
-    if (file_exists($UserClamLogFile)) errorEntry('Could not delete stale file '.$UserClamLogFile.'!', 16000, TRUE);
-    else file_put_contents($UserClamLogFile, 'Op-Act, '.$Time.', '.$SesHash3.': Created a User Clam Log File.'.$Lol, $Append);
-    // / Make sure that the file was successfully replaced.
-    if (!file_exists($UserClamLogFile)) errorEntry('Could not create a file at '.$UserClamLogFile.'!', 16001, TRUE);
-    else {
-      $LogsExist = TRUE;
-      if ($Verbose) logEntry('Created a file at '.$UserClamLogFile.'.'); } }
-  // / Verify the User ScanCore Log File if needed.
-  if ($type === 'scancore' or $type === 'all') {
-    // / Remove the old User ScanCore Virus Log file if one already exists.
-    if (file_exists($UserScanCoreLogFile)) {
-      if ($Verbose) logEntry('Deleting stale file '.$UserScanCoreLogFile.'.');
-      @unlink($UserScanCoreLogFile); }
-    // / Make sure that the stale file was deleted if required or creating a new one will cause problems.
-    if (file_exists($UserScanCoreLogFile)) errorEntry('Could not delete stale file '.$UserScanCoreLogFile.'!', 16002, TRUE);
-    else file_put_contents($UserScanCoreLogFile, 'Op-Act, '.$Time.', '.$SesHash3.': Created a User ScanCore Log File.'.$Lol, $Append);
-    // / Make sure that the file was successfully replaced.
-    if (!file_exists($UserScanCoreLogFile)) errorEntry('Could not create a file at '.$UserScanCoreLogFile.'!', 16003, TRUE);
-    else {
-      $LogsExist = TRUE;
-      if ($Verbose) logEntry('Created a file at '.$UserScanCoreLogFile.'.'); } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $type, $userClamLogFileName, $userScanCoreLogFileName);
-  return array($LogsExist, $UserClamLogFile, $UserScanCoreLogFile); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to format a log entry & write it to the logfile.
-// / Type can be either 'clamav' or 'scancore'.
-function userVirusLogEntry($Entry, $type) {
-  // / Set variables.
-  global $Time, $UserClamLogFile, $UserScanCoreLogFile, $SesHash3, $Lol, $Append, $EnableMemoryProtection;
-  $LogWritten = $logWrittenA = $logWrittenB = FALSE;
-  // / Format the input string into a log entry & write it to the $UserClamLogFile.
-  if ($type === 'clamav') $logWrittenA = file_put_contents($UserClamLogFile, 'Op-Act, '.$Time.', '.$SesHash3.': '.$Entry.$Lol, $Append);
-  // / Format the input string into a log entry & write it to the $UserScanCoreLogFile.
-  if ($type === 'scancore') $logWrittenB = file_put_contents($UserScanCoreLogFile, 'Op-Act, '.$Time.', '.$SesHash3.': '.$Entry.$Lol, $Append);
-  // / Check that a log entry was written.
-  if ($type === 'clamav') if ($logWrittenA) $LogWritten = TRUE;
-  if ($type === 'scancore') if ($logWrittenB) $LogWritten = TRUE;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $type, $logWrittenA, $logWrittenB);
-  return $LogWritten; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to scan user supplied files on demand with one scanner.
-// / Accepts the files to scan, the scanner's name as runVirusScan knows it & the name a
-// / user reads. Returns whether any file was given a verdict, whether anything went wrong
-// / & whether any file was found infected, in that order.
-// / Every scan goes through runVirusScan, the dispatcher that uploads, fetched files & the OCR pipeline already use.
-// / The user is told a verdict & nothing else, which is clean, infected or not scanned, & which of their own files.
-// / What a scanner said is counted for the administrator's log & discarded.
-// / Each file is judged on its own.
-function userScanWithScanner($FilesToScan, $scannerName, $scannerLabel) {
-  // / Set variables.
-  global $Verbose, $ConvertDir, $EnableMemoryProtection;
-  $OperationSuccessful = $OperationErrors = $UserVirusFound = FALSE;
-  $userFilename = $userExtension = $clean = $copy = $variableIsSanitized = $fileIsVerified = FALSE;
-  $scanCompleted = $threatWasFound = FALSE;
-  $skip = TRUE;
-  $scanFindings = array();
-  $file = $txt = $scannerUsed = $pathname = $oldPathname = $oldExtension = $newPathname = $verifiedFilename = '';
-  $sanitizeError = $verifyError = 0;
-  // / Each scanner keeps the error numbers it has always had, so a log still says which one.
-  $sanitizeError = ($scannerName === 'clamav') ? 17000 : 19000;
-  $verifyError = ($scannerName === 'clamav') ? 17001 : 19001;
-  $txt = 'Initiating User Virus Scan with '.$scannerLabel.'.';
-  userVirusLogEntry($txt, $scannerName);
-  if ($Verbose) logEntry($txt);
-  if (!is_array($FilesToScan)) $FilesToScan = array($FilesToScan);
-  // / Without the Pipeline Core there is no scanner to ask, & nothing is reported as clean.
-  if (!function_exists('runVirusScan')) {
-    $OperationErrors = TRUE;
-    errorEntry('The Pipeline Core is unavailable, so the user virus scan could not run!', 506, FALSE);
-    userVirusLogEntry('No scanner could be reached. NO FILE WAS SCANNED.', $scannerName);
-    $FilesToScan = array(); }
-  foreach ($FilesToScan as $file) {
-    list ($file, $variableIsSanitized) = sanitize($file, TRUE);
-    if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
-      $OperationErrors = TRUE;
-      errorEntry('Could not sanitize the input file!', $sanitizeError, FALSE);
-      continue; }
-    if ($Verbose) logEntry('User selected to perform a '.$scannerLabel.' scan on file '.$file.'.');
-    list ($fileIsVerified, $pathname, $oldPathname, $oldExtension, $newPathname, $verifiedFilename) = verifyFile($file, $userFilename, $userExtension, $clean, $copy, $skip);
-    if (!$fileIsVerified) {
-      $OperationErrors = TRUE;
-      errorEntry('Could not verify the input file.', $verifyError, FALSE);
-      continue; }
-    $txt = 'Scanning '.$file.'.';
-    if ($Verbose) logEntry($txt);
-    userVirusLogEntry($txt, $scannerName);
-    list ($scanCompleted, $threatWasFound, $scanFindings, $scannerUsed) = runVirusScan(array($ConvertDir.$file), $scannerName);
-    if ($Verbose) logEntry($scannerLabel.' reported '.count($scanFindings).' finding(s) for '.$file.'.');
-    // / A scan that did not finish is not a clean result & is never reported as one.
-    if (!$scanCompleted) {
-      $OperationErrors = TRUE;
-      warningEntry($scannerLabel.' could not scan '.$file.' for a user.');
-      userVirusLogEntry($file.' could not be scanned. No verdict was reached.', $scannerName); }
-    else if ($threatWasFound) {
-      $OperationSuccessful = $UserVirusFound = TRUE;
-      $txt = 'Potentially infected file detected at '.$file.'!';
-      warningEntry($txt);
-      userVirusLogEntry($txt, $scannerName); }
-    else {
-      $OperationSuccessful = TRUE;
-      $txt = 'No infection detected in '.$file.'.';
-      if ($Verbose) logEntry($txt);
-      userVirusLogEntry($txt, $scannerName); } }
-  // / A scan that gave no file a verdict does not get to end with the word Complete.
-  $txt = $OperationSuccessful ? $scannerLabel.' Virus Scan Complete.' : $scannerLabel.' Virus Scan DID NOT RUN.';
-  if ($Verbose) logEntry($txt);
-  userVirusLogEntry($txt, $scannerName);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $userFilename, $userExtension, $clean, $copy, $variableIsSanitized, $fileIsVerified, $scanCompleted, $threatWasFound, $skip, $scanFindings, $file, $txt, $scannerUsed, $pathname, $oldPathname, $oldExtension, $newPathname, $verifiedFilename, $sanitizeError, $verifyError, $scannerName, $scannerLabel);
-  return array($OperationSuccessful, $OperationErrors, $UserVirusFound); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to process the results of a User Virus Scan & check for any failures or errors.
-// / Type can be either 'clamav', 'scancore', or 'all'.
-function checkUserVirusScanResults($type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $ScanComplete = $ScanErrors = FALSE;
-  // / Check that all the input check results are valid.
-  if (!is_bool($scan1Complete)) $scan1Complete = FALSE;
-  if (!is_bool($scan1Errors)) $scan1Errors = FALSE;
-  if (!is_bool($scan2Complete)) $scan2Complete = FALSE;
-  if (!is_bool($scan2Errors)) $scan2Errors = FALSE;
-  // / A scanner's report is always delivered, even one saying the scan did not run, so the operation is complete & the errors flag carries a failure.
-  // / A scanner that gave no file a verdict has already set its own errors flag.
-  // / Both scanners are held to that in 'all' mode too.
-  if ($type == 'all') {
-    $ScanComplete = TRUE;
-    if ($scan1Errors or $scan2Errors) $ScanErrors = TRUE; }
-  // / Set results using only ClamAV output.
-  // / A test of the scan's own completion sat here after the line that had already set it &
-  // / decided nothing.
-  if ($type == 'clamav') {
-    $ScanComplete = TRUE;
-    if ($scan1Errors) $ScanErrors = TRUE; }
-  // / Set results using only ScanCore output.
-  if ($type == 'scancore') {
-    $ScanComplete = TRUE;
-    if ($scan2Errors) $ScanErrors = TRUE; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
-  return array($ScanComplete, $ScanErrors); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to define & verify that a Consolidated User Virus Log File exists.
-function verifyConsolidatedLogFile() {
-  // / Set variables.
-  global $Verbose, $ConsolidatedLogFile, $Append;
-  $ConsolidatedLogsExist = FALSE;
-  // / Remove the old Consolidated Virus Log file if one already exists.
-  if (file_exists($ConsolidatedLogFile)) {
-    if ($Verbose) logEntry('Deleting stale consolidated log file.');
-    @unlink($ConsolidatedLogFile); }
-  // / Make sure that the stale file was deleted if required or creating a new one will cause problems.
-  if (file_exists($ConsolidatedLogFile)) errorEntry('Could not delete stale file '.$ConsolidatedLogFile.'!', 20000, TRUE);
-  // / Attempt to create a new consolidated log if the previous one was successfully removed.
-  else file_put_contents($ConsolidatedLogFile, '', $Append);
-  // / Make sure that the file was successfully replaced.
-  if (!file_exists($ConsolidatedLogFile)) errorEntry('Could not create a file at '.$ConsolidatedLogFile.'!', 20001, TRUE);
-  else {
-    $ConsolidatedLogsExist = TRUE;
-    if ($Verbose) logEntry('Created a file at '.$ConsolidatedLogFile.'.'); }
-  return array($ConsolidatedLogsExist, $ConsolidatedLogFile); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to consolidate User Virus Scan log files generated via various methods into one meaningful report.
-// / Type can be either 'clamav', 'scancore', or 'all'.
-function consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile) {
-  // / Set variables.
-  // / The two user logs are the arguments & are not declared global. Declaring them global
-  // / as well replaced the arguments with the globals, so whatever a caller passed was ignored.
-  global $Lol, $Append, $ConsolidatedLogFile, $ConsolidatedLogFileName, $EnableMemoryProtection;
-  $ConsolidatedLogsExist = $ConsolidatedLogErrors = $logWrittenA = $logWrittenB = $logWrittenC = $logWrittenD = $logWrittenE = FALSE;
-  $userClamLogData = $userScanCoreData = $consolidatedLogData = $txt = $userScanCoreLogData = '';
-  $spacer = '----------';
-  list ($ConsolidatedLogsExist, $ConsolidatedLogFile) = verifyConsolidatedLogFile();
-  if ($type === 'clamav') {
-    // / Load the User Clam Log File into memory.
-    $userClamLogData = file_get_contents($UserClamLogFile);
-    $logWrittenA = file_put_contents($ConsolidatedLogFile, $userClamLogData.$Lol.$spacer.$Lol, $Append); }
-  if ($type === 'scancore') {
-    // / Load the User Scan Core Log File into memory.
-    $userScanCoreLogData = file_get_contents($UserScanCoreLogFile);
-    $logWrittenB = file_put_contents($ConsolidatedLogFile, $userScanCoreLogData.$Lol.$spacer.$Lol, $Append); }
-  if ($type === 'all') {
-    // / Head the report, then append both scanners' logs beneath it.
-    $txt = 'User selected to scan files with all available scanners.';
-    $logWrittenC = file_put_contents($ConsolidatedLogFile, $txt.$Lol.$spacer.$Lol, $Append);
-    $userClamLogData = file_get_contents($UserClamLogFile);
-    $logWrittenD = file_put_contents($ConsolidatedLogFile, $userClamLogData.$Lol.$spacer.$Lol, $Append);
-    $userScanCoreLogData = file_get_contents($UserScanCoreLogFile);
-    $logWrittenE = file_put_contents($ConsolidatedLogFile, $userScanCoreLogData.$Lol.$spacer.$Lol, $Append); }
-  // / Check to be sure that the $ConsolidatedLogFile exists.
-  if ($type === 'clamav' && !$logWrittenA) $ConsolidatedLogErrors = TRUE;
-  if ($type === 'scancore' && !$logWrittenB) $ConsolidatedLogErrors = TRUE;
-  if ($type === 'all') if (!$logWrittenC or !$logWrittenD or !$logWrittenE) $ConsolidatedLogErrors = TRUE;
-  if (file_exists($ConsolidatedLogFile)) $ConsolidatedLogsExist = TRUE;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $consolidatedLogData, $userScanCoreData, $type, $txt, $spacer, $logWrittenA, $logWrittenB, $logWrittenC, $logWrittenD, $logWrittenE, $userClamLogData, $userScanCoreLogData);
-  return array($ConsolidatedLogsExist, $ConsolidatedLogErrors, $ConsolidatedLogFile, $ConsolidatedLogFileName); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to scan the files a user selected with ClamAV, ScanCore or both, & build the
 // / report they download.
-// / Type can be either 'clamav', 'scancore', or 'all'.
+// / Accepts the files & the scan type, which is clamav, scancore or all, in that order.
+// / Returns whether a verdict was reached, whether anything went wrong, whether any file was found infected, the report's path & its name, in that order.
+// / The scan is the Scan pipeline's, from v4.1.6. This dispatches to it, names the report, & reads what the scan found.
+// / A missing Scan pipeline is reported rather than read as a scan that found nothing, because a clean verdict nobody reached is the one answer a scan must never give.
 function userVirusScan($FilesToScan, $type) {
   // / Set variables.
-  global $UserClamLogFile, $UserScanCoreLogFile, $ConsolidatedLogFile, $ConsolidatedLogFileName, $EnableMemoryProtection;
-  $ScanComplete = $ScanErrors = $UserVirusFound = $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = $ConsolidatedLogsExist = $ConsolidatedLogErrors = FALSE;
-  $clamVirusFound = $scanCoreVirusFound = $logsExist = FALSE;
-  // / Check that the $type input variable is valid.
-  if ($type !== 'all' && $type !== 'clamav' && $type !== 'scancore') $type = 'all';
-  // / Make sure the input files are formatted into an array.
-  if (!is_array($FilesToScan)) $FilesToScan = array($FilesToScan);
-  list ($logsExist, $UserClamLogFile, $UserScanCoreLogFile) = verifyUserVirusLogs($type);
-  // / Each scanner is run once, over the whole list, because a virus scan draws on a resource budget & runs under a ceiling.
-  // /
-  // / A detection from either scanner is a detection.
-  // / Each scanner reports into its own variable & the user is given the OR of them, because the two carry different definitions, which is the reason for offering both.
-  if ($type === 'clamav' or $type === 'all') {
-    // / Prepare to run a ClamAV Scan.
-    list ($scan1Complete, $scan1Errors, $clamVirusFound) = userScanWithScanner($FilesToScan, 'clamav', 'ClamAV');
-    if ($clamVirusFound) $UserVirusFound = TRUE; }
-  // / Perform a User Virus Scan using ScanCore if required.
-  if ($type === 'scancore' or $type === 'all') {
-    // / Prepare to run a ScanCore Scan.
-    list ($scan2Complete, $scan2Errors, $scanCoreVirusFound) = userScanWithScanner($FilesToScan, 'scancore', 'ScanCore');
-    if ($scanCoreVirusFound) $UserVirusFound = TRUE; }
-  // / Check the results of the virus scan for failures or errors.
-  list ($ScanComplete, $ScanErrors) = checkUserVirusScanResults($type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
-  // / Consolidate the log files created during the scan into the $ConvertTempDir so the user can access them.
-  list ($ConsolidatedLogsExist, $ConsolidatedLogErrors, $ConsolidatedLogFile, $ConsolidatedLogFileName) = consolidateLogs($type, $UserClamLogFile, $UserScanCoreLogFile);
-  // / Verify that all operations are complete.
-  if ($ScanErrors or $ConsolidatedLogErrors) $ScanErrors = TRUE;
-  if (!$ConsolidatedLogsExist) $ScanComplete = FALSE;
+  global $PipelineCoreActive, $ConsolidatedLogFileName, $EnableMemoryProtection;
+  $ScanComplete = $ScanErrors = $UserVirusFound = FALSE;
+  $ReportPath = $ReportName = '';
+  $scanFindings = array();
+  if (!$PipelineCoreActive or !function_exists('runOperationPipeline')) {
+    $ScanErrors = TRUE;
+    errorEntry('A virus scan was requested but no Scan pipeline is installed!', 34006, FALSE); }
+  else {
+    list ($ScanComplete, $ScanErrors, $scanFindings) = runOperationPipeline('Scan', $FilesToScan, (string)$ConsolidatedLogFileName, 'txt', (string)$type);
+    if (is_array($scanFindings)) {
+      $UserVirusFound = (($scanFindings['Threat'] ?? FALSE) === TRUE);
+      $ReportPath = is_string($scanFindings['Report'] ?? NULL) ? $scanFindings['Report'] : '';
+      $ReportName = is_string($scanFindings['ReportName'] ?? NULL) ? $scanFindings['ReportName'] : ''; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $logsExist, $clamVirusFound, $scanCoreVirusFound, $type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
-  return array($ScanComplete, $ScanErrors, $UserVirusFound, $ConsolidatedLogFile, $ConsolidatedLogFileName); }
+  purgeSensitiveMemory($EnableMemoryProtection, $scanFindings, $FilesToScan, $type);
+  return array($ScanComplete, $ScanErrors, $UserVirusFound, $ReportPath, $ReportName); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

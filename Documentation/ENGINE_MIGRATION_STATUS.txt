@@ -418,7 +418,10 @@ the code moves, not by the code moving.
   8. ONE SCANNER PATH.                                                                DONE
      Every scan goes through runVirusScan. userScanWithScanner gives each file the user chose
      to each scanner they chose, & userClamScan, userScanCoreScan & startScanCore are gone,
-     about two hundred lines. This is the change that most directly becomes HRProtect's core
+     about two hundred lines. From v4.1.6 userScanWithScanner & the report it feeds are the Scan
+     pipeline's, an operation pipeline, & convertCore.php keeps only the adapter that dispatches
+     it. The Archiver pipeline took archiveFiles in the same release, so no operation is left in
+     the application's own code, & a second application reaches both through the Pipeline Core. This is the change that most directly becomes HRProtect's core
      feature, because HRProtect is that dispatcher with a different application around it.
      DONE FIRST, BECAUSE THE DISPATCHER COULD NOT YET BE TRUSTED. runVirusScan reached two
      scanner pipelines that had never scanned anything. Both took sandboxCommand's pair as the

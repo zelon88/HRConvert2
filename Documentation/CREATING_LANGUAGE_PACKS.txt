@@ -183,8 +183,8 @@ WHEN NOT TO CHANGE A LANGUAGE PACK VERSION.
 
 ALL LANGUAGE PACKS MUST BE UPDATED TOGETHER.
   A version bump applies to every pack in every GUI at once. All or nothing.
-  Twenty six packs across three GUIs is seventy eight files, & every one of them must carry
-  the same $LanguageVersion.
+  Twenty six packs across two GUIs is fifty two files, & every one of them must carry the same
+  $LanguageVersion.
   A pack left behind is a pack the core warns about on every request, & a string it lacks is
   shown from the baseline instead of in the user's language.
   This is the single most common mistake when adding a string. Add the string to one pack,

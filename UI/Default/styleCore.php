@@ -35,6 +35,23 @@
 
 // / Grey color scheme (default).
 $defaultButtonCode = '
+/* / The colours this scheme draws every panel with, named once.
+   / HRConvert2.css draws every panel, box, menu & button from these & from nothing else, so a
+   / scheme is these few lines rather than a copy of the stylesheet.
+   / Each is a colour the scheme already had. The accent is its button colour, the frame its
+   / button border, the tint & the ink its file list panel, & the surface what a panel sits on.
+   / accent-rgb is the accent again as three numbers, so a wash of it can be drawn at any
+   / strength. shade-rgb is what a line or an edge is drawn in, black on a light scheme & white
+   / on the dark one, & on-accent is what is written on the accent. */
+:root {
+  --hrc2-accent: #5B5B5B;
+  --hrc2-accent-rgb: 91, 91, 91;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #5B5B5B;
+  --hrc2-tint: #eef0f2;
+  --hrc2-ink: #3a3a3a;
+  --hrc2-surface: #ffffff;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / THREE LAYERS, & each has a different job.
    / The page carries the scheme colour, or its pattern on blue.
    / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
@@ -44,7 +61,7 @@ $defaultButtonCode = '
    / Tinting the card was tried & was wrong. It competed with both the page behind it & the
    / panel on top of it, & the layers stopped reading as layers. */
 .file-list-card {
-  background-color: #ffffff;
+  background-color: var(--hrc2-surface);
   color: #555555; }
 /* / The panel carries the scheme colour. It is the only one of the three layers that does.
    / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
@@ -54,8 +71,8 @@ $defaultButtonCode = '
    / so there is no page colour to tint toward & the panel takes the blue of the scheme.
    / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #eef0f2;
-  color: #3a3a3a; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 .info-button {
   -webkit-box-shadow: 3px 4px 0px 0px #f3f6f4;
   box-shadow: 3px 4px 0px 0px #f3f6f4;
@@ -99,6 +116,16 @@ body {
 
 // / Green color scheme.
 $greenButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #298040;
+  --hrc2-accent-rgb: 41, 128, 64;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #054d0c;
+  --hrc2-tint: #e6f6e0;
+  --hrc2-ink: #2f4a2f;
+  --hrc2-surface: #ffffff;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / THREE LAYERS, & each has a different job.
    / The page carries the scheme colour, or its pattern on blue.
    / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
@@ -108,7 +135,7 @@ $greenButtonCode = '
    / Tinting the card was tried & was wrong. It competed with both the page behind it & the
    / panel on top of it, & the layers stopped reading as layers. */
 .file-list-card {
-  background-color: #ffffff;
+  background-color: var(--hrc2-surface);
   color: #555555; }
 /* / The panel carries the scheme colour. It is the only one of the three layers that does.
    / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
@@ -118,8 +145,8 @@ $greenButtonCode = '
    / so there is no page colour to tint toward & the panel takes the blue of the scheme.
    / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #e6f6e0;
-  color: #2f4a2f; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 .info-button {
   -webkit-box-shadow: 3px 4px 0px 0px #b9ccb3;
   box-shadow: 3px 4px 0px 0px #b9ccb3;
@@ -163,6 +190,16 @@ body {
 
 // / Blue color scheme.
 $blueButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #2d60b2;
+  --hrc2-accent-rgb: 45, 96, 178;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #16537e;
+  --hrc2-tint: #e4edf7;
+  --hrc2-ink: #26384a;
+  --hrc2-surface: #ffffff;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / THREE LAYERS, & each has a different job.
    / The page carries the scheme colour, or its pattern on blue.
    / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
@@ -172,7 +209,7 @@ $blueButtonCode = '
    / Tinting the card was tried & was wrong. It competed with both the page behind it & the
    / panel on top of it, & the layers stopped reading as layers. */
 .file-list-card {
-  background-color: #ffffff;
+  background-color: var(--hrc2-surface);
   color: #555555; }
 /* / The panel carries the scheme colour. It is the only one of the three layers that does.
    / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
@@ -182,8 +219,8 @@ $blueButtonCode = '
    / so there is no page colour to tint toward & the panel takes the blue of the scheme.
    / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #e4edf7;
-  color: #26384a; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 .info-button {
   -webkit-box-shadow: 3px 4px 0px 0px #cfe2f3;
   box-shadow: 3px 4px 0px 0px #cfe2f3;
@@ -230,6 +267,16 @@ body {
 
 // / Red color scheme.
 $redButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #c20e0e;
+  --hrc2-accent-rgb: 194, 14, 14;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #990000;
+  --hrc2-tint: #fbe6df;
+  --hrc2-ink: #4a2f2f;
+  --hrc2-surface: #ffffff;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / THREE LAYERS, & each has a different job.
    / The page carries the scheme colour, or its pattern on blue.
    / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
@@ -239,7 +286,7 @@ $redButtonCode = '
    / Tinting the card was tried & was wrong. It competed with both the page behind it & the
    / panel on top of it, & the layers stopped reading as layers. */
 .file-list-card {
-  background-color: #ffffff;
+  background-color: var(--hrc2-surface);
   color: #555555; }
 /* / The panel carries the scheme colour. It is the only one of the three layers that does.
    / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
@@ -249,8 +296,8 @@ $redButtonCode = '
    / so there is no page colour to tint toward & the panel takes the blue of the scheme.
    / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #fbe6df;
-  color: #4a2f2f; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 .info-button {
   -webkit-box-shadow: 3px 4px 0px 0px #bcbcbc;
   box-shadow: 3px 4px 0px 0px #bcbcbc;
@@ -294,6 +341,16 @@ body {
 
 // / Orange color scheme.
 $orangeButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #b35900;
+  --hrc2-accent-rgb: 179, 89, 0;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #803300;
+  --hrc2-tint: #fdefdc;
+  --hrc2-ink: #4a3a20;
+  --hrc2-surface: #ffffff;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / THREE LAYERS, & each has a different job.
    / The page carries the scheme colour, or its pattern on blue.
    / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
@@ -303,7 +360,7 @@ $orangeButtonCode = '
    / Tinting the card was tried & was wrong. It competed with both the page behind it & the
    / panel on top of it, & the layers stopped reading as layers. */
 .file-list-card {
-  background-color: #ffffff;
+  background-color: var(--hrc2-surface);
   color: #555555; }
 /* / The panel carries the scheme colour. It is the only one of the three layers that does.
    / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
@@ -313,8 +370,8 @@ $orangeButtonCode = '
    / so there is no page colour to tint toward & the panel takes the blue of the scheme.
    / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #fdefdc;
-  color: #4a3a20; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 .info-button {
   -webkit-box-shadow: 3px 4px 0px 0px #ffdcb3;
   box-shadow: 3px 4px 0px 0px #ffdcb3;
@@ -358,6 +415,16 @@ body {
 
 // / Purple color scheme.
 $purpleButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #8e44ad;
+  --hrc2-accent-rgb: 142, 68, 173;
+  --hrc2-on-accent: #ffffff;
+  --hrc2-frame: #4a235a;
+  --hrc2-tint: #f1e7f6;
+  --hrc2-ink: #3f2f4a;
+  --hrc2-surface: #ffffff;
+  --hrc2-shade-rgb: 0, 0, 0; }
 /* / THREE LAYERS, & each has a different job.
    / The page carries the scheme colour, or its pattern on blue.
    / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
@@ -367,7 +434,7 @@ $purpleButtonCode = '
    / Tinting the card was tried & was wrong. It competed with both the page behind it & the
    / panel on top of it, & the layers stopped reading as layers. */
 .file-list-card {
-  background-color: #ffffff;
+  background-color: var(--hrc2-surface);
   color: #555555; }
 /* / The panel carries the scheme colour. It is the only one of the three layers that does.
    / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
@@ -377,8 +444,8 @@ $purpleButtonCode = '
    / so there is no page colour to tint toward & the panel takes the blue of the scheme.
    / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #f1e7f6;
-  color: #3f2f4a; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 .info-button {
   -webkit-box-shadow: 3px 4px 0px 0px #e1cfea;
   box-shadow: 3px 4px 0px 0px #e1cfea;
@@ -422,6 +489,16 @@ body {
 
 // / Dark / Night mode color scheme.
 $darkButtonCode = '
+/* / The colours this scheme draws every panel with. The grey scheme says what each one is. */
+:root {
+  --hrc2-accent: #d8d8d8;
+  --hrc2-accent-rgb: 216, 216, 216;
+  --hrc2-on-accent: #262626;
+  --hrc2-frame: #555555;
+  --hrc2-tint: #3a3a3a;
+  --hrc2-ink: #e4e4e4;
+  --hrc2-surface: #2a2a2a;
+  --hrc2-shade-rgb: 255, 255, 255; }
 /* / THREE LAYERS, & each has a different job.
    / The page carries the scheme colour, or its pattern on blue.
    / The card is the sheet the work sits on & is WHITE in every scheme but dark, so the
@@ -435,7 +512,7 @@ $darkButtonCode = '
    / scheme is that there is not one. The three layers still read as three layers,
    / just inverted, so the card is lighter than the page & the panel is lighter again.
 .file-list-card {
-  background-color: #2a2a2a;
+  background-color: var(--hrc2-surface);
   color: #d8d8d8; }
 /* / The panel carries the scheme colour. It is the only one of the three layers that does.
    / It sits on the WHITE card rather than on the page, so it is a light tint rather than a
@@ -445,8 +522,8 @@ $darkButtonCode = '
    / so there is no page colour to tint toward & the panel takes the blue of the scheme.
    / Every other scheme tints toward the page it belongs to. */
 .file-list-panel {
-  background-color: #3a3a3a;
-  color: #e4e4e4; }
+  background-color: var(--hrc2-tint);
+  color: var(--hrc2-ink); }
 .info-button {
   -webkit-box-shadow: 3px 4px 0px 0px #1a1a1a;
   box-shadow: 3px 4px 0px 0px #1a1a1a;

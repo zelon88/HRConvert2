@@ -189,8 +189,9 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
       </form>
       <?php // / The selector panel holds a form of its own, so it stays OUTSIDE the one
             // / above. HTML does not allow a form inside a form & a browser silently drops
-            // / the inner one, which would take every selector button with it. ?>
-      <div id='uiSelector' name='uiSelector' style='display:none;'>
+            // / the inner one, which would take every selector button with it.
+            // / Every menu a button opens is drawn as a panel, with no divider before or after it. ?>
+      <div id='uiSelector' name='uiSelector' class='hrc2-panel hrc2-menu' style='display:none;'>
         <form id='uiSelectorForm' name='uiSelectorForm' method='post' action='<?php echo htmlspecialchars($selectorBase, ENT_QUOTES, 'UTF-8'); ?>'>
           <input type='hidden' name='Token1' value='<?php echo htmlspecialchars($Token1, ENT_QUOTES, 'UTF-8'); ?>'>
           <input type='hidden' name='Token2' value='<?php echo htmlspecialchars($Token2, ENT_QUOTES, 'UTF-8'); ?>'>
@@ -238,69 +239,23 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         </form>
       </div>
       <br /> <br />
-      <button id='scandocMoreOptionsButton' name='scandocMoreOptionsButton' class='info-button' onclick='toggle_visibility("compressAllOptions");'><?php echo $Gui2Text2; ?></button>
       <?php if ($EnableWorkflows) { ?>
       <button type='button' id='hrc2WorkflowsButton' name='hrc2WorkflowsButton' class='info-button' aria-expanded='false' aria-controls='hrc2Workflows' onclick='toggle_visibility("hrc2Workflows");'><?php echo $Gui2Text128; ?></button>
-      <?php } ?>
-      <div id='compressAllOptions' name='compressAllOptions' align='center' style='display:none;'>
-        <?php if ($AllowUserVirusScan) { ?>
-        <hr style='width: 50%;'/>
-        <p><strong><?php echo $Gui2Text3; ?></strong></p>
-        <p><?php echo $Gui2Text20; ?><input type='checkbox' id='clamscanall' value='clamscanall' name='clamScan' checked></p>
-        <p><?php echo $Gui2Text21; ?><input type='checkbox' id='scancoreall' value='scancoreall' name='phpavScan' checked></p>
-        <p><input type='submit' id='scanAllButton' name='scanAllButton' class='info-button' value='<?php echo htmlspecialchars($Gui2Text22, ENT_QUOTES, 'UTF-8'); ?>' onclick='toggle_visibility("loadingCommandDiv");'></p>
-        <script type='text/javascript'>
-          HRC2.bindScanAll('scanAllButton', '', 'clamscanall', 'scancoreall',
-            <?php echo json_encode(array_values($Files)); ?>, <?php echo json_encode($ConsolidatedLogFileName); ?>);
-        </script>
-      <?php } if ($AllowUserIdentify) { ?>
-        <?php
-        // / Identify every file. Without a report what it reads is shown beside each file in the list.
-        // / With one, the report is written beside the files & downloaded, as an archive is.
-        ?>
-        <hr style='width: 50%;'/>
-        <p><strong><?php echo $Gui2Text98; ?></strong></p>
-        <p><label><input type='checkbox' id='identifyallreport' name='identifyallreport'> <?php echo $Gui2Text97; ?></label></p>
-        <p><?php echo $Gui2Text17; ?><input type='text' id='identifyallfilename' name='identifyallfilename' value='User_Identify_Report' disabled></p>
-        <p><input type='submit' id='identifyAllButton' name='identifyAllButton' class='info-button' value='<?php echo htmlspecialchars($Gui2Text99, ENT_QUOTES, 'UTF-8'); ?>'></p>
-        <script type='text/javascript'>
-          HRC2.bindIdentifyAll(<?php echo json_encode(array('submitId' => 'identifyAllButton', 'suffix' => '', 'fileNames' => array_values($Files), 'reportId' => 'identifyallreport', 'nameId' => 'identifyallfilename')); ?>);
-        </script>
-
-
-      <?php } ?>
-        <hr style='width: 50%;'/>
-        <?php if (in_array('Archive', $SupportedConversionTypes)) { ?>
-        <p><strong><?php echo $Gui2Text4; ?></strong></p>
-        <p><?php echo $Gui2Text17; ?><input type='text' id='userarchallfilename' name='userarchallfilename' value='<?php echo $ApplicationName; ?>_Files-<?php echo $Date; ?>'></p>
-        <select id='archallextension' name='archallextension'>
-          <option value='zip'><?php echo $Gui2Text18; ?></option>
-          <?php foreach ($ArchiveArray as $gui2ArchArr) { ?>
-          <option value='<?php echo htmlspecialchars($gui2ArchArr, ENT_QUOTES, 'UTF-8'); ?>'><?php echo $gui2ArchArr; ?></option>
-          <?php } ?>
-        </select>
-        <input type='submit' id='archallSubmit' name='archallSubmit' class='info-button' value='<?php echo htmlspecialchars($Gui2Text19, ENT_QUOTES, 'UTF-8'); ?>' onclick='toggle_visibility("loadingCommandDiv");'>
-        <script type='text/javascript'>
-          HRC2.bindArchiveAll('archallSubmit', '', <?php echo json_encode(array_values($Files)); ?>,
-            'userarchallfilename', 'archallextension', 'zip');
-        </script>
-
-        <?php } ?>
-        <hr style='width: 50%;'/>
-      </div>
-      <?php if ($EnableWorkflows) {
+      <?php }
       // / The Workflows panel. HRC2-Workflows.js is its behaviour, & this page supplies its words & the places it draws.
-      // / The three boxes are the files, the workflow & running it, & whichever needs attention next is highlighted.
-      // / The boxes stay hidden, & the panel says workflows are unavailable, until the library has drawn it.
+      // / It opens as panels, with no divider before or after it & no heading repeating the button that opened it.
+      // / The Pipelines panel, the box that runs the workflow & the Status panel stay where they are, & are framed to say so.
+      // / The boxes between them are the files & each step, which come & go, & whichever needs attention next is highlighted.
+      // / The boxes stay hidden, & the Status panel says workflows are unavailable, until the library has drawn them.
       // / So a page whose library did not load still says something true, & so does a server without the Workflow Core.
       // / A pattern is code in any language, so the box it is typed into reads left to right.
-      // / Where the builder is on, the Pipelines section offers a tab for the library & one for each operation, & the workflow's box becomes a box for each step.
+      // / Where the builder is on, the Pipelines panel offers a tab for the library & one for each operation, & the workflow's box becomes a box for each step.
       // / The box that runs them is split, & its add button adds a step to its left. The library draws the tabs, the steps & their options.
-      ?>
+      // / Each of its buttons is named beside it where the box has the room, & the name is a label, so pressing it presses the button.
+      // / The Status panel says whether a workflow is running, how far it has got & how it ended, & a page loaded again while one runs draws it there.
+      if ($EnableWorkflows) { ?>
       <div id='hrc2Workflows' name='hrc2Workflows' class='hrc2-workflows' style='display:none;'>
-        <hr style='width: 50%;'/>
-        <p><strong><?php echo $Gui2Text128; ?></strong></p>
-        <div id='hrc2WfPipelines' class='hrc2-wf-pipelines' hidden>
+        <div id='hrc2WfPipelines' class='hrc2-panel hrc2-wf-pipelines' hidden>
           <p class='hrc2-wf-label'><?php echo $Gui2Text161; ?></p>
           <div id='hrc2WfTabs' class='hrc2-wf-tabs' role='tablist' aria-label='<?php echo htmlspecialchars($Gui2Text161, ENT_QUOTES, 'UTF-8'); ?>'></div>
           <div id='hrc2WfTabPanel' class='hrc2-wf-tab-panel' role='tabpanel'></div>
@@ -308,31 +263,40 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         </div>
         <div id='hrc2WfBoxes' class='hrc2-wf-boxes' hidden>
           <div id='hrc2WfFilesBox' class='hrc2-wf-box'>
-            <p class='hrc2-wf-label'><?php echo $Gui2Text129; ?></p>
+            <p class='hrc2-wf-label hrc2-wf-head'><?php echo $Gui2Text129; ?></p>
             <div id='hrc2WfFiles' class='hrc2-wf-files'></div>
             <label class='hrc2-wf-pattern'><?php echo $Gui2Text131; ?><input type='text' id='hrc2WfPattern' name='hrc2WfPattern' dir='ltr' placeholder='*.jpg' title='<?php echo htmlspecialchars($Gui2Text132, ENT_QUOTES, 'UTF-8'); ?>' autocomplete='off' spellcheck='false'></label>
           </div>
           <div id='hrc2WfPickBox' class='hrc2-wf-box'>
-            <p class='hrc2-wf-label'><label for='hrc2WfSelect'><?php echo $Gui2Text133; ?></label></p>
+            <p class='hrc2-wf-label hrc2-wf-head'><label for='hrc2WfSelect'><?php echo $Gui2Text133; ?></label></p>
             <select id='hrc2WfSelect' name='hrc2WfSelect' class='hrc2-wf-select'></select>
             <div id='hrc2WfAbout' class='hrc2-wf-about'></div>
           </div>
-          <div id='hrc2WfRunBox' class='hrc2-wf-box hrc2-wf-run-box'>
-            <button type='button' id='hrc2WfAdd' name='hrc2WfAdd' class='hrc2-wf-add' title='<?php echo htmlspecialchars($Gui2Text165, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text165, ENT_QUOTES, 'UTF-8'); ?>' aria-haspopup='menu' aria-expanded='false' aria-controls='hrc2WfAddMenu' hidden>+</button>
+          <div id='hrc2WfRunBox' class='hrc2-panel hrc2-wf-run-box'>
+            <div class='hrc2-wf-run-actions'>
+              <button type='button' id='hrc2WfAdd' name='hrc2WfAdd' class='hrc2-wf-add' title='<?php echo htmlspecialchars($Gui2Text165, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text165, ENT_QUOTES, 'UTF-8'); ?>' aria-haspopup='menu' aria-expanded='false' aria-controls='hrc2WfAddMenu' hidden>+</button>
+              <label for='hrc2WfAdd' class='hrc2-wf-caption'><?php echo $Gui2Text165; ?></label>
+              <button type='button' id='hrc2WfRun' name='hrc2WfRun' class='hrc2-wf-run' title='<?php echo htmlspecialchars($Gui2Text135, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text135, ENT_QUOTES, 'UTF-8'); ?>' disabled>&#9654;</button>
+              <label for='hrc2WfRun' class='hrc2-wf-caption'><?php echo $Gui2Text135; ?></label>
+              <button type='button' id='hrc2WfStop' name='hrc2WfStop' class='hrc2-wf-stop' title='<?php echo htmlspecialchars($Gui2Text136, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text136, ENT_QUOTES, 'UTF-8'); ?>' hidden>&#9632;</button>
+              <label for='hrc2WfStop' class='hrc2-wf-caption'><?php echo $Gui2Text136; ?></label>
+            </div>
             <div id='hrc2WfAddMenu' class='hrc2-wf-add-menu' role='menu' hidden>
               <button type='button' role='menuitem' data-hrc2-add='pipeline'><?php echo $Gui2Text163; ?></button>
               <button type='button' role='menuitem' data-hrc2-add='files'><?php echo $Gui2Text164; ?></button>
             </div>
-            <button type='button' id='hrc2WfRun' name='hrc2WfRun' class='hrc2-wf-run' title='<?php echo htmlspecialchars($Gui2Text135, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text135, ENT_QUOTES, 'UTF-8'); ?>' disabled>&#9654;</button>
-            <button type='button' id='hrc2WfStop' name='hrc2WfStop' class='hrc2-wf-stop' title='<?php echo htmlspecialchars($Gui2Text136, ENT_QUOTES, 'UTF-8'); ?>' aria-label='<?php echo htmlspecialchars($Gui2Text136, ENT_QUOTES, 'UTF-8'); ?>' hidden>&#9632;</button>
           </div>
         </div>
-        <div id='hrc2WfStatus' class='hrc2-wf-status' role='status' aria-live='polite'><p><?php echo $Gui2Text146; ?></p></div>
+        <div id='hrc2WfStatusBox' class='hrc2-panel hrc2-wf-status-box'>
+          <p class='hrc2-wf-label hrc2-wf-head'><?php echo $Gui2Text189; ?></p>
+          <div id='hrc2WfStatus' class='hrc2-wf-status' role='status' aria-live='polite'><p><?php echo $Gui2Text146; ?></p></div>
+        </div>
         <script type='text/javascript'>
           HRC2.startWorkflows(<?php echo json_encode(array(
             'builder' => ($EnableWorkflowBuilder === TRUE), 'importExport' => ($EnableWorkflowImportExport === TRUE),
             'text' => array('selected' => $Gui2Text113, 'pickFiles' => $Gui2Text130, 'choose' => $Gui2Text134, 'usable' => $Gui2Text137, 'step' => $Gui2Text138, 'file' => $Gui2Text139,
               'waiting' => $Gui2Text140, 'starting' => $Gui2Text141, 'finished' => $Gui2Text142, 'stopping' => $Gui2Text143, 'stopped' => $Gui2Text144, 'made' => $Gui2Text145,
+              'running' => $Gui2Text190, 'idle' => $Gui2Text191,
               'unavailable' => $Gui2Text146, 'empty' => $Gui2Text147,
               'library' => $Gui2Text128, 'pickPipeline' => $Gui2Text162, 'options' => $Gui2Text166, 'back' => $Gui2Text167, 'remove' => $Gui2Text67,
               'take' => $Gui2Text168, 'ticked' => $Gui2Text169, 'stepFiles' => $Gui2Text170, 'each' => $Gui2Text171, 'together' => $Gui2Text172,
@@ -407,15 +371,16 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
     // / page of an unrelated colour & the dark scheme drew a bright one.
     // / inherit was tried & was worse. A panel the same colour as the page behind it is not
     // / a panel, it is a border floating in the middle of nothing.
+    // / Its frame is the one every panel that stays put is drawn with, from HRConvert2.css.
     ?>
-    <div class='file-list-panel' style='max-width:500px; margin-left:auto; margin-right:auto; padding: 8px; border: 2px solid rgba(0, 0, 0, 0.3); border-radius: 10px;'>
+    <div class='file-list-panel' style='max-width:500px; margin-left:auto; margin-right:auto; padding: 8px;'>
       <?php
       // / The list publishes the files it was drawn from, every time it is drawn.
-      // / Archive All & Scan All read these when pressed, so they act on the files a user can see
-      // / rather than on the files the page held when it was first drawn.
+      // / Start Over reads these when pressed, so it empties the files a user can see
+      // / rather than the files the page held when it was first drawn.
       ?>
       <script type='text/javascript'>
-        HRC2.configure(<?php echo json_encode(array('sessionFiles' => array_values($Files), 'filesListed' => TRUE)); ?>);
+        HRC2.configure(<?php echo json_encode(array('sessionFiles' => array_values($Files))); ?>);
       </script>
       <?php
       // / The sort controls. Each one is a form submission, as the selector's are, because the
@@ -524,29 +489,28 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <img id='shareXfilebutton<?php echo $ConvertGuiCounter1; ?>' name='shareXfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("sharefilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("shareXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text7, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text7, ENT_QUOTES, 'UTF-8'); ?>'/>
 
-          <?php } if ($AllowUserVirusScan) { ?>
+          <?php } if ($OfferedOperations['Scan']) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
           <img id='scanfilebutton<?php echo $ConvertGuiCounter1; ?>' name='scanfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>scan.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
            onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text8.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text8.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' name='scanfileXbutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("scanfileXbutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text9, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text9, ENT_QUOTES, 'UTF-8'); ?>'/>
 
-          <?php } if ($AllowUserIdentify) { ?>
+          <?php } if ($OfferedOperations['Identify']) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
           <img id='identifyfilebutton<?php echo $ConvertGuiCounter1; ?>' name='identifyfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>identify.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
            onclick='toggle_visibility("identifyOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("identifyfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("identifyXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text86.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text86.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='identifyXfilebutton<?php echo $ConvertGuiCounter1; ?>' name='identifyXfilebutton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;'
            onclick='toggle_visibility("identifyOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("identifyfilebutton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("identifyXfilebutton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text87, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text87, ENT_QUOTES, 'UTF-8'); ?>'/>
 
-          <?php } ?>
-          
+          <?php } if ($OfferedOperations['Archive']) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
           <img id='archfileButton<?php echo $ConvertGuiCounter1; ?>' name='archfileButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>archive.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
            onclick='toggle_visibility("archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text10.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text10.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='archfileXButton<?php echo $ConvertGuiCounter1; ?>' name='archfileXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("archfileXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text11, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text11, ENT_QUOTES, 'UTF-8'); ?>'/>
 
-          <?php if (in_array($extension, $PDFWorkArr) && in_array('OCR', $SupportedConversionTypes)) { ?>          
+          <?php } if (in_array($extension, $PDFWorkArr) && $OfferedOperations['OCR']) { ?>          
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
           
           <img id='docscanButton<?php echo $ConvertGuiCounter1; ?>' name='docscanButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>docscan.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
@@ -695,13 +659,14 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
 
         </div>
 
+        <?php if ($OfferedOperations['Archive']) { ?>
         <div id='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='archfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style='max-width:750px; display:none;'>
           <p style='max-width:500px;'></p>
           <p><strong><?php echo $Gui2Text16; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type='text' id='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' name='userarchfilefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='archfileextension<?php echo $ConvertGuiCounter1; ?>' name='archfileextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value='zip'><?php echo $Gui2Text18; ?></option>
-            <?php foreach ($ArchiveArray as $gui2ArchArr) { ?>
+            <?php foreach ($ArchiveOperationArray as $gui2ArchArr) { ?>
             <option value='<?php echo htmlspecialchars($gui2ArchArr, ENT_QUOTES, 'UTF-8'); ?>'><?php echo $gui2ArchArr; ?></option>
             <?php } ?>
           </select></p>
@@ -713,6 +678,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
               <?php echo json_encode(array('archextension' => 'archfileextension'.$ConvertGuiCounter1, 'userfilename' => 'userarchfilefilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
+        <?php } ?>
 
         <?php if ($AllowUserShare) { ?>
         <div id='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='sharefileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:450px; display:none;">
@@ -748,7 +714,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           </script>
         </div>
 
-        <?php if ($AllowUserVirusScan) { ?>
+        <?php if ($OfferedOperations['Scan']) { ?>
         <div id='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scanfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:500px;"></p>
           <p><strong><?php echo $Gui2Text34; ?></strong></p>
@@ -765,7 +731,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         </div>
         <?php }
 
-        if ($AllowUserIdentify) {
+        if ($OfferedOperations['Identify']) {
         // / What Identify read about this file. Opening the panel asks for it once, & the button asks again.
         // / Every value is written into the page as text by the script, & never as markup.
         // / A report is written only when the box is ticked, & the name beside it is greyed out until it is.
@@ -795,7 +761,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         </div>
         <?php }
 
-        if (in_array($extension, $PDFWorkArr) && in_array('OCR', $SupportedConversionTypes)) { 
+        if (in_array($extension, $PDFWorkArr) && $OfferedOperations['OCR']) { 
         ?>
         <div id='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='pdfOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:500px;"></p>

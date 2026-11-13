@@ -162,11 +162,8 @@ window.HRC2 = {
   dataPath: '',
   shareBaseURL: '',
   // / The files in the session. The upload page supplies them, & the file list publishes them
-  // / every time it is drawn, so a bulk control acts on the files a user can see.
+  // / every time it is drawn, so Start Over empties the files a user can see.
   sessionFiles: [],
-  // / Whether the file list has published sessionFiles yet. Until it has, a bulk control uses
-  // / the names the page was drawn with.
-  filesListed: false,
   failureText: 'Operation Failed!',
   scanFailureText: 'Operation Failed!',
   operationFailedText: 'Operation Failed!',
@@ -328,12 +325,6 @@ window.HRC2 = {
     return chain.then(function () { return failed; });
   },
 
-  // / The files a bulk control acts on, read when the control is pressed.
-  // / The names the page was drawn with stand in only until the file list publishes its own.
-  listedFiles: function (pageFileNames) {
-    return this.filesListed ? this.sessionFiles.slice() : pageFileNames;
-  },
-
   // / Reload the file list without reloading the page.
   // / convertCore.php?showFiles=1&fileListOnly=1 already renders exactly this view, so the
   // / list needs nothing new from the core.
@@ -361,8 +352,8 @@ window.HRC2 = {
   },
 
   // / THE WHOLE PATTERN, ONCE.
-  // / suffix is the ConvertGuiCounter1 value, or an empty string for the bulk controls at
-  // / the top of the page. Every element id is derived from it.
+  // / suffix is the ConvertGuiCounter1 value, or an empty string for a control at the top of
+  // / the page, which has a spinner of its own there. Every element id is derived from it.
   // / One request is a batch of one, so it is handed to runBatch(), which is where the pattern lives.
   run: function (payload, suffix) {
     this.runBatch([{ payload: payload, row: suffix }], suffix);
@@ -821,39 +812,6 @@ window.HRC2 = {
     });
   },
 
-  // / Bind the bulk virus scan control, whose scanner is chosen by two checkboxes.
-  // / Neither ticked is treated as both, because a scan button that does nothing at all
-  // / reads as a broken control rather than as a refused one.
-  // / The files are read when it is pressed, so a file converted since the page was drawn is scanned too.
-  bindScanAll: function (buttonId, suffix, clamCheckboxId, scanCoreCheckboxId, fileNames, logFileName) {
-    var self = this;
-    $(function () {
-      $('#' + buttonId).click(function () {
-        var useClam = self.checked(clamCheckboxId);
-        var useScanCore = self.checked(scanCoreCheckboxId);
-        var scanType = 'all';
-        if (useClam && !useScanCore) scanType = 'clamav';
-        if (useScanCore && !useClam) scanType = 'scancore';
-        self.scanThenFetchLog(scanType, self.listedFiles(fileNames), logFileName, suffix);
-      });
-    });
-  },
-
-  // / Bind the bulk archive control. Archives every file in the session into one archive.
-  // / The files are read when it is pressed, so a file converted since the page was drawn is included.
-  // / It runs through run(), so the archive downloaded is the one the core reports & the list is refreshed.
-  // / The core gives a taken name the next free one, so the name typed is not always the name made.
-  bindArchiveAll: function (buttonId, suffix, fileNames, nameFieldId, extensionFieldId, defaultExtension) {
-    var self = this;
-    $(function () {
-      $('#' + buttonId).click(function () {
-        var extension = self.value(extensionFieldId);
-        if (extension === '') extension = defaultExtension;
-        self.run({ archive: '1', filesToArchive: self.listedFiles(fileNames), archextension: extension, userfilename: self.value(nameFieldId) }, suffix);
-      });
-    });
-  },
-
   // / -------------------------------------------------------------------------------
   // / Identify.
   // / The core answers an Identify request with one line of JSON under the key Identify,
@@ -987,17 +945,6 @@ window.HRC2 = {
       $('#' + spec.submitId).click(function () {
         var wantReport = self.checked(spec.reportId);
         self.identify(spec.fileName, wantReport, self.value(spec.nameId), spec.suffix); });
-    });
-  },
-
-  // / Bind Identify All. The files are read when it is pressed, so a file converted since the page was drawn is identified too.
-  bindIdentifyAll: function (spec) {
-    var self = this;
-    $(function () {
-      self.bindReportName(spec.reportId, spec.nameId);
-      $('#' + spec.submitId).click(function () {
-        var wantReport = self.checked(spec.reportId);
-        self.identify(self.listedFiles(spec.fileNames), wantReport, self.value(spec.nameId), spec.suffix); });
     });
   },
 

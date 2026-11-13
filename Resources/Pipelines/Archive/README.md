@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.1.1
+- **Version** v4.1.6
 - **Kind** conversion
 - **Family** Archive
 - **Entry point** convertArchives

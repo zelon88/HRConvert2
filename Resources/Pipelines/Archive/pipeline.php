@@ -12,12 +12,12 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.1.
+// / v4.1.6.
 // / The Archive pipeline's converter. pipelineCore.php loads it only to dispatch an Archive conversion.
 // / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13108 belongs to this pipeline.
-// / archiveFiles() in the core raises 13012.
+// / The Archiver pipeline raises 13012, & shares 13006, 13008, 13009 & 13010 with this one.
 // / verifyIsoBootloaders() & generateBootableIsoCommand() live here, because only this converter calls them.
-// / Its tools come from verifiedToolPath(), as the core's archiveFiles() & showVersionInfo() do.
+// / Its tools come from verifiedToolPath(), as the Archiver pipeline's do & as the core's showVersionInfo() asks for them.
 // / This is the only pipeline that renames its own output.
 // / An extraction is named differently from what was asked for, which the fifth value of the contract carries.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.

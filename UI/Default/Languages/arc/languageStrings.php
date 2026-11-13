@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.5';
+$LanguageVersion = 'v4.1.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -175,12 +175,6 @@ $Gui1Text37 = 'ܚܕܬ';
 // / Set GUI - 2 Related Variables.
 // / 'File Conversion Options'
 $Gui2Text1 = 'ܓܘܒܝ̈ܐ ܕܫܘܚܠܦ ܦܬܩܐ';
-// / 'Bulk File Options'
-$Gui2Text2 = 'ܓܘܒܝ̈ܐ ܕܦܬܩ̈ܐ ܡܪܘܚܩ̈ܐ';
-// / 'Scan All Files For Viruses'
-$Gui2Text3 = 'ܒܨܝ ܟܠܗܘܢ ܦܬܩ̈ܐ ܠܒܝܪܘܣ̈ܐ';
-// / 'Compress & Download All Files'
-$Gui2Text4 = 'ܥܘܨ ܘܨܚܒ ܟܠܗܘܢ ܦܬܩ̈ܐ';
 // / 'Download'
 $Gui2Text5 = 'ܨܚܒ';
 // / 'Share'
@@ -209,14 +203,6 @@ $Gui2Text16 = 'ܓܙܝ ܗܢܐ ܦܬܩܐ';
 $Gui2Text17 = 'ܚܬܡ ܫܡܐ ܕܦܬܩܐ: ';
 // / 'Format'
 $Gui2Text18 = 'ܫܘܚܠܦܐ';
-// / 'Compress & Download'
-$Gui2Text19 = 'ܥܘܨ ܘܨܚܒ';
-// / 'Scan with ClamAV: '
-$Gui2Text20 = 'ܒܨܝ ܒܝܕ ClamAV: ';
-// / 'Scan with ScanCore: '
-$Gui2Text21 = 'ܒܨܝ ܒܝܕ ScanCore: ';
-// / 'Scan All'
-$Gui2Text22 = 'ܒܨܝ ܟܠ';
 // / 'Share This File'
 $Gui2Text23 = 'ܫܪܟ ܗܢܐ ܦܬܩܐ';
 // / 'Link Status: '
@@ -365,10 +351,6 @@ $Gui2Text95 = 'ܦܘܫܩ̈ܐ: ';
 $Gui2Text96 = 'ܥܘܗܕܢ̈ܐ: ';
 // / 'Save report as file'
 $Gui2Text97 = 'ܢܛܘܪ ܡܘܕܥܢܘܬܐ ܐܝܟ ܦܬܩܐ';
-// / 'Identify All Files'
-$Gui2Text98 = 'ܦܪܘܫ ܟܠܗܘܢ ܦܬܩ̈ܐ';
-// / 'Identify All'
-$Gui2Text99 = 'ܦܪܘܫ ܟܠ';
 // / 'Yes'
 $Gui2Text100 = 'ܐܝܢ';
 // / 'No'
@@ -549,6 +531,12 @@ $Gui2Text186 = 'ܗܢܐ ܡܫܡܫܢܐ ܠܐ ܡܫܟܚ ܠܡܪܗܛܘ ܗܕܐ ܡܪܕܝܬ
 $Gui2Text187 = 'ܠܐ ܐܫܬܟܚ ܠܡܬܩܪܝܘ ܦܬܩܐ.';
 // / 'The workflow builder is not available on this server.'
 $Gui2Text188 = 'ܒܢܝܐ ܕܡܪ̈ܕܝܬܐ ܕܦܘܠܚܢܐ ܠܐ ܡܛܝܒ ܥܠ ܗܢܐ ܡܫܡܫܢܐ.';
+// / 'Status'
+$Gui2Text189 = 'ܐܣܟܡܐ';
+// / 'A workflow is running.'
+$Gui2Text190 = 'ܚܕܐ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܪܗܛܐ.';
+// / 'No workflow is running.'
+$Gui2Text191 = 'ܠܝܬ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܕܪܗܛܐ.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

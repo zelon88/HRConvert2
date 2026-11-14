@@ -306,6 +306,11 @@ check cannot be installed. Neither command touches the shipped library.
    account can read. Neither is ever put on a command line, which every account can read.
    The startup key is bound to this job & this session, & the worker spends it, so a job
    starts once. A worker that holds no key for its job does nothing.
+   A SIGNED IN USER'S WORKFLOW RUNS IN THEIR OWN FOLDER, FROM v4.2.0. The Engine hands the worker
+   the user's account with the session, & the startup key is bound to both, so the worker works
+   in that user's folder & is charged to their quota. A user who signs out does not stop it. An
+   account that is gone or disabled before the worker begins leaves it acting for nobody, & it
+   finds no job & stops. See ABOUT_AUTHENTICATION.txt.
 
 5. The worker runs each step in turn. Before every operation it reads whether a stop was asked
    for & whether --Maximum Workflow Runtime-- has passed, & takes the operation's budget, where

@@ -38,7 +38,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -637,4 +637,96 @@ $GuiFunctionsText1 = 'Trình duyệt của bạn không hỗ trợ sao chép và
 // / The closing anchor tag for this string lives in footer.php & must NOT be repeated here.
 // / 'Check out our Terms of Service and Privacy Policy'
 $GuiFooterText1 = 'Xem <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Điều Khoản Dịch Vụ</a> và <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Chính Sách Bảo Mật';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'Đăng nhập';
+// / 'Sign out'
+$GuiAuthText2 = 'Đăng xuất';
+// / 'Create an account'
+$GuiAuthText3 = 'Tạo tài khoản';
+// / 'Username'
+$GuiAuthText4 = 'Tên người dùng';
+// / 'Password'
+$GuiAuthText5 = 'Mật khẩu';
+// / 'Email address'
+$GuiAuthText6 = 'Địa chỉ email';
+// / 'Code'
+$GuiAuthText7 = 'Mã';
+// / 'New password'
+$GuiAuthText8 = 'Mật khẩu mới';
+// / 'Confirm your account'
+$GuiAuthText9 = 'Xác nhận tài khoản';
+// / 'Recover your account'
+$GuiAuthText10 = 'Khôi phục tài khoản';
+// / 'Choose a new password'
+$GuiAuthText11 = 'Chọn mật khẩu mới';
+// / 'Send the code again'
+$GuiAuthText12 = 'Gửi lại mã';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'Quên mật khẩu?';
+// / 'Have a code?'
+$GuiAuthText14 = 'Đã có mã?';
+// / 'Back to sign in'
+$GuiAuthText15 = 'Quay lại đăng nhập';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'Tiếp tục mà không đăng nhập';
+// / 'Signed in as'
+$GuiAuthText17 = 'Đã đăng nhập với tên';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'Hiện không thể đăng nhập vào máy chủ này.';
+// / 'Confirm'
+$GuiAuthText19 = 'Xác nhận';
+// / 'Send a code'
+$GuiAuthText20 = 'Gửi mã';
+// / 'Change password'
+$GuiAuthText21 = 'Đổi mật khẩu';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'Tên người dùng hoặc mật khẩu không đúng.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'Quá nhiều lần thử. Vui lòng đợi vài phút rồi thử lại.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'Hãy xác nhận tài khoản trước bằng mã chúng tôi đã gửi qua email.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'Tài khoản này không thể đăng nhập. Hãy liên hệ quản trị viên.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'Không thể tạo tài khoản mới tại đây. Hãy liên hệ quản trị viên.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'Tên người dùng gồm từ 3 đến 64 chữ cái, chữ số, dấu chấm, dấu gạch ngang hoặc gạch dưới, và bắt đầu bằng một chữ cái hoặc chữ số.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'Tên người dùng đó đã có người dùng. Hãy chọn tên khác.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'Không thể dùng địa chỉ email đó.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'Số ký tự tối thiểu của mật khẩu:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'Tài khoản của bạn đã được tạo. Chúng tôi đã gửi email một mã để xác nhận.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'Tài khoản của bạn đã được tạo, nhưng máy chủ này không gửi được mã qua email. Hãy liên hệ quản trị viên.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'Tài khoản của bạn đã được tạo. Bạn có thể đăng nhập ngay.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'Mã đó không đúng.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'Mã đó không còn dùng được. Hãy yêu cầu mã mới.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'Tài khoản của bạn đã được xác nhận. Bạn có thể đăng nhập ngay.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'Nếu tài khoản đó đang chờ xác nhận, một mã mới đang được gửi.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'Nếu tài khoản đó tồn tại, một mã đang được gửi đến địa chỉ email của nó.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'Mật khẩu của bạn đã được đổi. Bạn có thể đăng nhập ngay.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'Bạn đã đăng xuất.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'Bạn đã bị đăng xuất vì phiên đăng nhập của bạn được dùng ở nơi khác.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'Máy chủ không phản hồi. Vui lòng thử lại.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'Máy chủ này không hỗ trợ khôi phục tài khoản.';
 // / -----------------------------------------------------------------------------------

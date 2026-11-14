@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -628,4 +628,96 @@ $GuiFunctionsText1 = 'Kivinjari chako hakiauni unakili kwenye ubao wa nakala!';
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'Angalia <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Masharti yetu ya Huduma</a> na <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Sera ya Faragha';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'Ingia';
+// / 'Sign out'
+$GuiAuthText2 = 'Toka';
+// / 'Create an account'
+$GuiAuthText3 = 'Fungua akaunti';
+// / 'Username'
+$GuiAuthText4 = 'Jina la mtumiaji';
+// / 'Password'
+$GuiAuthText5 = 'Nenosiri';
+// / 'Email address'
+$GuiAuthText6 = 'Anwani ya barua pepe';
+// / 'Code'
+$GuiAuthText7 = 'Msimbo';
+// / 'New password'
+$GuiAuthText8 = 'Nenosiri jipya';
+// / 'Confirm your account'
+$GuiAuthText9 = 'Thibitisha akaunti yako';
+// / 'Recover your account'
+$GuiAuthText10 = 'Rejesha akaunti yako';
+// / 'Choose a new password'
+$GuiAuthText11 = 'Chagua nenosiri jipya';
+// / 'Send the code again'
+$GuiAuthText12 = 'Tuma msimbo tena';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'Umesahau nenosiri?';
+// / 'Have a code?'
+$GuiAuthText14 = 'Una msimbo?';
+// / 'Back to sign in'
+$GuiAuthText15 = 'Rudi kuingia';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'Endelea bila kuingia';
+// / 'Signed in as'
+$GuiAuthText17 = 'Umeingia kama';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'Kuingia hakupatikani kwenye seva hii kwa sasa.';
+// / 'Confirm'
+$GuiAuthText19 = 'Thibitisha';
+// / 'Send a code'
+$GuiAuthText20 = 'Tuma msimbo';
+// / 'Change password'
+$GuiAuthText21 = 'Badilisha nenosiri';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'Jina la mtumiaji au nenosiri si sahihi.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'Majaribio mengi mno. Tafadhali subiri dakika chache kisha ujaribu tena.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'Kwanza thibitisha akaunti yako kwa msimbo tuliokutumia kwa barua pepe.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'Akaunti hii haiwezi kuingia. Wasiliana na msimamizi.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'Akaunti mpya haziwezi kufunguliwa hapa. Wasiliana na msimamizi.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'Jina la mtumiaji lina herufi, tarakimu, nukta, vistari au vistari vya chini kati ya 3 na 64, na huanza kwa herufi au tarakimu.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'Jina hilo la mtumiaji limeshachukuliwa. Chagua jingine.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'Anwani hiyo ya barua pepe haiwezi kutumika.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'Idadi ndogo kabisa ya herufi za nenosiri:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'Akaunti yako imefunguliwa. Tumekutumia msimbo kwa barua pepe ili kuithibitisha.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'Akaunti yako imefunguliwa, lakini seva hii haikuweza kukutumia msimbo. Wasiliana na msimamizi.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'Akaunti yako imefunguliwa. Sasa unaweza kuingia.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'Msimbo huo si sahihi.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'Msimbo huo hauwezi kutumika tena. Omba mpya.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'Akaunti yako imethibitishwa. Sasa unaweza kuingia.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'Ikiwa akaunti hiyo inasubiri kuthibitishwa, msimbo mpya uko njiani.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'Ikiwa akaunti hiyo ipo, msimbo uko njiani kwenda kwenye anwani yake ya barua pepe.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'Nenosiri lako limebadilishwa. Sasa unaweza kuingia.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'Umetoka.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'Umetolewa kwa sababu kuingia kwako kulitumika mahali pengine.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'Seva haikujibu. Tafadhali jaribu tena.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'Kurejesha akaunti hakupatikani kwenye seva hii.';
 // / -----------------------------------------------------------------------------------

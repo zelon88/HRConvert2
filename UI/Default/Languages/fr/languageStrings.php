@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -625,4 +625,96 @@ $GuiFunctionsText1 = 'Votre navigateur ne prend pas en charge la copie dans le p
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'Consultez nos <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Conditions de Service</a> et nos <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Politique de Confidentialité';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'Se connecter';
+// / 'Sign out'
+$GuiAuthText2 = 'Se déconnecter';
+// / 'Create an account'
+$GuiAuthText3 = 'Créer un compte';
+// / 'Username'
+$GuiAuthText4 = 'Nom d\'utilisateur';
+// / 'Password'
+$GuiAuthText5 = 'Mot de passe';
+// / 'Email address'
+$GuiAuthText6 = 'Adresse e-mail';
+// / 'Code'
+$GuiAuthText7 = 'Code';
+// / 'New password'
+$GuiAuthText8 = 'Nouveau mot de passe';
+// / 'Confirm your account'
+$GuiAuthText9 = 'Confirmez votre compte';
+// / 'Recover your account'
+$GuiAuthText10 = 'Récupérez votre compte';
+// / 'Choose a new password'
+$GuiAuthText11 = 'Choisissez un nouveau mot de passe';
+// / 'Send the code again'
+$GuiAuthText12 = 'Renvoyer le code';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'Mot de passe oublié ?';
+// / 'Have a code?'
+$GuiAuthText14 = 'Vous avez un code ?';
+// / 'Back to sign in'
+$GuiAuthText15 = 'Retour à la connexion';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'Continuer sans se connecter';
+// / 'Signed in as'
+$GuiAuthText17 = 'Connecté en tant que';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'La connexion est indisponible sur ce serveur pour le moment.';
+// / 'Confirm'
+$GuiAuthText19 = 'Confirmer';
+// / 'Send a code'
+$GuiAuthText20 = 'Envoyer un code';
+// / 'Change password'
+$GuiAuthText21 = 'Changer le mot de passe';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'Le nom d\'utilisateur ou le mot de passe est incorrect.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'Trop de tentatives. Patientez quelques minutes, puis réessayez.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'Confirmez d\'abord votre compte avec le code que nous vous avons envoyé par e-mail.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'Ce compte ne peut pas se connecter. Contactez l\'administrateur.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'Impossible de créer de nouveaux comptes ici. Contactez l\'administrateur.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'Un nom d\'utilisateur compte de 3 à 64 lettres, chiffres, points, tirets ou traits de soulignement, et commence par une lettre ou un chiffre.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'Ce nom d\'utilisateur est déjà pris. Choisissez-en un autre.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'Cette adresse e-mail ne peut pas être utilisée.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'Nombre minimal de caractères d\'un mot de passe :';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'Votre compte a été créé. Nous vous avons envoyé un code par e-mail pour le confirmer.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'Votre compte a été créé, mais ce serveur n\'a pas pu vous envoyer le code. Contactez l\'administrateur.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'Votre compte a été créé. Vous pouvez vous connecter.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'Ce code n\'est pas le bon.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'Ce code ne peut plus être utilisé. Demandez-en un nouveau.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'Votre compte est confirmé. Vous pouvez vous connecter.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'Si ce compte attend sa confirmation, un nouveau code est en route.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'Si ce compte existe, un code est en route vers son adresse e-mail.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'Votre mot de passe a été changé. Vous pouvez vous connecter.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'Vous avez été déconnecté.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'Vous avez été déconnecté, car votre connexion a été utilisée ailleurs.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'Le serveur n\'a pas répondu. Veuillez réessayer.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'La récupération de compte est indisponible sur ce serveur.';
 // / -----------------------------------------------------------------------------------

@@ -156,6 +156,92 @@ function dependencyEnvironmentPrefix() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to find the Python 3 the distribution builds its own packages for.
+// / Accepts nothing. Returns its path, or an empty string where this host does not name one.
+// / Debian & Ubuntu name it in /usr/share/python3/debian_defaults, which their python3 package installs.
+// / A program the distribution packages, such as mat2, imports modules built for that Python & no other.
+// / python3 is usually that Python. A host that points python3 at another cannot start such a program by its own first line.
+// / Only a program root alone can change is named, so the Python returned is the distribution's & nothing put in its place.
+function distributionPythonPath() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PythonPath = '';
+  $defaultsText = $candidatePath = '';
+  $versionMatch = array();
+  $defaultsText = (string)@file_get_contents('/usr/share/python3/debian_defaults', FALSE, NULL, 0, 65536);
+  if (preg_match('/^\s*default-version\s*=\s*(python3\.[0-9]{1,2})\s*$/m', $defaultsText, $versionMatch) === 1) {
+    $candidatePath = '/usr/bin/'.$versionMatch[1];
+    clearstatcache(TRUE, $candidatePath);
+    if (is_file($candidatePath) && !is_link($candidatePath) && is_executable($candidatePath) && @fileowner($candidatePath) === 0 && ((int)@fileperms($candidatePath) & 0022) === 0) $PythonPath = $candidatePath; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $defaultsText, $candidatePath, $versionMatch);
+  return $PythonPath; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say how a program is started where its manifest entry names the Python that runs it.
+// / Accepts the entry & the program's path. Returns the command that starts it, quoted for the shell,
+// / or an empty string where it is started by its path, as every other program is.
+// / An entry whose Interpreter is python3 names a program the distribution packaged, whose first line is #!/usr/bin/python3.
+// / Such a program is started by the distribution's own Python, which its modules were built for, in isolated mode,
+// / so no variable & no folder of the account running it changes what it imports.
+// / A program whose first line names anything else, such as a copy this application built, is started by its path.
+function dependencyInterpreterCommand($dependencyEntry, $programPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $InterpreterCommand = '';
+  $programStart = $firstLine = $pythonPath = '';
+  $programLines = array();
+  if (is_array($dependencyEntry) && (string)($dependencyEntry['Interpreter'] ?? '') === 'python3' && is_string($programPath) && $programPath !== '' && is_file($programPath)) {
+    $programStart = (string)@file_get_contents($programPath, FALSE, NULL, 0, 256);
+    $programLines = explode("\n", $programStart, 2);
+    $firstLine = rtrim((string)$programLines[0], "\r");
+    if (preg_match('/^#!\s*\/usr\/bin\/python3(\s+-[IEs]+)?\s*$/', $firstLine) === 1) {
+      $pythonPath = distributionPythonPath();
+      if ($pythonPath !== '') $InterpreterCommand = escapeshellarg($pythonPath).' -I '.escapeshellarg($programPath); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $programStart, $firstLine, $pythonPath, $programLines, $dependencyEntry, $programPath);
+  return $InterpreterCommand; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to build the command that asks a program its version.
+// / Accepts the manifest entry & the program's path. Returns the entry's version command, with the program started
+// / as dependencyInterpreterCommand() starts it, so the version is asked of the program as a conversion starts it.
+// / A version command that does not begin with the entry's binary is returned as it is written.
+function dependencyVersionCommand($dependencyEntry, $programPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $VersionCommand = '';
+  $interpreterCommand = $binaryName = '';
+  $VersionCommand = (string)($dependencyEntry['VersionCommand'] ?? '');
+  $binaryName = (string)($dependencyEntry['Binary'] ?? '');
+  $interpreterCommand = dependencyInterpreterCommand($dependencyEntry, $programPath);
+  if ($interpreterCommand !== '' && $binaryName !== '' && strpos($VersionCommand, $binaryName.' ') === 0) $VersionCommand = $interpreterCommand.substr($VersionCommand, strlen($binaryName));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $interpreterCommand, $binaryName, $dependencyEntry, $programPath);
+  return $VersionCommand; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to choose the line of a probe's output that says the most.
+// / Accepts the lines. Returns the first, or the last that is not empty where the output is a Python traceback,
+// / because a traceback's first line names nothing & its last names what went wrong.
+function probeOutputLine($commandOutput) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OutputLine = '';
+  $outputLine = '';
+  $outputLines = array();
+  $outputLines = is_array($commandOutput) ? array_values($commandOutput) : array();
+  $OutputLine = trim((string)($outputLines[0] ?? ''));
+  if (strpos($OutputLine, 'Traceback (most recent call last)') === 0) foreach ($outputLines as $outputLine) if (trim((string)$outputLine) !== '') redeclare($OutputLine, trim((string)$outputLine));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $outputLine, $outputLines, $commandOutput);
+  return $OutputLine; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to verify & load the dependency manifest.
 // / Accepts the manifest version this core requires.
 // / Returns an availability boolean, the manifest array & the detected version, in order.
@@ -379,7 +465,10 @@ function judgeDependencyEntry($dependencyEntry) {
 // / NOT treated as absent, because reinstalling something that works helps nobody.
 // / The raw output is returned as well, because a pattern that does not match is the most
 // / common manifest fault there is & the only way to fix one is to see what it was matched
-// / against. A dependency that reports unknown-version shows its first line of output.
+// / against. A dependency that reports unknown-version shows its first line of output, or the
+// / last line of a Python traceback, which is the line that says what went wrong.
+// / A program whose entry names an Interpreter is asked through dependencyVersionCommand(),
+// / so it is asked as a conversion starts it.
 function resolveDependencyState($dependencyEntry) {
   // / Set variables.
   global $HostArchitecture, $EnableMemoryProtection;
@@ -460,11 +549,12 @@ function resolveDependencyState($dependencyEntry) {
     $DependencyStatus = 'unknown-version';
     if ((string)$dependencyEntry['VersionCommand'] === '') $DependencyStatus = 'ok';
     else {
+      // / The program is asked as a conversion starts it, which is by the distribution's Python where its entry names one.
       if (!$commandWasExecuted) {
         $commandOutput = array();
-        exec(dependencyEnvironmentPrefix().'('.(string)$dependencyEntry['VersionCommand'].') < /dev/null 2>&1', $commandOutput, $commandExitCode); }
+        exec(dependencyEnvironmentPrefix().'('.dependencyVersionCommand($dependencyEntry, $binaryPath).') < /dev/null 2>&1', $commandOutput, $commandExitCode); }
       $versionOutput = implode(PHP_EOL, $commandOutput);
-      $RawOutput = trim((string)(isset($commandOutput[0]) ? $commandOutput[0] : ''));
+      $RawOutput = probeOutputLine($commandOutput);
       // / A dependency that declares no pattern is not asking to be version checked. Its
       // / command ran & succeeded, which is the whole of what it claims to prove.
       // / Leaving it as unknown-version reported a fault where there is nothing to know.

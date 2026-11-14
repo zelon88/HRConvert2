@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <strong>490+ formats</strong> · <strong>26 languages</strong> · <strong>runs on a Raspberry Pi</strong> · <strong>no accounts, cookies, database or tracking</strong>
+  <strong>490+ formats</strong> · <strong>26 languages</strong> · <strong>runs on a Raspberry Pi</strong> · <strong>no cookies, database or tracking</strong>
 </p>
 
 <p align="center">
@@ -29,12 +29,12 @@
 
 Free online converters are paid for with your files. Upload a contract, a medical scan or a client's CAD drawing and it now sits on a stranger's server, next to an ad network.
 
-**HRConvert2 gives you the same convenience with none of that.** Drag a file in, pick a format, download the result. The conversion happens on hardware you control, your visitors never make an account, and their files are deleted on a schedule you set.
+**HRConvert2 gives you the same convenience with none of that.** Drag a file in, pick a format, download the result. The conversion happens on hardware you control, your visitors need no account, and their files are deleted on a schedule you set.
 
 | Promise | What it means |
 | :--- | :--- |
 | 🏠 **Nothing transmitted** | Every conversion runs on your server, with local tools. No CDN, no analytics, no telemetry. |
-| 👤 **No accounts, no cookies** | Visitors are anonymous. Each gets an isolated folder nobody else can see. |
+| 👤 **No cookies, no account needed** | Visitors are anonymous, and each gets an isolated folder nobody else can see. Optional accounts, off by default, let a user keep files of their own. |
 | 🗑️ **Files expire** | Uploads and results are deleted automatically after an age you choose. |
 | 🧱 **Sandboxed converters** | Every tool that parses an upload runs in a bubblewrap sandbox with no network. |
 | 🌍 **Built for strangers** | Designed to be put on the public internet and attacked, and documented that way. |

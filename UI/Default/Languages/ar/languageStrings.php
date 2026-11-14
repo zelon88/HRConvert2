@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -631,4 +631,96 @@ $GuiFunctionsText1 = 'متصفحك لا يدعم النسخ إلى الحافظ�
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'تحقق من <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>وسياسة الخصوصية</a> و <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>شروط الخدمة</a> الخاصة بنا';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'تسجيل الدخول';
+// / 'Sign out'
+$GuiAuthText2 = 'تسجيل الخروج';
+// / 'Create an account'
+$GuiAuthText3 = 'إنشاء حساب';
+// / 'Username'
+$GuiAuthText4 = 'اسم المستخدم';
+// / 'Password'
+$GuiAuthText5 = 'كلمة المرور';
+// / 'Email address'
+$GuiAuthText6 = 'عنوان البريد الإلكتروني';
+// / 'Code'
+$GuiAuthText7 = 'الرمز';
+// / 'New password'
+$GuiAuthText8 = 'كلمة مرور جديدة';
+// / 'Confirm your account'
+$GuiAuthText9 = 'أكّد حسابك';
+// / 'Recover your account'
+$GuiAuthText10 = 'استعد حسابك';
+// / 'Choose a new password'
+$GuiAuthText11 = 'اختر كلمة مرور جديدة';
+// / 'Send the code again'
+$GuiAuthText12 = 'أرسل الرمز مرة أخرى';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'هل نسيت كلمة المرور؟';
+// / 'Have a code?'
+$GuiAuthText14 = 'لديك رمز؟';
+// / 'Back to sign in'
+$GuiAuthText15 = 'العودة إلى تسجيل الدخول';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'المتابعة دون تسجيل الدخول';
+// / 'Signed in as'
+$GuiAuthText17 = 'مسجّل الدخول باسم';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'تسجيل الدخول غير متاح على هذا الخادم الآن.';
+// / 'Confirm'
+$GuiAuthText19 = 'تأكيد';
+// / 'Send a code'
+$GuiAuthText20 = 'أرسل رمزًا';
+// / 'Change password'
+$GuiAuthText21 = 'تغيير كلمة المرور';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'اسم المستخدم أو كلمة المرور غير صحيحة.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'محاولات كثيرة جدًا. يُرجى الانتظار بضع دقائق ثم المحاولة مرة أخرى.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'أكّد حسابك أولًا بالرمز الذي أرسلناه إلى بريدك الإلكتروني.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'لا يمكن لهذا الحساب تسجيل الدخول. تواصل مع المسؤول.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'لا يمكن إنشاء حسابات جديدة هنا. تواصل مع المسؤول.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'يتكوّن اسم المستخدم من 3 إلى 64 من الحروف أو الأرقام أو النقاط أو الشرطات أو الشرطات السفلية، ويبدأ بحرف أو رقم.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'اسم المستخدم هذا مستخدم بالفعل. اختر اسمًا آخر.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'لا يمكن استخدام عنوان البريد الإلكتروني هذا.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'أقل عدد من الأحرف لكلمة المرور:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'تم إنشاء حسابك. أرسلنا إلى بريدك الإلكتروني رمزًا لتأكيده.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'تم إنشاء حسابك، لكن هذا الخادم تعذّر عليه إرسال الرمز إليك. تواصل مع المسؤول.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'تم إنشاء حسابك. يمكنك تسجيل الدخول الآن.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'هذا الرمز غير صحيح.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'لم يعد بالإمكان استخدام هذا الرمز. اطلب رمزًا جديدًا.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'تم تأكيد حسابك. يمكنك تسجيل الدخول الآن.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'إن كان هذا الحساب بانتظار التأكيد، فرمز جديد في طريقه إليه.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'إن كان هذا الحساب موجودًا، فرمز في طريقه إلى عنوان بريده الإلكتروني.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'تم تغيير كلمة المرور. يمكنك تسجيل الدخول الآن.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'تم تسجيل خروجك.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'تم تسجيل خروجك لأن تسجيل دخولك استُخدم في مكان آخر.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'لم يستجب الخادم. يُرجى المحاولة مرة أخرى.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'استعادة الحسابات غير متاحة على هذا الخادم.';
 // / -----------------------------------------------------------------------------------

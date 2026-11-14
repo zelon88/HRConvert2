@@ -147,14 +147,15 @@ BUT "NOT IN THE ENGINE" HAS BEEN READ AS "INSIDE convertCore.php", & THOSE ARE D
 The mechanical rule is about the FILE the kernel loads. Nothing in it requires the kernel to be
 interleaved with an application. The direction below gives the kernel a file of its own.
 
-SESSIONS & THE INSTALL SECRET WAIT FOR AN AUTHENTICATION CORE.            DECIDED AT v3.9.9
-They move when authentication arrives, together, into a core that does not exist yet. An
-earlier draft of this file proposed putting them in the kernel. That was the wrong home,
-because authentication is a large subsystem & the kernel is only worth having while it stays
-small & identical in every application. ABOUT_ENGINE_CONTRACT.txt records the decision & the
-constraint that core will have to solve, which is that a session is derived before the
-Engine loads & every kernel log line carries its label. The kernel already treats the label
-as optional, so a kernel without sessions prints No Session & is correct.
+SESSIONS & THE INSTALL SECRET ARE THE KERNEL'S.                            DECIDED AT v4.1.9
+v3.9.9 decided they would wait for an authentication core & move with it, because the kernel
+is only worth having while it stays small, & authentication is a large subsystem. Neither of
+them is authentication, & both are reached before the Engine loads. The installation does not
+verify without the secret, root stops on the folders above it, the logfile is named from it &
+every log line carries the session's label. An Engine core could provide neither without a
+copy in the caller, which question three says is the sign of the wrong place. Signing in is
+the Engine's, from v4.2.0, & takes over a signed in request's identity once the Engine loads.
+ABOUT_ENGINE_CONTRACT.txt records the decision.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -235,8 +236,9 @@ The contract describes three tiers. The audit finds four, & the third is the one
 home.
 
   THE KERNEL          Pre Engine & identical in every application. Logging, memory
-                      shredding, input sanitizing, argument parsing, dependency location &
-                      component loading. Its own file. Its own version.
+                      shredding, input sanitizing, argument parsing, dependency location,
+                      component loading, & from v4.1.9 the install secret & a visitor's
+                      session identity. Its own file. Its own version.
   THE ENGINE          The runtime every application needs. Managers, budgets, sandbox, data
                       locations, cleaning, network policy, Dependency Core, Setup Core &
                       Pipeline Core. Its own directory, its own version, & the same bytes in
@@ -248,8 +250,8 @@ home.
                       The first three & the pipeline pin table are in Resources/Contract
                       as of v3.9.9.
   APPLICATION LOGIC   What makes the application itself. Conversion, the interface, its own
-                      commands, & the install secret & session identity until an
-                      authentication core exists to take them.
+                      commands, & what a session means. The install secret & session
+                      identity were here until v4.1.9.
 
 THE ORDER OF WORK.
 Each step is separately testable & separately revertible. A step marked REVERSES changes a
@@ -341,45 +343,67 @@ the code moves, not by the code moving.
      application's settings by their own names. The dispatcher takes the family, & the three
      settings are read through the application's map. See step nine.
 
-  6. SESSION & SECRET WAIT FOR AN AUTHENTICATION CORE.                             DEFERRED
-     Decided at v3.9.9. They move with authentication, into a core of their own, & not into
-     the kernel. See What Is Deliberately Not Moving above.
+  6. SESSION & SECRET ARE THE KERNEL'S.                                      DONE AT v4.1.9
+     Decided at v4.1.9, reversing v3.9.9, which had them wait for authentication. See What Is
+     Deliberately Not Moving above. Seventeen functions of the install secret & four of the
+     session moved out of convertCore.php into the kernel with their bodies as they were, but for
+     the lines written to the server's error log before a logfile exists, which name the
+     application through applicationLabel(), & the one command a line names. What
+     verifyInstallation decided & read is establishInstallSecret, what -v judged is
+     describeInstallSecret, & -fp & a rotation settle the secret through
+     settleInstallSecretAsRoot. rotateInstallSecret is the Engine's, & --rotate-secret with it,
+     because a rotation stops & starts the listener. convertCore.php keeps the version of secret
+     it accepts, the slug its secret files are named with & a call where it needs one.
      THE FOLDER THE SECRET IS KEPT IN IS THE ENGINE'S, FROM v4.0.4. Setup Core makes Secrets in
      the data location & gives it the secret role, root's, the web server account's group &
      0750, & puts nothing in it. The contract names it as $SecretLoc. It was built in the Engine
      rather than in convertCore.php so that it never has to move. The secret itself, & copying
-     an earlier release's key into the folder, stay the application's with the rest of this
-     step, because only the application knows what the file is & how to read it back.
-     PROVEN BY   A hundred & four checks over a fresh install, a copy at the top -v must name by
-                 its mode & by its group, an upgrade from v4.0.3 with a visitor whose session
-                 goes on through the drop in & the copy, a folder without its role, a copy in
-                 Secrets the web server account cannot read, an older copy at the top with
-                 another key, a rotation, a data location another account took, a chown -R over
-                 all of it, a secret the web server account must not run, -fp's session sweep,
-                 an upgrade over a data location a chown -R gave away, in one -fp, a secret
-                 another account could write, Sessions & Cache swapped for links, -fp from a
-                 tree it cannot install, a v4.0.3 data location every account can write, going
-                 back to v4.0.3 & forward again with a visitor, a key v4.0.3 rotated after going
-                 back, & an access control list that let another account write the copy, & one
-                 more check that runs ninety one cases over the moments another command run as
-                 root could interfere, a copy that cannot be written, a copy root cannot reach,
-                 a folder without its role, two copies with two keys & the one written last,
-                 which copy the web server account would use & whether it carries the key, a
-                 copy it can open but not use, who may own or write a copy & the folders above
-                 it, a group that may write, a copy made empty & judged before it is given the
-                 key under a staged name of its own, a file swapped in at that name, a copy made
-                 wider than 0640, a copy the web server account reads that a group which cannot
-                 be given would have replaced, a host that cannot look up the web server
-                 account, a folder reached through a link, & the lock. The control, the same
-                 function with only two looks, replaces a key that was moved while it was read.
-                 The web server account reads a copy root rewrites fifteen hundred times & never
-                 finds one it cannot open, where the writer before left more than half its reads
-                 without the key. Forty nine of the hundred & five checks fail on v4.0.3, which
-                 moved a session through the link.
+     an earlier release's key into the folder, were the application's until v4.1.9.
+     PROVEN BY   grep -c -E '^function (addSillyString|generateInstallSecret|
+                 readSecretWithoutExecuting|prepareDataLocationAsRoot|foldersRootCannotTrust|reportFoldersRootCannotTrust|
+                 olderInstallSecretFile|webServerAccountNumbers|secretFolderIsTrusted|
+                 installSecretCopyIsTrusted|topSecretCopyIsNewer|secretFolderStatus|
+                 writeInstallSecretAsRoot|webServerCanReadSecretCopy|resolveInstallSecretAsRoot|
+                 resolveSecretFile|resolveUserSecretFolder|generateRandomNumber|verifySession|
+                 verifySesHash|verifyTokens)\(' convertCore.php Resources/Kernel/kernel.php
+                 written as one line, answers 0 for convertCore.php & 21 for the kernel.
+                 python3 Documentation/Build/hrconvert2-check.py --only kernel   passes, so the
+                 kernel still calls only itself, PHP & a guarded Engine.
+                 The hundred & five checks below pass on v4.1.9 as they pass on v4.1.8, with the
+                 functions read from the kernel, & so do ninety two unit checks of the moved
+                 decisions, the rows -v prints, the rotation & the startup keys, & a drop in over
+                 a live v4.1.8 whose listener starts a manager again after the update.
+                 Until v4.1.9 they were proven by a hundred & four checks over a fresh install,
+                 a copy at the top -v must name by its mode & by its group, an upgrade from
+                 v4.0.3 with a visitor whose session goes on through the drop in & the copy, a
+                 folder without its role, a copy in Secrets the web server account cannot read,
+                 an older copy at the top with another key, a rotation, a data location another
+                 account took, a chown -R over all of it, a secret the web server account must
+                 not run, -fp's session sweep, an upgrade over a data location a chown -R gave
+                 away, in one -fp, a secret another account could write, Sessions & Cache
+                 swapped for links, -fp from a tree it cannot install, a v4.0.3 data location
+                 every account can write, going back to v4.0.3 & forward again with a visitor, a
+                 key v4.0.3 rotated after going back, & an access control list that let another
+                 account write the copy, & one more check that runs ninety one cases over the
+                 moments another command run as root could interfere, a copy that cannot be
+                 written, a copy root cannot reach, a folder without its role, two copies with
+                 two keys & the one written last, which copy the web server account would use &
+                 whether it carries the key, a copy it can open but not use, who may own or
+                 write a copy & the folders above it, a group that may write, a copy made empty
+                 & judged before it is given the key under a staged name of its own, a file
+                 swapped in at that name, a copy made wider than 0640, a copy the web server
+                 account reads that a group which cannot be given would have replaced, a host
+                 that cannot look up the web server account, a folder reached through a link, &
+                 the lock. The control, the same function with only two looks, replaces a key
+                 that was moved while it was read. The web server account reads a copy root
+                 rewrites fifteen hundred times & never finds one it cannot open, where the
+                 writer before left more than half its reads without the key. Forty nine of the
+                 hundred & five checks fail on v4.0.3, which moved a session through the link.
 
   7. AN ENGINE COMMAND DISPATCHER. STEP SIX OF THE ABSORPTION CONTRACT, REDERIVED.     DONE
      dispatchEngineCommand in engine.php owns the listener, the manager entry points,
-     --status, --setup, --config, --pipeline, -fp, -c & --run-environment-manager. The
+     --status, --setup, --config, --pipeline, -fp, -c & --run-environment-manager, & from
+     v4.1.9 --rotate-secret, which stops & starts the listener. The
      application serves -v, -h & anything beginning --app itself, offers every other command
      to the dispatcher, & handles what comes back unhandled, which is -u or a mistake. The
      dispatcher returns whether it handled the command & the exit status it earned, &
@@ -847,13 +871,35 @@ the code moves, not by the code moving.
                  Check eight passes, so the Engine calls the application only through what the
                  contract names.
 
+  16. SIGNING IN IS THE ENGINE'S, & THE APPLICATION HOLDS NONE OF IT.        DONE AT v4.2.0
+     The Authentication Core, the Email Core & the Authentication Manager were the Engine's from
+     their first line. convertCore.php calls answerEngineRequest() before verifyGlobals() &
+     engineSessionFolder() where it names a request's folder, draws the page the Engine names, &
+     runs no operation where the Engine answered. It keeps its pins & its settings, & nothing else
+     about an account. The listener is told the owner of a write through storageQuotaOwner(), & a
+     workflow's worker its user through engineWorkerContext(), so neither the Resource Manager nor
+     the Workflow Core names an account.
+     It passes question three. Nothing about an account is reached before the Engine is verified,
+     & a core that could not be loaded leaves every visitor anonymous, or shows every one the sign
+     in page with 43002 where the administrator requires accounts.
+     PROVEN BY   grep -c -E 'function (adoptAuthenticationIdentity|signInAccount|registerAccount|
+                 sendEngineEmail|sweepAuthentication)\(' convertCore.php   written as one line,
+                 answers 0.
+                 Check eight passes, so the Engine calls the application only through what the
+                 contract names.
+                 One hundred & nine unit checks, sixty one through Apache with a listener & a mail
+                 program that keeps what it is handed, sixty nine in a browser in both interfaces &
+                 right to left, twenty one over a live v4.1.9 updated by drop in, & fifteen over a
+                 chain of drop ins from v4.1.2. Seventy two mutations, each undoing one rule of
+                 accounts, of --account or of the pages that draw them, are caught.
+
 WHAT DROPS OUT.
   The step six sort written earlier in this release, which assumed the work was moving
   command machinery into the Engine. Step seven replaces it.
 
 THE QUESTION THE PLAN COULD NOT ANSWER FOR ITSELF, ANSWERED.
-  Whether HRProtect needs session identity on day one. It can wait, because sessions will
-  arrive with an authentication mechanism & both belong in a core that does not exist yet.
+  Whether HRProtect needs session identity on day one. From v4.1.9 the kernel derives it for
+  every application that asks, & one that never asks prints No Session.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1163,7 +1209,8 @@ passing. A refactor that also changes behaviour produces a failure nobody can bi
   www-data started a Core Manager that refused its key with error 31006, & --status could not
   ask a running listener anything.
   verifyInstallation gives the web server user the install secret for every command that
-  operates the listener & for --status, beside the manager entry points. The command is read
+  operates the listener & for --status, beside the manager entry points, through the kernel's
+  establishInstallSecret from v4.1.9. The command is read
   with the kernel's parser, so -L counts as -l. Every other account is still refused those
   commands by the Engine. www-data owns the secret file, so this grants that account nothing
   it could not already read.

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -628,4 +628,96 @@ $GuiFunctionsText1 = 'הדפדפן שלך אינו תומך בהעתקה ללו�
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'עיין ב<a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>תנאי השירות</a> וב<a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>מדיניות הפרטיות</a> שלנו';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'כניסה';
+// / 'Sign out'
+$GuiAuthText2 = 'יציאה';
+// / 'Create an account'
+$GuiAuthText3 = 'יצירת חשבון';
+// / 'Username'
+$GuiAuthText4 = 'שם משתמש';
+// / 'Password'
+$GuiAuthText5 = 'סיסמה';
+// / 'Email address'
+$GuiAuthText6 = 'כתובת דוא"ל';
+// / 'Code'
+$GuiAuthText7 = 'קוד';
+// / 'New password'
+$GuiAuthText8 = 'סיסמה חדשה';
+// / 'Confirm your account'
+$GuiAuthText9 = 'אשרו את החשבון';
+// / 'Recover your account'
+$GuiAuthText10 = 'שחזרו את החשבון';
+// / 'Choose a new password'
+$GuiAuthText11 = 'בחרו סיסמה חדשה';
+// / 'Send the code again'
+$GuiAuthText12 = 'שליחת הקוד שוב';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'שכחתם את הסיסמה?';
+// / 'Have a code?'
+$GuiAuthText14 = 'יש לכם קוד?';
+// / 'Back to sign in'
+$GuiAuthText15 = 'חזרה לכניסה';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'המשך בלי להיכנס';
+// / 'Signed in as'
+$GuiAuthText17 = 'מחובר בתור';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'הכניסה לשרת זה אינה זמינה כרגע.';
+// / 'Confirm'
+$GuiAuthText19 = 'אישור';
+// / 'Send a code'
+$GuiAuthText20 = 'שליחת קוד';
+// / 'Change password'
+$GuiAuthText21 = 'שינוי סיסמה';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'שם המשתמש או הסיסמה שגויים.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'יותר מדי ניסיונות. המתינו כמה דקות ונסו שוב.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'אשרו קודם את החשבון בקוד ששלחנו אליכם בדוא"ל.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'חשבון זה אינו יכול להיכנס. פנו למנהל המערכת.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'לא ניתן ליצור כאן חשבונות חדשים. פנו למנהל המערכת.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'שם משתמש כולל 3 עד 64 אותיות, ספרות, נקודות, מקפים או קווים תחתונים, ומתחיל באות או בספרה.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'שם המשתמש תפוס. בחרו שם אחר.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'לא ניתן להשתמש בכתובת דוא"ל זו.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'מספר התווים המזערי בסיסמה:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'החשבון נוצר. שלחנו אליכם בדוא"ל קוד לאישורו.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'החשבון נוצר, אך שרת זה לא הצליח לשלוח אליכם את הקוד. פנו למנהל המערכת.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'החשבון נוצר. אפשר להיכנס עכשיו.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'הקוד אינו נכון.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'לא ניתן עוד להשתמש בקוד זה. בקשו קוד חדש.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'החשבון אושר. אפשר להיכנס עכשיו.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'אם החשבון ממתין לאישור, קוד חדש בדרך.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'אם החשבון קיים, קוד בדרך לכתובת הדוא"ל שלו.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'הסיסמה שונתה. אפשר להיכנס עכשיו.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'יצאתם מהמערכת.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'יצאתם מהמערכת כי הכניסה שלכם שימשה במקום אחר.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'השרת לא ענה. נסו שוב.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'שחזור חשבונות אינו זמין בשרת זה.';
 // / -----------------------------------------------------------------------------------

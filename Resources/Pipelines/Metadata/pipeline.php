@@ -20,6 +20,7 @@
 // / A pipeline never prints. See contract 6.
 // / It is dispatched by runOperationPipeline('Metadata'), never through convert().
 // / mat2 strips the metadata, in its lightweight mode, inside the sandbox. A photo is not encoded again & a PDF keeps its text.
+// / mat2 is started by verifiedToolCommand(), as the Dependency Core verified it, which is by the distribution's own Python.
 // / Files are scanned through runVirusScan(), verifyFile(), metadataOperationFormats() & placeSessionFile() are the core's, & cleanFiles() is the Engine's.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file obeys.
 // /
@@ -66,8 +67,9 @@ function stripOneFile($mat2Command, $verifiedCopy, $fileExtension, $copyName) {
   global $Verbose, $ConvertDir, $Lol, $Lolol, $EnableMemoryProtection;
   $CopyWasPlaced = $StripErrors = FALSE;
   $PlacedName = '';
-  $stagingFolder = $stagedInput = $cleanedOutput = $stripCommand = $returnData = '';
+  $stagingFolder = $stagedInput = $cleanedOutput = $stripCommand = $returnData = $mat2Said = '';
   $sandboxIsAvailable = $nameWasRefused = $stagingIsRemoved = FALSE;
+  $outputLines = array();
   $stagingFolder = $ConvertDir.'.metadata-'.bin2hex(random_bytes(8));
   $stagedInput = $stagingFolder.DIRECTORY_SEPARATOR.'input.'.$fileExtension;
   $cleanedOutput = $stagingFolder.DIRECTORY_SEPARATOR.'input.cleaned.'.$fileExtension;
@@ -85,9 +87,12 @@ function stripOneFile($mat2Command, $verifiedCopy, $fileExtension, $copyName) {
       if ($Verbose && trim($returnData) !== '') logEntry('mat2 returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, trim($returnData))));
       clearstatcache(TRUE, $cleanedOutput);
       // / The copy mat2 wrote is the only verdict on whether it stripped anything, because mat2 warns without failing.
+      // / The error names the last line mat2 printed, which is its reason, or a Python traceback's last line, which names what it could not load.
       if (!is_file($cleanedOutput) or is_link($cleanedOutput) or (int)filesize($cleanedOutput) === 0) {
         $StripErrors = TRUE;
-        errorEntry('Could not strip the metadata from '.$copyName.'!', 41007, FALSE); }
+        $outputLines = array_values(array_filter(array_map('trim', explode("\n", $returnData)), 'strlen'));
+        $mat2Said = (count($outputLines) > 0) ? (string)$outputLines[count($outputLines) - 1] : '';
+        errorEntry('Could not strip the metadata from '.$copyName.'!'.($mat2Said !== '' ? ' mat2 said: '.$mat2Said : ' mat2 said nothing.'), 41007, FALSE); }
       else {
         list ($CopyWasPlaced, $PlacedName, $nameWasRefused) = placeSessionFile($cleanedOutput, $copyName);
         if ($nameWasRefused) {
@@ -100,7 +105,7 @@ function stripOneFile($mat2Command, $verifiedCopy, $fileExtension, $copyName) {
   $stagingIsRemoved = (!file_exists($stagingFolder) or cleanFiles($stagingFolder, array($ConvertDir)));
   if (!$stagingIsRemoved) warningEntry('The folder the metadata of '.$copyName.' was stripped in could not be removed. It is removed with the session.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $stagingFolder, $stagedInput, $cleanedOutput, $stripCommand, $returnData, $sandboxIsAvailable, $nameWasRefused, $stagingIsRemoved, $mat2Command, $verifiedCopy, $fileExtension, $copyName);
+  purgeSensitiveMemory($EnableMemoryProtection, $stagingFolder, $stagedInput, $cleanedOutput, $stripCommand, $returnData, $mat2Said, $sandboxIsAvailable, $nameWasRefused, $stagingIsRemoved, $outputLines, $mat2Command, $verifiedCopy, $fileExtension, $copyName);
   return array($CopyWasPlaced, $PlacedName, $StripErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -116,7 +121,7 @@ function stripMetadata($FilesToStrip, $UserFilename, $UserExtension, $Method) {
   global $Verbose, $VirusScan, $EnableMemoryProtection;
   $StripComplete = $StripErrors = FALSE;
   $StrippedFiles = array();
-  $file = $fileExtension = $pathname = $oldPathname = $oldExtension = $newPathname = $resolvedFilename = $copyName = $placedName = $scannerUsed = $mat2Command = '';
+  $file = $fileExtension = $pathname = $oldPathname = $oldExtension = $newPathname = $resolvedFilename = $copyName = $placedName = $scannerUsed = $mat2Command = $mat2Status = $mat2Output = '';
   $variableIsSanitized = $fileIsVerified = $scanComplete = $virusFound = $copyWasPlaced = $copyErrors = FALSE;
   $mat2Binary = $ffmpegBinary = FALSE;
   $scanFindings = $acceptedFormats = array();
@@ -128,11 +133,13 @@ function stripMetadata($FilesToStrip, $UserFilename, $UserExtension, $Method) {
   $ffmpegBinary = verifiedToolPath('FFMPEG');
   // / Make sure the input files are formatted into an array.
   if (!is_array($FilesToStrip)) $FilesToStrip = array($FilesToStrip);
+  // / A refusal names the status the Dependency Core gave mat2 & the line of its output that says the most, so the error says what to fix.
   if ($mat2Binary === FALSE) {
     $StripErrors = TRUE;
     $FilesToStrip = array();
-    errorEntry('mat2 is missing, unidentifiable, or too old, so no metadata was stripped!', 41000, FALSE); }
-  else $mat2Command = escapeshellarg((string)$mat2Binary).mat2SandboxFlag($mat2Binary);
+    list ($mat2Status, $mat2Output) = verifiedToolVerdict('MAT2');
+    errorEntry('mat2 is missing, unidentifiable, or too old, so no metadata was stripped!'.($mat2Status !== '' ? ' It is '.$mat2Status.($mat2Output !== '' ? ': '.$mat2Output : '.') : ''), 41000, FALSE); }
+  else $mat2Command = verifiedToolCommand('MAT2', (string)$mat2Binary).mat2SandboxFlag($mat2Binary);
   foreach ($FilesToStrip as $file) {
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
@@ -179,7 +186,7 @@ function stripMetadata($FilesToStrip, $UserFilename, $UserExtension, $Method) {
       if ($Verbose) logEntry('Stripped the metadata from '.$file.' into '.$placedName.'.'); } }
   if (count($StrippedFiles) > 0) $StripComplete = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $fileExtension, $pathname, $oldPathname, $oldExtension, $newPathname, $resolvedFilename, $copyName, $placedName, $scannerUsed, $variableIsSanitized, $fileIsVerified, $scanComplete, $virusFound, $copyWasPlaced, $copyErrors, $mat2Binary, $mat2Command, $ffmpegBinary, $scanFindings, $acceptedFormats, $videoFormats, $FilesToStrip, $UserFilename, $UserExtension, $Method);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $fileExtension, $pathname, $oldPathname, $oldExtension, $newPathname, $resolvedFilename, $copyName, $placedName, $scannerUsed, $mat2Status, $mat2Output, $variableIsSanitized, $fileIsVerified, $scanComplete, $virusFound, $copyWasPlaced, $copyErrors, $mat2Binary, $mat2Command, $ffmpegBinary, $scanFindings, $acceptedFormats, $videoFormats, $FilesToStrip, $UserFilename, $UserExtension, $Method);
   return array($StripComplete, $StripErrors, $StrippedFiles); }
 // / -----------------------------------------------------------------------------------
 ?>

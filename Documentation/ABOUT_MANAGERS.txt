@@ -45,6 +45,13 @@ coreManager.php is the core-manager role, the listener, which starts & supervise
 three. It keeps the name for historical reasons. The roles are core-manager,
 resource-manager, worker-manager & request-manager.
 
+TWO FILES THERE ARE NOT ROLES. environmentManager.php is root's, & only root loads it.
+authenticationManager.php is a library of the Authentication Core's, from v4.2.0. The Engine pins
+it with the four roles, & any process of the web server account loads it when it needs it. The
+resource-manager loads it to keep a user's quota & to sweep accounts after it sweeps the data
+locations, a web request loads it to sweep accounts, & --account loads it to change one. It
+starts nothing & has no socket. See ABOUT_AUTHENTICATION.txt.
+
 THIS DISTINCTION WAS LOAD BEARING WHEN THIS MACHINERY BECAME A SHARED ENGINE.
 The managers are the part of this application that has nothing to do with converting files.
 A virus scanner dispatching workers wants sockets, budgets, worker tracking & supervision,
@@ -63,7 +70,8 @@ A virus scanner dispatching workers wants sockets, budgets, worker tracking & su
                     location. Calculates the budget every operation is granted from, grants &
                     reclaims it, refuses a write a disk has no room for, keeps the worker
                     registry & the session map, & finds a worker that has outlived its
-                    expected runtime.
+                    expected runtime. From v4.2.0 it refuses a write that would take a signed
+                    in user past their quota, & sweeps accounts.
 
   worker-manager    Ends the worker it is told to end. It keeps no registry of its own & is
                     the only role that acts on a process without negotiation.
@@ -101,9 +109,13 @@ anybody relies on it for something larger.
 
 A MANAGER PROVES IT WAS STARTED BY THIS CORE & NOT BY SOMEBODY ELSE.
 
-deriveStartupKey() produces an HMAC over the install secret, a purpose & a short time
-bucket. validateStartupKey() accepts the current bucket or the one before it, because
-process launch is not instant.
+deriveStartupKey() draws a launch number at random & produces an HMAC over the install
+secret, a purpose, a short time bucket & that number, & the key is the number & the HMAC.
+validateStartupKey() accepts the current bucket or the one before it, because process launch
+is not instant. Every launch mints a key of its own, so a listener stopped & started again
+inside one bucket is not refused as a replay of itself, as it was until v4.1.9. A key without
+a launch number, as a listener an earlier release started mints until it is restarted, is
+still accepted.
 
 THE KEY TRAVELS IN THE ENVIRONMENT & NEVER ON THE COMMAND LINE.
 /proc/PID/cmdline is world readable. A key placed there is visible in ps to every local
@@ -118,16 +130,15 @@ clock this application does, so the window decides only how long they have & nev
 they succeed. Spending the key is the part this application controls.
 
 A KEY DERIVED & CHECKED INSIDE ONE PROCESS IS NOT SPENT.
-Derivation is deterministic within a window, so a service manager restarting inside ten
-seconds would mint the identical key & refuse itself as a replay. That is a restart loop
-rather than a security control.
+It never left the process, so nobody else holds a copy to replay.
 
 THE LEDGER OF SPENT KEYS HAS A CEILING & IT IS WORTH KNOWING WHERE.
-It holds hashes rather than keys, so reading it grants nothing. It defends against a key
-that leaked. It does NOT defend against an account holding the install secret. Deleting the
-ledger un-spends a captured key, & the only accounts that can delete it are root & the web
-server user, both of which can already read the secret, root:www-data 0640, & mint a valid key
-directly.
+It holds hashes rather than keys, so reading it grants nothing. It is read & written again
+under one lock, so managers spending their keys at the same moment each record theirs. It
+defends against a key that leaked. It does NOT defend against an account holding the install
+secret. Deleting the ledger un-spends a captured key, & the only accounts that can delete it
+are root & the web server user, both of which can already read the secret, root:www-data 0640,
+& mint a valid key directly.
 Losing the ledger to either of them costs nothing that was not already lost.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 

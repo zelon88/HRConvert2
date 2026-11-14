@@ -66,6 +66,7 @@ The Archiver raises the 4000 block & 13012, & 13006 through 13010 with the Archi
 The archiveExtraction.php shared module reserves 39000 through 39019 & the Extractor pipeline 39100 through 39119, from v4.1.7.
 The Archive pipeline raises 39000 through 39003 too, because it extracts an archive through that module.
 Renaming in convertCore.php reserves 23100 through 23119, the Metadata pipeline 41000 through 41019 & the PDF pipeline 42000 through 42019.
+The Authentication Core reserves 43000 through 43019 & the Email Core 43100 through 43119, from v4.2.0.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -898,7 +899,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-30, <SESSION_IDENTIFIER>: The secret file at <PATH> could not be removed by <USER>. Delete it as root & run the command again.
 
 FILE
-  convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   NO
@@ -5837,6 +5838,8 @@ ERROR DESCRIPTION
   The supplied key was derived from a per user secret rather than the install wide secret.
   The supplied key was derived more than two key windows ago & has expired.
   The install secret was rotated between the launch & the validation.
+  The key was presented once already & refused as a replay, which ERROR 31017 just above this one says.
+  Before v4.1.9 a listener stopped & started again inside ten seconds was refused this way, & from v4.1.9 every launch mints a key of its own.
   The application is being fuzzed or scanned for vulnerabilities.
   The --start-core-manager & --start-manager arguments are internal & are not documented in -h.
   They are invoked by the -l argument & are refused without a valid key.
@@ -6106,17 +6109,39 @@ LOGGED
 
 ERROR DESCRIPTION
   A manager startup key that had already been spent was presented again.
-  A startup key is an HMAC over a short time bucket and is valid for the current window and the one before it.
+  A startup key is a launch number drawn at random and an HMAC over it and a short time bucket, and is valid for the current window and the one before it.
+  From v4.1.9 every launch draws a launch number of its own, so two launches of one manager role inside one window mint two keys.
   A key that crosses a process boundary is now spent the moment it validates, and a second process presenting the same key is refused however soon it happens.
   Time alone cannot make a leaked key dead. Whoever holds a copy validates it against the same clock this application does, so the window decides only how long they have and never whether they succeed. Spending the key is the part this application controls.
   The key is also carried in the environment rather than on the command line, because /proc/PID/cmdline is world readable and a manager process runs for days.
-  CAUSE. Almost always a second launch of the same manager role within the same window, such as a service unit and an operator both starting the listener at once.
-  It is also what a replay of a captured key looks like, so a run of these with no matching launch is worth investigating.
-  RESOLUTION. Start the listener once. Run --status to see what is already running, and --stop-listener before starting it again.
+  CAUSE. A replay of a captured key, so a run of these with no matching launch is worth investigating.
+  Before v4.1.9 a key carried no launch number, & a listener stopped & started again inside ten seconds was refused this way.
+  A listener started by a release before v4.1.9 & still running after an update mints such keys until it is restarted.
+  So does a host that could not supply random bytes, which a WARNING says. See Warnings About Startup Keys below.
+  RESOLUTION. Run --status to see what is already running. A listener started by an earlier release is restarted with -k & -l.
   The ledger of spent keys lives in the manager socket directory and holds hashes rather than keys, so reading it grants nothing. Entries older than three windows are dropped automatically.
   This control defends against a key that leaked, not against an account that holds the install secret.
   Deleting the ledger un-spends a captured key, and the only accounts that can delete it are root and the web server user, both of which can already read the secret and mint a valid key directly. Losing the ledger to either of them costs nothing that was not already lost.
   The directory holding it sits inside the data location, owned by the web server user, so an unprivileged local account cannot remove it. That is the account this control exists for.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT STARTUP KEYS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php.
+    WARNING!!! A startup key for <PURPOSE> was refused.
+      The key did not validate for its purpose, in this window or the one before it. A manager that presented it does not
+      start, & ERROR 31006 follows. A key spent once already is refused with ERROR 31017 instead, & not with this warning.
+    WARNING!!! A startup key for <PURPOSE> carries no launch number, because this host could not supply random bytes. A second launch inside the same window will be refused as a replay.
+      From v4.1.9. PHP's random_bytes failed, so the key was minted as a release before v4.1.9 mints one, a signature alone.
+      It still validates. A second launch of the same purpose inside the same ten second window mints the same key, & that
+      one is refused with ERROR 31017. A host without a working source of random bytes is also a host where a session token
+      cannot be issued, so the cause is worth correcting.
+    WARNING!!! The ledger of spent startup keys at <FILE_PATH> could not be opened & locked, so a startup key for <PURPOSE> was accepted without being recorded as spent.
+      From v4.1.9. The key validated, & is accepted, because a manager that could not start over its ledger would take the
+      listener down with it. It was not recorded, so it could be presented again until its window closes. The ledger is in the
+      manager socket directory, which is the web server account's & 0700. Run -fp as root, which gives the folder back.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6177,7 +6202,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The web server account would not read the install secret root holds! <ADDITIONAL_DATA>
 
 FILE
-  convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   NO
@@ -6266,7 +6291,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31021, <SESSION_IDENTIFIER>: There is no install secret & the web server account does not create one. Run -fp as root to create it.
 
 FILE
-  convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   NO
@@ -6295,7 +6320,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31022, <SESSION_IDENTIFIER>: The install secret could not be rotated! The secret in place is unchanged.
 
 FILE
-  convertCore.php
+  Resources/Engine/engine.php
 
 FATAL
   NO
@@ -6358,7 +6383,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31024, <SESSION_IDENTIFIER>: Root will not work beneath <FOLDERS>, because another account can change them. Give each back to root & run the command again.
 
 FILE
-  convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   YES
@@ -8051,7 +8076,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41000, <SESSION_IDENTIFIER>: mat2 is missing, unidentifiable, or too old, so no metadata was stripped!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41000, <SESSION_IDENTIFIER>: mat2 is missing, unidentifiable, or too old, so no metadata was stripped! It is <STATUS>: <REASON>
 
 FILE
   Resources/Pipelines/Metadata/pipeline.php
@@ -8064,8 +8089,12 @@ LOGGED
 
 ERROR DESCRIPTION
   The Metadata pipeline strips metadata with mat2, & the manifest could not verify it.
+  From v4.2.0 the error names the status the Dependency Core gave mat2 & the line of its output that says the most.
+  Where mat2 gave no output to name, as when it is absent, the error ends It is <STATUS>. Where the Dependency Core could not be asked, it ends at stripped!
+  absent means mat2 is not installed, outdated means it is older than 0.13, & unknown-version means it would not say which it is.
   mat2 0.13 is the floor. Run  sudo php convertCore.php --setup --install-depends --subsystem=Metadata  to install it.
-  A host whose python3 is not the one its mat2 package was built for cannot run mat2, & -v reports it as missing.
+  mat2 is started by the Python 3 the distribution built it for, from v4.2.0, so a host that points python3 at another runs it too.
+  An unknown-version that names a module, such as cairo._cairo, means that Python lacks the module. Install mat2 again with the command above.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -8188,7 +8217,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41007, <SESSION_IDENTIFIER>: Could not strip the metadata from <FILE_NAME>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41007, <SESSION_IDENTIFIER>: Could not strip the metadata from <FILE_NAME>! mat2 said: <MESSAGE>
 
 FILE
   Resources/Pipelines/Metadata/pipeline.php
@@ -8200,8 +8229,10 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  mat2 ran & wrote no clean copy. With --Enhanced Logging Verbosity-- on, what mat2 printed is logged before this error.
+  mat2 ran & wrote no clean copy. From v4.2.0 the error names the last line mat2 printed, which is its reason, or ends mat2 said nothing.
+  With --Enhanced Logging Verbosity-- on, everything mat2 printed is logged before this error.
   The file may be damaged, or not be the format its extension says it is.
+  mat2 refuses an archive, such as an EPUB or an office document, holding a part it does not know, & names the part.
   mat2 fails when it tries to start a sandbox of its own inside this one. The Metadata pipeline keeps it from doing so for every release it knows.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -8409,4 +8440,178 @@ ERROR DESCRIPTION
 ERROR NUMBER RESERVATION
   42000 through 42019 are reserved for the PDF pipeline, & 42009 through 42019 are currently unused.
   42000 through 42008 are raised by the PDF pipeline, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-43000, <SESSION_IDENTIFIER>: A visitor must sign in & nobody can, because the accounts folder or the users folder is missing or cannot be written. Run -fp as root!
+
+FILE
+  Resources/Engine/Cores/authenticationCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.0. --Enable Authentication-- is TRUE & --Allow Anonymous Visitors-- is FALSE, so every visitor must sign in first.
+  Accounts or Users in the data location is missing, is a link or cannot be written by the web server account, or the accounts
+  salt in Accounts could not be read or made, so nobody can sign in.
+  The visitor is shown the sign in page, which says signing in is unavailable, & nothing they send is accepted.
+  -fp makes both folders & gives them to the web server account. Run  sudo php convertCore.php -fp .
+  It is raised for every request that arrives while it is so. Where anonymous visitors are allowed nothing is raised, every
+  visitor is served anonymously, & the sign in page says signing in is unavailable.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-43001, <SESSION_IDENTIFIER>: The folder for the files of <USERNAME> could not be made in <FOLDER_PATH>, so they were not signed in!
+
+FILE
+  Resources/Engine/Cores/authenticationCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.0. A page presented a valid sign in key, & the folder that holds that user's files could not be made in Users, is a
+  link, or cannot be written by the web server account. <FOLDER_PATH> is Users in the data location.
+  The request is served as an anonymous visitor's, or shown the sign in page where every visitor must sign in, so nothing of the
+  user's is put where another visitor could reach it. The sign in is not ended, & the next request tries again.
+  Run  sudo php convertCore.php -fp , which gives Users to the web server account. A full disk refuses the folder too.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-43002, <SESSION_IDENTIFIER>: A visitor must sign in & nobody can, because the Authentication Core could not be loaded!
+
+FILE
+  Resources/Engine/engine.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.0. --Enable Authentication-- is TRUE & --Allow Anonymous Visitors-- is FALSE, & the Authentication Core is missing or
+  does not report the version this application pins, so nobody can sign in.
+  The visitor is shown the sign in page, which says signing in is unavailable, & nothing they send is accepted. A command line
+  raises nothing, because it has no visitor.
+  The WARNING before this error names what was refused & why. Run  php convertCore.php -v  & read the Authentication Core line,
+  then restore Resources/Engine/Cores/authenticationCore.php from the matching release.
+  Where anonymous visitors are allowed nothing is raised but that WARNING, & every visitor is served anonymously.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  43000 through 43019 are reserved for the Authentication Core, & 43003 through 43019 are currently unused.
+  43000 & 43001 are raised by the Authentication Core, & 43002 by the Engine for it, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-43100, <SESSION_IDENTIFIER>: The host's mail system refused the <PURPOSE> email for <USERNAME>!
+
+FILE
+  Resources/Engine/Cores/emailCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.0. This host has the mail program that PHP's sendmail_path names, & PHP's mail function reported failure when it
+  was handed an email. <PURPOSE> is confirm or recover. The address is never logged.
+  The mail transfer agent's own log says why, & is usually /var/log/mail.log. A mail program that exits with an error for every
+  message, such as one with no relay configured, is the usual cause.
+  Registering tells the user their code could not be sent. Sending a code again & recovering an account answer as they always
+  do, so nobody learns whether an account exists.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  43100 through 43119 are reserved for the Email Core, & 43101 through 43119 are currently unused.
+  43100 is raised by the Email Core, & is documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT ACCOUNTS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  Every one of these is from v4.2.0. An address is never written to a log. A username is, because an administrator needs it.
+  The Authentication Core raises these, from Resources/Engine/Cores/authenticationCore.php.
+    WARNING!!! The accounts salt at <FILE_PATH> could not be read or made, so no account can be found.
+      The salt names every record in Accounts, so without it no account can be found & nobody can sign in. It is made once, by
+      the first request that needs it. Run  sudo php convertCore.php -fp , which gives Accounts to the web server account. A
+      salt that was changed by hand cannot be put right, because every record is named by the old one. Restore it from a backup.
+    WARNING!!! Attempts of the kind <KIND> reached the limit of <LIMIT> in <SECONDS> seconds, & are refused until the oldest is that old.
+      <KIND> is signin, register, code, resend or recover. code counts wrong confirmation & recovery codes. Each kind is counted
+      for each address a request comes from, & signin for each account as well, so one account's password cannot be guessed from
+      many addresses at once. The limit is --Sign In Attempt Limit-- & the window --Sign In Attempt Window--.
+      A visitor who reached it is told there were too many attempts. Many of these in a short time is somebody guessing.
+    WARNING!!! The <PURPOSE> email for <USERNAME> was not sent, because the Email Core is not loaded. Confirming an address & recovering an account are impossible until it is restored.
+      The Email Core is missing or does not report the version this application pins. Signing in with a correct password still
+      works. Run  php convertCore.php -v  & read the Email Core line, then restore Resources/Engine/Cores/emailCore.php from the
+      matching release. --config names it as a setting that contradicts another.
+    WARNING!!! An incorrect password was entered for <USERNAME>. The account cannot be recovered, because the Email Core is not loaded.
+      Raised for every incorrect password while the Email Core is not loaded, because a user who forgot theirs has no way back
+      in until it is restored. Where the Email Core is loaded, an incorrect password is logged as ordinary activity.
+    WARNING!!! An account could not be registered for <USERNAME>, because the accounts folder could not be written.
+      The visitor is told accounts are unavailable. Run  sudo php convertCore.php -fp , which gives Accounts to the web server
+      account. A full disk refuses the account too.
+    WARNING!!! The account <USERNAME> was given a new password with a recovery code, & every sign in made before it was ended.
+      The owner of the account's address asked for a recovery code & used it. Where the owner did not, somebody else reads that
+      address. Disable the account with  sudo php convertCore.php --account --disable <USERNAME>  until it is settled.
+    WARNING!!! A spent sign in key for <USERNAME> was presented to be exchanged again, so the sign in was ended. Somebody else may have held a copy of the key.
+      A page trades its key for a new one on a timer, & a key is traded once. A spent key traded again means two pages held
+      the same key, so the sign in is ended for both & the user signs in again. A browser that copies a page's key into a second
+      tab does it too, & that ends the sign in & nothing more.
+    WARNING!!! A workflow worker was handed an account that is gone or disabled or has no folder, so it acts for nobody.
+      A signed in user started a workflow, & before its worker began the account was removed or disabled, or its folder in
+      Users could not be made. The worker finds no job & stops, & the workflow does not run. Nothing was wrong with this server
+      unless the folder could not be made, which -fp corrects.
+  The Email Core raises these, from Resources/Engine/Cores/emailCore.php.
+    WARNING!!! The email sender <ADDRESS> set by --Email Sender-- cannot be used, so the host's mail system names the sender.
+      --Email Sender-- is not one plain address. The email is still sent, from whatever address the mail system uses.
+    WARNING!!! The <PURPOSE> email for <USERNAME> was not sent. <REASON>
+      <REASON> is one of these.
+        PHP was built without its mail function.
+        PHP names no mail program in sendmail_path.
+        The mail program <PROGRAM> that PHP names in sendmail_path is not installed. Install a mail transfer agent that provides it.
+        The address of <USERNAME> cannot be used.
+        There is no email for <PURPOSE>.
+      Nothing was handed to the host's mail system, so nobody receives the code. The first three are this host's, & --config
+      names them as a setting that contradicts another while accounts are on. A user who registered is told their code could
+      not be sent, & an administrator confirms the account with  sudo php convertCore.php --account --confirm <USERNAME> .
+  The Authentication Manager raises these, from Resources/Engine/Managers/authenticationManager.php.
+    WARNING!!! The files of <USERNAME> could not be measured against --User Storage Quota--, so a write of <BYTES> byte(s) was allowed.
+      The user's folder could not be read to its end, or holds more than 200,000 entries. The write is allowed, as one to a disk
+      that cannot be measured is.
+    WARNING!!! An account sweep did not finish, & what it left is swept next time.
+      A record that was over could not be removed, usually because a request held it at that moment. Many of these in a row mean
+      Accounts cannot be written. Run  sudo php convertCore.php -fp .
+    WARNING!!! Command line invocation. The account <USERNAME> was changed by an administrator: <CHANGE>.
+    WARNING!!! Command line invocation. The account <USERNAME> was added by an administrator.
+    WARNING!!! Command line invocation. The account <USERNAME> & its files were removed by an administrator.
+      A record of what --account changed, kept where the web server logs, beside the sign ins it changed. <CHANGE> is confirm,
+      disable, enable, admin, user or password. Nothing was wrong.
+  The Engine raises this, from Resources/Engine/engine.php.
+    WARNING!!! A write was charged to a signed in user & their quota could not be read, because accounts are off or the Authentication Manager is unavailable. It was allowed.
+      The listener was asked to keep a user's quota & cannot. Run  php convertCore.php -v  & read the Authentication Manager
+      line, or turn --Enable Authentication-- back on.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

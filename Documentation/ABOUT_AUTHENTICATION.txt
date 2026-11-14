@@ -1,0 +1,402 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 11/13/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v4.2.0.
+This file documents accounts. Signing in, the key a signed in page holds, registering, confirming an address, recovering an
+account, the files a signed in user keeps, the emails, the administrator's commands & the settings.
+It describes the Authentication Core, the Email Core & the Authentication Manager, which are the Engine's, & the sign in pages
+of both interfaces. For the requests, see ABOUT_REST_API.txt. For the commands, see ABOUT_COMMAND_LINE_ARGUMENTS.txt.
+For what another application must supply, see ABOUT_ENGINE_CONTRACT.txt. For each warning & error, see ERROR_DESCRIPTIONS.txt.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Accounts--
+
+ACCOUNTS ARE OFF UNTIL AN ADMINISTRATOR TURNS THEM ON. --Enable Authentication-- is FALSE by
+default, & an installation that leaves it so works exactly as every release before v4.2.0 did.
+
+Turned on, a visitor may create an account with a username & a password, & sign in with it. A
+signed in user keeps their files in a folder of their own, which no sweep removes. Every other
+visitor works as before, in a session that is removed after --File Deletion Age Threshold--,
+unless the administrator sets --Allow Anonymous Visitors-- FALSE & every visitor must sign in first.
+
+NO COOKIE IS EVER SET. NO DATABASE IS USED. NOTHING CONNECTS TO A THIRD PARTY.
+A signed in page holds a short lived key in its own memory & trades it for a new one on a timer.
+Accounts are files in the data location, outside the web root. Emails leave through the host's
+own mail system, & the Engine never connects to a mail server itself.
+
+THE CODE IS THE ENGINE'S. convertCore.php holds none of it.
+  Resources/Engine/Cores/authenticationCore.php       Accounts, signing in, keys, codes & limits.
+  Resources/Engine/Cores/emailCore.php                The emails the Authentication Core sends.
+  Resources/Engine/Managers/authenticationManager.php Sweeps, quotas & the administrator's commands.
+The application calls three generic Engine functions, & none of them says what an account is.
+answerEngineRequest() lets the Engine answer a request before the application serves it,
+engineSessionFolder() names the folder a request's files are in, & the interface draws the
+page the Engine names. See ABOUT_ENGINE_CONTRACT.txt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Signing In & The Key A Page Holds--
+
+Signing in hands the page a KEY of 96 hexadecimal digits. The first 32 name the sign in & the
+last 64 are its secret. The server keeps only a hash of the secret, so reading the accounts
+folder signs nobody in.
+
+THE KEY LIVES IN THE PAGE & IN THE TAB, & NOWHERE A BROWSER KEEPS FOR A SITE.
+The page holds it in memory & in window.name, which belongs to the tab. window.name is never
+sent to a server, survives a reload & a link followed in the same tab, & goes when the tab
+closes or goes to another site. The key is never written into a page the server draws, never
+put in an address & never logged.
+
+THE KEY IS PRESENTED WITH EVERY REQUEST & TRADED ON A TIMER.
+Every request the page sends to its own core carries the key, a form, a script's request & an
+upload alike. A request presenting the current key inside its life is signed in, & so is one
+presenting the key before it for a short grace after it was traded, so a request that crossed a
+trade in flight is not refused. The grace is a third of the key's life, & never under 3 seconds.
+Presenting a key does not spend it.
+Every --Sign In Exchange Interval-- seconds the page trades its key for a new one, which lives
+for --Sign In Key Lifetime-- seconds. The defaults are 6 & 30. Trading spends the key.
+
+A HIDDEN TAB STAYS SIGNED IN.
+A browser slows a hidden tab's own timers to once a minute, which would outlive a key. The page
+runs its timer in a dedicated worker, HRC2-SignInTimer.js, which the browser does not slow, &
+trades at once whenever the tab is shown again. A browser with no workers uses the page's timer.
+
+A RELOAD STAYS SIGNED IN.
+A reloaded page is drawn as a visitor's, because a reload sends no key. Its script finds the key
+the tab kept, trades it, & draws the page again signed in. That works while the key lives, so a
+tab whose timer was stopped for longer than a key's life, as a sleeping laptop's is, is signed out.
+
+A KEY TRADED TWICE ENDS THE SIGN IN.
+A key is traded once. A spent key traded again means two pages held the same key, so the sign in
+is ended for both, the user signs in again, & a WARNING is logged. A browser that copies a page's
+key into a second tab does it too, & that ends the sign in & nothing more.
+
+A SIGN IN ENDS WHEN
+  The user signs out, which removes it.
+  Its key was not traded inside its life.
+  --Sign In Maximum Lifetime-- has passed since it was made, however often it was traded. The
+  default is 43200 seconds, which is 12 hours, & 0 keeps no limit.
+  Its account is disabled, removed or given a new password.
+  The install secret is rotated with --rotate-secret. Every account is kept.
+A page whose sign in ended says why in its sign in bar & goes home.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Registering & Confirming An Address--
+
+A visitor may create an account where --Allow Registration-- is TRUE. Where it is FALSE, only an
+administrator creates accounts, with --account --add.
+
+A USERNAME is 3 to 64 letters, digits, dots, dashes & underscores, & begins with a letter or a
+digit. It is unique whatever its case, & is shown as it was typed. Registering says when a username
+is taken, because the visitor must choose another, & every account asked for is counted against
+the address it comes from, so usernames cannot be tested without end.
+
+A PASSWORD is at least --Minimum Password Length-- characters, which is 12 & never under 8, & at
+most 1024 bytes. Any character may be used. It is never sanitized, written, logged or shown. It is
+hashed with Argon2id where PHP has it, & with bcrypt over an HMAC-SHA256 of the password where it
+does not, because bcrypt reads only the first 72 bytes. A record names the scheme it was hashed
+with. A username no account has is checked against a hash all the same, so a wrong username takes
+as long to refuse as a wrong password.
+
+AN ADDRESS is never said to be in use. An address may hold several accounts, & nothing tells a
+visitor whether an address is known here.
+
+CONFIRMING. Where --Require Email Confirmation-- is TRUE, a new account must confirm its address
+before it may sign in. A CODE of ten characters is emailed to it, from an alphabet without the
+letters & digits that look alike. It is entered on the page where the account was made, & the
+page offers to send another. A code takes five wrong tries & is then spent, & a new one must be
+asked for. An account that does not confirm inside --Unconfirmed Account Lifetime-- is removed by
+a sweep, with the empty folder it was given. Where it is FALSE, a new account may sign in at once.
+
+AN EMAIL CARRIES A CODE & NEVER A LINK. A mail system that checks links opens each one before its
+reader does, & would spend a link that works once.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Recovering An Account--
+
+A user who forgot their password asks for a code by USERNAME, & the code is emailed to the address
+that account keeps. The page answers the same way whether or not the account exists, so asking
+tells nobody which usernames exist. Only a confirmed account that may sign in is sent one.
+
+The code is good for --Recovery Code Lifetime-- seconds, which is 1800 & never under 300, & for
+five wrong tries. With it the user chooses a new password. A new password ends every sign in made
+with the old one, & is a WARNING, so an administrator sees an account recovered by somebody who
+reads its owner's email.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Too Many Attempts--
+
+Failures are counted for each kind of attempt & each address a request comes from. Where
+--Sign In Attempt Limit-- of one kind have failed inside --Sign In Attempt Window-- seconds, that
+kind is refused from that address until the oldest is that old. The defaults are 5 & 900.
+
+  signin    A wrong password. Counted for the account as well, so one account's password cannot be
+            guessed from many addresses at once.
+  register  Every account asked for with a usable username, address & password, made or not.
+  code      A wrong code, confirming an address or recovering an account.
+  resend    Every code sent again.
+  recover   Every recovery asked for.
+
+A refused attempt is answered too-many, whatever the password was. The limit tripping is a
+WARNING. A correct password forgets the account's failures.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Files A Signed In User Keeps--
+
+Each account is given a folder in Users, in the data location, named by 18 random hexadecimal
+digits. It is the web server account's & 0700, & is outside the web root. No sweep removes what is
+in it, so a user's files stay until the user deletes them or the account is removed.
+
+A SIGNED IN REQUEST WORKS IN THE USER'S FOLDER. Uploads land there, the list a page reads is of
+what is there, & every operation reads & writes there. An anonymous request in the same session
+works in the session's folder, as always, & sees nothing of the user's.
+
+A FILE IS SERVED FROM THE SESSION'S FOLDER, NEVER THE USER'S. A file a user downloads or shares is
+copied into the session's served folder, which is named by the session & swept as always, so a
+link to one never names the user's folder & stops working when the session is swept.
+
+A WORKFLOW RUNS AS THE USER WHO STARTED IT. The worker is handed the session & the user's account,
+& its startup key is bound to both, so it works in the user's folder & is charged to their quota.
+A user who signs out does not stop a workflow they started. A worker handed an account that is
+gone or disabled acts for nobody, finds no job & stops. See ABOUT_WORKFLOWS.txt.
+
+A QUOTA. --User Storage Quota-- is the megabytes each user may keep, 1024 by default & 0 for none.
+What a user holds is measured from their folder at every write, so it is never out of date. A
+write past it is refused & says why. An upload past it fails as one to a full disk does. The
+quota is kept by the listener, as the storage reserve is, so it is kept only where
+--Enable Resource Awareness-- is TRUE & the listener runs. --config says so where it is not.
+
+Removing an account removes its folder & every file in it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Who May Visit--
+
+  --Allow Anonymous Visitors-- TRUE    Every visitor uses this server as before, & a sign in bar
+                                       is offered in a top corner of every page.
+  --Allow Anonymous Visitors-- FALSE   A visitor who has not signed in is shown the sign in page,
+                                       & nothing they send is accepted.
+
+Where accounts cannot be used, because Accounts or Users is missing or cannot be written, the
+sign in page says signing in is unavailable. Where every visitor must sign in, that is ERROR
+43000, & ERROR 43002 where the Authentication Core could not be loaded. Run -fp as root.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Email--
+
+THE EMAIL CORE SENDS THROUGH THE HOST'S OWN MAIL SYSTEM & NOTHING ELSE. It hands each email to
+PHP's mail function, which hands it to the program PHP's sendmail_path names. A host with no mail
+transfer agent sends nothing, & each email it does not send is a WARNING. The Engine never
+connects to a mail server, so relaying mail elsewhere is the mail system's to configure.
+
+AN EMAIL IS PLAIN TEXT IN UTF-8. A subject that is not plain ASCII is encoded as MIME requires.
+--Email Sender-- is the address it is from. Empty, the mail system names the sender.
+
+THE TEXT IS THE ENGINE'S, THEN THE APPLICATION'S, THEN THE ADMINISTRATOR'S.
+The Engine's defaults are in Resources/Engine/engineConfig.php, the application's contract may
+replace them, & the administrator's --Email Confirmation Subject--, --Email Confirmation Body--,
+--Email Recovery Subject-- & --Email Recovery Body-- replace both. An empty setting keeps the one
+before it. Each may name these, written in braces.
+  {APPLICATION}   The application's title, --Application Title String--.
+  {USERNAME}      The account's username.
+  {CODE}          The code.
+  {MINUTES}       The minutes the code may be used for.
+  {ADDRESS}       The address of this server.
+A name not in that list is left as it was written. A value can never add a header, because every
+line break is taken out of a subject & out of what a name stands for.
+
+AN ADDRESS IS NEVER WRITTEN TO A LOG. A username is, because an administrator needs it.
+
+WITHOUT THE EMAIL CORE, OR WITHOUT A MAIL SYSTEM, A VALID SIGN IN STILL WORKS.
+Confirming an address & recovering an account become impossible. Every email that would have been
+sent is a WARNING, & so is every incorrect password while the Email Core is missing, because a user
+who forgot theirs has no way back in. --config --repair names each as a setting that contradicts
+another. An administrator can still confirm an account with --account --confirm, & give it a new
+password with --account --password.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Administrator's Commands--
+
+  sudo php convertCore.php --account --list
+  sudo php convertCore.php --account --add <USERNAME> <ADDRESS>
+  sudo php convertCore.php --account --confirm <USERNAME>
+  sudo php convertCore.php --account --disable <USERNAME>
+  sudo php convertCore.php --account --enable <USERNAME>
+  sudo php convertCore.php --account --admin <USERNAME>
+  sudo php convertCore.php --account --user <USERNAME>
+  sudo php convertCore.php --account --password <USERNAME>
+  sudo php convertCore.php --account --remove <USERNAME> [-y]
+
+--list names every account, its role, whether it is confirmed or disabled, when it last signed
+in & its address. It never shows a password, a hash or a key.
+--add makes an account that is confirmed already, & shows a password of 20 characters once.
+--password gives an account a new password, shows it once & ends every sign in made with the old.
+--disable ends every sign in the account has from its next request, & --enable undoes it.
+--admin & --user set the account's role.
+--remove asks first, & removes the account & every file its user kept. -y answers yes.
+
+ROOT HANDS EVERY ONE OF THESE TO THE WEB SERVER ACCOUNT. Accounts & Users are that account's, & root
+never works by name inside a folder another account can change. Each change is a WARNING in the
+web server's log, beside the sign ins it changed.
+
+The commands work while accounts are off, so an administrator may prepare accounts first.
+
+A ROLE is user or admin. A page is told the role of the user it was drawn for. Nothing yet does more
+with it. See --Not Yet--.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Where Everything Is Kept--
+
+  Accounts/salt.php           The accounts salt, made once.
+  Accounts/Users/<NAME>.php   One account. Its username, address, password hash & scheme, role,
+                              whether it is confirmed or disabled, when it was made & last signed
+                              in, its folder & its generation.
+  Accounts/Codes/<NAME>.php   One code. Its purpose, a hash of it, when it expires & its tries.
+  Accounts/SignIns/<ID>.php   One sign in. Its account & generation, a fingerprint of the install
+                              secret, when it was made & ends, hashes of its current & previous
+                              keys & when each was issued, & the last eight keys it spent.
+  Accounts/Limits/<NAME>.php  The recent failures of one kind of attempt from one subject.
+  Accounts/swept              The time of the last sweep.
+  Users/<FOLDER>/             The files one user keeps.
+
+A RECORD IS READ AS TEXT & NEVER RUN. Its first line ends any attempt to run it as PHP, & its second
+holds the record as JSON. A record is changed in place under a lock, so two requests never write
+over each other.
+
+A NAME TELLS NOBODY WHAT IT NAMES. Each <NAME> is a SHA-256 of the accounts salt, the kind of
+record & its subject, lower cased, so a listing of Accounts reveals no username & no address.
+
+THE ACCOUNTS SALT IS NOT THE INSTALL SECRET. --rotate-secret keeps every account, & ends every sign
+in, because each sign in carries a fingerprint of the secret it was made under. A salt that is lost
+or changed loses every account, because every record is named by it. Back up Accounts & Users
+together.
+
+A GENERATION is a number each account keeps. A new password raises it, & a sign in made under an
+older one is over.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Sweeps--
+
+A sweep removes what is over.
+  A sign in whose key outlived its life & its grace, whose longest life has passed, or whose account
+  is gone, unconfirmed, disabled or of a newer generation.
+  A code that has expired.
+  The failures of a subject once the newest is older than --Sign In Attempt Window--.
+  An account that did not confirm its address inside --Unconfirmed Account Lifetime--, with its empty
+  folder.
+
+The listener sweeps accounts each time it sweeps the data locations, & a web request sweeps them at
+most once in ten minutes, so an installation with no listener sweeps them too. Only the web server
+account sweeps. A record another request is holding is left for the next sweep.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Settings--
+
+Each is in config.php & is read through the contract, so the Authentication Core never knows what
+the application calls it. After unpacking a drop in, run --config --repair before -fp.
+
+  --Enable Authentication--          $EnableAuthentication = FALSE. Whether accounts are on.
+  --Allow Anonymous Visitors--       $AllowAnonymousVisitors = TRUE. Whether a visitor may use this server without signing in.
+  --Allow Registration--             $AllowRegistration = TRUE. Whether a visitor may create an account.
+  --Require Email Confirmation--     $RequireEmailConfirmation = TRUE. Whether a new account must confirm its address.
+  --User Storage Quota--             $UserStorageQuota = 1024. Megabytes each user may keep. 0 keeps none.
+  --Sign In Key Lifetime--           $SignInKeyLifetime = 30. Seconds a key lives. Never under 10.
+  --Sign In Exchange Interval--      $SignInExchangeInterval = 6. Seconds between trades. 2 to half a key's life.
+  --Sign In Maximum Lifetime--       $SignInMaximumLifetime = 43200. Seconds a sign in may last. 0 keeps no limit.
+  --Minimum Password Length--        $MinimumPasswordLength = 12. Never under 8.
+  --Sign In Attempt Limit--          $SignInAttemptLimit = 5. Failures of one kind before it is refused.
+  --Sign In Attempt Window--         $SignInAttemptWindow = 900. Seconds failures are counted for. Never under 60.
+  --Unconfirmed Account Lifetime--   $UnconfirmedAccountLifetime = 86400. Seconds to confirm. Never under 600.
+  --Recovery Code Lifetime--         $RecoveryCodeLifetime = 1800. Seconds a recovery code lives. Never under 300.
+  --Email Sender--                   $EmailSender = ''. The address emails are from.
+  --Email Confirmation Subject--     $EmailConfirmationSubject = ''. Empty keeps the application's.
+  --Email Confirmation Body--        $EmailConfirmationBody = ''. Empty keeps the application's.
+  --Email Recovery Subject--         $EmailRecoverySubject = ''. Empty keeps the application's.
+  --Email Recovery Body--            $EmailRecoveryBody = ''. Empty keeps the application's.
+
+A value outside its range is raised or lowered into it. An application whose contract does not
+offer accounts has none, whatever config.php says, & -v names the Authentication Core & the Email
+Core either way. While accounts are off, --config names a setting above as having no effect only
+once it differs from its default, so an installation that never turns accounts on is told nothing.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Interface--
+
+Both interfaces draw the same pages from engineGui.php, which the Engine names when a visitor
+must sign in or asks for one of them. Sign in, Create an account, Confirm your account, Recover
+your account & Choose a new password are sections of one page, & a form is sent by a script, so
+a key comes back to the page that asked for it & never travels in a page.
+
+A SIGN IN BAR sits at the top of every page, at the end of the line a reader finishes on, so on
+the right, & on the left where the language reads right to left. It is part of the page rather
+than laid over it, so it covers nothing at any width & with any username. Signed in, it names the
+user & offers Sign out. Signed out, it offers Sign in. On the sign in page it is empty & takes no
+room.
+
+HRC2-SignIn.js holds the key, adds it to every request the page sends its own core & to no other,
+trades it on the timer & keeps it in the tab. HRC2-SignInTimer.js is the worker that keeps the
+time. Each interface has both, in its Resources/JS.
+
+Every string is in every language pack, as $GuiAuthText1 through $GuiAuthText43.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--What This Defends Against & What It Does Not--
+
+IT DEFENDS AGAINST
+  A guessed password, with the limits on attempts & a slow hash.
+  Learning which usernames & addresses exist, because sign in, confirmation & recovery answer
+  alike for an account that exists & one that does not. Registering says a username is taken,
+  & is limited.
+  A key leaking through a log, an address, a Referer header or a cookie, because it is in none.
+  A copied key, which ends the sign in the first time both copies are traded.
+  A request forged by another site, because a key is never sent by the browser on its own. A page
+  must present it, & another site's page cannot read it.
+  A stolen accounts folder signing anybody in, because it holds hashes.
+
+IT DOES NOT DEFEND AGAINST
+  A script running inside the page itself, which can read the key as it can read anything the
+  page holds. Keep every interface free of what a user can inject.
+  Somebody who controls the web server account, which can read & change every account.
+  Somebody who reads the user's email, which is where every code goes.
+  A network that can be watched. Serve this application over HTTPS. Nothing here encrypts a
+  request on its own.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Not Yet--
+
+v4.2.0 is the first round of accounts. These are planned & are not in this version.
+  An administrator's account marked admin may install a workflow for every user from a page, with
+  a description in each language.
+  A user may change their own password or address while signed in.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

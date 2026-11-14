@@ -139,6 +139,7 @@ code that root then runs. To correct anything, run -fp instead.
   --setup <argument>          An entire suite of commands for installing & managing HRConvert2 installations.
   --pipeline <argument>       Inspect & verify the installed pipelines.
   --workflow <argument>       List, check, export, install & remove workflows.
+  --account <argument>        List, add, confirm, disable, enable & remove accounts, set a role or a new password.
   --build --pins              Check every version pin against what ships. A developer step.
   --build --pins --write      Rewrite every version pin that differs from what ships.
   --app<name>                 Handed to the application untouched. See --About --app.
@@ -155,6 +156,7 @@ Root refuses an installation another account could change, & only the repairs ru
 See --CLI User Account Considerations--.
 The -v, -h, --status & --pipeline arguments work when run as any user, & so do --workflow --list, --check & --export.
 --workflow --install & --remove require root.
+--account requires root or the web server user, & root hands it to the web server user.
 --build needs write access to the source tree & nothing more. It is the developer's build
 step. It rewrites source files, & an operator never has a reason to run it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -382,6 +384,37 @@ place, which is how one is replaced.
 
 --run-workflow <job> is not an operator command. It is how a workflow's worker is started, & a
 worker without the startup key for its job & its session refuses the job & does nothing.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About   --account----
+
+Lists & changes accounts, from v4.2.0. See ABOUT_AUTHENTICATION.txt.
+
+Requires the Authentication Core & the Authentication Manager. Each works while accounts are off,
+so an administrator may prepare accounts before turning them on.
+
+  --account --list                         Every account, its role, whether it is confirmed or
+                                           disabled, when it last signed in & its address.
+  --account --add <username> <address>     Add an account, confirmed, & show its new password once.
+  --account --confirm <username>           Confirm an account's address for it.
+  --account --disable <username>           Stop an account signing in, & end every sign in it has.
+  --account --enable <username>            Let a disabled account sign in again.
+  --account --admin <username>             Make an account an administrator's.
+  --account --user <username>              Make an account an ordinary user's.
+  --account --password <username>          Give an account a new password, show it once, & end
+                                           every sign in made with the old one.
+  --account --remove <username>            Remove an account & every file its user kept. Asks
+                                           first, naming the account, & -y answers yes.
+
+An action is written with two dashes, & every one but --list is followed by the username of an
+account. A command that is missing either says which, & shows the form to type. An action written
+with one dash, such as -add, is named with its two & is not run.
+
+Root hands every one of these to the web server user, which owns the accounts, so root never reads
+or writes one. Each change is logged as a WARNING where the web server logs. A password is shown
+once & is never written anywhere but as its hash. The command exits 0 when it did what was asked,
+& 1 when it did not.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

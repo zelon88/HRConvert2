@@ -35,7 +35,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -633,4 +633,96 @@ $GuiFunctionsText1 = 'お使いのブラウザはクリップボードへのコ�
 // / Set GUI - Footer Related Variables.
 // / 'Check out our Terms of Service and Privacy Policy'
 $GuiFooterText1 = '<a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>利用規約</a>と<a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>プライバシーポリシー</a>をご確認ください';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'サインイン';
+// / 'Sign out'
+$GuiAuthText2 = 'サインアウト';
+// / 'Create an account'
+$GuiAuthText3 = 'アカウントを作成';
+// / 'Username'
+$GuiAuthText4 = 'ユーザー名';
+// / 'Password'
+$GuiAuthText5 = 'パスワード';
+// / 'Email address'
+$GuiAuthText6 = 'メールアドレス';
+// / 'Code'
+$GuiAuthText7 = 'コード';
+// / 'New password'
+$GuiAuthText8 = '新しいパスワード';
+// / 'Confirm your account'
+$GuiAuthText9 = 'アカウントを確認';
+// / 'Recover your account'
+$GuiAuthText10 = 'アカウントを復旧';
+// / 'Choose a new password'
+$GuiAuthText11 = '新しいパスワードを選択';
+// / 'Send the code again'
+$GuiAuthText12 = 'コードを再送信';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'パスワードをお忘れですか？';
+// / 'Have a code?'
+$GuiAuthText14 = 'コードをお持ちですか？';
+// / 'Back to sign in'
+$GuiAuthText15 = 'サインインに戻る';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'サインインせずに続ける';
+// / 'Signed in as'
+$GuiAuthText17 = 'サインイン中のユーザー：';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = '現在、このサーバーではサインインできません。';
+// / 'Confirm'
+$GuiAuthText19 = '確認';
+// / 'Send a code'
+$GuiAuthText20 = 'コードを送信';
+// / 'Change password'
+$GuiAuthText21 = 'パスワードを変更';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'ユーザー名またはパスワードが正しくありません。';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = '試行回数が多すぎます。数分待ってからもう一度お試しください。';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'まず、メールでお送りしたコードでアカウントを確認してください。';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'このアカウントはサインインできません。管理者に連絡してください。';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'ここでは新しいアカウントを作成できません。管理者に連絡してください。';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'ユーザー名は英字、数字、ピリオド、ハイフン、アンダースコアの3～64文字で、英字か数字で始まります。';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'そのユーザー名は使用されています。別の名前を選んでください。';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'そのメールアドレスは使用できません。';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'パスワードの最小文字数：';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'アカウントを作成しました。確認用のコードをメールでお送りしました。';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'アカウントを作成しましたが、このサーバーからコードをメールで送信できませんでした。管理者に連絡してください。';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'アカウントを作成しました。サインインできます。';
+// / 'That code is not right.'
+$GuiAuthText34 = 'そのコードは正しくありません。';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'そのコードはもう使用できません。新しいコードを請求してください。';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'アカウントを確認しました。サインインできます。';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'そのアカウントが確認待ちであれば、新しいコードを送信しています。';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'そのアカウントが存在すれば、そのメールアドレスにコードを送信しています。';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'パスワードを変更しました。サインインできます。';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'サインアウトしました。';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'サインインが別の場所で使用されたため、サインアウトしました。';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'サーバーが応答しませんでした。もう一度お試しください。';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'このサーバーではアカウントを復旧できません。';
 // / -----------------------------------------------------------------------------------

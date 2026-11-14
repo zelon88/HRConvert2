@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.8.
+// / v4.2.0.
 // / The Workflow Core, one of the Engine's cores.
 // / A workflow is a list of steps, & each step runs one of the application's operations on files a user selected or an earlier step made.
 // / This file reads, checks & runs workflows, & keeps the status a page reads while one runs.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by the application without executing this file.
-$WorkflowCoreVersion = 'v4.1.8';
+$WorkflowCoreVersion = 'v4.2.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -1030,16 +1030,18 @@ function forgetRunningWorkflow($runFolder, $jobId) {
 // / Nothing passes through a shell. The session & a startup key travel in the worker's environment, which only its own account can read.
 // / A command line is readable by every account, & a session's name is how its files are fetched, so neither is ever put on one.
 // / The startup key is bound to this job & this session, & the worker spends it, so the job starts once.
+// / The session is handed over as the Engine names it, which adds the signed in user the worker acts for where there is one, so the key binds that too.
 function startWorkflowWorker($jobId, $sessionContext) {
   // / Set variables.
   global $InstLoc, $DirSep, $Verbose, $EnableMemoryProtection;
   $WorkerWasStarted = FALSE;
   $StartNotice = '';
-  $startupKey = $setsidPath = $phpPath = $entryPath = '';
+  $startupKey = $setsidPath = $phpPath = $entryPath = $handedContext = '';
   $workerEnvironment = $commandParts = $processPipes = $processDescriptors = array();
   $workerProcess = FALSE;
   $exitStatus = -1;
-  $startupKey = deriveStartupKey('run-workflow|'.hash('sha256', (string)$sessionContext).'|'.(string)$jobId);
+  $handedContext = engineWorkerContext((string)$sessionContext);
+  $startupKey = deriveStartupKey('run-workflow|'.hash('sha256', $handedContext).'|'.(string)$jobId);
   $setsidPath = locateDependency('setsid');
   $phpPath = locateDependency('php');
   $entryPath = rtrim((string)$InstLoc, $DirSep).$DirSep.engineApplicationEntryPoint();
@@ -1050,7 +1052,7 @@ function startWorkflowWorker($jobId, $sessionContext) {
     $workerEnvironment = getenv();
     if (!is_array($workerEnvironment)) $workerEnvironment = array();
     $workerEnvironment[engineStartupKeyVariable()] = $startupKey;
-    $workerEnvironment[engineWorkerContextVariable()] = (string)$sessionContext;
+    $workerEnvironment[engineWorkerContextVariable()] = $handedContext;
     $commandParts = array($setsidPath, '-f', $phpPath, $entryPath, '--run-workflow', (string)$jobId);
     $processDescriptors = array(0 => array('file', '/dev/null', 'r'), 1 => array('file', '/dev/null', 'w'), 2 => array('file', '/dev/null', 'w'));
     $workerProcess = @proc_open($commandParts, $processDescriptors, $processPipes, (string)$InstLoc, $workerEnvironment);
@@ -1061,7 +1063,7 @@ function startWorkflowWorker($jobId, $sessionContext) {
       if (!$WorkerWasStarted) $StartNotice = 'setsid exited with status '.$exitStatus.', so the worker may not have started.';
       else if ($Verbose) logEntry('Started the worker for workflow job '.$jobId.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $startupKey, $setsidPath, $phpPath, $entryPath, $workerEnvironment, $commandParts, $processPipes, $processDescriptors, $workerProcess, $exitStatus, $jobId, $sessionContext);
+  purgeSensitiveMemory($EnableMemoryProtection, $startupKey, $setsidPath, $phpPath, $entryPath, $handedContext, $workerEnvironment, $commandParts, $processPipes, $processDescriptors, $workerProcess, $exitStatus, $jobId, $sessionContext);
   return array($WorkerWasStarted, $StartNotice); }
 // / -----------------------------------------------------------------------------------
 

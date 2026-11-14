@@ -235,6 +235,8 @@ rename its entry point is refused with a warning naming both folders.
   gives, including architecture rules, version windows & the licence gates.
   A pipeline that carries its own version check, or calls one living in the application, is
   not portable. It fails the first time it is copied into a different application.
+  A tool the distribution packages as a Python program is started by verifiedToolCommand(),
+  so the Python that runs it is the Python its version was asked of.
 
 CAPABILITIES ARE A CROSS PRODUCT, NARROWED BY EXCLUSIONS.
 Every input extension is assumed convertible to every output extension unless a pair appears

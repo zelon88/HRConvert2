@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -629,4 +629,96 @@ $GuiFunctionsText1 = 'Ваш браузер не підтримує копіюв
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'Перегляньте наші <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Загальні положення та умови</a> та <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Політика конфіденційності';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'Увійти';
+// / 'Sign out'
+$GuiAuthText2 = 'Вийти';
+// / 'Create an account'
+$GuiAuthText3 = 'Створити обліковий запис';
+// / 'Username'
+$GuiAuthText4 = 'Ім\'я користувача';
+// / 'Password'
+$GuiAuthText5 = 'Пароль';
+// / 'Email address'
+$GuiAuthText6 = 'Адреса електронної пошти';
+// / 'Code'
+$GuiAuthText7 = 'Код';
+// / 'New password'
+$GuiAuthText8 = 'Новий пароль';
+// / 'Confirm your account'
+$GuiAuthText9 = 'Підтвердіть обліковий запис';
+// / 'Recover your account'
+$GuiAuthText10 = 'Відновіть обліковий запис';
+// / 'Choose a new password'
+$GuiAuthText11 = 'Виберіть новий пароль';
+// / 'Send the code again'
+$GuiAuthText12 = 'Надіслати код ще раз';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'Забули пароль?';
+// / 'Have a code?'
+$GuiAuthText14 = 'Маєте код?';
+// / 'Back to sign in'
+$GuiAuthText15 = 'Повернутися до входу';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'Продовжити без входу';
+// / 'Signed in as'
+$GuiAuthText17 = 'Ви увійшли як';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'Вхід на цей сервер зараз недоступний.';
+// / 'Confirm'
+$GuiAuthText19 = 'Підтвердити';
+// / 'Send a code'
+$GuiAuthText20 = 'Надіслати код';
+// / 'Change password'
+$GuiAuthText21 = 'Змінити пароль';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'Неправильне ім\'я користувача або пароль.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'Забагато спроб. Зачекайте кілька хвилин і спробуйте знову.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'Спершу підтвердіть обліковий запис кодом, який ми надіслали вам поштою.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'Цей обліковий запис не може увійти. Зверніться до адміністратора.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'Тут не можна створювати нові облікові записи. Зверніться до адміністратора.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'Ім\'я користувача складається з літер, цифр, крапок, дефісів або підкреслень, від 3 до 64 знаків, і починається з літери або цифри.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'Це ім\'я користувача зайняте. Виберіть інше.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'Цю адресу електронної пошти не можна використати.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'Найменша допустима довжина пароля в знаках:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'Обліковий запис створено. Ми надіслали вам поштою код для його підтвердження.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'Обліковий запис створено, але цей сервер не зміг надіслати вам код. Зверніться до адміністратора.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'Обліковий запис створено. Тепер ви можете увійти.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'Цей код неправильний.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'Цей код більше не можна використати. Попросіть новий.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'Обліковий запис підтверджено. Тепер ви можете увійти.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'Якщо цей обліковий запис чекає на підтвердження, новий код уже в дорозі.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'Якщо цей обліковий запис існує, код уже надіслано на його адресу електронної пошти.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'Пароль змінено. Тепер ви можете увійти.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'Ви вийшли з системи.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'Ви вийшли з системи, бо ваш вхід було використано деінде.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'Сервер не відповів. Спробуйте ще раз.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'Відновлення облікових записів на цьому сервері недоступне.';
 // / -----------------------------------------------------------------------------------

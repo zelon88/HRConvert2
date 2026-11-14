@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -628,4 +628,96 @@ $GuiFunctionsText1 = 'Your browser does not support copying to the clipboard!';
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'Sign in';
+// / 'Sign out'
+$GuiAuthText2 = 'Sign out';
+// / 'Create an account'
+$GuiAuthText3 = 'Create an account';
+// / 'Username'
+$GuiAuthText4 = 'Username';
+// / 'Password'
+$GuiAuthText5 = 'Password';
+// / 'Email address'
+$GuiAuthText6 = 'Email address';
+// / 'Code'
+$GuiAuthText7 = 'Code';
+// / 'New password'
+$GuiAuthText8 = 'New password';
+// / 'Confirm your account'
+$GuiAuthText9 = 'Confirm your account';
+// / 'Recover your account'
+$GuiAuthText10 = 'Recover your account';
+// / 'Choose a new password'
+$GuiAuthText11 = 'Choose a new password';
+// / 'Send the code again'
+$GuiAuthText12 = 'Send the code again';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'Forgot your password?';
+// / 'Have a code?'
+$GuiAuthText14 = 'Have a code?';
+// / 'Back to sign in'
+$GuiAuthText15 = 'Back to sign in';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'Continue without signing in';
+// / 'Signed in as'
+$GuiAuthText17 = 'Signed in as';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'Signing in is unavailable on this server right now.';
+// / 'Confirm'
+$GuiAuthText19 = 'Confirm';
+// / 'Send a code'
+$GuiAuthText20 = 'Send a code';
+// / 'Change password'
+$GuiAuthText21 = 'Change password';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'The username or password is incorrect.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'Too many attempts. Please wait a few minutes and try again.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'Confirm your account with the code we emailed you first.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'This account cannot sign in. Contact the administrator.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'New accounts cannot be created here. Contact the administrator.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'That username is taken. Choose another.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'That email address cannot be used.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'Passwords must have at least this many characters:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'Your account was created. We emailed you a code to confirm it.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'Your account was created, but this server could not email your code. Contact the administrator.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'Your account was created. You can sign in now.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'That code is not right.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'That code can no longer be used. Ask for a new one.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'Your account is confirmed. You can sign in now.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'If that account is waiting to be confirmed, a new code is on its way.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'If that account exists, a code is on its way to its email address.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'Your password was changed. You can sign in now.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'You have been signed out.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'You were signed out, because your sign in was used somewhere else.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'The server did not answer. Please try again.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'Recovering an account is unavailable on this server.';
 // / -----------------------------------------------------------------------------------

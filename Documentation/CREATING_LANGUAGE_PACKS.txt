@@ -217,6 +217,9 @@ a plural helper would otherwise be needed. {kind} is the name of a kind of file,
 $Gui2Text127 give it, so a language whose words for all agree with the noun writes the sentence around
 it, as all files: {kind}.
 Do not repeat a closing HTML tag that footer.php already supplies. $GuiFooterText1 ends without its final closing anchor tag for this reason.
+From v4.2.0 a pack carries $GuiAuthText1 through $GuiAuthText43, the words of the sign in bar & the sign in pages,
+under Set GUI - Sign In Related Variables. $GuiAuthText30 is followed by a number on the page, so it ends where
+a number reads correctly after it, as a colon does in English. Sign in is a verb on a button, & reads as one.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

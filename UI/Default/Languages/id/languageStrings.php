@@ -37,7 +37,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -636,4 +636,96 @@ $GuiFunctionsText1 = 'Peramban Anda tidak mendukung penyalinan ke papan klip.';
 // / The closing anchor tag for this string lives in footer.php & must NOT be repeated here.
 // / 'Check out our Terms of Service and Privacy Policy'
 $GuiFooterText1 = 'Lihat <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Ketentuan Layanan</a> dan <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Kebijakan Privasi';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'Masuk';
+// / 'Sign out'
+$GuiAuthText2 = 'Keluar';
+// / 'Create an account'
+$GuiAuthText3 = 'Buat akun';
+// / 'Username'
+$GuiAuthText4 = 'Nama pengguna';
+// / 'Password'
+$GuiAuthText5 = 'Kata sandi';
+// / 'Email address'
+$GuiAuthText6 = 'Alamat email';
+// / 'Code'
+$GuiAuthText7 = 'Kode';
+// / 'New password'
+$GuiAuthText8 = 'Kata sandi baru';
+// / 'Confirm your account'
+$GuiAuthText9 = 'Konfirmasi akun Anda';
+// / 'Recover your account'
+$GuiAuthText10 = 'Pulihkan akun Anda';
+// / 'Choose a new password'
+$GuiAuthText11 = 'Pilih kata sandi baru';
+// / 'Send the code again'
+$GuiAuthText12 = 'Kirim ulang kode';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'Lupa kata sandi?';
+// / 'Have a code?'
+$GuiAuthText14 = 'Punya kode?';
+// / 'Back to sign in'
+$GuiAuthText15 = 'Kembali ke halaman masuk';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'Lanjutkan tanpa masuk';
+// / 'Signed in as'
+$GuiAuthText17 = 'Masuk sebagai';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'Saat ini tidak dapat masuk ke server ini.';
+// / 'Confirm'
+$GuiAuthText19 = 'Konfirmasi';
+// / 'Send a code'
+$GuiAuthText20 = 'Kirim kode';
+// / 'Change password'
+$GuiAuthText21 = 'Ganti kata sandi';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'Nama pengguna atau kata sandi salah.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'Konfirmasi dulu akun Anda dengan kode yang kami kirim lewat email.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'Akun ini tidak dapat masuk. Hubungi administrator.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'Akun baru tidak dapat dibuat di sini. Hubungi administrator.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'Nama pengguna terdiri dari 3 sampai 64 huruf, angka, titik, tanda hubung, atau garis bawah, dan diawali huruf atau angka.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'Nama pengguna itu sudah dipakai. Pilih yang lain.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'Alamat email itu tidak dapat digunakan.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'Jumlah karakter paling sedikit untuk kata sandi:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'Akun Anda sudah dibuat. Kami mengirim kode lewat email untuk mengonfirmasinya.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'Akun Anda sudah dibuat, tetapi server ini tidak dapat mengirim kode Anda lewat email. Hubungi administrator.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'Akun Anda sudah dibuat. Anda sekarang dapat masuk.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'Kode itu tidak benar.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'Kode itu tidak dapat digunakan lagi. Minta kode baru.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'Akun Anda sudah dikonfirmasi. Anda sekarang dapat masuk.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'Jika akun itu sedang menunggu konfirmasi, kode baru sedang dikirim.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'Jika akun itu ada, kode sedang dikirim ke alamat emailnya.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'Kata sandi Anda sudah diganti. Anda sekarang dapat masuk.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'Anda telah keluar.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'Anda telah dikeluarkan karena sesi masuk Anda dipakai di tempat lain.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'Server tidak menjawab. Silakan coba lagi.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'Pemulihan akun tidak tersedia di server ini.';
 // / -----------------------------------------------------------------------------------

@@ -501,7 +501,10 @@ $DependsManifest = array(
   // / 0.13 is the floor. Every release before 0.13 writes outside its folder when it cleans a zip, CVE-2022-35410, & every office document is a zip.
   // / Ubuntu 24.04 carries 0.13.4 & Debian's bookworm carries 0.13.3, so neither needs a build of its own.
   // / The Metadata pipeline runs it in the sandbox, because it parses whatever a user uploaded.
-  array('Name' => 'MAT2', 'Binary' => 'mat2', 'Type' => 'apt', 'Package' => 'mat2',
+  // / It is a Python program, & its package's modules are built for the distribution's own Python 3 & no other.
+  // / Interpreter has it started by that Python, which Debian & Ubuntu name in /usr/share/python3/debian_defaults,
+  // / so a host that points python3 at another Python still runs it. Without the setting it failed to start there with 41000.
+  array('Name' => 'MAT2', 'Binary' => 'mat2', 'Type' => 'apt', 'Package' => 'mat2', 'Interpreter' => 'python3',
     'MinimumVersion' => '0.13', 'VersionCommand' => 'mat2 --version', 'VersionPattern' => '/mat2 (\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => 'Metadata', 'Requires' => array('Bubblewrap'),
     'License' => 'LGPL-3.0', 'Source' => 'https://0xacab.org/jvoisin/mat2', 'Purpose' => 'Strips the metadata a file carries for Strip Metadata.'),

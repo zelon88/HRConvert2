@@ -43,7 +43,7 @@ This document will teach administrators and developers how GUIs are handled and 
 In this document when we refer to a GUI, we refer to a set of files required to render HRConvert2.
 In this document when we refer to a language pack, we refer to the files required to localize a GUI into a specific language.
 
-An HRConvert2 GUI is made up of 9 components. Each component serves a specific function. The 9 components of a GUI are:
+An HRConvert2 GUI is made up of 10 components. Each component serves a specific function. The 10 components of a GUI are:
 
   1. header.php
   2. convertGui1.php
@@ -54,6 +54,7 @@ An HRConvert2 GUI is made up of 9 components. Each component serves a specific f
   7. A 'Languages' folder with at least one ISO 639-1 supported Language Pack.
   8. uiVersionInfo.php
   9. A 'Resources' folder containing 'Image', 'CSS' & 'JS' subdirectories.
+  10. engineGui.php, from v4.2.0.
 
 These components are stored in a folder named after the GUI.
 That folder is placed inside the 'UI' subdirectory of the installation location.
@@ -229,6 +230,36 @@ This file contains the end of the GUI including the Terms of Service & Privacy P
 This file is always displayed.
 Localized text for this file is contained in the 'Languages/<LANGUAGE_CODE>/languageStrings.php' file of the language pack.
 Insert code here that should run at the end of every page that HRConvert2 renders.
+From v4.2.0, where accounts are on, it writes the sign in bar, moves it to the top of the page, & starts HRC2SignIn with
+the strings it shows. $EnginePageState says whether accounts are on & who is signed in. See ABOUT_AUTHENTICATION.txt.
+The bar is written last because the footer is the one file every page shares, & is moved first because that is where a
+reader looks for it. It is part of the page rather than laid over it, so it covers nothing at any width.
+A bar with nothing to say, as on the sign in page, is written with nothing inside it, not even a space, so it is empty
+& the included GUIs draw an empty bar as nothing. They draw it by the hrc2-signin- classes in HRConvert2.css, at the end
+of the line a reader finishes on, so on the left where the language reads right to left.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About engineGui.php--
+
+This file draws a page the Engine names, in place of convertGui1.php or convertGui2.php, from v4.2.0.
+The Engine names one only where accounts are on, when a visitor must sign in or asks for one of its pages.
+It is drawn inside header.php & footer.php, with the language pack's strings in scope, & no operation runs with it.
+It is required, as every other file is, so a GUI without it is refused & the core falls back to the Default GUI.
+$EnginePageState tells it what it may show.
+  Page                   signin, register, confirm, recover or reset. The section to show first.
+  Available              Whether accounts can be used on this server now.
+  AllowAnonymous         Whether a visitor may go on without signing in.
+  AllowRegistration      Whether a visitor may create an account.
+  RequireConfirmation    Whether a new account must confirm its address.
+  EmailAvailable         Whether this server can send an email, so confirming & recovering can work.
+  MinimumPasswordLength  The fewest characters a password may have.
+  KeyLifetime            The seconds a key lives.
+  ExchangeInterval       The seconds between trades.
+The included GUIs draw every page as a section of one card & send every form with a script, so a key comes back
+to the page that asked for it & is never written into a page. The strings are $GuiAuthText1 through $GuiAuthText43.
+Each field's name is above the field, so a long name in any language never pushes its field onto a line of its own.
+The included GUIs style the card, the forms & the links under them by the hrc2-signin- classes in HRConvert2.css.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -315,6 +346,10 @@ The included GUIs keep their client side script library at 'Resources/JS/HRC2-Fu
 Workflows panel's at 'Resources/JS/HRC2-Workflows.js'. header.php points $WorkflowsJsPath at the
 second & loads it only while $EnableWorkflows is on. Both are stamped with their modification time,
 so a browser fetches a new copy the moment one changes.
+From v4.2.0 'Resources/JS/HRC2-SignIn.js' holds a signed in page's key, adds it to every request the
+page sends its core, & trades it on a timer. header.php loads it, stamped the same way, only while
+accounts are on. 'Resources/JS/HRC2-SignInTimer.js' is the worker that keeps its time, because a
+browser slows a hidden tab's own timers. A GUI keeps both, or a signed in page cannot stay signed in.
 header.php points $JsLibraryPath at it & loads it before anything that calls into it.
 That file is static javascript & CANNOT read a language pack, so every string it shows a
 user is passed in as an argument by the PHP that calls it. Pass those strings through

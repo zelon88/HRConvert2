@@ -11,7 +11,7 @@ Welcome to the official `Documentation/` folder! This document outlines the cont
 * **Licensing Model:** Protected under the strict terms of the **GNU GPLv3 Open-Source License**. Refer to the [Official License Portal](https://www.gnu.org/licenses/gpl-3.0.html) for distribution requirements.
 
 ### System Intent
-This application provides a highly accessible, unauthenticated web interface enabling file conversions directly on a server infrastructure using any modern web browser.
+This application provides a highly accessible web interface enabling file conversions directly on a server infrastructure using any modern web browser. It needs no account, & optional accounts, off by default, let a user keep files of their own.
 
 | Metric | Minimum Operational Requirements |
 | :--- | :--- |

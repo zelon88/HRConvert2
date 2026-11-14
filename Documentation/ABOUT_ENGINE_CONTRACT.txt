@@ -74,7 +74,7 @@ declare an input & an output format was written when every pipeline converted so
 & it silently refused both scanner pipelines for two releases. That is the shape of mistake
 to watch for.
 
-THE SESSION MECHANISM WAITS FOR AN AUTHENTICATION CORE.
+THE INSTALL SECRET & THE SESSION MECHANISM ARE THE KERNEL'S, FROM v4.1.9.
 
 HRConvert2 derives a session identity from an install secret & a supplied token, with a
 daily parent directory for domain separation, & uses NO COOKIE ANYWHERE. A token cannot be
@@ -84,21 +84,25 @@ That is not a conversion feature. It is stateful identity without client side st
 HRCloud3 would need exactly it for authentication rather than for grouping uploads.
 
 The application keeps what a session MEANS, which is whose files these are & what may be
-done with them. The Engine would keep how an identity is derived, bound & expired. The
-split is the same one every other seam here uses & the mechanism is already written.
+done with them. The kernel keeps how the install secret is kept & how a visitor's identity is
+derived from it. establishInstallSecret decides which secret a process may hold & reads it,
+settleInstallSecretAsRoot writes it again as root, & verifyTokens & verifySesHash derive a
+session. The application names its secret files with its slug & pins the version of secret it
+accepts, $RequiredSecretVersion.
 
-DECIDED AT v3.9.9. Sessions move when authentication arrives, together, into a core of their
-own that does not exist yet. Not into the kernel, which was proposed & is the wrong home,
-because authentication is a large subsystem & the kernel is only worth having while it stays
-small & identical everywhere. Not ahead of authentication either, because the two will be
-designed against each other.
+DECIDED AT v4.1.9, REVERSING v3.9.9. v3.9.9 decided both would move with authentication into a
+core of their own, & not into the kernel, because authentication is a large subsystem & the
+kernel is only worth having while it stays small & identical everywhere. Neither of them is
+authentication. Both are reached before the Engine is verified, which is question three below.
+The installation does not verify without the secret, root stops on the folders above it, the
+logfile is named from it & every log line carries the session's label. Every application on
+the Engine needs the secret, because its startup & socket keys are derived from it, & neither
+calls anything but the kernel.
 
-THE CONSTRAINT THAT CORE HAS TO SOLVE. Today a session is derived BEFORE the Engine is
-verified, & every kernel log line carries the session label. A core loaded by the Engine
-cannot provide something needed before the Engine loads, which is question three below. So
-either session derivation moves later in the boot, or the label becomes something the
-kernel can do without. The kernel already reads it optionally & prints No Session when it is
-absent, so the second is cheap.
+SIGNING IN IS THE ENGINE'S. Authentication, from v4.2.0, is a core the Engine loads, & it takes
+over a signed in request's identity once the Engine has loaded, as a workflow's worker adopts
+the session it continues. Rotating the install secret stops & starts the listener, so
+--rotate-secret is the Engine's command, & the kernel rewrites the secret for it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -159,7 +163,7 @@ A FOLDER FOR SECRETS IS AN ENGINE LOCATION, FROM v4.0.4. The secret role is root
 server account's group & 0750, so that account reads what root keeps there & changes none of it,
 & no other account can list it. Setup Core makes the folder & gives it the role, & puts nothing
 in it. HRConvert2 names Secrets as $SecretLoc & keeps its install secret there. Reading, writing &
-copying the secret is still the application's, until authentication has a core of its own.
+copying the secret is the kernel's, from v4.1.9.
 THE ENGINE KNOWS WHAT THE WEB SERVER SERVES, FROM v4.0.5. A location the contract gives the
 served role is a folder of the web server account's that browsers fetch files from, & HRConvert2
 names DATA in its hosted location that way. Setup Core writes the Apache configuration from the
@@ -272,8 +276,9 @@ exactly one application, which is the situation this exists to leave behind.
   THE KERNEL   Resources/Kernel/kernel.php, beside the Engine & never inside it. Required
                by the entry point before anything else runs & pinned exactly by
                $RequiredKernelVersion. Logging, halting, memory shredding, sanitizing,
-               the command line, dependency location, component loading, & the file
-               operations root performs where another account could interfere.
+               the command line, dependency location, component loading, the file
+               operations root performs where another account could interfere, the
+               install secret & a visitor's session identity.
 
   THE ENGINE   Resources/Engine/engine.php. The environment every application needs.
 
@@ -337,7 +342,8 @@ SIX VALUES. THE CONTRACT IS DELIBERATELY SMALL.
                           because an application may be relocated & the Engine should not
                           have an opinion about that.
   $LogDir                 Absolute path to where logs are written.
-  $SecretKey              The install secret. Startup keys are derived from it.
+  $SecretKey              The install secret. Startup keys are derived from it. The kernel
+                          establishes it, & the application sets it from what that returns.
   $ApacheUser             The account the web server runs as.
   $Verbose                Whether ordinary activity is logged.
   $EnableMemoryProtection Whether sensitive memory is shredded at every return.
@@ -394,6 +400,31 @@ workflow, logs error 38000 & loses nothing else. A worker is the application's o
 adoptWorkflowSession(). From v4.1.5 the provider may also name SessionFiles, a function listing a
 session's files as the application's pages list them, which gives its workflows the Workflow Core's
 Select step. HRConvert2 names getFiles(). See ABOUT_WORKFLOWS.txt.
+
+AN APPLICATION MAY OFFER ACCOUNTS, FROM v4.2.0.
+The Engine's default is none, $EngineEnableAuthentication FALSE in engineConfig.php, & an application
+that offers accounts sets it TRUE in its contract. HRConvert2 does. The administrator still decides,
+through the setting the contract maps to EnableAuthentication, & every other setting accounts read is
+mapped in $EngineSettingNames as well, from AllowAnonymousVisitors to EmailRecoveryBody, with
+AccountLocation & UserLocation, which the contract names as locations of the web role,
+ApplicationTitle & ServerName. An application offering accounts makes three generic calls & names
+nothing about an account.
+  answerEngineRequest()        Called once the Engine has loaded & before the application builds the
+                               globals a session hangs from. It returns an empty string where the
+                               application serves the request, page where the application draws the
+                               page the Engine names & runs no operation, or answered where the Engine
+                               wrote the whole answer & the application draws nothing & runs nothing.
+                               HRConvert2 keeps it in $EngineAnswer.
+  engineSessionFolder()        Called with the folder a request's files would be in. It returns the
+                               signed in user's own folder for a signed in request, & the folder it
+                               was handed for any other.
+  engineGui.php                A file every interface supplies. The application draws it, inside its
+                               header & footer, where the answer was page. $EnginePageState tells it
+                               which page, & what the page may show about the visitor.
+The Engine names the signed in user to the listener itself, through storageQuotaOwner(), & to a
+workflow's worker through engineWorkerContext(), so the application changes nothing for a quota or a
+worker. An application also pins $RequiredAuthenticationCoreVersion & $RequiredEmailCoreVersion, as
+it pins every Engine core, & -v reports both. See ABOUT_AUTHENTICATION.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -452,6 +483,7 @@ degrades. Enabling it says this application uses it, not that it must be present
   $EngineEnableStartupKeys            Proving a process was started by this application.
   $EngineEnableEnvironmentValidation  Reporting whether the host is configured correctly.
   $EngineEnableResourceLimits         Bounding what one unit of work may consume.
+  $EngineEnableAuthentication         Accounts. Off unless the application's contract offers them.
 
 The list grows as applications need more. It does not grow speculatively. A gate with
 nothing behind it is a gate somebody will eventually turn on expecting something to happen.

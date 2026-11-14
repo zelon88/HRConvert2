@@ -59,7 +59,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. An update & --config --repair keep it current.
-$ConfigVersion = 'v4.1.7';
+$ConfigVersion = 'v4.2.0';
 // / ------------------------------
 
 // / ------------------------------
@@ -246,10 +246,10 @@ $ThrowSandboxWarning = TRUE;
 // /  --Stream Duration Timeout--
 // /   Set the maximum amount of time in minutes that FFMPEG will stream a file from a streaming provider for a user.
 // /   This setting must be lower than the PHP execution timer set in php.ini.
-// /   This setting must be lower than the --Delete Threshold-- located in the ---General Information--- section of this config.php file.
+// /   This setting must be lower than the --File Deletion Age Threshold-- located in the ---General Information--- section of this config.php file.
 // /   This setting is costly because it requires FFMPEG & HRConvert2 to both maintain dedicated threads for the duration of the users stream.
 // /   On popular public facing servers, setting this too high can result in the server becoming overwhelmed by on-going streams.
-// /   Valid options are integers greater than 1, but not more than the PHP execution time or the --Delete Threshold--.
+// /   Valid options are integers greater than 1, but not more than the PHP execution time or the --File Deletion Age Threshold--.
 // /   This option MUST be set higher than 0.
 // /   Default is 15.
 $StreamWatchTimeout = 15;
@@ -533,6 +533,137 @@ $EnvironmentManagerMayRepair = FALSE;
 // /   the shipped version silently & you will find out at the next conversion.
 // /   Default is TRUE.
 $EnvironmentManagerMayRewriteConfigs = TRUE;
+// /  --Enable Authentication--
+// /   Usernames & passwords. A user who signs in keeps their files in a folder of their own,
+// /   which no sweep removes, & every other visitor works exactly as before.
+// /   No cookie is ever set. A signed in page holds a short lived key in its memory & trades
+// /   it for a new one on a timer, so closing the tab ends the sign in.
+// /   Accounts are kept in Accounts & each user's files in Users, both in the data location
+// /   & outside the web root. -fp makes both, whether or not this is on.
+// /   Confirming an address & recovering an account need the Email Core & a mail system on
+// /   this host. Without them, signing in with valid credentials still works, & --config
+// /   names what is missing.
+// /   See Documentation/ABOUT_AUTHENTICATION.txt.
+// /   Valid options are TRUE or FALSE.
+// /   Default is FALSE.
+$EnableAuthentication = FALSE;
+// /  --Allow Anonymous Visitors--
+// /   Whether a visitor who has not signed in may still use this server, in a session that
+// /   is removed after --File Deletion Age Threshold-- as every session always has been.
+// /   Set it FALSE to require every visitor to sign in first.
+// /   Requires --Enable Authentication--.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowAnonymousVisitors = TRUE;
+// /  --Allow Registration--
+// /   Whether a visitor may create an account of their own.
+// /   Set it FALSE to have only an administrator create accounts, with --account --add.
+// /   Requires --Enable Authentication--.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowRegistration = TRUE;
+// /  --Require Email Confirmation--
+// /   Whether a new account must confirm its address with a code emailed to it before it
+// /   may sign in. An account an administrator creates is confirmed already.
+// /   Requires --Allow Registration--.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$RequireEmailConfirmation = TRUE;
+// /  --User Storage Quota--
+// /   The megabytes each signed in user may keep. A write that would take them past it is
+// /   refused. Set it to 0 for no limit.
+// /   The listener keeps the quota, as it keeps the storage reserve, so it is kept only where
+// /   --Enable Resource Awareness-- is TRUE & the listener runs.
+// /   Requires --Enable Authentication--.
+// /   Valid options are integers 0 and larger.
+// /   Default is 1024.
+$UserStorageQuota = 1024;
+// /  --Sign In Key Lifetime--
+// /   The seconds a signed in page's key may be presented for. A page trades it for a new
+// /   one long before then. A key that is not traded in time ends the sign in.
+// /   Values below 10 are raised to 10.
+// /   Requires --Enable Authentication--.
+// /   Valid options are integers 10 and larger.
+// /   Default is 30.
+$SignInKeyLifetime = 30;
+// /  --Sign In Exchange Interval--
+// /   The seconds between a page's trades. It is held to half of --Sign In Key Lifetime-- at
+// /   most, so every key is traded at least twice before its life is over.
+// /   Requires --Enable Authentication--.
+// /   Valid options are integers 2 and larger.
+// /   Default is 6.
+$SignInExchangeInterval = 6;
+// /  --Sign In Maximum Lifetime--
+// /   The seconds a sign in may last however busy its page is, after which the user signs
+// /   in again. Set it to 0 to let a sign in last as long as its page is open.
+// /   Requires --Enable Authentication--.
+// /   Valid options are integers 0 and larger.
+// /   Default is 43200, which is twelve hours.
+$SignInMaximumLifetime = 43200;
+// /  --Minimum Password Length--
+// /   The fewest characters a new password may have. Values below 8 are raised to 8.
+// /   Requires --Enable Authentication--.
+// /   Valid options are integers 8 and larger.
+// /   Default is 12.
+$MinimumPasswordLength = 12;
+// /  --Sign In Attempt Limit--
+// /   The failed attempts an account, or an address a request comes from, may make inside
+// /   --Sign In Attempt Window-- before every further attempt is refused until the oldest
+// /   is that old. It limits registrations, codes & recovery requests from an address too.
+// /   Requires --Enable Authentication--.
+// /   Valid options are integers 1 and larger.
+// /   Default is 5.
+$SignInAttemptLimit = 5;
+// /  --Sign In Attempt Window--
+// /   The seconds --Sign In Attempt Limit-- counts over. Values below 60 are raised to 60.
+// /   Requires --Enable Authentication--.
+// /   Valid options are integers 60 and larger.
+// /   Default is 900, which is fifteen minutes.
+$SignInAttemptWindow = 900;
+// /  --Unconfirmed Account Lifetime--
+// /   The seconds a new account has to confirm its address, & the life of the code sent to
+// /   it. An account still unconfirmed after it is removed. Values below 600 are raised to 600.
+// /   Requires --Require Email Confirmation--.
+// /   Valid options are integers 600 and larger.
+// /   Default is 86400, which is one day.
+$UnconfirmedAccountLifetime = 86400;
+// /  --Recovery Code Lifetime--
+// /   The seconds a recovery code may be used for. Values below 300 are raised to 300.
+// /   Requires --Enable Authentication--.
+// /   Valid options are integers 300 and larger.
+// /   Default is 1800, which is thirty minutes.
+$RecoveryCodeLifetime = 1800;
+// /  --Email Sender--
+// /   The address the emails this server sends are from. Leave it empty to let this host's
+// /   mail system name the sender.
+// /   Requires --Enable Authentication--.
+// /   Default is empty.
+$EmailSender = '';
+// /  --Email Confirmation Subject--
+// /   The subject of the email that confirms a new account's address. Leave it empty for
+// /   the one this release ships. It may name {APPLICATION}, {USERNAME}, {CODE},
+// /   {MINUTES} & {ADDRESS}, & each is replaced before the email is sent.
+// /   Requires --Enable Authentication--.
+// /   Default is empty.
+$EmailConfirmationSubject = '';
+// /  --Email Confirmation Body--
+// /   The text of that email. Leave it empty for the one this release ships. It may name
+// /   the same five, & should name {CODE}, because the code is what the reader types.
+// /   Requires --Enable Authentication--.
+// /   Default is empty.
+$EmailConfirmationBody = '';
+// /  --Email Recovery Subject--
+// /   The subject of the email that lets the owner of an account choose a new password.
+// /   Leave it empty for the one this release ships. It may name the same five.
+// /   Requires --Enable Authentication--.
+// /   Default is empty.
+$EmailRecoverySubject = '';
+// /  --Email Recovery Body--
+// /   The text of that email. Leave it empty for the one this release ships. It may name
+// /   the same five, & should name {CODE}.
+// /   Requires --Enable Authentication--.
+// /   Default is empty.
+$EmailRecoveryBody = '';
 
 // / ------------------------------
 
@@ -646,7 +777,7 @@ $UniqueDailyLogHash = TRUE;
 $AdditionalConvertLocs = array();
 // /  --Storage Cleanup Interval--
 // /   How often the Resource Manager sweeps every configured data location, in seconds.
-// /   The sweep uses --Delete Threshold-- to decide what has expired.
+// /   The sweep uses --File Deletion Age Threshold-- to decide what has expired.
 // /   Set to 0 to disable the scheduled sweep entirely.
 // /   Standalone installations, or installs where no listener is available are unaffected by this setting.
 // /   Standalone workers also sweep for stale files at runtime.

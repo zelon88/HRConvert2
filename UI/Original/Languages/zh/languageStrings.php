@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -624,4 +624,96 @@ $GuiFunctionsText1 = 'आपका ब्राउज़र क्लिपब�
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = '查看我们的<a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>服务条款</a>和<a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>隐私政策';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = '登录';
+// / 'Sign out'
+$GuiAuthText2 = '退出登录';
+// / 'Create an account'
+$GuiAuthText3 = '创建账户';
+// / 'Username'
+$GuiAuthText4 = '用户名';
+// / 'Password'
+$GuiAuthText5 = '密码';
+// / 'Email address'
+$GuiAuthText6 = '电子邮件地址';
+// / 'Code'
+$GuiAuthText7 = '验证码';
+// / 'New password'
+$GuiAuthText8 = '新密码';
+// / 'Confirm your account'
+$GuiAuthText9 = '确认您的账户';
+// / 'Recover your account'
+$GuiAuthText10 = '找回您的账户';
+// / 'Choose a new password'
+$GuiAuthText11 = '设置新密码';
+// / 'Send the code again'
+$GuiAuthText12 = '重新发送验证码';
+// / 'Forgot your password?'
+$GuiAuthText13 = '忘记密码？';
+// / 'Have a code?'
+$GuiAuthText14 = '已有验证码？';
+// / 'Back to sign in'
+$GuiAuthText15 = '返回登录';
+// / 'Continue without signing in'
+$GuiAuthText16 = '不登录继续';
+// / 'Signed in as'
+$GuiAuthText17 = '当前登录：';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = '此服务器目前无法登录。';
+// / 'Confirm'
+$GuiAuthText19 = '确认';
+// / 'Send a code'
+$GuiAuthText20 = '发送验证码';
+// / 'Change password'
+$GuiAuthText21 = '修改密码';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = '用户名或密码不正确。';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = '尝试次数过多。请稍等几分钟后再试。';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = '请先用我们发送到您邮箱的验证码确认账户。';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = '此账户无法登录。请联系管理员。';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = '此处无法创建新账户。请联系管理员。';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = '用户名由3到64个字母、数字、点、连字符或下划线组成，并以字母或数字开头。';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = '该用户名已被使用。请另选一个。';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = '无法使用该电子邮件地址。';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = '密码的最少字符数：';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = '您的账户已创建。我们已向您的邮箱发送了确认验证码。';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = '您的账户已创建，但此服务器无法向您发送验证码。请联系管理员。';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = '您的账户已创建。现在可以登录了。';
+// / 'That code is not right.'
+$GuiAuthText34 = '验证码不正确。';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = '该验证码已无法使用。请重新获取。';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = '您的账户已确认。现在可以登录了。';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = '如果该账户正在等待确认，新的验证码正在发送中。';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = '如果该账户存在，验证码正在发送到其电子邮件地址。';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = '您的密码已修改。现在可以登录了。';
+// / 'You have been signed out.'
+$GuiAuthText40 = '您已退出登录。';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = '由于您的登录在其他地方被使用，您已被退出登录。';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = '服务器没有响应。请重试。';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = '此服务器不支持找回账户。';
 // / -----------------------------------------------------------------------------------

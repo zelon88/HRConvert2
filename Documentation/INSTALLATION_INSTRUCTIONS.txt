@@ -385,5 +385,9 @@ config.php in place of the one in use, which is then kept only in Last-Installed
 7. Please respect the terms of the GPLv3 license.
 8. Please reciprocate improvements back to the community with a Pull Request.
 9. Report problems at  'https://github.com/zelon88/HRConvert2'
-10. Psst... Hey... You look like you could use a cup of coffee.....
+10. Accounts are off until --Enable Authentication-- is TRUE. Confirming an address & recovering
+    an account need a mail transfer agent on this host that provides the program PHP's
+    sendmail_path names, & HRConvert2 installs none. Without one, a valid sign in still works &
+    --config names what is missing. See ABOUT_AUTHENTICATION.txt.
+11. Psst... Hey... You look like you could use a cup of coffee.....
 -----------------------------------------------------------------------------------

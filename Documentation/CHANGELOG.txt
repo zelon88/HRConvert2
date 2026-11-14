@@ -27,6 +27,58 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 --------------------
 COMMIT 11/13/2026
+v4.2.0 - Optional accounts. A user may sign in & keep files of their own, & no cookie is ever set.
+
+-v4.2.0.
+-Round 1.
+-New Authentication Core, Email Core & Authentication Manager in the Engine. Accounts are off until --Enable Authentication-- is TRUE.
+-New registration, sign in, confirmation of an address by an emailed code & recovery by an emailed code. Passwords are hashed with Argon2id, or bcrypt where PHP has no Argon2id.
+-A signed in page holds a key in its memory & its tab, & trades it every 6 seconds from a worker. Each key lives 30 seconds. A reload stays signed in, & a key traded twice ends the sign in.
+-A signed in user's files are kept in Users in the data location & are never swept. A workflow's worker works in the folder of the user who started it.
+--fp makes Accounts & Users in the data location, the web server account's & 0700, whether or not accounts are on.
+-New --User Storage Quota--, kept by the listener.
+-New limits on failed attempts for each address, & on wrong passwords for each account.
+-New --account command, with --list, --add, --confirm, --disable, --enable, --admin, --user, --password & --remove. Root hands it to the web server account.
+-New settings --Enable Authentication--, --Allow Anonymous Visitors--, --Allow Registration--, --Require Email Confirmation--, --User Storage Quota--, --Sign In Key Lifetime--, --Sign In Exchange Interval--, --Sign In Maximum Lifetime--, --Minimum Password Length--, --Sign In Attempt Limit--, --Sign In Attempt Window--, --Unconfirmed Account Lifetime--, --Recovery Code Lifetime--, --Email Sender--, --Email Confirmation Subject--, --Email Confirmation Body--, --Email Recovery Subject-- & --Email Recovery Body--. Run --config --repair after updating.
+-Without the Email Core or a mail system, a valid sign in still works, every email not sent & every incorrect password is a WARNING, & --config names it as a contradiction.
+-New NamedWhenChanged in the configuration model. While accounts are off, --config names a setting of accounts as having no effect only once it differs from its default.
+-New engineGui.php in both interfaces, with the sign in pages, & a sign in bar on every page. New HRC2-SignIn.js & HRC2-SignInTimer.js. Every language pack carries $GuiAuthText1 through $GuiAuthText43.
+-convertCore.php calls answerEngineRequest() & engineSessionFolder() & draws the page the Engine names, & holds no account code.
+-loadEngineManager() builds its path from DIRECTORY_SEPARATOR, so a manager may be loaded before verifyGlobals().
+-The kernel gives the web server account the install secret for --account, so what it changes is logged beside the sign ins it changes.
+-FIX. --config wrote a string or path default with the template's quotes inside the value, so an empty one became '\'\''. A repair adds a string setting for the first time in v4.2.0, & a reset restored one this way before.
+-FIX. The Default interface's dark colour scheme drew its card in the colour of the page, because a comment above the card's rule was never closed & hid it.
+-FIX. Links in the dark colour scheme of both interfaces were the browser's dark blue & purple on a dark page, & are now light.
+-config.php's notes name --File Deletion Age Threshold-- by its label, where three called it --Delete Threshold--.
+-New errors 43000, 43001, 43002 & 43100. ERROR_DESCRIPTIONS documents them & every new warning.
+-New ABOUT_AUTHENTICATION. ABOUT_COMPONENTS, ABOUT_MANAGERS, ABOUT_MANAGED_LOCATIONS, ABOUT_ENGINE_CONTRACT, ABOUT_REST_API, ABOUT_COMMAND_LINE_ARGUMENTS, ABOUT_WORKFLOWS, CREATING_GUIS, CREATING_LANGUAGE_PACKS, ENGINE_MIGRATION_STATUS, INSTALLATION_INSTRUCTIONS, DEVELOPMENT_NOTES & both READMEs describe the change.
+-The core, the kernel, the Engine, Setup Core, the Workflow Core, the Resource Manager, both interfaces, every language pack & config.php are v4.2.0, & every pin to them requires v4.2.0.
+-Round 2.
+-FIX. Strip Metadata made nothing from a docx, xlsx, pptx, odt, ods, odp, odg, EPUB, FLAC, Ogg, Opus or WMV file, because the sandbox hid /etc/mime.types, which Python names their types from. mat2's sandbox profile shows it.
+-FIX. Strip Metadata failed with 41000 on a host whose python3 is not the distribution's own, which mat2's package is built for. mat2 is started by the distribution's Python.
+-New Interpreter in the dependency manifest. An entry naming python3 is started & asked its version by the distribution's own Python 3, in isolated mode. MAT2 names it.
+-New verifiedToolCommand() & verifiedToolVerdict() in the Pipeline Core. 41000 names the status mat2 was given & why, & 41007 names what mat2 said.
+-The Dependency Core reports the last line of a Python traceback, which names what went wrong, rather than its first.
+-FIX. A refused --account names what is missing & shows the form to type. An action written with one dash is named with its two. Root's --remove names the account it asks about.
+-The -h help lists every --account action on a line of its own, with what it takes.
+-ERROR_DESCRIPTIONS, ABOUT_DEPENDENCIES, ABOUT_PIPELINE_COMPONENTS, CREATING_CONVERSION_PIPELINES, ABOUT_COMMAND_LINE_ARGUMENTS, ENGINE_MIGRATION_STATUS & DEVELOPMENT_NOTES describe the change.
+
+--------------------
+COMMIT 11/13/2026
+v4.1.9 - The install secret & sessions are the kernel's, --rotate-secret is the Engine's, & a listener restarted at once keeps its managers.
+
+-v4.1.9.
+-The install secret moved out of convertCore.php into the kernel, 17 functions, & so did sessions, verifySession(), verifyTokens(), verifySesHash() & generateRandomNumber(). convertCore.php is 1,357 lines shorter.
+-New kernel functions establishInstallSecret(), settleInstallSecretAsRoot() & describeInstallSecret(). verifyInstallation(), -fp & -v call them in place of the code that moved.
+-rotateInstallSecret() moved into the Engine, & --rotate-secret is an Engine command.
+-FIX. A listener stopped & started again within ten seconds was refused its own managers as replays, with 31017, 31006 & 31005. Every startup key carries a launch number of its own. A key without one, from a listener an earlier release started, is still accepted until it is restarted.
+-FIX. Managers spending startup keys at the same moment each wrote back the ledger they had read, so all but one key went unrecorded & could be replayed. The ledger is read & written under one lock.
+-New kernel function applicationLabel(). The kernel labels what it writes to the server's error log with the application's name, & quickDie() & errorEntry() ask it too.
+-ERROR_DESCRIPTIONS names the kernel for 30, 31020, 31021 & 31024 & the Engine for 31022, corrects 31006 & 31017, & documents the startup key warnings. ABOUT_ENGINE_CONTRACT, ENGINE_MIGRATION_STATUS, ABOUT_MANAGERS, ABOUT_RESOURCE_RATE_LIMITING, CODING_CONVENTIONS & DEVELOPMENT_NOTES describe the change.
+-The core, the kernel & the Engine are v4.1.9, & every pin to them requires v4.1.9.
+
+--------------------
+COMMIT 11/13/2026
 v4.1.8 - New Rename, Delete, Strip Metadata, Merge & Split for files & workflows, Convert's formats grouped by kind, & the upload page's boxes take their scheme's colours.
 
 -v4.1.8.

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -628,4 +628,96 @@ $GuiFunctionsText1 = 'သင်၏ဘရောက်ဆာသည် ကလစ်
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'ကျွန်ုပ်တို့၏ <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>ဝန်ဆောင်မှုစည်းမျဉ်းများ</a> နှင့် <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>ကိုယ်ရေးအချက်အလက်မူဝါဒ</a> ကို ကြည့်ရှုပါ။';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'ဝင်ရောက်ရန်';
+// / 'Sign out'
+$GuiAuthText2 = 'ထွက်ရန်';
+// / 'Create an account'
+$GuiAuthText3 = 'အကောင့်ဖွင့်ရန်';
+// / 'Username'
+$GuiAuthText4 = 'အသုံးပြုသူအမည်';
+// / 'Password'
+$GuiAuthText5 = 'စကားဝှက်';
+// / 'Email address'
+$GuiAuthText6 = 'အီးမေးလ်လိပ်စာ';
+// / 'Code'
+$GuiAuthText7 = 'ကုဒ်';
+// / 'New password'
+$GuiAuthText8 = 'စကားဝှက်အသစ်';
+// / 'Confirm your account'
+$GuiAuthText9 = 'သင့်အကောင့်ကို အတည်ပြုပါ';
+// / 'Recover your account'
+$GuiAuthText10 = 'သင့်အကောင့်ကို ပြန်ယူပါ';
+// / 'Choose a new password'
+$GuiAuthText11 = 'စကားဝှက်အသစ် ရွေးပါ';
+// / 'Send the code again'
+$GuiAuthText12 = 'ကုဒ်ကို ထပ်ပို့ရန်';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'စကားဝှက် မေ့နေပါသလား။';
+// / 'Have a code?'
+$GuiAuthText14 = 'ကုဒ် ရှိပါသလား။';
+// / 'Back to sign in'
+$GuiAuthText15 = 'ဝင်ရောက်ရန်သို့ ပြန်သွားရန်';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'မဝင်ဘဲ ဆက်လုပ်ရန်';
+// / 'Signed in as'
+$GuiAuthText17 = 'ဝင်ရောက်ထားသူ -';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'ယခု ဤဆာဗာသို့ ဝင်ရောက်၍ မရပါ။';
+// / 'Confirm'
+$GuiAuthText19 = 'အတည်ပြုရန်';
+// / 'Send a code'
+$GuiAuthText20 = 'ကုဒ် ပို့ရန်';
+// / 'Change password'
+$GuiAuthText21 = 'စကားဝှက် ပြောင်းရန်';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'အသုံးပြုသူအမည် သို့မဟုတ် စကားဝှက် မှားနေပါသည်။';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'ကြိုးစားမှု များလွန်းပါသည်။ မိနစ်အနည်းငယ် စောင့်ပြီး ထပ်ကြိုးစားပါ။';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'ကျွန်ုပ်တို့ အီးမေးလ်ဖြင့် ပို့ထားသော ကုဒ်ဖြင့် သင့်အကောင့်ကို ဦးစွာ အတည်ပြုပါ။';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'ဤအကောင့်ဖြင့် ဝင်ရောက်၍ မရပါ။ စီမံခန့်ခွဲသူကို ဆက်သွယ်ပါ။';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'ဤနေရာတွင် အကောင့်အသစ် ဖွင့်၍ မရပါ။ စီမံခန့်ခွဲသူကို ဆက်သွယ်ပါ။';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'အသုံးပြုသူအမည်တွင် စာလုံး၊ ဂဏန်း၊ အစက်၊ တုံးတို သို့မဟုတ် အောက်မျဉ်း ၃ လုံးမှ ၆၄ လုံးအထိ ပါပြီး စာလုံး သို့မဟုတ် ဂဏန်းဖြင့် စရပါသည်။';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'ထိုအသုံးပြုသူအမည်ကို ယူထားပြီးဖြစ်သည်။ အခြားတစ်ခု ရွေးပါ။';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'ထိုအီးမေးလ်လိပ်စာကို အသုံးပြု၍ မရပါ။';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'စကားဝှက်တွင် အနည်းဆုံး ပါရမည့် စာလုံးအရေအတွက် -';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'သင့်အကောင့်ကို ဖွင့်ပြီးပါပြီ။ အတည်ပြုရန် ကုဒ်တစ်ခုကို အီးမေးလ်ဖြင့် ပို့ထားပါသည်။';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'သင့်အကောင့်ကို ဖွင့်ပြီးပါပြီ၊ သို့သော် ဤဆာဗာက ကုဒ်ကို အီးမေးလ်ဖြင့် ပို့၍ မရပါ။ စီမံခန့်ခွဲသူကို ဆက်သွယ်ပါ။';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'သင့်အကောင့်ကို ဖွင့်ပြီးပါပြီ။ ယခု ဝင်ရောက်နိုင်ပါပြီ။';
+// / 'That code is not right.'
+$GuiAuthText34 = 'ထိုကုဒ် မမှန်ပါ။';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'ထိုကုဒ်ကို အသုံးပြု၍ မရတော့ပါ။ အသစ်တစ်ခု တောင်းပါ။';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'သင့်အကောင့်ကို အတည်ပြုပြီးပါပြီ။ ယခု ဝင်ရောက်နိုင်ပါပြီ။';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'ထိုအကောင့်သည် အတည်ပြုရန် စောင့်နေပါက ကုဒ်အသစ်တစ်ခု ပို့နေပါသည်။';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'ထိုအကောင့် ရှိပါက ၎င်း၏ အီးမေးလ်လိပ်စာသို့ ကုဒ်တစ်ခု ပို့နေပါသည်။';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'သင့်စကားဝှက်ကို ပြောင်းပြီးပါပြီ။ ယခု ဝင်ရောက်နိုင်ပါပြီ။';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'သင် ထွက်ပြီးပါပြီ။';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'သင့်ဝင်ရောက်မှုကို အခြားနေရာတွင် အသုံးပြုခဲ့သဖြင့် သင့်ကို ထုတ်လိုက်ပါသည်။';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'ဆာဗာက မတုံ့ပြန်ပါ။ ထပ်ကြိုးစားပါ။';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'ဤဆာဗာတွင် အကောင့် ပြန်ယူ၍ မရပါ။';
 // / -----------------------------------------------------------------------------------

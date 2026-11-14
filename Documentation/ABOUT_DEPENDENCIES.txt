@@ -68,6 +68,8 @@ Each entry carries these fields.
   Purpose          Why this application needs it, in one sentence.
   Fallback         For an apt entry, how this application builds its own copy where the
                    package manager's falls short. See When The Package Manager Is Behind.
+  Interpreter      python3 for a program the distribution packaged as a Python program, from
+                   v4.2.0. It is started by the distribution's own Python 3. See below.
 
 THE MANIFEST OWNS EVERY MINIMUM VERSION & THERE IS NO OVERRIDE.
 Nineteen Minimum*Version settings were retired from config.php because they were a second
@@ -91,6 +93,25 @@ pipeline must then report that & refuse rather than guess.
 
 This is what makes a pipeline portable. A pipeline names a dependency & knows nothing else
 about it, so the same pipeline runs against any installation & any host layout.
+
+  $command = verifiedToolCommand('MAT2', $binary);
+  list ($status, $reason) = verifiedToolVerdict('MAT2');
+
+verifiedToolCommand() turns the path into the command that starts the tool, quoted for the
+shell, from v4.2.0. A tool is started as the Dependency Core asked its version, so the program
+that runs is the program that was verified. verifiedToolVerdict() gives the status a refused
+tool was given & the line of its output that says the most, so the error a pipeline raises can
+say what to fix.
+
+A PROGRAM THE DISTRIBUTION PACKAGED IS STARTED BY THE DISTRIBUTION'S PYTHON.
+A Python program a distribution packages imports modules built for that distribution's Python
+3 & no other, & its first line is #!/usr/bin/python3. A host that points python3 at another
+Python, through an alternative or a PPA, cannot start it by that line. An entry whose
+Interpreter is python3 is therefore started by the Python 3 Debian & Ubuntu name in
+/usr/share/python3/debian_defaults, in isolated mode, when that Python is root's alone & the
+program's first line names python3. Its version is asked the same way. A program whose first
+line names anything else, & every entry on a host that names no such Python, is started by its
+path. mat2 is the one entry that names an interpreter.
 
 EVERY DEPENDENCY THAT PARSES AN UPLOADED FILE RUNS INSIDE A SANDBOX.
 sandboxCommand() wraps the command before it is run. A pipeline that isolates a command

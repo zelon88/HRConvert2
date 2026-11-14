@@ -126,10 +126,12 @@ sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -fp
 | `--pipeline <argument>` | List, describe & verify the installed pipelines. | any user |
 | `--workflow --list` / `--check=<file>` / `--export=<id>` | List every workflow & why one is not usable, check a workflow file, or print a workflow from the library as a file a page can import. | any user |
 | `--workflow --install=<file>` / `--remove=<id>` | Install a checked workflow into the installed library, or remove one. | root |
+| `--account --list` / `--add <username> <address>` | List every account, or add one, confirmed, & show its password once. | root or `www-data` |
+| `--account --confirm` / `--disable` / `--enable` / `--admin` / `--user` / `--password` / `--remove <username>` | Change one account. `--password` shows a new password once, & `--remove` asks first & takes the user's files with it. | root or `www-data` |
 | `--build --pins [--write]` | Check every version pin against what ships, or rewrite every pin that differs. A developer step that rewrites source files. | write access to the tree |
 | `--app<name>` | Handed to the application untouched. HRConvert2 declares none yet. | — |
 
-`ABOUT_COMMAND_LINE_ARGUMENTS.txt` covers `--config`, `--setup`, `--pipeline`, `--workflow` and `--app` option by option. `ABOUT_WORKFLOWS.txt` describes workflows.
+`ABOUT_COMMAND_LINE_ARGUMENTS.txt` covers `--config`, `--setup`, `--pipeline`, `--workflow`, `--account` and `--app` option by option. `ABOUT_WORKFLOWS.txt` describes workflows, & `ABOUT_AUTHENTICATION.txt` accounts.
 
 ### 🚦 Exit Status
 Every command exits with a status a script can act on, as of v3.9.9.

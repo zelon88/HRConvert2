@@ -511,6 +511,8 @@ $darkButtonCode = '
    / A white sheet in a dark interface is a light source, & the whole point of a dark
    / scheme is that there is not one. The three layers still read as three layers,
    / just inverted, so the card is lighter than the page & the panel is lighter again.
+   / This comment was not closed before v4.2.0, so it hid the rule under it & the card
+   / was drawn in the colour of the page. */
 .file-list-card {
   background-color: var(--hrc2-surface);
   color: #d8d8d8; }
@@ -566,5 +568,10 @@ select {
   border: 1px solid #555; }
 body { 
   background-color: #222222; 
-  color: #ffffff; }';
+  color: #ffffff; }
+/* / A link in the browser\'s own blue or purple cannot be read on a dark page, so it is drawn light. */
+a:link {
+  color: #8ab4f8; }
+a:visited {
+  color: #c58af9; }';
 // / -----------------------------------------------------------------------------------

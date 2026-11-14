@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -628,4 +628,96 @@ $GuiFunctionsText1 = 'آپ کا براؤزر کلپ بورڈ پر کاپی کر�
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'ہماری <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>سروس کی شرائط</a> اور <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>رازداری کی پالیسی</a> ملاحظہ کریں';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'سائن ان کریں';
+// / 'Sign out'
+$GuiAuthText2 = 'سائن آؤٹ کریں';
+// / 'Create an account'
+$GuiAuthText3 = 'اکاؤنٹ بنائیں';
+// / 'Username'
+$GuiAuthText4 = 'صارف نام';
+// / 'Password'
+$GuiAuthText5 = 'پاس ورڈ';
+// / 'Email address'
+$GuiAuthText6 = 'ای میل پتا';
+// / 'Code'
+$GuiAuthText7 = 'کوڈ';
+// / 'New password'
+$GuiAuthText8 = 'نیا پاس ورڈ';
+// / 'Confirm your account'
+$GuiAuthText9 = 'اپنے اکاؤنٹ کی تصدیق کریں';
+// / 'Recover your account'
+$GuiAuthText10 = 'اپنا اکاؤنٹ بحال کریں';
+// / 'Choose a new password'
+$GuiAuthText11 = 'نیا پاس ورڈ منتخب کریں';
+// / 'Send the code again'
+$GuiAuthText12 = 'کوڈ دوبارہ بھیجیں';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'پاس ورڈ بھول گئے؟';
+// / 'Have a code?'
+$GuiAuthText14 = 'کوڈ موجود ہے؟';
+// / 'Back to sign in'
+$GuiAuthText15 = 'سائن ان پر واپس جائیں';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'سائن ان کیے بغیر جاری رکھیں';
+// / 'Signed in as'
+$GuiAuthText17 = 'سائن ان بطور';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'اس سرور پر ابھی سائن ان دستیاب نہیں ہے۔';
+// / 'Confirm'
+$GuiAuthText19 = 'تصدیق کریں';
+// / 'Send a code'
+$GuiAuthText20 = 'کوڈ بھیجیں';
+// / 'Change password'
+$GuiAuthText21 = 'پاس ورڈ تبدیل کریں';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'صارف نام یا پاس ورڈ درست نہیں ہے۔';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'بہت زیادہ کوششیں۔ براہ کرم چند منٹ انتظار کریں اور دوبارہ کوشش کریں۔';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'پہلے اس کوڈ سے اپنے اکاؤنٹ کی تصدیق کریں جو ہم نے آپ کو ای میل کیا ہے۔';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'یہ اکاؤنٹ سائن ان نہیں کر سکتا۔ منتظم سے رابطہ کریں۔';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'یہاں نئے اکاؤنٹ نہیں بنائے جا سکتے۔ منتظم سے رابطہ کریں۔';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'صارف نام 3 سے 64 حروف، ہندسوں، نقطوں، ڈیش یا انڈر سکور پر مشتمل ہوتا ہے اور کسی حرف یا ہندسے سے شروع ہوتا ہے۔';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'یہ صارف نام پہلے سے لیا جا چکا ہے۔ کوئی اور منتخب کریں۔';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'یہ ای میل پتا استعمال نہیں کیا جا سکتا۔';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'پاس ورڈ کے کم از کم حروف کی تعداد:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'آپ کا اکاؤنٹ بن گیا ہے۔ ہم نے تصدیق کے لیے آپ کو ایک کوڈ ای میل کیا ہے۔';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'آپ کا اکاؤنٹ بن گیا ہے، لیکن یہ سرور آپ کو کوڈ ای میل نہیں کر سکا۔ منتظم سے رابطہ کریں۔';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'آپ کا اکاؤنٹ بن گیا ہے۔ اب آپ سائن ان کر سکتے ہیں۔';
+// / 'That code is not right.'
+$GuiAuthText34 = 'یہ کوڈ درست نہیں ہے۔';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'یہ کوڈ اب استعمال نہیں ہو سکتا۔ نیا کوڈ طلب کریں۔';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'آپ کے اکاؤنٹ کی تصدیق ہو گئی ہے۔ اب آپ سائن ان کر سکتے ہیں۔';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'اگر یہ اکاؤنٹ تصدیق کا منتظر ہے تو ایک نیا کوڈ راستے میں ہے۔';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'اگر یہ اکاؤنٹ موجود ہے تو ایک کوڈ اس کے ای میل پتے پر بھیجا جا رہا ہے۔';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'آپ کا پاس ورڈ تبدیل ہو گیا ہے۔ اب آپ سائن ان کر سکتے ہیں۔';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'آپ سائن آؤٹ ہو گئے ہیں۔';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'آپ کو سائن آؤٹ کر دیا گیا کیونکہ آپ کا سائن ان کہیں اور استعمال ہوا۔';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'سرور نے جواب نہیں دیا۔ براہ کرم دوبارہ کوشش کریں۔';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'اس سرور پر اکاؤنٹ بحال کرنا دستیاب نہیں ہے۔';
 // / -----------------------------------------------------------------------------------

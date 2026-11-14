@@ -64,7 +64,8 @@ account root is protecting itself from.
   data-root   $DataRootLoc                           root:root, 0755, never walked
   secret      $SecretLoc, Secrets                    root:www-data, 0750, never walked
   web         $SessionLoc, $CacheLoc, $LogDir,       the web server account, 0700
-              $ManagerSocketDir
+              $ManagerSocketDir, $AccountLoc,
+              $UserLoc
   served      $ConvertTemp, DATA                     the web server account, 0700, served inert
   root-only   $EngineDir, $BackupLoc                  root:root, folders 0700, files 0600
   library     $WorkflowLoc, Workflows                root:root, folders 0755, files 0644
@@ -75,6 +76,7 @@ it. $ConvertLoc is the data location & $DataRootLoc holds that same path on the 
 where $ConvertLoc has been narrowed to the session area a request uses. Sessions live in
 Sessions, the web server account's caches & its home in Cache, its logs in Logs & its sockets
 in Sockets, & from v4.1.4 the workflows an administrator installs are in Workflows. Root's own log folder is Engine & the previous installation is Last-Installed-Version.
+From v4.2.0 accounts are kept in Accounts & the files each signed in user keeps in Users, where the application offers accounts.
 The install secret is kept in Secrets, from v4.0.4, which only root may change & only the web
 server account's group may enter, & a copy with the same key stays at the top for every release
 that reads it there. The Environment Manager's state sits at the top of the data location,
@@ -135,6 +137,10 @@ A folder the web server account owns & writes — the session area, the cache, t
 the socket folder. Root gives each folder itself to that account & has the account set its own
 mode, through runAsAccount, so a link swapped in can only send the change to a file that account
 could already change. Nothing inside is touched. Every session, upload & log stays as it is.
+Accounts & Users are web folders too, from v4.2.0, & -fp makes both whether or not accounts are
+turned on, so turning them on later needs nothing else. Neither is a session area, so no sweep of
+sessions reaches them. Only the web server account works in either. Root's --account command is
+handed to that account, so root never reads or writes an account. See ABOUT_AUTHENTICATION.txt.
 
 SERVED.
 A web folder the web server hands to browsers, from v4.0.5. HRConvert2's is DATA in the hosted

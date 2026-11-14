@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.8.
+// / v4.2.0.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -72,6 +72,10 @@ $EngineApplicationArgumentHandler = '';
 
 // /   The folder inside the installation holding the workflows this release ships.
 $EngineShippedWorkflows = 'Resources/Workflows';
+
+// /   This application offers the Engine's accounts. An installation has them only once its
+// /   administrator sets --Enable Authentication-- to TRUE in config.php.
+$EngineEnableAuthentication = TRUE;
 // / -----------------------------------------------------------------------------------
 
 
@@ -160,6 +164,8 @@ $EnginePinSources = array(
 // / HomeLoc is not listed, because the cache folder is the web server account's home.
 // / WorkflowLoc is Workflows, where an administrator installs workflows with --workflow --install, & an update leaves them.
 // / SecretLoc is Secrets, where this application keeps its install secret.
+// / AccountLoc is Accounts, where the Engine keeps each account, sign in & code, & UserLoc is Users, where each signed in user's files are kept.
+// / Both are the web server account's, because a request is what signs a user in & what writes their files, & neither is ever swept.
 // / Root writes it & the web server account's group reads it, & no other account can list the folder.
 // / The data location is named by $DataRootLoc here, not $ConvertLoc. $ConvertLoc is narrowed to
 // / the session area a request uses, so it is not the root on the command line where this is
@@ -176,6 +182,8 @@ $EngineManagedLocations = array(
   'LogDir' => 'web',
   'ManagerSocketDir' => 'web',
   'WorkflowLoc' => 'library',
+  'AccountLoc' => 'web',
+  'UserLoc' => 'web',
   'EngineDir' => 'root-only',
   'BackupLoc' => 'root-only');
 
@@ -224,6 +232,9 @@ $EngineUnwantedApacheConfs = array('javascript-common');
 // / EnableWorkflowBuilder & EnableWorkflowImportExport are the Workflow Core's too, & an application that maps neither has no builder & no import or export.
 // / SessionFolder is the folder a session's files are in, SessionContext is the name a worker is handed to continue it,
 // / & WorkflowLibrary is the installed library.
+// / EnableAuthentication & every setting after it are the Authentication Core's & the Email Core's. An application that maps
+// / none has no accounts, & every visitor is anonymous. AccountLocation & UserLocation are where accounts & users' files are kept.
+// / ApplicationTitle & ServerName are what an email calls this server, & ServerName is --Server URL-- as an administrator typed it.
 $EngineSettingNames = array(
   'FormatDetectionType' => 'SupportedFormatDetectionType',
   'WarnOnCapabilityMismatch' => 'WarnOnCapabilityMismatch',
@@ -245,6 +256,28 @@ $EngineSettingNames = array(
   'MaxConcurrentWorkflows' => 'MaxConcurrentWorkflows',
   'SessionFolder' => 'ConvertDir',
   'SessionContext' => 'SesHash3',
-  'WorkflowLibrary' => 'WorkflowLoc');
+  'WorkflowLibrary' => 'WorkflowLoc',
+  'EnableAuthentication' => 'EnableAuthentication',
+  'AllowAnonymousVisitors' => 'AllowAnonymousVisitors',
+  'AllowRegistration' => 'AllowRegistration',
+  'RequireEmailConfirmation' => 'RequireEmailConfirmation',
+  'UserStorageQuota' => 'UserStorageQuota',
+  'SignInKeyLifetime' => 'SignInKeyLifetime',
+  'SignInExchangeInterval' => 'SignInExchangeInterval',
+  'SignInMaximumLifetime' => 'SignInMaximumLifetime',
+  'MinimumPasswordLength' => 'MinimumPasswordLength',
+  'SignInAttemptLimit' => 'SignInAttemptLimit',
+  'SignInAttemptWindow' => 'SignInAttemptWindow',
+  'UnconfirmedAccountLifetime' => 'UnconfirmedAccountLifetime',
+  'RecoveryCodeLifetime' => 'RecoveryCodeLifetime',
+  'EmailSender' => 'EmailSender',
+  'EmailConfirmationSubject' => 'EmailConfirmationSubject',
+  'EmailConfirmationBody' => 'EmailConfirmationBody',
+  'EmailRecoverySubject' => 'EmailRecoverySubject',
+  'EmailRecoveryBody' => 'EmailRecoveryBody',
+  'AccountLocation' => 'AccountLoc',
+  'UserLocation' => 'UserLoc',
+  'ApplicationTitle' => 'ApplicationTitle',
+  'ServerName' => 'URL');
 // / -----------------------------------------------------------------------------------
 ?>

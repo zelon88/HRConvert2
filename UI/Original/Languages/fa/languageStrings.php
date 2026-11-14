@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -628,4 +628,96 @@ $GuiFunctionsText1 = 'مرورگر شما از کپی کردن در کلیپ‌�
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'از <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>شرایط خدمات</a> و <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>سیاست حریم خصوصی</a> ما دیدن کنید';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'ورود';
+// / 'Sign out'
+$GuiAuthText2 = 'خروج';
+// / 'Create an account'
+$GuiAuthText3 = 'ساخت حساب';
+// / 'Username'
+$GuiAuthText4 = 'نام کاربری';
+// / 'Password'
+$GuiAuthText5 = 'گذرواژه';
+// / 'Email address'
+$GuiAuthText6 = 'نشانی ایمیل';
+// / 'Code'
+$GuiAuthText7 = 'کد';
+// / 'New password'
+$GuiAuthText8 = 'گذرواژه جدید';
+// / 'Confirm your account'
+$GuiAuthText9 = 'حساب خود را تأیید کنید';
+// / 'Recover your account'
+$GuiAuthText10 = 'حساب خود را بازیابی کنید';
+// / 'Choose a new password'
+$GuiAuthText11 = 'یک گذرواژه جدید انتخاب کنید';
+// / 'Send the code again'
+$GuiAuthText12 = 'ارسال دوباره کد';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'گذرواژه را فراموش کرده‌اید؟';
+// / 'Have a code?'
+$GuiAuthText14 = 'کد دارید؟';
+// / 'Back to sign in'
+$GuiAuthText15 = 'بازگشت به ورود';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'ادامه بدون ورود';
+// / 'Signed in as'
+$GuiAuthText17 = 'وارد شده با نام';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'ورود به این سرور در حال حاضر ممکن نیست.';
+// / 'Confirm'
+$GuiAuthText19 = 'تأیید';
+// / 'Send a code'
+$GuiAuthText20 = 'ارسال کد';
+// / 'Change password'
+$GuiAuthText21 = 'تغییر گذرواژه';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'نام کاربری یا گذرواژه نادرست است.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'تلاش‌ها بیش از حد است. چند دقیقه صبر کنید و دوباره تلاش کنید.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'ابتدا حساب خود را با کدی که برایتان ایمیل کردیم تأیید کنید.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'این حساب نمی‌تواند وارد شود. با مدیر تماس بگیرید.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'در اینجا نمی‌توان حساب تازه ساخت. با مدیر تماس بگیرید.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'نام کاربری از ۳ تا ۶۴ حرف، رقم، نقطه، خط تیره یا زیرخط تشکیل می‌شود و با یک حرف یا رقم آغاز می‌شود.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'این نام کاربری گرفته شده است. نام دیگری انتخاب کنید.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'از این نشانی ایمیل نمی‌توان استفاده کرد.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'کمترین تعداد نویسه‌های گذرواژه:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'حساب شما ساخته شد. کدی برای تأیید آن به ایمیلتان فرستادیم.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'حساب شما ساخته شد، اما این سرور نتوانست کد را برایتان ایمیل کند. با مدیر تماس بگیرید.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'حساب شما ساخته شد. اکنون می‌توانید وارد شوید.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'این کد درست نیست.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'این کد دیگر قابل استفاده نیست. کد تازه‌ای بخواهید.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'حساب شما تأیید شد. اکنون می‌توانید وارد شوید.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'اگر این حساب در انتظار تأیید باشد، کد تازه‌ای در راه است.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'اگر این حساب وجود داشته باشد، کدی به نشانی ایمیل آن در راه است.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'گذرواژه شما تغییر کرد. اکنون می‌توانید وارد شوید.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'از حساب خارج شدید.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'از حساب خارج شدید، زیرا ورود شما در جای دیگری استفاده شد.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'سرور پاسخ نداد. لطفاً دوباره تلاش کنید.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'بازیابی حساب در این سرور در دسترس نیست.';
 // / -----------------------------------------------------------------------------------

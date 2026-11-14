@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.4.
+// / v4.2.0.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -135,6 +135,50 @@ $EngineEnableEnvironmentValidation = TRUE;
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $EngineEnableResourceLimits = TRUE;
+
+// /  --Engine Enable Authentication--
+// /   Usernames & passwords, the accounts behind them, & a folder each signed in user keeps.
+// /   An application that serves anonymous visitors only does not need it.
+// /   Enabling it says this application offers it. An installation still has it off until
+// /   its administrator turns it on in the application's config.php.
+// /   It needs the Email Core to confirm an address or to recover an account. Without the
+// /   Email Core, signing in with valid credentials still works, & every email that would
+// /   have been sent & every incorrect password is a warning in the log.
+// /   See Documentation/ABOUT_AUTHENTICATION.txt.
+// /   Valid options are TRUE or FALSE.
+// /   Default is FALSE.
+$EngineEnableAuthentication = FALSE;
+// / -----------------------------------------------------------------------------------
+
+
+// / -----------------------------------------------------------------------------------
+// / --Engine Email--
+// /
+// / The Email Core sends through the host's own mail system, & never connects to a mail
+// / server of its own accord. A host with no mail system sends nothing, & says so.
+// / The text below is the Engine's default. An application replaces it in its contract, &
+// / an administrator replaces the application's in config.php.
+// / Each may name {APPLICATION}, {USERNAME}, {CODE}, {MINUTES} & {ADDRESS}, & each is
+// / replaced before the email is sent. {CODE} is what the reader types into the page, &
+// / {MINUTES} is how long it may be used for.
+// / An email carries a code rather than a link, because a mail system that checks links
+// / opens each one before the reader does, & would spend a link that works once.
+// /
+// /  --Engine Email Confirmation Subject--
+// /   The subject of the email that confirms a new account's address.
+$EngineEmailConfirmationSubject = '{APPLICATION}: confirm your account';
+
+// /  --Engine Email Confirmation Body--
+// /   The text of the email that confirms a new account's address.
+$EngineEmailConfirmationBody = "Hello {USERNAME},\n\nYour confirmation code for {APPLICATION} is {CODE}\n\nEnter it on the page where you created your account. It can be used for {MINUTES} minutes.\n\nIf you did not create an account at {ADDRESS}, you can ignore this email.\n";
+
+// /  --Engine Email Recovery Subject--
+// /   The subject of the email that lets the owner of an account choose a new password.
+$EngineEmailRecoverySubject = '{APPLICATION}: recover your account';
+
+// /  --Engine Email Recovery Body--
+// /   The text of the email that lets the owner of an account choose a new password.
+$EngineEmailRecoveryBody = "Hello {USERNAME},\n\nYour recovery code for {APPLICATION} is {CODE}\n\nEnter it on the page where you asked to recover your account, with the new password you want. It can be used for {MINUTES} minutes.\n\nIf you did not ask to recover an account at {ADDRESS}, you can ignore this email. Your password has not changed.\n";
 // / -----------------------------------------------------------------------------------
 
 

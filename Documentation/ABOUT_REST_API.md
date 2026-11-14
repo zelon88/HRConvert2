@@ -84,10 +84,30 @@ POST inputs are organized into distinct functional operational blocks based on p
   * Must be stored & resubmitted with every subsequent request that is part of the same session.
   * *Value*: Match the hidden form field from `convertGui1.php` possessing an `id` of `'Token2'`.
 
+### 🔐 A2. Signing In
+Where the administrator has turned accounts on, a caller may sign in and present its key with every request after, and where every visitor must sign in, it must. Every action is answered with one line of JSON under the key `SignIn`, after the doctype line that opens every reply: `{"SignIn":{"Outcome":"signed-in","Key":"<96 hexadecimal digits>","Life":30,"Interval":6}}`. `Key` is empty unless the outcome is `signed-in` or `exchanged`. Any action may also be answered `unavailable`. `ABOUT_AUTHENTICATION.txt` describes accounts.
+
+| `SignInAction` | Sent with | Outcomes |
+| --- | --- | --- |
+| `signin` | `SignInUsername`, `SignInPassword` | `signed-in`, `credentials-wrong`, `too-many`, `unconfirmed`, `disabled` |
+| `exchange` | `SignInKey` | `exchanged` with a new key, `signed-out` for a key that is unknown or over, `ended` for a key traded already |
+| `signout` | `SignInKey` | `signed-out` |
+| `register` | `SignInUsername`, `SignInEmail`, `SignInPassword` | `registered-confirm`, `registered-unsent`, `registered-ready`, `registration-closed`, `too-many`, `username-invalid`, `email-invalid`, `password-short`, `username-taken` |
+| `confirm` | `SignInUsername`, `SignInCode` | `confirmed`, `code-wrong`, `code-expired`, `too-many` |
+| `resend` | `SignInUsername` | `resent`, `too-many`, whether or not the account exists |
+| `recover` | `SignInUsername` | `recovery-sent`, `too-many`, whether or not the account exists |
+| `reset` | `SignInUsername`, `SignInCode`, `SignInPassword` | `reset-done`, `code-wrong`, `code-expired`, `password-short`, `too-many` |
+| `page` | `SignInPage` | Draws `signin`, `register`, `confirm`, `recover` or `reset` as HTML |
+
+* `SignInKey` *(String, 96 hexadecimal digits)*
+  * **A signed in caller sends it with every request**, an upload and an operation alike. The newest key inside its life signs a request in, and so does the key before it for a short grace. A request without one is anonymous.
+  * Trade it with `exchange` every `Interval` seconds and always use the newest. Presenting a key does not spend it, and trading one does. A key traded twice ends the sign in.
+* `SignInPassword` is sent as typed and is never sanitized. One longer than 1024 bytes is refused.
+
 ### 🗄️ B. General File Operations
 * `file` *(Multipart file field, or `file[]` for several)*
   * An upload happens whenever a file is posted with valid tokens. No other input is needed to trigger it.
-  * An upload fails with error 18 when the listener refuses it, because the disk holding the session has `--Storage Reserve--` megabytes free or less, or would have once it was written.
+  * An upload fails with error 18 when the listener refuses it, because the disk holding the session has `--Storage Reserve--` megabytes free or less, or would have once it was written, or because it would take a signed in user past `--User Storage Quota--`.
 * `download` *(String or JSON Array)*
   * Used at any time to download user files or generate file URLs for sharing operations.
   * *Value*: A target name or string list of names to use for input files.

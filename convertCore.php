@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.8.
+// / v4.2.0.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -25,26 +25,6 @@
 // / Run  php convertCore.php -v  to see what this installation has.
 // /
 // / <3 Open-Source
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to produce random number variables for truly unique per-session identifiers.
-// / This function uses the built-in PHP "random_int" function to generate the random number.
-// / This function does not generate its own number. It produces a number from random_int().
-// / Random number range is hardcoded to 100000000000000000 to 999999999999999999 for consistency.
-// / Returns FALSE in $RandomNumberCheck if the system entropy source was unavailable.
-// / The caller MUST check $RandomNumberCheck. A predictable identifier is worse than none.
-function generateRandomNumber() {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $RandomNumber = FALSE;
-  $RandomNumberCheck = TRUE;
-  // / random_int() throws rather than returning a poor result when entropy is unavailable.
-  try { $RandomNumber = random_int(100000000000000000, 999999999999999999); }
-  catch (Throwable $error) { $RandomNumberCheck = FALSE; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $error);
-  return array($RandomNumber, $RandomNumberCheck); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -106,7 +86,8 @@ function verifyConfigVersion($RequiredConfigVersion) {
     'ReserveResourcePercentage', 'MaxConcurrentWorkers', 'MaxExpectedRuntime', 'MaxRuntimeExtensions',
     'DefaultConversionCost', 'DefaultExpectedRuntime', 'LowStorageWarning', 'StorageReserve', 'MaintainHTAccess',
     'MaxWorkflowSteps', 'MaxWorkflowFiles', 'MaxWorkflowRuntime', 'MaxConcurrentWorkflows', 'EnableWorkflowBuilder', 'EnableWorkflowImportExport',
-    'MaxExtractedSize', 'MaxExtractedFiles');
+    'MaxExtractedSize', 'MaxExtractedFiles',
+    'EnableAuthentication', 'AllowAnonymousVisitors', 'AllowRegistration', 'RequireEmailConfirmation', 'UserStorageQuota', 'SignInKeyLifetime', 'SignInExchangeInterval', 'SignInMaximumLifetime', 'MinimumPasswordLength', 'SignInAttemptLimit', 'SignInAttemptWindow', 'UnconfirmedAccountLifetime', 'RecoveryCodeLifetime', 'EmailSender', 'EmailConfirmationSubject', 'EmailConfirmationBody', 'EmailRecoverySubject', 'EmailRecoveryBody');
   // / Check that every required setting actually exists in the global scope.
   // / config.php is required at global scope, so every setting it defines lands in $GLOBALS.
   foreach ($requiredConfigVars as $requiredConfigVar) {
@@ -145,1002 +126,6 @@ function verifyConfigVersion($RequiredConfigVersion) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $requiredConfigVars, $requiredConfigVar, $configVersionParts, $requiredVersionParts, $configVersionIsCurrent, $cleanConfigVersion, $cleanRequiredVersion, $RequiredConfigVersion);
   return array($ConfigIsValid, $MissingConfigVars, $DetectedConfigVersion); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to obfuscate the secret file contents.
-// / Decoy secrets give a grep & regex scan seven plausible keys instead of one.
-// / This raises the cost of an attack rather than preventing one.
-// / A root or www-data command line user can still read the real key from this function.
-// / The time an adversary spends adjusting an exploit chain is the product being built here.
-// / Adversaries reading this are invited to star the repository & bring it to their next conference.
-function addSillyString($Secret, $secretVersion) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $FinalOutput = '';
-  // / A local separator that cannot be empty. An empty one removes the whitespace after
-  // / the opening tag, which stops PHP recognizing the file as PHP at all.
-  $newLine = PHP_EOL;
-  // / Match the newline count on either side of every secret, decoy & real alike.
-  $lolol2 = $newLine.$newLine.$newLine.$newLine;
-  // / Seven is the optimal number for the decoy loop.
-  $numberOfDecoys = 7;
-  // / Select the iteration of the decoy loop that will carry the real secret.
-  $randomNumber = random_int(1, $numberOfDecoys);
-  // / Buffer strings into an array before a single compilation step.
-  $parts = array();
-  // / Strip anything that is not a version character before it is written into PHP source.
-  $cleanVersion = preg_replace('/[^0-9A-Za-z.\-]/', '', (string)$secretVersion);
-  // / Open the PHP region & pin the version, then open the comment fence.
-  // / The newline directly after the opening tag is what makes this a PHP file.
-  $parts[] = '<?php'.$newLine.'$SecretVersion = \''.$cleanVersion.'\';'.$newLine.'/* ';
-  // / Loop to create the desired number of decoy secrets.
-  while ($numberOfDecoys > 0) {
-    // / Every decoy is drawn from the same source as the real secret, so no table of
-    // / candidate decoys can be precomputed to eliminate them.
-    if ($numberOfDecoys !== $randomNumber) $parts[] = $lolol2.'$SecretKey = \''.bin2hex(random_bytes(32)).'\';'.$lolol2;
-    // / Close the comment fence for the real secret & reopen it immediately afterwards.
-    if ($numberOfDecoys === $randomNumber) $parts[] = ' */'.$lolol2.'$SecretKey = \''.$Secret.'\';'.$lolol2.'/* ';
-    $numberOfDecoys--; }
-  // / Close the trailing comment fence, deliberately without a closing PHP tag.
-  $parts[] = $newLine.' */'.$newLine;
-  // / Compile the final output string.
-  $FinalOutput = implode('', $parts);
-  // / Manually clean up sensitive memory. Every target is passed directly by reference.
-  // / $FinalOutput is not purged, because it is the return value.
-  if (!purgeSensitiveMemory($EnableMemoryProtection, $Secret, $numberOfDecoys, $randomNumber, $lolol2, $newLine, $parts, $cleanVersion, $secretVersion)) {
-    // / The failure is already logged under this function's name & is not logged again here.
-    // / An unpurged buffer does not make the payload wrong, so the payload is still returned.
-    $FinalOutput = $FinalOutput; }
-  return $FinalOutput; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / generateInstallSecret must not live in the Engine, because verifyInstallation & resolveSecretFile reach it before the Engine loads.
-// / closeClientConnection is reached through quickDie, so it lives in the kernel beside the Engine.
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to generate the per-install secret used to derive session identifiers.
-// / 32 bytes gives 256 bits of entropy & returns as a 64 hexadecimal character string.
-function generateInstallSecret() {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $InstallSecret = FALSE;
-  $InstallSecretCheck = TRUE;
-  // / random_bytes() throws rather than returning a poor result when entropy is unavailable.
-  // / Fail closed. A predictable secret is worse than no installation at all.
-  try { $InstallSecret = bin2hex(random_bytes(32)); }
-  catch (Throwable $error) { $InstallSecretCheck = FALSE; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $error);
-  return array($InstallSecret, $InstallSecretCheck); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to read an install secret without running it.
-// / Accepts the path of the secret file.
-// / Returns a success boolean, the key & the version it declares, in that order.
-// /
-// / Root never requires a secret file.
-// / An account that can write the file could add a line, & root would run it.
-// / So root reads the file as text with PHP's own tokenizer, which parses without executing.
-// / The file must have exactly the shape addSillyString writes, which is an opening tag, the version & one live key, with every decoy inside a comment.
-// / Anything else in it, a call, a second assignment or a stray line, means it is not a file this application wrote, & it is refused rather than partly believed.
-// / A refused file is replaced, as a secret of the wrong version is, & every session it derived is invalid.
-// / It is read with readFileWithoutFollowing, because its folder may belong to the web server account.
-// / A link, a FIFO or a file with two names there is refused unread & replaced.
-function readSecretWithoutExecuting($secretFile) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $SecretWasRead = $secretWasOpened = FALSE;
-  $ReadSecretKey = $ReadSecretVersion = '';
-  $secretContents = $readNotice = '';
-  $secretTokens = $liveTokens = array();
-  $secretToken = NULL;
-  list ($secretWasOpened, $secretContents, $readNotice) = readFileWithoutFollowing($secretFile, 65536);
-  if ($secretWasOpened && $secretContents !== '') {
-    $secretTokens = token_get_all($secretContents);
-    foreach ($secretTokens as $secretToken) {
-      if (is_array($secretToken) && in_array($secretToken[0], array(T_WHITESPACE, T_COMMENT, T_DOC_COMMENT), TRUE)) continue;
-      $liveTokens[] = is_array($secretToken) ? array($secretToken[0], $secretToken[1]) : array(0, $secretToken); }
-    // / Nine live tokens & nothing else. An opening tag, the version's assignment & the key's.
-    if (count($liveTokens) === 9 && $liveTokens[0][0] === T_OPEN_TAG && $liveTokens[1] === array(T_VARIABLE, '$SecretVersion') && $liveTokens[2] === array(0, '=') && $liveTokens[3][0] === T_CONSTANT_ENCAPSED_STRING && $liveTokens[4] === array(0, ';') && $liveTokens[5] === array(T_VARIABLE, '$SecretKey') && $liveTokens[6] === array(0, '=') && $liveTokens[7][0] === T_CONSTANT_ENCAPSED_STRING && $liveTokens[8] === array(0, ';')) {
-      $ReadSecretVersion = substr((string)$liveTokens[3][1], 1, -1);
-      $ReadSecretKey = substr((string)$liveTokens[7][1], 1, -1);
-      if (preg_match('/^[0-9a-f]{64}$/', $ReadSecretKey) === 1 && preg_match('/^[0-9A-Za-z.\-]+$/', $ReadSecretVersion) === 1) $SecretWasRead = TRUE; } }
-  if (!$SecretWasRead) $ReadSecretKey = $ReadSecretVersion = '';
-  // / Manually clean up sensitive memory. Every target is passed directly by reference.
-  // / $ReadSecretKey is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $secretWasOpened, $secretContents, $readNotice, $secretTokens, $liveTokens, $secretToken, $secretFile);
-  return array($SecretWasRead, $ReadSecretKey, $ReadSecretVersion); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to create the data location as root when it does not exist yet, & to give it back
-// / to root when another account holds it.
-// / Accepts the data location. Returns TRUE when it exists afterwards.
-// / The install secret is written into the data location at boot, so a missing location would stop every root command before the installer could create it.
-// / The location is created only beneath a folder root can trust, never beneath a system folder, & its parents are 0755 so the web server account can reach it.
-// / The location itself is root's & 0755, & each folder below it has its own role.
-// / Root takes the data location back when another account holds it, during a repair & whenever Secrets is in it.
-// / Root reads & writes the install secret only where no account but root & the web server account could replace it, & in Secrets only below a folder only root can change.
-// / A data location another account owns or can write, as an old chown -R repair, a restored backup or a bind mount leaves one, would put every copy out of reach.
-// / -fp would then stop before its data-root role could give it back, so it is given back here first, root:root 0755, as that role gives it.
-// / Any other command leaves a data location with no Secrets in it alone, because an older release may still keep its sessions directly in it.
-// / A data location an account other than root & the web server account could write sets $SecretPlacesWereOpen before it is taken back.
-// / So only a copy of the secret root owns counts for the rest of the command.
-function prepareDataLocationAsRoot($dataLocation) {
-  // / Set variables.
-  global $SecretPlacesWereOpen, $EnableMemoryProtection;
-  $LocationExists = FALSE;
-  $existingAncestor = $systemFolder = $trustNotice = $resolvedAncestor = $ownerNotice = $resolvedLocation = $resolvedParent = $parentNotice = $cliCommand = $cliTarget = $cliSecondTarget = $openNotice = $resolvedOpen = '';
-  $ancestorIsTrusted = $ownerWasChanged = $locationIsTrusted = $modeWasChanged = $parentIsTrusted = $repairRequested = $cliConfirmed = $cliVectorParsed = $locationWasClosed = FALSE;
-  $cliArguments = array();
-  $cliArgumentCount = 0;
-  $systemFolders = array('/bin', '/boot', '/dev', '/etc', '/lib', '/lib32', '/lib64', '/proc', '/root', '/run', '/sbin', '/sys', '/usr');
-  $dataLocation = rtrim((string)$dataLocation, DIRECTORY_SEPARATOR);
-  if ($dataLocation === '' or is_dir($dataLocation)) {
-    $LocationExists = ($dataLocation !== '');
-    // / A repair is what the code gate lets through, & is told apart from the arguments the same way.
-    list ($cliArguments, $cliArgumentCount, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed, $cliVectorParsed) = parseArgumentVector(isset($_SERVER['argv']) ? $_SERVER['argv'] : array());
-    $repairRequested = (in_array($cliCommand, array('-fp', '--fix-permissions', '--setup'), TRUE) or ($cliCommand === '--config' && $cliTarget === '--repair'));
-    if ($LocationExists && ($repairRequested or is_dir($dataLocation.DIRECTORY_SEPARATOR.'Secrets'))) {
-      list ($locationIsTrusted, $resolvedLocation, $trustNotice) = pathIsTrustedByRoot($dataLocation);
-      list ($parentIsTrusted, $resolvedParent, $parentNotice) = pathIsTrustedByRoot(dirname($dataLocation));
-      list ($locationWasClosed, $resolvedOpen, $openNotice) = secretFolderIsTrusted($dataLocation);
-      if (!$locationIsTrusted && !$locationWasClosed) $SecretPlacesWereOpen = TRUE; }
-    // / Only the location itself is taken, by the path configured & never through a link, & only
-    // / beneath a folder only root can change, so nothing can swap it between the owner change &
-    // / the mode set by name next. Every command run as root stops with ERROR 31024 before this when
-    // / a folder above it is not one, & this checks again rather than rely on that.
-    if ($LocationExists && $resolvedLocation === $dataLocation && !$locationIsTrusted) {
-      if ($parentIsTrusted && $resolvedParent === dirname($dataLocation)) list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($dataLocation, 'root', 'root');
-      else $ownerNotice = $parentNotice;
-      if ($ownerWasChanged) $modeWasChanged = @chmod($dataLocation, 0755);
-      if ($ownerWasChanged && $modeWasChanged) warningEntry('The data location at '.$dataLocation.' could be changed by another account, so root took it back, root:root 0755, as -fp does. '.$trustNotice);
-      else warningEntry('The data location at '.$dataLocation.' could be changed by another account & could not be given back to root, so the install secret below it is out of root\'s reach. '.$trustNotice.' '.$ownerNotice); } }
-  else {
-    $existingAncestor = dirname($dataLocation);
-    while ($existingAncestor !== DIRECTORY_SEPARATOR && !file_exists($existingAncestor)) $existingAncestor = dirname($existingAncestor);
-    list ($ancestorIsTrusted, $resolvedAncestor, $trustNotice) = pathIsTrustedByRoot($existingAncestor);
-    // / The folders are made by the path configured, so that path must be the one judged. A link
-    // / on the way could be pointed somewhere else between the check & the mkdir, by whoever owns
-    // / the folder the link sits in, & that folder is not on the path that was judged.
-    if ($ancestorIsTrusted && $resolvedAncestor !== $existingAncestor) {
-      $ancestorIsTrusted = FALSE;
-      $trustNotice = $existingAncestor.' leads to '.$resolvedAncestor.'.'; }
-    foreach ($systemFolders as $systemFolder) {
-      if ($dataLocation === $systemFolder or strpos($dataLocation.DIRECTORY_SEPARATOR, $systemFolder.DIRECTORY_SEPARATOR) === 0) $ancestorIsTrusted = FALSE; }
-    if (!$ancestorIsTrusted) warningEntry('The data location '.$dataLocation.' does not exist & was not created, because it is beneath a system folder, a folder another account can change or a link. '.$trustNotice);
-    else {
-      @mkdir(dirname($dataLocation), 0755, TRUE);
-      // / The data location is owned by root & 0755, so every account may traverse it to a folder of its own below, & none but root may change what is in it.
-      // / The install secret is kept below it, in Secrets, & a root owned data location is what keeps another account from replacing that folder.
-      // / The session, cache & log folders below are the web server account's, & --setup or -fp creates them with their roles, as it does Secrets.
-      if (@mkdir($dataLocation, 0755) && is_dir($dataLocation)) {
-        // / The location was created a moment ago in a folder only root can change, so the
-        // / name cannot have been swapped, & changeOwnerWithoutFollowing confirms that first.
-        list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($dataLocation, 'root', 'root');
-        if (!$ownerWasChanged) warningEntry($ownerNotice);
-        $LocationExists = TRUE;
-        warningEntry('The data location did not exist & was created at '.$dataLocation.'.'); } } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $existingAncestor, $systemFolder, $trustNotice, $resolvedAncestor, $resolvedLocation, $resolvedParent, $parentNotice, $cliCommand, $cliTarget, $cliSecondTarget, $openNotice, $resolvedOpen, $ancestorIsTrusted, $ownerWasChanged, $locationIsTrusted, $modeWasChanged, $parentIsTrusted, $repairRequested, $cliConfirmed, $cliVectorParsed, $locationWasClosed, $cliArguments, $cliArgumentCount, $ownerNotice, $systemFolders, $dataLocation);
-  return $LocationExists; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to find the folders above the given locations that root cannot trust.
-// / Accepts the locations, each the topmost folder -fp corrects on its path.
-// / Returns whether every location could be judged & the folders that fail, in that order.
-// / Each folder is keyed by its path & carries its owner, group & mode, & what it needs.
-// /
-// / -fp corrects the locations it manages & never a folder above them.
-// / Root will not read, write or run anything beneath a folder another account can change, because that account could rename what is inside it aside & put its own in its place.
-// / A folder above a managed location is the administrator's, so it is named rather than changed.
-// / An upgraded host is where this is seen, because older install guides gave /var/www or /DATA to the web server account.
-// / Folders are judged as pathIsTrustedByRoot judges them, on the resolved path, & every one that fails is named rather than the first.
-// / Only a folder that exists is judged, because a missing one is created beneath a trusted folder when it is needed.
-// / Only a folder that root or the web server account owns is to be given to root.
-// / A folder another account owns, such as a home folder, & a folder every account shares by design, such as /tmp, are left to the administrator.
-// / Changing either would decide something for somebody else.
-function foldersRootCannotTrust($managedLocations) {
-  // / Set variables.
-  global $ApacheUser, $EnableMemoryProtection;
-  $FoldersWereJudged = TRUE;
-  $UntrustedFolders = array();
-  $managedLocation = $existingFolder = $resolvedFolder = $walkedPath = $pathComponent = $ownerName = $groupName = $folderAdvice = '';
-  $pathComponents = $componentStatus = $ownerRecord = $groupRecord = array();
-  $folderIsPlain = FALSE;
-  foreach ((array)$managedLocations as $managedLocation) {
-    $managedLocation = rtrim(trim((string)$managedLocation), DIRECTORY_SEPARATOR);
-    if ($managedLocation === '' or strpos($managedLocation, DIRECTORY_SEPARATOR) !== 0) continue;
-    $existingFolder = dirname($managedLocation);
-    while ($existingFolder !== DIRECTORY_SEPARATOR && !file_exists($existingFolder)) $existingFolder = dirname($existingFolder);
-    $resolvedFolder = (string)@realpath($existingFolder);
-    if ($resolvedFolder === '') $FoldersWereJudged = FALSE;
-    else {
-      $walkedPath = '';
-      $pathComponents = array_merge(array(''), array_values(array_filter(explode(DIRECTORY_SEPARATOR, $resolvedFolder), 'strlen')));
-      foreach ($pathComponents as $pathComponent) {
-        $walkedPath = rtrim($walkedPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$pathComponent;
-        if (isset($UntrustedFolders[$walkedPath])) continue;
-        clearstatcache(TRUE, $walkedPath);
-        $componentStatus = @lstat($walkedPath);
-        if (!is_array($componentStatus)) {
-          $FoldersWereJudged = FALSE;
-          break; }
-        $folderIsPlain = (((int)$componentStatus['mode'] & 0170000) === 0040000);
-        if ($folderIsPlain && (int)$componentStatus['uid'] === 0 && ((int)$componentStatus['mode'] & 0022) === 0) continue;
-        $ownerRecord = function_exists('posix_getpwuid') ? @posix_getpwuid((int)$componentStatus['uid']) : array();
-        $groupRecord = function_exists('posix_getgrgid') ? @posix_getgrgid((int)$componentStatus['gid']) : array();
-        $ownerName = (is_array($ownerRecord) && isset($ownerRecord['name'])) ? (string)$ownerRecord['name'] : (string)$componentStatus['uid'];
-        $groupName = (is_array($groupRecord) && isset($groupRecord['name'])) ? (string)$groupRecord['name'] : (string)$componentStatus['gid'];
-        $folderAdvice = 'Give it to root:root, mode 755.';
-        if (!$folderIsPlain) $folderAdvice = 'Is not a folder. Point the location somewhere else.';
-        else if (((int)$componentStatus['mode'] & 01000) !== 0) $folderAdvice = 'Is shared by every account by design. Move the location out of it.';
-        else if ((int)$componentStatus['uid'] !== 0 && $ownerName !== (string)$ApacheUser) $folderAdvice = 'Belongs to '.$ownerName.'. Move the location out of it rather than taking it.';
-        $UntrustedFolders[$walkedPath] = array('Owner' => $ownerName, 'Group' => $groupName, 'Mode' => sprintf('%o', (int)$componentStatus['mode'] & 07777), 'Advice' => $folderAdvice); } } }
-  ksort($UntrustedFolders);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $FoldersWereJudged & $UntrustedFolders are not purged, because they are the return values.
-  purgeSensitiveMemory($EnableMemoryProtection, $managedLocation, $existingFolder, $resolvedFolder, $walkedPath, $pathComponent, $ownerName, $groupName, $folderAdvice, $pathComponents, $componentStatus, $ownerRecord, $groupRecord, $folderIsPlain, $managedLocations);
-  return array($FoldersWereJudged, $UntrustedFolders); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to name the folders root cannot trust & what each needs.
-// / Accepts the folders foldersRootCannotTrust found & whether root must stop without them.
-// / Returns the number of folders named.
-// / Only each folder itself changes, & nothing inside it. Mode 755 keeps every account able to
-// / reach the folders below, which the web server account needs. The commands are in the
-// / description of error 31024 rather than printed, as every instruction to change an owner is.
-// / Root stops when the install secret is beneath one of them, & otherwise goes on & corrects
-// / nothing beneath them.
-function reportFoldersRootCannotTrust($untrustedFolders, $rootMustStop) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $FoldersNamed = 0;
-  $folderPath = $folderLines = $reportText = '';
-  $folderDetail = array();
-  foreach ((array)$untrustedFolders as $folderPath => $folderDetail) {
-    $FoldersNamed++;
-    $folderLines = $folderLines.'  '.str_pad((string)$folderPath, 24).' '.str_pad($folderDetail['Owner'].':'.$folderDetail['Group'].' '.$folderDetail['Mode'], 24).' '.$folderDetail['Advice'].PHP_EOL; }
-  $reportText = PHP_EOL.'Root will not work beneath a folder another account can change, & these can be changed.'.PHP_EOL.$folderLines
-    .'-fp corrects the locations it manages & never a folder above them. Change each folder itself'.PHP_EOL
-    .'& nothing inside it, then run the command again. Error 31024 in'.PHP_EOL
-    .'Documentation/ERROR_DESCRIPTIONS.txt shows how. Releases before v4.0.1 gave /var/www & /DATA'.PHP_EOL
-    .'to the web server account, & nothing needs that now.'.PHP_EOL
-    .($rootMustStop ? 'The install secret is beneath them, so root stopped.' : 'Root went on & corrected nothing beneath them.').PHP_EOL.PHP_EOL;
-  print($reportText);
-  if ($rootMustStop) errorEntry('Root will not work beneath '.implode(', ', array_keys((array)$untrustedFolders)).', because another account can change them. Give each back to root & run the command again.', 31024, TRUE);
-  else warningEntry('Root corrects nothing beneath '.implode(', ', array_keys((array)$untrustedFolders)).', because another account can change them.');
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $FoldersNamed is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $folderPath, $folderLines, $reportText, $folderDetail, $untrustedFolders, $rootMustStop);
-  return $FoldersNamed; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to name the copy of the install secret at the top of the data location.
-// / Accepts the install secret's file in Secrets.
-// / Returns the same name at the top of the data location.
-// / A release older than v4.0.4 keeps the secret there alone, & the same key is kept there & in Secrets.
-// / Until Secrets has its role the copy there is the one the web server account reads first.
-// / This is the one place the name is built.
-function olderInstallSecretFile($secretFile) {
-  // / Set variables.
-  global $DataRootLoc, $EnableMemoryProtection;
-  $OlderSecretFile = rtrim((string)$DataRootLoc, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.basename((string)$secretFile);
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $OlderSecretFile is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $secretFile);
-  return $OlderSecretFile; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to find the number of the web server account & of the group named after it.
-// / Accepts nothing. Returns the account's number & the group's number, in that order, each -1
-// / when it cannot be found.
-// / The group is the one root gives the install secret & Secrets. Some systems do not have the
-// / posix functions, so id & getent are asked instead, as elsewhere in this application. The
-// / answer is kept for the rest of the process, because neither changes while it runs.
-function webServerAccountNumbers() {
-  // / Set variables.
-  global $ApacheUser, $EnableMemoryProtection;
-  // / The answer is kept for the life of the process. It holds two numbers & nothing secret.
-  static $knownNumbers = NULL;
-  $WebAccountNumber = $WebGroupNumber = -1;
-  $accountRecord = $groupRecord = $commandOutput = $groupFields = array();
-  $commandStatus = 1;
-  $commandAnswer = '';
-  if (is_array($knownNumbers)) list ($WebAccountNumber, $WebGroupNumber) = $knownNumbers;
-  else if (trim((string)$ApacheUser) !== '') {
-    if (function_exists('posix_getpwnam')) $accountRecord = @posix_getpwnam((string)$ApacheUser);
-    else exec('id -u '.escapeshellarg((string)$ApacheUser).' 2>/dev/null', $commandOutput, $commandStatus);
-    $commandAnswer = trim(implode('', $commandOutput));
-    if (is_array($accountRecord) && isset($accountRecord['uid'])) $WebAccountNumber = (int)$accountRecord['uid'];
-    else if ($commandStatus === 0 && preg_match('/^[0-9]+$/', $commandAnswer) === 1) $WebAccountNumber = (int)$commandAnswer;
-    $commandOutput = array();
-    $commandStatus = 1;
-    if (function_exists('posix_getgrnam')) $groupRecord = @posix_getgrnam((string)$ApacheUser);
-    else exec('getent group '.escapeshellarg((string)$ApacheUser).' 2>/dev/null', $commandOutput, $commandStatus);
-    $groupFields = explode(':', trim(implode('', $commandOutput)));
-    if (is_array($groupRecord) && isset($groupRecord['gid'])) $WebGroupNumber = (int)$groupRecord['gid'];
-    else if ($commandStatus === 0 && isset($groupFields[2]) && preg_match('/^[0-9]+$/', $groupFields[2]) === 1) $WebGroupNumber = (int)$groupFields[2];
-    $knownNumbers = array($WebAccountNumber, $WebGroupNumber); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $WebAccountNumber & $WebGroupNumber are not purged, because they are the return values.
-  purgeSensitiveMemory($EnableMemoryProtection, $accountRecord, $groupRecord, $commandOutput, $groupFields, $commandStatus, $commandAnswer);
-  return array($WebAccountNumber, $WebGroupNumber); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to decide whether only root or the web server account could change a folder of
-// / the install secret's, or any folder above it.
-// / Accepts the folder. Returns whether that holds, the folder it leads to & the reason it does
-// / not, in that order.
-// / Every folder from the filesystem root down must belong to root or the web server account, &
-// / be writable by no account but its owner. An account that can write any of them could put a
-// / file of its own at a name below it between any look & any read. A folder its group may write
-// / is refused whoever the group is, because under an access control list the group bits are
-// / only the list's mask, & cannot say which other accounts the list lets write. A folder reached
-// / through a link is refused too, as folderIsHeldForRoot refuses one for root, because whoever
-// / can change the link could point it somewhere else between the look & the read. Root writes
-// / no copy of the secret where this does not hold, because the web server account would refuse
-// / it there.
-function secretFolderIsTrusted($secretFolder) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $FolderIsTrusted = FALSE;
-  $ResolvedFolder = $TrustNotice = '';
-  $walkedPath = $pathComponent = '';
-  $pathComponents = $componentStatus = $trustedOwners = array();
-  $webAccountNumber = -1;
-  list ($webAccountNumber) = webServerAccountNumbers();
-  $trustedOwners = array(0);
-  if ($webAccountNumber >= 0) $trustedOwners[] = $webAccountNumber;
-  if (trim((string)$secretFolder) !== '') $ResolvedFolder = (string)@realpath((string)$secretFolder);
-  if ($ResolvedFolder === '') $TrustNotice = (string)$secretFolder.' does not exist.';
-  else if ($ResolvedFolder !== rtrim((string)$secretFolder, DIRECTORY_SEPARATOR)) $TrustNotice = (string)$secretFolder.' leads to '.$ResolvedFolder.'.';
-  else {
-    // / The empty first component is the filesystem root, which is judged like any other.
-    $pathComponents = array_merge(array(''), array_values(array_filter(explode(DIRECTORY_SEPARATOR, $ResolvedFolder), 'strlen')));
-    foreach ($pathComponents as $pathComponent) {
-      $walkedPath = rtrim($walkedPath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$pathComponent;
-      clearstatcache(TRUE, $walkedPath);
-      $componentStatus = @lstat($walkedPath);
-      if (!is_array($componentStatus)) $TrustNotice = $walkedPath.' could not be examined.';
-      else if (((int)$componentStatus['mode'] & 0170000) !== 0040000) $TrustNotice = $walkedPath.' is not a folder.';
-      else if (!in_array((int)$componentStatus['uid'], $trustedOwners, TRUE)) $TrustNotice = $walkedPath.' belongs to an account other than root & the web server account.';
-      else if (((int)$componentStatus['mode'] & 0002) !== 0) $TrustNotice = $walkedPath.' can be written by every account.';
-      else if (((int)$componentStatus['mode'] & 0020) !== 0) $TrustNotice = $walkedPath.' can be written by its group.';
-      if ($TrustNotice !== '') break; }
-    if ($TrustNotice === '') $FolderIsTrusted = TRUE; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $FolderIsTrusted, $ResolvedFolder & $TrustNotice are not purged, because they are the return values.
-  purgeSensitiveMemory($EnableMemoryProtection, $walkedPath, $pathComponent, $pathComponents, $componentStatus, $trustedOwners, $webAccountNumber, $secretFolder);
-  return array($FolderIsTrusted, $ResolvedFolder, $TrustNotice); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to decide whether a copy of the install secret could only have been written by
-// / root or the web server account.
-// / Accepts the copy. Returns whether it may be used & the reason it may not, in that order.
-// / A key another account could have written is a key that account may know.
-// / The copy must be a plain file with one name in a folder secretFolderIsTrusted holds, belong to root or the web server account, & be writable by no account but its owner.
-// / Then nothing but root or the web server account can change what is read, & both know the key anyway, so a copy is judged before it is read.
-// / Root & the web server account judge every copy this way, so neither uses one the other would refuse.
-// / The kernel reads no file with a second name, which fs.protected_hardlinks keeps any other account from making.
-// / Once a command run as root has found a place the secret is kept open to another account, only a copy root owns counts for the rest of it.
-// / $SecretPlacesWereOpen says so.
-// / Root takes such a place back before it reads, but the account that could write there could have put a file the web server account owns at the name.
-// / Every such file is a key that account chose.
-// / The web server account never sets it.
-function installSecretCopyIsTrusted($secretFile) {
-  // / Set variables.
-  global $SecretPlacesWereOpen, $EnableMemoryProtection;
-  $CopyIsTrusted = FALSE;
-  $TrustNotice = '';
-  $folderIsTrusted = FALSE;
-  $resolvedFolder = $judgedCopy = '';
-  $copyStatus = $trustedOwners = array();
-  $webAccountNumber = -1;
-  list ($folderIsTrusted, $resolvedFolder, $TrustNotice) = secretFolderIsTrusted(dirname((string)$secretFile));
-  if ($folderIsTrusted) {
-    list ($webAccountNumber) = webServerAccountNumbers();
-    $trustedOwners = array(0);
-    if ($webAccountNumber >= 0 && (!isset($SecretPlacesWereOpen) or $SecretPlacesWereOpen !== TRUE)) $trustedOwners[] = $webAccountNumber;
-    $judgedCopy = rtrim($resolvedFolder, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.basename((string)$secretFile);
-    clearstatcache(TRUE, $judgedCopy);
-    $copyStatus = @lstat($judgedCopy);
-    if (!is_array($copyStatus)) $TrustNotice = $judgedCopy.' could not be examined.';
-    else if (((int)$copyStatus['mode'] & 0170000) !== 0100000) $TrustNotice = $judgedCopy.' is not a plain file.';
-    else if ((int)$copyStatus['nlink'] !== 1) $TrustNotice = $judgedCopy.' has more than one name.';
-    else if (!in_array((int)$copyStatus['uid'], $trustedOwners, TRUE) && $webAccountNumber >= 0 && (int)$copyStatus['uid'] === $webAccountNumber) $TrustNotice = $judgedCopy.' belongs to the web server account, & only a copy root owns counts once a place the secret is kept was found open to another account.';
-    else if (!in_array((int)$copyStatus['uid'], $trustedOwners, TRUE) && $webAccountNumber < 0) $TrustNotice = $judgedCopy.' does not belong to root, & the web server account could not be looked up.';
-    else if (!in_array((int)$copyStatus['uid'], $trustedOwners, TRUE)) $TrustNotice = $judgedCopy.' belongs to an account other than root & the web server account.';
-    else if (((int)$copyStatus['mode'] & 0002) !== 0) $TrustNotice = $judgedCopy.' can be written by every account.';
-    else if (((int)$copyStatus['mode'] & 0020) !== 0) $TrustNotice = $judgedCopy.' can be written by its group.';
-    else $CopyIsTrusted = TRUE; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $CopyIsTrusted & $TrustNotice are not purged, because they are the return values.
-  purgeSensitiveMemory($EnableMemoryProtection, $folderIsTrusted, $resolvedFolder, $judgedCopy, $copyStatus, $trustedOwners, $webAccountNumber, $secretFile);
-  return array($CopyIsTrusted, $TrustNotice); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to decide whether the copy of the install secret at the top of the data location
-// / was written after the copy in Secrets.
-// / Accepts the install secret's file in Secrets. Returns TRUE when both copies are plain files,
-// / the one at the top is root's & no other account can write it, & it was written later.
-// / A release older than v4.0.4 knows only the copy at the top.
-// / Going back to one & rotating the key there, or letting it make a new one, leaves the copy in Secrets carrying the key that was replaced.
-// / The copy written last carries the key in use, so when this holds root & the web server account both read the copy at the top first, & root then writes its key into Secrets.
-// / Only a copy root owns is put first this way, so a copy another account owns never outranks one root wrote.
-// / This release writes one key into both copies, so the order changes nothing until they disagree.
-// / The times are whole seconds of the host's clock, so two copies written in the same second, or across a clock set back, keep the usual order.
-function topSecretCopyIsNewer($secretFile) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $TopIsNewer = FALSE;
-  $olderSecretFile = '';
-  $topStatus = $secretsStatus = array();
-  $olderSecretFile = olderInstallSecretFile($secretFile);
-  if ($olderSecretFile !== (string)$secretFile) {
-    clearstatcache(TRUE, $olderSecretFile);
-    clearstatcache(TRUE, (string)$secretFile);
-    $topStatus = @lstat($olderSecretFile);
-    $secretsStatus = @lstat((string)$secretFile);
-    $TopIsNewer = (is_array($topStatus) && is_array($secretsStatus) && ((int)$topStatus['mode'] & 0170000) === 0100000 && ((int)$secretsStatus['mode'] & 0170000) === 0100000 && (int)$topStatus['uid'] === 0 && ((int)$topStatus['mode'] & 0022) === 0 && (int)$topStatus['mtime'] > (int)$secretsStatus['mtime']); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $TopIsNewer is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $olderSecretFile, $topStatus, $secretsStatus, $secretFile);
-  return $TopIsNewer; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to examine the folder the install secret is kept in, without following anything.
-// / Accepts the folder. Returns its state, its mode & its owner & group, in that order.
-// / The state is ok, missing, not a folder, wrong or unjudged. The mode & the owner are empty
-// / unless a folder is there. A folder is unjudged when the group named after the web server
-// / account cannot be looked up, because then nothing can say whether its group is that one.
-// / The group is compared by number, so a host without the posix functions judges it the same.
-// / Setup Core gives the folder the secret role, which is root's, the web server account's group
-// / & 0750, so that account may read the secret & change nothing, & no other account may list
-// / the folder. The copy in a folder in any other state is never the one read first, because the
-// / web server account might not be able to read it there, & every request would stop.
-function secretFolderStatus($secretFolder) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $FolderState = 'missing';
-  $FolderMode = $FolderOwnership = '';
-  $folderStatus = $ownerRecord = $groupRecord = array();
-  $ownerName = $groupName = '';
-  $webAccountNumber = $webGroupNumber = -1;
-  clearstatcache(TRUE, (string)$secretFolder);
-  if ((string)$secretFolder !== '') $folderStatus = @lstat((string)$secretFolder);
-  if (is_array($folderStatus) && ((int)$folderStatus['mode'] & 0170000) !== 0040000) $FolderState = 'not a folder';
-  else if (is_array($folderStatus)) {
-    if (function_exists('posix_getpwuid')) $ownerRecord = @posix_getpwuid((int)$folderStatus['uid']);
-    if (function_exists('posix_getgrgid')) $groupRecord = @posix_getgrgid((int)$folderStatus['gid']);
-    $ownerName = (is_array($ownerRecord) && isset($ownerRecord['name'])) ? (string)$ownerRecord['name'] : (string)$folderStatus['uid'];
-    $groupName = (is_array($groupRecord) && isset($groupRecord['name'])) ? (string)$groupRecord['name'] : (string)$folderStatus['gid'];
-    $FolderMode = sprintf('%04o', (int)$folderStatus['mode'] & 07777);
-    $FolderOwnership = $ownerName.':'.$groupName;
-    list ($webAccountNumber, $webGroupNumber) = webServerAccountNumbers();
-    if ($webGroupNumber < 0) $FolderState = 'unjudged';
-    else $FolderState = ((int)$folderStatus['uid'] === 0 && $FolderMode === '0750' && (int)$folderStatus['gid'] === $webGroupNumber) ? 'ok' : 'wrong'; }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $FolderState, $FolderMode & $FolderOwnership are not purged, because they are the return values.
-  purgeSensitiveMemory($EnableMemoryProtection, $folderStatus, $ownerRecord, $groupRecord, $ownerName, $groupName, $webAccountNumber, $webGroupNumber, $secretFolder);
-  return array($FolderState, $FolderMode, $FolderOwnership); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to write the install wide secret as root & read it back.
-// / Accepts the file, the key & the version the file declares.
-// / Returns whether the file holds the key, whether the web server account's group can read it,
-// / & the reason the file does not hold the key, in that order.
-// / The new copy is finished before it takes the name.
-// / It is made beside the name as a staged copy, under a name of its own for every write, through the kernel.
-// / So nothing planted at either name is followed, & nothing left at one can stop the next.
-// / It is made empty, given the web server account's group & its mode, & judged, & only then is the key written into it.
-// / The key is written through a handle the kernel compares with what was judged.
-// / Then it is renamed over the name, so the name always holds a whole copy that account can read whenever its group could be given.
-// / The owner stays root, & the file is read back exactly as root reads it next time.
-// / A default access control list decides a new file's mode in place of the umask, & could leave the secret readable by every account, so the mode is set again by name.
-// / That is done only in a folder root owns that no other account can write, because only there can nothing swap the staged name between the write & the change.
-// / Every folder -fp gives a copy is one, & anywhere else a copy wider than 0640 is given no key & never takes the name.
-// / A list that names another account can still let that account read a copy, which no mode shows.
-// / A group that could not be changed is warned about & is not a failure to write, because root still reads the key.
-// / The exception is a name holding a copy the web server account reads now, which is never replaced by one it could not read.
-// / The caller decides the rest.
-function writeInstallSecretAsRoot($secretFile, $secretKey, $secretVersion) {
-  // / Set variables.
-  global $ApacheUser, $EnableMemoryProtection;
-  $SecretWasWritten = $GroupWasChanged = FALSE;
-  $WriteFailure = '';
-  $fileWasWritten = $readBackSucceeded = $folderIsRootsAlone = $modeWasSet = $stagedWasRemoved = $stagedWasCreated = $placeIsReadable = $handleIsJudged = FALSE;
-  $secretFileContent = $writeNotice = $groupNotice = $readBackKey = $readBackVersion = $stagedFile = $removalNotice = $randomPart = $openNotice = '';
-  $folderStatus = $stagedStatus = $handleStatus = array();
-  $randomError = NULL;
-  $stagedHandle = FALSE;
-  $bytesWritten = 0;
-  $secretFileContent = addSillyString($secretKey, $secretVersion);
-  try { $randomPart = bin2hex(random_bytes(6)); }
-  catch (Throwable $randomError) { $randomPart = str_replace('.', '', uniqid('', TRUE)); }
-  $stagedFile = dirname((string)$secretFile).DIRECTORY_SEPARATOR.'.'.basename((string)$secretFile).'.'.$randomPart.'.staged';
-  list ($fileWasWritten, $writeNotice) = writeFileWithoutFollowing($stagedFile, '', 0640);
-  if (!$fileWasWritten) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! '.$writeNotice;
-  else {
-    // / The owner stays root. Only the group becomes the web server's, so it can read the key.
-    list ($GroupWasChanged, $groupNotice) = changeOwnerWithoutFollowing($stagedFile, '', (string)$ApacheUser);
-    if (!$GroupWasChanged) warningEntry($groupNotice.' The web server account cannot read the install secret until it is.');
-    // / A copy that account reads is never replaced by one it cannot.
-    $placeIsReadable = (!$GroupWasChanged && webServerCanReadSecretCopy($secretFile));
-    clearstatcache(TRUE, dirname((string)$secretFile));
-    $folderStatus = @lstat(dirname((string)$secretFile));
-    $folderIsRootsAlone = (is_array($folderStatus) && ((int)$folderStatus['mode'] & 0170000) === 0040000 && (int)$folderStatus['uid'] === 0 && ((int)$folderStatus['mode'] & 0022) === 0);
-    if ($folderIsRootsAlone) $modeWasSet = @chmod($stagedFile, 0640);
-    clearstatcache(TRUE, $stagedFile);
-    $stagedStatus = @lstat($stagedFile);
-    if ($placeIsReadable) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! Its group could not be given, & the copy there now is one the web server account reads.';
-    else if ($folderIsRootsAlone && !$modeWasSet) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! Its mode could not be set.';
-    else if (!is_array($stagedStatus) or ((int)$stagedStatus['mode'] & 0037) !== 0) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! The new copy was made wider than 0640, as a default access control list makes it.';
-    else {
-      // / Only now is the key written into it, & only into the file judged above, by device, inode,
-      // / owner, size & mode, so a file swapped in at the staged name since is never filled, even
-      // / one given the same inode number again.
-      list ($stagedHandle, $stagedWasCreated, $openNotice) = openFileWithoutFollowing($stagedFile, 0640);
-      if (is_resource($stagedHandle)) $handleStatus = @fstat($stagedHandle);
-      $handleIsJudged = (is_resource($stagedHandle) && !$stagedWasCreated && is_array($handleStatus) && $handleStatus['dev'] === $stagedStatus['dev'] && $handleStatus['ino'] === $stagedStatus['ino'] && (int)$handleStatus['uid'] === 0 && (int)$handleStatus['size'] === 0 && ((int)$handleStatus['mode'] & 0037) === 0);
-      if ($handleIsJudged) {
-        $bytesWritten = (int)@fwrite($stagedHandle, $secretFileContent);
-        @fflush($stagedHandle); }
-      if (is_resource($stagedHandle)) @fclose($stagedHandle);
-      if (!$handleIsJudged or $bytesWritten !== strlen($secretFileContent)) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! The new copy could not be filled. '.$openNotice;
-      else if (!@rename($stagedFile, (string)$secretFile)) $WriteFailure = 'The install secret could not be written to '.$secretFile.'! The new copy could not be moved into place.';
-      else {
-        // / Read the new file back exactly as root will read it next time.
-        list ($readBackSucceeded, $readBackKey, $readBackVersion) = readSecretWithoutExecuting($secretFile);
-        if (!$readBackSucceeded or $readBackKey !== $secretKey) $WriteFailure = 'The install secret written to '.$secretFile.' did not read back correctly!';
-        else $SecretWasWritten = TRUE; } }
-    // / A staged copy that did not take the name is removed. Removing a name never follows it.
-    if (file_exists($stagedFile) or is_link($stagedFile)) list ($stagedWasRemoved, $removalNotice) = removeFileWithoutFollowing($stagedFile);
-    if (file_exists($stagedFile) or is_link($stagedFile)) warningEntry('The staged copy of the install secret at '.$stagedFile.' could not be removed. '.$removalNotice); }
-  // / Manually clean up sensitive memory. Every target is passed directly by reference.
-  // / $SecretWasWritten, $GroupWasChanged & $WriteFailure are not purged, because they are the return values.
-  purgeSensitiveMemory($EnableMemoryProtection, $fileWasWritten, $readBackSucceeded, $folderIsRootsAlone, $modeWasSet, $stagedWasRemoved, $stagedWasCreated, $placeIsReadable, $handleIsJudged, $handleStatus, $secretFileContent, $writeNotice, $groupNotice, $readBackKey, $readBackVersion, $stagedFile, $removalNotice, $randomPart, $openNotice, $folderStatus, $stagedStatus, $randomError, $stagedHandle, $bytesWritten, $secretFile, $secretKey, $secretVersion);
-  return array($SecretWasWritten, $GroupWasChanged, $WriteFailure); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to decide whether the web server account would read a copy of the install secret.
-// / Accepts the copy. Returns TRUE when that account would judge it as it judges every copy, & could
-// / open it.
-// / Root cannot open a file as another account, so this is judged from the owner, the group & the
-// / mode of the copy & of the folder it is in, the way the kernel would judge that account's open.
-// / The account judges a copy without the closer rule a command run as root takes on once it finds
-// / a place the secret is kept open, so a copy it owns counts here. When the account or its group
-// / cannot be looked up, nothing can be judged, & a copy is taken to be readable, so a host where
-// / they cannot be is not stopped by a check it cannot make, & root says so elsewhere.
-function webServerCanReadSecretCopy($secretFile) {
-  // / Set variables.
-  global $EnableMemoryProtection;
-  $CopyIsReadable = $folderIsTrusted = FALSE;
-  $resolvedFolder = $trustNotice = '';
-  $copyStatus = $folderStatus = array();
-  $webAccountNumber = $webGroupNumber = -1;
-  $readBits = $searchBits = 0;
-  list ($webAccountNumber, $webGroupNumber) = webServerAccountNumbers();
-  list ($folderIsTrusted, $resolvedFolder, $trustNotice) = secretFolderIsTrusted(dirname((string)$secretFile));
-  clearstatcache(TRUE, (string)$secretFile);
-  clearstatcache(TRUE, dirname((string)$secretFile));
-  $copyStatus = @lstat((string)$secretFile);
-  $folderStatus = @lstat(dirname((string)$secretFile));
-  if ($folderIsTrusted && is_array($copyStatus) && is_array($folderStatus) && ((int)$copyStatus['mode'] & 0170000) === 0100000 && (int)$copyStatus['nlink'] === 1 && ((int)$copyStatus['mode'] & 0022) === 0) {
-    if ($webAccountNumber < 0 or $webGroupNumber < 0) $CopyIsReadable = TRUE;
-    else if (in_array((int)$copyStatus['uid'], array(0, $webAccountNumber), TRUE)) {
-      // / The owner's bits apply to the owner, the group's to a member, & the rest to anybody else.
-      $readBits = ((int)$copyStatus['uid'] === $webAccountNumber) ? 0400 : (((int)$copyStatus['gid'] === $webGroupNumber) ? 0040 : 0004);
-      $searchBits = ((int)$folderStatus['uid'] === $webAccountNumber) ? 0100 : (((int)$folderStatus['gid'] === $webGroupNumber) ? 0010 : 0001);
-      $CopyIsReadable = (((int)$copyStatus['mode'] & $readBits) !== 0 && ((int)$folderStatus['mode'] & $searchBits) !== 0); } }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $CopyIsReadable is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $folderIsTrusted, $resolvedFolder, $trustNotice, $copyStatus, $folderStatus, $webAccountNumber, $webGroupNumber, $readBits, $searchBits, $secretFile);
-  return $CopyIsReadable; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to load, create or rotate the install wide secret as root.
-// / Accepts the secret file, the version this core requires & whether a new key was asked for.
-// / Returns a readiness boolean & the key, in that order.
-// /
-// / Root reads the secret with readSecretWithoutExecuting & writes it through writeInstallSecretAsRoot.
-// / Nothing here requires the file or follows a link.
-// /
-// / Two copies carry one key, & neither is removed while it is known to carry it.
-// / The secret is kept in Secrets once Setup Core has given the folder its role.
-// / The copy at the top of the data location, where older releases read it, keeps the same key.
-// / Every command run as root writes the key it holds into each copy that does not already carry it exactly.
-// / So a web server running this release, an older one, or one not installed yet always finds the key, & going back to an older release costs no session.
-// / The web server account reads the copy in Secrets first once the folder has its role & the data location is root's, & the copy at the top first until then.
-// / topSecretCopyIsNewer puts the copy at the top first when root wrote it after the copy in Secrets.
-// / A copy known to carry the key is never removed, because a web server that can no longer read its copy is a site that stops.
-// / A release that reads only the top, or a hosted tree never installed, cannot be told apart from here.
-// / The one copy removed is one not known to carry the key, that could not be written, & only once the web server account reads the key in the copy it reads first.
-// /
-// / The first usable copy wins.
-// / The copy the web server account reads first is looked in, then the other, then the first again.
-// / A copy that cannot be used is passed over & named, & is written again with the key in use.
-// / A copy that vanishes or changes while it is read was moved or replaced by an older release running as root, & a later look finds it.
-// /
-// / A copy counts only when installSecretCopyIsTrusted says so, before it is read.
-// / That is how the web server account judges the copy it reads too, so neither uses a copy the other refuses.
-// / A copy the web server account owns is taken, because older releases & an old chown -R leave it so, & that account reads the key whoever owns the file.
-// / It is written again as root's with its same key.
-// /
-// / A new key is written only when no usable copy is found, & never in place of a copy root cannot reach.
-// / Root does not read in Secrets while another account could replace the folder, so it stops with error 31020 & names why rather than replace a copy that may be the good one.
-// / prepareDataLocationAsRoot gives the data location back to root first, which is the usual cause.
-// / A rotation writes its new key into every copy, & is refused with error 31020 while a copy in Secrets is out of reach, because that copy would keep the old key.
-// / No copy is written where another account could replace it.
-// /
-// / The key is in use only when the web server account reads it.
-// / Once the copies are settled, webServerCanReadSecretCopy judges which copy that account would read first, & the key is ready only when that copy carries it.
-// / A rotation is done once the copy read first carries the new key.
-// /
-// / One command run as root settles the secret at a time.
-// / A lock in Engine, root's own folder, opened through the kernel, is held while this runs, so a command that read the old key never writes it back over a new rotation.
-// / It is taken only in an Engine that is root's own, because a lock another account could hold could stall every repair.
-// / A command that has waited fifteen seconds goes on without it & says so.
-// / A command that finds no Engine, as before the first -fp, goes on without it, because nothing else can be settling a secret there yet.
-function resolveInstallSecretAsRoot($secretFile, $requiredSecretVersion, $rotationRequested) {
-  // / Set variables.
-  global $ApacheUser, $EngineDir, $SecretPlacesWereOpen, $EnableMemoryProtection;
-  $SecretIsReady = FALSE;
-  $ResolvedSecretKey = '';
-  $existingWasRead = $keyWasGenerated = $copyWasWritten = $groupWasChanged = $copyIsRight = $folderIsHeld = $folderIsReady = $secretIsUnreachable = $copyIsTrusted = $lockIsHeld = $lockWasCreated = $placeIsTrusted = $engineIsTrusted = $lockWouldBlock = $preferredIsRight = $keptWasRead = $keptIsTrusted = $preferredIsReadable = $staleWasRemoved = $judgedWasRead = $webReadsKey = FALSE;
-  $existingKey = $existingVersion = $candidateKey = $cleanRequiredVersion = $writeFailure = $trustNotice = $holdNotice = $lockNotice = $folderProblem = $refusalNotice = $resolvedPlace = $placeNotice = $resolvedEngine = $engineNotice = $keptKey = $keptVersion = $keptNotice = $removalNotice = '';
-  $secretFolder = $olderSecretFile = $preferredCopy = $otherCopy = $keptCopy = $sourceFile = $candidateFile = $refusedFile = $folderState = $folderMode = $folderOwnership = $lockPath = $writtenCopies = '';
-  $judgedCopy = $judgedKey = $judgedVersion = $webCopy = '';
-  $secretStatus = $candidateFiles = $refusedCopies = $keptCopies = array();
-  $webAccountNumber = $webGroupNumber = -1;
-  $lockDeadline = 0;
-  $lockHandle = FALSE;
-  $cleanRequiredVersion = ltrim(trim((string)$requiredSecretVersion), 'vV');
-  $secretFolder = dirname((string)$secretFile);
-  $olderSecretFile = olderInstallSecretFile($secretFile);
-  list ($webAccountNumber, $webGroupNumber) = webServerAccountNumbers();
-  if ($webAccountNumber < 0 or $webGroupNumber < 0) warningEntry('The web server account '.$ApacheUser.' or the group of the same name could not be looked up, so only a copy of the install secret root owns counts, & Secrets cannot be judged.');
-  // / The lock is taken before anything is looked at, & only in an Engine that is root's own. A
-  // / lock file another command run as root created a moment ago is opened again, once.
-  if (isset($EngineDir) && is_string($EngineDir) && $EngineDir !== '' && is_dir($EngineDir)) {
-    list ($engineIsTrusted, $resolvedEngine, $engineNotice) = pathIsTrustedByRoot($EngineDir);
-    if (!$engineIsTrusted or $resolvedEngine !== rtrim($EngineDir, DIRECTORY_SEPARATOR)) $lockNotice = 'Engine is not root\'s own yet. '.$engineNotice;
-    else {
-      $lockPath = $resolvedEngine.DIRECTORY_SEPARATOR.'secret.lock';
-      list ($lockHandle, $lockWasCreated, $lockNotice) = openFileWithoutFollowing($lockPath, 0600);
-      if (!is_resource($lockHandle)) list ($lockHandle, $lockWasCreated, $lockNotice) = openFileWithoutFollowing($lockPath, 0600);
-      $lockDeadline = hrtime(TRUE) + 15000000000;
-      while (is_resource($lockHandle) && !$lockIsHeld) {
-        $lockIsHeld = @flock($lockHandle, LOCK_EX | LOCK_NB, $lockWouldBlock);
-        if ($lockIsHeld or !$lockWouldBlock or hrtime(TRUE) >= $lockDeadline) break;
-        usleep(100000); }
-      if (is_resource($lockHandle) && !$lockIsHeld) $lockNotice = $lockWouldBlock ? 'Another command run as root held the lock for fifteen seconds.' : 'This filesystem cannot lock it.'; }
-    if (!$lockIsHeld) warningEntry('The install secret was settled without its lock, so another command run as root could have been settling it at the same moment. '.$lockNotice); }
-  // / The web server account reads the copy in Secrets first once the folder has its role & only
-  // / root could replace it, unless the copy at the top is root's & was written after it, & the
-  // / copy at the top first until then. Root looks in the same order.
-  list ($folderState, $folderMode, $folderOwnership) = secretFolderStatus($secretFolder);
-  list ($folderIsHeld, $holdNotice) = folderIsHeldForRoot($secretFolder);
-  $folderIsReady = ($folderState === 'ok' && $folderIsHeld && $olderSecretFile !== (string)$secretFile);
-  $preferredCopy = ($folderIsReady && !topSecretCopyIsNewer($secretFile)) ? (string)$secretFile : $olderSecretFile;
-  $otherCopy = ($preferredCopy === $olderSecretFile) ? (string)$secretFile : $olderSecretFile;
-  // / Root neither reads nor writes in Secrets while another account could replace the folder.
-  $secretIsUnreachable = (!$folderIsHeld && $olderSecretFile !== (string)$secretFile && (file_exists($secretFile) or is_link($secretFile)));
-  // / A place another account could write makes every copy there one only root's own may stand for.
-  list ($placeIsTrusted, $resolvedPlace, $placeNotice) = secretFolderIsTrusted($secretFolder);
-  if ($folderIsHeld && !$placeIsTrusted && file_exists($secretFolder)) $SecretPlacesWereOpen = TRUE;
-  // / The copies root keeps. The top always. Secrets once the folder has its role, & any copy root
-  // / can reach there before then, so it carries the same key.
-  $keptCopies = array($preferredCopy);
-  if ($otherCopy === $olderSecretFile or ($folderIsHeld && (file_exists($otherCopy) or is_link($otherCopy)))) $keptCopies[] = $otherCopy;
-  // / Find the first usable key, unless a new one was asked for.
-  if (!$rotationRequested) {
-    $candidateFiles = array($preferredCopy, $otherCopy, $preferredCopy);
-    foreach ($candidateFiles as $candidateFile) {
-      if (!file_exists($candidateFile) && !is_link($candidateFile)) continue;
-      if ($candidateFile === (string)$secretFile && !$folderIsHeld) continue;
-      $existingWasRead = FALSE;
-      $existingKey = $existingVersion = '';
-      list ($copyIsTrusted, $trustNotice) = installSecretCopyIsTrusted($candidateFile);
-      if ($copyIsTrusted) list ($existingWasRead, $existingKey, $existingVersion) = readSecretWithoutExecuting($candidateFile);
-      if ($copyIsTrusted && $existingWasRead && ltrim($existingVersion, 'vV') === $cleanRequiredVersion) {
-        $sourceFile = $candidateFile;
-        $candidateKey = $existingKey;
-        unset($refusedCopies[$candidateFile]);
-        break; }
-      // / A copy that is there & cannot be used is named once, with why, & the looks go on.
-      if (!isset($refusedCopies[$candidateFile]) && (file_exists($candidateFile) or is_link($candidateFile))) $refusedCopies[$candidateFile] = $copyIsTrusted ? 'It is not one this core can use, or carries something this application did not write.' : $trustNotice; }
-    foreach ($refusedCopies as $refusedFile => $refusalNotice) warningEntry('The copy of the install secret at '.$refusedFile.' is not used. '.$refusalNotice); }
-  // / A copy in Secrets root cannot reach may be the good one, so nothing is written in its place.
-  if ($rotationRequested && $secretIsUnreachable) errorEntry('The install secret was not rotated, because another account could replace '.$secretFolder.', & the copy there would keep the old key! '.$holdNotice, 31020, FALSE);
-  else if ($candidateKey === '' && $secretIsUnreachable) errorEntry('The install secret at '.$secretFile.' could not be reached, because another account could replace '.$secretFolder.', so nothing was replaced! '.$holdNotice, 31020, FALSE);
-  else {
-    if ($candidateKey === '') list ($candidateKey, $keyWasGenerated) = generateInstallSecret();
-    if (!is_string($candidateKey) or $candidateKey === '') errorEntry('An install secret could not be generated, because this host could not supply random bytes!', 31020, FALSE);
-    else {
-      // / Every copy root keeps is made to carry the key exactly, the one read first first. A copy
-      // / is right when it is root's, 0640, its group is the web server account's & it already
-      // / carries the key. No copy is written where another account could replace it.
-      foreach ($keptCopies as $keptCopy) {
-        $copyIsRight = $keptWasRead = $keptIsTrusted = $copyWasWritten = $groupWasChanged = FALSE;
-        $keptKey = $keptVersion = $writeFailure = $keptNotice = '';
-        $secretStatus = array();
-        if (!$keyWasGenerated && $keptCopy === $sourceFile) $keptKey = $candidateKey;
-        else if (!$keyWasGenerated && (file_exists($keptCopy) or is_link($keptCopy))) {
-          list ($keptIsTrusted, $keptNotice) = installSecretCopyIsTrusted($keptCopy);
-          if ($keptIsTrusted) list ($keptWasRead, $keptKey, $keptVersion) = readSecretWithoutExecuting($keptCopy); }
-        clearstatcache(TRUE, $keptCopy);
-        $secretStatus = @lstat($keptCopy);
-        // / When the group cannot be looked up, no copy's group can be judged, so a copy is not
-        // / written again on every command for a group nobody here can name.
-        $copyIsRight = ($keptKey === $candidateKey && is_array($secretStatus) && ((int)$secretStatus['mode'] & 0170000) === 0100000 && (int)$secretStatus['uid'] === 0 && ((int)$secretStatus['mode'] & 0777) === 0640 && ($webGroupNumber < 0 or (int)$secretStatus['gid'] === $webGroupNumber));
-        if (!$copyIsRight) {
-          list ($placeIsTrusted, $resolvedPlace, $placeNotice) = secretFolderIsTrusted(dirname($keptCopy));
-          if ($placeIsTrusted) list ($copyWasWritten, $groupWasChanged, $writeFailure) = writeInstallSecretAsRoot($keptCopy, $candidateKey, $cleanRequiredVersion);
-          else $writeFailure = 'The install secret was not written to '.$keptCopy.', because another account could replace it there. '.$placeNotice;
-          // / A copy written whose group could not be given is warned about by the writer. A copy
-          // / read first that could not be written is an error when the key is new or a rotation's.
-          // / Otherwise the key was found in a copy, which still carries it, so it is only warned
-          // / about, & whether the web server account reads the key is judged once every copy is
-          // / settled, below.
-          if (!$copyWasWritten && $keptCopy === $preferredCopy && ($sourceFile === '' or $rotationRequested or $keyWasGenerated)) errorEntry($writeFailure, 31020, FALSE);
-          else if (!$copyWasWritten && $keptCopy === $preferredCopy) warningEntry($writeFailure.' The copy at '.$sourceFile.' still carries the key, & the next command run as root tries again.');
-          // / A copy that is not there carries nothing & is only named.
-          else if (!$copyWasWritten && !file_exists($keptCopy) && !is_link($keptCopy)) warningEntry($writeFailure);
-          // / Another copy not known to carry the key, because it carries another, none, or could not
-          // / be trusted to be read, & that could not be written goes, once the web server account
-          // / can read the key in the copy it reads first, so no other key can ever be found there.
-          // / One known to carry the key is left, because it is right but for its owner or mode.
-          else if (!$copyWasWritten && $preferredIsReadable && $keptKey !== $candidateKey) {
-            list ($staleWasRemoved, $removalNotice) = removeFileWithoutFollowing($keptCopy);
-            if ($staleWasRemoved) warningEntry($writeFailure.' It was not known to carry the key in use, so it was removed. The copy at '.$preferredCopy.' carries the key.');
-            else errorEntry($writeFailure.' It is not known to carry the key in use & could not be removed either. '.$removalNotice, 31020, FALSE); }
-          // / While the copy read first is not right, the web server account may read this one, so
-          // / one not known to carry the key is left, & the judgment below says what it means.
-          else if (!$copyWasWritten && $keptKey !== $candidateKey && !$rotationRequested) warningEntry($writeFailure.' It is not known to carry the key in use, & is left while the copy at '.$preferredCopy.' is not right.');
-          else if (!$copyWasWritten && $rotationRequested) errorEntry($writeFailure.' It still carries the old key until the next command run as root writes the new one there.', 31020, FALSE);
-          else if (!$copyWasWritten) warningEntry($writeFailure.' It carries the key in use, & the next command run as root tries again.');
-          else if (!$keyWasGenerated && !$rotationRequested && ($keptCopy === $sourceFile or $keptKey === $candidateKey)) warningEntry('The install secret at '.$keptCopy.' was rewritten as root with its existing key. Every session is unaffected.');
-          else if (!$keyWasGenerated && !$rotationRequested && $keptWasRead && $keptKey !== '' && $keptKey !== $candidateKey && ltrim($keptVersion, 'vV') === $cleanRequiredVersion) warningEntry('The copy of the install secret at '.$keptCopy.' carried another key, & now carries the one at '.$sourceFile.'. Every session derived from its key is now invalid.');
-          else if (!$keyWasGenerated && !$rotationRequested) warningEntry('The install secret at '.$sourceFile.' was copied to '.$keptCopy.' with its existing key. Every session is unaffected.');
-          if ($copyWasWritten) $writtenCopies .= ($writtenCopies === '' ? '' : ' & ').$keptCopy; }
-        if ($keptCopy === $preferredCopy) {
-          $preferredIsRight = ($copyIsRight or $copyWasWritten);
-          $preferredIsReadable = ($copyIsRight or ($copyWasWritten && $groupWasChanged)); }
-        // / A rotation stops at the first copy it could not write, so no later copy gets a key the
-        // / earlier one does not carry.
-        if ($rotationRequested && !$copyIsRight && !$copyWasWritten) break; }
-      // / The key is in use only when the web server account reads it.
-      // / That account uses the first copy it can read & use, in the order root looked, & passes over one it cannot read & one not in the shape this core reads.
-      // / So each copy is judged & read the same way, & the key root holds is in use only when the copy that account would use carries it.
-      // / A rotation is done once the copy read first carries the new key, & is named here too when that account would not read it.
-      foreach (array($preferredCopy, $otherCopy) as $judgedCopy) {
-        if ($webCopy !== '' or !webServerCanReadSecretCopy($judgedCopy)) continue;
-        list ($judgedWasRead, $judgedKey, $judgedVersion) = readSecretWithoutExecuting($judgedCopy);
-        if ($judgedWasRead && ltrim($judgedVersion, 'vV') === $cleanRequiredVersion) {
-          $webCopy = $judgedCopy;
-          $webReadsKey = ($judgedKey === $candidateKey); } }
-      if (!$webReadsKey) errorEntry('The web server account would not read the install secret root holds! '.($webCopy !== '' ? 'The first copy it would use, at '.$webCopy.', carries another key.' : 'It can use neither copy.'), 31020, FALSE);
-      if (($rotationRequested && $preferredIsRight) or (!$rotationRequested && $webReadsKey)) {
-        $SecretIsReady = TRUE;
-        $ResolvedSecretKey = $candidateKey;
-        if ($rotationRequested) warningEntry('The install secret was rotated. Every session derived from the old one is now invalid.');
-        else if ($keyWasGenerated) warningEntry('A new install secret was written to '.$writtenCopies.'.'); } } }
-  // / A folder that is there without its role is what keeps the copy there from being read first,
-  // / so it is named, whether or not a key was put in place.
-  if (!$folderIsReady && $folderState !== 'missing' && $olderSecretFile !== (string)$secretFile) {
-    if ($folderState === 'not a folder') $folderProblem = $secretFolder.' is not a folder & is never followed. Remove it & run -fp as root.';
-    else if ($folderState === 'unjudged') $folderProblem = $secretFolder.' has a group that cannot be judged, because the group '.$ApacheUser.' could not be looked up.';
-    else if ($folderState === 'wrong') $folderProblem = $secretFolder.' is '.$folderOwnership.' '.$folderMode.' & needs root:'.$ApacheUser.' 0750. -fp gives the folder its role & copies the secret in.';
-    else $folderProblem = 'another account could replace '.$secretFolder.'. '.$holdNotice;
-    warningEntry('The web server account reads the install secret at '.$olderSecretFile.' first, because '.$folderProblem); }
-  // / The lock is released & closed whatever happened above.
-  if (is_resource($lockHandle)) {
-    if ($lockIsHeld) @flock($lockHandle, LOCK_UN);
-    @fclose($lockHandle); }
-  // / Manually clean up sensitive memory. Every target is passed directly by reference.
-  // / $ResolvedSecretKey is not purged, because it is the return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $existingWasRead, $keyWasGenerated, $copyWasWritten, $groupWasChanged, $copyIsRight, $folderIsHeld, $folderIsReady, $secretIsUnreachable, $copyIsTrusted, $lockIsHeld, $lockWasCreated, $placeIsTrusted, $engineIsTrusted, $lockWouldBlock, $preferredIsRight, $keptWasRead, $keptIsTrusted, $preferredIsReadable, $staleWasRemoved, $judgedWasRead, $webReadsKey, $judgedKey, $judgedVersion, $judgedCopy, $webCopy, $existingKey, $existingVersion, $candidateKey, $cleanRequiredVersion, $writeFailure, $trustNotice, $holdNotice, $lockNotice, $folderProblem, $refusalNotice, $resolvedPlace, $placeNotice, $resolvedEngine, $engineNotice, $keptKey, $keptVersion, $keptNotice, $removalNotice, $secretFolder, $olderSecretFile, $preferredCopy, $otherCopy, $keptCopy, $sourceFile, $candidateFile, $refusedFile, $folderState, $folderMode, $folderOwnership, $lockPath, $writtenCopies, $secretStatus, $candidateFiles, $refusedCopies, $keptCopies, $webAccountNumber, $webGroupNumber, $lockDeadline, $lockHandle, $secretFile, $requiredSecretVersion, $rotationRequested);
-  return array($SecretIsReady, $ResolvedSecretKey); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to load an install secret from a file, or to create one when none exists.
-// / Accepts the absolute path of the secret file.
-// / Returns a readiness boolean & the secret key, in that order.
-// / A failure returns FALSE & an empty string, which the caller must treat as a failed installation.
-// / The file is written with only the secret & is checked byte for byte afterwards, & a file that fails that check is deleted.
-// / Appending to an existing file would produce a file that loads & carries a key nobody generated.
-// / A per user secret is chmod 0600 on every path, because a secret another account can read is not a secret.
-// / The install wide secret is never changed here, because the web server account only reads it.
-// / This is called for the install wide secret & for a per user secret in a folder of its own, so it lives here rather than twice.
-// / $SecretKey is capitalized against convention 3 because the secret file defines it under that name.
-// / It is a function local here regardless of its case & is shredded before this function returns.
-// /
-// / Root does not come here, & the web server account only reads.
-// / Root reads the install wide secret through resolveInstallSecretAsRoot, which never requires it.
-// / The web server account neither removes nor creates the file root wrote, because a secret it could write is a secret root would one day have to read.
-// / A file it cannot use is reported, & -fp as root replaces it.
-// / The web server account never runs the install secret, & reads it with readSecretWithoutExecuting, as root does.
-// / A per user secret is its own account's file, & is required & created by that account alone, in a folder only it can reach.
-// / That includes the web server account's own per user secret.
-// / The install wide secret is the one name ending in -secret.php.
-// / verifyInstallation names a per user secret with its account after that, & it is the only place either name is built.
-function resolveSecretFile($secretFile, $requiredSecretVersion) {
-  // / Set variables.
-  global $LogFile, $ApacheUser, $CurrentUser, $EnableMemoryProtection, $CoreLoaded;
-  $SecretIsReady = FALSE;
-  $ResolvedSecretKey = $secret = $secretFileContent = '';
-  $detectedSecretVersion = $cleanRequiredVersion = $rotationNotice = $strayOutput = '';
-  $secretGenerated = $existingIsUsable = $loggingIsReady = $payloadIsWellFormed = $secretIsReadable = $creationIsPermitted = $isInstallSecret = $secretWasRead = FALSE;
-  $bytesWritten = 0;
-  // / Both are only ever defined by the require or the read below.
-  // / They are initialized here so a path that reaches neither leaves neither undefined.
-  $SecretKey = '';
-  $SecretVersion = '';
-  $cleanRequiredVersion = ltrim(trim((string)$requiredSecretVersion), 'vV');
-  if (isset($LogFile) && is_string($LogFile) && $LogFile !== '') $loggingIsReady = TRUE;
-  $isInstallSecret = (substr(basename((string)$secretFile), -11) === '-secret.php');
-  $creationIsPermitted = ((string)$CurrentUser !== (string)$ApacheUser or !$isInstallSecret);
-  // / Load an existing secret file & decide whether this core may still use it.
-  if (file_exists($secretFile)) {
-    if ($creationIsPermitted) @chmod($secretFile, 0600);
-    // / A file this process cannot read must NEVER reach require. PHP reports that as a
-    // / raw warning, which reaches the page & names an absolute path outside the web root.
-    // / This happens when a root command line run created the file, because it is then
-    // / owned by root & the chmod above fails silently for every other account.
-    $secretIsReadable = is_readable($secretFile);
-    if (!$secretIsReadable) {
-      $rotationNotice = 'The secret file at '.$secretFile.' exists but cannot be read by '.$CurrentUser.'. It was almost certainly created by a different account. '.($creationIsPermitted ? 'Delete it as root & run the command again.' : 'Run the -fp argument as root to replace it.');
-      if ($loggingIsReady) warningEntry($rotationNotice);
-      else error_log('WARNING!!! HRConvert2: '.$rotationNotice); }
-    // / The install secret, read by the web server account, is read & never run.
-    else if (!$creationIsPermitted) {
-      list ($secretWasRead, $SecretKey, $SecretVersion) = readSecretWithoutExecuting($secretFile);
-      $detectedSecretVersion = ltrim(trim((string)$SecretVersion), 'vV'); }
-    else {
-      // / require rather than require_once, because a second file may be resolved in the same request.
-      // / The buffer is what stops a malformed file printing the key into the response.
-      ob_start();
-      require ($secretFile);
-      $strayOutput = ob_get_clean();
-      $detectedSecretVersion = ltrim(trim((string)$SecretVersion), 'vV'); }
-    // / A file that emitted anything did not parse as PHP & cannot be trusted or reused.
-    if ($strayOutput !== '') {
-      $SecretKey = '';
-      $rotationNotice = 'The secret file at '.$secretFile.' emitted '.strlen($strayOutput).' byte(s) instead of parsing as PHP. It is malformed & is being replaced.'; }
-    else if (!empty($SecretKey) && strlen($SecretKey) === 64 && $detectedSecretVersion !== '' && $detectedSecretVersion === $cleanRequiredVersion) $existingIsUsable = TRUE; }
-  // / The web server account reports a file it cannot use & leaves it for root to replace.
-  if (file_exists($secretFile) && !$existingIsUsable && !$creationIsPermitted) {
-    $rotationNotice = 'The install secret cannot be used by '.$CurrentUser.' & is not replaced from a web request. Run  sudo php convertCore.php -fp  to replace it.';
-    if ($loggingIsReady) warningEntry($rotationNotice);
-    else error_log('WARNING!!! HRConvert2: '.$rotationNotice);
-    $SecretKey = ''; }
-  // / Remove a secret file this core may not use, so a replacement can take its place.
-  // / A file carrying no version predates version pinning & is always replaced.
-  if (file_exists($secretFile) && !$existingIsUsable && $creationIsPermitted) {
-    if ($rotationNotice === '') {
-      $rotationNotice = 'The secret file at '.$secretFile.' reports version '.($detectedSecretVersion === '' ? 'none' : 'v'.$detectedSecretVersion).' & this core requires v'.$cleanRequiredVersion.'. It is being replaced & every session derived from it is now invalid.';
-      if ($loggingIsReady) warningEntry($rotationNotice);
-      else error_log('WARNING!!! HRConvert2: '.$rotationNotice); }
-    @unlink($secretFile);
-    // / A file that survives the unlink belongs to another account, & saying so once beats failing the same way on every request.
-    // / Only a standard user reaches this, for a secret of its own in its own folder, which -fp does not manage.
-    if (file_exists($secretFile)) {
-      $rotationNotice = 'The secret file at '.$secretFile.' could not be removed by '.$CurrentUser.'. Delete it as root & run the command again.';
-      if ($loggingIsReady) errorEntry($rotationNotice, 30, FALSE);
-      else error_log('ERROR!!! HRConvert2-30: '.$rotationNotice); }
-    // / Discard the key that was loaded from the file being replaced.
-    $SecretKey = ''; }
-  // / Create a secret file whenever a usable one is not already in place.
-  if (!$existingIsUsable && !file_exists($secretFile) && $creationIsPermitted) {
-    list ($secret, $secretGenerated) = generateInstallSecret();
-    if ($secretGenerated) {
-      // / Build the obfuscated payload out of transient buffers.
-      $secretFileContent = addSillyString($secret, $cleanRequiredVersion);
-      // / Refuse to write a payload that would not parse.
-      // / The opening tag must be followed by whitespace & the file must carry no closing tag.
-      if (preg_match('/^<\?php\s/', $secretFileContent) === 1 && strpos($secretFileContent, '?>') === FALSE) $payloadIsWellFormed = TRUE;
-      if (!$payloadIsWellFormed) {
-        $rotationNotice = 'The generated secret file payload is malformed & was not written to '.$secretFile.'.';
-        if ($loggingIsReady) warningEntry($rotationNotice);
-        else error_log('WARNING!!! HRConvert2: '.$rotationNotice); }
-      else {
-        // / Commit the buffer to disk under an immediate exclusive lock.
-        // / The write is suppressed & then checked, rather than left to print a raw PHP warning.
-        // / A failure here was already handled below & never reported, while PHP printed its own
-        // / message first. A standard user whose secret lives in a directory another user created
-        // / hits exactly that, because the directory is private to whoever made it first.
-        $bytesWritten = @file_put_contents($secretFile, $secretFileContent, LOCK_EX);
-        // / Check that the secret, & only the secret, was written to the file.
-        if ($bytesWritten !== strlen($secretFileContent)) {
-          $rotationNotice = 'The install secret could not be written to '.$secretFile.'. The directory may belong to another user, or be read only.';
-          if ($loggingIsReady) warningEntry($rotationNotice);
-          else error_log('WARNING!!! HRConvert2: '.$rotationNotice);
-          if (file_exists($secretFile)) @unlink($secretFile); }
-        else {
-          @chmod($secretFile, 0600);
-          // / Read the new file back exactly as every later request will read it.
-          // / A file that does not return the key it was built from is deleted, not kept.
-          $SecretKey = '';
-          $SecretVersion = '';
-          ob_start();
-          require ($secretFile);
-          $strayOutput = ob_get_clean();
-          if ($strayOutput === '' && $SecretKey === $secret) {
-            $ResolvedSecretKey = $secret;
-            $SecretIsReady = TRUE; }
-          else {
-            @unlink($secretFile);
-            $rotationNotice = 'The secret file written to '.$secretFile.' did not read back correctly & was removed.';
-            if ($loggingIsReady) warningEntry($rotationNotice);
-            else error_log('WARNING!!! HRConvert2: '.$rotationNotice); } } } } }
-  // / Adopt the key from a file that was already usable.
-  if ($existingIsUsable) {
-    $ResolvedSecretKey = $SecretKey;
-    $SecretIsReady = TRUE; }
-  // / Manually clean up sensitive memory. Every target is passed directly by reference.
-  // / $ResolvedSecretKey is not purged, because it is the return value.
-  // / PHP separates the shared buffer when $SecretKey is shredded, so the return survives intact.
-  if (!purgeSensitiveMemory($EnableMemoryProtection, $SecretKey, $SecretVersion, $secret, $secretFile, $secretFileContent, $bytesWritten, $secretGenerated, $existingIsUsable, $detectedSecretVersion, $cleanRequiredVersion, $rotationNotice, $strayOutput, $loggingIsReady, $payloadIsWellFormed, $secretIsReadable, $creationIsPermitted, $isInstallSecret, $secretWasRead, $requiredSecretVersion)) {
-    // / The failure is already logged under this function's name & is not logged again here.
-    // / A secret that loaded correctly is still correct, so readiness is not withdrawn.
-    $SecretIsReady = $SecretIsReady; }
-  return array($SecretIsReady, $ResolvedSecretKey); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to find a folder for the per user secret of a command line account.
-// / Accepts the application's slug & the account's slug, both already sanitized.
-// / Returns a readiness boolean & the folder, in that order. A failure returns FALSE & an
-// / empty string, which the caller must treat as no secret at all.
-// / Every account gets a folder named for itself in the temporary directory.
-// / The home directory is not used, because HOME is the cache folder for every account but root.
-// / The temporary directory is shared, so another account can create the name first, as a folder of its own, a folder anybody may write or a link.
-// / A folder is used only when this account can write it, it is not a link & its mode is exactly 0700.
-// / Each refusal says why, because a secret kept where another account can reach it is not a secret.
-function resolveUserSecretFolder($applicationSlug, $accountSlug) {
-  // / Set variables.
-  global $LogFile, $EnableMemoryProtection;
-  $FolderIsReady = FALSE;
-  $UserSecretFolder = '';
-  $candidateFolder = $folderNotice = '';
-  $loggingIsReady = FALSE;
-  if (isset($LogFile) && is_string($LogFile) && $LogFile !== '') $loggingIsReady = TRUE;
-  $candidateFolder = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'.'.$applicationSlug.'-'.$accountSlug;
-  if (!file_exists($candidateFolder) && !is_link($candidateFolder)) @mkdir($candidateFolder, 0700, TRUE);
-  // / A folder this account owns can only have lost bits to the umask, so it is put back to
-  // / 0700. The chmod fails silently on a folder another account owns, & the checks refuse it.
-  if (is_dir($candidateFolder) && !is_link($candidateFolder)) @chmod($candidateFolder, 0700);
-  clearstatcache(TRUE, $candidateFolder);
-  if (is_link($candidateFolder)) $folderNotice = 'The per user secret folder at '.$candidateFolder.' is a link & was not used. Delete it as root & run the command again.';
-  else if (!is_dir($candidateFolder)) $folderNotice = 'The per user secret folder at '.$candidateFolder.' could not be created.';
-  else if (!is_writable($candidateFolder)) $folderNotice = 'The per user secret folder at '.$candidateFolder.' belongs to another account & was not used. Delete it as root & run the command again.';
-  else if ((fileperms($candidateFolder) & 0777) !== 0700) $folderNotice = 'The per user secret folder at '.$candidateFolder.' can be reached by other accounts & was not used. Delete it as root & run the command again.';
-  else {
-    $FolderIsReady = TRUE;
-    $UserSecretFolder = $candidateFolder; }
-  if (!$FolderIsReady) {
-    if ($loggingIsReady) warningEntry($folderNotice);
-    else error_log('WARNING!!! HRConvert2: '.$folderNotice); }
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $candidateFolder, $folderNotice, $loggingIsReady, $applicationSlug, $accountSlug);
-  return array($FolderIsReady, $UserSecretFolder); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1224,20 +209,14 @@ function verifyCodeIsTrustedByRoot($treePath) {
 // / versionInfo.php & the core loaded flag, in that order.
 // / Every failure other than the secret is fatal & dies here, because nothing downstream
 // / can operate without a config file or against a mismatched core.
-// / The secret file is only touched by an authorized combination of user & context.
-// / root from the command line, or the web server user from a web request, gets the install
-// / wide secret, & so does the web server user on the command line for the commands that
-// / operate the listener. Any other command line user gets a secret of their own in a folder
-// / of their own in the temporary directory, which lets them run diagnostics without ever
-// / reading the install wide one.
-// / Any other combination gets no secret at all & fails verification.
+// / The kernel's establishInstallSecret decides which secret this process may hold, by account & context, & reads it.
+// / A process that may hold none fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $AllowUserIdentify, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $LowStorageWarning, $StorageReserve, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $WorkflowLoc, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $MaxWorkflowSteps, $MaxWorkflowFiles, $MaxWorkflowRuntime, $MaxConcurrentWorkflows, $MaxExtractedSize, $MaxExtractedFiles, $RequiredWorkflowCoreVersion,
-    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $EngineApplicationVersion, $CodeIsTrusted, $HostedLoc, $ApplicationLoc, $SecretPlacesWereOpen;
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $AllowUserIdentify, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $LowStorageWarning, $StorageReserve, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $WorkflowLoc, $AccountLoc, $UserLoc, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $MaxWorkflowSteps, $MaxWorkflowFiles, $MaxWorkflowRuntime, $MaxConcurrentWorkflows, $MaxExtractedSize, $MaxExtractedFiles, $RequiredWorkflowCoreVersion, $RequiredAuthenticationCoreVersion, $RequiredEmailCoreVersion, $EnableAuthentication, $AllowAnonymousVisitors, $AllowRegistration, $RequireEmailConfirmation, $UserStorageQuota, $SignInKeyLifetime, $SignInExchangeInterval, $SignInMaximumLifetime, $MinimumPasswordLength, $SignInAttemptLimit, $SignInAttemptWindow, $UnconfirmedAccountLifetime, $RecoveryCodeLifetime, $EmailSender, $EmailConfirmationSubject, $EmailConfirmationBody, $EmailRecoverySubject, $EmailRecoveryBody,
+    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $EngineApplicationVersion, $CodeIsTrusted, $HostedLoc, $ApplicationLoc;
   $rootRecord = array();
-  $legacyWasRemoved = FALSE;
-  $legacyNotice = $homeTarget = '';
+  $homeTarget = '';
   // / Root keeps its own home.
   // / Every tool a command runs reads its configuration from HOME, curl its .curlrc & pip its pip.conf among them.
   // / $HomeLoc is the cache folder, which the web server account owns, so root never takes it.
@@ -1248,27 +227,15 @@ function verifyInstallation() {
     putenv('HOME='.((is_array($rootRecord) && isset($rootRecord['dir']) && (string)$rootRecord['dir'] !== '') ? (string)$rootRecord['dir'] : '/root')); }
   $CoreLoaded = TRUE;
   $InstallationIsVerified = $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
-  $secretAuthorized = $userSecretAuthorized = $secretIsReady = $configIsValid = $componentIsAvailable = FALSE;
-  $SecretKey = $CurrentUser = $detectedConfigVersion = $configFile = $secretFolder = '';
-  $applicationSlug = $legacySecretFile = $olderSecretFile = $installSecretFile = $webCandidate = $trustNotice = $accountSlug = $listenerCommand = '';
-  $webSecretsState = $webSecretsMode = $webSecretsOwnership = $resolvedDataLocation = $dataLocationNotice = '';
-  $webCandidates = $webTried = array();
-  $webCandidateIndex = 0;
-  $copyIsTrusted = $dataLocationIsTrusted = FALSE;
-  $secretFolderIsReady = $configRepairRequested = $bootstrapWritten = FALSE;
+  $secretIsReady = $configIsValid = $componentIsAvailable = FALSE;
+  $SecretKey = $CurrentUser = $detectedConfigVersion = $configFile = $applicationSlug = '';
+  $configRepairRequested = $bootstrapWritten = FALSE;
   $bootstrapSetup = $bootstrapEngine = '';
-  $listenerArguments = array();
-  $listenerArgumentCount = $bootstrapCount = 0;
+  $bootstrapCount = 0;
   $entryScript = '';
   $runningIsInstalled = FALSE;
   $SecretFile = '';
-  // / Set by prepareDataLocationAsRoot or resolveInstallSecretAsRoot when a place the secret is kept
-  // / could be written by an account other than root & the web server account. See
-  // / installSecretCopyIsTrusted.
-  $SecretPlacesWereOpen = FALSE;
   $missingConfigVars = array();
-  $blockingWereJudged = $limitingWereJudged = FALSE;
-  $blockingFolders = $limitingFolders = $limitingLocations = $additionalLocation = array();
   // / Detect if the application is being run from the command line.
   if (php_sapi_name() === 'cli') $RunningFromCLI = TRUE;
   // / Detect the current user account that is running the application.
@@ -1285,34 +252,10 @@ function verifyInstallation() {
   $PermissionLevels = 0700;
   // / Detect if the application is being run inside a container.
   $RunningInContainer = verifyContainerEnvironment();
-  // / Decide which secret, if any, this combination of user & context may have.
-  // / The install wide secret derives every web session, so only the two contexts that
-  // / legitimately serve or maintain those sessions may read it.
-  if ($RunningFromCLI && $RunningAsRoot) $secretAuthorized = TRUE;
-  if (!$RunningFromCLI && $CurrentUser === $ApacheUser) $secretAuthorized = TRUE;
-  // / An administrator on the command line who is neither root nor the web server user is
-  // / given a secret of their own. It lets them run diagnostics without ever reading the
-  // / install wide secret, & it cannot be used to derive or forge a web session.
-  if ($RunningFromCLI && !$secretAuthorized) $userSecretAuthorized = TRUE;
-  // / The web server user on the command line is denied the install secret by the rules above, & is granted it here for the commands that operate the listener.
-  // / Each of them derives a startup key or a socket key from the install secret, & a per user secret derives keys no manager accepts.
-  // / The Engine refuses the listener commands to every account but root & the web server user before any key is derived.
-  // / This list names the same commands as its dispatcher.
-  // / The web server user's group can read the secret file, so this grants it nothing new.
-  // / --run-core-manager is how a service unit starts the listener, & without it every socket key the unit derived would differ from the web workers'.
-  // / -c is granted it too, because root hands every sweep to the web server user, & the sweep finds its data location by asking the listener.
-  // / --run-workflow is granted it, because a workflow's worker continues a web session & checks a startup key a web request made with the install secret.
-  // / It logs where a web request logs, for the same reason.
-  // / The command is read with the kernel's parser, because parseCommandLine has not run yet & two places deciding what the first argument means come to disagree.
-  if ($RunningFromCLI && $CurrentUser === $ApacheUser) {
-    list ($listenerArguments, $listenerArgumentCount, $listenerCommand) = parseArgumentVector(isset($_SERVER['argv']) ? $_SERVER['argv'] : array());
-    if (in_array($listenerCommand, array('--start-core-manager', '--start-manager', '--run-core-manager', '-l', '--listen', '-k', '--kill', '--kill-all-workers', '--kill-every-worker', '--status', '-c', '--clean', '--run-workflow'), TRUE)) {
-      $secretAuthorized = TRUE;
-      $userSecretAuthorized = FALSE; } }
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.1.8';
+  $HRConvertVersion = 'v4.2.0';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -1320,19 +263,19 @@ function verifyInstallation() {
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v4.1.7';
+  $RequiredConfigVersion = 'v4.2.0';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.1.8';
+  $RequiredGuiVersion = 'v4.2.0';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A Language Pack version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v4.1.8';
+  $RequiredLanguageVersion = 'v4.2.0';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / No Core Manager version is pinned here. Every manager role is a subcomponent of the
   // / Engine & getAcceptedManagers() inside the Engine pins each one exactly.
@@ -1340,7 +283,7 @@ function verifyInstallation() {
   // / This is an exact match. A component built for another core may not be called safely.
   // / Raise this when the Setup Core itself changes.
   // / The configuration model is applicationConfigModel() in this file & its defaults are the template, so a new setting raises nothing here.
-  $RequiredSetupCoreVersion = 'v4.1.7';
+  $RequiredSetupCoreVersion = 'v4.2.0';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
@@ -1361,8 +304,15 @@ function verifyInstallation() {
   // / The Workflow Core component version this core requires.
   // / This is an exact match, because a component built for another core may call an operation with arguments that have moved.
   // / Raise this when the Workflow Core itself changes & for nothing else. It is an Engine core, at Resources/Engine/Cores/workflowCore.php.
-  $RequiredWorkflowCoreVersion = 'v4.1.8';
+  $RequiredWorkflowCoreVersion = 'v4.2.0';
   $RequiredWorkflowCoreVersion = ltrim($RequiredWorkflowCoreVersion, 'vV');
+  // / The Authentication Core & Email Core component versions this core requires.
+  // / Each is an exact match, for the reason every Engine core's is. The Engine loads them where accounts are on.
+  // / They are Engine cores, at Resources/Engine/Cores/authenticationCore.php & Resources/Engine/Cores/emailCore.php.
+  $RequiredAuthenticationCoreVersion = 'v4.2.0';
+  $RequiredAuthenticationCoreVersion = ltrim($RequiredAuthenticationCoreVersion, 'vV');
+  $RequiredEmailCoreVersion = 'v4.2.0';
+  $RequiredEmailCoreVersion = ltrim($RequiredEmailCoreVersion, 'vV');
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
   // / rather than installed beside it. The updater replaces both together, so the pin & the
@@ -1370,7 +320,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.1.7';
+  $RequiredEngineVersion = 'v4.2.0';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -1501,6 +451,8 @@ function verifyInstallation() {
   $EngineDir = $DataRootLoc.DIRECTORY_SEPARATOR.'Engine';
   $SecretLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Secrets';
   $WorkflowLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Workflows';
+  $AccountLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Accounts';
+  $UserLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Users';
   // / Every account but root runs its tools with its home in the cache folder, set now that
   // / config.php has been read. A $HomeLoc that still names the data location, as an older
   // / config.php does, is the data location root now owns, so the cache folder is used instead
@@ -1517,75 +469,10 @@ function verifyInstallation() {
   // / empty string, which would produce a hidden file named -secret.php.
   $applicationSlug = sanitizeString($ApplicationName, TRUE);
   if ($applicationSlug === '') $applicationSlug = 'HRConvert2';
-  // / Establish a secret. The path differs by authorization & nothing else does.
+  // / Establish the secret this process may hold. The kernel decides which, by account & context, & reads it.
   // / The install wide secret lives in Secrets in the data location, outside the web root.
-  if ($secretAuthorized) {
-    $SecretFile = $SecretLoc.DIRECTORY_SEPARATOR.$applicationSlug.'-secret.php';
-    $olderSecretFile = olderInstallSecretFile($SecretFile);
-    $legacySecretFile = $DataRootLoc.DIRECTORY_SEPARATOR.'secret.php';
-    // / Root reads & writes the install wide secret without ever running it, & creates the
-    // / data location first when an installation has none yet.
-    // / The secret is beneath the data location, so a folder above it that another account can
-    // / change stops root here, -fp included, with every such folder named & the commands that
-    // / give each back to root. Otherwise root would find the secret unreadable, call it unusable
-    // / & stop with error 5, & say nothing of the folder. The folders above the hosted location &
-    // / above each additional data location only limit what -fp corrects there, so they are named
-    // / & root goes on. The topmost folder -fp corrects on the hosted location's path is
-    // / HRProprietary, when the hosted location is inside it.
-    if ($RunningAsRoot) {
-      $limitingLocations = array((string)$HostedLoc);
-      if (trim((string)$ProprietaryLoc) !== '' && strpos(rtrim((string)$HostedLoc, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR, rtrim((string)$ProprietaryLoc, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR) === 0) $limitingLocations = array((string)$ProprietaryLoc);
-      if (isset($AdditionalConvertLocs) && is_array($AdditionalConvertLocs)) foreach ($AdditionalConvertLocs as $additionalLocation) if (is_array($additionalLocation) && isset($additionalLocation[0])) $limitingLocations[] = (string)$additionalLocation[0];
-      list ($blockingWereJudged, $blockingFolders) = foldersRootCannotTrust(array($ConvertLoc));
-      if (!$blockingWereJudged) warningEntry('A folder above the data location '.$ConvertLoc.' could not be examined.');
-      list ($limitingWereJudged, $limitingFolders) = foldersRootCannotTrust($limitingLocations);
-      if (!$limitingWereJudged) warningEntry('A folder above the hosted location or an additional data location could not be examined.');
-      if (count($blockingFolders) > 0) reportFoldersRootCannotTrust(array_merge($limitingFolders, $blockingFolders), TRUE);
-      else {
-        if (count($limitingFolders) > 0) reportFoldersRootCannotTrust($limitingFolders, FALSE);
-        if (prepareDataLocationAsRoot($ConvertLoc)) list ($secretIsReady, $SecretKey) = resolveInstallSecretAsRoot($SecretFile, $RequiredSecretVersion, FALSE); } }
-    // / The web server account only ever reads it, & never writes one of its own.
-    // / It reads first the copy root reads first, by the same rule.
-    // / That is the copy in Secrets once the folder has its role & the data location is root's, unless the copy at the top is root's & was written after it.
-    // / Otherwise it is the copy at the top of the data location, where older releases kept it.
-    // / The other copy is tried when the first cannot be used, & the first again after it, because a copy root replaced at that moment is whole a moment later.
-    // / Root writes the same key into both, & removes only a copy not known to carry it, so either carries the key in use.
-    // / A copy is judged before it is read, by installSecretCopyIsTrusted, exactly as root judges it, so a copy another account could have written is never used.
-    // / The messages name no path, because a halt at boot shows them to the visitor.
-    else {
-      list ($webSecretsState, $webSecretsMode, $webSecretsOwnership) = secretFolderStatus($SecretLoc);
-      list ($dataLocationIsTrusted, $resolvedDataLocation, $dataLocationNotice) = pathIsTrustedByRoot($DataRootLoc);
-      $installSecretFile = ($webSecretsState === 'ok' && $dataLocationIsTrusted && $resolvedDataLocation === rtrim((string)$DataRootLoc, DIRECTORY_SEPARATOR) && !topSecretCopyIsNewer($SecretFile)) ? $SecretFile : $olderSecretFile;
-      $webCandidates = array($installSecretFile, ($installSecretFile === $SecretFile ? $olderSecretFile : $SecretFile), $installSecretFile);
-      // / A copy refused once is named once. The third look reads the first copy again only when this
-      // / account can open it, because one it cannot open was not replaced in the moment between.
-      foreach ($webCandidates as $webCandidateIndex => $webCandidate) {
-        if ($secretIsReady or !file_exists($webCandidate) or ($webCandidateIndex === 2 && !is_readable($webCandidate))) continue;
-        list ($copyIsTrusted, $trustNotice) = installSecretCopyIsTrusted($webCandidate);
-        if ($copyIsTrusted) list ($secretIsReady, $SecretKey) = resolveSecretFile($webCandidate, $RequiredSecretVersion);
-        else if (!isset($webTried[$webCandidate])) warningEntry('A copy of the install secret is not used, because another account could have written it. Run -fp as root, which names it & why.');
-        $webTried[$webCandidate] = TRUE; }
-      if (!$secretIsReady && !file_exists($SecretFile) && !file_exists($olderSecretFile)) errorEntry('There is no install secret & the web server account does not create one. Run -fp as root to create it.', 31021, FALSE); }
-    // / Remove the unnamed secret file left by a release before this one.
-    // / It is removed only once a replacement is in place, so a failure above leaves the
-    // / old file usable & the installation recoverable.
-    // / The folder is the web server account's, so root removes it through the kernel.
-    if ($secretIsReady && (file_exists($legacySecretFile) or is_link($legacySecretFile))) {
-      list ($legacyWasRemoved, $legacyNotice) = removeFileWithoutFollowing($legacySecretFile);
-      $legacyNotice = $legacyWasRemoved ? 'The legacy secret file at '.$legacySecretFile.' was removed.' : 'The legacy secret file at '.$legacySecretFile.' could not be removed. '.$legacyNotice;
-      if (isset($LogFile) && is_string($LogFile) && $LogFile !== '') warningEntry($legacyNotice);
-      else error_log('WARNING!!! HRConvert2: '.$legacyNotice); } }
-  // / A per user secret lives in a folder of its own for each account, with that account's
-  // / logs beside it. The folder is created if it does not exist, because this may be the
-  // / first thing the account has ever asked this application to do. A folder that cannot
-  // / be used is refused with the reason, & the installation then fails to verify.
-  else if ($userSecretAuthorized) {
-    $accountSlug = sanitizeString($CurrentUser, TRUE);
-    list ($secretFolderIsReady, $secretFolder) = resolveUserSecretFolder($applicationSlug, $accountSlug);
-    if ($secretFolderIsReady) {
-      $LogDir = $secretFolder.DIRECTORY_SEPARATOR.'Logs'.DIRECTORY_SEPARATOR;
-      $SecretFile = $secretFolder.DIRECTORY_SEPARATOR.$applicationSlug.'-secret-'.$accountSlug.'.php';
-      list ($secretIsReady, $SecretKey) = resolveSecretFile($SecretFile, $RequiredSecretVersion); } }
+  // / See establishInstallSecret in Resources/Kernel/kernel.php.
+  list ($secretIsReady, $SecretKey, $SecretFile) = establishInstallSecret($applicationSlug);
   // / The AppArmor profile every sandboxed conversion depends on is validated as soon as the Engine has loaded, by verifySandboxPolicyAtStart(), which says why.
   // / Resource awareness is decided by the main logic the moment the Engine has loaded, because the Engine is verified after this function runs.
   // / A failure to verify it is worth a warning that has somewhere to be written.
@@ -1603,119 +490,8 @@ function verifyInstallation() {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SecretKey is deliberately NOT cleared here because the rest of the core needs it.
   // / $SecretFile is deliberately NOT cleared here because it is a global the core reads later.
-  purgeSensitiveMemory($EnableMemoryProtection, $entryScript, $runningIsInstalled, $bootstrapEngine, $configRepairRequested, $bootstrapSetup, $bootstrapWritten, $bootstrapCount, $secretAuthorized, $userSecretAuthorized, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $secretFolder, $applicationSlug, $legacySecretFile, $componentIsAvailable, $accountSlug, $secretFolderIsReady, $listenerArguments, $listenerArgumentCount, $listenerCommand, $rootRecord, $legacyWasRemoved, $legacyNotice, $olderSecretFile, $installSecretFile, $webCandidates, $webCandidate, $webCandidateIndex, $webTried, $copyIsTrusted, $trustNotice, $webSecretsState, $webSecretsMode, $webSecretsOwnership, $dataLocationIsTrusted, $resolvedDataLocation, $dataLocationNotice, $homeTarget, $blockingWereJudged, $limitingWereJudged, $blockingFolders, $limitingFolders, $limitingLocations, $additionalLocation);
+  purgeSensitiveMemory($EnableMemoryProtection, $entryScript, $runningIsInstalled, $bootstrapEngine, $configRepairRequested, $bootstrapSetup, $bootstrapWritten, $bootstrapCount, $secretIsReady, $configIsValid, $missingConfigVars, $detectedConfigVersion, $applicationSlug, $componentIsAvailable, $rootRecord, $homeTarget);
   return array($InstallationIsVerified, $configFile, $Version, $CoreLoaded); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to detect the user's IP & user agent.
-// / The IP is not used to derive any session identifier.
-// / HTTP_CLIENT_IP & HTTP_X_FORWARDED_FOR are attacker supplied headers that cannot be trusted as a binding factor, & they rotate legitimately on mobile networks.
-// / The token pair is the credential, & the IP is kept for logging only.
-function verifySession() {
-  // / Set variables.
-  $IP = $HashedUserAgent = '';
-  $SessionIsVerified = FALSE;
-  list ($HashedUserAgent, $SessionIsVerified) = sanitize(hash('sha256', $_SERVER['HTTP_USER_AGENT'] ?? ''), TRUE);
-  // / Detect an IP for logging. Header-supplied values are recorded but never trusted.
-  if (!empty($_SERVER['HTTP_CLIENT_IP'])) list ($IP, $SessionIsVerified) = sanitize($_SERVER['HTTP_CLIENT_IP'], TRUE);
-  elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) list ($IP, $SessionIsVerified) = sanitize($_SERVER['HTTP_X_FORWARDED_FOR'], TRUE);
-  else list ($IP, $SessionIsVerified) = sanitize($_SERVER['REMOTE_ADDR'] ?? '', TRUE);
-  return array($SessionIsVerified, $IP, $HashedUserAgent); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to define the $SesHash related variables for the session.
-// / $SesHash  = per-server-per-day. The parent directory holding every session for today.
-// / $SesHash2 = per-session. The individual user directory inside today's parent.
-// / $SesHash3 = the combined relative path, "[server-daily]/[session]".
-// / $SesHash4 = per-server-per-day log file identifier. Never tied to any individual session.
-// / Every one of these is derived with HMAC keyed on the per-install $SecretKey.
-// / Nothing here is derivable from the server name, the date, the version file, or a default
-// / config.php. An attacker who knows the machine still cannot compute any of these values.
-function verifySesHash($Token1) {
-  // / Set variables.
-  global $Date, $SecretKey, $UniqueDailyLogHash, $EnableMemoryProtection;
-  $SesHashIsVerified = $inputsAreUsable = FALSE;
-  $SesHash = $SesHash2 = $SesHash3 = $SesHash4 = FALSE;
-  $dailyContext = '';
-  // / Both the install secret & a well formed Token1 are required before anything can be derived.
-  if (!empty($SecretKey) && strlen($SecretKey) === 64 && !empty($Token1) && ctype_digit((string)$Token1) && strlen((string)$Token1) === 18) $inputsAreUsable = TRUE;
-  if ($inputsAreUsable) {
-    // / The daily context. Server name is included only for domain separation between vhosts
-    // / sharing one installation. It contributes no secrecy & is not relied on for entropy.
-    $dailyContext = 'HRC2-DAILY|'.$Date.'|'.($_SERVER['SERVER_NAME'] ?? '');
-    // / Per-server-per-day parent directory.
-    $SesHash = substr(hash_hmac('sha256', $dailyContext, $SecretKey), -18);
-    // / Per-session directory. Bound to the daily parent so a token cannot be replayed into a different day's directory tree.
-    $SesHash2 = substr(hash_hmac('sha256', 'HRC2-SESSION|'.$SesHash.'|'.(string)$Token1, $SecretKey), -18);
-    // / The combined relative path used everywhere else in the core.
-    // / DIRECTORY_SEPARATOR rather than $DirSep, because verifySesHash() runs before
-    // / verifyGlobals() sets that global.
-    $SesHash3 = $SesHash.DIRECTORY_SEPARATOR.$SesHash2;
-    // / The log file identifier. Distinct context string so it can never collide with $SesHash.
-    // / Derived only from daily context so it is never tied to an individual user.
-    if ($UniqueDailyLogHash) $SesHash4 = substr(hash_hmac('sha256', 'HRC2-LOG|'.$dailyContext, $SecretKey), -18);
-    else $SesHash4 = substr(hash_hmac('sha256', 'HRC2-LOG|'.($_SERVER['SERVER_NAME'] ?? ''), $SecretKey), -18);
-    // / Confirm every identifier came out the expected length before anything trusts them.
-    if (strlen($SesHash) === 18 && strlen($SesHash2) === 18 && strlen($SesHash4) === 18 && !empty($SesHash3)) $SesHashIsVerified = TRUE; }
-  // / Any failure at any point invalidates all four. Never hand back a partial set.
-  if (!$SesHashIsVerified) $SesHash = $SesHash2 = $SesHash3 = $SesHash4 = FALSE;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dailyContext, $inputsAreUsable);
-  return array($SesHashIsVerified, $SesHash, $SesHash2, $SesHash3, $SesHash4); }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to set or validate the token pair used to identify a session.
-// / Token1 is the session credential & carries the entropy. It is an 18 digit random number.
-// / Token2 is an HMAC signature over Token1, keyed with the per-install $SecretKey.
-// / An attacker who does not hold $SecretKey cannot produce a valid Token2 for any Token1.
-// / This validation touches no files & depends on no directory state.
-// / This validation runs BEFORE the session hashes exist & introduces no circular dependency.
-// / This validation is arithmetic only.
-function verifyTokens($Token1, $Token2) {
-  // / Set variables.
-  global $SecretKey, $EnableMemoryProtection, $Verbose;
-  $TokensAreValid = $randomCheck = $secretIsUsable = $issueNewSession = FALSE;
-  $expectedToken2 = '';
-  // / Without the install secret nothing can be validated or signed.
-  if (!empty($SecretKey) && strlen($SecretKey) === 64) $secretIsUsable = TRUE;
-  // / An absent or malformed Token1 means there is no session to validate, so issue a new one.
-  // / Note this deliberately discards any Token2 that arrived with it. A Token2 signed
-  // / over a token we are about to replace is meaningless.
-  if (empty($Token1) or !ctype_digit((string)$Token1) or strlen((string)$Token1) !== 18) $issueNewSession = TRUE;
-  // / Token1 is well formed, so recompute what Token2 SHOULD be & compare.
-  // / hash_equals() compares in constant time so the comparison itself leaks nothing.
-  elseif ($secretIsUsable) {
-    $expectedToken2 = hash_hmac('sha256', (string)$Token1, $SecretKey);
-    if (!empty($Token2) && hash_equals($expectedToken2, (string)$Token2)) $TokensAreValid = TRUE;
-    // / The pair did not verify. Do not trust either half. Issue an entirely new session.
-    else $issueNewSession = TRUE; }
-  // / A new session is issued silently, which makes a lost one invisible.
-  // / A request that meant to continue an existing session & arrived without a usable
-  // / Token1 is handed a fresh one, lands in a directory it just created, & reports that
-  // / the user uploaded nothing. Saying which of the two happened is the difference between
-  // / diagnosing that in one line & inferring it from a changing session hash.
-  // / A first visit has no token & that is not a warning.
-  // / Every new visitor arrives without one, so warning on an absent Token1 would put a
-  // / WARNING in the log for ordinary traffic, which is how a log stops being read.
-  // / A Token1 that ARRIVED and did not verify is different. Something sent a token this
-  // / core would not accept, & that is worth recording once, at the tier that means
-  // / somebody should know rather than the tier that means something is broken.
-  if ($issueNewSession && $secretIsUsable && !empty($Token1)) warningEntry('A session token arrived & did not verify, so a new session was issued. The token was '.strlen((string)$Token1).' characters. A stale bookmark, a rotated install secret, or a request built by something other than this interface will all do this.');
-  else if ($issueNewSession && $secretIsUsable && $Verbose && PHP_SAPI !== 'cli') logEntry('No session token arrived, so a new session was issued. This is a first visit.');
-  // / Issue a fresh token pair. This is the only place tokens are ever generated.
-  if ($issueNewSession && $secretIsUsable) {
-    list ($Token1, $randomCheck) = generateRandomNumber();
-    if ($randomCheck) {
-      $Token2 = hash_hmac('sha256', (string)$Token1, $SecretKey);
-      $TokensAreValid = TRUE; } }
-  // / Any failure at any point invalidates both halves. Never hand back a partial pair.
-  if (!$TokensAreValid) $Token1 = $Token2 = FALSE;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $expectedToken2, $randomCheck, $secretIsUsable, $issueNewSession);
-  return array($TokensAreValid, $Token1, $Token2); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1895,7 +671,7 @@ function verifyColors($ButtonStyle) {
 // / A function to set the GUI to use for the session.
 function verifyGui() {
   // / Set variables.
-  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font, $GuiVersion, $RequiredGuiVersion, $EnableMemoryProtection, $CoreLoaded, $GuiWidth, $GuiMaxWidth, $GUIAlignment;
+  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GuiEngineFile, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font, $GuiVersion, $RequiredGuiVersion, $EnableMemoryProtection, $CoreLoaded, $GuiWidth, $GuiMaxWidth, $GUIAlignment;
   // / The interface width is decided ONCE, here, before the stylesheet that uses it loads.
   // / $GuiWidth is FLUID rather than fixed. min() takes whichever is smaller, so a phone is
   // / bounded by its own viewport & a wide monitor by the configured ceiling.
@@ -1941,12 +717,14 @@ function verifyGui() {
     $GuiFooterFile = $GuiDir.'footer.php';
     $GuiUI1File = $GuiDir.'convertGui1.php';
     $GuiUI2File = $GuiDir.'convertGui2.php';
+    // / The page the Engine names, drawn in place of the two above when the Engine answers a request with a page of its own.
+    $GuiEngineFile = $GuiDir.'engineGui.php';
     $guiVersionFile = $GuiDir.'uiVersionInfo.php';
     $GuiResourcesDir = $GuiDir.'Resources/';
     $GuiImageDir = $GuiResourcesDir.'Image/';
     $GuiCSSDir = $GuiResourcesDir.'CSS/';
     $GuiJSDir = $GuiResourcesDir.'JS/';
-    $guiFiles = array($GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $styleCoreFile, $guiVersionFile);
+    $guiFiles = array($GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GuiEngineFile, $styleCoreFile, $guiVersionFile);
     // / The resources folder is part of a GUI, not an optional extra.
     // / It began as an optional convenience & the documentation still called it optional,
     // / but the core had quietly come to depend on it. header.php builds five asset paths
@@ -2083,7 +861,7 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
-    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $HostedLoc, $ApplicationLoc, $WorkflowLoc;
+    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $HostedLoc, $ApplicationLoc, $WorkflowLoc, $AccountLoc, $UserLoc;
   // / Application related variables.
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
   $SleepTimer = 0;
@@ -2168,6 +946,8 @@ function verifyGlobals() {
   $EngineDir = $DataRootLoc.$DirSep.'Engine';
   $SecretLoc = $DataRootLoc.$DirSep.'Secrets';
   $WorkflowLoc = $DataRootLoc.$DirSep.'Workflows';
+  $AccountLoc = $DataRootLoc.$DirSep.'Accounts';
+  $UserLoc = $DataRootLoc.$DirSep.'Users';
   $PrimaryConvertLoc = $SessionLoc;
   // / Each additional data location is a root too, so its session area is the pool member.
   if (is_array($AdditionalConvertLocs)) {
@@ -2195,6 +975,9 @@ function verifyGlobals() {
     $ConvertLoc = $PrimaryConvertLoc; }
   list ($convertDir0, $sanitizeGlobalCheckA) = sanitize($ConvertLoc.$DirSep.$SesHash, FALSE);
   list ($ConvertDir, $sanitizeGlobalCheckB) = sanitize($convertDir0.$DirSep.$SesHash2.$DirSep, FALSE);
+  // / The Engine may keep a request's files in a folder of its own, as it does for a user who signed in.
+  // / It is asked here, before anything is built on the folder, so every path below follows it. The served folder stays the session's.
+  if (function_exists('engineSessionFolder')) $ConvertDir = engineSessionFolder($ConvertDir);
   list ($ConvertTemp, $sanitizeGlobalCheckC) = sanitize($HostedLoc.$DirSep.'DATA', FALSE);
   list ($convertTempDir0, $sanitizeGlobalCheckD) = sanitize($ConvertTemp.$DirSep.$SesHash, FALSE);
   list ($ConvertTempDir, $sanitizeGlobalCheckE) = sanitize($convertTempDir0.$DirSep.$SesHash2.$DirSep, FALSE);
@@ -2543,7 +1326,7 @@ function toolRequirement($manifestName) {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $EngineActive, $DependsManifest, $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $SecretFile, $SecretLoc, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $AllowUserIdentify, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines, $RequiredWorkflowCoreVersion, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport;
+  global $EngineActive, $Verbose, $DependsManifest, $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $AllowUserIdentify, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines, $RequiredWorkflowCoreVersion, $RequiredAuthenticationCoreVersion, $RequiredEmailCoreVersion, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
@@ -2551,7 +1334,7 @@ function showVersionInfo() {
   $fileBinary = $probeBinary = $pdfInfoBinary = FALSE;
   $pdfUniteBinary = $pdfSeparateBinary = $mat2Binary = FALSE;
   $listenerIsRunning = $bwrapBinary = $listenerIsAsked = FALSE;
-  $sandboxLauncher = $secretLabel = '';
+  $sandboxLauncher = '';
   $listenerStatus = array();
   $installedGui = $installedLang = $installedEndonym = $checkDir = $checkFile = $foundVersion = $langLine = '';
   $guiMatches = $langMatches = array();
@@ -2566,10 +1349,9 @@ function showVersionInfo() {
   $subsystemIsReady = $scriptIsValid = FALSE;
   $failureCount = 0;
   $maintainHtaccess = $apacheConfigIsInstalled = $dataIsProtected = FALSE;
-  $exposureStatus = $exposureDetail = $secretMode = $socketMode = $manifestVersion = $pipelineKind = $secretExpected = '';
-  $secretShown = $olderSecretFile = $secretsState = $secretsMode = $secretsOwnership = $topCopyMode = '';
-  $secretOwner = $topCopyOwner = $secretGroup = $topCopyGroup = $secretGroupExpected = $webAccountNumber = -1;
-  $secretPasses = FALSE;
+  $exposureStatus = $exposureDetail = $socketMode = $manifestVersion = $pipelineKind = '';
+  $secretRows = $secretRow = array();
+  $secretGroupWasFound = FALSE;
   $pipelineKindCounts = $pipelineKindLabels = $pipelineRecord = $disabledFeatures = $disabledFeature = $manifestEntry = $serviceEntry = array();
   $servicePath = $choiceVersion = $choiceStatus = $choiceOutput = $choicePath = $choiceOrigin = '';
   $choiceIsPresent = FALSE;
@@ -2631,7 +1413,9 @@ function showVersionInfo() {
     'Setup Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'setupCore.php', 'SetupCoreVersion'), $RequiredSetupCoreVersion),
     'Dependency Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion'), $RequiredDependencyCoreVersion),
     'Pipeline Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'pipelineCore.php', 'PipelineCoreVersion'), $RequiredPipelineCoreVersion),
-    'Workflow Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'workflowCore.php', 'WorkflowCoreVersion'), $RequiredWorkflowCoreVersion));
+    'Workflow Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'workflowCore.php', 'WorkflowCoreVersion'), $RequiredWorkflowCoreVersion),
+    'Authentication Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'authenticationCore.php', 'AuthenticationCoreVersion'), $RequiredAuthenticationCoreVersion),
+    'Email Core' => array(readComponentVersion('Engine'.$DirSep.'Cores'.$DirSep.'emailCore.php', 'EmailCoreVersion'), $RequiredEmailCoreVersion));
   foreach ($componentChecks as $componentName => $componentPair) {
     if (ltrim((string)$componentPair[0], 'vV') === ltrim((string)$componentPair[1], 'vV')) print('  '.str_pad($componentName, 28).'OK, '.ltrim((string)$componentPair[0], 'vV').$Lol);
     else {
@@ -2792,63 +1576,18 @@ function showVersionInfo() {
     print('  '.str_pad($installedGui, 28).$langOk.' of '.$langTotal.' OK'.($langLine === '' ? '' : ', failed:'.$langLine).$Lol); }
 
   // / The three paths the manager security model rests on.
-  // / The install secret is root's & 0640, so the web server account's group reads it, nothing else can, & only root can change it.
-  // / A standard user's own secret is that user's & 0600.
-  // / The socket directory is the web server account's & 0700.
-  // / The install secret is kept in Secrets, which is root's, the web server account's group & 0750, so no other account can list it.
-  // / Until -fp moves it there, the copy an older release kept at the top of the data location is the one in use, & the one judged here.
+  // / The install secret & Secrets, which the kernel keeps & judges in describeInstallSecret, & the socket directory, which is the web server account's & 0700.
   // / A startup key is only worth anything because those hold, & an installation never repaired as root, or widened by a restore, loses that silently.
-  // / The row judges the secret this command holds by its own role.
-  // / The install secret is the one name ending in -secret.php, & a per user secret carries its account after that, as resolveSecretFile says.
-  // / The web server account on the command line holds a per user secret for -v, so the expectation follows the name rather than the account.
-  $secretShown = isset($SecretFile) ? (string)$SecretFile : '';
-  $secretExpected = (substr(basename($secretShown), -11) === '-secret.php') ? '0640' : '0600';
-  // / The install secret's group is judged too, by number, because a copy that is root:root 0640 is one the web server account cannot read.
-  // / It is not judged when the group cannot be looked up.
-  if ($secretExpected === '0640') {
-    $olderSecretFile = olderInstallSecretFile($secretShown);
-    list ($webAccountNumber, $secretGroupExpected) = webServerAccountNumbers(); }
-  if ($olderSecretFile !== '' && !file_exists($secretShown) && file_exists($olderSecretFile)) $secretShown = $olderSecretFile;
-  if ($secretShown !== '' && file_exists($secretShown)) {
-    $secretMode = substr(sprintf('%o', fileperms($secretShown)), -4);
-    $secretOwner = (int)fileowner($secretShown);
-    $secretGroup = (int)filegroup($secretShown); }
-  $secretPasses = ($secretMode === $secretExpected && ($secretExpected !== '0640' or ($secretOwner === 0 && ($secretGroupExpected < 0 or $secretGroup === $secretGroupExpected))));
-  // / The copy at the top carries the same key as the copy in Secrets, so a copy there another
-  // / account may read gives the key away just the same, & it is judged too when that one passes.
-  if ($olderSecretFile !== '' && $secretShown !== $olderSecretFile && $secretPasses && file_exists($olderSecretFile)) {
-    $topCopyMode = substr(sprintf('%o', fileperms($olderSecretFile)), -4);
-    $topCopyOwner = (int)fileowner($olderSecretFile);
-    $topCopyGroup = (int)filegroup($olderSecretFile);
-    if ($topCopyMode !== $secretExpected or $topCopyOwner !== 0 or ($secretGroupExpected >= 0 && $topCopyGroup !== $secretGroupExpected)) {
-      $secretShown = $olderSecretFile;
-      $secretMode = $topCopyMode;
-      $secretOwner = $topCopyOwner;
-      $secretGroup = $topCopyGroup;
-      $secretPasses = FALSE; } }
-  list ($secretsState, $secretsMode, $secretsOwnership) = secretFolderStatus(isset($SecretLoc) ? (string)$SecretLoc : '');
+  list ($secretGroupWasFound, $secretRows) = describeInstallSecret();
+  // / A group that could not be looked up is said in the rows, & recorded here as what it means for the report.
+  if (!$secretGroupWasFound && $Verbose) logEntry('The group '.$ApacheUser.' could not be looked up, so the install secret\'s group & the group of Secrets were not judged.');
   if (isset($ManagerSocketDir) && $ManagerSocketDir !== '' && is_dir($ManagerSocketDir)) $socketMode = substr(sprintf('%o', fileperms($ManagerSocketDir)), -4);
 
   // / The environment every conversion runs in.
-  // / The row is named for the secret it judges, because an account that is neither root nor the web server's holds a secret of its own.
-  $secretLabel = ($secretExpected === '0640') ? 'Install secret' : 'Per user secret';
   print($Lol.'Environment'.$Lol);
-  if ($secretMode === '') print('  '.str_pad($secretLabel, 28).'NOT PRESENT, '.($secretExpected === '0640' ? 'created by root\'s first command' : 'created by this account\'s first command').$Lol);
-  else if (!$secretPasses) {
-    $failureCount++;
-    print('  '.str_pad($secretLabel, 28).'FAILED, '.($secretShown === $olderSecretFile ? 'the copy at the top of the data location, ' : '').'mode '.$secretMode.($secretOwner === 0 ? ', root' : ', not root').(($secretExpected === '0640' && $secretGroupExpected >= 0) ? ($secretGroup === $secretGroupExpected ? ', group '.$ApacheUser : ', group not '.$ApacheUser) : '').', expected '.$secretExpected.($secretExpected === '0640' ? ', root'.($secretGroupExpected >= 0 ? ' & group '.$ApacheUser : '') : '').'. Run -fp as root'.$Lol); }
-  else print('  '.str_pad($secretLabel, 28).'OK, '.$secretExpected.($secretExpected === '0640' ? ', root' : '').($secretShown === $olderSecretFile ? ', at the top of the data location until -fp copies it into Secrets' : '').$Lol);
-  if ($secretsState === 'missing') print('  '.str_pad('Secrets folder', 28).'NOT PRESENT, -fp creates it'.$Lol);
-  else if ($secretsState === 'not a folder') {
-    $failureCount++;
-    print('  '.str_pad('Secrets folder', 28).'FAILED, not a folder & never followed. Remove it & run -fp as root'.$Lol); }
-  else if ($secretsState === 'unjudged') {
-    $failureCount++;
-    print('  '.str_pad('Secrets folder', 28).'FAILED, '.$secretsOwnership.' '.$secretsMode.', & the group '.$ApacheUser.' could not be looked up'.$Lol); }
-  else if ($secretsState !== 'ok') {
-    $failureCount++;
-    print('  '.str_pad('Secrets folder', 28).'FAILED, '.$secretsOwnership.' '.$secretsMode.', expected root:'.$ApacheUser.' 0750. Run -fp as root'.$Lol); }
-  else print('  '.str_pad('Secrets folder', 28).'OK, 0750, root:'.$ApacheUser.$Lol);
+  foreach ($secretRows as $secretRow) {
+    if ($secretRow['Failed']) $failureCount++;
+    print('  '.str_pad($secretRow['Label'], 28).$secretRow['Text'].$Lol); }
   if ($socketMode === '') print('  '.str_pad('Manager socket directory', 28).'NOT PRESENT, created with the listener'.$Lol);
   else if ($socketMode !== '0700') {
     $failureCount++;
@@ -2940,7 +1679,7 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $listenerIsAsked, $secretLabel, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $secretShown, $olderSecretFile, $topCopyMode, $topCopyOwner, $secretGroup, $topCopyGroup, $secretGroupExpected, $webAccountNumber, $secretPasses, $secretsState, $secretsMode, $secretsOwnership, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $fileBinary, $probeBinary, $pdfInfoBinary, $pdfUniteBinary, $pdfSeparateBinary, $mat2Binary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $secretMode, $secretOwner, $secretExpected, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $listenerIsAsked, $secretRows, $secretRow, $secretGroupWasFound, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $fileBinary, $probeBinary, $pdfInfoBinary, $pdfUniteBinary, $pdfSeparateBinary, $mat2Binary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -2975,6 +1714,15 @@ function showHelpInfo() {
   print('                              It watches, & repairs only when config.php allows.'.$Lol);
   print('  --rotate-secret             Replace the install secret. Every session ends.'.$Lol);
   print('                              Asks first. -y answers in advance. Root only.'.$Lol);
+  print('  --account --list            List every account. Root or the web server user.'.$Lol);
+  print('  --account --add NAME EMAIL  Add a confirmed account & show its password once.'.$Lol);
+  print('  --account --confirm NAME    Confirm an account\'s address for it.'.$Lol);
+  print('  --account --disable NAME    Stop an account signing in & end its sign ins.'.$Lol);
+  print('  --account --enable NAME     Let a disabled account sign in again.'.$Lol);
+  print('  --account --admin NAME      Make an account an administrator\'s.'.$Lol);
+  print('  --account --user NAME       Make an account an ordinary user\'s.'.$Lol);
+  print('  --account --password NAME   Show a new password once & end its sign ins.'.$Lol);
+  print('  --account --remove NAME     Remove an account & its user\'s files. Asks first.'.$Lol);
   print('  --config                    Configure this installation without a text editor.'.$Lol);
   print('  --setup                     Install, check & audit dependencies.'.$Lol);
   print('  --workflow                  List the workflow library & what is wrong with any of it.'.$Lol);
@@ -3147,7 +1895,7 @@ function parseCommandLine() {
         showHelpInfo();
         $CommandLineHandled = TRUE; }
       // / Every other command is offered to the Engine first.
-      // / The listener, the managers, setup, configuration, the pipelines, repair & cleaning are the Engine's, & every application of this shape needs them.
+      // / The listener, the managers, setup, configuration, the pipelines, repair, cleaning & rotating the install secret are the Engine's, & every application of this shape needs them.
       // / What comes back unhandled is this application's own, which is -u, or a mistake.
       // / The gate above already refused all of this when there is no Engine to ask.
       else {
@@ -3164,12 +1912,6 @@ function parseCommandLine() {
             warningEntry('The Setup Core is unavailable, so no update was attempted.');
             print($Lol.'The Setup Core is unavailable, so no update was attempted. Run -v to see why.'.$Lol.$Lol); }
           else if (!updateApplication(strtolower($cliTarget))) $CommandLineStatus = 1; }
-        // / The install secret is this application's until an authentication manager owns it,
-        // / so rotating it is this application's command. It is root only, like -u.
-        else if ($cliCommand === '--rotate-secret' && !$RunningAsRoot) $CommandLineStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A root only command was refused for an unauthorized user.');
-        else if ($cliCommand === '--rotate-secret') {
-          warningEntry('Command line invocation. Rotating the install secret.');
-          if (!rotateInstallSecret($cliConfirmed)) $CommandLineStatus = 1; }
         // / An unrecognized argument is a mistake, not a web request.
         // / An option belonging to one of the Engine's commands is named with its owner, from
         // / the Engine's own map, because an option typed alone is the commonest mistake there is.
@@ -4021,14 +2763,21 @@ function getSandboxProfiles() {
       'ReadOnlyPaths' => array('/etc/php'),
       'Reason' => 'PHP reads the configuration that loads its extensions from this directory.'),
 
+    // / mat2 is a Python program reading what the base sandbox shows, & renders a PDF with the fonts it shows too.
+    // / The Metadata pipeline keeps it from starting a sandbox of its own, because this one allows no namespace inside it.
+    // / mat2 chooses how to read a file by the type Python names for its extension, & Python names docx, xlsx, pptx, OpenDocument,
+    // / EPUB, FLAC, Ogg & WMV extensions, & an EPUB's XHTML parts, only from /etc/mime.types. Without it mat2 says the format of each
+    // / is None & makes nothing. Python alone names Opus audio/opus, which mat2 does not read, where this file names it audio/ogg.
+    'mat2' => array(
+      'OperationType' => 'Document',
+      'ReadOnlyPaths' => array('/etc/mime.types'),
+      'Reason' => 'Python names the type of docx, xlsx, pptx, OpenDocument, EPUB, FLAC, Ogg, Opus & WMV files from this file.'),
+
     // / Everything below needs nothing beyond the base sandbox.
     // / A profile that declares only its operation type is not an oversight.
     'ffmpeg' => array('OperationType' => 'Video'),
     'archive' => array('OperationType' => 'Archive'),
     'poppler' => array('OperationType' => 'Document'),
-    // / mat2 is a Python program reading what the base sandbox shows, & renders a PDF with the fonts it shows too.
-    // / The Metadata pipeline keeps it from starting a sandbox of its own, because this one allows no namespace inside it.
-    'mat2' => array('OperationType' => 'Document'),
     'generic' => array('OperationType' => 'Generic'));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SandboxProfiles is not purged, because it is the return value.
@@ -4141,6 +2890,26 @@ function applicationConfigModel() {
       // / The Environment Manager settings belong to the model as well as to config.php, because a repair can only add a setting this utility knows about.
       'EnvironmentManagerMayRepair' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Environment Manager May Repair'),
       'EnvironmentManagerMayRewriteConfigs' => array('Type' => 'bool', 'Depends' => 'EnvironmentManagerMayRepair', 'Description' => 'Environment Manager May Rewrite Configs'),
+      // / Accounts are the Engine's. These settings are this application's names for what the Authentication Core & the Email Core read.
+      // / Each that needs accounts is named as having no effect only once it differs from its default, because most installations leave accounts off.
+      'EnableAuthentication' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Authentication'),
+      'AllowAnonymousVisitors' => array('Type' => 'bool', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Allow Anonymous Visitors'),
+      'AllowRegistration' => array('Type' => 'bool', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Allow Registration'),
+      'RequireEmailConfirmation' => array('Type' => 'bool', 'Depends' => 'AllowRegistration', 'Description' => 'Require Email Confirmation'),
+      'UserStorageQuota' => array('Type' => 'int', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'User Storage Quota'),
+      'SignInKeyLifetime' => array('Type' => 'int', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Sign In Key Lifetime'),
+      'SignInExchangeInterval' => array('Type' => 'int', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Sign In Exchange Interval'),
+      'SignInMaximumLifetime' => array('Type' => 'int', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Sign In Maximum Lifetime'),
+      'MinimumPasswordLength' => array('Type' => 'int', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Minimum Password Length'),
+      'SignInAttemptLimit' => array('Type' => 'int', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Sign In Attempt Limit'),
+      'SignInAttemptWindow' => array('Type' => 'int', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Sign In Attempt Window'),
+      'UnconfirmedAccountLifetime' => array('Type' => 'int', 'Depends' => 'RequireEmailConfirmation', 'Description' => 'Unconfirmed Account Lifetime'),
+      'RecoveryCodeLifetime' => array('Type' => 'int', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Recovery Code Lifetime'),
+      'EmailSender' => array('Type' => 'string', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Email Sender'),
+      'EmailConfirmationSubject' => array('Type' => 'string', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Email Confirmation Subject'),
+      'EmailConfirmationBody' => array('Type' => 'string', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Email Confirmation Body'),
+      'EmailRecoverySubject' => array('Type' => 'string', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Email Recovery Subject'),
+      'EmailRecoveryBody' => array('Type' => 'string', 'Depends' => 'EnableAuthentication', 'NamedWhenChanged' => TRUE, 'Description' => 'Email Recovery Body'),
       'ThrowSandboxWarning' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Throw Sandbox Warning'),
       'StreamWatchTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Stream Duration Timeout'),
       'StreamConnectionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Stream Connection Timeout'),
@@ -4372,78 +3141,6 @@ function verifyRequiredDirs() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to replace the install wide secret with a new one.
-// / Accepts whether the action was confirmed in advance with -y. Returns a success boolean.
-// / Called by --rotate-secret, never reachable from the web, & root only.
-// /
-// / Every session ends.
-// / Every session folder, token & startup key derives from the secret, so a visitor is given a new session on their next visit & cannot reach their earlier files.
-// / Those folders stay where they are & expire on the delete threshold like any other.
-// / That is what rotating a secret is for, so the operator is asked first, or answers with -y.
-// /
-// / The listener holds keys derived from the old secret, so one that is running must be stopped & started again, & root never does either through the web server account's files.
-// /   Ask whether a listener is running & stop it before the secret is rewritten.
-// /   A service unit that owns the listener is asked through systemctl.
-// /   Otherwise the web server account is asked, & it answers & stops with the old key, which is still the one on disk.
-// /   A listener that could not be stopped would keep answering with the old key, so nothing is rotated & the operator is told.
-// /   Rewrite the secret as root, which is the one part that is root's.
-// /   Start it again through startCoreManagerListener(), which uses the unit when one owns the listener & hands the start to the web server account when none does.
-// / A listener that was not running is left stopped.
-// / A container from an image built before v4.0.1 carries the secret that image was built with, & every container started from it shares it.
-// / Running this once in each ends that.
-function rotateInstallSecret($rotationConfirmed) {
-  // / Set variables.
-  global $InstLoc, $SecretFile, $SecretKey, $RequiredSecretVersion, $ResourceAwarenessActive, $ApacheUser, $Lol, $EnableMemoryProtection;
-  $SecretWasRotated = FALSE;
-  $actionIsConfirmed = $listenerWasRunning = $listenerWasStopped = $listenerWasStarted = $secretIsReady = $unitOwnsListener = FALSE;
-  $newSecretKey = $entryPath = $unitName = '';
-  $statusOutput = $stopOutput = array();
-  $statusExit = $stopExit = 1;
-  $actionIsConfirmed = confirmDestructiveAction('Rotating the install secret ends every session. Visitors are given a new one & cannot reach their earlier files.', $rotationConfirmed);
-  if ($actionIsConfirmed) {
-    $entryPath = $InstLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint();
-    $unitName = engineApplicationSlug().'-listener';
-    if ($ResourceAwarenessActive && function_exists('listenerUnitIsInstalled')) $unitOwnsListener = listenerUnitIsInstalled();
-    // / Learn whether a listener is running, & stop it, BEFORE the secret is rewritten.
-    if ($ResourceAwarenessActive && $unitOwnsListener) {
-      exec('systemctl is-active --quiet '.escapeshellarg($unitName).' 2>&1', $statusOutput, $statusExit);
-      $listenerWasRunning = ($statusExit === 0);
-      if ($listenerWasRunning) {
-        exec('systemctl stop '.escapeshellarg($unitName).' 2>&1', $stopOutput, $stopExit);
-        $listenerWasStopped = ($stopExit === 0); } }
-    else if ($ResourceAwarenessActive && function_exists('runAsAccount')) {
-      list ($statusOutput, $statusExit) = runAsAccount('php '.escapeshellarg($entryPath).' --status 2>&1', (string)$ApacheUser);
-      $listenerWasRunning = (stripos(implode(' ', $statusOutput), 'RUNNING as process') !== FALSE);
-      if ($listenerWasRunning) {
-        list ($stopOutput, $stopExit) = runAsAccount('php '.escapeshellarg($entryPath).' -k 2>&1', (string)$ApacheUser);
-        $listenerWasStopped = ($stopExit === 0); } }
-    if ($listenerWasRunning && !$listenerWasStopped) {
-      warningEntry('The install secret was not rotated, because the running listener could not be stopped first. It would have kept answering with the old key.');
-      errorEntry('The install secret could not be rotated! The secret in place is unchanged.', 31022, FALSE);
-      print($Lol.'The listener is running & could not be stopped, so the install secret was NOT rotated.'.$Lol);
-      print('Stop it with  sudo php '.engineApplicationEntryPoint().' -k  & run this again.'.$Lol); }
-    else {
-      list ($secretIsReady, $newSecretKey) = resolveInstallSecretAsRoot($SecretFile, $RequiredSecretVersion, TRUE);
-      if (!$secretIsReady) {
-        errorEntry('The install secret could not be rotated! The secret in place is unchanged.', 31022, FALSE);
-        print($Lol.'The install secret could not be rotated. The secret in place is unchanged.'.$Lol); }
-      else {
-        $SecretWasRotated = TRUE;
-        print($Lol.'The install secret was rotated. Every earlier session has ended.'.$Lol);
-        // / $SecretKey is the documented exception to convention 3 & is assigned here because
-        // / nothing in this process derives a key again, but a reader that did would get the new one.
-        $SecretKey = $newSecretKey; }
-      // / A listener that was running is started again whether or not the rotation took, because
-      // / it was stopped above & the secret on disk is whichever one is in place now.
-      if ($listenerWasRunning) $listenerWasStarted = startCoreManagerListener();
-      if ($listenerWasRunning && !$listenerWasStarted) print('The listener could not be restarted. Run  sudo php '.engineApplicationEntryPoint().' -l'.$Lol); }
-    print($Lol); }
-  // / Manually clean up sensitive memory. Every target is passed directly by reference.
-  purgeSensitiveMemory($EnableMemoryProtection, $actionIsConfirmed, $listenerWasRunning, $listenerWasStopped, $listenerWasStarted, $secretIsReady, $unitOwnsListener, $newSecretKey, $entryPath, $unitName, $statusOutput, $stopOutput, $statusExit, $stopExit, $rotationConfirmed);
-  return $SecretWasRotated; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
 // / A function to convert a file based on a pre-determined input type & return the results.
 // / Streams are the only conversion that keeps running after the user has been served.
 // / The stream supervision variables are globals so the core can reach them after this returns.
@@ -4660,7 +3357,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $GuiEngineFile, $EngineAnswer, $EnginePageState;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
   $Files = $FileDetails = $ArchiveOperationArray = $ExtractOperationArray = $MetadataOperationArray = $OfferedOperations = array();
@@ -4737,6 +3434,8 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
     // / Build and define the different GUI types that are available.
     if ($guiType === 1) $guiUIFile = $GuiUI1File;
     if ($guiType === 2) $guiUIFile = $GuiUI2File;
+    // / A request the Engine answered with a page of its own draws that page between the same header & footer.
+    if (isset($EngineAnswer) && $EngineAnswer === 'page') $guiUIFile = $GuiEngineFile;
     // / Build the specified GUI.
     if (in_array($guiUIFile, $GuiFiles)) require_once($guiUIFile);
     // / Load the footer.
@@ -5233,7 +3932,7 @@ function userVirusScan($FilesToScan, $type) {
 // / Returns a success boolean & the number of paths corrected, in that order.
 function fixManagedPermissions() {
   // / Set variables.
-  global $ApacheUser, $Lol, $RunningAsRoot, $EnablePerConversionLimits, $RequiredSetupCoreVersion, $EnableMemoryProtection, $DirSep, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $InstLoc, $EngineRepairIsUnattended, $EnvironmentManagerMayRewriteConfigs, $HostedLoc, $ApplicationLoc, $ConvertTemp, $SecretFile, $SecretKey, $SecretLoc, $RequiredSecretVersion;
+  global $ApacheUser, $Lol, $RunningAsRoot, $EnablePerConversionLimits, $RequiredSetupCoreVersion, $EnableMemoryProtection, $DirSep, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $InstLoc, $EngineRepairIsUnattended, $EnvironmentManagerMayRewriteConfigs, $HostedLoc, $ApplicationLoc, $ConvertTemp, $SecretFile, $SecretKey, $SecretLoc;
   $buildEnvCleaned = $buildEnvDeleted = $devDocsDeleted = $codeIsTrustedNow = $repairIsUnattended = $configsMayChange = $scriptIsValid = $secretIsReady = FALSE;
   $placedSecretKey = '';
   $codeTrustNotice = $scriptStatus = $scriptDisplayStatus = $scriptDetail = $hostedStatus = $hostedDetail = '';
@@ -5285,9 +3984,10 @@ function fixManagedPermissions() {
     // / The install secret is copied into Secrets with its key, now that the folder has its role.
     // / Root's boot read it where an older release kept it, before this command made the folder, so an upgrade finishes in this one run.
     // / The copy at the top is kept with the same key, & a copy that is already right is left as it is.
+    // / The kernel settles it, as it settled it at boot, in settleInstallSecretAsRoot.
     // / $SecretKey is the documented exception to convention 3, & is assigned here because the key root holds must be the one on disk.
     if ($setupIsAvailable) {
-      list ($secretIsReady, $placedSecretKey) = resolveInstallSecretAsRoot($SecretFile, $RequiredSecretVersion, FALSE);
+      list ($secretIsReady, $placedSecretKey) = settleInstallSecretAsRoot(FALSE);
       if ($secretIsReady) $SecretKey = $placedSecretKey;
       if ($secretIsReady && is_file($SecretFile)) print('  Install secret in '.$SecretLoc.'. Group '.$ApacheUser.' may read it.'.$Lol);
       else print('  Install secret NOT in '.$SecretLoc.' yet. See the lines above & root\'s log.'.$Lol); }
@@ -5474,7 +4174,7 @@ function askOperator($promptText) {
 // / kernel is never executed, the same guarantee a mismatched Engine gets.
 // / The build cannot write this pin or the Engine's, because it runs inside both. Move them
 // / by hand, with the version each file declares.
-$RequiredKernelVersion = 'v4.1.8';
+$RequiredKernelVersion = 'v4.2.0';
 $KernelFile = dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Kernel'.DIRECTORY_SEPARATOR.'kernel.php';
 $KernelVersionMatch = array();
 if (!is_readable($KernelFile)) {
@@ -5597,6 +4297,14 @@ if ($RequireResourceAwareness && !$ResourceAwarenessActive && !($RunningFromCLI 
 $WorkflowSessionAdopted = FALSE;
 if ($RunningFromCLI && $EngineActive && isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === '--run-workflow') $WorkflowSessionAdopted = adoptWorkflowSession();
 
+// / The Engine may answer a request itself, as it does to sign a user in, & may name a page of its own to draw in place of this application's.
+// / It is asked here, after it has loaded & before the globals that hang off a session are built, because it decides where a request's files are kept.
+// / $EngineAnswer is empty for a request this application serves, page for one it draws the Engine's page for & runs no operation for,
+// / & answered for one the Engine wrote the whole answer to, which draws nothing & runs nothing. What a page may show is in $EnginePageState.
+$EngineAnswer = '';
+$EnginePageState = array();
+if ($EngineActive && function_exists('answerEngineRequest')) $EngineAnswer = answerEngineRequest();
+
 // / The following code verifies & sanitizes global variables for the session.
 list ($GlobalsAreVerified) = verifyGlobals();
 if (!$GlobalsAreVerified) errorEntry('Could not verify globals!', 11, TRUE);
@@ -5694,7 +4402,8 @@ if (!$CommandLineHandled && $UserType === 'web') {
     // / A caller can tell a failure from a success only by reading the body, & a whole page carries the script literal that recognises a core error.
     // / A file operation returns a filename or an error, & never a page.
     // / An upload is known by its files, because Dropzone sends the file & the two tokens & no upload field.
-    if (!isset($_POST['filesToArchive']) && !isset($_POST['filesToExtract']) && !isset($_POST['filesToRename']) && !isset($_POST['filesToStrip']) && !isset($_POST['filesToMerge']) && !isset($_POST['filesToSplit']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete']) && !isset($_POST['filesToIdentify']) && !isset($_POST['workflowLibrary']) && !isset($_POST['workflowRun']) && !isset($_POST['workflowDocument']) && !isset($_POST['workflowStatus']) && !isset($_POST['workflowStop']) && !isset($_POST['workflowOperations']) && !isset($_POST['workflowCheck']) && !isset($_POST['workflowExport']) && !isset($_POST['workflowPreview']) && !isset($_POST['workflowPreviewDocument'])) {
+    // / A request the Engine wrote the whole answer to draws nothing here.
+    if ($EngineAnswer !== 'answered' && !isset($_POST['filesToArchive']) && !isset($_POST['filesToExtract']) && !isset($_POST['filesToRename']) && !isset($_POST['filesToStrip']) && !isset($_POST['filesToMerge']) && !isset($_POST['filesToSplit']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete']) && !isset($_POST['filesToIdentify']) && !isset($_POST['workflowLibrary']) && !isset($_POST['workflowRun']) && !isset($_POST['workflowDocument']) && !isset($_POST['workflowStatus']) && !isset($_POST['workflowStop']) && !isset($_POST['workflowOperations']) && !isset($_POST['workflowCheck']) && !isset($_POST['workflowExport']) && !isset($_POST['workflowPreview']) && !isset($_POST['workflowPreviewDocument'])) {
 
       // / The following code sets the GUI for the session.
       list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
@@ -5731,7 +4440,8 @@ if (!$CommandLineHandled && $UserType === 'web') {
     if (!$TokensAreValid && $Verbose) logEntry('Providing the user with a new pair of tokens.');
 
     // / Only enable file related operations if valid tokens were supplied by the user.
-    if ($TokensAreValid) {
+    // / A request the Engine answered, with a page of its own or otherwise, runs none, as one whose visitor must sign in first.
+    if ($TokensAreValid && $EngineAnswer === '') {
       if ($Verbose) logEntry('Verified supplied tokens.');
 
       // / The following code is performed when a user initiates a file upload.

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -628,4 +628,96 @@ $GuiFunctionsText1 = 'Uw browser ondersteunt het kopiëren naar het klembord nie
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'Bekijk onze <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Servicevoorwaarden</a> en ons <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacybeleid';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'Inloggen';
+// / 'Sign out'
+$GuiAuthText2 = 'Uitloggen';
+// / 'Create an account'
+$GuiAuthText3 = 'Account aanmaken';
+// / 'Username'
+$GuiAuthText4 = 'Gebruikersnaam';
+// / 'Password'
+$GuiAuthText5 = 'Wachtwoord';
+// / 'Email address'
+$GuiAuthText6 = 'E-mailadres';
+// / 'Code'
+$GuiAuthText7 = 'Code';
+// / 'New password'
+$GuiAuthText8 = 'Nieuw wachtwoord';
+// / 'Confirm your account'
+$GuiAuthText9 = 'Bevestig je account';
+// / 'Recover your account'
+$GuiAuthText10 = 'Herstel je account';
+// / 'Choose a new password'
+$GuiAuthText11 = 'Kies een nieuw wachtwoord';
+// / 'Send the code again'
+$GuiAuthText12 = 'Code opnieuw sturen';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'Wachtwoord vergeten?';
+// / 'Have a code?'
+$GuiAuthText14 = 'Heb je een code?';
+// / 'Back to sign in'
+$GuiAuthText15 = 'Terug naar inloggen';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'Doorgaan zonder in te loggen';
+// / 'Signed in as'
+$GuiAuthText17 = 'Ingelogd als';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'Inloggen is op deze server op dit moment niet beschikbaar.';
+// / 'Confirm'
+$GuiAuthText19 = 'Bevestigen';
+// / 'Send a code'
+$GuiAuthText20 = 'Stuur een code';
+// / 'Change password'
+$GuiAuthText21 = 'Wachtwoord wijzigen';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'De gebruikersnaam of het wachtwoord is onjuist.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'Te veel pogingen. Wacht een paar minuten en probeer het opnieuw.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'Bevestig eerst je account met de code die we je hebben gemaild.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'Dit account kan niet inloggen. Neem contact op met de beheerder.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'Hier kunnen geen nieuwe accounts worden aangemaakt. Neem contact op met de beheerder.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'Een gebruikersnaam heeft 3 tot 64 letters, cijfers, punten, streepjes of underscores, en begint met een letter of een cijfer.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'Die gebruikersnaam is al in gebruik. Kies een andere.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'Dat e-mailadres kan niet worden gebruikt.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'Minimaal aantal tekens van een wachtwoord:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'Je account is aangemaakt. We hebben je een code gemaild om het te bevestigen.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'Je account is aangemaakt, maar deze server kon je code niet mailen. Neem contact op met de beheerder.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'Je account is aangemaakt. Je kunt nu inloggen.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'Die code klopt niet.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'Die code kan niet meer worden gebruikt. Vraag een nieuwe aan.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'Je account is bevestigd. Je kunt nu inloggen.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'Als dat account op bevestiging wacht, is er een nieuwe code onderweg.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'Als dat account bestaat, is er een code onderweg naar het e-mailadres ervan.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'Je wachtwoord is gewijzigd. Je kunt nu inloggen.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'Je bent uitgelogd.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'Je bent uitgelogd, omdat je aanmelding ergens anders is gebruikt.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'De server gaf geen antwoord. Probeer het opnieuw.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'Accounts herstellen is op deze server niet beschikbaar.';
 // / -----------------------------------------------------------------------------------

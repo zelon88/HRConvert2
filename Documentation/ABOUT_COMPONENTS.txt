@@ -40,6 +40,8 @@ lost is the capability that component provides, & the loss is reported rather th
   Resources/Engine/Cores/dependencyCore.php   Dependency management & the supply chain audit.
   Resources/Engine/Cores/pipelineCore.php     Pipeline verification & dispatch.
   Resources/Engine/Cores/workflowCore.php     Workflows, their libraries, their workers & their status.
+  Resources/Engine/Cores/authenticationCore.php  Accounts, signing in & the key a signed in page holds.
+  Resources/Engine/Cores/emailCore.php        The emails the Authentication Core sends.
 
 Each Core lives in Resources/Engine/Cores, because a Core is part of the Engine. Configuration
 files do not. config.php & versionInfo.php stay in Resources, & depends.php lives in
@@ -76,6 +78,8 @@ the core does not have on its own.
   Dependency Core   Dependencies, capability detection & the supply chain audit.
   Pipeline Core     Which conversion families exist & which one gets a given conversion.
   Workflow Core     Workflows, from their format to running one & reporting how it went.
+  Authentication Core  Accounts, signing in & the files a signed in user keeps.
+  Email Core        Sending an email through the host's own mail system.
   Core Manager      Resource awareness & the manager processes.
 
 FOUR PROPERTIES SEPARATE A CORE FROM ANYTHING ELSE IN THIS APPLICATION.
@@ -95,7 +99,7 @@ FOUR PROPERTIES SEPARATE A CORE FROM ANYTHING ELSE IN THIS APPLICATION.
 
   4  IT EXTENDS SCOPE RATHER THAN CAPABILITY. A dependency gives the application a new
      format. A pipeline gives it a new conversion. A Core gives it a new thing it is able
-     to be responsible for, which is a larger claim & is why there are only five.
+     to be responsible for, which is a larger claim & is why there are only seven.
 
 A CORE IS NOT A MANAGER, & THE WORD MANAGER MEANS SOMETHING ELSE IN THIS APPLICATION.
 A Core is a file that is loaded. A manager is a role a long lived process runs under, with
@@ -177,9 +181,14 @@ component it will not call. Only the Engine & Pipeline Core are resolved on ever
   engine.php             Resolved in the main logic, before verifyGlobals().
   pipelineCore.php       Resolved in the main logic, directly after verifyGlobals().
   workflowCore.php       Resolved after Pipeline Core, when workflows are on or --workflow is asked for.
+  authenticationCore.php Resolved with the Engine's answer to a request, before verifyGlobals(), when
+                         accounts are on, & by --account whether or not they are.
+  emailCore.php          Resolved with the Authentication Core.
   setupCore.php          Loaded by --config, & by -fp for resource limits & the service unit.
   dependencyCore.php     Loaded by --setup.
   Managers/<role>.php    Loaded by loadEngineManager, only in a process running as that role.
+  Managers/authenticationManager.php
+                         Loaded by loadEngineManager to sweep accounts, to keep a quota & by --account.
 
 PIPELINE CORE IS THE EXCEPTION TO ON DEMAND & THE REASON IS ORDERING.
 It is resolved on every request that could convert something, because a conversion cannot
@@ -197,7 +206,7 @@ did by loading Setup Core before every --setup option.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Version Pins--
 
-TWELVE PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
+FOURTEEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
 
   $RequiredConfigVersion           config.php                    MINIMUM. A newer config carrying
                                                                  every required setting is fine.
@@ -207,6 +216,8 @@ TWELVE PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
   $RequiredDependencyCoreVersion   dependencyCore.php            EXACT.
   $RequiredPipelineCoreVersion     pipelineCore.php              EXACT.
   $RequiredWorkflowCoreVersion     workflowCore.php              EXACT.
+  $RequiredAuthenticationCoreVersion authenticationCore.php      EXACT.
+  $RequiredEmailCoreVersion        emailCore.php                 EXACT.
   $RequiredDependsVersion          depends.php                   EXACT.
   $RequiredSecretVersion           the install secret file       EXACT.
   $RequiredGuiVersion              every UI folder               EXACT.
@@ -249,6 +260,8 @@ settings & a section an operator owns. A dependency is named only where the code
 the setting while the one it depends on is off, & a Conflict names what follows where it is read
 & contradicts it instead, as --Require Resource Awareness-- does. --config prints both. The Engine finds both through $EngineConfigModelProvider
 & $EngineConfigTemplate in Resources/Contract/app-engine-config.php.
+A setting whose model carries NamedWhenChanged, from v4.2.0, is named as having no effect only once it differs from its
+default, so a feature with many settings that most installations leave off, as accounts are, names only what was changed.
 Forgetting the model does not break anything immediately, which is the point. A setting the
 model does not know is reported as unaccounted, can still be edited by hand, & simply cannot
 be reset. Forgetting the list stops the check covering that setting.

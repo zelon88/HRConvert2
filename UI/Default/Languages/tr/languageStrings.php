@@ -39,7 +39,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -641,4 +641,96 @@ $GuiFunctionsText1 = 'Tarayıcınız panoya kopyalamayı desteklemiyor.';
 // / The closing anchor tag for this string lives in footer.php & must NOT be repeated here.
 // / 'Check out our Terms of Service and Privacy Policy'
 $GuiFooterText1 = '<a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Hizmet Şartlarımıza</a> ve <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Gizlilik Politikamıza göz atın';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'Oturum aç';
+// / 'Sign out'
+$GuiAuthText2 = 'Oturumu kapat';
+// / 'Create an account'
+$GuiAuthText3 = 'Hesap oluştur';
+// / 'Username'
+$GuiAuthText4 = 'Kullanıcı adı';
+// / 'Password'
+$GuiAuthText5 = 'Parola';
+// / 'Email address'
+$GuiAuthText6 = 'E-posta adresi';
+// / 'Code'
+$GuiAuthText7 = 'Kod';
+// / 'New password'
+$GuiAuthText8 = 'Yeni parola';
+// / 'Confirm your account'
+$GuiAuthText9 = 'Hesabınızı onaylayın';
+// / 'Recover your account'
+$GuiAuthText10 = 'Hesabınızı kurtarın';
+// / 'Choose a new password'
+$GuiAuthText11 = 'Yeni bir parola seçin';
+// / 'Send the code again'
+$GuiAuthText12 = 'Kodu yeniden gönder';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'Parolanızı mı unuttunuz?';
+// / 'Have a code?'
+$GuiAuthText14 = 'Kodunuz var mı?';
+// / 'Back to sign in'
+$GuiAuthText15 = 'Oturum açmaya dön';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'Oturum açmadan devam et';
+// / 'Signed in as'
+$GuiAuthText17 = 'Oturum açan:';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'Bu sunucuda şu anda oturum açılamıyor.';
+// / 'Confirm'
+$GuiAuthText19 = 'Onayla';
+// / 'Send a code'
+$GuiAuthText20 = 'Kod gönder';
+// / 'Change password'
+$GuiAuthText21 = 'Parolayı değiştir';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'Kullanıcı adı veya parola yanlış.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'Çok fazla deneme. Lütfen birkaç dakika bekleyip yeniden deneyin.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'Önce hesabınızı size e-postayla gönderdiğimiz kodla onaylayın.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'Bu hesap oturum açamaz. Yöneticiye başvurun.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'Burada yeni hesap oluşturulamaz. Yöneticiye başvurun.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'Kullanıcı adı 3 ile 64 arasında harf, rakam, nokta, tire veya alt çizgiden oluşur ve bir harf ya da rakamla başlar.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'Bu kullanıcı adı alınmış. Başka bir tane seçin.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'Bu e-posta adresi kullanılamaz.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'Bir parolanın en az karakter sayısı:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'Hesabınız oluşturuldu. Onaylamanız için size e-postayla bir kod gönderdik.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'Hesabınız oluşturuldu, ancak bu sunucu kodunuzu e-postayla gönderemedi. Yöneticiye başvurun.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'Hesabınız oluşturuldu. Artık oturum açabilirsiniz.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'Bu kod doğru değil.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'Bu kod artık kullanılamaz. Yeni bir kod isteyin.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'Hesabınız onaylandı. Artık oturum açabilirsiniz.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'Bu hesap onay bekliyorsa yeni bir kod yolda.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'Bu hesap varsa, e-posta adresine bir kod gönderiliyor.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'Parolanız değiştirildi. Artık oturum açabilirsiniz.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'Oturumunuz kapatıldı.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'Oturumunuz başka bir yerde kullanıldığı için kapatıldı.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'Sunucu yanıt vermedi. Lütfen yeniden deneyin.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'Bu sunucuda hesap kurtarma kullanılamıyor.';
 // / -----------------------------------------------------------------------------------

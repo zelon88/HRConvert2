@@ -78,6 +78,16 @@ if (file_exists($StylesheetPath)) $StylesheetPath .= '?v='.filemtime($Stylesheet
     if ($EnableWorkflows) { ?>
     <script type='text/javascript' src='<?php echo $WorkflowsJsPath; ?>'></script>
     <?php } ?>
+    <?php
+    // / The sign in library is loaded only where accounts are on, & does nothing until the footer starts it.
+    // / It is stamped with its modification time, as the other libraries this project edits are, so an edited copy is fetched at once.
+    $signInJsPath = $GuiJSDir.'HRC2-SignIn.js';
+    if (file_exists($signInJsPath)) $signInJsPath .= '?v='.filemtime($signInJsPath);
+    if (isset($EnginePageState) && is_array($EnginePageState) && !empty($EnginePageState['Enabled'])) { ?>
+    <script type='text/javascript' src='<?php echo htmlspecialchars($signInJsPath, ENT_QUOTES, 'UTF-8'); ?>'></script>
+    <?php }
+    $signInJsPath = NULL;
+    unset($signInJsPath); ?>
     <script type='text/javascript' src='<?php echo $DropzonePath; ?>'></script>
     <style>
       body {

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -628,4 +628,96 @@ $GuiFunctionsText1 = 'আপনার ব্রাউজার ক্লিপ�
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'আমাদের পরিষেবার <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>শর্তাবলী</a> এবং <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>গোপনীয়তা নীতি</a> দেখুন';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'সাইন ইন করুন';
+// / 'Sign out'
+$GuiAuthText2 = 'সাইন আউট করুন';
+// / 'Create an account'
+$GuiAuthText3 = 'অ্যাকাউন্ট তৈরি করুন';
+// / 'Username'
+$GuiAuthText4 = 'ব্যবহারকারীর নাম';
+// / 'Password'
+$GuiAuthText5 = 'পাসওয়ার্ড';
+// / 'Email address'
+$GuiAuthText6 = 'ইমেল ঠিকানা';
+// / 'Code'
+$GuiAuthText7 = 'কোড';
+// / 'New password'
+$GuiAuthText8 = 'নতুন পাসওয়ার্ড';
+// / 'Confirm your account'
+$GuiAuthText9 = 'আপনার অ্যাকাউন্ট নিশ্চিত করুন';
+// / 'Recover your account'
+$GuiAuthText10 = 'আপনার অ্যাকাউন্ট পুনরুদ্ধার করুন';
+// / 'Choose a new password'
+$GuiAuthText11 = 'নতুন পাসওয়ার্ড বেছে নিন';
+// / 'Send the code again'
+$GuiAuthText12 = 'কোড আবার পাঠান';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'পাসওয়ার্ড ভুলে গেছেন?';
+// / 'Have a code?'
+$GuiAuthText14 = 'কোড আছে?';
+// / 'Back to sign in'
+$GuiAuthText15 = 'সাইন ইনে ফিরে যান';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'সাইন ইন না করেই চালিয়ে যান';
+// / 'Signed in as'
+$GuiAuthText17 = 'যে নামে সাইন ইন:';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'এই সার্ভারে এখন সাইন ইন করা যাচ্ছে না।';
+// / 'Confirm'
+$GuiAuthText19 = 'নিশ্চিত করুন';
+// / 'Send a code'
+$GuiAuthText20 = 'কোড পাঠান';
+// / 'Change password'
+$GuiAuthText21 = 'পাসওয়ার্ড বদলান';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'ব্যবহারকারীর নাম বা পাসওয়ার্ড সঠিক নয়।';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'অনেক বেশি চেষ্টা হয়েছে। কয়েক মিনিট অপেক্ষা করে আবার চেষ্টা করুন।';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'প্রথমে আমাদের ইমেল করা কোড দিয়ে আপনার অ্যাকাউন্ট নিশ্চিত করুন।';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'এই অ্যাকাউন্ট সাইন ইন করতে পারবে না। প্রশাসকের সঙ্গে যোগাযোগ করুন।';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'এখানে নতুন অ্যাকাউন্ট তৈরি করা যায় না। প্রশাসকের সঙ্গে যোগাযোগ করুন।';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'ব্যবহারকারীর নামে ৩ থেকে ৬৪টি অক্ষর, অঙ্ক, বিন্দু, ড্যাশ বা আন্ডারস্কোর থাকে, এবং এটি একটি অক্ষর বা অঙ্ক দিয়ে শুরু হয়।';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'এই ব্যবহারকারীর নামটি আগেই নেওয়া হয়েছে। অন্য একটি বেছে নিন।';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'এই ইমেল ঠিকানা ব্যবহার করা যাবে না।';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'পাসওয়ার্ডে অন্তত এতগুলি অক্ষর থাকতে হবে:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'আপনার অ্যাকাউন্ট তৈরি হয়েছে। এটি নিশ্চিত করার জন্য আমরা আপনাকে একটি কোড ইমেল করেছি।';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'আপনার অ্যাকাউন্ট তৈরি হয়েছে, কিন্তু এই সার্ভার আপনাকে কোড ইমেল করতে পারেনি। প্রশাসকের সঙ্গে যোগাযোগ করুন।';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'আপনার অ্যাকাউন্ট তৈরি হয়েছে। এখন আপনি সাইন ইন করতে পারেন।';
+// / 'That code is not right.'
+$GuiAuthText34 = 'এই কোডটি সঠিক নয়।';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'এই কোডটি আর ব্যবহার করা যাবে না। নতুন একটি চেয়ে নিন।';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'আপনার অ্যাকাউন্ট নিশ্চিত হয়েছে। এখন আপনি সাইন ইন করতে পারেন।';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'সেই অ্যাকাউন্ট নিশ্চিতকরণের অপেক্ষায় থাকলে একটি নতুন কোড পাঠানো হচ্ছে।';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'সেই অ্যাকাউন্ট থাকলে তার ইমেল ঠিকানায় একটি কোড পাঠানো হচ্ছে।';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'আপনার পাসওয়ার্ড বদলানো হয়েছে। এখন আপনি সাইন ইন করতে পারেন।';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'আপনি সাইন আউট হয়েছেন।';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'আপনাকে সাইন আউট করা হয়েছে, কারণ আপনার সাইন ইন অন্য কোথাও ব্যবহৃত হয়েছে।';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'সার্ভার সাড়া দেয়নি। আবার চেষ্টা করুন।';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'এই সার্ভারে অ্যাকাউন্ট পুনরুদ্ধার করা যায় না।';
 // / -----------------------------------------------------------------------------------

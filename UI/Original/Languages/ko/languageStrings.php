@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -623,4 +623,96 @@ $GuiFunctionsText1 = '사용 중인 브라우저는 클립보드 복사를 지�
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = '<a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>서비스 약관</a> 및 를 확인하세요 <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>개인정보 보호정책';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = '로그인';
+// / 'Sign out'
+$GuiAuthText2 = '로그아웃';
+// / 'Create an account'
+$GuiAuthText3 = '계정 만들기';
+// / 'Username'
+$GuiAuthText4 = '사용자 이름';
+// / 'Password'
+$GuiAuthText5 = '비밀번호';
+// / 'Email address'
+$GuiAuthText6 = '이메일 주소';
+// / 'Code'
+$GuiAuthText7 = '코드';
+// / 'New password'
+$GuiAuthText8 = '새 비밀번호';
+// / 'Confirm your account'
+$GuiAuthText9 = '계정 확인';
+// / 'Recover your account'
+$GuiAuthText10 = '계정 복구';
+// / 'Choose a new password'
+$GuiAuthText11 = '새 비밀번호 선택';
+// / 'Send the code again'
+$GuiAuthText12 = '코드 다시 보내기';
+// / 'Forgot your password?'
+$GuiAuthText13 = '비밀번호를 잊으셨나요?';
+// / 'Have a code?'
+$GuiAuthText14 = '코드가 있으신가요?';
+// / 'Back to sign in'
+$GuiAuthText15 = '로그인으로 돌아가기';
+// / 'Continue without signing in'
+$GuiAuthText16 = '로그인하지 않고 계속';
+// / 'Signed in as'
+$GuiAuthText17 = '로그인한 사용자:';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = '지금은 이 서버에 로그인할 수 없습니다.';
+// / 'Confirm'
+$GuiAuthText19 = '확인';
+// / 'Send a code'
+$GuiAuthText20 = '코드 보내기';
+// / 'Change password'
+$GuiAuthText21 = '비밀번호 변경';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = '사용자 이름 또는 비밀번호가 올바르지 않습니다.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = '시도 횟수가 너무 많습니다. 몇 분 후에 다시 시도하세요.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = '먼저 이메일로 보내 드린 코드로 계정을 확인하세요.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = '이 계정은 로그인할 수 없습니다. 관리자에게 문의하세요.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = '여기에서는 새 계정을 만들 수 없습니다. 관리자에게 문의하세요.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = '사용자 이름은 문자, 숫자, 마침표, 하이픈, 밑줄로 된 3~64자이며 문자나 숫자로 시작합니다.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = '이미 사용 중인 사용자 이름입니다. 다른 이름을 선택하세요.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = '이 이메일 주소는 사용할 수 없습니다.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = '비밀번호의 최소 글자 수:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = '계정이 만들어졌습니다. 확인용 코드를 이메일로 보내 드렸습니다.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = '계정이 만들어졌지만 이 서버에서 코드를 이메일로 보내지 못했습니다. 관리자에게 문의하세요.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = '계정이 만들어졌습니다. 이제 로그인할 수 있습니다.';
+// / 'That code is not right.'
+$GuiAuthText34 = '코드가 올바르지 않습니다.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = '이 코드는 더 이상 사용할 수 없습니다. 새 코드를 요청하세요.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = '계정이 확인되었습니다. 이제 로그인할 수 있습니다.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = '해당 계정이 확인을 기다리는 중이라면 새 코드가 발송되고 있습니다.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = '해당 계정이 있다면 그 이메일 주소로 코드가 발송되고 있습니다.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = '비밀번호가 변경되었습니다. 이제 로그인할 수 있습니다.';
+// / 'You have been signed out.'
+$GuiAuthText40 = '로그아웃되었습니다.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = '로그인이 다른 곳에서 사용되어 로그아웃되었습니다.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = '서버가 응답하지 않았습니다. 다시 시도하세요.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = '이 서버에서는 계정을 복구할 수 없습니다.';
 // / -----------------------------------------------------------------------------------

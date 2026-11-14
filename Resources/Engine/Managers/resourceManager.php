@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.3.
+// / v4.2.0.
 // / This file is the Resource Manager. It is a manager subcomponent of the Engine.
 // / The Resource Manager polls the host, calculates the budget every operation is granted from & sweeps anything that has outlived its welcome.
 // / It watches the free space on every disk holding a data location, & refuses what would write into the reserve kept on one.
@@ -32,7 +32,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.1.3';
+$ManagerVersion = 'v4.2.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -116,6 +116,8 @@ function runResourceManager() {
         list ($sweepCompleted, $locationsSwept) = cleanEveryConvertLoc();
         if (!$sweepCompleted) warningEntry('A scheduled data location sweep did not complete cleanly.');
         else logEntry('Scheduled sweep completed across '.$locationsSwept.' data location(s).');
+        // / Accounts are swept on the same schedule, where the installation has them.
+        if (function_exists('sweepAccountsWhenDue')) sweepAccountsWhenDue(0);
         // / Revalidate the operating environment on the same schedule. A package upgrade, a
         // / kernel change or an administrator editing a policy can break the sandbox under a
         // / listener that has been running for weeks, & nothing else would notice until a
@@ -492,14 +494,14 @@ function evaluateStorageRequest($dataLocations, $requestedLocation, $requestedBy
 // / A function to decide whether an owner's quota allows a write.
 // / Accepts the owner the write is charged to, the data location & the bytes it would write, in that order.
 // / Returns whether the quota allows it & the reason it does not, in that order.
-// / This is where a quota will be kept, & it keeps none yet, so every write is allowed.
-// / Every request is anonymous until the Authentication Manager signs a user in & names them as the owner.
-// / That manager will hold each owner's quota & what each owner holds, & answer here.
+// / An anonymous write is charged to nobody & is allowed. A signed in user's is charged to their account, & the Authentication Manager
+// / answers it from --User Storage Quota-- & what their folder holds, through the Engine's evaluateOwnerQuota().
 function evaluateStorageQuota($quotaOwner, $dataLocation, $requestedBytes) {
   // / Set variables.
   global $EnableMemoryProtection;
   $QuotaAllows = TRUE;
   $QuotaReason = '';
+  if ((string)$quotaOwner !== '' && function_exists('evaluateOwnerQuota')) list ($QuotaAllows, $QuotaReason) = evaluateOwnerQuota((string)$quotaOwner, $requestedBytes);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $quotaOwner, $dataLocation, $requestedBytes);
   return array($QuotaAllows, $QuotaReason); }

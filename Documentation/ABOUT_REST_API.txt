@@ -55,6 +55,9 @@ To use HRConvert2 via POST & GET requests only:
   4. The core will return a filename to the file that was created, or an error that can be checked against ERROR_DESCRIPTIONS.txt.
   5. Submit a download request for the filename that the core provided to you in the last step.
   6. The core will return a relative URL to the file that will remain valid for --File Deletion Age Threshold-- set in config.php, after which it will be removed.
+
+Where the administrator has turned accounts on, a caller may sign in after step 1 & present its key with every request after it,
+& where every visitor must sign in, it must. See Signing In below & ABOUT_AUTHENTICATION.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -145,13 +148,53 @@ The following is a list of supported POST inputs, organized into sections based 
           This value must be stored & resubmitted with every subsequent request that is part of the same session.
           Set this input to the value of the hidden form field from convertGui1.php that has an 'id' of 'Token2'.
 
+  Signing In
+      Where accounts are off, these are ignored. Every action is answered with one line of JSON under the key SignIn,
+      after the doctype line that opens every reply, & nothing else is drawn or run.
+          {"SignIn":{"Outcome":"signed-in","Key":"<96 hexadecimal digits>","Life":30,"Interval":6}}
+      Key is empty but where Outcome is signed-in or exchanged. Life is the seconds a key lives & Interval the seconds
+      between trades. Every action may also be answered unavailable, where accounts cannot be used on this server.
+      SignInAction
+          signin, signout, register, confirm, resend, recover, reset, exchange or page.
+          signin     With SignInUsername & SignInPassword. signed-in, credentials-wrong, too-many, unconfirmed or disabled.
+                     A username no account has is answered credentials-wrong.
+          exchange   With SignInKey. exchanged, with a new key, signed-out for a key that is unknown or over, or ended for a
+                     key that was traded already, which ends the sign in.
+          signout    With SignInKey. Always signed-out.
+          register   With SignInUsername, SignInEmail & SignInPassword. registered-confirm when a code was emailed,
+                     registered-unsent when it could not be, registered-ready when no code is needed, registration-closed,
+                     too-many, username-invalid, email-invalid, password-short or username-taken.
+          confirm    With SignInUsername & SignInCode. confirmed, code-wrong, code-expired or too-many.
+          resend     With SignInUsername. resent or too-many, whether or not the account exists.
+          recover    With SignInUsername. recovery-sent or too-many, whether or not the account exists.
+          reset      With SignInUsername, SignInCode & SignInPassword. reset-done, code-wrong, code-expired, password-short
+                     or too-many.
+          page       With SignInPage. Draws that page as HTML, rather than answering with JSON.
+      SignInUsername
+          String. 3 to 64 letters, digits, dots, dashes & underscores, beginning with a letter or a digit. Any case.
+      SignInEmail
+          String. One address.
+      SignInPassword
+          String. Sent as typed. It is never sanitized. One longer than 1024 bytes is refused.
+      SignInCode
+          String. The ten characters an email carried.
+      SignInPage
+          signin, register, confirm, recover or reset.
+      SignInKey
+          String. 96 hexadecimal digits.
+          A signed in caller sends it with EVERY request, an upload & an operation alike. A request presenting the key it
+          was last handed, inside its life, is signed in, & so is one presenting the key before it for a short grace. A
+          request without one is anonymous. Trade it with SignInAction exchange every Interval seconds, & always use the
+          newest key. Presenting a key does not spend it. Trading one does.
+
   General File Operations
       file
           Multipart file field, or file[] for several files at once.
           This input is used to upload files. An upload happens whenever a file is posted with
           valid tokens, & no other input is needed to trigger it.
           An upload fails with error 18 when the listener refuses it, because the disk holding the
-          session has --Storage Reserve-- megabytes free or less, or would have once it was written.
+          session has --Storage Reserve-- megabytes free or less, or would have once it was written,
+          or because it would take a signed in user past --User Storage Quota--.
       download
           String or JSON Array.
           This input is used at any time to download user files.

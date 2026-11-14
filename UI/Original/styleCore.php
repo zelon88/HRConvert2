@@ -604,5 +604,10 @@ select {
   border: 1px solid #555; }
 body { 
   background-color: var(--hrc2-surface); 
-  color: #ffffff; }';
+  color: #ffffff; }
+/* / A link in the browser\'s own blue or purple cannot be read on a dark page, so it is drawn light. */
+a:link {
+  color: #8ab4f8; }
+a:visited {
+  color: #c58af9; }';
 // / -----------------------------------------------------------------------------------

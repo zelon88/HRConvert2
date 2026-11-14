@@ -254,6 +254,9 @@ Read these before writing code. They are preconditions, not steps.
       is not portable. It fails the first time it is copied into a different application.
   6l. A pipeline needing several tools asks for each by name & decides for itself which it
       cannot run without. The Archive pipeline is the example: RAR is optional, 7-Zip is not.
+  6m. A tool the distribution packages as a Python program names `'Interpreter' => 'python3'`.
+      Start it with `verifiedToolCommand()`, never by its path, so the Python that runs it is
+      the Python its version was asked of. The Metadata pipeline is the example.
 
 7. Create `Resources/Pipelines/<Family>/` & write the two files it holds.
   7a. Start by copying the existing pipeline closest to what you want. Ebook is small &
@@ -292,6 +295,7 @@ Read these before writing code. They are preconditions, not steps.
   8f. ROUTE ON WHAT A TOOL CAN WRITE, NOT ON WHAT IT CAN READ. Assimp reads OFF & has no OFF
       exporter, & an input based route retried an impossible command until it timed out.
   8g. Gate on `verifiedToolPath()` first. Error out with your reserved number.
+      `verifiedToolVerdict()` gives the reason a tool was refused, for that error to name.
   8h. Build the command once, before the retry loop. It never changes.
   8i. Sandbox the command, then test the permission boolean.
   8j. Refuse with your reserved sandbox number when that boolean is FALSE.

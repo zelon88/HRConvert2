@@ -703,10 +703,43 @@ measured. Nothing checked the folder above a name until v4.0.1.
 In v4.0.0 a link planted where the DATA protection file belongs made one -fp copy the link's target
 into a backup the web server account could read, overwrite it & leave it world readable. Until
 v4.0.1 root read the install secret & the DATA protection file with file_get_contents.
+
+THE INSTALL SECRET & A VISITOR'S SESSION ARE THE KERNEL'S, FROM v4.1.9.
+Until v4.1.9 both lived in convertCore.php, eleven hundred lines of it. v3.9.9 decided they would
+move with authentication into a core of their own & not into the kernel, because authentication is
+a large subsystem & the kernel is only worth having while it stays small. Neither of them is
+authentication. The secret is read before the Engine can load, because the installation does not
+verify without it, root stops on the folders above it & the logfile is named from it. A session is
+derived from it before the Engine loads as well, because every log line carries its label. A core
+the Engine loads can provide neither, & keeping a copy in the caller for when the Engine is missing
+is the sign of a function in the wrong place. Every application on the Engine needs the secret,
+because its startup & socket keys are derived from it, & neither calls anything but the kernel.
+Signing in is the Engine's, from v4.2.0, & takes over a signed in request's identity once the
+Engine has loaded, as adoptWorkflowSession() takes over a workflow worker's.
+Rotating the secret stops & starts the listener, which is the Engine's, so --rotate-secret became
+the Engine's command at the same time.
+The lines the secret writes to the server's error log before a logfile exists named HRConvert2,
+which in the kernel would have named it for every application. applicationLabel() names them.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Managers--
+
+A STARTUP KEY CARRIES A LAUNCH NUMBER OF ITS OWN, FROM v4.1.9.
+Until v4.1.9 a key was a signature over its purpose & a ten second bucket & nothing else, so two
+launches of one purpose inside one bucket minted the same key. A key that crosses a process boundary
+is spent, so the second launch was refused as a replay. A listener stopped & started again inside
+ten seconds lost its managers that way, with ERROR 31017, ERROR 31006 & ERROR 31005, & a key derived
+& checked inside one process was not spent because a service manager restarting inside ten seconds
+would have refused itself. A key without a launch number is still accepted, because a listener an
+earlier release started goes on minting them after an update until it is restarted.
+
+THE LEDGER OF SPENT STARTUP KEYS IS READ & WRITTEN UNDER ONE LOCK, FROM v4.1.9.
+Until v4.1.9 each process read the ledger, added its own key & wrote back what it had read. The
+listener's managers spend their keys at the same moment, so every key but the last one written was
+lost, & a key that was lost could be presented again inside its window. Sixteen processes spending
+at once left one key in the ledger. The restart test found it, because the third restart of three
+under v4.1.8 was accepted when the first two were refused.
 
 THE CORE MANAGER ANSWERS A STOP SIGNAL & WAITS FOR ITS SUBORDINATES.
 Until v4.0.6 nothing answered it, so the Core Manager died at once & the service manager killed the
@@ -1745,6 +1778,35 @@ own program, which is text, & passes the argument only where it says it turns th
 Ubuntu 24.04 carries 0.13.4 & Debian's bookworm 0.13.3, & both failed under Apache while the
 argument was always passed.
 
+FOUND BY TESTING. TWELVE FORMATS WERE NEVER STRIPPED IN THE SANDBOX. v4.2.0.
+mat2 chooses how to read a file by the type Python names for its extension, & Python names docx,
+xlsx, pptx, odt, ods, odp, odg, EPUB, FLAC, Ogg & WMV, & an EPUB's XHTML parts, only from
+/etc/mime.types, which the sandbox did not show. mat2 said the format of each was None & made
+nothing. Python alone names Opus audio/opus, which mat2 does not read, where that file names it
+audio/ogg. Strip Metadata failed with 41007 & 34 for twelve of the twenty four formats it offers.
+The unit checks of v4.1.8 ran mat2 without the sandbox & passed, & the suites through Apache
+stripped a photo & nothing else. The mat2 profile now shows /etc/mime.types read only, & a suite
+strips a file of every format through Apache, as a visitor & as a signed in user.
+
+MAT2 IS STARTED BY THE DISTRIBUTION'S PYTHON. v4.2.0.
+mat2's first line is #!/usr/bin/python3, & its package's modules are built for the distribution's
+Python 3 & no other. A host whose python3 is another Python, through an alternative or a PPA,
+cannot start it, & Strip Metadata failed with 41000 & 34 on every file. The test host is one,
+pointing python3 at 3.13 where Ubuntu 24.04's packages are built for 3.12. The manifest names
+python3 as mat2's Interpreter, & the Dependency Core & the Metadata pipeline start it with the
+Python Debian & Ubuntu name in /usr/share/python3/debian_defaults, in isolated mode, so the
+version that is asked & the program that runs are started alike. On a host whose python3 is that
+Python nothing changes but the isolation.
+
+A REFUSAL SAYS WHY. v4.2.0.
+41000 names the status the Dependency Core gave mat2 & the line of its output that says the most,
+which for a Python program that cannot start is the last line of its traceback & not the first.
+41007 names the last line mat2 printed. Before, both reasons were logged only with verbose
+logging on, & a user saw 34 & nothing more. mat2 refuses an archive holding a part it does not
+know, such as the display options Apple Books & pandoc write into an EPUB, & 41007 names the part.
+ODG is in the pipeline's list of formats, & no upload accepts one & nothing converts to one, so
+it is reached by nothing a user can do today.
+
 A MERGE NAMES ITS PDFS RELATIVE TO ITS FOLDER.
 The sandbox rewrites the one input & the one output it is given into the paths it mounts, & a
 merge reads many. Each PDF is copied into the merge's own folder as part-1.pdf, part-2.pdf & so
@@ -1755,6 +1817,93 @@ A SPLIT IS HELD AS AN EXTRACTION IS.
 A split makes a great many files from one, as an extraction does, so it is held to the same two
 settings. A PDF with more pages than --Maximum Extracted Files-- is refused before it is split, &
 pages holding more than --Maximum Extracted Size-- are measured before any is placed, & none is.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Accounts--
+
+NO COOKIE, SO THE PAGE HOLDS THE KEY. v4.2.0.
+A browser sends a cookie with every request that names this server, from any site, so a cookie is a
+credential nobody has to present, & this project sets none. A signed in page holds its key in its own
+memory instead & adds it to every request it sends its own core. Another site's page cannot read it,
+so it cannot forge a request that is signed in.
+
+THE KEY IS KEPT IN window.name, BECAUSE A RELOAD MUST NOT SIGN A USER OUT.
+Page memory dies with every navigation, & every form this application posts is one. window.name
+belongs to the tab rather than to the site, is never sent to a server, survives a reload & a link
+followed in the same tab, & is cleared when the tab goes to another site. Web storage is kept for the
+site, & local storage outlives the tab, which is what a cookie does & what this avoids.
+
+A KEY IS PRESENTED OFTEN & TRADED SELDOM.
+Were every request to trade its key, two requests in flight at once would each spend the key the
+other carried, & a page sending an upload & a list together would sign itself out. So an ordinary
+request presents the key & spends nothing, & only the timer trades it. The key before the newest is
+honoured for a short grace, so a request that crossed a trade still lands.
+
+A SPENT KEY TRADED AGAIN ENDS THE SIGN IN.
+A sign in keeps the hashes of the last eight keys it spent. Only a copy of a key can be traded twice,
+so the second trade ends the sign in for every copy. A key that is unknown or over answers signed out
+& ends nothing, because that is what a tab left too long sends.
+
+THE TIMER RUNS IN A WORKER.
+Chrome slows the timers of a tab hidden for five minutes to once a minute, which is longer than a key
+lives. A dedicated worker's timer is not slowed. The page trades at once when it is shown again, for
+a browser that slows the worker too.
+
+AN EMAIL CARRIES A CODE, NOT A LINK.
+A mail system that checks links opens each one before its reader does, & would spend a link that
+works once. A code is typed, so only its reader spends it.
+
+AN ACCOUNT IS FOUND BY ITS USERNAME, & AN ADDRESS IS NEVER AN INDEX.
+Recovery asks for a username & mails the address that account keeps. An index of addresses would let
+registering or recovering tell a visitor whether an address is known here, & an address may hold
+several accounts.
+
+THE ACCOUNTS SALT IS NOT THE INSTALL SECRET.
+Records are named by a salt of their own, so --rotate-secret, which an administrator runs when the
+secret may have leaked, keeps every account. Each sign in carries a fingerprint of the secret it was
+made under, so the same rotation ends every sign in.
+
+A RECORD IS JSON BEHIND A LINE THAT STOPS PHP, & IS NEVER INCLUDED.
+It is read as text. The first line is for a mistake elsewhere that hands the file to PHP, & nothing in
+the Engine relies on it.
+
+ROOT NEVER TOUCHES AN ACCOUNT.
+Accounts is the web server account's, so root working there by name could be sent anywhere by a link.
+--account run as root hands itself to the web server account, as -c does, & only that account sweeps.
+
+FOUND BY TESTING. THE FIRST SWEEP THAT RAN, RAN AS ROOT. v4.2.0.
+A web request sweeps accounts before verifyGlobals, & loadEngineManager built its path from $DirSep,
+which verifyGlobals sets, so the Authentication Manager was never found & nothing was swept. Once the
+path was built from DIRECTORY_SEPARATOR the manager loaded everywhere, & -fp, which root runs, swept
+before anything else did & made the folders inside Accounts as root. The web server account could then
+register nobody. A sweep now runs only as the web server account, from a web request or the listener,
+& the suites check that nothing in Accounts or Users belongs to any other account.
+
+A WORKER KNOWS WHOSE FILES IT HAS.
+A workflow's worker is a process with no request, so it cannot present a key. The Engine adds the
+user's account to the session it hands the worker, & the startup key is bound to the whole, so the
+account cannot be changed without the install secret.
+
+FOUND BY TESTING. A REPAIR WROTE AN EMPTY DEFAULT AS TWO QUOTES. v4.2.0.
+collectConfigModel() reads each default from the template as it is written there, quotes & all, &
+formatConfigValue() quoted every string again. No release before v4.2.0 had a repair add a string
+setting, so only a reset in --config met it. The chain of drop ins from v4.1.2 found it, where the
+email settings came back as '\'\'', & every email would have carried two quotes for its subject &
+its text. A quoted value is now read as the literal it is, & the value between its quotes is written.
+
+FOUND BY LOOKING. THE SIGN IN BAR COVERED THE PAGE. v4.2.0.
+The bar was first fixed over a top corner of the window. Screenshots at a phone's width showed it over
+the buttons at the top of the card, & on a wide screen a long username ran it into the card. It is now
+part of the page, written by footer.php & moved to the top of the page, so nothing can be under it.
+The same screenshots found the dark scheme's card drawn in the colour of the page, & its links in the
+browser's dark blue. Both are fixed, & neither was new in v4.2.0.
+
+FOUND BY USE. --account TOLD AN ADMINISTRATOR A RULE INSTEAD OF WHAT TO TYPE. v4.2.0.
+--account --admin with no username said what a username may hold, & -add was answered with a list
+of actions. Every refusal now names what is missing & shows the form to type, an action written
+with one dash is named with its two & is not run, & root's --remove names the account it asks
+about. -y where a username belongs names no username, because no username begins with a dash.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

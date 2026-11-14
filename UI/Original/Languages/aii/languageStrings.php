@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.1.8';
+$LanguageVersion = 'v4.2.0';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -628,4 +628,96 @@ $GuiFunctionsText1 = 'ܠܵܘܚܵܐ ܕܚܙܵܝܬܵܐ ܕܝܼܵܘܟ݂ܘܿܢ ܠܹܐ 
 // / Set GUI - Footer Related Variables.
 // / 'Check out our <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Terms of Service</a> and <a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>Privacy Policy'
 $GuiFooterText1 = 'ܚܙܝܼ <a href=\''.$TOSURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>ܩܝܵܡܹܐ ܕܬܸܫܡܸܫܬܵܐ</a> ܘ<a href=\''.$PPURL.'\' target=\'_blank\' rel=\'noopener noreferrer\'>ܕܝܼܠܵܢܵܝܘܼܬܵܐ ܕܦܘܼܪܩܵܢܵܐ</a> ܕܝܼܠܲܢ';
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / Set GUI - Sign In Related Variables.
+// / These strings are drawn by engineGui.php, the sign in page the Engine names, & by the sign in bar in the footer.
+// / A sentence that names a number is written so it reads correctly for any count, so no plural helper is needed.
+// / 'Sign in'
+$GuiAuthText1 = 'ܥܘܿܠ';
+// / 'Sign out'
+$GuiAuthText2 = 'ܦܘܿܩ';
+// / 'Create an account'
+$GuiAuthText3 = 'ܒܪܝܼ ܚܘܼܫܒܵܢܵܐ';
+// / 'Username'
+$GuiAuthText4 = 'ܫܸܡܵܐ ܕܡܲܦܠܚܵܢܵܐ';
+// / 'Password'
+$GuiAuthText5 = 'ܡܸܠܬܵܐ ܕܥܘܼܒܵܪܵܐ';
+// / 'Email address'
+$GuiAuthText6 = 'ܡܘܼܢܥܵܐ ܕܐܝܼܡܹܝܠ';
+// / 'Code'
+$GuiAuthText7 = 'ܪܸܡܙܵܐ';
+// / 'New password'
+$GuiAuthText8 = 'ܡܸܠܬܵܐ ܕܥܘܼܒܵܪܵܐ ܚܕܲܬܬܵܐ';
+// / 'Confirm your account'
+$GuiAuthText9 = 'ܚܲܬܸܡ ܚܘܼܫܒܵܢܘܼܟ݂';
+// / 'Recover your account'
+$GuiAuthText10 = 'ܦܲܢܝܼ ܚܘܼܫܒܵܢܘܼܟ݂';
+// / 'Choose a new password'
+$GuiAuthText11 = 'ܓܒܝܼ ܡܸܠܬܵܐ ܕܥܘܼܒܵܪܵܐ ܚܕܲܬܬܵܐ';
+// / 'Send the code again'
+$GuiAuthText12 = 'ܫܲܕܪ ܪܸܡܙܵܐ ܐܚܪܹܢ ܓܵܗ̇ܵܐ';
+// / 'Forgot your password?'
+$GuiAuthText13 = 'ܡܸܠܬܵܐ ܕܥܘܼܒܵܪܵܐ ܡܲܛܥܝܼܠܘܼܟ݂ ܝܠܵܗ̇؟';
+// / 'Have a code?'
+$GuiAuthText14 = 'ܐܝܼܬ ܠܘܼܟ݂ ܪܸܡܙܵܐ؟';
+// / 'Back to sign in'
+$GuiAuthText15 = 'ܕܥܘܿܪ ܠܥܘܼܠܵܐ';
+// / 'Continue without signing in'
+$GuiAuthText16 = 'ܡܲܫܸܟ ܕܠܵܐ ܥܘܼܠܵܐ';
+// / 'Signed in as'
+$GuiAuthText17 = 'ܥܠܝܼܠܵܐ ܐܲܝܟ';
+// / 'Signing in is unavailable on this server right now.'
+$GuiAuthText18 = 'ܥܘܼܠܵܐ ܠܵܐ ܝܠܹܗ ܡܵܨܝܵܐ ܒܗܵܢܵܐ ܡܫܲܡܫܵܢܵܐ ܗܵܫܵܐ.';
+// / 'Confirm'
+$GuiAuthText19 = 'ܚܲܬܸܡ';
+// / 'Send a code'
+$GuiAuthText20 = 'ܫܲܕܪ ܪܸܡܙܵܐ';
+// / 'Change password'
+$GuiAuthText21 = 'ܫܲܚܠܸܦ ܡܸܠܬܵܐ ܕܥܘܼܒܵܪܵܐ';
+// / 'The username or password is incorrect.'
+$GuiAuthText22 = 'ܫܸܡܵܐ ܕܡܲܦܠܚܵܢܵܐ ܐܵܘ ܡܸܠܬܵܐ ܕܥܘܼܒܵܪܵܐ ܠܵܐ ܝܠܵܗ̇ ܬܪܝܼܨܬܵܐ.';
+// / 'Too many attempts. Please wait a few minutes and try again.'
+$GuiAuthText23 = 'ܣܲܓܝܼ ܢܸܣܝܘܿܢܹܐ. ܓܪܘܼܒ ܐܚܪܹܢ ܒܬܲܪ ܩܲܠܝܼܠ ܩܛܝܼܢܹܐ.';
+// / 'Confirm your account with the code we emailed you first.'
+$GuiAuthText24 = 'ܩܲܕܡܵܝܵܐ ܚܲܬܸܡ ܚܘܼܫܒܵܢܘܼܟ݂ ܒܪܸܡܙܵܐ ܕܫܲܕܪܲܚ ܠܘܼܟ݂ ܒܐܝܼܡܹܝܠ.';
+// / 'This account cannot sign in. Contact the administrator.'
+$GuiAuthText25 = 'ܗܵܢܵܐ ܚܘܼܫܒܵܢܵܐ ܠܵܐ ܡܵܨܹܐ ܥܵܐܹܠ. ܡܲܚܒܸܪ ܥܲܡ ܡܲܕܒܪܵܢܵܐ.';
+// / 'New accounts cannot be created here. Contact the administrator.'
+$GuiAuthText26 = 'ܚܘܼܫܒܵܢܹܐ ܚܕܲܬܹܐ ܠܵܐ ܡܵܨܝܼ ܕܡܸܬܒܪܹܝܢ ܗܵܪܟܵܐ. ܡܲܚܒܸܪ ܥܲܡ ܡܲܕܒܪܵܢܵܐ.';
+// / 'A username is 3 to 64 letters, digits, dots, dashes or underscores, and starts with a letter or a digit.'
+$GuiAuthText27 = 'ܫܸܡܵܐ ܕܡܲܦܠܚܵܢܵܐ ܐܝܼܬ ܒܹܗ ܡܼܢ 3 ܗܲܠ 64 ܐܵܬܘܵܬܹܐ، ܡܸܢܝܵܢܹܐ، ܢܘܼܩܙܹܐ، ܣܲܪܛܹܐ ܐܵܘ ܣܲܪܛܹܐ ܬܚܵܝܹܐ، ܘܫܵܪܹܐ ܒܐܵܬܵܐ ܐܵܘ ܒܡܸܢܝܵܢܵܐ.';
+// / 'That username is taken. Choose another.'
+$GuiAuthText28 = 'ܗܵܢܵܐ ܫܸܡܵܐ ܕܡܲܦܠܚܵܢܵܐ ܫܩܝܼܠܵܐ ܝܠܹܗ. ܓܒܝܼ ܚܲܕ ܐܚܹܪܹܢܵܐ.';
+// / 'That email address cannot be used.'
+$GuiAuthText29 = 'ܗܵܢܵܐ ܡܘܼܢܥܵܐ ܕܐܝܼܡܹܝܠ ܠܵܐ ܡܵܨܹܐ ܕܡܸܬܦܲܠܚ.';
+// / 'Passwords must have at least this many characters:'
+$GuiAuthText30 = 'ܡܸܢܝܵܢܵܐ ܙܥܘܿܪܵܐ ܕܐܵܬܘܵܬܹܐ ܕܡܸܠܬܵܐ ܕܥܘܼܒܵܪܵܐ:';
+// / 'Your account was created. We emailed you a code to confirm it.'
+$GuiAuthText31 = 'ܚܘܼܫܒܵܢܘܼܟ݂ ܒܪܹܐ ܠܹܗ. ܫܲܕܪܲܚ ܠܘܼܟ݂ ܪܸܡܙܵܐ ܒܐܝܼܡܹܝܠ ܕܚܲܬܡܲܬ ܠܹܗ.';
+// / 'Your account was created, but this server could not email your code. Contact the administrator.'
+$GuiAuthText32 = 'ܚܘܼܫܒܵܢܘܼܟ݂ ܒܪܹܐ ܠܹܗ، ܐܵܢܵܐ ܗܵܢܵܐ ܡܫܲܡܫܵܢܵܐ ܠܵܐ ܡܨܹܐ ܠܹܗ ܕܫܵܕܹܪ ܠܘܼܟ݂ ܪܸܡܙܵܐ. ܡܲܚܒܸܪ ܥܲܡ ܡܲܕܒܪܵܢܵܐ.';
+// / 'Your account was created. You can sign in now.'
+$GuiAuthText33 = 'ܚܘܼܫܒܵܢܘܼܟ݂ ܒܪܹܐ ܠܹܗ. ܗܵܫܵܐ ܡܵܨܹܬ ܥܵܐܹܠܵܬ.';
+// / 'That code is not right.'
+$GuiAuthText34 = 'ܗܵܢܵܐ ܪܸܡܙܵܐ ܠܵܐ ܝܠܹܗ ܬܪܝܼܨܵܐ.';
+// / 'That code can no longer be used. Ask for a new one.'
+$GuiAuthText35 = 'ܗܵܢܵܐ ܪܸܡܙܵܐ ܠܵܐ ܡܵܨܹܐ ܕܡܸܬܦܲܠܚ ܐܚܪܹܢ. ܒܥܝܼ ܚܲܕ ܚܕܲܬܵܐ.';
+// / 'Your account is confirmed. You can sign in now.'
+$GuiAuthText36 = 'ܚܘܼܫܒܵܢܘܼܟ݂ ܚܬܝܼܡܵܐ ܝܠܹܗ. ܗܵܫܵܐ ܡܵܨܹܬ ܥܵܐܹܠܵܬ.';
+// / 'If that account is waiting to be confirmed, a new code is on its way.'
+$GuiAuthText37 = 'ܐܸܢ ܗܵܘ ܚܘܼܫܒܵܢܵܐ ܡܲܣܟܹܐ ܝܠܹܗ ܠܚܘܼܬܵܡܵܐ، ܪܸܡܙܵܐ ܚܕܲܬܵܐ ܒܐܘܼܪܚܵܐ ܝܠܹܗ.';
+// / 'If that account exists, a code is on its way to its email address.'
+$GuiAuthText38 = 'ܐܸܢ ܗܵܘ ܚܘܼܫܒܵܢܵܐ ܐܝܼܬܵܘܗܝ، ܪܸܡܙܵܐ ܒܐܘܼܪܚܵܐ ܝܠܹܗ ܠܡܘܼܢܥܵܐ ܕܐܝܼܡܹܝܠ ܕܝܼܠܹܗ.';
+// / 'Your password was changed. You can sign in now.'
+$GuiAuthText39 = 'ܡܸܠܬܵܐ ܕܥܘܼܒܵܪܵܐ ܕܝܼܠܘܼܟ݂ ܫܚܝܼܠܦܵܐ ܝܠܵܗ̇. ܗܵܫܵܐ ܡܵܨܹܬ ܥܵܐܹܠܵܬ.';
+// / 'You have been signed out.'
+$GuiAuthText40 = 'ܦܸܩܠܘܼܟ݂.';
+// / 'You were signed out, because your sign in was used somewhere else.'
+$GuiAuthText41 = 'ܦܸܩܠܘܼܟ݂، ܣܵܒܵܒ ܥܘܼܠܵܐ ܕܝܼܠܘܼܟ݂ ܦܠܝܼܚܵܐ ܝܠܹܗ ܒܕܘܼܟܬܵܐ ܐܚܹܪܬܵܐ.';
+// / 'The server did not answer. Please try again.'
+$GuiAuthText42 = 'ܡܫܲܡܫܵܢܵܐ ܠܵܐ ܡܘܼܦܢܝܼ ܠܹܗ. ܓܪܘܼܒ ܐܚܪܹܢ.';
+// / 'Recovering an account is unavailable on this server.'
+$GuiAuthText43 = 'ܦܘܼܢܵܝܵܐ ܕܚܘܼܫܒܵܢܵܐ ܠܵܐ ܝܠܹܗ ܡܵܨܝܵܐ ܒܗܵܢܵܐ ܡܫܲܡܫܵܢܵܐ.';
 // / -----------------------------------------------------------------------------------

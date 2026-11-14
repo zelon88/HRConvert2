@@ -809,3 +809,116 @@ input.hrc2-wf-row-control[type='number'] {
 @media (max-width: 520px) {
   .hrc2-wf-form {
     grid-template-columns: minmax(0, 1fr); } }
+
+/* / -----------------------------------------------------------------------------------
+   / SIGNING IN, WHERE ACCOUNTS ARE ON.
+   / The sign in bar is a small card at the top of every page, at the end of the line a
+   / reader of the page's language finishes on, so on the right, & on the left where the
+   / language reads right to left.
+   / It is part of the page rather than laid over it, so no username however long & no
+   / screen however narrow can put it over anything. It was laid over a corner of the page
+   / at first, & on a phone it covered the buttons at the top of the page.
+   / footer.php writes it, because the footer is the one file every page shares, & moves it
+   / to the top of the page. A bar with nothing to say is empty, & an empty bar takes no room.
+   / Its buttons are the scheme's buttons made small, so they read as the same buttons.
+   / ----------------------------------------------------------------------------------- */
+.hrc2-signin-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 10px;
+  box-sizing: border-box;
+  width: -moz-fit-content;
+  width: fit-content;
+  max-width: calc(100% - 24px);
+  margin-top: 0;
+  margin-bottom: 6px;
+  margin-inline-start: auto;
+  margin-inline-end: 12px;
+  padding: 5px 6px;
+  background-color: var(--hrc2-surface);
+  color: var(--hrc2-ink);
+  border: 1px solid var(--hrc2-edge);
+  border-radius: 8px;
+  box-shadow: var(--hrc2-lift);
+  font-size: 13px;
+  overflow-wrap: anywhere; }
+.hrc2-signin-bar:empty {
+  display: none; }
+.hrc2-signin-who {
+  padding-inline-start: 4px; }
+.hrc2-signin-bar .info-button {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: 6px 16px;
+  font-size: 14px; }
+/* / The sign in page is one card on the surface the scheme draws a card on.
+   / Each field's name is above the field, so a long name in any language never pushes its
+   / field onto a line of its own, & each field is as wide as the card.
+   / A field's text is 16 pixels, because a phone zooms into a field of smaller text when
+   / it is touched & does not zoom back out. */
+.hrc2-signin-card {
+  box-sizing: border-box;
+  max-width: 460px;
+  margin: 20px auto;
+  padding: 20px 24px;
+  border-radius: 12px;
+  background-color: var(--hrc2-surface);
+  color: var(--hrc2-ink);
+  box-shadow: 1px 1px 5px 5px rgba(var(--hrc2-shade-rgb), 0.1); }
+.hrc2-signin-card h2 {
+  margin: 0 0 14px 0; }
+.hrc2-signin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0; }
+.hrc2-signin-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  font-weight: bold; }
+.hrc2-signin-form input[type='text'],
+.hrc2-signin-form input[type='email'],
+.hrc2-signin-form input[type='password'] {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: normal;
+  color: var(--hrc2-ink);
+  background-color: var(--hrc2-surface);
+  border: 1px solid var(--hrc2-edge);
+  border-radius: 6px; }
+.hrc2-signin-form input:focus {
+  outline: none;
+  border-color: var(--hrc2-accent);
+  box-shadow: 0 0 0 3px var(--hrc2-glow); }
+.hrc2-signin-form .info-button {
+  align-self: center;
+  margin-top: 4px; }
+.hrc2-signin-again {
+  margin-top: 12px; }
+/* / The links under a form are spaced apart & wrap as whole links, so no two read as one. */
+.hrc2-signin-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 18px;
+  margin: 18px 0 0 0;
+  font-size: 14px; }
+/* / What the server answered is said in a box above the form, in the scheme's wash. */
+.hrc2-signin-message {
+  margin: 0 0 14px 0;
+  padding: 10px 12px;
+  background-color: var(--hrc2-wash);
+  color: var(--hrc2-ink);
+  border: 1px solid var(--hrc2-edge);
+  border-radius: 6px; }
+.hrc2-signin-message[hidden] {
+  display: none; }

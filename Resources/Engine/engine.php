@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.1.7.
+// / v4.2.0.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -41,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.1.7';
+$EngineVersion = 'v4.2.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -172,18 +172,42 @@ function engineWorkerContextVariable() {
 // / It is also kept in $TransportedWorkerContext, because the worker's startup key is bound to it & is checked once the Workflow Core loads.
 // / It is cleared from the environment at once, so a converter the worker starts does not inherit it.
 // / It lives here rather than in the Workflow Core, because the application adopts the session before the globals that hang off one are built, & that is before any core loads.
+// / A worker started for a signed in user was handed that user's account after the session, as engineWorkerContext() writes it.
+// / The account is kept in $TransportedWorkerIdentity for the Authentication Core, & the application is handed its own session alone.
+// / $TransportedWorkerContext keeps the whole, so the startup key binds the account as well as the session.
 function readTransportedWorkerContext() {
   // / Set variables.
-  global $TransportedWorkerContext, $EnableMemoryProtection;
+  global $TransportedWorkerContext, $TransportedWorkerIdentity, $EnableMemoryProtection;
   $WorkerContext = '';
   $contextVariable = '';
+  $contextParts = array();
   $contextVariable = engineWorkerContextVariable();
-  $WorkerContext = (string)getenv($contextVariable);
+  $TransportedWorkerContext = (string)getenv($contextVariable);
   putenv($contextVariable);
   unset($_ENV[$contextVariable], $_SERVER[$contextVariable]);
-  $TransportedWorkerContext = $WorkerContext;
+  $TransportedWorkerIdentity = '';
+  if (preg_match('/^(.*)\|([a-f0-9]{64})$/s', $TransportedWorkerContext, $contextParts) === 1) list ($WorkerContext, $TransportedWorkerIdentity) = array($contextParts[1], $contextParts[2]);
+  else $WorkerContext = $TransportedWorkerContext;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $contextVariable);
+  purgeSensitiveMemory($EnableMemoryProtection, $contextVariable, $contextParts);
+  return $WorkerContext; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name what a workflow worker is handed.
+// / Accepts the session as the application names it. Returns that session, followed by | & the signed in user's account where there is one.
+// / The account is the name of its record, which grants nothing by itself, & the worker's startup key is bound to the whole.
+// / A worker handed no account is anonymous, exactly as every worker was before accounts existed.
+function engineWorkerContext($sessionContext) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $WorkerContext = '';
+  $quotaOwner = '';
+  $quotaOwner = storageQuotaOwner();
+  $WorkerContext = (string)$sessionContext;
+  if (preg_match('/^[a-f0-9]{64}$/', $quotaOwner) === 1) $WorkerContext .= '|'.$quotaOwner;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $quotaOwner, $sessionContext);
   return $WorkerContext; }
 // / -----------------------------------------------------------------------------------
 
@@ -199,34 +223,41 @@ function readTransportedWorkerContext() {
 // / It does not defend against an account holding the install secret, which can mint a valid key directly.
 // / Root & the web server user can delete the ledger, & both can already read the secret, so deleting it gains them nothing.
 // / The ledger sits in the socket folder, 0700 & the web server user's, so an unprivileged local account cannot reach it.
+// / It is read & written again under one lock, because the listener's managers spend their keys at the same moment.
+// / Until v4.1.9 each read it, & wrote back what it read with its own key, so all but the last key written were lost.
+// / A ledger that cannot be opened or locked spends nothing, & says so, because a key it could not record could be replayed.
 function consumeStartupKey($keyPurpose, $suppliedKey) {
   // / Set variables.
   global $ManagerSocketDir, $DirSep, $StartupKeyWindow, $EnableMemoryProtection;
-  $KeyWasUnspent = FALSE;
+  $KeyWasUnspent = TRUE;
   $ledgerPath = $ledgerContents = $keyFingerprint = $rebuiltLedger = $ledgerLine = '';
   $ledgerLines = array();
   $cutoffTime = 0;
-  if (!is_dir((string)$ManagerSocketDir)) $KeyWasUnspent = TRUE;
-  else {
+  $ledgerHandle = FALSE;
+  $ledgerIsLocked = FALSE;
+  if (is_dir((string)$ManagerSocketDir)) {
     $ledgerPath = rtrim((string)$ManagerSocketDir, $DirSep).$DirSep.'startup-keys.ledger';
     $keyFingerprint = hash('sha256', (string)$keyPurpose.'|'.(string)$suppliedKey);
     $cutoffTime = time() - (max(1, (int)$StartupKeyWindow) * 3);
-    $ledgerContents = (string)@file_get_contents($ledgerPath);
-    $ledgerLines = ($ledgerContents === '' ? array() : explode(PHP_EOL, $ledgerContents));
-    $KeyWasUnspent = TRUE;
-    foreach ($ledgerLines as $ledgerLine) {
-      if (trim($ledgerLine) === '') continue;
+    $ledgerHandle = @fopen($ledgerPath, 'c+');
+    if (is_resource($ledgerHandle)) $ledgerIsLocked = @flock($ledgerHandle, LOCK_EX);
+    if (!$ledgerIsLocked) warningEntry('The ledger of spent startup keys at '.$ledgerPath.' could not be opened & locked, so a startup key for '.$keyPurpose.' was accepted without being recorded as spent.');
+    else {
+      $ledgerContents = (string)stream_get_contents($ledgerHandle);
+      $ledgerLines = ($ledgerContents === '' ? array() : explode(PHP_EOL, $ledgerContents));
       // / A line is a timestamp & a fingerprint. Anything older than the cutoff is dropped
       // / rather than carried, so the ledger cannot grow without bound.
-      if ((int)substr($ledgerLine, 0, strpos($ledgerLine, ' ')) < $cutoffTime) continue;
-      if (substr($ledgerLine, strpos($ledgerLine, ' ') + 1) === $keyFingerprint) $KeyWasUnspent = FALSE;
-      $rebuiltLedger = $rebuiltLedger.$ledgerLine.PHP_EOL; }
-    if ($KeyWasUnspent) {
-      $rebuiltLedger = $rebuiltLedger.time().' '.$keyFingerprint.PHP_EOL;
-      @file_put_contents($ledgerPath, $rebuiltLedger, LOCK_EX);
-      @chmod($ledgerPath, 0600); } }
+      foreach ($ledgerLines as $ledgerLine) {
+        if (trim($ledgerLine) === '' or (int)substr($ledgerLine, 0, strpos($ledgerLine, ' ')) < $cutoffTime) continue;
+        if (substr($ledgerLine, strpos($ledgerLine, ' ') + 1) === $keyFingerprint) $KeyWasUnspent = FALSE;
+        $rebuiltLedger = $rebuiltLedger.$ledgerLine.PHP_EOL; }
+      if ($KeyWasUnspent && @ftruncate($ledgerHandle, 0) && @rewind($ledgerHandle)) @fwrite($ledgerHandle, $rebuiltLedger.time().' '.$keyFingerprint.PHP_EOL);
+      @fflush($ledgerHandle);
+      @flock($ledgerHandle, LOCK_UN); }
+    if (is_resource($ledgerHandle)) @fclose($ledgerHandle);
+    if (file_exists($ledgerPath)) @chmod($ledgerPath, 0600); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $ledgerPath, $ledgerContents, $keyFingerprint, $rebuiltLedger, $ledgerLine, $ledgerLines, $cutoffTime, $keyPurpose, $suppliedKey);
+  purgeSensitiveMemory($EnableMemoryProtection, $ledgerPath, $ledgerContents, $keyFingerprint, $rebuiltLedger, $ledgerLine, $ledgerLines, $cutoffTime, $ledgerHandle, $ledgerIsLocked, $keyPurpose, $suppliedKey);
   return $KeyWasUnspent; }
 // / -----------------------------------------------------------------------------------
 
@@ -235,18 +266,28 @@ function consumeStartupKey($keyPurpose, $suppliedKey) {
 // / Accepts the purpose the key authorizes.
 // / Returns the key, or an empty string when no install secret is available.
 // / The bucket bounds the window in which a captured key can be reused.
+// / A key is a launch number of 32 hexadecimal characters drawn at random, then a signature of 64 over the purpose, the bucket & that number.
+// / So every key minted is a key of its own, & a second launch inside one window is not a replay of the first.
+// / A host that cannot supply random bytes mints the signature alone, as releases before v4.1.9 did, & says so.
+// / Two launches of one purpose inside one window then share a key, & the second is refused as a replay.
 function deriveStartupKey($keyPurpose) {
   // / Set variables.
   global $SecretKey, $StartupKeyWindow, $EnableMemoryProtection;
   $StartupKey = '';
   $timeBucket = 0;
-  $keyMaterial = '';
+  $keyMaterial = $launchNumber = '';
+  $randomError = NULL;
   if (is_string($SecretKey) && strlen($SecretKey) === 64) {
     $timeBucket = (int)floor(time() / max(1, (int)$StartupKeyWindow));
-    $keyMaterial = 'startup|'.$keyPurpose.'|'.$timeBucket;
-    $StartupKey = hash_hmac('sha256', $keyMaterial, $SecretKey); }
+    try { $launchNumber = bin2hex(random_bytes(16)); }
+    catch (Throwable $randomError) { $launchNumber = ''; }
+    if ($launchNumber === '') {
+      warningEntry('A startup key for '.$keyPurpose.' carries no launch number, because this host could not supply random bytes. A second launch inside the same window will be refused as a replay.');
+      $keyMaterial = 'startup|'.$keyPurpose.'|'.$timeBucket; }
+    else $keyMaterial = 'startup|'.$keyPurpose.'|'.$timeBucket.'|'.$launchNumber;
+    $StartupKey = $launchNumber.hash_hmac('sha256', $keyMaterial, $SecretKey); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $timeBucket, $keyMaterial, $keyPurpose);
+  purgeSensitiveMemory($EnableMemoryProtection, $timeBucket, $keyMaterial, $launchNumber, $randomError, $keyPurpose);
   return $StartupKey; }
 // / -----------------------------------------------------------------------------------
 
@@ -261,19 +302,26 @@ function deriveStartupKey($keyPurpose) {
 // / is not spent, because there is nothing to replay & four such keys minted in the same
 // / second would otherwise refuse each other.
 // / The default is not to spend, so a component built against an older core still works.
+// / A key of 96 characters is a launch number & the signature over it, as deriveStartupKey mints it.
+// / A key of 64 is a signature alone. A release before v4.1.9 mints that, & so does a listener it started, after an update, until the listener is restarted.
+// / So it is still accepted, & both are spent the same way, by the whole key.
 function validateStartupKey($keyPurpose, $suppliedKey, $singleUse = FALSE) {
   // / Set variables.
   global $SecretKey, $StartupKeyWindow, $EnableMemoryProtection;
   $KeyIsValid = FALSE;
   $timeBucket = 0;
   $keyWasUnspent = TRUE;
-  $currentKey = $previousKey = $cleanKey = '';
+  $currentKey = $previousKey = $cleanKey = $keySignature = $launchContext = '';
   $cleanKey = preg_replace('/[^a-f0-9]/', '', strtolower((string)$suppliedKey));
-  if (is_string($SecretKey) && strlen($SecretKey) === 64 && strlen($cleanKey) === 64) {
+  if (strlen($cleanKey) === 96) {
+    $launchContext = '|'.substr($cleanKey, 0, 32);
+    $keySignature = substr($cleanKey, 32); }
+  else if (strlen($cleanKey) === 64) $keySignature = $cleanKey;
+  if (is_string($SecretKey) && strlen($SecretKey) === 64 && $keySignature !== '') {
     $timeBucket = (int)floor(time() / max(1, (int)$StartupKeyWindow));
-    $currentKey = hash_hmac('sha256', 'startup|'.$keyPurpose.'|'.$timeBucket, $SecretKey);
-    $previousKey = hash_hmac('sha256', 'startup|'.$keyPurpose.'|'.($timeBucket - 1), $SecretKey);
-    if (hash_equals($currentKey, $cleanKey) or hash_equals($previousKey, $cleanKey)) $KeyIsValid = TRUE; }
+    $currentKey = hash_hmac('sha256', 'startup|'.$keyPurpose.'|'.$timeBucket.$launchContext, $SecretKey);
+    $previousKey = hash_hmac('sha256', 'startup|'.$keyPurpose.'|'.($timeBucket - 1).$launchContext, $SecretKey);
+    if (hash_equals($currentKey, $keySignature) or hash_equals($previousKey, $keySignature)) $KeyIsValid = TRUE; }
   // / The key is only spent once it has proved genuine, so a wrong guess cannot fill the
   // / ledger & cannot deny the real one.
   if ($KeyIsValid && $singleUse) {
@@ -283,7 +331,7 @@ function validateStartupKey($keyPurpose, $suppliedKey, $singleUse = FALSE) {
       errorEntry('A startup key for '.$keyPurpose.' was presented a second time & refused as a replay!', 31017, FALSE); } }
   if (!$KeyIsValid && $keyWasUnspent) warningEntry('A startup key for '.$keyPurpose.' was refused.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $timeBucket, $currentKey, $previousKey, $cleanKey, $keyWasUnspent, $keyPurpose, $suppliedKey, $singleUse);
+  purgeSensitiveMemory($EnableMemoryProtection, $timeBucket, $currentKey, $previousKey, $cleanKey, $keySignature, $launchContext, $keyWasUnspent, $keyPurpose, $suppliedKey, $singleUse);
   return $KeyIsValid; }
 // / -----------------------------------------------------------------------------------
 
@@ -572,9 +620,10 @@ function getAcceptedManagers() {
   $AcceptedManagers = array();
   $AcceptedManagers = array(
     'coreManager.php' => 'v4.1.3',
-    'resourceManager.php' => 'v4.1.3',
+    'resourceManager.php' => 'v4.2.0',
     'workerManager.php' => 'v4.0.8',
-    'requestManager.php' => 'v4.1.3');
+    'requestManager.php' => 'v4.1.3',
+    'authenticationManager.php' => 'v4.2.0');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $AcceptedManagers is not purged, because it is the return value.
   purgeSensitiveMemory($EnableMemoryProtection);
@@ -608,9 +657,10 @@ function getAcceptedRootManagers() {
 // / another Engine may accept an argument this one has dropped.
 // / A manager that is absent or mismatched is a warning rather than a halt. What is lost
 // / is the role that manager serves & the loss is named rather than guessed at.
+// / The path uses DIRECTORY_SEPARATOR rather than $DirSep, because a web request asks for the Authentication Manager before verifyGlobals sets $DirSep.
 function loadEngineManager($managerFileName) {
   // / Set variables.
-  global $InstLoc, $DirSep, $CoreLoaded, $EnableMemoryProtection;
+  global $InstLoc, $CoreLoaded, $EnableMemoryProtection;
   $ManagerIsAvailable = FALSE;
   $ManagerVersion = '';
   $acceptedManagers = array();
@@ -619,10 +669,10 @@ function loadEngineManager($managerFileName) {
   if (!isset($acceptedManagers[(string)$managerFileName])) warningEntry('The manager subcomponent '.$managerFileName.' is not one this Engine accepts. It was not loaded.');
   else {
     $requiredVersion = ltrim((string)$acceptedManagers[(string)$managerFileName], 'vV');
-    $managerPath = rtrim((string)$InstLoc, $DirSep).$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Managers'.$DirSep.(string)$managerFileName;
+    $managerPath = rtrim((string)$InstLoc, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Engine'.DIRECTORY_SEPARATOR.'Managers'.DIRECTORY_SEPARATOR.(string)$managerFileName;
     // / readComponentVersion is a kernel service & reads the version without executing the
     // / file, which is the whole reason a mismatched manager can be refused safely.
-    $ManagerVersion = readComponentVersion('Engine'.$DirSep.'Managers'.$DirSep.(string)$managerFileName, 'ManagerVersion');
+    $ManagerVersion = readComponentVersion('Engine'.DIRECTORY_SEPARATOR.'Managers'.DIRECTORY_SEPARATOR.(string)$managerFileName, 'ManagerVersion');
     if (!file_exists($managerPath)) warningEntry('The manager subcomponent '.$managerFileName.' is not installed. The role it serves is unavailable.');
     else if ($ManagerVersion === '') warningEntry('The manager subcomponent '.$managerFileName.' reports no version. An unknown build cannot be cleared & it was not loaded.');
     else if (ltrim((string)$ManagerVersion, 'vV') !== $requiredVersion) warningEntry('The manager subcomponent '.$managerFileName.' reports '.$ManagerVersion.' & this Engine requires '.$requiredVersion.'. It was not loaded.');
@@ -1597,12 +1647,129 @@ function requestStorageSpace($dataLocation, $requestedBytes) {
 // / A function to name the owner a write is charged to.
 // / Accepts no arguments.
 // / Returns the owner, or an empty string for a request nobody has signed in to.
-// / This is where an owner will come from, & every request is anonymous until the Authentication Manager signs a user in.
+// / The owner is the signed in account's record name, which names nobody, & the Authentication Core sets it when a key signs a request in.
 // / The listener charges an owner's writes against their quota, & charges an anonymous write to nobody.
 function storageQuotaOwner() {
   // / Set variables.
-  $QuotaOwner = '';
+  global $SignedInAccount;
+  $QuotaOwner = (isset($SignedInAccount) && is_array($SignedInAccount) && isset($SignedInAccount['Name']) && is_string($SignedInAccount['Name'])) ? $SignedInAccount['Name'] : '';
   return $QuotaOwner; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether this installation has accounts.
+// / Accepts nothing. Returns TRUE where this application offers them & its administrator turned them on.
+// / A capability a missing Engine configuration leaves unset counts as on, as every other capability does, & the administrator still decides.
+function authenticationIsOn() {
+  // / Set variables.
+  global $EngineEnableAuthentication;
+  $AuthenticationIsOn = ((!isset($EngineEnableAuthentication) or $EngineEnableAuthentication === TRUE) && applicationSetting('EnableAuthentication', FALSE) === TRUE);
+  return $AuthenticationIsOn; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to load the Authentication Core & the Email Core, where this installation has accounts.
+// / Accepts whether to load them where accounts are off, as --account does so an administrator may prepare accounts first.
+// / Returns whether the Authentication Core is loaded & whether the Email Core is, in that order.
+// / Each is pinned exactly by the application, as every Engine core is, & verifyCoreComponent() names what was refused & why.
+// / The Authentication Core goes on without the Email Core, because signing in needs no email. It warns every time an email is not sent.
+function loadAuthenticationCores($loadWhenOff) {
+  // / Set variables.
+  global $RequiredAuthenticationCoreVersion, $RequiredEmailCoreVersion, $AuthenticationCoreActive, $EmailCoreActive, $EnableMemoryProtection;
+  $authenticationVersion = $emailVersion = '';
+  if (!isset($AuthenticationCoreActive) or !is_bool($AuthenticationCoreActive)) $AuthenticationCoreActive = FALSE;
+  if (!isset($EmailCoreActive) or !is_bool($EmailCoreActive)) $EmailCoreActive = FALSE;
+  if (($loadWhenOff === TRUE or authenticationIsOn()) && !$AuthenticationCoreActive) {
+    list ($AuthenticationCoreActive, $authenticationVersion) = verifyCoreComponent('Authentication Core', 'Engine'.DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'authenticationCore.php', 'AuthenticationCoreVersion', (string)$RequiredAuthenticationCoreVersion);
+    list ($EmailCoreActive, $emailVersion) = verifyCoreComponent('Email Core', 'Engine'.DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'emailCore.php', 'EmailCoreVersion', (string)$RequiredEmailCoreVersion); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $authenticationVersion, $emailVersion, $loadWhenOff);
+  return array($AuthenticationCoreActive, $EmailCoreActive); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to let the Engine answer a request before the application serves it.
+// / Accepts nothing. Returns an empty string when the application serves it, page when the Engine names a page of its own to draw in place
+// / of the application's, or answered when the Engine wrote the whole answer, in which case the application draws nothing & runs nothing.
+// / Only the Authentication Core answers anything. Where accounts are off, every request is the application's, exactly as it was.
+// / $EnginePageState is what a page may show about the Engine's part of a request, & says Enabled FALSE where accounts are off.
+function answerEngineRequest() {
+  // / Set variables.
+  global $RunningFromCLI, $TransportedWorkerIdentity, $EnginePageState, $EnableMemoryProtection;
+  $EngineAnswer = '';
+  $authenticationIsLoaded = $emailIsLoaded = FALSE;
+  $EnginePageState = array('Enabled' => FALSE, 'SignedIn' => FALSE, 'Username' => '', 'Role' => '', 'Page' => '');
+  list ($authenticationIsLoaded, $emailIsLoaded) = loadAuthenticationCores(FALSE);
+  if ($authenticationIsLoaded && function_exists('adoptAuthenticationIdentity')) $EngineAnswer = adoptAuthenticationIdentity();
+  // / A workflow worker continues as the signed in user who started it, where it was handed one.
+  if ($authenticationIsLoaded && $RunningFromCLI === TRUE && isset($TransportedWorkerIdentity) && is_string($TransportedWorkerIdentity) && $TransportedWorkerIdentity !== '' && function_exists('adoptWorkerIdentity')) adoptWorkerIdentity($TransportedWorkerIdentity);
+  // / Accounts are swept from here at most once in ten minutes, so an installation with no listener still sweeps them.
+  // / Only a web request sweeps from here, because a command line has no visitor & may be root's, which never works in the accounts folder.
+  if ($authenticationIsLoaded && $RunningFromCLI !== TRUE) sweepAccountsWhenDue(600);
+  // / A visitor who must sign in where the Authentication Core could not be loaded is shown the page that says signing in is unavailable,
+  // / rather than let through, because an administrator who requires accounts did not choose to serve anonymous visitors.
+  // / A command line has no visitor, & -v & --config name a core that could not be loaded.
+  else if (!$authenticationIsLoaded && $RunningFromCLI !== TRUE && authenticationIsOn() && applicationSetting('AllowAnonymousVisitors', TRUE) !== TRUE) {
+    list ($EnginePageState['Enabled'], $EnginePageState['Page'], $EnginePageState['Available'], $EngineAnswer) = array(TRUE, 'signin', FALSE, 'page');
+    errorEntry('A visitor must sign in & nobody can, because the Authentication Core could not be loaded!', 43002, FALSE); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $authenticationIsLoaded, $emailIsLoaded);
+  return $EngineAnswer; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to sweep every account, code, sign in & count of failures that is over, where accounts are on & a sweep is due.
+// / Accepts the fewest seconds since the last sweep, 0 for a sweep now. Returns how many records were removed.
+// / The listener sweeps on its storage schedule, & a web request at most once in ten minutes, so one runs whichever is there.
+// / Only the web server account sweeps. The accounts folder is that account's, & root never works by path inside a folder another account can change.
+function sweepAccountsWhenDue($sweepInterval) {
+  // / Set variables.
+  global $CurrentUser, $ApacheUser, $RunningAsRoot, $EnableMemoryProtection;
+  $RecordsRemoved = 0;
+  $authenticationIsLoaded = $emailIsLoaded = $managerIsLoaded = $sweepRan = FALSE;
+  $managerVersion = '';
+  if (authenticationIsOn() && $RunningAsRoot !== TRUE && (string)$CurrentUser !== '' && (string)$CurrentUser === (string)$ApacheUser) {
+    list ($authenticationIsLoaded, $emailIsLoaded) = loadAuthenticationCores(FALSE);
+    if ($authenticationIsLoaded && !function_exists('sweepAuthenticationIfDue')) list ($managerIsLoaded, $managerVersion) = loadEngineManager('authenticationManager.php');
+    if (function_exists('sweepAuthenticationIfDue')) list ($sweepRan, $RecordsRemoved) = sweepAuthenticationIfDue((int)$sweepInterval); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $authenticationIsLoaded, $emailIsLoaded, $managerIsLoaded, $sweepRan, $managerVersion, $sweepInterval);
+  return $RecordsRemoved; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether a signed in user's quota allows a write, for the Resource Manager.
+// / Accepts the owner & the bytes the write would add. Returns whether it may & the reason it may not, in that order.
+// / An owner is only ever named where accounts are on, so an owner where they are off, or where the Authentication Manager is missing, allows the write
+// / & is a warning, as a disk that cannot be measured is.
+function evaluateOwnerQuota($quotaOwner, $requestedBytes) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $QuotaAllows = TRUE;
+  $QuotaReason = '';
+  $authenticationIsLoaded = $emailIsLoaded = $managerIsLoaded = FALSE;
+  $managerVersion = '';
+  list ($authenticationIsLoaded, $emailIsLoaded) = loadAuthenticationCores(FALSE);
+  if ($authenticationIsLoaded && !function_exists('evaluateAccountQuota')) list ($managerIsLoaded, $managerVersion) = loadEngineManager('authenticationManager.php');
+  if (function_exists('evaluateAccountQuota')) list ($QuotaAllows, $QuotaReason) = evaluateAccountQuota($quotaOwner, $requestedBytes);
+  else warningEntry('A write was charged to a signed in user & their quota could not be read, because accounts are off or the Authentication Manager is unavailable. It was allowed.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $authenticationIsLoaded, $emailIsLoaded, $managerIsLoaded, $managerVersion, $quotaOwner, $requestedBytes);
+  return array($QuotaAllows, $QuotaReason); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the folder a request's files are kept in.
+// / Accepts the folder the application derived for its session. Returns the folder its files are kept in.
+// / A signed in request keeps its files in the user's own folder, & every other request in its session's, as it always has.
+// / The application asks before it builds anything on the folder, so every path it derives from it follows.
+function engineSessionFolder($sessionFolder) {
+  // / Set variables.
+  global $SignedInFolder, $EnableMemoryProtection;
+  $SessionFolder = (isset($SignedInFolder) && is_string($SignedInFolder) && $SignedInFolder !== '') ? $SignedInFolder : (string)$sessionFolder;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $sessionFolder);
+  return $SessionFolder; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2237,8 +2404,7 @@ function runCoreManagerForeground() {
       if (!$environmentIsReady) warningEntry('The listener is starting into a degraded environment. The sandbox is unavailable & conversions requiring it will be refused. Run the -fp argument as root.');
       prepareManagerSocketDir();
       // / This key is derived & checked inside this process & never leaves it, so it is
-      // / not spent. Spending it would refuse a service manager restarting inside the same
-      // / window, because the key it derives on the way back up is byte for byte the same.
+      // / not spent, because there is nothing anybody else could replay.
       $ListenerExitedCleanly = dispatchManagerRole('core-manager', $startupKey, FALSE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $startupKey, $callerIsAuthorized, $environmentIsReady, $environmentFindings);
@@ -2528,10 +2694,8 @@ function prepareManagerSocketDir() {
 // / This is the single entry point convertCore.php uses to enter a manager process.
 // / The third argument says whether the key reached this process from another one.
 // / A key that crossed a boundary is spent, because a copy of it may exist elsewhere.
-// / A key derived & checked inside one process is NOT spent. Derivation is deterministic
-// / within a window, so the foreground listener restarting inside ten seconds would mint
-// / the identical key & refuse itself as a replay, which under a service manager is a
-// / restart loop rather than a security control.
+// / A key derived & checked inside one process is NOT spent, because it never left that
+// / process & there is nothing anybody else could replay.
 function dispatchManagerRole($managerRole, $suppliedKey, $keyWasTransported = TRUE) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -4402,6 +4566,44 @@ function refuseCommandForUser($cliCommand, $cliWhoami, $refusalWarning) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to run --account, the administrator's command for accounts.
+// / Accepts the argument list, the action & whether the operator confirmed in advance, in that order. Returns the exit status.
+// / Every account & every user's files are the web server account's, & root never works inside a folder that account can change.
+// / So root asks before a removal, because an administrator is at the terminal, & hands the command to that account with the answer given,
+// / as it hands -k over. The arguments are handed as they were typed, each quoted for the shell.
+// / The web server account loads the Authentication Core & the Authentication Manager, even where accounts are off, & runs it.
+function runEngineAccountCommand($cliArguments, $cliTarget, $cliConfirmed) {
+  // / Set variables.
+  global $RunningAsRoot, $ApacheUser, $InstLoc, $Lol, $EnableMemoryProtection;
+  $CommandStatus = 1;
+  $actionIsConfirmed = $authenticationIsLoaded = $emailIsLoaded = $managerIsLoaded = FALSE;
+  $handedCommand = $handedArgument = $managerVersion = $accountUsername = '';
+  $accountOutput = array();
+  $accountExit = 1;
+  if ($RunningAsRoot) {
+    // / A removal asks first & names the account it removes. One naming no account is handed over unasked, & the web server user says what is missing.
+    $accountUsername = (is_array($cliArguments) && isset($cliArguments[2]) && is_string($cliArguments[2])) ? trim($cliArguments[2]) : '';
+    if (preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/', $accountUsername) !== 1) $accountUsername = '';
+    $actionIsConfirmed = ($cliTarget !== '--remove' or $accountUsername === '') ? TRUE : confirmDestructiveAction('This removes the account '.$accountUsername.' & every file its user keeps.', $cliConfirmed);
+    if ($actionIsConfirmed) {
+      logEntry('Command line invocation. Handing --account to '.$ApacheUser.'.');
+      $handedCommand = 'php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint()).' --account';
+      foreach (array_slice((array)$cliArguments, 1, 3) as $handedArgument) $handedCommand .= ' '.escapeshellarg((string)$handedArgument);
+      $handedCommand .= (($cliTarget === '--remove' && $accountUsername !== '') ? ' -y' : '').' 2>&1';
+      list ($accountOutput, $accountExit) = runAsAccount($handedCommand, (string)$ApacheUser);
+      print(implode($Lol, $accountOutput).$Lol);
+      if ($accountExit === 0) $CommandStatus = 0; } }
+  else {
+    list ($authenticationIsLoaded, $emailIsLoaded) = loadAuthenticationCores(TRUE);
+    if ($authenticationIsLoaded) list ($managerIsLoaded, $managerVersion) = loadEngineManager('authenticationManager.php');
+    if (!$authenticationIsLoaded or !$managerIsLoaded) print($Lol.'The Authentication Core or the Authentication Manager is unavailable. Run  php '.engineApplicationEntryPoint().' -v  to see which.'.$Lol.$Lol);
+    else $CommandStatus = runAccountCommand($cliArguments, $cliTarget, $cliConfirmed); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $actionIsConfirmed, $authenticationIsLoaded, $emailIsLoaded, $managerIsLoaded, $handedCommand, $handedArgument, $managerVersion, $accountUsername, $accountOutput, $accountExit, $cliArguments, $cliTarget, $cliConfirmed);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to start one of the manager processes the listener runs.
 // / Accepts the command, its target & a second target, in that order.
 // / Returns the exit status, which is 0 unless the process halted. A manager that starts
@@ -5155,7 +5357,7 @@ function listEnginePins() {
   $engineSources = $pinSources = $pinMatches = $pinMatch = array();
   $entryPath = $entryContents = $enginePath = $contractFile = $pinKey = $pinVersion = '';
   $engineSources = array('KernelVersion' => 'Resources/Kernel/kernel.php', 'EngineVersion' => 'Resources/Engine/engine.php', 'SetupCoreVersion' => 'Resources/Engine/Cores/setupCore.php',
-    'DependencyCoreVersion' => 'Resources/Engine/Cores/dependencyCore.php', 'PipelineCoreVersion' => 'Resources/Engine/Cores/pipelineCore.php', 'WorkflowCoreVersion' => 'Resources/Engine/Cores/workflowCore.php', 'ConfigScript' => 'Documentation/Build/'.engineApplicationSlug().'-setup.sh');
+    'DependencyCoreVersion' => 'Resources/Engine/Cores/dependencyCore.php', 'PipelineCoreVersion' => 'Resources/Engine/Cores/pipelineCore.php', 'WorkflowCoreVersion' => 'Resources/Engine/Cores/workflowCore.php', 'AuthenticationCoreVersion' => 'Resources/Engine/Cores/authenticationCore.php', 'EmailCoreVersion' => 'Resources/Engine/Cores/emailCore.php', 'ConfigScript' => 'Documentation/Build/'.engineApplicationSlug().'-setup.sh');
   $pinSources = array_merge((isset($EnginePinSources) && is_array($EnginePinSources)) ? $EnginePinSources : array(), $engineSources);
   $entryPath = $InstLoc.$DirSep.engineApplicationEntryPoint();
   $enginePath = $InstLoc.$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'engine.php';
@@ -5275,6 +5477,78 @@ function runEngineBuildCommand($cliTarget, $cliSecondTarget) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to replace the install wide secret with a new one.
+// / Accepts whether the action was confirmed in advance with -y. Returns a success boolean.
+// / Called by --rotate-secret, never reachable from the web, & root only.
+// /
+// / Every session ends.
+// / Every session folder, token & startup key derives from the secret, so a visitor is given a new session on their next visit & cannot reach their earlier files.
+// / Those folders stay where they are & expire on the delete threshold like any other.
+// / That is what rotating a secret is for, so the operator is asked first, or answers with -y.
+// /
+// / The listener holds keys derived from the old secret, so one that is running must be stopped & started again, & root never does either through the web server account's files.
+// /   Ask whether a listener is running & stop it before the secret is rewritten.
+// /   A service unit that owns the listener is asked through systemctl.
+// /   Otherwise the web server account is asked, & it answers & stops with the old key, which is still the one on disk.
+// /   A listener that could not be stopped would keep answering with the old key, so nothing is rotated & the operator is told.
+// /   Rewrite the secret as root, which is the one part that is root's. The kernel keeps the secret & rewrites it, in settleInstallSecretAsRoot.
+// /   Start it again through startCoreManagerListener(), which uses the unit when one owns the listener & hands the start to the web server account when none does.
+// / A listener that was not running is left stopped.
+// / A container from an image built before v4.0.1 carries the secret that image was built with, & every container started from it shares it.
+// / Running this once in each ends that.
+function rotateInstallSecret($rotationConfirmed) {
+  // / Set variables.
+  global $InstLoc, $SecretKey, $ResourceAwarenessActive, $ApacheUser, $Lol, $EnableMemoryProtection;
+  $SecretWasRotated = FALSE;
+  $actionIsConfirmed = $listenerWasRunning = $listenerWasStopped = $listenerWasStarted = $secretIsReady = $unitOwnsListener = FALSE;
+  $newSecretKey = $entryPath = $unitName = '';
+  $statusOutput = $stopOutput = array();
+  $statusExit = $stopExit = 1;
+  $actionIsConfirmed = confirmDestructiveAction('Rotating the install secret ends every session. Visitors are given a new one & cannot reach their earlier files.', $rotationConfirmed);
+  if ($actionIsConfirmed) {
+    $entryPath = $InstLoc.DIRECTORY_SEPARATOR.engineApplicationEntryPoint();
+    $unitName = engineApplicationSlug().'-listener';
+    if ($ResourceAwarenessActive && function_exists('listenerUnitIsInstalled')) $unitOwnsListener = listenerUnitIsInstalled();
+    // / Learn whether a listener is running, & stop it, BEFORE the secret is rewritten.
+    if ($ResourceAwarenessActive && $unitOwnsListener) {
+      exec('systemctl is-active --quiet '.escapeshellarg($unitName).' 2>&1', $statusOutput, $statusExit);
+      $listenerWasRunning = ($statusExit === 0);
+      if ($listenerWasRunning) {
+        exec('systemctl stop '.escapeshellarg($unitName).' 2>&1', $stopOutput, $stopExit);
+        $listenerWasStopped = ($stopExit === 0); } }
+    else if ($ResourceAwarenessActive && function_exists('runAsAccount')) {
+      list ($statusOutput, $statusExit) = runAsAccount('php '.escapeshellarg($entryPath).' --status 2>&1', (string)$ApacheUser);
+      $listenerWasRunning = (stripos(implode(' ', $statusOutput), 'RUNNING as process') !== FALSE);
+      if ($listenerWasRunning) {
+        list ($stopOutput, $stopExit) = runAsAccount('php '.escapeshellarg($entryPath).' -k 2>&1', (string)$ApacheUser);
+        $listenerWasStopped = ($stopExit === 0); } }
+    if ($listenerWasRunning && !$listenerWasStopped) {
+      warningEntry('The install secret was not rotated, because the running listener could not be stopped first. It would have kept answering with the old key.');
+      errorEntry('The install secret could not be rotated! The secret in place is unchanged.', 31022, FALSE);
+      print($Lol.'The listener is running & could not be stopped, so the install secret was NOT rotated.'.$Lol);
+      print('Stop it with  sudo php '.engineApplicationEntryPoint().' -k  & run this again.'.$Lol); }
+    else {
+      list ($secretIsReady, $newSecretKey) = settleInstallSecretAsRoot(TRUE);
+      if (!$secretIsReady) {
+        errorEntry('The install secret could not be rotated! The secret in place is unchanged.', 31022, FALSE);
+        print($Lol.'The install secret could not be rotated. The secret in place is unchanged.'.$Lol); }
+      else {
+        $SecretWasRotated = TRUE;
+        print($Lol.'The install secret was rotated. Every earlier session has ended.'.$Lol);
+        // / $SecretKey is the documented exception to convention 3 & is assigned here because
+        // / nothing in this process derives a key again, but a reader that did would get the new one.
+        $SecretKey = $newSecretKey; }
+      // / A listener that was running is started again whether or not the rotation took, because
+      // / it was stopped above & the secret on disk is whichever one is in place now.
+      if ($listenerWasRunning) $listenerWasStarted = startCoreManagerListener();
+      if ($listenerWasRunning && !$listenerWasStarted) print('The listener could not be restarted. Run  sudo php '.engineApplicationEntryPoint().' -l'.$Lol); }
+    print($Lol); }
+  // / Manually clean up sensitive memory. Every target is passed directly by reference.
+  purgeSensitiveMemory($EnableMemoryProtection, $actionIsConfirmed, $listenerWasRunning, $listenerWasStopped, $listenerWasStarted, $secretIsReady, $unitOwnsListener, $newSecretKey, $entryPath, $unitName, $statusOutput, $stopOutput, $statusExit, $stopExit, $rotationConfirmed);
+  return $SecretWasRotated; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to run one of the Engine's commands, or say that the command is not one.
 // / Accepts the argument list, the command, its target, a second target & whether the
 // / operator confirmed in advance, in that order.
@@ -5308,7 +5582,7 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
   // / A standard user holds a per user secret, which cannot derive a valid startup key.
   // / The web server user must hold the install secret for every listener command, every
   // / manager entry point & --status, or the keys they derive are refused. Which secret an
-  // / account holds is the application's to decide, before this Engine is loaded.
+  // / account holds is the kernel's to decide, before this Engine is loaded.
   if ($RunningAsRoot or $CurrentUser === $ApacheUser) $cliListenerAuthorized = TRUE;
   $cliWhoami = ($CurrentUser === '' ? 'an unidentified user' : $CurrentUser);
   if (in_array($cliCommand, $managerCommands, TRUE)) $CommandStatus = runEngineManagerEntry($cliCommand, $cliTarget, $cliSecondTarget);
@@ -5332,6 +5606,15 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
   else if (in_array($cliCommand, $cleanCommands, TRUE)) $CommandStatus = runEngineCleanCommand($cliTarget);
   else if (in_array($cliCommand, $rootCommands, TRUE) && !$RunningAsRoot) $CommandStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A root only command was refused for an unauthorized user.');
   else if (in_array($cliCommand, $rootCommands, TRUE)) $CommandStatus = runEngineRootCommand($cliCommand, $cliTarget);
+  // / Rotating the install secret stops & starts the listener, so it is the Engine's command, & root's alone.
+  // / The kernel rewrites the secret itself.
+  // / Accounts are the web server account's, so --account is that account's & root's, & root hands it to that account.
+  else if ($cliCommand === '--account' && !$cliListenerAuthorized) $CommandStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'An account command was refused for an unauthorized user.');
+  else if ($cliCommand === '--account') $CommandStatus = runEngineAccountCommand($cliArguments, $cliTarget, $cliConfirmed);
+  else if ($cliCommand === '--rotate-secret' && !$RunningAsRoot) $CommandStatus = refuseCommandForUser($cliCommand, $cliWhoami, 'A root only command was refused for an unauthorized user.');
+  else if ($cliCommand === '--rotate-secret') {
+    warningEntry('Command line invocation. Rotating the install secret.');
+    if (!rotateInstallSecret($cliConfirmed)) $CommandStatus = 1; }
   // / Installing & removing a workflow write the installed library, which is root's, so both are refused here for anybody else.
   // / --workflow is refused by what it was asked to do, because --list & --check are anybody's & only a write is root's.
   // / So the refusal names the option as typed, & the command it suggests is the whole one.

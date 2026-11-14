@@ -613,13 +613,14 @@ function loadPipelineCore($pipelineFolderName) {
 // / It asks the Dependency Core rather than probing, so a pipeline gets the answer --setup --check-depends gives.
 // / That includes the architecture rules, the version window & the policy gates, so a gated tool is refused here too.
 // / FALSE means do not run, & every caller must treat it that way.
+// / The verdict is kept, so verifiedToolVerdict() can say why a tool was refused, & verifiedToolCommand() starts what was verified.
 function verifiedToolPath($manifestName) {
   // / Set variables.
   // / $CoreLoaded is declared because the manifest is required INSIDE this function, & every
   // / component checks it at file scope. Without it the require sees an undefined variable &
   // / the component refuses to load, which reads as a missing manifest rather than a scope
   // / mistake.
-  global $CoreLoaded, $DependsManifest, $InstLoc, $DirSep, $Verbose, $EnableMemoryProtection, $RequiredDependencyCoreVersion;
+  global $CoreLoaded, $DependsManifest, $InstLoc, $DirSep, $Verbose, $EnableMemoryProtection, $RequiredDependencyCoreVersion, $ToolVerdicts;
   $VerifiedPath = FALSE;
   $manifestPath = $dependencyStatus = $detectedVersion = $rawOutput = $binaryPath = $binaryOrigin = '';
   $manifestEntry = array();
@@ -645,6 +646,9 @@ function verifiedToolPath($manifestName) {
       // / The path is FIFTH & is the program that answered inside the window, which is this
       // / application's own build where it has one, so the program verified is the program run.
       list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput, $binaryPath, $binaryOrigin) = resolveDependencyChoice($manifestEntry);
+      // / The verdict is kept for verifiedToolVerdict(), so a pipeline that is refused a tool can say why.
+      if (!isset($ToolVerdicts) or !is_array($ToolVerdicts)) $ToolVerdicts = array();
+      $ToolVerdicts[(string)$manifestName] = array((string)$dependencyStatus, (string)$rawOutput);
       // / ok is the only status a pipeline may run on. absent, outdated, too-new,
       // / unsupported, misconfigured & refused all mean the same thing to a caller.
       if ($dependencyStatus === 'ok') {
@@ -665,6 +669,48 @@ function verifiedToolPath($manifestName) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $toolIsRequired, $dependencyCoreLoaded, $dependencyCoreVersion, $dependencyIsPresent, $dependencyStatus, $detectedVersion, $rawOutput, $binaryPath, $binaryOrigin, $manifestEntry, $entryWasFound, $manifestName);
   return $VerifiedPath; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to hand a pipeline the command that starts a tool verifiedToolPath() verified.
+// / Accepts the name as the dependency manifest spells it & the path verifiedToolPath() returned for it.
+// / Returns the command, quoted for the shell, or an empty string where no path was given.
+// / The tool is started as the Dependency Core asked its version, through dependencyInterpreterCommand(),
+// / so the program that runs is started as the program that was verified. A tool whose entry names no interpreter is started by its path.
+function verifiedToolCommand($manifestName, $verifiedPath) {
+  // / Set variables.
+  global $DependsManifest, $EnableMemoryProtection;
+  $ToolCommand = '';
+  $interpreterCommand = '';
+  $manifestEntry = array();
+  if (is_string($verifiedPath) && $verifiedPath !== '') {
+    $ToolCommand = escapeshellarg($verifiedPath);
+    if (is_array($DependsManifest) && function_exists('dependencyInterpreterCommand')) foreach ($DependsManifest as $manifestEntry) {
+      if ((string)$manifestEntry['Name'] !== (string)$manifestName) continue;
+      $interpreterCommand = dependencyInterpreterCommand($manifestEntry, $verifiedPath);
+      if ($interpreterCommand !== '') $ToolCommand = $interpreterCommand;
+      break; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $interpreterCommand, $manifestEntry, $manifestName, $verifiedPath);
+  return $ToolCommand; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say why verifiedToolPath() last refused a tool.
+// / Accepts the name as the dependency manifest spells it.
+// / Returns the status the Dependency Core gave it & the line of its output that says the most, in that order,
+// / or two empty strings where the tool was never asked for or the Dependency Core could not be asked.
+// / A pipeline names both in the error it raises, so the error says what to fix.
+function verifiedToolVerdict($manifestName) {
+  // / Set variables.
+  global $ToolVerdicts, $EnableMemoryProtection;
+  $VerdictStatus = $VerdictOutput = '';
+  if (isset($ToolVerdicts) && is_array($ToolVerdicts) && isset($ToolVerdicts[(string)$manifestName]) && is_array($ToolVerdicts[(string)$manifestName])) {
+    $VerdictStatus = (string)($ToolVerdicts[(string)$manifestName][0] ?? '');
+    $VerdictOutput = (string)($ToolVerdicts[(string)$manifestName][1] ?? ''); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestName);
+  return array($VerdictStatus, $VerdictOutput); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

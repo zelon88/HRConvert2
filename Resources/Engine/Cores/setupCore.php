@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.1.7.
+// / v4.2.0.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.1.7';
+$SetupCoreVersion = 'v4.2.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -184,6 +184,8 @@ function validateConfigSections($configModel, $detectedSections) {
 // / A bool is off when it is FALSE & an int is off at 0 or below, which is how the code reads each.
 // / A bool that is itself FALSE is not reported, because a feature left off is not being ignored.
 // / A setting whose model carries a Conflict is not ignored at all, so its finding is a contradiction & says what follows from it.
+// / A setting whose model carries NamedWhenChanged is named only once its value differs from its default, so a feature with many
+// / settings that most installations leave off names only what an administrator changed.
 // / Each finding carries a Kind of conflict or inert, so the two can be printed apart.
 // / This never blocks anything. It tells an administrator that a value they set is being
 // / ignored, which is otherwise invisible & is the single most common configuration
@@ -213,6 +215,7 @@ function validateConfigDependencies($configModel, $detectedSections) {
       else redeclare($parentIsOff, in_array($dependsValue, array('FALSE', '0', 'NULL', ''), TRUE));
       if (!$parentIsOff) continue;
       if ((string)$variableModel['Type'] === 'bool' && in_array($variableValue, array('FALSE', '0', 'NULL', ''), TRUE)) continue;
+      if (!empty($variableModel['NamedWhenChanged']) && isset($variableModel['Default']) && $variableValue === strtoupper(trim((string)$variableModel['Default'], " '\""))) continue;
       $ConfigIsCoherent = FALSE;
       redeclare($conflictText, (isset($variableModel['Conflict']) ? trim((string)$variableModel['Conflict']) : ''));
       if ($conflictText !== '') $DependencyFindings[] = array('Variable' => $variableName, 'Depends' => $dependsOn, 'Kind' => 'conflict', 'Detail' => '$'.$variableName.' is '.((string)$variableModel['Type'] === 'bool' ? 'TRUE' : 'set').' & $'.$dependsOn.' is '.$dependsValue.', '.$conflictText);
@@ -220,6 +223,40 @@ function validateConfigDependencies($configModel, $detectedSections) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $sectionName, $variableName, $dependsOn, $dependsValue, $variableValue, $conflictText, $sectionModel, $variableModel, $flatValues, $modelTypes, $parentIsOff, $configModel, $detectedSections);
   return array($ConfigIsCoherent, $DependencyFindings); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to find what the Engine's own state makes of a configuration, beyond what one setting says of another.
+// / Accepts the detected sections. Returns the findings, each with a Kind of conflict or inert & a Detail worded as validateConfigDependencies() words its own.
+// / Accounts that are on with the Email Core missing, or with a host that cannot send email, is a contradiction. Confirming an address &
+// / recovering an account are impossible, & signing in with valid credentials still works.
+// / Requiring confirmation where no email can be sent leaves every account a visitor registers unconfirmed until an administrator confirms it.
+// / A quota where the listener is off, & accounts this application does not offer, have no effect.
+// / The Email Core is judged by its file & its pin, & loaded only to ask whether the host can send, so --config needs no account of its own.
+function findEngineConfigContradictions($detectedSections) {
+  // / Set variables.
+  global $RequiredEmailCoreVersion, $EngineEnableAuthentication, $EnableMemoryProtection;
+  $EngineFindings = array();
+  $foundSection = $emailVersion = $emailReason = '';
+  $foundRecord = $settingValues = array();
+  $settingName = '';
+  $emailCoreIsInstalled = $emailCoreIsLoaded = $hostCanSend = FALSE;
+  foreach (array('EnableAuthentication', 'AllowRegistration', 'RequireEmailConfirmation', 'UserStorageQuota', 'EnableResourceAwareness') as $settingName) {
+    list ($foundSection, $foundRecord) = findConfigVariable($detectedSections, $settingName);
+    $settingValues[$settingName] = strtoupper(trim((string)($foundRecord['Value'] ?? ''), " '\"")); }
+  if ($settingValues['EnableAuthentication'] === 'TRUE') {
+    $emailVersion = ltrim((string)readComponentVersion('Engine'.DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'emailCore.php', 'EmailCoreVersion'), 'vV');
+    $emailCoreIsInstalled = ($emailVersion !== '' && $emailVersion === ltrim((string)$RequiredEmailCoreVersion, 'vV'));
+    if ($emailCoreIsInstalled && !function_exists('emailIsAvailable')) list ($emailCoreIsLoaded, $emailVersion) = verifyCoreComponent('Email Core', 'Engine'.DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'emailCore.php', 'EmailCoreVersion', (string)$RequiredEmailCoreVersion);
+    if ($emailCoreIsInstalled && function_exists('emailIsAvailable')) list ($hostCanSend, $emailReason) = emailIsAvailable();
+    if (!$emailCoreIsInstalled) $EngineFindings[] = array('Kind' => 'conflict', 'Detail' => '$EnableAuthentication is TRUE & the Email Core is missing or does not match this release, so no address can be confirmed & no account recovered. Signing in with valid credentials still works. Restore Resources/Engine/Cores/emailCore.php from this release.');
+    else if (!$hostCanSend) $EngineFindings[] = array('Kind' => 'conflict', 'Detail' => '$EnableAuthentication is TRUE & this host cannot send email, so no address can be confirmed & no account recovered. Signing in with valid credentials still works. '.$emailReason);
+    if (!$hostCanSend && $settingValues['AllowRegistration'] === 'TRUE' && $settingValues['RequireEmailConfirmation'] === 'TRUE') $EngineFindings[] = array('Kind' => 'conflict', 'Detail' => '$RequireEmailConfirmation is TRUE & no email can be sent, so every account a visitor registers stays unconfirmed until an administrator runs --account --confirm.');
+    if (is_numeric($settingValues['UserStorageQuota']) && (float)$settingValues['UserStorageQuota'] > 0 && in_array($settingValues['EnableResourceAwareness'], array('FALSE', '0', 'NULL', ''), TRUE)) $EngineFindings[] = array('Kind' => 'inert', 'Detail' => '$UserStorageQuota has no effect, because the listener keeps it & $EnableResourceAwareness is '.$settingValues['EnableResourceAwareness'].'.');
+    if (isset($EngineEnableAuthentication) && $EngineEnableAuthentication === FALSE) $EngineFindings[] = array('Kind' => 'inert', 'Detail' => '$EnableAuthentication has no effect, because this application does not offer the Engine\'s accounts.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $foundSection, $emailVersion, $emailReason, $foundRecord, $settingValues, $settingName, $emailCoreIsInstalled, $emailCoreIsLoaded, $hostCanSend, $detectedSections);
+  return $EngineFindings; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -475,12 +512,17 @@ function escapeConfigString($rawValue) {
 // / Accepts the declared type & the value, in that order.
 // / Returns a validity boolean & the formatted value, in that order.
 // / A value that does not suit its declared type is refused rather than written badly.
+// / A default comes from the template as it is written there, so a quoted value arrives with its quotes, & '' is an empty one.
+// / A quoted value is read as the literal it is, & the value between the quotes is the one written, so it is never quoted twice.
+// / An administrator who types a value with quotes around it is read the same way.
 function formatConfigValue($valueType, $rawValue) {
   // / Set variables.
   global $EnableMemoryProtection;
   $ValueIsValid = FALSE;
   $FormattedValue = '';
+  $literalMatch = array();
   $cleanValue = trim((string)$rawValue);
+  if (in_array($valueType, array('path', 'string', 'csv', 'version'), TRUE) && preg_match('/^\'((?:[^\'\\\\]|\\\\.)*)\'$/s', $cleanValue, $literalMatch) === 1) $cleanValue = preg_replace('/\\\\([\\\\\'])/', '$1', $literalMatch[1]);
   if ($valueType === 'bool') {
     if (strtoupper($cleanValue) === 'TRUE' or $cleanValue === '1') { $FormattedValue = 'TRUE'; $ValueIsValid = TRUE; }
     else if (strtoupper($cleanValue) === 'FALSE' or $cleanValue === '0') { $FormattedValue = 'FALSE'; $ValueIsValid = TRUE; } }
@@ -495,7 +537,7 @@ function formatConfigValue($valueType, $rawValue) {
     // / string, csv & version are all written as quoted strings.
     if (strpos($cleanValue, "\n") === FALSE) { $FormattedValue = "'".escapeConfigString($cleanValue)."'"; $ValueIsValid = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cleanValue, $valueType, $rawValue);
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanValue, $literalMatch, $valueType, $rawValue);
   return array($ValueIsValid, $FormattedValue); }
 // / -----------------------------------------------------------------------------------
 
@@ -1395,7 +1437,7 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
   $generatedCount = 0;
   $UtilityCompleted = FALSE;
   $configTarget = $detectedConfigVersion = $sectionName = $variableName = $operatorChoice = '';
-  $configModel = $detectedSections = $validationFindings = $dependencyFindings = $pendingChanges = array();
+  $configModel = $detectedSections = $validationFindings = $dependencyFindings = $engineFindings = $pendingChanges = array();
   $sectionModel = $variableModel = $finding = array();
   $targetWasResolved = $parseSucceeded = $configIsAuthentic = $sectionsAreTrusted = $configIsCoherent = FALSE;
   $valueIsValid = $changesWereApplied = $stampIsRaised = FALSE;
@@ -1448,6 +1490,9 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
         print($Lol.'Sections'.$Lol);
         foreach ($validationFindings as $finding) print('  '.str_pad($finding['Status'], 13).str_pad($finding['Section'], 36).$finding['Detail'].$Lol);
         list ($configIsCoherent, $dependencyFindings) = validateConfigDependencies($configModel, $detectedSections);
+        // / What the Engine's own state makes of the file is printed with what one setting says of another, as accounts without email are.
+        $engineFindings = findEngineConfigContradictions($detectedSections);
+        if (!empty($engineFindings)) list ($configIsCoherent, $dependencyFindings) = array(FALSE, array_merge($dependencyFindings, $engineFindings));
         // / A contradiction is printed first & apart, because it changes what the application does, & a setting with no effect changes nothing.
         if (!$configIsCoherent) {
           foreach ($dependencyFindings as $finding) {
@@ -1545,7 +1590,7 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
               if ($operatorChoice !== 'YES') print($Lol.'Cancelled. Nothing was written.'.$Lol.$Lol);
               else { list ($changesWereApplied, $changesApplied) = applyConfigChanges($configTarget, $detectedSections, $pendingChanges); $UtilityCompleted = $changesWereApplied; } } } } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $generatedOk, $generatedCount, $foundSection, $foundRecord, $changeName, $changeRecord, $configTarget, $detectedConfigVersion, $sectionName, $variableName, $operatorChoice, $configModel, $detectedSections, $validationFindings, $dependencyFindings, $pendingChanges, $sectionModel, $variableModel, $finding, $targetWasResolved, $parseSucceeded, $configIsAuthentic, $sectionsAreTrusted, $configIsCoherent, $valueIsValid, $changesWereApplied, $formattedValue, $changesApplied, $stampIsRaised, $stampChange, $settingsLeftMissing, $conflictLines, $inertLines, $suppliedPath, $utilityMode, $modeTarget, $operatorConfirmed);
+  purgeSensitiveMemory($EnableMemoryProtection, $generatedOk, $generatedCount, $foundSection, $foundRecord, $changeName, $changeRecord, $configTarget, $detectedConfigVersion, $sectionName, $variableName, $operatorChoice, $configModel, $detectedSections, $validationFindings, $dependencyFindings, $engineFindings, $pendingChanges, $sectionModel, $variableModel, $finding, $targetWasResolved, $parseSucceeded, $configIsAuthentic, $sectionsAreTrusted, $configIsCoherent, $valueIsValid, $changesWereApplied, $formattedValue, $changesApplied, $stampIsRaised, $stampChange, $settingsLeftMissing, $conflictLines, $inertLines, $suppliedPath, $utilityMode, $modeTarget, $operatorConfirmed);
   return $UtilityCompleted; }
 // / -----------------------------------------------------------------------------------
 // / A function to find a setting anywhere in a configuration file.
@@ -1648,14 +1693,14 @@ function namesToList($entryNames) {
 // / A folder that is not held is named, & nothing is moved into it.
 function provisionAndMigrateDataRoot($webAccount) {
   // / Set variables.
-  global $DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $WorkflowLoc, $ManagerSocketDir, $AdditionalConvertLocs, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
+  global $DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $WorkflowLoc, $AccountLoc, $UserLoc, $EngineEnableAuthentication, $ManagerSocketDir, $AdditionalConvertLocs, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
   $FoldersAreReady = TRUE;
   $MovedCount = 0;
   $primaryFolders = $additionalEntry = $additionalRoots = $rootEntries = $sessionEntries = $cacheStatus = $foreignEntries = $sessionNames = $strangerEntries = $entryStatus = $webRecord = array();
   $folderPath = $additionalRoot = $rootToMigrate = $sessionTarget = $rootEntry = $entryPath = $holdNotice = $cacheSource = $cacheTarget = $sessionName = $removalNotice = '';
   $targetIsHeld = $cacheIsHeld = $rootWasTaken = $cacheWasRemoved = FALSE;
   $webUid = -1;
-  $reservedNames = array('.', '..', 'Sessions', 'Cache', 'Logs', 'Sockets', 'Engine', 'Secrets', 'Workflows', 'Last-Installed-Version', 'Application', 'lost+found', '.cache', '.config');
+  $reservedNames = array('.', '..', 'Sessions', 'Cache', 'Logs', 'Sockets', 'Engine', 'Secrets', 'Workflows', 'Accounts', 'Users', 'Last-Installed-Version', 'Application', 'lost+found', '.cache', '.config');
   if (!$RunningAsRoot) { warningEntry('The data root can only be provisioned while running as root, so nothing was created or moved.'); $FoldersAreReady = FALSE; }
   else {
     // / Create the primary root & give it back to root first, so every folder below it is
@@ -1664,6 +1709,9 @@ function provisionAndMigrateDataRoot($webAccount) {
     $primaryFolders = array($DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $ManagerSocketDir);
     // / The installed workflow library is made only where the application names one, because an application without workflows has none.
     if (isset($WorkflowLoc) && is_string($WorkflowLoc) && $WorkflowLoc !== '') $primaryFolders[] = $WorkflowLoc;
+    // / The accounts & the users' files are made only where the application offers accounts, from v4.2.0, & their role makes them the web server account's.
+    // / Both are made whether or not an administrator has turned accounts on, so turning them on later needs nothing else.
+    if ((!isset($EngineEnableAuthentication) or $EngineEnableAuthentication === TRUE) && isset($AccountLoc, $UserLoc) && is_string($AccountLoc) && is_string($UserLoc) && $AccountLoc !== '' && $UserLoc !== '') array_push($primaryFolders, $AccountLoc, $UserLoc);
     foreach ($primaryFolders as $folderPath) {
       if ((string)$folderPath === '') continue;
       if (!createHeldFolder($folderPath)) $FoldersAreReady = FALSE; }

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -629,6 +629,12 @@ $Gui2Text235 = 'Unachukua nafasi ya {name} kwa kila mtumiaji.';
 $Gui2Text236 = 'Mtiririko wa kazi haukuweza kuandaliwa.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'Maelezo moja yana herufi zaidi ya 500, au yana herufi isiyoweza kuonyeshwa.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'Zimepitishwa bila kubadilishwa: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'Zinatiliwa shaka, lakini hazijathibitishwa kuambukizwa: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'Hazijachanganuliwa kikamilifu: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -736,4 +742,24 @@ $GuiAuthText41 = 'Umetolewa kwa sababu kuingia kwako kulitumika mahali pengine.'
 $GuiAuthText42 = 'Seva haikujibu. Tafadhali jaribu tena.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'Kurejesha akaunti hakupatikani kwenye seva hii.';
+// / 'Delete my files'
+$GuiAuthText44 = 'Futa faili zangu';
+// / 'Never'
+$GuiAuthText45 = 'Kamwe';
+// / 'After 1 hour'
+$GuiAuthText46 = 'Baada ya saa 1';
+// / 'After 1 day'
+$GuiAuthText47 = 'Baada ya siku 1';
+// / 'After 1 week'
+$GuiAuthText48 = 'Baada ya wiki 1';
+// / 'After 30 days'
+$GuiAuthText49 = 'Baada ya siku 30';
+// / 'Save'
+$GuiAuthText50 = 'Hifadhi';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'Faili hufutwa mara inapokaa bila kubadilishwa kwa muda huo.';
+// / 'Saved.'
+$GuiAuthText52 = 'Imehifadhiwa.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'Haikuweza kuhifadhiwa.';
 // / -----------------------------------------------------------------------------------

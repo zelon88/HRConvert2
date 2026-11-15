@@ -1,109 +1,107 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / ScanCore, Copyright on 3/31/2024 by Justin Grimes, www.github.com/zelon88 
-// / 
+// / ScanCore, Copyright on 3/31/2024 by Justin Grimes, www.github.com/zelon88
+// /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / BSD or MIT licensing is available. Reach out to @zelon88 for more information.
 // / https://www.gnu.org/licenses/gpl-3.0.html
-// / 
+// /
 // / APPLICATION INFORMATION ...
 // / This application is designed to scan files & folders for viruses.
-// / 
+// /
 // / FILE INFORMATION ...
-// / v1.8.
+// / v1.9.
 // / This file contains the core logic of the ScanCore application.
 // /
 // / HARDWARE REQUIREMENTS ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
 // / This application will run on just about any x86 or x64 computer.
-// / 
-// / DEPENDENCY REQUIREMENTS ... 
+// /
+// / DEPENDENCY REQUIREMENTS ...
 // / This application should run on Linux or Windows systems with PHP 8.0 (or later).
 // / Git is preferred for performing automatic update operations, but not required.
-// / 
+// /
 // / VALID SWITCHES / ARGUMENTS / USAGE ...
 // / Quick Start Example:
 // /  C:\Path-To-PHP-Binary.exe C:\Path-To-ScanCore.php C:\Path-To-Scan\ -m [integer] -c [integer] -v -d
-// / 
+// /
 // / Start by opening a command-prompt.
 // / Type the absolute path to a portable PHP 8.0+ binary. Don't press enter just yet.
 // / Now type the absolute path to this PHP file as the only argument for the PHP binary.
 // / Everything after the path to this script will be passed to this file as an argument.
 // / The first Argument Must be a valid absolute path to the file or folder being scanned.
 // / Optional arguments can be specified after the scan path. Separate them with spaces.
-// / 
-// / Reqiured Arguments Include:
-// / 
+// /
+// / Required Arguments Include:
+// /
 // /   File or folder to scan:                 /path/to/scan
-// / 
+// /
 // / Optional Arguments Include:
-// / 
+// /
 // /   Show version information:               -version
 // /                                           -ver
-// / 
+// /
 // /   Show help information:                  -help
 // /                                           -h
-// / 
+// /
 // /   Force recursion:                        -recursion
 // /                                           -r
-// / 
+// /
 // /   Force no recursion:                     -norecursion
 // /                                           -nr
-// / 
+// /
 // /   Specify memory limit (in bytes):        -memorylimit ####
 // /                                           -m ####
-// / 
-// /   Specify chunk size (in bytes);          -chunksize ####
+// /
+// /   Specify chunk size (in bytes):          -chunksize ####
 // /                                           -c ####
-// / 
+// /
 // /   Enable "debug" mode (more logging):     -debug
 // /                                           -d
-// / 
+// /
 // /   Enable "verbose" mode (more console):   -verbose
 // /                                           -v
-// / 
+// /
 // /   Force a specific report file:           -reportfile /path/to/file
 // /                                           -rf path/to/file
 // /                                           -logfile /path/to/file
 // /                                           -lf path/to/file
-// / 
+// /
 // /   Force a specific configuration file:    -configfile /path/to/file
 // /                                           -cf path/to/file
-// / 
+// /
 // /   Force a specific definitions file:      -defsfile /path/to/file
 // /                                           -df path/to/file
-// / 
+// /
 // /   Force maximum log size (in bytes):      -maxlogsize ###
 // /                                           -ml ###
-// / 
+// /
 // /   Force maximum scan depth (in folders):  -maxdepth ###
 // /                                           -md ###
-// / 
+// /
 // /   Follow symbolic links while scanning:   -followsymlinks
 // /                                           -fs
-// / 
+// /
 // /   Perform definition update:              -updatedefinitions
 // /                                           -ud
-// / 
+// /
 // /   Perform application update:             -updateapplication
 // /                                           -ua
-// / 
+// /
 // / EXIT STATUS ...
 // / A status of 0 is returned when the requested operation completed.
 // / A status of 1 is returned when a fatal error stopped the requested operation.
 // / A clean scan & an infected scan both return 0, exactly as previous versions did.
-// / 
+// /
 // / NAMING CONVENTIONS ...
 // / Upper case first letter variables are global in scope.
 // / Lower case first letter variables never leave the function that initialized them.
 // / The only documented exception is $argv, which PHP itself defines for us.
-// / 
+// /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
-
-
 
 // / -----------------------------------------------------------------------------------
 // / A function to release sensitive values from memory as soon as they stop being needed.
@@ -127,9 +125,14 @@ function purgeSensitiveMemory(&...$variables) {
 // / -----------------------------------------------------------------------------------
 // / A function to reset a narrow scope variable to a known value inside a loop body.
 // / Assigning NULL before the new value releases the previous value straight away.
-function redeclare(&$variable, $value = NULL) {
-  $variable = NULL;
-  $variable = $value; }
+// / Nothing is purged here. The target is the caller's own variable, & the new value is a copy the caller still holds.
+function redeclare(&$targetVariable, $newValue = NULL) {
+  // / Set variables.
+  $VariableIsRedeclared = FALSE;
+  $targetVariable = NULL;
+  $targetVariable = $newValue;
+  $VariableIsRedeclared = TRUE;
+  return $VariableIsRedeclared; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -158,14 +161,13 @@ function sanitize($input) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to normalize a command line switch before it gets compared.
-// / Switches only ever contain a leading dash & lower case letters.
-// / Values such as file paths are never passed through this function.
+// / A switch is a leading dash followed by letters & nothing else.
+// / Any other argument, such as a path, normalizes to an empty string.
 function normalizeSwitch($argument) {
   // / Set variables.
   $NormalizedSwitch = '';
   $workingArgument = sanitize($argument);
-  if (is_string($workingArgument)) $NormalizedSwitch = strtolower($workingArgument);
-  $NormalizedSwitch = preg_replace('/[^a-z\-]/', '', $NormalizedSwitch);
+  if (is_string($workingArgument)) if (preg_match('/^-[A-Za-z]+$/', $workingArgument)) $NormalizedSwitch = strtolower($workingArgument);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($workingArgument, $argument);
   return $NormalizedSwitch; }
@@ -232,15 +234,16 @@ function resolvePath($path, $baseDirectory) {
 // / A function to verify that this installation can actually run before anything starts.
 // / Previous versions declared the installation verified without inspecting anything.
 function verifyInstallation() {
-  global $Date, $Time, $Version, $InstallationVerified, $FileCount, $DirCount, $Infected, $Suspicious, $DetectionCount, $HandlerFileCount, $CodeFileCount, $EOL, $SEP, $RP, $CoreFile, $DefaultConfigFile, $LogAvailable, $LogBytesWritten, $VerificationFault;
+  global $Date, $Time, $Version, $InstallationVerified, $FileCount, $DirCount, $Infected, $Suspicious, $DetectionCount, $HandlerFileCount, $CodeFileCount, $IncompleteCount, $MemberContext, $EOL, $SEP, $RP, $CoreFile, $DefaultConfigFile, $LogAvailable, $LogBytesWritten, $VerificationFault;
   // / Time related variables.
   $Date = date("m_d_y");
   $Time = date("F j, Y, g:i a");
   // / Application related variables.
-  $Version = 'v1.8';
+  $Version = 'v1.9';
   $DefaultConfigFile = 'ScanCore_Config.php';
   $FileCount = $DirCount = $Infected = $Suspicious = $DetectionCount = $LogBytesWritten = 0;
-  $HandlerFileCount = $CodeFileCount = 0;
+  $HandlerFileCount = $CodeFileCount = $IncompleteCount = 0;
+  $MemberContext = '';
   $EOL = PHP_EOL;
   $SEP = DIRECTORY_SEPARATOR;
   $RP = realpath(dirname(__FILE__));
@@ -304,9 +307,9 @@ function applyConfigFallback(&$setting, $defaultValue, $settingName, $settingTyp
 // / A function to load a specified configuration file.
 // / If neither the -configfile nor the -cf argument is set, ScanCore_Config.php is used.
 // / If neither the -defsfile nor the -df argument is set, the configured file is used.
-// / The core version arrives as an argument & is never pulled back out of global scope.
-function loadConfig($coreVersion) {
-  global $argv, $ConfigFilePath, $RP, $SEP, $EOL, $ConfigFile, $ScanLoc, $DefsFile, $ConfigVersion, $ConfigLoaded, $DefsExist, $ReportFile, $ReportDir, $ReportFileName, $RequiredDirs, $InstallDir, $MaxLogSize, $MemoryLimit, $ChunkSize, $DefaultMemoryLimit, $DefaultChunkSize, $DefaultMaxLogSize, $DefinitionRepositoryName, $DefinitionUpdates, $DefinitionUpdateDomain, $DefinitionUpdateURL, $DefInstallDir, $DefGitDir, $ApplicationRepositoryName, $ApplicationUpdates, $ApplicationUpdateDomain, $ApplicationUpdateURL, $AppInstallDir, $AppGitDir, $DefinitionsUpdateSubscriptions, $DefsFileName, $Verbose, $Debug, $UpdateMethod, $DefinitionBranchName, $ApplicationBranchName, $ApplicationUpdateSubscriptions, $VersionsMatch, $ConfigFaults, $MaxScanDepth, $FollowSymlinks, $ConnectionTimeout, $MinimumDataSignatureLength, $ClassifyContent, $ClassifierFileName, $ClassifierFile, $MinimumLanguageSignatures, $EnabledClassifiers, $InspectArchivedContent, $MaxArchiveEntries, $MaxArchiveEntrySize, $MaxArchiveTotalSize, $MaxArchiveCompressionRatio, $ReportSuspicious, $PreserveOwnership, $OwnerUser, $OwnerGroup, $FilePermissions, $DirectoryPermissions, $UseHashIndex, $HashIndexThreshold;
+// / The core version & the arguments arrive as arguments & are never pulled back out of global scope.
+function loadConfig($coreVersion, $argumentList) {
+  global $ConfigFilePath, $RP, $SEP, $EOL, $ConfigFile, $ScanLoc, $DefsFile, $ConfigVersion, $ConfigLoaded, $DefsExist, $ReportFile, $ReportDir, $ReportFileName, $RequiredDirs, $InstallDir, $MaxLogSize, $MemoryLimit, $ChunkSize, $DefaultMemoryLimit, $DefaultChunkSize, $DefaultMaxLogSize, $DefinitionRepositoryName, $DefinitionUpdates, $DefinitionUpdateDomain, $DefinitionUpdateURL, $DefInstallDir, $DefGitDir, $ApplicationRepositoryName, $ApplicationUpdates, $ApplicationUpdateDomain, $ApplicationUpdateURL, $AppInstallDir, $AppGitDir, $DefinitionsUpdateSubscriptions, $DefsFileName, $Verbose, $Debug, $UpdateMethod, $DefinitionBranchName, $ApplicationBranchName, $ApplicationUpdateSubscriptions, $VersionsMatch, $ConfigFaults, $MaxScanDepth, $FollowSymlinks, $ConnectionTimeout, $MinimumDataSignatureLength, $ClassifyContent, $ClassifierFileName, $ClassifierFile, $MinimumLanguageSignatures, $EnabledClassifiers, $InspectArchivedContent, $MaxArchiveEntries, $MaxArchiveEntrySize, $MaxArchiveTotalSize, $MaxArchiveCompressionRatio, $ReportSuspicious, $PreserveOwnership, $OwnerUser, $OwnerGroup, $FilePermissions, $DirectoryPermissions, $UseHashIndex, $HashIndexThreshold, $InspectImages, $MaxImagePixels, $MaxImageChunkSize, $MaxArchiveDepth;
   // / Set variables.
   $ConfigLoaded = $DefsExist = $VersionsMatch = FALSE;
   $ConfigFaults = array();
@@ -316,10 +319,10 @@ function loadConfig($coreVersion) {
   $overrideDefsFile = '';
   $createBlankDefs = FALSE;
   // / Initialize an empty array if no arguments are set.
-  if (!isset($argv)) $argv = array();
+  if (!is_array($argumentList)) $argumentList = array();
   // / Briefly iterate the arguments just to see if a special configuration file is wanted.
-  foreach ($argv as $configKey => $configArg) if (normalizeSwitch($configArg) === '-configfile' or normalizeSwitch($configArg) === '-cf') {
-    if (isset($argv[$configKey + 1])) $ConfigFilePath = resolvePath(sanitize($argv[$configKey + 1]), $RP);
+  foreach ($argumentList as $configKey => $configArg) if (normalizeSwitch($configArg) === '-configfile' or normalizeSwitch($configArg) === '-cf') {
+    if (isset($argumentList[$configKey + 1])) $ConfigFilePath = resolvePath(sanitize($argumentList[$configKey + 1]), $RP);
     else $ConfigFaults[] = 'The -configfile argument was supplied without a path, using the default instead.'; }
   // / Load the configuration file located at $ConfigFilePath.
   if (file_exists($ConfigFilePath) && !is_dir($ConfigFilePath)) {
@@ -330,17 +333,17 @@ function loadConfig($coreVersion) {
   // / Validate every configuration entry & fall back to a working default when needed.
   if ($ConfigLoaded) list($VersionsMatch) = validateConfig($coreVersion);
   // / Briefly iterate the arguments to see if a special definitions file is wanted.
-  foreach ($argv as $defsKey => $defsArg) if (normalizeSwitch($defsArg) === '-defsfile' or normalizeSwitch($defsArg) === '-df') {
-    if (isset($argv[$defsKey + 1])) $overrideDefsFile = resolvePath(sanitize($argv[$defsKey + 1]), $RP);
+  foreach ($argumentList as $defsKey => $defsArg) if (normalizeSwitch($defsArg) === '-defsfile' or normalizeSwitch($defsArg) === '-df') {
+    if (isset($argumentList[$defsKey + 1])) $overrideDefsFile = resolvePath(sanitize($argumentList[$defsKey + 1]), $RP);
     else $ConfigFaults[] = 'The -defsfile argument was supplied without a path, using the configured file instead.'; }
   if ($overrideDefsFile !== '') $DefsFile = $overrideDefsFile;
   // / Create a blank definitions file when an update was requested against a missing one.
-  foreach ($argv as $updateKey => $updateArg) if (normalizeSwitch($updateArg) === '-updatedefinitions' or normalizeSwitch($updateArg) === '-ud') $createBlankDefs = TRUE;
+  foreach ($argumentList as $updateKey => $updateArg) if (normalizeSwitch($updateArg) === '-updatedefinitions' or normalizeSwitch($updateArg) === '-ud') $createBlankDefs = TRUE;
   if ($createBlankDefs && is_string($DefsFile) && $DefsFile !== '' && !file_exists($DefsFile)) @file_put_contents($DefsFile, '');
   // / Check whether the definitions file is present & readable.
   if (is_string($DefsFile) && $DefsFile !== '') if (file_exists($DefsFile) && !is_dir($DefsFile)) $DefsExist = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($configKey, $configArg, $defsKey, $defsArg, $updateKey, $updateArg, $requireResult, $overrideDefsFile, $createBlankDefs, $coreVersion);
+  purgeSensitiveMemory($configKey, $configArg, $defsKey, $defsArg, $updateKey, $updateArg, $requireResult, $overrideDefsFile, $createBlankDefs, $coreVersion, $argumentList);
   return array($ConfigLoaded, $DefsExist, $ConfigFilePath, $VersionsMatch); }
 // / -----------------------------------------------------------------------------------
 
@@ -349,7 +352,7 @@ function loadConfig($coreVersion) {
 // / The configuration file is a minimum match, so a newer configuration is acceptable.
 // / A configuration that is older than the core is refused, because settings may be absent.
 function validateConfig($coreVersion) {
-  global $RP, $SEP, $ConfigVersion, $ScanLoc, $DefsFile, $DefsFileName, $ReportFile, $ReportDir, $ReportFileName, $RequiredDirs, $InstallDir, $MaxLogSize, $MemoryLimit, $ChunkSize, $DefaultMemoryLimit, $DefaultChunkSize, $DefaultMaxLogSize, $DefinitionRepositoryName, $DefinitionUpdates, $DefinitionUpdateDomain, $DefinitionUpdateURL, $DefInstallDir, $DefGitDir, $ApplicationRepositoryName, $ApplicationUpdates, $ApplicationUpdateDomain, $ApplicationUpdateURL, $AppInstallDir, $AppGitDir, $DefinitionsUpdateSubscriptions, $Verbose, $Debug, $UpdateMethod, $DefinitionBranchName, $ApplicationBranchName, $ApplicationUpdateSubscriptions, $ConfigFaults, $MaxScanDepth, $FollowSymlinks, $ConnectionTimeout, $MinimumDataSignatureLength, $ClassifyContent, $ClassifierFileName, $ClassifierFile, $MinimumLanguageSignatures, $EnabledClassifiers, $InspectArchivedContent, $MaxArchiveEntries, $MaxArchiveEntrySize, $MaxArchiveTotalSize, $MaxArchiveCompressionRatio, $ReportSuspicious, $PreserveOwnership, $OwnerUser, $OwnerGroup, $FilePermissions, $DirectoryPermissions, $UseHashIndex, $HashIndexThreshold;
+  global $RP, $SEP, $ConfigVersion, $ScanLoc, $DefsFile, $DefsFileName, $ReportFile, $ReportDir, $ReportFileName, $RequiredDirs, $InstallDir, $MaxLogSize, $MemoryLimit, $ChunkSize, $DefaultMemoryLimit, $DefaultChunkSize, $DefaultMaxLogSize, $DefinitionRepositoryName, $DefinitionUpdates, $DefinitionUpdateDomain, $DefinitionUpdateURL, $DefInstallDir, $DefGitDir, $ApplicationRepositoryName, $ApplicationUpdates, $ApplicationUpdateDomain, $ApplicationUpdateURL, $AppInstallDir, $AppGitDir, $DefinitionsUpdateSubscriptions, $Verbose, $Debug, $UpdateMethod, $DefinitionBranchName, $ApplicationBranchName, $ApplicationUpdateSubscriptions, $ConfigFaults, $MaxScanDepth, $FollowSymlinks, $ConnectionTimeout, $MinimumDataSignatureLength, $ClassifyContent, $ClassifierFileName, $ClassifierFile, $MinimumLanguageSignatures, $EnabledClassifiers, $InspectArchivedContent, $MaxArchiveEntries, $MaxArchiveEntrySize, $MaxArchiveTotalSize, $MaxArchiveCompressionRatio, $ReportSuspicious, $PreserveOwnership, $OwnerUser, $OwnerGroup, $FilePermissions, $DirectoryPermissions, $UseHashIndex, $HashIndexThreshold, $InspectImages, $MaxImagePixels, $MaxImageChunkSize, $MaxArchiveDepth;
   // / Set variables.
   $VersionsMatch = $versionsCompared = FALSE;
   // / Compare the configuration version numerically against the core version.
@@ -361,7 +364,7 @@ function validateConfig($coreVersion) {
   applyConfigFallback($ApplicationUpdateDomain, 'github.com', 'ApplicationUpdateDomain', 'string');
   applyConfigFallback($ApplicationRepositoryName, 'ScanCore', 'ApplicationRepositoryName', 'string');
   applyConfigFallback($ApplicationBranchName, 'master', 'ApplicationBranchName', 'string');
-  applyConfigFallback($ApplicationUpdateSubscriptions, array('README.md', 'ScanCore.php', 'ScanCore_Config.php', 'index.html', 'Documentation/CHANGELOG.txt', 'Documentation/index.html'), 'ApplicationUpdateSubscriptions', 'array');
+  applyConfigFallback($ApplicationUpdateSubscriptions, array('README.md', 'ScanCore.php', 'ScanCore_Config.php', 'index.html', 'ScanCore_Classifiers.def', 'Documentation/CHANGELOG.txt', 'Documentation/ERROR_DESCRIPTIONS.txt', 'Documentation/DEVELOPMENT_NOTES.txt', 'Documentation/index.html'), 'ApplicationUpdateSubscriptions', 'array');
   applyConfigFallback($DefinitionUpdates, TRUE, 'DefinitionUpdates', 'boolean');
   applyConfigFallback($DefinitionUpdateURL, 'https://github.com/zelon88/ScanCore_Definitions', 'DefinitionUpdateURL', 'string');
   applyConfigFallback($DefinitionUpdateDomain, 'github.com', 'DefinitionUpdateDomain', 'string');
@@ -381,7 +384,11 @@ function validateConfig($coreVersion) {
   applyConfigFallback($EnabledClassifiers, array('Language', 'SCAD', 'PDF', 'Document', 'Spreadsheet', 'Presentation', 'XPS', 'SVG', 'Markup', 'Stream', 'Transport', 'Model', 'Drawing', 'Ebook', 'Subtitle'), 'EnabledClassifiers', 'list');
   applyConfigFallback($MinimumLanguageSignatures, 2, 'MinimumLanguageSignatures', 'integer');
   applyConfigFallback($InspectArchivedContent, TRUE, 'InspectArchivedContent', 'boolean');
-  applyConfigFallback($MaxArchiveEntries, 512, 'MaxArchiveEntries', 'integer');
+  applyConfigFallback($MaxArchiveEntries, 4096, 'MaxArchiveEntries', 'integer');
+  applyConfigFallback($MaxArchiveDepth, 5, 'MaxArchiveDepth', 'integer');
+  applyConfigFallback($InspectImages, TRUE, 'InspectImages', 'boolean');
+  applyConfigFallback($MaxImagePixels, 16384*16384, 'MaxImagePixels', 'integer');
+  applyConfigFallback($MaxImageChunkSize, 1024*1024*8, 'MaxImageChunkSize', 'integer');
   applyConfigFallback($MaxArchiveEntrySize, 1024*1024*8, 'MaxArchiveEntrySize', 'integer');
   applyConfigFallback($MaxArchiveTotalSize, 1024*1024*64, 'MaxArchiveTotalSize', 'integer');
   applyConfigFallback($MaxArchiveCompressionRatio, 200, 'MaxArchiveCompressionRatio', 'integer');
@@ -484,15 +491,46 @@ function resolveOwnership($announce) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to tell whether root may change a path by its name.
+// / A folder may be changed, & so may a file with no other name. A link is not, because changing it
+// / by name would change whatever it points at. A file with a second hard link is not either, because
+// / that other name could be anywhere on the system, & so could the file another account linked here.
+function pathIsPlainForRoot($path) {
+  // / Set variables.
+  $PathIsPlain = FALSE;
+  $pathStat = @lstat($path);
+  $pathType = 0;
+  if (is_array($pathStat)) {
+    $pathType = intval($pathStat['mode']) & 0170000;
+    if ($pathType === 0040000 or ($pathType === 0100000 && intval($pathStat['nlink']) === 1)) $PathIsPlain = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($pathStat, $pathType, $path);
+  return $PathIsPlain; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to hand a path to an owner & group without following a link.
+// / lchown & lchgrp change the name itself, so a link put where the path was is never followed.
+// / Returns TRUE when both the owner & the group were changed.
+function changeOwnerWithoutFollowing($path, $ownerUid, $ownerGid) {
+  // / Set variables.
+  $OwnerChanged = FALSE;
+  if (@lchown($path, $ownerUid) && @lchgrp($path, $ownerGid)) $OwnerChanged = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($path, $ownerUid, $ownerGid);
+  return $OwnerChanged; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to hand a newly created path to the owner this installation belongs to.
 // / Does nothing at all unless we are root, because nobody else may give a file away.
+// / A link or a file with a second hard link is left as it is, because root would change what it leads to.
 function applyOwnership($path, $isDirectory) {
   global $RunningAsRoot, $PreserveOwnership, $OwnershipUid, $OwnershipGid, $FilePermissions, $DirectoryPermissions;
   // / Set variables.
   $OwnershipApplied = FALSE;
-  if ($RunningAsRoot && $PreserveOwnership && $OwnershipUid >= 0 && file_exists($path)) {
-    @chown($path, $OwnershipUid);
-    @chgrp($path, $OwnershipGid);
+  if ($RunningAsRoot && $PreserveOwnership && $OwnershipUid >= 0 && file_exists($path) && pathIsPlainForRoot($path)) {
+    changeOwnerWithoutFollowing($path, $OwnershipUid, $OwnershipGid);
     if ($isDirectory) @chmod($path, $DirectoryPermissions);
     else @chmod($path, $FilePermissions);
     $OwnershipApplied = TRUE; }
@@ -521,15 +559,14 @@ function captureFileIdentity($path) {
 // / A function to put a recorded owner & mode back onto a replaced file.
 // / The mode is restored whoever we are, because the owner of a file may always set it.
 // / The owner is only restored when we are root, because nobody else may give a file away.
+// / A link or a file with a second hard link is left as it is, because the change would reach what it leads to.
 function restoreFileIdentity($path, $fileIdentity) {
   global $RunningAsRoot, $PreserveOwnership;
   // / Set variables.
   $IdentityRestored = FALSE;
-  if ($fileIdentity['exists'] && file_exists($path)) {
+  if ($fileIdentity['exists'] && file_exists($path) && pathIsPlainForRoot($path)) {
     if ($fileIdentity['mode'] >= 0) @chmod($path, $fileIdentity['mode']);
-    if ($RunningAsRoot && $PreserveOwnership && $fileIdentity['uid'] >= 0) {
-      @chown($path, $fileIdentity['uid']);
-      @chgrp($path, $fileIdentity['gid']); }
+    if ($RunningAsRoot && $PreserveOwnership && $fileIdentity['uid'] >= 0) changeOwnerWithoutFollowing($path, $fileIdentity['uid'], $fileIdentity['gid']);
     $IdentityRestored = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($path, $fileIdentity);
@@ -538,7 +575,7 @@ function restoreFileIdentity($path, $fileIdentity) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to create required directories when they do not already exist.
-function createDirs($RequiredDirs) { 
+function createDirs($RequiredDirs) {
   global $RP, $SEP;
   // / Set variables.
   $RequiredDirsExist = TRUE;
@@ -554,7 +591,7 @@ function createDirs($RequiredDirs) {
       applyOwnership($reqdDir.$SEP.'index.html', FALSE); }
     if (!is_dir($reqdDir)) $RequiredDirsExist = FALSE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($reqdDir, $RequiredDirs); 
+  purgeSensitiveMemory($reqdDir, $RequiredDirs);
   return array($RequiredDirsExist); }
 // / -----------------------------------------------------------------------------------
 
@@ -619,7 +656,7 @@ function addLogEntry($entry, $level, $errorNumber) {
       $LogBytesWritten = $LogBytesWritten + intval($writeResult);
       $LogCreated = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($preText, $entryTime, $writeResult, $reportExisted, $entry, $level, $errorNumber); 
+  purgeSensitiveMemory($preText, $entryTime, $writeResult, $reportExisted, $entry, $level, $errorNumber);
   return array($LogCreated); }
 // / -----------------------------------------------------------------------------------
 
@@ -644,10 +681,10 @@ function processOutput($txt, $level, $errorNumber, $requiredLog, $requiredConsol
   if ($Debug or $requiredLog) list ($OutputProcessed) = addLogEntry($txt, $entryLevel, $errorNumber);
   // / Output the summary text to the terminal if the $Verbose (-v switch) variable is set.
   if ($Verbose or $requiredConsole) echo $txt.$EOL;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($txt, $entryLevel, $level, $errorNumber, $requiredLog, $requiredConsole); 
   // / Stop execution as needed, reporting a failing status to whatever invoked us.
   if ($fatal) exit(1);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($txt, $entryLevel, $level, $errorNumber, $requiredLog, $requiredConsole, $fatal);
   return array($OutputProcessed); }
 // / -----------------------------------------------------------------------------------
 
@@ -718,8 +755,13 @@ function buildHelpInformation() {
       array('Enable content classification', '-classify', '-cy'),
       array('Disable content classification', '-noclassify', '-ncy'),
       array('Choose which classifiers run', '-classifiers scad,pdf', '-cl scad,pdf'),
-      array('Inspect inside zip containers', '-inspectarchives', '-ia'),
-      array('Do not open zip containers', '-noinspectarchives', '-nia'),
+      array('Inspect inside containers', '-inspectarchives', '-ia'),
+      array('Do not open containers', '-noinspectarchives', '-nia'),
+      array('Container nesting depth limit', '-maxarchivedepth ###', '-mad ###'),
+      array('Inspect the structure of images', '-inspectimages', '-ii'),
+      array('Do not inspect images', '-noinspectimages', '-nii'),
+      array('Largest image accepted (in pixels)', '-maximagepixels ###', '-mip ###'),
+      array('Largest image text chunk (in bytes)', '-maximagechunksize ###', '-mics ###'),
       array('Container entry count budget', '-maxarchiveentries ###', '-mae ###'),
       array('Container entry size budget (bytes)', '-maxarchiveentrysize ###', '-maes ###'),
       array('Container total size budget (bytes)', '-maxarchivetotalsize ###', '-mats ###'),
@@ -742,15 +784,12 @@ function buildHelpInformation() {
       if ($switchRow[2] !== '') $switchText = $switchText.sprintf('  %-38s %s', '', $switchRow[2]).$EOL; }
     $qsText1 = $EOL.'Quick Start Example:'.$EOL;
     $qsText2 = $EOL.'  C:\Path-To-PHP-Binary.exe C:\Path-To-ScanCore.php C:\Path-To-Scan\ -m [integer] -c [integer] -v -d'.$EOL;
-    $HelpText = $verText1.$qsText1.$qsText2.$EOL.'Reqiured Arguments Include:'.$EOL
+    $HelpText = $verText1.$qsText1.$qsText2.$EOL.'Required Arguments Include:'.$EOL
       .$EOL.'  File or folder to scan:                /path/to/scan'.$EOL
       .$EOL.'Optional Arguments Include:'.$EOL.$switchText;
     $VersionText = $verText1.$verText2.$verText3.$verText4.$verText5.$verText6.$verText7.$verText8.$verText9.$verText10.$verText11; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($coreFilePath, $configFilePath, $defsFilePath, $originalRepo, $licenseText);
-  purgeSensitiveMemory($switchTable, $switchRow, $switchText, $qsText1, $qsText2);
-  purgeSensitiveMemory($verText1, $verText2, $verText3, $verText4, $verText5, $verText6);
-  purgeSensitiveMemory($verText7, $verText8, $verText9, $verText10, $verText11);
+  purgeSensitiveMemory($coreFilePath, $configFilePath, $defsFilePath, $originalRepo, $licenseText, $switchTable, $switchRow, $switchText, $qsText1, $qsText2, $verText1, $verText2, $verText3, $verText4, $verText5, $verText6, $verText7, $verText8, $verText9, $verText10, $verText11);
   return array($InformationBuilt, $SubText, $VersionText, $HelpText); }
 // / -----------------------------------------------------------------------------------
 
@@ -796,6 +835,7 @@ function parseArgs($argumentList) {
   global $ClassifyContent, $EnabledClassifiers, $MinimumLanguageSignatures, $MinimumDataSignatureLength, $InspectArchivedContent;
   global $MaxArchiveEntries, $MaxArchiveEntrySize, $MaxArchiveTotalSize, $MaxArchiveCompressionRatio, $ConnectionTimeout, $UpdateMethod;
   global $ReportSuspicious, $PreserveOwnership, $OwnerUser, $OwnerGroup, $UseHashIndex, $HashIndexThreshold, $RebuildHashIndex;
+  global $InspectImages, $MaxImagePixels, $MaxImageChunkSize, $MaxArchiveDepth;
   // / Set variables.
   $ArgsParsed = $PerformScan = $Recursion = FALSE;
   $RebuildHashIndex = FALSE;
@@ -819,6 +859,17 @@ function parseArgs($argumentList) {
     if ($currentSwitch === '-noclassify' or $currentSwitch === '-ncy') $ClassifyContent = FALSE;
     if ($currentSwitch === '-inspectarchives' or $currentSwitch === '-ia') $InspectArchivedContent = TRUE;
     if ($currentSwitch === '-noinspectarchives' or $currentSwitch === '-nia') $InspectArchivedContent = FALSE;
+    if ($currentSwitch === '-inspectimages' or $currentSwitch === '-ii') $InspectImages = TRUE;
+    if ($currentSwitch === '-noinspectimages' or $currentSwitch === '-nii') $InspectImages = FALSE;
+    if ($currentSwitch === '-maximagepixels' or $currentSwitch === '-mip') {
+      list($valueFound, $argumentValue) = readArgumentValue($argumentList, $argKey, $currentSwitch);
+      if ($valueFound) $MaxImagePixels = $argumentValue; }
+    if ($currentSwitch === '-maximagechunksize' or $currentSwitch === '-mics') {
+      list($valueFound, $argumentValue) = readArgumentValue($argumentList, $argKey, $currentSwitch);
+      if ($valueFound) $MaxImageChunkSize = $argumentValue; }
+    if ($currentSwitch === '-maxarchivedepth' or $currentSwitch === '-mad') {
+      list($valueFound, $argumentValue) = readArgumentValue($argumentList, $argKey, $currentSwitch);
+      if ($valueFound) $MaxArchiveDepth = $argumentValue; }
     if ($currentSwitch === '-suspicious' or $currentSwitch === '-sus') $ReportSuspicious = TRUE;
     if ($currentSwitch === '-nosuspicious' or $currentSwitch === '-nsus') $ReportSuspicious = FALSE;
     if ($currentSwitch === '-nopreserveownership' or $currentSwitch === '-npo') $PreserveOwnership = FALSE;
@@ -887,7 +938,10 @@ function parseArgs($argumentList) {
   // / Validate every override the same way, so a bad argument falls back rather than breaks.
   $MinimumLanguageSignatures = validateNumericSetting($MinimumLanguageSignatures, 2, 1, 'MinimumLanguageSignatures');
   $MinimumDataSignatureLength = validateNumericSetting($MinimumDataSignatureLength, 4, 1, 'MinimumDataSignatureLength');
-  $MaxArchiveEntries = validateNumericSetting($MaxArchiveEntries, 512, 1, 'MaxArchiveEntries');
+  $MaxArchiveEntries = validateNumericSetting($MaxArchiveEntries, 4096, 1, 'MaxArchiveEntries');
+  $MaxArchiveDepth = validateNumericSetting($MaxArchiveDepth, 5, 1, 'MaxArchiveDepth');
+  $MaxImagePixels = validateNumericSetting($MaxImagePixels, 16384*16384, 1, 'MaxImagePixels');
+  $MaxImageChunkSize = validateNumericSetting($MaxImageChunkSize, 1024*1024*8, 1024, 'MaxImageChunkSize');
   $MaxArchiveEntrySize = validateNumericSetting($MaxArchiveEntrySize, 1024*1024*8, 1024, 'MaxArchiveEntrySize');
   $MaxArchiveTotalSize = validateNumericSetting($MaxArchiveTotalSize, 1024*1024*64, 1024, 'MaxArchiveTotalSize');
   $MaxArchiveCompressionRatio = validateNumericSetting($MaxArchiveCompressionRatio, 200, 2, 'MaxArchiveCompressionRatio');
@@ -936,8 +990,7 @@ function parseArgs($argumentList) {
           processOutput('The MemoryLimit is:  '.$MemoryLimit, 'log', 0, FALSE, FALSE, FALSE);
           $ArgsParsed = $PerformScan = TRUE; } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($argKey, $argValue, $currentSwitch, $showVersion, $showHelp, $valueFound);
-  purgeSensitiveMemory($argumentValue, $scanPathSupplied, $InformationBuilt, $SubText, $argumentList);
+  purgeSensitiveMemory($argKey, $argValue, $currentSwitch, $showVersion, $showHelp, $valueFound, $argumentValue, $scanPathSupplied, $InformationBuilt, $SubText, $argumentList);
   return array($ArgsParsed, $PerformScan, $PathToScan, $MemoryLimit, $ChunkSize, $Debug, $Verbose, $Recursion, $ReportFile, $MaxLogSize, $PerformDefUpdate, $PerformAppUpdate); }
 // / -----------------------------------------------------------------------------------
 
@@ -995,7 +1048,7 @@ function clean($Location) {
     // / Check if the location was deleted.
     if (!is_dir($Location) && !file_exists($Location)) $LocationCleaned = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($entryName, $entryList, $scanResult); 
+  purgeSensitiveMemory($entryName, $entryList, $scanResult);
   return array($LocationCleaned); }
 // / -----------------------------------------------------------------------------------
 
@@ -1025,7 +1078,7 @@ function connectionSuccess($type) {
   // / The caller raises the numbered error, so an unreachable host is only a warning here.
   if (!$ConnectionResult) processOutput('Cannot reach the configured update host:  '.$urlToCheck, 'warning', 0, TRUE, FALSE, FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($connection, $urlToCheck, $errorNumber, $errorText, $type); 
+  purgeSensitiveMemory($connection, $urlToCheck, $errorNumber, $errorText, $type);
   return $ConnectionResult; }
 // / -----------------------------------------------------------------------------------
 
@@ -1060,7 +1113,7 @@ function fetchRemoteFile($sourceUrl, $destinationFile) {
       if (is_string($fetchedData)) if (trim($fetchedData) !== '404: Not Found') $FileFetched = TRUE; } }
   if (!$FileFetched) if (file_exists($destinationFile)) @unlink($destinationFile);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($fetchedData, $streamContext, $writeResult, $shellResult, $sourceUrl, $destinationFile); 
+  purgeSensitiveMemory($fetchedData, $streamContext, $writeResult, $shellResult, $sourceUrl, $destinationFile);
   return $FileFetched; }
 // / -----------------------------------------------------------------------------------
 
@@ -1076,7 +1129,7 @@ function cloneRepository($repositoryUrl, $branchName, $destinationDir) {
   // / Confirm that git is actually installed before relying upon it.
   $gitAvailable = shell_exec('git --version 2>&1');
   if (is_string($gitAvailable) && stripos($gitAvailable, 'git version') !== FALSE) {
-    $shellResult = shell_exec('git clone --depth 1 --branch '.escapeshellarg($branchName).' '.escapeshellarg($repositoryUrl).' '.escapeshellarg($destinationDir).' 2>&1');
+    $shellResult = shell_exec('git clone --depth 1 --branch '.escapeshellarg($branchName).' -- '.escapeshellarg($repositoryUrl).' '.escapeshellarg($destinationDir).' 2>&1');
     if (is_dir($destinationDir)) $RepositoryCloned = TRUE;
     if (!$RepositoryCloned) processOutput('The git clone operation did not produce a directory:  '.trim(strval($shellResult)), 'warning', 0, TRUE, FALSE, FALSE); }
   else processOutput('Cannot find a usable git binary, consider setting $UpdateMethod to raw.', 'warning', 0, TRUE, FALSE, FALSE);
@@ -1185,7 +1238,7 @@ function verifyStagedFile($targetFile) {
         $FileVerified = FALSE;
         $VerificationNote = 'the staged definitions file contains nothing matchable'; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($stagedFile, $stagedSize, $stagedHead, $lintPerformed, $lintPassed, $lintNote, $fileExtension);
+  purgeSensitiveMemory($stagedFile, $stagedSize, $stagedHead, $lintPerformed, $lintPassed, $lintNote, $fileExtension, $targetFile);
   return array($FileVerified, $VerificationNote); }
 // / -----------------------------------------------------------------------------------
 
@@ -1378,8 +1431,7 @@ function updateDefinitions() {
     processOutput('Only '.countWithNoun($subCount, 'file', 'files').' of '.$subTotal.' subscribed definition files were installed.', 'warning', 0, TRUE, TRUE, FALSE); }
   discardStagedFile($DefsFile);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($defSubs, $defSubFile, $subData, $subData1, $subCount, $subTotal, $installedCount);
-  purgeSensitiveMemory($rawDefURL, $subText, $connectionResult, $sourceReady, $stagingReady, $fileVerified, $fileSwapped, $verificationNote);
+  purgeSensitiveMemory($defSubs, $defSubFile, $subData, $subData1, $subCount, $subTotal, $installedCount, $rawDefURL, $subText, $connectionResult, $sourceReady, $stagingReady, $fileVerified, $fileSwapped, $verificationNote);
   return array($UpdateDefinitionsComplete, $UpdateDefinitionsErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -1519,9 +1571,7 @@ function updateApplication() {
     $UpdateApplicationErrors = TRUE;
     processOutput('Only '.countWithNoun($installedCount, 'file', 'files').' of '.$subTotal.' subscribed application files were installed.', 'warning', 0, TRUE, TRUE, FALSE); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($appSubs, $appSubFile, $rawAppURL, $relativeName, $targetFile, $stagedTargets, $stagedTarget);
-  purgeSensitiveMemory($subCount, $subTotal, $installedCount, $connectionResult, $sourceReady, $configCopied);
-  purgeSensitiveMemory($stagingFailed, $verificationFailed, $swapFailed, $testPerformed, $testPassed, $testNote, $verificationNote, $fileVerified);
+  purgeSensitiveMemory($appSubs, $appSubFile, $rawAppURL, $relativeName, $targetFile, $stagedTargets, $stagedTarget, $subCount, $subTotal, $installedCount, $connectionResult, $sourceReady, $configCopied, $stagingFailed, $verificationFailed, $swapFailed, $testPerformed, $testPassed, $testNote, $verificationNote, $fileVerified);
   return array($UpdateApplicationComplete, $UpdateApplicationErrors); }
 // / -----------------------------------------------------------------------------------
 
@@ -1612,7 +1662,7 @@ function loadClassifiers($ClassifierFile) {
   global $EnabledClassifiers;
   // / Set variables.
   $ClassifiersLoaded = FALSE;
-  $Classifiers = array('types' => array(), 'languages' => array(), 'handlers' => array(), 'magic' => array());
+  $Classifiers = array('types' => array(), 'languages' => array(), 'handlers' => array(), 'magic' => array(), 'embeds' => array());
   $ClassifierLongestToken = 0;
   $rawLines = array();
   $recordCount = $malformedCount = $skippedCount = 0;
@@ -1620,14 +1670,33 @@ function loadClassifiers($ClassifierFile) {
   $recordBody = $typeName = $languageName = $extensionText = $signatureText = '';
   $handlerMembers = $signatureMembers = $extensionList = array();
   $handlerToken = $handlerCapabilities = $signaturePair = $magicBytes = '';
-  $signatureList = array();
+  $signatureList = $embedParts = array();
   $magicOffset = 0;
+  $embedName = $embedConfidence = '';
   if (!file_exists($ClassifierFile)) processOutput('Cannot load the classifier definitions file, content classification is disabled:  '.$ClassifierFile, 'error', 520, TRUE, FALSE, FALSE);
   else {
     $rawLines = file($ClassifierFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if (!is_array($rawLines)) $rawLines = array();
     foreach ($rawLines as $rawLine) {
       redeclare($recordBody, trim($rawLine));
+      // / An embed record declares code that has no business inside an image.
+      if (substr($recordBody, 0, 6) === 'embed ') {
+        redeclare($equalsPosition, strpos($recordBody, '='));
+        if ($equalsPosition === FALSE) $malformedCount++;
+        else {
+          redeclare($embedName, trim(substr($recordBody, 6, $equalsPosition - 6)));
+          redeclare($embedConfidence, 'medium');
+          if (preg_match('/^(.+)\((high|medium|low)\)$/i', $embedName, $embedParts)) {
+            $embedName = trim($embedParts[1]);
+            $embedConfidence = strtolower($embedParts[2]); }
+          redeclare($signatureList, array());
+          foreach (splitDefinitionList(trim(substr($recordBody, $equalsPosition + 1))) as $signatureMember) if ($signatureMember['text'] !== '') $signatureList[] = decodeDefinitionValue($signatureMember['text']);
+          if ($embedName === '' or count($signatureList) === 0) $malformedCount++;
+          else {
+            $Classifiers['embeds'][] = array('name' => $embedName, 'confidence' => $embedConfidence, 'signatures' => $signatureList);
+            $recordCount++; } }
+        // / The record is finished with, so nothing below may read it as a handler.
+        redeclare($recordBody, ''); }
       // / Skip a blank line & skip a comment line, neither of which declares anything.
       if ($recordBody !== '' && substr($recordBody, 0, 1) !== '#') {
         // / A type record maps a type name onto the extensions that type covers.
@@ -1657,7 +1726,7 @@ function loadClassifiers($ClassifierFile) {
                   redeclare($magicOffset, intval(trim(substr($signaturePair, 0, $colonPosition))));
                   redeclare($magicBytes, strtolower(trim(substr($signaturePair, $colonPosition + 1))));
                   // / A signature has to be whole bytes, so an odd number of digits is refused.
-                  if ($magicBytes !== '' && strlen($magicBytes) % 2 === 0 && ctype_xdigit($magicBytes)) $signatureList[] = array('offset' => $magicOffset, 'bytes' => $magicBytes); } }
+                  if ($magicBytes !== '' && strlen($magicBytes) % 2 === 0 && preg_match('/^[0-9A-Fa-f]+$/', $magicBytes) === 1) $signatureList[] = array('offset' => $magicOffset, 'bytes' => $magicBytes); } }
               if ($typeName === '' or count($signatureList) === 0) $malformedCount++;
               else {
                 if (!classifierIsEnabled($typeName)) $skippedCount++;
@@ -1729,11 +1798,7 @@ function loadClassifiers($ClassifierFile) {
     if ($recordCount < 1) processOutput('The classifier definitions file contains no usable records:  '.$ClassifierFile, 'error', 530, TRUE, FALSE, FALSE);
     else $ClassifiersLoaded = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($rawLines, $rawLine, $recordBody, $typeName, $languageName, $extensionText);
-  purgeSensitiveMemory($signatureText, $handlerMembers, $signatureMembers, $extensionList, $extensionEntry);
-  purgeSensitiveMemory($handlerMember, $signatureMember, $handlerToken, $handlerCapabilities, $recordCount);
-  purgeSensitiveMemory($malformedCount, $skippedCount, $keywordEnd, $equalsPosition, $colonPosition, $bracketPosition);
-  purgeSensitiveMemory($signatureList, $signaturePair, $magicOffset, $magicBytes);
+  purgeSensitiveMemory($rawLines, $rawLine, $recordBody, $typeName, $languageName, $extensionText, $signatureText, $handlerMembers, $signatureMembers, $extensionList, $extensionEntry, $handlerMember, $signatureMember, $handlerToken, $handlerCapabilities, $recordCount, $malformedCount, $skippedCount, $keywordEnd, $equalsPosition, $colonPosition, $bracketPosition, $signatureList, $signaturePair, $magicOffset, $magicBytes, $embedParts, $embedName, $embedConfidence, $enabledName);
   return array($ClassifiersLoaded, $Classifiers, $ClassifierLongestToken); }
 // / -----------------------------------------------------------------------------------
 
@@ -1773,7 +1838,7 @@ function skipToMeaningfulCharacter($haystack, $startPosition, $lookaheadLimit) {
           else $MeaningfulPosition = $commentEnd + 1; }
         else $keepSkipping = FALSE; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($haystackTop, $stopPosition, $keepSkipping, $currentCharacter, $nextCharacter, $commentEnd, $haystack);
+  purgeSensitiveMemory($haystackTop, $stopPosition, $keepSkipping, $currentCharacter, $nextCharacter, $commentEnd, $haystack, $startPosition, $lookaheadLimit);
   return $MeaningfulPosition; }
 // / -----------------------------------------------------------------------------------
 
@@ -1811,7 +1876,7 @@ function handlerTokenAppears($haystack, $handlerToken, $isLiteral) {
           $keepSearching = FALSE; } }
       if ($keepSearching) $searchOffset = $foundPosition + 1; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($searchOffset, $foundPosition, $characterBefore, $followingCharacter, $lookaheadPosition, $keepSearching, $haystack, $handlerToken);
+  purgeSensitiveMemory($searchOffset, $foundPosition, $characterBefore, $followingCharacter, $lookaheadPosition, $keepSearching, $haystack, $handlerToken, $isLiteral);
   return $TokenAppears; }
 // / -----------------------------------------------------------------------------------
 
@@ -1959,23 +2024,8 @@ function magicTypeFor($Classifiers, $fileHeader) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to say whether a file is a zip container.
-// / An office document, a presentation, an ebook & an XPS package are all zip files
-// / whose interesting content is compressed, so the container has to be opened.
-function isZipContainer($fileHeader) {
-  // / Set variables.
-  $ContainerIsZip = FALSE;
-  if (substr($fileHeader, 0, 4) === "PK\x03\x04") $ContainerIsZip = TRUE;
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($fileHeader);
-  return $ContainerIsZip; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / A function to decide whether an entry inside a container is worth reading.
-// / A handler lives in markup, never in a picture or a font, so reading the rest would
-// / spend the decompression budget on entries that can never carry a finding.
-// / An entry that is itself an archive is skipped, because this inspector does not nest.
+// / A function to decide whether a container member is worth classifying for handlers.
+// / A handler lives in markup, never in a picture or a font.
 function archiveEntryIsInteresting($entryName) {
   // / Set variables.
   $EntryIsInteresting = FALSE;
@@ -1992,130 +2042,708 @@ function archiveEntryIsInteresting($entryName) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to decide whether a container entry may be decompressed.
-// / Three separate limits apply & any one of them refuses the entry on its own.
-// / An entry that expands far more than its stored size is the shape of a decompression
-// / bomb, so the ratio is refused before a single byte of it is decompressed.
-function archiveEntryIsWithinBudget($entryName, $entrySize, $entryCompressedSize, $runningTotal) {
-  global $MaxArchiveEntrySize, $MaxArchiveTotalSize, $MaxArchiveCompressionRatio;
+// / A function to render a file or member name safely into a report line.
+// / Control characters are escaped so a hostile name cannot forge a line of its own.
+// / A very long name is shortened so one member cannot flood the report.
+function printableName($name) {
   // / Set variables.
-  $EntryIsWithinBudget = TRUE;
-  $entryRatio = 0;
-  // / A stored size of zero cannot be divided, & an empty entry expands to nothing.
-  if ($entryCompressedSize > 0) $entryRatio = intval($entrySize / $entryCompressedSize);
-  if ($entryRatio > $MaxArchiveCompressionRatio) {
-    $EntryIsWithinBudget = FALSE;
-    processOutput('Refused a container entry that expands '.$entryRatio.' times its stored size:  '.$entryName, 'error', 620, TRUE, FALSE, FALSE); }
-  if ($EntryIsWithinBudget && $entrySize > $MaxArchiveEntrySize) {
-    $EntryIsWithinBudget = FALSE;
-    processOutput('Skipped a container entry larger than the entry budget:  '.$entryName, 'warning', 0, TRUE, FALSE, FALSE); }
-  if ($EntryIsWithinBudget && ($runningTotal + $entrySize) > $MaxArchiveTotalSize) {
-    $EntryIsWithinBudget = FALSE;
-    processOutput('Stopped reading container entries at the total decompression budget.', 'warning', 0, TRUE, FALSE, FALSE); }
+  $PrintableName = strval($name);
+  if (strlen($PrintableName) > 255) $PrintableName = substr($PrintableName, 0, 252).'...';
+  if (preg_match('/[\x00-\x1F\x7F]/', $PrintableName)) $PrintableName = preg_replace_callback('/[\x00-\x1F\x7F]/', function($byteMatch) { return sprintf('\\x%02x', ord($byteMatch[0])); }, $PrintableName);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($entryRatio, $entryName, $entrySize, $entryCompressedSize, $runningTotal);
-  return $EntryIsWithinBudget; }
+  purgeSensitiveMemory($name);
+  return $PrintableName; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to read one container entry through the unzip binary.
-// / Used only when the zip extension is unavailable. The read is bounded by the caller
-// / rather than by the archive, so a lying header cannot talk us into a large read.
-function readEntryWithUnzipBinary($containerFile, $entryName, $readLimit) {
+// / A function to name the container format a file header describes.
+// / A tar names itself at offset 257, so the header must be at least 263 bytes long.
+function containerFormatOf($fileHeader) {
   // / Set variables.
-  $EntryData = '';
-  $pipeHandle = FALSE;
-  $readChunk = '';
-  $pipeHandle = @popen('unzip -p '.escapeshellarg($containerFile).' '.escapeshellarg($entryName).' 2>/dev/null', 'r');
-  if ($pipeHandle !== FALSE) {
-    while (strlen($EntryData) < $readLimit && !feof($pipeHandle)) {
-      redeclare($readChunk, fread($pipeHandle, 65536));
-      if ($readChunk === FALSE or $readChunk === '') break;
-      $EntryData = $EntryData.$readChunk; }
-    pclose($pipeHandle);
-    // / Trim anything the pipe delivered past the limit before the loop noticed.
-    if (strlen($EntryData) > $readLimit) $EntryData = substr($EntryData, 0, $readLimit); }
+  $ContainerFormat = '';
+  if (substr($fileHeader, 0, 4) === "PK\x03\x04" or substr($fileHeader, 0, 4) === "PK\x05\x06") $ContainerFormat = 'zip';
+  if (substr($fileHeader, 0, 3) === "\x1f\x8b\x08") $ContainerFormat = 'gzip';
+  if (substr($fileHeader, 0, 3) === 'BZh') $ContainerFormat = 'bzip2';
+  if (substr($fileHeader, 257, 5) === 'ustar') $ContainerFormat = 'tar';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($pipeHandle, $readChunk, $containerFile, $entryName, $readLimit);
-  return $EntryData; }
+  purgeSensitiveMemory($fileHeader);
+  return $ContainerFormat; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to list the entries of a container using the unzip binary.
-// / The verbose listing carries the stored size & the expanded size, which is what the
-// / decompression budget needs in order to refuse a bomb before opening it.
-function listEntriesWithUnzipBinary($containerFile) {
+// / A function to name the image format a file header describes.
+function imageFormatOf($fileHeader) {
+  // / Set variables.
+  $ImageFormat = '';
+  if (substr($fileHeader, 0, 8) === "\x89PNG\r\n\x1a\n") $ImageFormat = 'png';
+  if (substr($fileHeader, 0, 3) === "\xFF\xD8\xFF") $ImageFormat = 'jpeg';
+  if (substr($fileHeader, 0, 6) === 'GIF87a' or substr($fileHeader, 0, 6) === 'GIF89a') $ImageFormat = 'gif';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($fileHeader);
+  return $ImageFormat; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to start the record that one file inspection keeps as it descends.
+// / The budgets are shared by every nested container beneath one scanned file.
+function newInspectionState($candidateTypes) {
+  // / Set variables.
+  $InspectionState = array('bytes' => 0, 'entries' => 0, 'halted' => FALSE, 'incomplete' => array(), 'types' => $candidateTypes);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($candidateTypes);
+  return $InspectionState; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to record a reason one file could not be inspected completely.
+// / Each reason is kept once & the list is capped so the report line stays readable.
+function noteIncomplete(&$inspection, $reason) {
+  // / Set variables.
+  $ReasonNoted = FALSE;
+  if (!in_array($reason, $inspection['incomplete'], TRUE) && count($inspection['incomplete']) < 6) {
+    $inspection['incomplete'][] = $reason;
+    $ReasonNoted = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($reason);
+  return $ReasonNoted; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to copy a block of data into a memory stream that can be sought & read.
+// / Nested containers & embedded images are inspected through the same stream readers.
+function openMemoryStream($streamData) {
+  // / Set variables.
+  $MemoryHandle = @fopen('php://memory', 'w+b');
+  if ($MemoryHandle !== FALSE) {
+    fwrite($MemoryHandle, $streamData);
+    rewind($MemoryHandle); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($streamData);
+  return $MemoryHandle; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to inflate a compressed block held in memory, up to an output limit.
+// / The input is fed in small pieces so one call can never produce an unbounded result.
+// / The stream ended flag is FALSE when the limit stopped the work before the data did.
+function inflateBounded($compressedData, $zlibEncoding, $outputLimit) {
+  // / Set variables.
+  $InflateWorked = FALSE;
+  $InflatedData = '';
+  $StreamEnded = FALSE;
+  $inflateContext = FALSE;
+  $inputOffset = 0;
+  $inputLength = strlen($compressedData);
+  $outputPiece = '';
+  if (function_exists('inflate_init')) $inflateContext = @inflate_init($zlibEncoding);
+  if ($inflateContext !== FALSE) {
+    $InflateWorked = TRUE;
+    while ($InflateWorked && !$StreamEnded && $inputOffset < $inputLength && strlen($InflatedData) <= $outputLimit) {
+      redeclare($outputPiece, @inflate_add($inflateContext, substr($compressedData, $inputOffset, 4096)));
+      $inputOffset = $inputOffset + 4096;
+      if ($outputPiece === FALSE) $InflateWorked = FALSE;
+      else {
+        $InflatedData = $InflatedData.$outputPiece;
+        if (inflate_get_status($inflateContext) === ZLIB_STREAM_END) $StreamEnded = TRUE; } }
+    if (strlen($InflatedData) > $outputLimit) {
+      $InflatedData = substr($InflatedData, 0, $outputLimit);
+      $StreamEnded = FALSE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($inflateContext, $inputOffset, $inputLength, $outputPiece, $compressedData, $zlibEncoding, $outputLimit);
+  return array($InflateWorked, $InflatedData, $StreamEnded); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to test a block of data against the embedded code signatures.
+// / A signature shorter than six bytes is only tested against decoded text, because a
+// / short run of bytes turns up by chance inside compressed image data.
+function matchEmbedSignatures($file, $haystack, $isDecodedText, &$fileDetections) {
+  global $Classifiers;
+  // / Set variables.
+  $MatchesFound = 0;
+  $signatureMatched = FALSE;
+  if (isset($Classifiers['embeds'])) foreach ($Classifiers['embeds'] as $embedEntry) {
+    // / Decoded text does not repeat what the raw bytes of the file already reported.
+    redeclare($signatureMatched, ($isDecodedText && isset($fileDetections['Embedded.'.$embedEntry['name'].'|Structure Match|'])));
+    foreach ($embedEntry['signatures'] as $signatureText) if (!$signatureMatched) {
+      if ($isDecodedText or strlen($signatureText) >= 6) if (stripos($haystack, $signatureText) !== FALSE) {
+        $signatureMatched = TRUE;
+        recordDetection($file, 'Embedded.'.$embedEntry['name'], 'Structure Match', $signatureText, $embedEntry['confidence'], $fileDetections);
+        $MatchesFound++; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($embedEntry, $signatureText, $signatureMatched, $haystack, $isDecodedText, $file);
+  return $MatchesFound; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to work out how many bytes the image data of a png must inflate to.
+// / Every scanline carries one filter byte. An interlaced image is seven smaller images.
+function pngDecodedSize($imageWidth, $imageHeight, $channelCount, $bitDepth, $interlaceMethod) {
+  // / Set variables.
+  $DecodedSize = 0;
+  $bitsPerPixel = $channelCount * $bitDepth;
+  $passIndex = 0;
+  $passWidth = $passHeight = 0;
+  $startX = array(0, 4, 0, 2, 0, 1, 0);
+  $startY = array(0, 0, 4, 0, 2, 0, 1);
+  $stepX = array(8, 8, 4, 4, 2, 2, 1);
+  $stepY = array(8, 8, 8, 4, 4, 2, 2);
+  if ($interlaceMethod !== 1) $DecodedSize = (intdiv(($imageWidth * $bitsPerPixel) + 7, 8) + 1) * $imageHeight;
+  else {
+    while ($passIndex < 7) {
+      $passWidth = intdiv($imageWidth - $startX[$passIndex] + $stepX[$passIndex] - 1, $stepX[$passIndex]);
+      $passHeight = intdiv($imageHeight - $startY[$passIndex] + $stepY[$passIndex] - 1, $stepY[$passIndex]);
+      if ($passWidth > 0 && $passHeight > 0) $DecodedSize = $DecodedSize + ((intdiv(($passWidth * $bitsPerPixel) + 7, 8) + 1) * $passHeight);
+      $passIndex++; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($bitsPerPixel, $passIndex, $passWidth, $passHeight, $startX, $startY, $stepX, $stepY, $imageWidth, $imageHeight, $channelCount, $bitDepth, $interlaceMethod);
+  return $DecodedSize; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to inspect the text a png chunk carries, inflating it first when needed.
+// / A compressed chunk is inflated up to the chunk limit & no further.
+function inspectPngTextChunk($file, $chunkType, $chunkData, &$fileDetections) {
+  global $MaxImageChunkSize, $MemberContext;
+  // / Set variables.
+  $ChunkInspected = FALSE;
+  $outerContext = $MemberContext;
+  $separatorPosition = strpos($chunkData, "\0");
+  $chunkText = $compressedPart = '';
+  $isCompressed = FALSE;
+  $inflateWorked = $streamEnded = FALSE;
+  $fieldEnd = 0;
+  $MemberContext = ($outerContext !== '' ? $outerContext.' > ' : '').$chunkType.' chunk';
+  if ($separatorPosition !== FALSE) {
+    $ChunkInspected = TRUE;
+    if ($chunkType === 'tEXt') $chunkText = substr($chunkData, $separatorPosition + 1);
+    if ($chunkType === 'zTXt' or $chunkType === 'iCCP') {
+      $isCompressed = TRUE;
+      $compressedPart = substr($chunkData, $separatorPosition + 2); }
+    if ($chunkType === 'iTXt') {
+      // / The text follows a compression flag, a method, a language tag & a translated keyword.
+      $isCompressed = (substr($chunkData, $separatorPosition + 1, 1) === "\x01");
+      $fieldEnd = strpos($chunkData, "\0", $separatorPosition + 3);
+      if ($fieldEnd !== FALSE) $fieldEnd = strpos($chunkData, "\0", $fieldEnd + 1);
+      if ($fieldEnd === FALSE) $ChunkInspected = FALSE;
+      else {
+        if ($isCompressed) $compressedPart = substr($chunkData, $fieldEnd + 1);
+        else $chunkText = substr($chunkData, $fieldEnd + 1); } }
+    if ($ChunkInspected && $isCompressed) {
+      list($inflateWorked, $chunkText, $streamEnded) = inflateBounded($compressedPart, ZLIB_ENCODING_DEFLATE, $MaxImageChunkSize);
+      // / A chunk still producing output at the limit is a decompression bomb.
+      if ($inflateWorked && !$streamEnded && strlen($chunkText) >= $MaxImageChunkSize) recordDetection($file, 'Bomb.PNG.ChunkExpansion', 'Structure Match', 'expands past '.$MaxImageChunkSize.' bytes from '.strlen($compressedPart), 'high', $fileDetections); }
+    // / A colour profile is binary, so only text chunks are searched for code.
+    if ($ChunkInspected && $chunkType !== 'iCCP' && $chunkText !== '') matchEmbedSignatures($file, $chunkText, TRUE, $fileDetections); }
+  $MemberContext = $outerContext;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($outerContext, $separatorPosition, $chunkText, $compressedPart, $isCompressed, $inflateWorked, $streamEnded, $fieldEnd, $chunkType, $chunkData, $file);
+  return $ChunkInspected; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to walk the chunks of a png & report what is wrong with its structure.
+// / The header decides how large the decoded image may be. The image data is inflated
+// / & counted, never kept, so the walk costs no more memory than one small buffer.
+function inspectPngStream($file, $handle, $sourceSize, &$fileDetections) {
+  global $MaxImagePixels, $MaxImageChunkSize;
+  // / Set variables.
+  $PngInspected = FALSE;
+  $chunkLimit = 1048576;
+  $chunkCount = 0;
+  $position = 8;
+  $keepWalking = TRUE;
+  $sawHeader = $sawData = $sawEnd = $dataEnded = $overrunReported = FALSE;
+  $malformedReason = '';
+  $chunkHeader = $chunkType = $chunkData = $dataPiece = $storedCrc = $inflatedPiece = '';
+  $chunkLength = $bytesLeft = $pieceLength = 0;
+  $chunkFields = $headerFields = array();
+  $crcContext = NULL;
+  $inflateContext = FALSE;
+  $keepData = FALSE;
+  $imageWidth = $imageHeight = $decodedSize = $inflatedTotal = 0;
+  $channelCounts = array(0 => 1, 2 => 3, 3 => 1, 4 => 2, 6 => 4);
+  $validDepths = array(0 => array(1, 2, 4, 8, 16), 2 => array(8, 16), 3 => array(1, 2, 4, 8), 4 => array(8, 16), 6 => array(8, 16));
+  $textChunks = array('tEXt', 'zTXt', 'iTXt', 'iCCP');
+  $criticalChunks = array('IHDR', 'PLTE', 'IDAT', 'IEND');
+  if ($handle !== FALSE && @fseek($handle, 8) === 0) $PngInspected = TRUE;
+  while ($PngInspected && $keepWalking) {
+    redeclare($chunkHeader, strval(fread($handle, 8)));
+    if (strlen($chunkHeader) < 8) $keepWalking = FALSE;
+    else {
+      $chunkCount++;
+      redeclare($chunkFields, unpack('Nlength', $chunkHeader));
+      redeclare($chunkLength, intval($chunkFields['length']));
+      redeclare($chunkType, substr($chunkHeader, 4, 4));
+      $position = $position + 8;
+      // / A chunk that claims more bytes than the file holds ends the walk.
+      if (!preg_match('/^[A-Za-z]{4}$/', $chunkType) or ($position + $chunkLength + 4) > $sourceSize) {
+        if ($malformedReason === '') $malformedReason = 'a chunk runs past the end of the file';
+        $keepWalking = FALSE; }
+      if ($keepWalking && $chunkCount > $chunkLimit) {
+        if ($malformedReason === '') $malformedReason = 'more than '.$chunkLimit.' chunks';
+        $keepWalking = FALSE; }
+      if ($keepWalking) {
+        if ($chunkCount === 1 && $chunkType !== 'IHDR' && $malformedReason === '') $malformedReason = 'the first chunk is not the header';
+        if ($chunkType === 'IHDR' && ($sawHeader or $chunkLength !== 13) && $malformedReason === '') $malformedReason = 'a damaged or repeated header chunk';
+        // / A decoder must refuse a critical chunk it does not know.
+        if (preg_match('/^[A-Z]/', $chunkType) === 1 && !in_array($chunkType, $criticalChunks, TRUE) && $malformedReason === '') $malformedReason = 'an unknown critical chunk named '.$chunkType;
+        redeclare($keepData, ($chunkType === 'IHDR' or in_array($chunkType, $textChunks, TRUE)) && $chunkLength <= $MaxImageChunkSize);
+        if (in_array($chunkType, $textChunks, TRUE) && !$keepData && $malformedReason === '') $malformedReason = 'an oversized '.$chunkType.' chunk of '.$chunkLength.' bytes';
+        redeclare($chunkData, '');
+        redeclare($crcContext, hash_init('crc32b'));
+        hash_update($crcContext, $chunkType);
+        redeclare($bytesLeft, $chunkLength);
+        while ($bytesLeft > 0) {
+          redeclare($pieceLength, min($bytesLeft, 8192));
+          redeclare($dataPiece, strval(fread($handle, $pieceLength)));
+          if (strlen($dataPiece) < 1) break;
+          $bytesLeft = $bytesLeft - strlen($dataPiece);
+          hash_update($crcContext, $dataPiece);
+          if ($keepData) $chunkData = $chunkData.$dataPiece;
+          // / Inflate the image data only to count it, & stop counting once it has overrun.
+          if ($chunkType === 'IDAT' && $inflateContext !== FALSE && !$dataEnded && !$overrunReported) {
+            redeclare($inflatedPiece, @inflate_add($inflateContext, $dataPiece));
+            if ($inflatedPiece === FALSE) $dataEnded = TRUE;
+            else {
+              $inflatedTotal = $inflatedTotal + strlen($inflatedPiece);
+              if (inflate_get_status($inflateContext) === ZLIB_STREAM_END) $dataEnded = TRUE;
+              if ($inflatedTotal > ($decodedSize + $MaxImageChunkSize)) {
+                $overrunReported = TRUE;
+                recordDetection($file, 'Bomb.PNG.DataOverrun', 'Structure Match', 'the image data inflates past '.$inflatedTotal.' bytes & the header declares '.$decodedSize, 'high', $fileDetections); } } } }
+        redeclare($storedCrc, strval(fread($handle, 4)));
+        $position = $position + $chunkLength + 4;
+        if (($bytesLeft > 0 or bin2hex($storedCrc) !== hash_final($crcContext)) && $malformedReason === '') $malformedReason = 'the '.$chunkType.' chunk fails its checksum';
+        if ($chunkType === 'IHDR' && !$sawHeader && strlen($chunkData) === 13) {
+          $sawHeader = TRUE;
+          $headerFields = unpack('Nwidth/Nheight/Cdepth/Ccolour/Ccompression/Cfilter/Cinterlace', $chunkData);
+          $imageWidth = intval($headerFields['width']);
+          $imageHeight = intval($headerFields['height']);
+          if ($imageWidth < 1 or $imageHeight < 1 or !isset($validDepths[$headerFields['colour']]) or !in_array($headerFields['depth'], $validDepths[$headerFields['colour']], TRUE) or $headerFields['interlace'] > 1) {
+            if ($malformedReason === '') $malformedReason = 'the header declares an impossible image'; }
+          else {
+            $decodedSize = pngDecodedSize($imageWidth, $imageHeight, $channelCounts[$headerFields['colour']], $headerFields['depth'], $headerFields['interlace']);
+            // / The pixel limit is the policy. An image past it is refused whatever it holds.
+            if (($imageWidth * $imageHeight) > $MaxImagePixels) recordDetection($file, 'Bomb.PNG.PixelFlood', 'Structure Match', $imageWidth.' by '.$imageHeight.' pixels decodes to '.$decodedSize.' bytes from a file of '.$sourceSize, 'high', $fileDetections);
+            else { if (function_exists('inflate_init')) $inflateContext = @inflate_init(ZLIB_ENCODING_DEFLATE); } } }
+        if ($chunkType === 'IDAT') $sawData = TRUE;
+        if ($keepData && $chunkType !== 'IHDR') inspectPngTextChunk($file, $chunkType, $chunkData, $fileDetections);
+        if ($chunkType === 'IEND') {
+          $sawEnd = TRUE;
+          $keepWalking = FALSE; } } } }
+  if ($PngInspected) {
+    if ($malformedReason === '' && (!$sawHeader or !$sawData or !$sawEnd)) $malformedReason = 'the header, the image data or the end chunk is missing';
+    // / Image data that overruns its header by a little is damage rather than a bomb.
+    if ($malformedReason === '' && !$overrunReported && $sawHeader && $inflatedTotal > $decodedSize) $malformedReason = 'the image data holds '.($inflatedTotal - $decodedSize).' bytes more than the header declares';
+    if ($malformedReason !== '') recordDetection($file, 'Malformed.PNG', 'Structure Match', $malformedReason, 'medium', $fileDetections);
+    // / Anything after the end chunk is invisible to an image viewer & readable by everything else.
+    if ($sawEnd && $position < $sourceSize) recordDetection($file, 'Polyglot.PNG.TrailingData', 'Structure Match', ($sourceSize - $position).' bytes follow the end of the image', 'medium', $fileDetections); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($chunkLimit, $chunkCount, $position, $keepWalking, $sawHeader, $sawData, $sawEnd, $dataEnded, $overrunReported, $malformedReason, $chunkHeader, $chunkType, $chunkData, $dataPiece, $storedCrc, $inflatedPiece, $chunkLength, $bytesLeft, $pieceLength, $chunkFields, $headerFields, $crcContext, $inflateContext, $keepData, $imageWidth, $imageHeight, $decodedSize, $inflatedTotal, $channelCounts, $validDepths, $textChunks, $criticalChunks, $file, $handle, $sourceSize);
+  return $PngInspected; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to locate the central directory of a zip archive.
+// / The directory record sits at the end of the file, behind an optional comment.
+// / The base is the number of bytes sitting in front of the archive, which is not zero
+// / when an archive has been appended to another file.
+function findZipDirectory($handle, $sourceSize) {
+  // / Set variables.
+  $Directory = array('found' => FALSE, 'entries' => 0, 'offset' => 0, 'size' => 0, 'base' => 0);
+  $tailLength = min($sourceSize, 65557);
+  $tailStart = $sourceSize - $tailLength;
+  $tailData = $locatorData = $wideData = '';
+  $recordPosition = FALSE;
+  $recordFields = $wideFields = array();
+  $attemptsLeft = 16;
+  $recordStart = $directoryEnd = 0;
+  if ($tailLength >= 22 && @fseek($handle, $tailStart) === 0) {
+    $tailData = strval(fread($handle, $tailLength));
+    $recordPosition = strrpos($tailData, "PK\x05\x06");
+    // / A comment may carry a false record, so each candidate must fit the file it is in.
+    while ($recordPosition !== FALSE && !$Directory['found'] && $attemptsLeft > 0) {
+      $attemptsLeft--;
+      if (($recordPosition + 22) <= $tailLength) {
+        redeclare($recordFields, unpack('vdisk/vstartDisk/vdiskEntries/ventries/Vsize/Voffset/vcomment', substr($tailData, $recordPosition + 4, 18)));
+        redeclare($recordStart, $tailStart + $recordPosition);
+        $Directory['entries'] = intval($recordFields['entries']);
+        $Directory['size'] = intval($recordFields['size']);
+        $Directory['offset'] = intval($recordFields['offset']);
+        redeclare($directoryEnd, $recordStart);
+        // / A saturated field means the real values sit in the zip64 record instead.
+        if ($recordFields['entries'] === 0xFFFF or $recordFields['size'] === 0xFFFFFFFF or $recordFields['offset'] === 0xFFFFFFFF) {
+          if ($recordStart >= 20 && @fseek($handle, $recordStart - 20) === 0) {
+            redeclare($locatorData, strval(fread($handle, 20)));
+            if (substr($locatorData, 0, 4) === "PK\x06\x07") {
+              redeclare($wideFields, unpack('Pposition', substr($locatorData, 8, 8)));
+              if ($wideFields['position'] >= 0 && $wideFields['position'] < $sourceSize && @fseek($handle, $wideFields['position']) === 0) {
+                redeclare($wideData, strval(fread($handle, 56)));
+                if (strlen($wideData) === 56 && substr($wideData, 0, 4) === "PK\x06\x06") {
+                  redeclare($directoryEnd, intval($wideFields['position']));
+                  redeclare($wideFields, unpack('Pentries/Psize/Poffset', substr($wideData, 32, 24)));
+                  $Directory['entries'] = intval($wideFields['entries']);
+                  $Directory['size'] = intval($wideFields['size']);
+                  $Directory['offset'] = intval($wideFields['offset']); } } } } }
+        $Directory['base'] = $directoryEnd - $Directory['size'] - $Directory['offset'];
+        if ($Directory['entries'] >= 0 && $Directory['size'] >= 0 && $Directory['offset'] >= 0 && $Directory['base'] >= 0) {
+          // / An empty archive has no directory to check. Any other must open with an entry.
+          if ($Directory['entries'] === 0) $Directory['found'] = ($Directory['size'] === 0);
+          else {
+            if (@fseek($handle, $Directory['base'] + $Directory['offset']) === 0) if (strval(fread($handle, 4)) === "PK\x01\x02") $Directory['found'] = TRUE; } } }
+      if (!$Directory['found']) $recordPosition = ($recordPosition > 0) ? strrpos(substr($tailData, 0, $recordPosition), "PK\x05\x06") : FALSE; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($tailLength, $tailStart, $tailData, $locatorData, $wideData, $recordPosition, $recordFields, $wideFields, $attemptsLeft, $recordStart, $directoryEnd, $handle, $sourceSize);
+  return $Directory; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the entries a zip central directory lists.
+// / Reading stops at the entry budget, so the list may be shorter than the directory.
+function readZipDirectory($handle, $directory) {
   global $MaxArchiveEntries;
   // / Set variables.
+  $DirectoryRead = FALSE;
   $EntryList = array();
-  $listingText = '';
-  $listingLines = array();
-  $lineFields = array();
-  $listingText = shell_exec('unzip -v '.escapeshellarg($containerFile).' 2>/dev/null');
-  if (is_string($listingText)) {
-    $listingLines = explode("\n", $listingText);
-    foreach ($listingLines as $listingLine) if (count($EntryList) < $MaxArchiveEntries) {
-      // / A content line opens with the expanded size & carries eight fields before the name.
-      redeclare($lineFields, preg_split('/\s+/', trim($listingLine), 8));
-      if (count($lineFields) === 8) if (ctype_digit($lineFields[0]) && ctype_digit($lineFields[2])) {
-        $EntryList[] = array('name' => $lineFields[7], 'size' => intval($lineFields[0]), 'compressed' => intval($lineFields[2])); } } }
+  $entryHeader = $entryName = $extraData = '';
+  $entryFields = $wideFields = array();
+  $entryIndex = $extraOffset = $extraId = $extraLength = $wideOffset = 0;
+  $entryRecord = array();
+  if (@fseek($handle, $directory['base'] + $directory['offset']) === 0) $DirectoryRead = TRUE;
+  while ($DirectoryRead && $entryIndex < $directory['entries'] && count($EntryList) < $MaxArchiveEntries) {
+    redeclare($entryHeader, strval(fread($handle, 46)));
+    if (strlen($entryHeader) < 46 or substr($entryHeader, 0, 4) !== "PK\x01\x02") $DirectoryRead = FALSE;
+    else {
+      redeclare($entryFields, unpack('vmade/vneeded/vflags/vmethod/vtime/vdate/Vcrc/Vcompressed/Vsize/vnameLength/vextraLength/vcommentLength/vdisk/vinternal/Vexternal/Voffset', substr($entryHeader, 4)));
+      redeclare($entryName, $entryFields['nameLength'] > 0 ? strval(fread($handle, $entryFields['nameLength'])) : '');
+      redeclare($extraData, $entryFields['extraLength'] > 0 ? strval(fread($handle, $entryFields['extraLength'])) : '');
+      if ($entryFields['commentLength'] > 0) fread($handle, $entryFields['commentLength']);
+      redeclare($entryRecord, array('name' => $entryName, 'flags' => $entryFields['flags'], 'method' => $entryFields['method'], 'compressed' => $entryFields['compressed'], 'size' => $entryFields['size'], 'offset' => $entryFields['offset']));
+      // / A saturated field is carried in the zip64 extra field, in a fixed order.
+      redeclare($extraOffset, 0);
+      while (($extraOffset + 4) <= strlen($extraData)) {
+        redeclare($wideFields, unpack('vid/vlength', substr($extraData, $extraOffset, 4)));
+        redeclare($extraId, $wideFields['id']);
+        redeclare($extraLength, $wideFields['length']);
+        if ($extraId === 1) {
+          redeclare($wideOffset, $extraOffset + 4);
+          foreach (array('size', 'compressed', 'offset') as $wideName) if ($entryRecord[$wideName] === 0xFFFFFFFF && ($wideOffset + 8) <= strlen($extraData)) {
+            $entryRecord[$wideName] = intval(unpack('Pvalue', substr($extraData, $wideOffset, 8))['value']);
+            $wideOffset = $wideOffset + 8; } }
+        $extraOffset = $extraOffset + 4 + $extraLength; }
+      $entryRecord['offset'] = $entryRecord['offset'] + $directory['base'];
+      $EntryList[] = $entryRecord;
+      $entryIndex++; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($listingText, $listingLines, $listingLine, $lineFields, $containerFile);
-  return $EntryList; }
+  purgeSensitiveMemory($entryHeader, $entryName, $extraData, $entryFields, $wideFields, $entryIndex, $extraOffset, $extraId, $extraLength, $wideOffset, $entryRecord, $wideName, $directory, $handle);
+  return array($DirectoryRead, $EntryList); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to classify the entries inside a zip container.
-// / The zip extension is preferred because it needs no external binary & reports the
-// / stored size of an entry directly. The unzip binary is the fallback when it is absent.
-// / Every entry is measured against the decompression budget before it is opened, so a
-// / container that claims to expand to something enormous is refused rather than read.
-function inspectArchiveContainer($file, $Classifiers, $candidateTypes, &$handlerHits) {
-  global $MaxArchiveEntries, $MaxArchiveEntrySize;
+// / A function to read one member of a zip archive, up to a limit.
+// / The limit bounds the output whatever the archive declares, so a dishonest header
+// / cannot cause a large read. The note names why a member could not be read at all.
+function readZipMember($handle, $sourceSize, $entryRecord, $readLimit) {
+  // / Set variables.
+  $MemberData = '';
+  $MemberComplete = FALSE;
+  $MemberNote = '';
+  $ConsumedBytes = 0;
+  $localHeader = $localName = $dataPiece = $outputPiece = '';
+  $localFields = array();
+  $bytesLeft = 0;
+  $inflateContext = FALSE;
+  $keepReading = TRUE;
+  if ($entryRecord['offset'] < 0 or ($entryRecord['offset'] + 30) > $sourceSize or @fseek($handle, $entryRecord['offset']) !== 0) $MemberNote = 'damaged';
+  else {
+    $localHeader = strval(fread($handle, 30));
+    if (strlen($localHeader) < 30 or substr($localHeader, 0, 4) !== "PK\x03\x04") $MemberNote = 'damaged';
+    else {
+      $localFields = unpack('vneeded/vflags/vmethod/vtime/vdate/Vcrc/Vcompressed/Vsize/vnameLength/vextraLength', substr($localHeader, 4));
+      $localName = $localFields['nameLength'] > 0 ? strval(fread($handle, $localFields['nameLength'])) : '';
+      if ($localFields['extraLength'] > 0) fread($handle, $localFields['extraLength']);
+      // / The two headers describing one member must agree, or two readers see two files.
+      if ($localName !== $entryRecord['name'] or $localFields['method'] !== $entryRecord['method']) $MemberNote = 'mismatch';
+      if (($entryRecord['flags'] & 1) === 1) $MemberNote = 'encrypted';
+      $bytesLeft = min($entryRecord['compressed'], max(0, $sourceSize - ftell($handle)));
+      if ($MemberNote !== 'encrypted' && $entryRecord['method'] === 0) {
+        if ($bytesLeft > 0) $MemberData = strval(fread($handle, min($bytesLeft, $readLimit)));
+        $ConsumedBytes = strlen($MemberData);
+        $MemberComplete = ($bytesLeft <= $readLimit); }
+      if ($MemberNote !== 'encrypted' && $entryRecord['method'] === 8) {
+        if (function_exists('inflate_init')) $inflateContext = @inflate_init(ZLIB_ENCODING_RAW);
+        if ($inflateContext === FALSE) $MemberNote = 'unsupported';
+        while ($inflateContext !== FALSE && $keepReading && $bytesLeft > 0) {
+          redeclare($dataPiece, strval(fread($handle, min($bytesLeft, 8192))));
+          if ($dataPiece === '') $keepReading = FALSE;
+          else {
+            $bytesLeft = $bytesLeft - strlen($dataPiece);
+            $ConsumedBytes = $ConsumedBytes + strlen($dataPiece);
+            redeclare($outputPiece, @inflate_add($inflateContext, $dataPiece));
+            if ($outputPiece === FALSE) {
+              $MemberNote = 'damaged';
+              $keepReading = FALSE; }
+            else {
+              $MemberData = $MemberData.$outputPiece;
+              if (inflate_get_status($inflateContext) === ZLIB_STREAM_END) {
+                $MemberComplete = TRUE;
+                $keepReading = FALSE; }
+              if (strlen($MemberData) > $readLimit) {
+                $MemberData = substr($MemberData, 0, $readLimit);
+                $MemberComplete = FALSE;
+                $keepReading = FALSE; } } } } }
+      if ($MemberNote !== 'encrypted' && $entryRecord['method'] !== 0 && $entryRecord['method'] !== 8) $MemberNote = 'unsupported'; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($localHeader, $localName, $dataPiece, $outputPiece, $localFields, $bytesLeft, $inflateContext, $keepReading, $entryRecord, $readLimit, $handle, $sourceSize);
+  return array($MemberData, $MemberComplete, $MemberNote, $ConsumedBytes); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to claim the budget for reading one more container member.
+// / Returns the number of bytes that may be read, or zero once a budget is spent.
+function claimMemberBudget(&$inspection) {
+  global $MaxArchiveEntries, $MaxArchiveEntrySize, $MaxArchiveTotalSize;
+  // / Set variables.
+  $ReadLimit = 0;
+  $inspection['entries']++;
+  if ($inspection['entries'] > $MaxArchiveEntries) {
+    noteIncomplete($inspection, 'the entry budget of '.$MaxArchiveEntries.' was reached');
+    $inspection['halted'] = TRUE; }
+  else {
+    $ReadLimit = min($MaxArchiveEntrySize, $MaxArchiveTotalSize - $inspection['bytes']);
+    if ($ReadLimit < 1) {
+      $ReadLimit = 0;
+      noteIncomplete($inspection, 'the total decompression budget of '.$MaxArchiveTotalSize.' bytes was reached');
+      $inspection['halted'] = TRUE; } }
+  return $ReadLimit; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to inspect one member taken out of a container.
+// / The member is matched against the definitions, classified, checked as an image &
+// / opened in turn when it is itself a container.
+function inspectMemberData($file, $memberPath, $memberName, $memberData, $memberIsComplete, $depth, &$fileDetections, &$handlerHits, &$inspection) {
+  global $Defs, $Classifiers, $ClassifiersLoaded, $ClassifyContent, $InspectImages, $MaxArchiveDepth, $MemberContext;
+  // / Set variables.
+  $MemberInspected = TRUE;
+  $outerContext = $MemberContext;
+  $memberHeader = substr($memberData, 0, 512);
+  $containerFormat = containerFormatOf($memberHeader);
+  $imageFormat = imageFormatOf($memberHeader);
+  $scopeTypes = array();
+  $memoryHandle = FALSE;
+  $MemberContext = $memberPath;
+  if ($ClassifiersLoaded) $scopeTypes = typesForExtension($Classifiers, fileExtensionOf($memberName));
+  // / A hash only means something when the whole member was read.
+  if ($memberIsComplete) matchHashSignatures($file, hash('md5', $memberData), hash('sha1', $memberData), hash('sha256', $memberData), $Defs, $fileDetections);
+  matchContentIndicators($file, $memberData, $Defs, $scopeTypes, $fileDetections);
+  foreach ($Defs['name'] as $definitionRecord) if (stripos($memberName, $definitionRecord['value']) !== FALSE) recordDetection($file, $definitionRecord['name'], 'Name Match', $definitionRecord['value'], $definitionRecord['confidence'], $fileDetections);
+  // / A member that is a container reports its handlers through its own members instead.
+  if ($ClassifyContent && $ClassifiersLoaded && $containerFormat === '' && archiveEntryIsInteresting($memberName)) matchHandlerTokens($memberData, $Classifiers, $inspection['types'], $handlerHits, printableName($memberPath));
+  if ($InspectImages && $imageFormat !== '') {
+    matchEmbedSignatures($file, $memberData, FALSE, $fileDetections);
+    // / A member that was cut short would only report the cut as damage.
+    if ($imageFormat === 'png' && $memberIsComplete) {
+      $memoryHandle = openMemoryStream($memberData);
+      if ($memoryHandle !== FALSE) {
+        inspectPngStream($file, $memoryHandle, strlen($memberData), $fileDetections);
+        fclose($memoryHandle); } } }
+  if ($containerFormat !== '') {
+    if (($depth + 1) > $MaxArchiveDepth) {
+      recordDetection($file, 'Bomb.Archive.NestingDepth', 'Structure Match', 'containers are nested more than '.$MaxArchiveDepth.' deep', 'high', $fileDetections);
+      $inspection['halted'] = TRUE; }
+    else {
+      if (!$memberIsComplete) noteIncomplete($inspection, 'a nested archive larger than the entry budget was not opened');
+      else {
+        redeclare($memoryHandle, openMemoryStream($memberData));
+        if ($memoryHandle !== FALSE) {
+          inspectContainerHandle($file, $memoryHandle, strlen($memberData), $containerFormat, $memberPath, $depth + 1, $fileDetections, $handlerHits, $inspection);
+          fclose($memoryHandle); } } } }
+  $MemberContext = $outerContext;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($outerContext, $memberHeader, $containerFormat, $imageFormat, $scopeTypes, $memoryHandle, $definitionRecord, $memberPath, $memberName, $memberData, $memberIsComplete, $depth, $file);
+  return $MemberInspected; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to inspect a zip archive through a stream handle.
+// / The directory is judged before any member is read. Members that share stored bytes
+// / & a directory that declares an absurd total are both bombs & stop the inspection.
+function inspectZipHandle($file, $handle, $sourceSize, $containerPath, $depth, &$fileDetections, &$handlerHits, &$inspection) {
+  global $MaxArchiveEntrySize, $MaxArchiveTotalSize, $MaxArchiveCompressionRatio, $MemberContext;
+  // / Set variables.
+  $ZipInspected = FALSE;
+  $outerContext = $MemberContext;
+  $directory = findZipDirectory($handle, $sourceSize);
+  $directoryRead = FALSE;
+  $entryList = $extentList = array();
+  $declaredTotal = $previousEnd = $readLimit = $consumedBytes = 0;
+  $entriesOverlap = $memberComplete = FALSE;
+  $memberData = $memberNote = $memberPath = '';
+  $MemberContext = $containerPath;
+  if (!$directory['found']) noteIncomplete($inspection, 'a zip directory could not be read');
+  else {
+    list($directoryRead, $entryList) = readZipDirectory($handle, $directory);
+    $ZipInspected = TRUE;
+    if (!$directoryRead) noteIncomplete($inspection, 'a zip directory is damaged');
+    if ($directory['entries'] > count($entryList) && $directoryRead) noteIncomplete($inspection, 'an archive lists '.$directory['entries'].' entries & '.count($entryList).' were inspected');
+    foreach ($entryList as $entryRecord) {
+      $declaredTotal = $declaredTotal + $entryRecord['size'];
+      if ($entryRecord['compressed'] > 0) $extentList[] = array($entryRecord['offset'], $entryRecord['offset'] + 30 + strlen($entryRecord['name']) + $entryRecord['compressed']); }
+    usort($extentList, function($firstExtent, $secondExtent) { return $firstExtent[0] <=> $secondExtent[0]; });
+    foreach ($extentList as $extentRecord) {
+      if ($extentRecord[0] < $previousEnd) $entriesOverlap = TRUE;
+      $previousEnd = max($previousEnd, $extentRecord[1]); }
+    if ($entriesOverlap) {
+      recordDetection($file, 'Bomb.Archive.OverlappingEntries', 'Structure Match', 'members of the archive share the same stored bytes', 'high', $fileDetections);
+      $inspection['halted'] = TRUE; }
+    if (!$inspection['halted'] && $declaredTotal > $MaxArchiveTotalSize && $sourceSize > 0 && intdiv($declaredTotal, $sourceSize) > $MaxArchiveCompressionRatio) {
+      recordDetection($file, 'Bomb.Archive.TotalExpansion', 'Structure Match', countWithNoun(count($entryList), 'member declares', 'members declare').' '.$declaredTotal.' bytes from an archive of '.$sourceSize, 'high', $fileDetections);
+      $inspection['halted'] = TRUE; }
+    foreach ($entryList as $entryRecord) if (!$inspection['halted'] && substr($entryRecord['name'], -1) !== '/') {
+      redeclare($memberPath, ($containerPath !== '' ? $containerPath.' > ' : '').$entryRecord['name']);
+      $MemberContext = $memberPath;
+      // / A member that declares a huge expansion is refused before any of it is read.
+      if ($entryRecord['compressed'] > 0 && $entryRecord['size'] > $MaxArchiveEntrySize && intdiv($entryRecord['size'], $entryRecord['compressed']) > $MaxArchiveCompressionRatio) {
+        recordDetection($file, 'Bomb.Archive.CompressionRatio', 'Structure Match', 'declares '.$entryRecord['size'].' bytes from '.$entryRecord['compressed'], 'high', $fileDetections);
+        $inspection['halted'] = TRUE; }
+      else {
+        redeclare($readLimit, claimMemberBudget($inspection));
+        if ($readLimit > 0) {
+          list($memberData, $memberComplete, $memberNote, $consumedBytes) = readZipMember($handle, $sourceSize, $entryRecord, $readLimit);
+          if ($memberNote === 'encrypted') noteIncomplete($inspection, 'an encrypted member cannot be inspected');
+          if ($memberNote === 'unsupported') noteIncomplete($inspection, 'a member uses a compression method that is not read');
+          if ($memberNote === 'damaged') noteIncomplete($inspection, 'a damaged member could not be read');
+          if ($memberNote === 'mismatch') recordDetection($file, 'Malformed.Archive.HeaderMismatch', 'Structure Match', 'the two headers describing the member disagree', 'medium', $fileDetections);
+          if ($memberData !== '' && !$memberComplete) {
+            // / A member that reaches the limit from very little input lied about its size.
+            if (strlen($memberData) >= $readLimit && $consumedBytes > 0 && intdiv(strlen($memberData), $consumedBytes) > $MaxArchiveCompressionRatio) {
+              recordDetection($file, 'Bomb.Archive.CompressionRatio', 'Structure Match', 'expands past '.strlen($memberData).' bytes from '.$consumedBytes, 'high', $fileDetections);
+              $inspection['halted'] = TRUE; }
+            else noteIncomplete($inspection, 'a member larger than the entry budget was inspected in part'); }
+          $inspection['bytes'] = $inspection['bytes'] + strlen($memberData);
+          if ($memberData !== '' && !$inspection['halted']) inspectMemberData($file, $memberPath, basename(str_replace('\\', '/', $entryRecord['name'])), $memberData, $memberComplete, $depth, $fileDetections, $handlerHits, $inspection); } } } }
+  $MemberContext = $outerContext;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($outerContext, $directory, $directoryRead, $entryList, $extentList, $entryRecord, $extentRecord, $declaredTotal, $previousEnd, $readLimit, $consumedBytes, $entriesOverlap, $memberComplete, $memberData, $memberNote, $memberPath, $file, $handle, $sourceSize, $containerPath, $depth);
+  return $ZipInspected; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to inspect a gzip stream through a stream handle.
+// / The stream is inflated up to the member budget, then inspected as one member.
+function inspectGzipHandle($file, $handle, $sourceSize, $containerPath, $depth, &$fileDetections, &$handlerHits, &$inspection) {
+  global $MaxArchiveCompressionRatio, $MemberContext;
+  // / Set variables.
+  $GzipInspected = FALSE;
+  $outerContext = $MemberContext;
+  $inflateContext = FALSE;
+  $streamData = $dataPiece = $outputPiece = '';
+  $streamComplete = FALSE;
+  $keepReading = TRUE;
+  $consumedBytes = 0;
+  $readLimit = claimMemberBudget($inspection);
+  $streamPath = ($containerPath !== '' ? $containerPath.' > ' : '').'gzip stream';
+  $MemberContext = $streamPath;
+  if (function_exists('inflate_init')) $inflateContext = @inflate_init(ZLIB_ENCODING_GZIP);
+  if ($inflateContext === FALSE) noteIncomplete($inspection, 'a gzip stream cannot be read without the zlib extension');
+  if ($inflateContext !== FALSE && $readLimit > 0 && @fseek($handle, 0) === 0) {
+    $GzipInspected = TRUE;
+    while ($keepReading && !feof($handle)) {
+      redeclare($dataPiece, strval(fread($handle, 8192)));
+      if ($dataPiece === '') $keepReading = FALSE;
+      else {
+        $consumedBytes = $consumedBytes + strlen($dataPiece);
+        redeclare($outputPiece, @inflate_add($inflateContext, $dataPiece));
+        if ($outputPiece === FALSE) $keepReading = FALSE;
+        else {
+          $streamData = $streamData.$outputPiece;
+          if (inflate_get_status($inflateContext) === ZLIB_STREAM_END) {
+            $streamComplete = TRUE;
+            $keepReading = FALSE; }
+          if (strlen($streamData) > $readLimit) {
+            $streamData = substr($streamData, 0, $readLimit);
+            $streamComplete = FALSE;
+            $keepReading = FALSE; } } } }
+    if ($streamData !== '' && !$streamComplete) {
+      if (strlen($streamData) >= $readLimit && intdiv(strlen($streamData), $consumedBytes) > $MaxArchiveCompressionRatio) {
+        recordDetection($file, 'Bomb.Archive.CompressionRatio', 'Structure Match', 'expands past '.strlen($streamData).' bytes from '.$consumedBytes, 'high', $fileDetections);
+        $inspection['halted'] = TRUE; }
+      else noteIncomplete($inspection, 'a compressed stream larger than the entry budget was inspected in part'); }
+    $inspection['bytes'] = $inspection['bytes'] + strlen($streamData);
+    if ($streamData !== '' && !$inspection['halted']) inspectMemberData($file, $streamPath, 'gzip stream', $streamData, $streamComplete, $depth, $fileDetections, $handlerHits, $inspection); }
+  $MemberContext = $outerContext;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($outerContext, $inflateContext, $streamData, $dataPiece, $outputPiece, $streamComplete, $keepReading, $consumedBytes, $readLimit, $streamPath, $file, $handle, $sourceSize, $containerPath, $depth);
+  return $GzipInspected; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to inspect a tar archive through a stream handle.
+// / A tar is a run of 512 byte headers, each followed by its member padded to a block.
+function inspectTarHandle($file, $handle, $sourceSize, $containerPath, $depth, &$fileDetections, &$handlerHits, &$inspection) {
+  // / Set variables.
+  $TarInspected = FALSE;
+  $position = 0;
+  $keepWalking = TRUE;
+  $tarHeader = $memberName = $namePrefix = $longName = $sizeField = $memberType = $memberData = $memberPath = '';
+  $memberSize = $readLimit = 0;
+  $memberComplete = FALSE;
+  $paxParts = array();
+  while ($keepWalking && !$inspection['halted'] && ($position + 512) <= $sourceSize && @fseek($handle, $position) === 0) {
+    redeclare($tarHeader, strval(fread($handle, 512)));
+    redeclare($memberName, rtrim(substr($tarHeader, 0, 100), "\0"));
+    // / A block of nothing is how a tar says it has finished.
+    if (strlen($tarHeader) < 512 or $memberName === '') $keepWalking = FALSE;
+    else {
+      $TarInspected = TRUE;
+      redeclare($namePrefix, rtrim(substr($tarHeader, 345, 155), "\0"));
+      if (substr($tarHeader, 257, 5) === 'ustar' && $namePrefix !== '') $memberName = $namePrefix.'/'.$memberName;
+      redeclare($sizeField, substr($tarHeader, 124, 12));
+      // / A size is written in octal, or in binary when the leading bit is set.
+      if ((ord($sizeField[0]) & 0x80) !== 0) redeclare($memberSize, intval(unpack('Jvalue', substr($sizeField, 4, 8))['value']));
+      else redeclare($memberSize, intval(octdec(preg_replace('/[^0-7]/', '', $sizeField))));
+      redeclare($memberType, substr($tarHeader, 156, 1));
+      $position = $position + 512;
+      if ($memberSize < 0 or ($position + $memberSize) > $sourceSize) {
+        noteIncomplete($inspection, 'a tar archive ends before its last member does');
+        $memberSize = max(0, $sourceSize - $position);
+        $keepWalking = FALSE; }
+      // / A long name is stored as a member of its own, ahead of the member it names.
+      if ($memberType === 'L') redeclare($longName, rtrim(strval(fread($handle, min($memberSize, 4096))), "\0"));
+      // / A pax header does the same job & writes the name as a path record.
+      if ($memberType === 'x' && preg_match('/^\d+ path=([^\n]*)$/m', strval(fread($handle, min($memberSize, 8192))), $paxParts)) redeclare($longName, $paxParts[1]);
+      if (($memberType === '0' or $memberType === "\0" or $memberType === '7') && $memberSize > 0) {
+        if ($longName !== '') {
+          $memberName = $longName;
+          $longName = ''; }
+        redeclare($readLimit, claimMemberBudget($inspection));
+        if ($readLimit > 0) {
+          redeclare($memberData, strval(fread($handle, min($memberSize, $readLimit))));
+          redeclare($memberComplete, $memberSize <= $readLimit && $keepWalking);
+          if (!$memberComplete && $keepWalking) noteIncomplete($inspection, 'a member larger than the entry budget was inspected in part');
+          $inspection['bytes'] = $inspection['bytes'] + strlen($memberData);
+          redeclare($memberPath, ($containerPath !== '' ? $containerPath.' > ' : '').$memberName);
+          if ($memberData !== '') inspectMemberData($file, $memberPath, basename($memberName), $memberData, $memberComplete, $depth, $fileDetections, $handlerHits, $inspection); } }
+      $position = $position + (intdiv($memberSize + 511, 512) * 512); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($position, $keepWalking, $tarHeader, $memberName, $namePrefix, $longName, $sizeField, $memberType, $memberData, $memberPath, $memberSize, $readLimit, $memberComplete, $paxParts, $file, $handle, $sourceSize, $containerPath, $depth);
+  return $TarInspected; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to inspect a container of any supported format through a stream handle.
+// / The depth counts how many containers sit above this one.
+function inspectContainerHandle($file, $handle, $sourceSize, $containerFormat, $containerPath, $depth, &$fileDetections, &$handlerHits, &$inspection) {
   // / Set variables.
   $ContainerInspected = FALSE;
-  $entriesRead = 0;
-  $runningTotal = 0;
-  $entryList = array();
-  $entryData = '';
-  $zipHandle = NULL;
-  $entryIndex = 0;
-  $entryStat = array();
-  $readLimit = 0;
-  $useZipExtension = class_exists('ZipArchive');
-  // / Build one entry list, whichever reader is available, so the budget logic is shared.
-  if ($useZipExtension) {
-    $zipHandle = new ZipArchive();
-    if ($zipHandle->open($file) === TRUE) {
-      $ContainerInspected = TRUE;
-      $entryIndex = 0;
-      while ($entryIndex < $zipHandle->numFiles && count($entryList) < $MaxArchiveEntries) {
-        redeclare($entryStat, $zipHandle->statIndex($entryIndex));
-        if (is_array($entryStat)) $entryList[] = array('name' => $entryStat['name'], 'size' => intval($entryStat['size']), 'compressed' => intval($entryStat['comp_size']), 'index' => $entryIndex);
-        $entryIndex++; } } }
-  else {
-    if (function_exists('shell_exec')) {
-      $entryList = listEntriesWithUnzipBinary($file);
-      if (count($entryList) > 0) $ContainerInspected = TRUE; } }
-  if (!$ContainerInspected) processOutput('Cannot open a container for inspection, its contents were not classified:  '.$file, 'error', 630, TRUE, FALSE, FALSE);
-  else {
-    foreach ($entryList as $entryRecord) if (archiveEntryIsInteresting($entryRecord['name'])) {
-      if (archiveEntryIsWithinBudget($entryRecord['name'], $entryRecord['size'], $entryRecord['compressed'], $runningTotal)) {
-        // / Bound the read at the entry budget as well, so a lying header changes nothing.
-        redeclare($readLimit, $MaxArchiveEntrySize);
-        if ($entryRecord['size'] > 0 && $entryRecord['size'] < $readLimit) $readLimit = $entryRecord['size'];
-        redeclare($entryData, '');
-        if ($useZipExtension) $entryData = strval($zipHandle->getFromIndex($entryRecord['index'], $readLimit));
-        else $entryData = readEntryWithUnzipBinary($file, $entryRecord['name'], $readLimit);
-        $runningTotal = $runningTotal + strlen($entryData);
-        if ($entryData !== '') {
-          $entriesRead++;
-          matchHandlerTokens($entryData, $Classifiers, $candidateTypes, $handlerHits, $entryRecord['name']); } } }
-    processOutput('Inspected '.countWithNoun($entriesRead, 'entry', 'entries').' inside the container:  '.$file, 'log', 0, FALSE, FALSE, FALSE);
-    if ($useZipExtension) $zipHandle->close(); }
+  if ($containerFormat === 'zip') $ContainerInspected = inspectZipHandle($file, $handle, $sourceSize, $containerPath, $depth, $fileDetections, $handlerHits, $inspection);
+  if ($containerFormat === 'gzip') $ContainerInspected = inspectGzipHandle($file, $handle, $sourceSize, $containerPath, $depth, $fileDetections, $handlerHits, $inspection);
+  if ($containerFormat === 'tar') $ContainerInspected = inspectTarHandle($file, $handle, $sourceSize, $containerPath, $depth, $fileDetections, $handlerHits, $inspection);
+  if ($containerFormat === 'bzip2') noteIncomplete($inspection, 'a bzip2 stream is not read');
+  processOutput('Inspected a '.$containerFormat.' container at depth '.$depth.'.', 'log', 0, FALSE, FALSE, FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($entryList, $entryRecord, $entryData, $zipHandle, $entryIndex, $entryStat);
-  purgeSensitiveMemory($readLimit, $runningTotal, $entriesRead, $useZipExtension, $file, $candidateTypes);
+  purgeSensitiveMemory($containerFormat, $containerPath, $depth, $sourceSize, $file, $handle);
   return $ContainerInspected; }
 // / -----------------------------------------------------------------------------------
 
@@ -2124,12 +2752,12 @@ function inspectArchiveContainer($file, $Classifiers, $candidateTypes, &$handler
 // / A byte signature is raw bytes. Writing those into the report would put control
 // / characters & broken encoding into a text file that other tools read, so any byte
 // / without a printable form is written back as the escape that names it.
-function printableValue($value) {
+function printableValue($rawValue) {
   // / Set variables.
-  $PrintableValue = $value;
-  if (preg_match('/[^\x20-\x7E]/', $value)) $PrintableValue = preg_replace_callback('/[^\x20-\x7E]/', function($byteMatch) { return sprintf('\\x%02x', ord($byteMatch[0])); }, $value);
+  $PrintableValue = $rawValue;
+  if (preg_match('/[^\x20-\x7E]/', $rawValue)) $PrintableValue = preg_replace_callback('/[^\x20-\x7E]/', function($byteMatch) { return sprintf('\\x%02x', ord($byteMatch[0])); }, $rawValue);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($value);
+  purgeSensitiveMemory($rawValue);
   return $PrintableValue; }
 // / -----------------------------------------------------------------------------------
 
@@ -2158,6 +2786,20 @@ function hashIndexPath($DefsFile) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to pack hash records into sorted sections that can be searched by halving.
+function packHashSections($hashRecords) {
+  // / Set variables.
+  $PackedSections = array('md5' => '', 'sha1' => '', 'sha256' => '', 'counts' => array('md5' => 0, 'sha1' => 0, 'sha256' => 0), 'strings' => array());
+  foreach (array('md5', 'sha1', 'sha256') as $hashKind) if (isset($hashRecords[$hashKind])) {
+    sort($hashRecords[$hashKind], SORT_STRING);
+    $PackedSections['counts'][$hashKind] = count($hashRecords[$hashKind]);
+    $PackedSections[$hashKind] = implode('', $hashRecords[$hashKind]); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($hashKind, $hashRecords);
+  return $PackedSections; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to build a packed index beside a definitions file.
 // / A hash held in a PHP array costs far more than the hash itself, because the array
 // / holds a whole record for every one. A million samples that way needs a gigabyte of
@@ -2176,15 +2818,9 @@ function buildHashIndex($DefsFile, $indexFile, $hashRecords, $stringIndicators, 
   $headerText = '';
   $hashKind = '';
   $sectionWidths = array('md5' => 20, 'sha1' => 24, 'sha256' => 36);
-  $sectionCounts = array('md5' => 0, 'sha1' => 0, 'sha256' => 0);
-  // / Sort each section so it can be searched by halving rather than by walking.
-  foreach ($sectionWidths as $hashKind => $sectionWidth) {
-    redeclare($sectionText, '');
-    if (isset($hashRecords[$hashKind])) {
-      sort($hashRecords[$hashKind], SORT_STRING);
-      $sectionCounts[$hashKind] = count($hashRecords[$hashKind]);
-      $sectionText = implode('', $hashRecords[$hashKind]); }
-    $indexBody = $indexBody.$sectionText; }
+  $packedSections = packHashSections($hashRecords);
+  $sectionCounts = $packedSections['counts'];
+  $indexBody = $packedSections['md5'].$packedSections['sha1'].$packedSections['sha256'];
   $stringBlob = serialize($stringIndicators);
   // / The header carries the hash of the definitions file this index was built from, so
   // / an index left behind by an older definitions file is recognised rather than trusted.
@@ -2194,7 +2830,7 @@ function buildHashIndex($DefsFile, $indexFile, $hashRecords, $stringIndicators, 
     $IndexBuilt = TRUE; }
   else processOutput('Cannot write the definitions index, so the definitions will be parsed on every scan:  '.$indexFile, 'error', 550, TRUE, FALSE, FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($indexBody, $sectionText, $stringBlob, $headerText, $hashKind, $sectionWidths, $sectionCounts, $hashRecords, $stringIndicators);
+  purgeSensitiveMemory($indexBody, $sectionText, $stringBlob, $headerText, $hashKind, $sectionWidths, $sectionCounts, $packedSections, $hashRecords, $stringIndicators, $indexFile, $sourceHash);
   return $IndexBuilt; }
 // / -----------------------------------------------------------------------------------
 
@@ -2238,7 +2874,7 @@ function loadHashIndex($indexFile, $sourceHash) {
           if (strlen($Index['sha256']) !== $Index['counts']['sha256'] * 36) $sectionsRead = FALSE;
           if ($sectionsRead) {
             $stringBlob = $stringLength > 0 ? strval(fread($indexHandle, $stringLength)) : serialize(array());
-            $Index['strings'] = @unserialize($stringBlob);
+            $Index['strings'] = @unserialize($stringBlob, array('allowed_classes' => FALSE));
             if (is_array($Index['strings'])) $IndexLoaded = TRUE; } } }
       fclose($indexHandle); } }
   if (!$IndexLoaded) $Index = array('md5' => '', 'sha1' => '', 'sha256' => '', 'counts' => array('md5' => 0, 'sha1' => 0, 'sha256' => 0), 'strings' => array());
@@ -2269,7 +2905,7 @@ function lookupPackedHash($sectionBlob, $sectionCount, $hashWidth, $rawHash) {
       if ($comparison < 0) $lowIndex = $middleIndex + 1;
       else $highIndex = $middleIndex - 1; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($lowIndex, $highIndex, $middleIndex, $recordWidth, $comparison, $offsetBytes, $sectionBlob, $rawHash);
+  purgeSensitiveMemory($lowIndex, $highIndex, $middleIndex, $recordWidth, $comparison, $offsetBytes, $sectionBlob, $rawHash, $sectionCount, $hashWidth);
   return $MatchOffset; }
 // / -----------------------------------------------------------------------------------
 
@@ -2314,7 +2950,10 @@ function parseDefinitionRecord($recordBody) {
     $remainder = ltrim(substr($recordBody, $equalsPosition + 1));
     // / A quoted value keeps whatever whitespace it arrived with & may contain a space.
     if (substr($remainder, 0, 1) === '"') {
-      $closingQuote = strpos($remainder, '"', 1);
+      // / A quote written after a backslash belongs to the value & does not close it.
+      $closingQuote = 0;
+      do $closingQuote = strpos($remainder, '"', $closingQuote + 1);
+      while ($closingQuote !== FALSE && substr($remainder, $closingQuote - 1, 1) === '\\');
       if ($closingQuote !== FALSE) {
         $Record['value'] = decodeDefinitionValue(str_replace('\\"', '"', substr($remainder, 1, $closingQuote - 1)));
         $attributeText = trim(substr($remainder, $closingQuote + 1));
@@ -2355,7 +2994,7 @@ function loadDefs($DefsFile) {
   $indexFile = hashIndexPath($DefsFile);
   $indexLoaded = FALSE;
   $hashRecords = array('md5' => array(), 'sha1' => array(), 'sha256' => array());
-  $lineOffset = $hashTotal = 0;
+  $lineOffset = $hashTotal = $hashCount = 0;
   $DefData = '';
   $DefsLongestSignature = 0;
   $defsHandle = FALSE;
@@ -2404,7 +3043,8 @@ function loadDefs($DefsFile) {
             if ($definitionRecord['kind'] === 'md5' or $definitionRecord['kind'] === 'sha1' or $definitionRecord['kind'] === 'sha256') {
               // / Hold the whole record only while the set is small enough not to be indexed.
               // / Above that the packed record below is the only copy that is kept.
-              if (!$UseHashIndex or $usableCount < $HashIndexThreshold) $Defs[$definitionRecord['kind']][strtolower($definitionRecord['value'])] = $definitionRecord;
+              if (!$UseHashIndex or $hashCount < $HashIndexThreshold) $Defs[$definitionRecord['kind']][strtolower($definitionRecord['value'])] = $definitionRecord;
+              $hashCount++;
               // / Pack the hash with the offset of its own line, ready to be indexed.
               $hashRecords[$definitionRecord['kind']][] = hex2bin(strtolower($definitionRecord['value'])).pack('V', $recordStart); }
             else {
@@ -2426,13 +3066,16 @@ function loadDefs($DefsFile) {
     // / A small set is cheaper to parse than to index, & needs no second file on disk.
     $hashTotal = count($hashRecords['md5']) + count($hashRecords['sha1']) + count($hashRecords['sha256']);
     if ($DefsLoaded && $UseHashIndex && $hashTotal >= $HashIndexThreshold) {
+      // / Search the packed records from this run onward, whether or not the file gets written.
+      $HashIndex = packHashSections($hashRecords);
+      $HashIndexActive = TRUE;
+      $Defs['md5'] = $Defs['sha1'] = $Defs['sha256'] = array();
       processOutput('Building a packed index for '.$hashTotal.' hashes.', 'log', 0, TRUE, FALSE, FALSE);
       buildHashIndex($DefsFile, $indexFile, $hashRecords, array('name' => $Defs['name'], 'data' => $Defs['data'], 'host' => $Defs['host'], 'url' => $Defs['url'], 'longest' => $DefsLongestSignature), $DefData); }
     // / Remove a stale index when this set is too small to keep one.
     if ($DefsLoaded && $hashTotal < $HashIndexThreshold) if (file_exists($indexFile)) @unlink($indexFile); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($defsHandle, $rawLine, $recordBody, $recordStart, $recordParsed, $definitionRecord);
-  purgeSensitiveMemory($usableCount, $malformedCount, $retiredFormatCount, $indexFile, $indexLoaded, $hashRecords, $lineOffset, $hashTotal);
+  purgeSensitiveMemory($defsHandle, $rawLine, $recordBody, $recordStart, $recordParsed, $definitionRecord, $usableCount, $malformedCount, $retiredFormatCount, $indexFile, $indexLoaded, $hashRecords, $lineOffset, $hashTotal, $hashCount);
   return array($DefsLoaded, $Defs, $DefData, $DefsLongestSignature); }
 // / -----------------------------------------------------------------------------------
 
@@ -2441,11 +3084,13 @@ function loadDefs($DefsFile) {
 // / Confidence decides which word opens the line. A whole file hash is an exact match &
 // / opens with Infected. A heuristic opens with Suspicious, so a caller testing for
 // / Infected is never handed a filename pattern with the weight of a confirmed hash.
+// / A detection made inside a container names the member it was made in.
 function recordDetection($file, $definitionName, $matchType, $matchValue, $confidence, &$fileDetections) {
-  global $DetectionCount, $ReportSuspicious;
+  global $DetectionCount, $ReportSuspicious, $MemberContext;
   // / Set variables.
   $DetectionRecorded = FALSE;
-  $detectionKey = $definitionName.'|'.$matchType;
+  $detectionKey = $definitionName.'|'.$matchType.'|'.$MemberContext;
+  $memberText = ($MemberContext !== '') ? ' in '.printableName($MemberContext) : '';
   $openingWord = 'Suspicious: ';
   if ($confidence === 'high') $openingWord = 'Infected: ';
   // / A signature that spans a chunk boundary appears twice, so report it only once.
@@ -2454,9 +3099,9 @@ function recordDetection($file, $definitionName, $matchType, $matchValue, $confi
       $fileDetections[$detectionKey] = $confidence;
       $DetectionCount++;
       $DetectionRecorded = TRUE;
-      processOutput($openingWord.$file.' ('.$definitionName.', '.$matchType.': '.printableValue($matchValue).')', 'log', 0, TRUE, TRUE, FALSE); } }
+      processOutput($openingWord.printableName($file).' ('.$definitionName.', '.$matchType.': '.printableValue($matchValue).$memberText.')', 'log', 0, TRUE, TRUE, FALSE); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($detectionKey, $openingWord, $file, $definitionName, $matchType, $matchValue, $confidence);
+  purgeSensitiveMemory($detectionKey, $memberText, $openingWord, $file, $definitionName, $matchType, $matchValue, $confidence);
   return $DetectionRecorded; }
 // / -----------------------------------------------------------------------------------
 
@@ -2489,13 +3134,16 @@ function extractNetworkCandidates($haystack) {
   $hostMatches = $urlMatches = array();
   // / A url is anything with a scheme, stopping at whitespace or a quoting character.
   preg_match_all('#[a-z][a-z0-9+.\-]{1,15}://[^\s"\'<>()\[\]\\\\]{4,2048}#i', $haystack, $urlMatches);
-  // / A host is a dotted name or a dotted quad. The regex is what enforces the name
-  // / boundary, so nothing here can match ow.ly inside snow.lyrics.
-  preg_match_all('#(?:\d{1,3}\.){3}\d{1,3}|(?:[a-z0-9](?:[a-z0-9\-]*[a-z0-9])?\.)+[a-z]{2,24}#i', $haystack, $hostMatches);
+  // / A host is a run of name characters holding at least one dot, which covers a dotted
+  // / quad as well. The first label & the rest of the run are each taken in one step
+  // / with nothing given back, so the search is linear however long the run is.
+  $hostsSearched = preg_match_all('#(?<![a-z0-9\-])[a-z0-9\-]++\.[a-z0-9.\-]++#i', $haystack, $hostMatches);
+  // / A search the pattern engine gave up on would otherwise look like a clean block.
+  if ($hostsSearched === FALSE) processOutput('Cannot search a block of data for host names, host indicators in it were not matched.', 'warning', 0, TRUE, TRUE, FALSE);
   if (isset($urlMatches[0])) $Candidates['urls'] = $urlMatches[0];
   if (isset($hostMatches[0])) $Candidates['hosts'] = $hostMatches[0];
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($hostMatches, $urlMatches, $haystack);
+  purgeSensitiveMemory($hostMatches, $urlMatches, $haystack, $hostsSearched);
   return $Candidates; }
 // / -----------------------------------------------------------------------------------
 
@@ -2506,7 +3154,8 @@ function extractNetworkCandidates($haystack) {
 function lookupHostIndicator($hostCandidate, $hostIndex) {
   // / Set variables.
   $MatchedKey = '';
-  $workingHost = strtolower(rtrim($hostCandidate, '.'));
+  // / A name is never longer than 253 characters, so only the end of a longer run counts.
+  $workingHost = strtolower(trim(substr($hostCandidate, -253), '.-'));
   $dotPosition = 0;
   while ($workingHost !== '' && $MatchedKey === '') {
     if (isset($hostIndex[$workingHost])) $MatchedKey = $workingHost;
@@ -2548,7 +3197,7 @@ function matchContentIndicators($file, $haystack, $Defs, $candidateTypes, &$file
         recordDetection($file, $Defs['host'][$matchedKey]['name'], 'Host Match', $Defs['host'][$matchedKey]['value'], $Defs['host'][$matchedKey]['confidence'], $fileDetections);
         $MatchesFound++; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($definitionRecord, $networkCandidates, $urlCandidate, $hostCandidate, $matchedKey, $haystack, $candidateTypes);
+  purgeSensitiveMemory($definitionRecord, $networkCandidates, $urlCandidate, $hostCandidate, $matchedKey, $haystack, $candidateTypes, $file);
   return $MatchesFound; }
 // / -----------------------------------------------------------------------------------
 
@@ -2565,7 +3214,7 @@ function matchNameIndicators($file, $Defs, &$fileDetections) {
       recordDetection($file, $definitionRecord['name'], 'Name Match', $definitionRecord['value'], $definitionRecord['confidence'], $fileDetections);
       $MatchesFound++; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($definitionRecord, $fileName);
+  purgeSensitiveMemory($definitionRecord, $fileName, $file);
   return $MatchesFound; }
 // / -----------------------------------------------------------------------------------
 
@@ -2602,7 +3251,7 @@ function matchHashSignatures($file, $md5Hash, $sha1Hash, $sha256Hash, $Defs, &$f
     recordDetection($file, $Defs['sha256'][$sha256Hash]['name'], 'SHA256 Hash Match', $sha256Hash, $Defs['sha256'][$sha256Hash]['confidence'], $fileDetections);
     $MatchesFound++; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($indexOffset, $indexRecord, $recordFound, $hashWidths, $computedHashes, $md5Hash, $sha1Hash, $sha256Hash);
+  purgeSensitiveMemory($indexOffset, $indexRecord, $recordFound, $hashWidths, $computedHashes, $md5Hash, $sha1Hash, $sha256Hash, $file, $hashKind, $hashWidth);
   return $MatchesFound; }
 // / -----------------------------------------------------------------------------------
 
@@ -2610,26 +3259,29 @@ function matchHashSignatures($file, $md5Hash, $sha1Hash, $sha256Hash, $Defs, &$f
 // / A function to hash a file & check it for viruses against the static virus definitions.
 // / The file is read once, in chunks, while all three hashes are computed alongside.
 // / An overlap is carried between chunks so a signature spanning a boundary still matches.
-// / Previous versions evaluated hash signatures outside the definition loop, so a chunked
-// / file was only ever compared against whichever definition happened to be read last.
+// / The structure of an image or a container is inspected afterwards, whether or not
+// / classification is switched on.
 function virusCheck($file, $Defs, $DefData, $MemoryLimit, $ChunkSize, $DefsLongestSignature) {
-  global $Infected, $Suspicious, $FileCount, $DefsRealPath, $ReportRealPath;
-  global $Classifiers, $ClassifiersLoaded, $ClassifyContent, $ClassifierLongestToken, $HandlerFileCount, $CodeFileCount, $InspectArchivedContent;
+  global $Infected, $Suspicious, $FileCount, $DefsRealPath, $ReportRealPath, $IncompleteCount, $MemberContext;
+  global $Classifiers, $ClassifiersLoaded, $ClassifyContent, $ClassifierLongestToken, $HandlerFileCount, $CodeFileCount, $InspectArchivedContent, $InspectImages;
   // / Set variables.
   $CheckComplete = FALSE;
   $fileDetections = array();
   $fileIsScannable = TRUE;
   $targetPath = realpath($file);
+  $displayFile = printableName($file);
   $fileSize = 0;
   $readSize = $overlapSize = 0;
-  $handle = FALSE;
-  $buffer = $overlap = '';
+  $handle = $structureHandle = FALSE;
+  $buffer = $overlap = $window = '';
   $md5Context = $sha1Context = $sha256Context = NULL;
   $md5Hash = $sha1Hash = $sha256Hash = '';
   $readFailed = FALSE;
-  $handlerHits = $languageHits = $candidateTypes = $scopeTypes = array();
-  $fileExtension = $extensionLanguage = $contentLanguage = $classifyMode = $magicType = $fileHeader = '';
-  $containerIsZip = FALSE;
+  $handlerHits = $languageHits = $candidateTypes = $scopeTypes = $inspection = $hiddenDirectory = array();
+  $fileExtension = $extensionLanguage = $contentLanguage = $classifyMode = $magicType = $fileHeader = $containerFormat = $imageFormat = '';
+  $classifyActive = ($ClassifyContent && $ClassifiersLoaded);
+  $containerIsWalked = FALSE;
+  $MemberContext = '';
   // / Never scan our own definitions file, which is full of signatures by design.
   if ($targetPath !== FALSE && $targetPath === $DefsRealPath) $fileIsScannable = FALSE;
   // / Never scan our own report file, which quotes a signature every time one matches.
@@ -2637,18 +3289,20 @@ function virusCheck($file, $Defs, $DefData, $MemoryLimit, $ChunkSize, $DefsLonge
   if ($targetPath === FALSE or !is_file($file)) $fileIsScannable = FALSE;
   if ($fileIsScannable && !is_readable($file)) {
     $fileIsScannable = FALSE;
-    processOutput('Cannot open a file for reading, it was skipped:  '.$file, 'error', 610, TRUE, FALSE, FALSE); }
+    processOutput('Cannot open a file for reading, it was skipped:  '.$displayFile, 'error', 610, TRUE, FALSE, FALSE); }
   if ($fileIsScannable) {
-    processOutput('Scanning file:  '.$file, 'log', 0, TRUE, FALSE, FALSE);
+    processOutput('Scanning file:  '.$displayFile, 'log', 0, TRUE, FALSE, FALSE);
     $FileCount++;
     $fileSize = intval(@filesize($file));
+    // / Read the opening bytes once, to identify an image or a container by its content.
+    $fileHeader = readFileHeader($file, 512);
+    $fileExtension = fileExtensionOf($file);
+    $containerFormat = containerFormatOf($fileHeader);
+    $imageFormat = imageFormatOf($fileHeader);
+    $containerIsWalked = ($containerFormat !== '' && $InspectArchivedContent);
     // / Decide up front what this file needs, so the reader only searches what matters.
     // / A file whose extension already names a language needs no content search at all.
-    if ($ClassifyContent && $ClassifiersLoaded) {
-      $fileExtension = fileExtensionOf($file);
-      // / Read the opening bytes once, for magic identification & container detection.
-      $fileHeader = readFileHeader($file, 512);
-      $containerIsZip = isZipContainer($fileHeader);
+    if ($classifyActive) {
       $magicType = magicTypeFor($Classifiers, $fileHeader);
       $extensionLanguage = languageForExtension($Classifiers, $fileExtension);
       $candidateTypes = typesForExtension($Classifiers, $fileExtension);
@@ -2668,11 +3322,17 @@ function virusCheck($file, $Defs, $DefData, $MemoryLimit, $ChunkSize, $DefsLonge
           else {
             // / An extension nothing claims is searched against every declared type.
             $classifyMode = 'unknown';
-            $candidateTypes = array_keys($Classifiers['handlers']); } } } }
+            $candidateTypes = array_keys($Classifiers['handlers']);
+            // / An image is the exception. Compressed pixels hold every short token by chance.
+            // / Code inside an image is reported by the embedded code signatures instead.
+            if ($imageFormat !== '') $classifyMode = ''; } } } }
     // / Announce a file large enough to need more than a single read.
-    if ($fileSize >= $MemoryLimit) processOutput('Chunking file:  '.$file, 'log', 0, TRUE, FALSE, FALSE);
+    if ($fileSize >= $MemoryLimit) processOutput('Chunking file:  '.$displayFile, 'log', 0, TRUE, FALSE, FALSE);
     $handle = @fopen($file, 'rb');
-    if ($handle === FALSE) processOutput('Cannot open a file for reading, it was skipped:  '.$file, 'error', 610, TRUE, FALSE, FALSE);
+    // / A file that cannot be opened is skipped. It does not stop the rest of the scan.
+    if ($handle === FALSE) {
+      $fileIsScannable = FALSE;
+      processOutput('Cannot open a file for reading, it was skipped:  '.$displayFile, 'error', 610, TRUE, FALSE, FALSE); }
     else {
       $md5Context = hash_init('md5');
       $sha1Context = hash_init('sha1');
@@ -2684,6 +3344,7 @@ function virusCheck($file, $Defs, $DefData, $MemoryLimit, $ChunkSize, $DefsLonge
       $overlapSize = $DefsLongestSignature - 1;
       // / A handler match looks ahead past its token, so the tail must carry that too.
       if ($classifyMode !== '' && ($ClassifierLongestToken + 256) > $overlapSize) $overlapSize = $ClassifierLongestToken + 256;
+      if ($imageFormat !== '' && $overlapSize < 64) $overlapSize = 64;
       if ($overlapSize < 0) $overlapSize = 0;
       if ($overlapSize > intdiv($readSize, 2)) $overlapSize = intdiv($readSize, 2);
       while ($fileSize > 0 && !feof($handle)) {
@@ -2697,14 +3358,18 @@ function virusCheck($file, $Defs, $DefData, $MemoryLimit, $ChunkSize, $DefsLonge
           hash_update($sha256Context, $buffer);
           processOutput('Scanning chunk.', 'log', 0, FALSE, FALSE, FALSE);
           // / Scan the current chunk, prefixed by the tail of the chunk before it.
-          matchContentIndicators($file, $overlap.$buffer, $Defs, $scopeTypes, $fileDetections);
+          redeclare($window, $overlap.$buffer);
+          matchContentIndicators($file, $window, $Defs, $scopeTypes, $fileDetections);
+          // / Code has no business inside an image, wherever in the file it sits.
+          if ($InspectImages && $imageFormat !== '') matchEmbedSignatures($file, $window, FALSE, $fileDetections);
           // / Classify the same block while it is already in memory.
-          if ($classifyMode === 'unknown') matchLanguageSignatures($overlap.$buffer, $Classifiers, $languageHits);
-          if ($classifyMode === 'handlers' or $classifyMode === 'unknown') matchHandlerTokens($overlap.$buffer, $Classifiers, $candidateTypes, $handlerHits);
+          if ($classifyMode === 'unknown') matchLanguageSignatures($window, $Classifiers, $languageHits);
+          // / A container that will be walked reports its handlers by member instead.
+          if (($classifyMode === 'handlers' or $classifyMode === 'unknown') && !$containerIsWalked) matchHandlerTokens($window, $Classifiers, $candidateTypes, $handlerHits);
           redeclare($overlap, substr($buffer, 0 - $overlapSize));
           if ($overlapSize < 1) redeclare($overlap, ''); } }
       fclose($handle);
-      if ($readFailed) processOutput('Cannot read the whole of a file, results may be incomplete:  '.$file, 'error', 600, TRUE, TRUE, FALSE);
+      if ($readFailed) processOutput('Cannot read the whole of a file, results may be incomplete:  '.$displayFile, 'error', 600, TRUE, TRUE, FALSE);
       $md5Hash = hash_final($md5Context);
       $sha1Hash = hash_final($sha1Context);
       $sha256Hash = hash_final($sha256Context);
@@ -2714,13 +3379,31 @@ function virusCheck($file, $Defs, $DefData, $MemoryLimit, $ChunkSize, $DefsLonge
         // / Match the file name, which is a different question from its content.
         matchNameIndicators($file, $Defs, $fileDetections);
         matchHashSignatures($file, $md5Hash, $sha1Hash, $sha256Hash, $Defs, $fileDetections);
+        $inspection = newInspectionState($candidateTypes);
+        $structureHandle = ($fileSize > 0) ? @fopen($file, 'rb') : FALSE;
+        if ($structureHandle !== FALSE) {
+          if ($InspectImages) {
+            if ($imageFormat === 'png') inspectPngStream($file, $structureHandle, $fileSize, $fileDetections);
+            // / A file named as a png that is not one is dressed as something it is not.
+            if (($fileExtension === 'png' or $fileExtension === 'apng') && $imageFormat !== 'png') recordDetection($file, 'Masquerade.PNG', 'Structure Match', 'the file is named as a png & does not begin with a png signature', 'medium', $fileDetections); }
+          if ($InspectArchivedContent) {
+            if ($containerFormat !== '') inspectContainerHandle($file, $structureHandle, $fileSize, $containerFormat, '', 0, $fileDetections, $handlerHits, $inspection);
+            else {
+              // / A zip is read from its end, so one can hide behind the header of another format.
+              $hiddenDirectory = findZipDirectory($structureHandle, $fileSize);
+              if ($hiddenDirectory['found'] && $hiddenDirectory['entries'] > 0) {
+                if ($imageFormat !== '') recordDetection($file, 'Polyglot.Archive.Hidden', 'Structure Match', 'a zip archive of '.countWithNoun($hiddenDirectory['entries'], 'entry', 'entries').' sits behind a '.$imageFormat.' header', 'medium', $fileDetections);
+                inspectContainerHandle($file, $structureHandle, $fileSize, 'zip', 'appended archive', 0, $fileDetections, $handlerHits, $inspection); } } }
+          fclose($structureHandle); }
+        $MemberContext = '';
+        // / Say plainly when part of a file could not be looked at, & why.
+        if (count($inspection['incomplete']) > 0) {
+          $IncompleteCount++;
+          processOutput('Incomplete: '.$displayFile.' ('.implode('; ', $inspection['incomplete']).')', 'log', 0, TRUE, TRUE, FALSE); }
         // / Count the file once, under the strongest verdict any of its matches carried.
         if (count($fileDetections) > 0) {
           if (in_array('high', $fileDetections, TRUE)) $Infected++;
           else $Suspicious++; }
-        // / A zip container hides its content from a byte scan, because the interesting
-        // / part of a document is a compressed member rather than the container itself.
-        if ($classifyMode !== '' && $containerIsZip && $InspectArchivedContent) inspectArchiveContainer($file, $Classifiers, $candidateTypes, $handlerHits);
         // / An extension that names a language settles the question by itself.
         if ($classifyMode === 'language') $contentLanguage = $extensionLanguage;
         // / An unclaimed extension is decided by how much of a language it carries.
@@ -2728,20 +3411,16 @@ function virusCheck($file, $Defs, $DefData, $MemoryLimit, $ChunkSize, $DefsLonge
         // / Executable code is reported as code & is never classified for handlers.
         if ($contentLanguage !== '') {
           $CodeFileCount++;
-          processOutput('Classified: '.$file.' (File may contain executable code - Detected Language: '.$contentLanguage.')', 'log', 0, TRUE, TRUE, FALSE); }
+          processOutput('Classified: '.$displayFile.' (File may contain executable code - Detected Language: '.$contentLanguage.')', 'log', 0, TRUE, TRUE, FALSE); }
         else {
           if (count($handlerHits) > 0) {
             $HandlerFileCount++;
-            processOutput('Classified: '.$file.' (File may contain file or URL handlers - '.describeHandlerHits($handlerHits).')', 'log', 0, TRUE, TRUE, FALSE); } } }
+            processOutput('Classified: '.$displayFile.' (File may contain file or URL handlers - '.describeHandlerHits($handlerHits).')', 'log', 0, TRUE, TRUE, FALSE); } } }
       $CheckComplete = TRUE; } }
   // / A file we deliberately skipped is not a failure, so the check still reports complete.
   if (!$fileIsScannable) $CheckComplete = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($buffer, $overlap, $handle, $md5Context, $sha1Context, $sha256Context);
-  purgeSensitiveMemory($md5Hash, $sha1Hash, $sha256Hash, $fileDetections, $targetPath, $fileSize);
-  purgeSensitiveMemory($readSize, $overlapSize, $readFailed, $fileIsScannable, $file, $DefData);
-  purgeSensitiveMemory($handlerHits, $languageHits, $candidateTypes, $fileExtension, $extensionLanguage, $contentLanguage, $classifyMode);
-  purgeSensitiveMemory($magicType, $fileHeader, $containerIsZip, $scopeTypes);
+  purgeSensitiveMemory($buffer, $overlap, $window, $handle, $structureHandle, $md5Context, $sha1Context, $sha256Context, $md5Hash, $sha1Hash, $sha256Hash, $fileDetections, $targetPath, $displayFile, $fileSize, $readSize, $overlapSize, $readFailed, $fileIsScannable, $file, $DefData, $handlerHits, $languageHits, $candidateTypes, $fileExtension, $extensionLanguage, $contentLanguage, $classifyMode, $magicType, $fileHeader, $containerFormat, $imageFormat, $scopeTypes, $inspection, $hiddenDirectory, $classifyActive, $containerIsWalked);
   return array($CheckComplete, $Infected, $FileCount, $Suspicious); }
 // / -----------------------------------------------------------------------------------
 
@@ -2790,8 +3469,7 @@ function fileScan($folder, $Defs, $DefData, $MemoryLimit, $ChunkSize, $Recursion
       list($checkComplete, $Infected, $FileCount, $Suspicious) = virusCheck($folder, $Defs, $DefData, $MemoryLimit, $ChunkSize, $DefsLongestSignature);
       $ScanComplete = $checkComplete; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($files, $file, $entry, $scanResult, $checkComplete, $childComplete, $entryIsLink);
-  purgeSensitiveMemory($folder, $DefData); 
+  purgeSensitiveMemory($files, $file, $entry, $scanResult, $checkComplete, $childComplete, $entryIsLink, $folder, $DefData, $currentDepth);
   return array($ScanComplete, $DirCount, $FileCount, $Infected, $Suspicious); }
 // / -----------------------------------------------------------------------------------
 
@@ -2805,7 +3483,7 @@ if (!$InstallationVerified) {
   exit(1); }
 
 // / Load the configuration file.
-list ($ConfigLoaded, $DefsExist, $ConfigFilePath, $VersionsMatch) = loadConfig($Version);
+list ($ConfigLoaded, $DefsExist, $ConfigFilePath, $VersionsMatch) = loadConfig($Version, isset($argv) ? $argv : array());
 if (!$ConfigLoaded) {
   echo 'ERROR!!! ScanCore-2, Cannot load the configuration file located at:  '.$ConfigFilePath.$EOL;
   exit(1); }
@@ -2845,13 +3523,13 @@ if (!@ini_set('memory_limit', strval($MemoryLimit))) processOutput('Cannot apply
 // / Perform a definition update, when required.
 if ($PerformDefUpdate) {
   list($UpdateDefinitionsComplete, $UpdateDefinitionsErrors) = updateDefinitions();
-  if (!$UpdateDefinitionsComplete) processOutput('Cannot install definition update!', 'error', 7, TRUE, TRUE, TRUE); 
+  if (!$UpdateDefinitionsComplete) processOutput('Cannot install definition update!', 'error', 7, TRUE, TRUE, TRUE);
   else processOutput('Installed definition update.', 'log', 0, TRUE, TRUE, FALSE); }
 
 // / Perform an application update, when required.
 if ($PerformAppUpdate) {
   list($UpdateApplicationComplete, $UpdateApplicationErrors) = updateApplication();
-  if (!$UpdateApplicationComplete) processOutput('Cannot install application update!', 'error', 8, TRUE, TRUE, TRUE); 
+  if (!$UpdateApplicationComplete) processOutput('Cannot install application update!', 'error', 8, TRUE, TRUE, TRUE);
   else processOutput('Installed application update. Please open '.$DefaultConfigFile.' & validate configuration entries.', 'log', 0, TRUE, TRUE, FALSE); }
 
 // / Perform scanning operations, when required.
@@ -2864,9 +3542,10 @@ if ($PerformScan) {
   // / Load the classifier definitions, which describe handlers rather than threats.
   // / Classification is optional, so a missing file disables it rather than stopping.
   $ClassifiersLoaded = FALSE;
-  $Classifiers = array('types' => array(), 'languages' => array(), 'handlers' => array(), 'magic' => array());
+  $Classifiers = array('types' => array(), 'languages' => array(), 'handlers' => array(), 'magic' => array(), 'embeds' => array());
   $ClassifierLongestToken = 0;
-  if ($ClassifyContent) list($ClassifiersLoaded, $Classifiers, $ClassifierLongestToken) = loadClassifiers($ClassifierFile);
+  // / The same file carries the embedded code signatures that image inspection uses.
+  if ($ClassifyContent or $InspectImages) list($ClassifiersLoaded, $Classifiers, $ClassifierLongestToken) = loadClassifiers($ClassifierFile);
   if ($ClassifyContent && !$ClassifiersLoaded) processOutput('Content classification is disabled because no classifier definitions could be loaded.', 'warning', 0, TRUE, FALSE, FALSE);
 
   // / Resolve the files the scanner must never inspect, so the walker can recognize them.
@@ -2882,9 +3561,10 @@ if ($PerformScan) {
     // / verdict. The infected count is last because it is the answer, & an answer that
     // / opens the summary is read before the reader knows what was scanned.
     processOutput('Scanned '.countWithNoun($FileCount, 'file', 'files').' in '.countWithNoun($DirCount, 'folder', 'folders').'.', 'log', 0, TRUE, TRUE, FALSE);
-    if ($ClassifiersLoaded) {
+    if ($ClassifyContent && $ClassifiersLoaded) {
       processOutput('Found '.countWithNoun($HandlerFileCount, 'file', 'files').' that may contain file or URL handlers.', 'log', 0, TRUE, TRUE, FALSE);
       processOutput('Found '.countWithNoun($CodeFileCount, 'file', 'files').' that may contain executable code.', 'log', 0, TRUE, TRUE, FALSE); }
+    processOutput('Found '.countWithNoun($IncompleteCount, 'file', 'files').' that could not be fully inspected.', 'log', 0, TRUE, TRUE, FALSE);
     if ($ReportSuspicious) processOutput('Found '.countWithNoun($Suspicious, 'suspicious file', 'suspicious files').'.', 'log', 0, TRUE, TRUE, FALSE);
     processOutput('Found '.countWithNoun($Infected, 'infected file', 'infected files').'.', 'log', 0, TRUE, TRUE, FALSE); } }
 // / -----------------------------------------------------------------------------------

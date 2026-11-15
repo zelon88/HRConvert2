@@ -29,7 +29,15 @@
 #     Declares what to look for inside a file of that type.
 #     Capabilities are file, url & exec, joined with a pipe when more than one.
 #
-#   A zip container is opened & each entry inside it is classified against the type
+#   embed <Name>(<confidence>) = <signature>, <signature>, ...
+#     Declares code that has no business inside an image.
+#     Confidence is high or medium. High reports the file as infected.
+#     A signature shorter than six bytes is only tested against decoded png text,
+#     because that few bytes turn up by chance in compressed image data.
+#     Embed records are read whenever image inspection is on.
+#     They are not governed by the enabled classifier list.
+#
+#   A container is opened & each entry inside it is classified against the type
 #   the container itself claims. That is how a handler inside a .docx is found, since
 #   the interesting part of a .docx is a compressed xml file rather than the container.
 #
@@ -167,6 +175,16 @@ drawing "XREF"(file), "IMAGEDEF"(file|url), "ACAD_IMAGE"(file), "OLE2FRAME"(file
 # Subtitles. Advanced SubStation headers name the media they were timed against.
 # --------------------------------------------------------------------------
 subtitle "Video File:"(file), "Audio File:"(file), "<font"(file|url), "src="(file|url), "xlink:href"(file|url)
+
+
+# --------------------------------------------------------------------------
+# Code embedded in images.
+# A decoder ignores these bytes. An interpreter that is handed the file does not.
+# --------------------------------------------------------------------------
+embed PHP(high) = "<?php ", "<?php\x0a", "<?php\x0d", "<?php\x09", "<?php", "<?=", "$_GET[", "$_POST[", "$_REQUEST[", "$_COOKIE[", "$_FILES[", "$_SERVER["
+embed Script(medium) = "<script>", "<script ", "javascript:", "<iframe "
+embed Shell(medium) = "#!/bin/sh", "#!/bin/bash", "#!/usr/bin/env ", "/bin/sh -c", "powershell -", "cmd.exe /c"
+embed Execution(medium) = "eval(base64_decode(", "base64_decode(", "shell_exec(", "passthru(", "proc_open(", "assert($_", "system($_", "exec($_"
 
 
 # --------------------------------------------------------------------------

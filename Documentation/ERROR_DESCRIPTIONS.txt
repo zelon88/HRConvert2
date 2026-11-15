@@ -4026,6 +4026,22 @@ WARNINGS ABOUT SCANNING FILES FOR A USER
     WARNING!!! Potentially infected file detected at <FILE_NAME>!
       The scanner found the file infected. The report says so, & the file is left where it is for the user to see.
       A workflow's Scan step that finds one ends the workflow, so nothing is made from the file.
+      From v4.2.3 ScanCore v1.9 finds a decompression bomb infected, & PHP hidden in an image, & a known hash inside an archive.
+    WARNING!!! Suspicious file detected at <FILE_NAME>.
+      From v4.2.3. ScanCore matched the file to a definition that is not a hash & is not marked high confidence, such as a host,
+      a URL, a run of bytes or a name. That is a heuristic, & a suspicious file is not an infected one. The report says so, under
+      the line ScanCore wrote, & the file is left where it is. A workflow's Scan step that finds one goes on, & names it in its result.
+      The definitions ScanCore ships are hashes alone, so a match by content is raised only by a definition an administrator added.
+      From v4.2.3 ScanCore v1.9 raises it for a structure too, such as a malformed archive, an archive hidden behind an image or a
+      file named as a png that is not one.
+    WARNING!!! <SCANNER> could not inspect all of <FILE_NAME>.
+      From v4.2.3. ScanCore v1.9 could not read the whole file, & wrote Incomplete with the reason, such as an encrypted member of a
+      zip, a bzip2 stream, a damaged archive or one larger than its budget, or logged its error 610 for a file it could not open once
+      a scan had begun, or its error 600 for one it could not read to the end. A file not scanned in full is not known to be clean.
+      The report says so, under the line ScanCore wrote, & the file is left where it is. A workflow's Scan step that finds one goes on,
+      & names it in its result. A file also found infected or suspicious is named only as that. A file ScanCore cannot read at all it
+      refuses before it scans, & that is the first warning above, that it could not scan the file. Nothing needs to change unless
+      every file is named so, which can mean the PHP zlib extension is missing, without which ScanCore reads no compressed member.
     WARNING!!! A scan was asked to write a report under a name that is not a plain text file's name, so it was written as <FILE_NAME>.
       From v4.1.6. The report is always a txt file, & a name for it that is not one is replaced rather than trusted.
       The core names every report User_Consolidated_Virus_Scan_Report.txt, so this means something other than the core
@@ -5329,7 +5345,9 @@ ERROR DESCRIPTION
   An update was requested on a server where --Enable Automatic Updates-- is FALSE.
   This is the default. A server does not gain the ability to replace its own code unless an
   administrator has deliberately granted it.
-  Set $EnableAutoUpdates to TRUE in config.php to permit updates from the command line.
+  Set $EnableAutoUpdates to TRUE to permit updates from the command line, with
+  sudo php convertCore.php --config  & then  set EnableAutoUpdates  in General Information,
+  or in config.php itself. The refusal names this installation's own paths for both.
   An update is NEVER reachable from the web interface & never will be. Replacing application
   code requires write access to the installation directory, which is what shell access
   already implies & is the correct authorization for the operation.
@@ -7830,6 +7848,7 @@ WARNINGS ABOUT WORKFLOWS
     WARNING!!! The <OPERATION> operation declares an option that is not usable. It was left out of the operation.
     WARNING!!! The <OPERATION> operation declares no mode it runs in. It was left out.
     WARNING!!! The <OPERATION> operation names <FUNCTION_NAME> to decide which files it reads, & no such function exists. It was left out.
+    WARNING!!! The <OPERATION> operation names <FUNCTION_NAME> to decide which files it passes on unchanged, & no such function exists. It was left out.
       An entry the operation provider declared cannot be used. That operation is left out, & every other one is offered.
       From v4.1.8 an operation that takes no budget declares a Budget of FALSE, as HRConvert2's Delete & Rename do. A budget that
       is missing or empty is still a mistake, & leaves that operation out.
@@ -8716,6 +8735,10 @@ WARNINGS ABOUT ACCOUNTS
       A signed in user started a workflow, & before its worker began the account was removed or disabled, or its folder in
       Users could not be made. The worker finds no job & stops, & the workflow does not run. Nothing was wrong with this server
       unless the folder could not be made, which -fp corrects.
+    WARNING!!! How long <USERNAME> keeps their files could not be saved, because their account could not be written.
+      From v4.2.3. A signed in user chose how long their files are kept, & their account could not be changed. They are told it
+      could not be saved, & their files are kept as long as before. Run  sudo php convertCore.php -fp , which gives Accounts to
+      the web server account. A full disk refuses it too.
     WARNING!!! This page was sent without Cross-Origin-Opener-Policy, because something was written before its headers. A page of another site could reach the key a signed in tab holds.
       From v4.2.1. While accounts are on, every response carries the policy, so a page of another site can neither name a
       tab with a key of its own nor hold a tab & read its key. Something was printed before the Engine judged the request,
@@ -8740,6 +8763,10 @@ WARNINGS ABOUT ACCOUNTS
     WARNING!!! An account sweep did not finish, & what it left is swept next time.
       A record that was over could not be removed, usually because a request held it at that moment. Many of these in a row mean
       Accounts cannot be written. Run  sudo php convertCore.php -fp .
+    WARNING!!! <COUNT> file(s) <USERNAME> kept longer than they chose to keep them could not be removed.
+      From v4.2.3. The user chose how long their files are kept, & a file in their folder in Users went unchanged for longer & could
+      not be removed. It is tried again in every sweep. A file the web server account does not own, or one made immutable, cannot be
+      removed by it. Run  sudo php convertCore.php -fp , which gives the folder back to that account.
     WARNING!!! Command line invocation. The account <USERNAME> was changed by an administrator: <CHANGE>.
     WARNING!!! Command line invocation. The account <USERNAME> was added by an administrator.
     WARNING!!! Command line invocation. The account <USERNAME> & its files were removed by an administrator.

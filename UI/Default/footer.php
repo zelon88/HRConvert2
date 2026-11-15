@@ -53,7 +53,8 @@
       if (typeof HRC2SignIn !== 'undefined' && typeof HRC2SignIn.start === 'function') {
         HRC2SignIn.start(<?php echo json_encode(array('signedIn' => !empty($footerSignIn['SignedIn']), 'life' => (int)($footerSignIn['KeyLifetime'] ?? 30), 'interval' => (int)($footerSignIn['ExchangeInterval'] ?? 6),
           'tokens' => array('Token1' => (string)$Token1, 'Token2' => (string)$Token2), 'workerPath' => $GuiJSDir.'HRC2-SignInTimer.js', 'home' => $footerHome,
-          'notices' => array('signed-out' => $GuiAuthText40, 'ended' => $GuiAuthText41)), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE); ?>);
+          'notices' => array('signed-out' => $GuiAuthText40, 'ended' => $GuiAuthText41),
+          'lifetime' => array('saved' => $GuiAuthText52, 'failed' => $GuiAuthText53, 'no-answer' => $GuiAuthText42)), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE); ?>);
       }
     </script>
     <?php }

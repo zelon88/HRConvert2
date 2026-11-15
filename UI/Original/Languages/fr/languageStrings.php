@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -626,6 +626,12 @@ $Gui2Text235 = 'Il remplace {name} pour chaque utilisateur.';
 $Gui2Text236 = 'Le flux de travail n’a pas pu être préparé.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'Une description dépasse 500 caractères, ou contient un caractère qui ne peut pas être affiché.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'Transmis sans changement: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'Suspects, mais pas confirmés comme infectés: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'Pas entièrement analysés: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -733,4 +739,24 @@ $GuiAuthText41 = 'Vous avez été déconnecté, car votre connexion a été util
 $GuiAuthText42 = 'Le serveur n\'a pas répondu. Veuillez réessayer.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'La récupération de compte est indisponible sur ce serveur.';
+// / 'Delete my files'
+$GuiAuthText44 = 'Supprimer mes fichiers';
+// / 'Never'
+$GuiAuthText45 = 'Jamais';
+// / 'After 1 hour'
+$GuiAuthText46 = 'Après 1 heure';
+// / 'After 1 day'
+$GuiAuthText47 = 'Après 1 jour';
+// / 'After 1 week'
+$GuiAuthText48 = 'Après 1 semaine';
+// / 'After 30 days'
+$GuiAuthText49 = 'Après 30 jours';
+// / 'Save'
+$GuiAuthText50 = 'Enregistrer';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'Un fichier est supprimé dès qu’il est resté inchangé aussi longtemps.';
+// / 'Saved.'
+$GuiAuthText52 = 'Enregistré.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'Ce choix n’a pas pu être enregistré.';
 // / -----------------------------------------------------------------------------------

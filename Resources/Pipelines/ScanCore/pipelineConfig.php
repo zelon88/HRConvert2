@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.3.
 // / This file declares the ScanCore scanner pipeline.
 // /
 // / ScanCore ships inside this application rather than being installed on the host, so it
@@ -32,7 +32,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines().
-$PipelineVersion = 'v4.2.1';
+$PipelineVersion = 'v4.2.3';
 
 // / A scanner inspects a file & reports on it. It changes nothing.
 $PipelineKind = 'scanner';

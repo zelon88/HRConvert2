@@ -807,8 +807,8 @@ $ApplicationTitle = 'Convert Anything!';
 // /   If set to TRUE, an administrator may run  php convertCore.php -u  to update.
 // /   If set to FALSE, that command refuses & the application may only be updated by hand.
 // /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$EnableAutoUpdates = TRUE;
+// /   Default is FALSE.
+$EnableAutoUpdates = FALSE;
 // /  --Automatic Update Target Version--
 // /   Which release an update installs when no version is supplied on the command line.
 // /   If set to 'latest', the newest tagged release is installed.

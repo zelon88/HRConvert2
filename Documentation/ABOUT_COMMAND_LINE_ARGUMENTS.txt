@@ -550,7 +550,9 @@ implies & is the correct authorization for the operation. An HTTP endpoint prote
 secret would reduce that authorization to one guessable string.
 
 REQUIREMENTS.
-  $EnableAutoUpdates must be TRUE in config.php. The default is FALSE.
+  $EnableAutoUpdates must be TRUE in config.php. The default is FALSE. Turn it on with --config,
+  by entering  set EnableAutoUpdates  in General Information, or in config.php itself. Until it
+  is on, -u changes nothing, exits 1 & names both ways, with this installation's own paths.
   The server must be able to reach the update source. Many deliberately cannot.
   The update runs as root. The folder holding the installation & the --Proprietary
   Directory-- must belong to root & be writable by nobody else, or the update is refused

@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.1
+- **Version** v4.2.3
 - **Kind** scanner
 - **Family** ScanCore
 - **Entry point** scanWithScanCore
@@ -19,7 +19,7 @@ so it cannot drift from either. Do not edit it by hand.
 ## Dependencies
 
 - **Bubblewrap** (required, 0.4 or newer, LGPL-2.0). Isolates every conversion from the host & the network.
-- **ScanCore** (optional, 1.8 or newer, GPL-3.0). Scans every uploaded file. Written & distributed by this project.
+- **ScanCore** (optional, 1.9 or newer, GPL-3.0). Scans every uploaded file. Written & distributed by this project.
 
 ## Approval
 

@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.2.2.
+// / v4.2.3.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -41,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.2.2';
+$EngineVersion = 'v4.2.3';
 // / -----------------------------------------------------------------------------------
 
 
@@ -623,7 +623,7 @@ function getAcceptedManagers() {
     'resourceManager.php' => 'v4.2.0',
     'workerManager.php' => 'v4.0.8',
     'requestManager.php' => 'v4.1.3',
-    'authenticationManager.php' => 'v4.2.0');
+    'authenticationManager.php' => 'v4.2.3');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $AcceptedManagers is not purged, because it is the return value.
   purgeSensitiveMemory($EnableMemoryProtection);
@@ -1718,7 +1718,28 @@ function answerEngineRequest() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to say whether a workflow is starting or running in a folder of files, for a sweep about to remove some of them, from v4.2.3.
+// / Accepts the folder. Returns TRUE when one is, or when workflows are on & the Workflow Core that would say cannot be loaded.
+// / The Workflow Core is loaded here where the application has not loaded it yet, because an account sweep in a web request runs before it does.
+// / It is loaded at the version the application pins, as the application loads it, & only once.
+function engineFolderIsBusy($folderPath) {
+  // / Set variables.
+  global $RequiredWorkflowCoreVersion, $EnableMemoryProtection;
+  $FolderIsBusy = FALSE;
+  $workflowsAreOn = $coreIsLoaded = FALSE;
+  $coreVersion = '';
+  $workflowsAreOn = (applicationSetting('EnableWorkflows', FALSE) === TRUE);
+  if ($workflowsAreOn && !function_exists('workflowSessionIsBusy') && isset($RequiredWorkflowCoreVersion)) list ($coreIsLoaded, $coreVersion) = verifyCoreComponent('Workflow Core', 'Engine'.DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'workflowCore.php', 'WorkflowCoreVersion', (string)$RequiredWorkflowCoreVersion);
+  if (function_exists('workflowSessionIsBusy')) $FolderIsBusy = workflowSessionIsBusy($folderPath);
+  else if ($workflowsAreOn) $FolderIsBusy = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowsAreOn, $coreIsLoaded, $coreVersion, $folderPath);
+  return $FolderIsBusy; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to sweep every account, code, sign in & count of failures that is over, where accounts are on & a sweep is due.
+// / Each file an account kept longer than its user chose is removed with them, from v4.2.3.
 // / Accepts the fewest seconds since the last sweep, 0 for a sweep now. Returns how many records were removed.
 // / The listener sweeps on its storage schedule, & a web request at most once in ten minutes, so one runs whichever is there.
 // / Only the web server account sweeps. The accounts folder is that account's, & root never works by path inside a folder another account can change.

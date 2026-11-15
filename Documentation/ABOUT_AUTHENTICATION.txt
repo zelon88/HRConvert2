@@ -186,8 +186,8 @@ WARNING. A correct password forgets the account's failures.
 --The Files A Signed In User Keeps--
 
 Each account is given a folder in Users, in the data location, named by 18 random hexadecimal
-digits. It is the web server account's & 0700, & is outside the web root. No sweep removes what is
-in it, so a user's files stay until the user deletes them or the account is removed.
+digits. It is the web server account's & 0700, & is outside the web root. A user's files stay
+until the user deletes them, the account is removed, or they outlive the time the user chose.
 
 A SIGNED IN REQUEST WORKS IN THE USER'S FOLDER. Uploads land there, the list a page reads is of
 what is there, & every operation reads & writes there. An anonymous request in the same session
@@ -207,6 +207,20 @@ What a user holds is measured from their folder at every write, so it is never o
 write past it is refused & says why. An upload past it fails as one to a full disk does. The
 quota is kept by the listener, as the storage reserve is, so it is kept only where
 --Enable Resource Awareness-- is TRUE & the listener runs. --config says so where it is not.
+
+A USER CHOOSES HOW LONG THEIR FILES ARE KEPT, from v4.2.3. The account panel offers Never, 1 hour,
+1 day, 1 week & 30 days, & every account starts at Never, which keeps them until they are deleted.
+The account holds the choice. The account sweep deletes each file in the user's folder that has
+gone unchanged for longer than it, so a file made again is kept for as long again. A file an
+operation places, such as one extracted from an archive, is given the time it was placed, so the
+date an archive gave it does not count. Only plain files at the top of the folder are deleted. A
+folder a workflow is running in is left for the next sweep, so nothing is deleted from under a
+workflow. A file that cannot be deleted is counted in a warning. Until v4.2.3 no sweep removed
+anything a user kept.
+
+START OVER IS NOT OFFERED TO A SIGNED IN USER, from v4.2.3. Start Over deletes every file a page
+lists, & a signed in user's files are kept for them on purpose, so only a visitor who has not signed
+in is offered it. A file's own Delete still deletes it, & so does a workflow's Delete step.
 
 Removing an account removes its folder & every file in it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -296,7 +310,7 @@ See --Staging For Every User-- in ABOUT_WORKFLOWS.txt.
   Accounts/salt.php           The accounts salt, made once.
   Accounts/Users/<NAME>.php   One account. Its username, address, password hash & scheme, role,
                               whether it is confirmed or disabled, when it was made & last signed
-                              in, its folder & its generation.
+                              in, its folder, its generation & how long its files are kept.
   Accounts/Codes/<NAME>.php   One code. Its purpose, a hash of it, when it expires & its tries.
   Accounts/SignIns/<ID>.php   One sign in. Its account & generation, a fingerprint of the install
                               secret, when it was made & ends, hashes of its current & previous
@@ -331,6 +345,8 @@ A sweep removes what is over.
   The failures of a subject once the newest is older than --Sign In Attempt Window--.
   An account that did not confirm its address inside --Unconfirmed Account Lifetime--, with its empty
   folder.
+  A file a user kept longer than they chose to keep it, from v4.2.3, unless a workflow is running in
+  their folder. See --The Files A Signed In User Keeps--.
 
 The listener sweeps accounts each time it sweeps the data locations, & a web request sweeps them at
 most once in ten minutes, so an installation with no listener sweeps them too. Only the web server
@@ -381,17 +397,18 @@ Workflows & the settings, so on the right, & on the left where the language read
 The bar is inside the Default interface's card & inside the Original's column, so on a wide screen
 the account is never farther from the page than the card's corner or the column's edge. Signed
 out, it offers Sign in. Signed in, it is the user's name, which opens a panel saying who is signed
-in & offering Sign out. A long name is cut short, & the whole of it is the button's title. The sign
-in page has no bar, because nobody signed in is ever shown it. Until v4.2.1 the account was a sign
-in bar of its own, at the corner of the window, & taskbar.php has drawn it since. CREATING_GUIS
-describes taskbar.php.
+in, offering how long their files are kept, from v4.2.3, & offering Sign out. A long name is cut
+short, & the whole of it is the button's title. The sign in page has no bar, because nobody signed
+in is ever shown it. Until v4.2.1 the account was a sign in bar of its own, at the corner of the
+window, & taskbar.php has drawn it since. CREATING_GUIS describes taskbar.php.
 
 HRC2-SignIn.js holds the key, adds it to every request the page sends its own core & to no other,
 trades it on the timer & keeps it in the tab. Over plain HTTP it takes up a key the tab kept only as
 --Signing In & The Key A Page Holds-- says. HRC2-SignInTimer.js is the worker that keeps the time.
 Each interface has both, in its Resources/JS.
 
-Every string is in every language pack, as $GuiAuthText1 through $GuiAuthText43.
+Every string is in every language pack, as $GuiAuthText1 through $GuiAuthText53. $GuiAuthText44
+through $GuiAuthText53 are the panel's choice of how long files are kept, from v4.2.3.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -12,12 +12,13 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.3.
 // / The Scan pipeline. pipelineCore.php loads it only to dispatch a Scan operation.
 // / Error blocks 16000 through 16003, 17000 & 17001, 19000 & 19001, & 20000 & 20001 belong to this pipeline.
 // / Scan is an operation pipeline. It takes the files a user asked to have scanned & changes none of them.
 // / It scans each one with ClamAV, ScanCore or both, through runVirusScan(), & writes the report a user downloads.
-// / It returns three values, the third being whether any file was found infected & where the report is.
+// / It returns three values, the third being whether any file was found infected, which were found suspicious, which were not scanned in full
+// / & where the report is.
 // / A pipeline never prints. See contract 6.
 // / It is dispatched by runOperationPipeline('Scan'), never through convert().
 // / Until v4.1.6 this was userVirusScan() & its helpers in convertCore.php, & every error number they raised came with them.
@@ -100,21 +101,26 @@ function userVirusLogEntry($Entry, $logPath) {
 // / A function to scan user supplied files on demand with one scanner.
 // / Accepts the files to scan, the scanner's name as runVirusScan knows it, the name a user reads
 // / & the path of that scanner's log, in that order.
-// / Returns whether any file was given a verdict, whether anything went wrong & whether any
-// / file was found infected, in that order.
+// / Returns whether any file was given a verdict, whether anything went wrong, whether any
+// / file was found infected, the files found suspicious, the files found infected & the files not scanned in full, in that order.
 // / Every scan goes through runVirusScan, the dispatcher that uploads, fetched files & the OCR pipeline already use.
-// / The user is told a verdict & nothing else, which is clean, infected or not scanned, & which of their own files.
-// / What a scanner said is counted for the administrator's log & discarded.
+// / The user is told a verdict for each of their own files, which is infected, suspicious, not scanned in full, clean or not scanned.
+// / Suspicious is ScanCore's word for a match that is not a hash, from v4.2.3, & a suspicious file is not an infected one.
+// / Incomplete is ScanCore's word for a file it could not read all of, such as an encrypted archive, & such a file is not known to be clean.
+// / Under each verdict is what the scanner said about the file, where it says it for a user, as ScanCore does from v4.2.3.
+// / ScanCore names what it matched & what a file may contain, executable code or a file or URL handler, & each line names the file as the user does.
+// / Until v4.2.3 everything a scanner said was counted for the administrator's log & discarded, so a suspicious file read as clean.
 // / Each file is judged on its own.
 function userScanWithScanner($FilesToScan, $scannerName, $scannerLabel, $logPath) {
   // / Set variables.
   global $Verbose, $ConvertDir, $EnableMemoryProtection;
   $OperationSuccessful = $OperationErrors = $UserVirusFound = FALSE;
+  $SuspiciousFiles = $InfectedFiles = $IncompleteFiles = array();
   $userFilename = $userExtension = $clean = $copy = $variableIsSanitized = $fileIsVerified = FALSE;
   $scanCompleted = $threatWasFound = FALSE;
   $skip = TRUE;
-  $scanFindings = array();
-  $file = $txt = $scannerUsed = $pathname = $oldPathname = $oldExtension = $newPathname = $verifiedFilename = '';
+  $scanFindings = $scanVerdicts = $scannerLines = array();
+  $file = $txt = $scannerUsed = $pathname = $oldPathname = $oldExtension = $newPathname = $verifiedFilename = $fileVerdict = $scannerLine = '';
   $sanitizeError = $verifyError = 0;
   // / Each scanner keeps the error numbers it has always had, so a log still says which one.
   $sanitizeError = ($scannerName === 'clamav') ? 17000 : 19000;
@@ -138,30 +144,45 @@ function userScanWithScanner($FilesToScan, $scannerName, $scannerLabel, $logPath
     $txt = 'Scanning '.$file.'.';
     if ($Verbose) logEntry($txt);
     userVirusLogEntry($txt, $logPath);
-    list ($scanCompleted, $threatWasFound, $scanFindings, $scannerUsed) = runVirusScan(array($ConvertDir.$file), $scannerName);
+    list ($scanCompleted, $threatWasFound, $scanFindings, $scannerUsed, $scanVerdicts) = runVirusScan(array($ConvertDir.$file), $scannerName);
     if ($Verbose) logEntry($scannerLabel.' reported '.count($scanFindings).' finding(s) for '.$file.'.');
+    // / A detection is a detection whatever a verdict says, so the verdict is read only where nothing was found.
+    redeclare($fileVerdict, $threatWasFound ? 'infected' : (string)($scanVerdicts[$ConvertDir.$file]['Verdict'] ?? 'clean'));
+    redeclare($scannerLines, (isset($scanVerdicts[$ConvertDir.$file]['Lines']) && is_array($scanVerdicts[$ConvertDir.$file]['Lines'])) ? $scanVerdicts[$ConvertDir.$file]['Lines'] : array());
     // / A scan that did not finish is not a clean result & is never reported as one.
     if (!$scanCompleted) {
       $OperationErrors = TRUE;
       warningEntry($scannerLabel.' could not scan '.$file.' for a user.');
       userVirusLogEntry($file.' could not be scanned. No verdict was reached.', $logPath); }
-    else if ($threatWasFound) {
+    else if ($fileVerdict === 'infected') {
       $OperationSuccessful = $UserVirusFound = TRUE;
+      $InfectedFiles[] = $file;
       $txt = 'Potentially infected file detected at '.$file.'!';
       warningEntry($txt);
       userVirusLogEntry($txt, $logPath); }
+    else if ($fileVerdict === 'suspicious') {
+      $OperationSuccessful = TRUE;
+      $SuspiciousFiles[] = $file;
+      warningEntry('Suspicious file detected at '.$file.'.');
+      userVirusLogEntry('Suspicious file detected at '.$file.'. A suspicious file is not confirmed infected.', $logPath); }
+    else if ($fileVerdict === 'incomplete') {
+      $OperationSuccessful = TRUE;
+      $IncompleteFiles[] = $file;
+      warningEntry($scannerLabel.' could not inspect all of '.$file.'.');
+      userVirusLogEntry($file.' was not scanned in full. A file not scanned in full is not known to be clean.', $logPath); }
     else {
       $OperationSuccessful = TRUE;
       $txt = 'No infection detected in '.$file.'.';
       if ($Verbose) logEntry($txt);
-      userVirusLogEntry($txt, $logPath); } }
+      userVirusLogEntry($txt, $logPath); }
+    if ($scanCompleted) foreach ($scannerLines as $scannerLine) userVirusLogEntry($scannerLine, $logPath); }
   // / A scan that gave no file a verdict does not get to end with the word Complete.
   $txt = $OperationSuccessful ? $scannerLabel.' Virus Scan Complete.' : $scannerLabel.' Virus Scan DID NOT RUN.';
   if ($Verbose) logEntry($txt);
   userVirusLogEntry($txt, $logPath);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $userFilename, $userExtension, $clean, $copy, $variableIsSanitized, $fileIsVerified, $scanCompleted, $threatWasFound, $skip, $scanFindings, $file, $txt, $scannerUsed, $pathname, $oldPathname, $oldExtension, $newPathname, $verifiedFilename, $sanitizeError, $verifyError, $scannerName, $scannerLabel, $logPath);
-  return array($OperationSuccessful, $OperationErrors, $UserVirusFound); }
+  purgeSensitiveMemory($EnableMemoryProtection, $userFilename, $userExtension, $clean, $copy, $variableIsSanitized, $fileIsVerified, $scanCompleted, $threatWasFound, $skip, $scanFindings, $scanVerdicts, $scannerLines, $file, $txt, $scannerUsed, $pathname, $oldPathname, $oldExtension, $newPathname, $verifiedFilename, $fileVerdict, $scannerLine, $sanitizeError, $verifyError, $scannerName, $scannerLabel, $logPath);
+  return array($OperationSuccessful, $OperationErrors, $UserVirusFound, $SuspiciousFiles, $InfectedFiles, $IncompleteFiles); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -262,6 +283,8 @@ function consolidateLogs($type, $clamLogPath, $scanCoreLogPath, $reportPath) {
 // / Accepts the files, the report's name, an extension, which is not read, & the scan type, which is all, clamav or scancore, in that order.
 // / Returns whether a verdict was reached, whether anything went wrong & what the scan found, in that order.
 // / What it found holds Threat, which is TRUE when any file was found infected, Report, the report's path, & ReportName, its name.
+// / It holds Suspicious too, from v4.2.3, the files a scanner found suspicious & no scanner found infected, & Incomplete, the files a scanner
+// / could not read in full that no scanner found infected or suspicious.
 // / A detection from either scanner is a detection.
 // / Each scanner reports into its own variable & the user is given the OR of them, because the two carry different definitions, which is the reason for offering both.
 // / Each scanner is run once, over the whole list, because a virus scan draws on a resource budget & runs under a ceiling.
@@ -270,7 +293,8 @@ function scanSelection($FilesToScan, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
   global $ConvertDir, $ConvertTempDir, $EnableMemoryProtection;
   $ScanComplete = $ScanErrors = FALSE;
-  $ScanFindings = array('Threat' => FALSE, 'Report' => '', 'ReportName' => '');
+  $ScanFindings = array('Threat' => FALSE, 'Report' => '', 'ReportName' => '', 'Suspicious' => array(), 'Incomplete' => array());
+  $clamSuspicious = $scanCoreSuspicious = $clamInfected = $scanCoreInfected = $clamIncomplete = $scanCoreIncomplete = $suspiciousFiles = array();
   $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = $logsExist = $reportExists = $reportErrors = $nameIsSanitized = FALSE;
   $clamVirusFound = $scanCoreVirusFound = $virusWasFound = $clamIsInstalled = $scanCoreIsInstalled = FALSE;
   $type = $reportName = $clamLogPath = $scanCoreLogPath = $reportPath = '';
@@ -297,10 +321,10 @@ function scanSelection($FilesToScan, $UserFilename, $UserExtension, $Method) {
   if (!is_array($FilesToScan)) $FilesToScan = array($FilesToScan);
   $logsExist = verifyUserVirusLogs($type, $clamLogPath, $scanCoreLogPath);
   if ($type === 'clamav' or $type === 'all') {
-    list ($scan1Complete, $scan1Errors, $clamVirusFound) = userScanWithScanner($FilesToScan, 'clamav', 'ClamAV', $clamLogPath);
+    list ($scan1Complete, $scan1Errors, $clamVirusFound, $clamSuspicious, $clamInfected, $clamIncomplete) = userScanWithScanner($FilesToScan, 'clamav', 'ClamAV', $clamLogPath);
     if ($clamVirusFound) $virusWasFound = TRUE; }
   if ($type === 'scancore' or $type === 'all') {
-    list ($scan2Complete, $scan2Errors, $scanCoreVirusFound) = userScanWithScanner($FilesToScan, 'scancore', 'ScanCore', $scanCoreLogPath);
+    list ($scan2Complete, $scan2Errors, $scanCoreVirusFound, $scanCoreSuspicious, $scanCoreInfected, $scanCoreIncomplete) = userScanWithScanner($FilesToScan, 'scancore', 'ScanCore', $scanCoreLogPath);
     if ($scanCoreVirusFound) $virusWasFound = TRUE; }
   // / Check the results of the virus scan for failures or errors.
   list ($ScanComplete, $ScanErrors) = checkUserVirusScanResults($type, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors);
@@ -309,9 +333,12 @@ function scanSelection($FilesToScan, $UserFilename, $UserExtension, $Method) {
   // / Verify that all operations are complete.
   if ($ScanErrors or $reportErrors) $ScanErrors = TRUE;
   if (!$reportExists) $ScanComplete = FALSE;
-  $ScanFindings = array('Threat' => $virusWasFound, 'Report' => $reportExists ? $reportPath : '', 'ReportName' => $reportExists ? $reportName : '');
+  // / A file is named under the strongest verdict any scanner gave it, so one found infected is neither suspicious nor incomplete, & one found suspicious is not incomplete.
+  $suspiciousFiles = array_values(array_diff(array_unique(array_merge((array)$clamSuspicious, (array)$scanCoreSuspicious)), (array)$clamInfected, (array)$scanCoreInfected));
+  $ScanFindings = array('Threat' => $virusWasFound, 'Report' => $reportExists ? $reportPath : '', 'ReportName' => $reportExists ? $reportName : '', 'Suspicious' => $suspiciousFiles,
+    'Incomplete' => array_values(array_diff(array_unique(array_merge((array)$clamIncomplete, (array)$scanCoreIncomplete)), (array)$clamInfected, (array)$scanCoreInfected, $suspiciousFiles)));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors, $logsExist, $reportExists, $reportErrors, $nameIsSanitized, $clamVirusFound, $scanCoreVirusFound, $virusWasFound, $clamIsInstalled, $scanCoreIsInstalled, $type, $reportName, $clamLogPath, $scanCoreLogPath, $reportPath, $defaultReportName, $FilesToScan, $UserFilename, $UserExtension, $Method);
+  purgeSensitiveMemory($EnableMemoryProtection, $clamSuspicious, $scanCoreSuspicious, $clamInfected, $scanCoreInfected, $clamIncomplete, $scanCoreIncomplete, $suspiciousFiles, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors, $logsExist, $reportExists, $reportErrors, $nameIsSanitized, $clamVirusFound, $scanCoreVirusFound, $virusWasFound, $clamIsInstalled, $scanCoreIsInstalled, $type, $reportName, $clamLogPath, $scanCoreLogPath, $reportPath, $defaultReportName, $FilesToScan, $UserFilename, $UserExtension, $Method);
   return array($ScanComplete, $ScanErrors, $ScanFindings); }
 // / -----------------------------------------------------------------------------------
 ?>

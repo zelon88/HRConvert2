@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.2.2.
+// / v4.2.3.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.2.2';
+$SetupCoreVersion = 'v4.2.3';
 // / -----------------------------------------------------------------------------------
 
 
@@ -3401,9 +3401,14 @@ function updateApplication($requestedVersion) {
   $resolvedParent = $trustNotice = $resolvedBackupParent = $backupNotice = '';
   $backupStatus = array();
   // / An update must be explicitly enabled. A server that does not want this cannot get it.
+  // / It is off by default from v4.2.3, so the refusal names both ways to turn it on, with this installation's own paths.
   if (!$EnableAutoUpdates) {
     errorEntry('Automatic updates are disabled in config.php!', 29009, FALSE);
-    print($Lol.'Automatic updates are disabled. Set $EnableAutoUpdates to TRUE in config.php.'.$Lol.$Lol); }
+    print($Lol.'Automatic updates are off on this server. Nothing was downloaded or changed.'.$Lol
+      .'Turn them on with  sudo php '.$InstLoc.$DirSep.engineApplicationEntryPoint().' --config'.$Lol
+      .'& enter  set EnableAutoUpdates  in General Information, or set  $EnableAutoUpdates = TRUE;'.$Lol
+      .'in '.$InstLoc.$DirSep.'Resources'.$DirSep.'config.php. Then run -u again.'.$Lol
+      .'See error 29009 in Documentation/ERROR_DESCRIPTIONS.txt.'.$Lol.$Lol); }
   else {
     // / The command line argument overrides the configured default when one is supplied.
     if ($requestedVersion === '') $requestedVersion = $AutoUpdateTargetVersion;

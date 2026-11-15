@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -629,6 +629,12 @@ $Gui2Text235 = 'הוא יחליף את {name} לכל המשתמשים.';
 $Gui2Text236 = 'לא ניתן היה להכין את תהליך העבודה.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'תיאור ארוך מ-500 תווים, או שיש בו תו שאי אפשר להציג.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'הועברו ללא שינוי: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'חשודים, אך הדבקה לא אושרה: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'לא נסרקו במלואם: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -736,4 +742,24 @@ $GuiAuthText41 = 'יצאתם מהמערכת כי הכניסה שלכם שימש�
 $GuiAuthText42 = 'השרת לא ענה. נסו שוב.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'שחזור חשבונות אינו זמין בשרת זה.';
+// / 'Delete my files'
+$GuiAuthText44 = 'מחיקת הקבצים שלי';
+// / 'Never'
+$GuiAuthText45 = 'אף פעם';
+// / 'After 1 hour'
+$GuiAuthText46 = 'אחרי שעה';
+// / 'After 1 day'
+$GuiAuthText47 = 'אחרי יום';
+// / 'After 1 week'
+$GuiAuthText48 = 'אחרי שבוע';
+// / 'After 30 days'
+$GuiAuthText49 = 'אחרי 30 יום';
+// / 'Save'
+$GuiAuthText50 = 'שמירה';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'קובץ נמחק ברגע שלא השתנה במשך זמן זה.';
+// / 'Saved.'
+$GuiAuthText52 = 'נשמר.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'לא ניתן היה לשמור.';
 // / -----------------------------------------------------------------------------------

@@ -254,10 +254,20 @@ Workflows is on the file list wherever --Enable Workflows-- is TRUE, & on the up
 opens the file list with #hrc2Workflows on its address, & the script library opens the panel once the page has been read.
 The settings are one panel, holding the language, the colour & the interface a user may choose, & Start Over, which is
 only drawn where there is something to clear. Start Over asks before it deletes, & nothing deletes on the first press.
+From v4.2.3 Start Over is drawn only for a visitor who has not signed in, because a signed in user's files are kept for
+them & Start Over deletes every one.
 The gear is drawn only where the panel has something in it.
 The account is Sign in for a visitor, & the user's name for one who is signed in, which opens a panel holding Sign out.
 It is only drawn where accounts are on, & keeps the id hrc2SignInBar, because HRC2-SignIn.js binds the buttons in it &
 writes in it why a sign in ended.
+From v4.2.3 the account's panel also holds how long the user's files are kept, beneath Sign out. HRC2-SignIn.js binds it
+by these ids, & sends the choice as the lifetime action ABOUT_REST_API.txt describes.
+  hrc2FileLifetimeOptions   The section holding it.
+  hrc2FileLifetime          A select, with an option for each lifetime $EnginePageState['FileLifetimes'] names, its value
+                            the seconds, & the one $EnginePageState['FileLifetime'] names selected.
+  hrc2FileLifetimeSave      The button that saves it.
+  hrc2FileLifetimeStatus    Where the library says it was saved or was not. Give it role status.
+footer.php hands HRC2SignIn the words it says there, as lifetime's saved, failed & no-answer.
 Its buttons are bound by HRC2.bindTaskbar, in HRC2-Functions.js. A button naming a panel in data-hrc2-panel opens it &
 closes the other, so one is open at a time, & says whether it is open in aria-expanded. Escape closes it, & gives the
 focus back to its button where the focus was inside it.
@@ -265,7 +275,8 @@ The Default GUI draws the bar inside the card, & the Original inside a column as
 Maximum Width-- bounds, so the account is never farther from the page than the card's corner or the column's edge.
 Until v4.2.1 the sign in bar was at the corner of the window, which a wide screen put a long way from the page.
 Both draw it by the hrc2-taskbar- & hrc2-menu- classes in HRConvert2.css, with start & end rather than left & right,
-so a page that reads right to left is drawn the other way round. Every string it shows is one the pages already had.
+so a page that reads right to left is drawn the other way round. Every string it shows is one the pages already had,
+but how long files are kept, which is $GuiAuthText44 through $GuiAuthText53, from v4.2.3.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,6 +296,8 @@ $EnginePageState tells it what it may show.
   MinimumPasswordLength  The fewest characters a password may have.
   KeyLifetime            The seconds a key lives.
   ExchangeInterval       The seconds between trades.
+  FileLifetimes          The seconds a signed in user may choose to keep their files, 0 first, from v4.2.3.
+  FileLifetime           The one the signed in user's account holds, 0 for until they are deleted, from v4.2.3.
 The included GUIs draw every page as a section of one card & send every form with a script, so a key comes back
 to the page that asked for it & is never written into a page. The strings are $GuiAuthText1 through $GuiAuthText43.
 Each field's name is above the field, so a long name in any language never pushes its field onto a line of its own.
@@ -543,7 +556,7 @@ The settings let a user change language, colour & interface from within the page
 They are a panel the gear in the taskbar opens, on both pages, & taskbar.php draws them.
 Until v4.2.1 they were a selector bar of their own, drawn in a design no other panel shared.
 Each choice is a button, & the one in use is outlined, & a word is bold & underlined as well.
-Start Over is the last thing in the panel, under a line, where there is something to clear.
+Start Over is the last thing in the panel, under a line, where there is something to clear & nobody is signed in.
 Token1 & Token2 are carried as hidden POST inputs & are never placed in the query string,
 because $SesHash derives from Token1. A selector that dropped them would discard the
 user's uploaded files, & one that put them in a URL would leak them into history & logs.
@@ -687,6 +700,12 @@ these ids unless elements names others.
 settings carries preview, previewHeadline, leftOut, nothingTaken & sessionFiles, the words a preview
 is drawn into hrc2WfStatus with, & incomplete among the failed reasons. step, which carries {step},
 {steps} & {operation}, names each step of a preview as it names the step that runs.
+From v4.2.3 text carries keeps, the words before the files a step of a preview passes on unchanged,
+which it names on a line of their own, & suspicious, the words before the files a finished workflow
+found suspicious, which it names beneath the files it made, in a line of class hrc2-wf-suspicious.
+text carries incomplete too, the words before the files a finished workflow could not scan in full,
+which it names beneath those, in a line of class hrc2-wf-incomplete. It is not failed's incomplete,
+the words for a workflow that stopped before a step that deletes files.
 Put the words for workflows being unavailable into hrc2WfStatus as the page draws it, so a page
 whose library did not load still says something true. The library replaces them once it runs, &
 says no workflow is running whenever it has nothing else to say. The included GUIs put hrc2WfStatus

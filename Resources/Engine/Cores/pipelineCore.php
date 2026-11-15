@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.3.
 // / The Pipeline Core, one of the Engine's cores.
 // / It verifies, describes & dispatches the pipelines under Resources/Pipelines, each at the exact version the application pins.
 // / Which pipelines are accepted is the application's decision, read from its contract, so this file names none of them.
@@ -37,7 +37,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v4.2.1';
+$PipelineCoreVersion = 'v4.2.3';
 // / -----------------------------------------------------------------------------------
 
 
@@ -863,10 +863,32 @@ function pipelineOutputIsUsable($outputPath) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to keep only the verdicts a scanner pipeline may hand on, from v4.2.3.
+// / Accepts what the scanner returned as its verdicts. Returns them keyed by path, each holding Verdict & Lines.
+// / A verdict is infected, suspicious, incomplete or clean, & its lines are text, no more than 100 of them, each no longer than 2000 bytes.
+// / Anything else is left out, so a scanner's mistake never reaches a user.
+function cleanScanVerdicts($scannerVerdicts) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $CleanVerdicts = array();
+  $scannedPath = $verdictLine = NULL;
+  $verdictRecord = $cleanLines = array();
+  if (is_array($scannerVerdicts)) foreach ($scannerVerdicts as $scannedPath => $verdictRecord) {
+    if (!is_string($scannedPath) or $scannedPath === '' or !is_array($verdictRecord) or !in_array($verdictRecord['Verdict'] ?? NULL, array('infected', 'suspicious', 'incomplete', 'clean'), TRUE)) continue;
+    redeclare($cleanLines, array());
+    if (isset($verdictRecord['Lines']) && is_array($verdictRecord['Lines'])) foreach ($verdictRecord['Lines'] as $verdictLine) if (is_string($verdictLine) && $verdictLine !== '' && strlen($verdictLine) <= 2000 && count($cleanLines) < 100) $cleanLines[] = $verdictLine;
+    $CleanVerdicts[$scannedPath] = array('Verdict' => $verdictRecord['Verdict'], 'Lines' => $cleanLines); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $scannedPath, $verdictLine, $verdictRecord, $cleanLines, $scannerVerdicts);
+  return $CleanVerdicts; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to run a virus scan through a scanner pipeline.
 // / Accepts the paths to scan & the scanner name, or an empty name for the configured
-// / default. Returns whether the scan completed, whether anything was found, the findings
-// / & the name of the scanner that ran, in that order.
+// / default. Returns whether the scan completed, whether anything was found, the findings,
+// / the name of the scanner that ran & its verdict on each path, in that order.
+// / A scanner may return a verdict on each path as a fourth value, from v4.2.3, as ScanCore does, & one that does not hands on none.
 // /
 // / A scanner is chosen by name & not by extension, because every scanner claims every file.
 // / An administrator picks one, & a user may pick another if the interface offers it.
@@ -879,7 +901,7 @@ function runVirusScan($pathsToScan, $requestedScanner) {
   global $Verbose, $EnableMemoryProtection;
   $ScanCompleted = FALSE;
   $ThreatWasFound = FALSE;
-  $ScanFindings = array();
+  $ScanFindings = $ScanVerdicts = array();
   $ScannerUsed = '';
   $chosenFolder = $chosenScanner = $entryPointName = '';
   $pipelineIsReady = FALSE;
@@ -898,12 +920,13 @@ function runVirusScan($pathsToScan, $requestedScanner) {
       if (!$pipelineIsReady) $ScanFindings[] = 'The '.$chosenScanner.' scanner could not be loaded.';
       else {
         if ($Verbose) logEntry('Dispatching a virus scan to the '.$chosenFolder.' scanner.');
-        list ($ScanCompleted, $ThreatWasFound, $ScanFindings) = $entryPointName($pathsToScan);
+        list ($ScanCompleted, $ThreatWasFound, $ScanFindings, $ScanVerdicts) = array_pad((array)$entryPointName($pathsToScan), 4, array());
         $ScannerUsed = $chosenScanner;
-        if (!is_array($ScanFindings)) $ScanFindings = array(); } } }
+        if (!is_array($ScanFindings)) $ScanFindings = array();
+        $ScanVerdicts = cleanScanVerdicts($ScanVerdicts); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $chosenFolder, $chosenScanner, $entryPointName, $pipelineIsReady, $pathsToScan, $requestedScanner);
-  return array($ScanCompleted, $ThreatWasFound, $ScanFindings, $ScannerUsed); }
+  return array($ScanCompleted, $ThreatWasFound, $ScanFindings, $ScannerUsed, $ScanVerdicts); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

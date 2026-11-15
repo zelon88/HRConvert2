@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -629,6 +629,12 @@ $Gui2Text235 = 'Hij neemt de plaats in van {name} voor elke gebruiker.';
 $Gui2Text236 = 'De workflow kon niet worden klaargezet.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'Een beschrijving is langer dan 500 tekens of bevat een teken dat niet kan worden weergegeven.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'Ongewijzigd doorgegeven: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'Verdacht, maar niet bevestigd als besmet: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'Niet volledig gescand: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -736,4 +742,24 @@ $GuiAuthText41 = 'Je bent uitgelogd, omdat je aanmelding ergens anders is gebrui
 $GuiAuthText42 = 'De server gaf geen antwoord. Probeer het opnieuw.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'Accounts herstellen is op deze server niet beschikbaar.';
+// / 'Delete my files'
+$GuiAuthText44 = 'Mijn bestanden verwijderen';
+// / 'Never'
+$GuiAuthText45 = 'Nooit';
+// / 'After 1 hour'
+$GuiAuthText46 = 'Na 1 uur';
+// / 'After 1 day'
+$GuiAuthText47 = 'Na 1 dag';
+// / 'After 1 week'
+$GuiAuthText48 = 'Na 1 week';
+// / 'After 30 days'
+$GuiAuthText49 = 'Na 30 dagen';
+// / 'Save'
+$GuiAuthText50 = 'Opslaan';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'Een bestand wordt verwijderd zodra het zo lang ongewijzigd is gebleven.';
+// / 'Saved.'
+$GuiAuthText52 = 'Opgeslagen.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'Dit kon niet worden opgeslagen.';
 // / -----------------------------------------------------------------------------------

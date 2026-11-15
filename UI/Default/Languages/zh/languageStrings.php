@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -625,6 +625,12 @@ $Gui2Text235 = '它将为所有用户替换 {name}。';
 $Gui2Text236 = '无法准备此工作流。';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = '某条说明超过 500 个字符，或包含无法显示的字符。';
+// / 'Passed on unchanged: '
+$Gui2Text238 = '原样传递：';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = '可疑，但未确认感染：';
+// / 'Not scanned in full: '
+$Gui2Text240 = '未能完整扫描：';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -732,4 +738,24 @@ $GuiAuthText41 = '由于您的登录在其他地方被使用，您已被退出�
 $GuiAuthText42 = '服务器没有响应。请重试。';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = '此服务器不支持找回账户。';
+// / 'Delete my files'
+$GuiAuthText44 = '删除我的文件';
+// / 'Never'
+$GuiAuthText45 = '从不';
+// / 'After 1 hour'
+$GuiAuthText46 = '1 小时后';
+// / 'After 1 day'
+$GuiAuthText47 = '1 天后';
+// / 'After 1 week'
+$GuiAuthText48 = '1 周后';
+// / 'After 30 days'
+$GuiAuthText49 = '30 天后';
+// / 'Save'
+$GuiAuthText50 = '保存';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = '文件在这么长时间内未被更改后即被删除。';
+// / 'Saved.'
+$GuiAuthText52 = '已保存。';
+// / 'It could not be saved.'
+$GuiAuthText53 = '无法保存。';
 // / -----------------------------------------------------------------------------------

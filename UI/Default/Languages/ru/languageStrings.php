@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -627,6 +627,12 @@ $Gui2Text235 = 'Он заменит {name} для всех пользовате�
 $Gui2Text236 = 'Не удалось подготовить рабочий процесс.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'Описание длиннее 500 символов или содержит символ, который нельзя показать.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'Переданы без изменений: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'Подозрительные, но заражение не подтверждено: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'Проверены не полностью: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -734,4 +740,24 @@ $GuiAuthText41 = 'Вы вышли из системы, потому что ва�
 $GuiAuthText42 = 'Сервер не ответил. Попробуйте ещё раз.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'Восстановление учётных записей на этом сервере недоступно.';
+// / 'Delete my files'
+$GuiAuthText44 = 'Удалять мои файлы';
+// / 'Never'
+$GuiAuthText45 = 'Никогда';
+// / 'After 1 hour'
+$GuiAuthText46 = 'Через 1 час';
+// / 'After 1 day'
+$GuiAuthText47 = 'Через 1 день';
+// / 'After 1 week'
+$GuiAuthText48 = 'Через 1 неделю';
+// / 'After 30 days'
+$GuiAuthText49 = 'Через 30 дней';
+// / 'Save'
+$GuiAuthText50 = 'Сохранить';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'Файл удаляется, если он не менялся столько времени.';
+// / 'Saved.'
+$GuiAuthText52 = 'Сохранено.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'Не удалось сохранить.';
 // / -----------------------------------------------------------------------------------

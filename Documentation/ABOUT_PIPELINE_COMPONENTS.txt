@@ -95,8 +95,18 @@ mat2, beside the file, & returns the name of every copy. The PDF pipeline serves
 & the method it is handed says which. merge puts a selection of PDFs into one & split makes a PDF
 of each page. Each places what it makes through the core's placeSessionFile(), as the Extractor
 does, so nothing in the session is written over & every name is held to what an upload's is.
+From v4.2.3 a placed file is given the time it was placed, as an upload is, & not the time an archive gave it.
 The Files pipeline, of kind file, renames a file as well as listing, placing & removing one, &
 Delete & Rename hand their work to it rather than to an operation pipeline of their own.
+A SCANNER PIPELINE is handed the paths to scan & returns whether the scan completed, whether a
+threat was found & its findings, lines an operator should read. From v4.2.3 it may return a fourth
+value, its verdict on each path, keyed by the path, as Verdict & Lines. Verdict is infected,
+suspicious, incomplete or clean, & Lines is what the scanner said of that path in words a user may
+read, with no path of the server's in them. Incomplete is a file the scanner could not read in full,
+which is not known to be clean. runVirusScan() returns them as its fifth value, & keeps only a verdict
+it knows & no more than 100 lines of 2000 bytes each, so a scanner returning three values still works.
+ScanCore returns them, & Scan writes their lines into the user's report. ClamAV returns none.
+From v4.2.3 ScanCore v1.9 is bundled, & its Incomplete lines & its errors 600 & 610 make a file incomplete.
 Both kinds are verified, pinned, ordered & loaded identically. ONLY DISPATCH DIFFERS.
 
 A SHARED MODULE is a file two or more pipelines both need & neither can own. It is not a

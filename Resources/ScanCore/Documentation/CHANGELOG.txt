@@ -1,5 +1,53 @@
 ScanCore CHANGELOG
 
+v1.9
+--------------------------------------------------------------------------------
+Container & image inspection, plus fixes from a code review
+
+- Added png structure inspection. Reports Bomb.PNG.PixelFlood,
+  Bomb.PNG.ChunkExpansion, Bomb.PNG.DataOverrun, Malformed.PNG,
+  Polyglot.PNG.TrailingData & Masquerade.PNG.
+- Added embedded code detection for png, jpeg & gif. Signatures are the new
+  embed records in ScanCore_Classifiers.def. Reports Embedded.<Name>.
+- Added nested container inspection for zip, gzip & tar. Reports
+  Bomb.Archive.NestingDepth, Bomb.Archive.OverlappingEntries,
+  Bomb.Archive.TotalExpansion, Bomb.Archive.CompressionRatio,
+  Malformed.Archive.HeaderMismatch & Polyglot.Archive.Hidden.
+- Container members are now matched against the virus definitions. They were
+  only classified before.
+- A zip appended to a file of another format is now found & opened.
+- Replaced ZipArchive & the unzip binary with a bounded reader that needs only
+  zlib. Member names no longer reach a shell.
+- Added the Incomplete: report line & its summary line.
+- Added $InspectImages, $MaxImagePixels, $MaxImageChunkSize & $MaxArchiveDepth
+  with switches -ii, -nii, -mip, -mics & -mad.
+- Raised the default $MaxArchiveEntries from 512 to 4096.
+- Container & image inspection no longer depend on classification being on.
+- A recognised image is no longer classified as source code.
+- Fixed hashes past $HashIndexThreshold being missed on the run that builds
+  the index.
+- Fixed hashes being missed when string indicators pushed the record count
+  past the threshold.
+- Fixed the host pattern taking quadratic time & failing silently on long runs.
+  A failed search is now a warning.
+- Fixed a relative path such as -ua.jpg being read as a switch.
+- Fixed a quoted definition value ending at an escaped quote.
+- Fixed one unopenable file aborting the whole scan with error 10.
+- File & member names are escaped before they are printed or logged.
+- The index file is unserialized with classes disallowed.
+- The git clone arguments are separated from its options.
+- Retired errors 620 & 630. Both conditions are now findings.
+- Synced the $ApplicationUpdateSubscriptions fallback with the config file.
+  Added ERROR_DESCRIPTIONS.txt & DEVELOPMENT_NOTES.txt to both.
+- Added Documentation/DEVELOPMENT_NOTES.txt.
+- Running as root, a link or a file with a second hard link is no longer
+  handed to the installation owner or given a new mode. lchown & lchgrp
+  replace chown & chgrp.
+- loadConfig() is handed the arguments instead of reading the global $argv.
+- Every cleanup before a return is one call naming every local it holds.
+  redeclare() & printableValue() name their inputs & redeclare() returns.
+- Fixed "Reqiured" in the help text. Removed trailing spaces.
+
 v1.8
 --------------------------------------------------------------------------------
 Updates now stage, verify, swap, test & commit

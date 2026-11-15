@@ -9,7 +9,9 @@ Features include:
 - Updates virus definitions automatically.
 - Reports a confirmed hash match differently from a heuristic match, so a filename pattern never carries the weight of a known sample.
 - Classifies data files for the file and url handlers they carry, and for executable source code.
-- Opens zip containers such as word processing documents and ebooks, within a decompression budget that refuses a bomb before it expands.
+- Opens zip, gzip and tar containers, and the containers nested inside them, and matches every member against the virus definitions.
+- Detects decompression bombs, including overlapping zip entries, excessive nesting and a member that expands past its budget.
+- Checks the structure of png images, and searches every image for embedded code.
 - Small memory footprint with the ability to set a custom memory limit.
 - Keeps a packed binary index of large definition sets, so a million hashes load in under a second.
 - Written in PHP, so it works from Apache or the command line.
@@ -44,7 +46,7 @@ This application requires Windows or Linux with PHP 8.0 (or later).
 
 Nothing else is required to scan. The following are optional and each one has a fallback.
 
-- Either the PHP zip extension or the unzip binary, to look inside zip containers. Without either, a container is scanned as bytes and its compressed members are not read.
+- The PHP zlib extension, to read compressed container members and png chunks. Without it, a compressed member is reported as incomplete.
 - Git or cURL, to perform application and definition updates. The built in downloader is tried first.
 - The PHP posix extension, to hand new files to the right owner when running as root. Without it, files created as root stay owned by root.
 
@@ -66,7 +68,7 @@ Start by opening a command-prompt.
 4. The first Argument must be a valid absolute path to the file or folder being scanned.
 5. Optional arguments can be specified after the scan path. Separate them with spaces.
 
-Reqiured Arguments Include:
+Required Arguments Include:
 
      File or folder to scan:                 /path/to/scan
 
@@ -132,11 +134,26 @@ Optional Arguments Include:
      Choose which classifiers run:           -classifiers scad,pdf
                                              -cl scad,pdf
 
-     Inspect inside zip containers:          -inspectarchives
+     Inspect inside containers:              -inspectarchives
                                              -ia
 
-     Do not open zip containers:             -noinspectarchives
+     Do not open containers:                 -noinspectarchives
                                              -nia
+
+     Container nesting depth limit:          -maxarchivedepth ###
+                                             -mad ###
+
+     Inspect the structure of images:        -inspectimages
+                                             -ii
+
+     Do not inspect images:                  -noinspectimages
+                                             -nii
+
+     Largest image accepted (in pixels):     -maximagepixels ###
+                                             -mip ###
+
+     Largest image text chunk (in bytes):    -maximagechunksize ###
+                                             -mics ###
 
      Container entry count budget:           -maxarchiveentries ###
                                              -mae ###
@@ -192,7 +209,7 @@ Every argument above has a matching entry in ScanCore_Config.php. The argument w
 
 ## WHAT SCANCORE REPORTS ...
 
-ScanCore writes three kinds of finding, and each one opens with its own word so a caller can tell them apart without reading further.
+ScanCore writes four kinds of finding, and each one opens with its own word so a caller can tell them apart without reading further.
 
      Infected: /path/to/file (Name, SHA256 Hash Match: 7d14bfe...)
 
@@ -206,11 +223,18 @@ A definition matched with medium or low confidence. A file name pattern or a hos
 
 The classifier recognised something the file is able to do. This is never a threat report, and a classification line never begins with the word Infected.
 
+     Incomplete: /path/to/file (an encrypted member cannot be inspected)
+
+Part of the file could not be read. This is not a verdict.
+
 A scan ends with a summary of each kind.
 
-     Scanned 12 files in 1 folders and found 2 potentially infected items.
-     Flagged 3 files as suspicious.
-     Classified 5 files that may contain file or URL handlers and 5 files that may contain executable code.
+     Scanned 12 files in 1 folder.
+     Found 5 files that may contain file or URL handlers.
+     Found 5 files that may contain executable code.
+     Found 1 file that could not be fully inspected.
+     Found 3 suspicious files.
+     Found 2 infected files.
 
 -----------------------------------------------------------------------------------
 
@@ -224,7 +248,27 @@ Executable code is detected first. A file recognised as source code is reported 
 
 Classifiers are declared in ScanCore_Classifiers.def, which is plain text you can read and extend. A type record maps a name onto the extensions it covers, a lang record declares an executable language, a magic record identifies a type by its opening bytes whatever its extension claims, and a handler line names what to look for. Choose which ones run with the EnabledClassifiers setting or the -classifiers argument.
 
-A zip container is opened and its members are classified individually, which is how a handler inside a word processing document is found at all. Four independent limits govern how far a container may be allowed to expand, and any one of them refuses an entry on its own. Those limits exist because a small container can declare an enormous member.
+A container is opened and its members are classified individually, which is how a handler inside a word processing document is found at all.
+
+-----------------------------------------------------------------------------------
+
+## CONTAINERS AND IMAGES ...
+
+A zip, gzip or tar container is opened and every member is matched against the virus definitions. A container inside a container is opened in turn. A zip appended to a file of another format is found and opened as well. A match names the member it was found in.
+
+     Infected: /path/to/file (Name, SHA256 Hash Match: 7d14bfe... in outer.zip > inner.zip > payload.bin)
+
+Five limits govern how far a container may expand, which are the entry count, the entry size, the total size, the compression ratio and the nesting depth. A container that breaks the ratio, the declared total or the depth is reported as infected, and so is a zip whose entries share the same stored bytes. These are reported under names beginning with Bomb.
+
+A png is checked chunk by chunk. An image larger than MaxImagePixels, a text or profile chunk that expands past MaxImageChunkSize and image data that inflates past its declared size are reported as infected. A damaged chunk, data after the end of the image, a hidden archive and a file named png that is not one are reported as suspicious.
+
+Every png, jpeg and gif is searched for embedded code. The signatures are the embed records in ScanCore_Classifiers.def.
+
+A file that could not be read in full is reported on a line of its own. This covers an encrypted member, a bzip2 stream, a damaged archive and a container that ran out of budget. It is not a verdict, and a caller that needs certainty should treat it as unscanned.
+
+     Incomplete: /path/to/file (an encrypted member cannot be inspected)
+
+7z, rar, xz and zstd containers are not opened. The frames of an animated png are not inflated.
 
 -----------------------------------------------------------------------------------
 
@@ -264,6 +308,8 @@ An administrator running an update under sudo would otherwise leave every file o
 Anything ScanCore creates while running as root is handed to the user and group that owns the installation directory. Set OwnerUser and OwnerGroup, or use -owner and -group, when the installation directory belongs to somebody other than the account that runs ScanCore day to day.
 
 A file being replaced by an update keeps the owner and the mode it already had. The mode is preserved whoever is running, and the owner is restored only when running as root. None of this does anything at all unless the process is root.
+
+A link, or a file with a second hard link, is left exactly as it is rather than handed over, because changing it by name would change whatever it leads to. The owner is changed with lchown and lchgrp, which never follow a link.
 
 -----------------------------------------------------------------------------------
 

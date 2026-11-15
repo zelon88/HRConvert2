@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -629,6 +629,12 @@ $Gui2Text235 = 'ܗܵܕܹܐ ܫܵܩܠܵܐ ܕܘܼܟ݂ܬܵܐ ܕ{name} ܠܟܠ ܡܲܦ�
 $Gui2Text236 = 'ܠܵܐ ܡܨܹܐ ܠܛܲܝܵܒܵܐ ܠܡܲܪܕܝܼܬܵܐ ܕܦܘܼܠܚܵܢܵܐ.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'ܚܲܕ ܬܘܼܪܓܵܡܵܐ ܝܼܪܝܼܟ݂ ܝܠܹܗ ܡܢ 500 ܐܵܬܘܵܬܹܐ، ܐܵܘ ܐܝܼܬ ܒܹܗ ܐܵܬܘܵܬܵܐ ܕܠܵܐ ܡܵܨܝܵܐ ܠܡܸܬܚܙܵܝܵܐ.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'ܫܕܝܼܪܹ̈ܐ ܕܠܵܐ ܫܘܼܚܠܵܦܵܐ: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'ܚܫܝܼܕܹ̈ܐ، ܐܸܠܵܐ ܠܵܐ ܫܪܝܼܪܵܐ ܝܠܵܗ̇ ܕܐܝܼܬ ܒܝܼܪܘܼܣ ܒܓܵܘܲܝܗܘܿܢ: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'ܠܵܐ ܒܚܝܼܢܹ̈ܐ ܓܡܝܼܪܵܐܝܼܬ݂: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -736,4 +742,24 @@ $GuiAuthText41 = 'ܦܸܩܠܘܼܟ݂، ܣܵܒܵܒ ܥܘܼܠܵܐ ܕܝܼܠܘܼܟ݂ ܦ
 $GuiAuthText42 = 'ܡܫܲܡܫܵܢܵܐ ܠܵܐ ܡܘܼܦܢܝܼ ܠܹܗ. ܓܪܘܼܒ ܐܚܪܹܢ.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'ܦܘܼܢܵܝܵܐ ܕܚܘܼܫܒܵܢܵܐ ܠܵܐ ܝܠܹܗ ܡܵܨܝܵܐ ܒܗܵܢܵܐ ܡܫܲܡܫܵܢܵܐ.';
+// / 'Delete my files'
+$GuiAuthText44 = 'ܛܠܘܿܩ ܦܸܬܩܹ̈ܐ ܕܝܼܝܼ';
+// / 'Never'
+$GuiAuthText45 = 'ܚܲܕ݂ ܓ݂ܵܗܵܐ ܠܵܐ';
+// / 'After 1 hour'
+$GuiAuthText46 = 'ܒܵܬ݂ܲܪ ܚܲܕ݂ ܫܵܥܬ݂ܵܐ';
+// / 'After 1 day'
+$GuiAuthText47 = 'ܒܵܬ݂ܲܪ ܚܲܕ݂ ܝܵܘܡܵܐ';
+// / 'After 1 week'
+$GuiAuthText48 = 'ܒܵܬ݂ܲܪ ܚܲܕ݂ ܫܵܒ݂ܘܿܥܵܐ';
+// / 'After 30 days'
+$GuiAuthText49 = 'ܒܵܬ݂ܲܪ 30 ܝܵܘܡܵܢܹ̈ܐ';
+// / 'Save'
+$GuiAuthText50 = 'ܢܛܘܿܪ';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'ܦܸܬܩܵܐ ܛܠܝܼܩܵܐ ܗܵܘܹܐ ܐܸܡܲܢ ܕܦܝܼܫܵܐ ܝܠܹܗ ܕܠܵܐ ܫܘܼܚܠܵܦܵܐ ܗܵܕܵܟ݂ ܙܲܒ݂ܢܵܐ.';
+// / 'Saved.'
+$GuiAuthText52 = 'ܢܛܝܼܪܵܐ ܝܠܵܗ̇.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'ܠܵܐ ܡܨܹܐ ܠܡܲܛܵܪܬܵܐ.';
 // / -----------------------------------------------------------------------------------

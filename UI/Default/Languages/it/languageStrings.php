@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility chec takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -627,6 +627,12 @@ $Gui2Text235 = 'Prende il posto di {name} per ogni utente.';
 $Gui2Text236 = 'Non è stato possibile preparare il flusso di lavoro.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'Una descrizione supera i 500 caratteri o contiene un carattere che non può essere mostrato.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'Passati senza modifiche: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'Sospetti, ma non confermati come infetti: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'Non analizzati per intero: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -734,4 +740,24 @@ $GuiAuthText41 = 'Sei uscito perché il tuo accesso è stato usato altrove.';
 $GuiAuthText42 = 'Il server non ha risposto. Riprova.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'Il recupero degli account non è disponibile su questo server.';
+// / 'Delete my files'
+$GuiAuthText44 = 'Elimina i miei file';
+// / 'Never'
+$GuiAuthText45 = 'Mai';
+// / 'After 1 hour'
+$GuiAuthText46 = 'Dopo 1 ora';
+// / 'After 1 day'
+$GuiAuthText47 = 'Dopo 1 giorno';
+// / 'After 1 week'
+$GuiAuthText48 = 'Dopo 1 settimana';
+// / 'After 30 days'
+$GuiAuthText49 = 'Dopo 30 giorni';
+// / 'Save'
+$GuiAuthText50 = 'Salva';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'Un file viene eliminato quando resta invariato per quel tempo.';
+// / 'Saved.'
+$GuiAuthText52 = 'Salvato.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'Non è stato possibile salvare.';
 // / -----------------------------------------------------------------------------------

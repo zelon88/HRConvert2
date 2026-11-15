@@ -39,7 +39,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -641,6 +641,12 @@ $Gui2Text235 = 'Her kullanıcı için {name} iş akışının yerini alır.';
 $Gui2Text236 = 'İş akışı hazırlanamadı.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'Bir açıklama 500 karakterden uzun veya gösterilemeyen bir karakter içeriyor.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'Değiştirilmeden aktarılanlar: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'Şüpheli, ancak virüslü olduğu doğrulanmadı: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'Tamamen taranamayanlar: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -749,4 +755,24 @@ $GuiAuthText41 = 'Oturumunuz başka bir yerde kullanıldığı için kapatıldı
 $GuiAuthText42 = 'Sunucu yanıt vermedi. Lütfen yeniden deneyin.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'Bu sunucuda hesap kurtarma kullanılamıyor.';
+// / 'Delete my files'
+$GuiAuthText44 = 'Dosyalarımı sil';
+// / 'Never'
+$GuiAuthText45 = 'Asla';
+// / 'After 1 hour'
+$GuiAuthText46 = '1 saat sonra';
+// / 'After 1 day'
+$GuiAuthText47 = '1 gün sonra';
+// / 'After 1 week'
+$GuiAuthText48 = '1 hafta sonra';
+// / 'After 30 days'
+$GuiAuthText49 = '30 gün sonra';
+// / 'Save'
+$GuiAuthText50 = 'Kaydet';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'Bir dosya, bu kadar süre değişmeden kaldığında silinir.';
+// / 'Saved.'
+$GuiAuthText52 = 'Kaydedildi.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'Kaydedilemedi.';
 // / -----------------------------------------------------------------------------------

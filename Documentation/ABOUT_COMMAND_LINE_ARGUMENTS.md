@@ -385,7 +385,7 @@ Replaces the live application code with a release from your configured update so
 * **Security Boundary:** Updates are **NEVER** accessible via the web interface. Modifying application code requires file write access, which shell access natively implies. Protecting an HTTP update endpoint with a secret would insecurely reduce server authorization to a single guessable string.
 
 #### System Requirements
-* `$EnableAutoUpdates` must be set to `TRUE` in `config.php` (Default is `TRUE`).
+* `$EnableAutoUpdates` must be set to `TRUE` in `config.php` (Default is `FALSE`). Turn it on with `--config`, by entering `set EnableAutoUpdates` in General Information, or in `config.php` itself. Until it is on, `-u` changes nothing, exits 1 & names both ways, with this installation's own paths.
 * The server must have outbound network access to reach the update source.
 * The update runs as root. The folder holding the installation and the `--Proprietary Directory--` must belong to root and be writable by nobody else, or the update is refused with ERROR 31023.
 * The filesystem holding the installation must have free space roughly equal to **twice the installed size** of the app.

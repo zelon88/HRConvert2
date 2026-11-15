@@ -430,6 +430,47 @@ ended in a PHP fatal error rather than a verdict. The sandbox was not handed Sca
 directory, so php inside it said Could not open input file. Any line containing found counted as
 a detection.
 
+A SUSPICIOUS FILE IS NOT AN INFECTED ONE. v4.2.3.
+ScanCore opens a line with Infected only for a hash, a definition marked high confidence or, from
+v1.9, a decompression bomb, & with Suspicious for any other match, such as a host, a URL, a run of
+bytes, a name or a malformed archive. It writes Classified for a file that may hold code or
+handlers, which is no detection at all. HRConvert2 asked only whether a threat was found, so a user
+read a clean report for a file ScanCore called suspicious. The pipeline returns its verdict on each
+path, & Scan writes ScanCore's own lines into the report beneath it. A suspicious file is named & a
+workflow goes on, because ScanCore's own rule is that a heuristic does not carry a hash's weight.
+
+A FILE SCANCORE COULD NOT READ IN FULL IS NOT CLEAN. v4.2.3.
+v4.2.3 bundles ScanCore v1.9, which opens zip, gzip & tar containers, matches each member against
+its definitions & checks images. It writes Incomplete for a file it could not read in full, such as
+one holding an encrypted member, a bzip2 stream or a damaged directory, & says a caller that needs
+certainty treats Incomplete as unscanned. HRConvert2 reads such a file as incomplete, below
+suspicious & above clean. The report says it was not scanned in full & is not known to be clean,
+the administrator is warned, & a workflow names it under Incomplete & goes on, as it does past a
+suspicious file, because a file nobody could see into is the user's to judge, not a threat.
+ScanCore refuses a path it cannot read before it scans, & exits 1, which is no verdict, so such a file
+is reported as not scanned at all. Once a scan has begun it logs error 610 for a file it could not open
+& 600 for one whose read failed partway, writes Incomplete for neither & goes on. HRConvert2 reads
+both as Incomplete, because each would otherwise have been called clean.
+The minimum ScanCore is 1.9, so a copy an older ScanCore replaced is reported rather than trusted.
+
+A SCANCORE LINE IS READ BY ITS EARLIEST WORD, BEFORE ITS PATH. v4.2.3.
+A line was a detection wherever it held Infected:, & ScanCore names a member of an archive as the
+archive holds it, so a Classified line for a member named Infected: x was read as a threat. A line is
+read by the first of Infected:, Suspicious:, Classified: & Incomplete: it holds, or ScanCore-600 or
+ScanCore-610, & only where that comes before the line's first slash, because ScanCore writes it
+before the path. The line naming each file scanned holds no word before its path, so a file named
+Infected: x would have read as a threat. No name HRConvert2 makes holds a colon, & the rule keeps it
+so whatever a path holds. A detection naming no path it was handed still counts, because a threat
+attributed to nothing is still a threat.
+
+WHAT A SCANNER SAYS REACHES A USER WITHOUT THE SERVER'S PATHS. v4.2.3.
+A ScanCore line names the path it scanned, which is the server's, & quotes what it matched, which an
+uploader chose. A line handed on names the file as the user knows it, shows a control character as ?
+& is cut at 1000 bytes, & Pipeline Core keeps only a verdict it knows & lines of text, so a scanner's
+mistake never reaches a user. A Classified line is passed on as ScanCore wrote it. Quieting one, such
+as an OOXML document's own relationships, is ScanCore's to do, because HRConvert2 cannot tell which
+handlers are expected in a format it does not read.
+
 THE IMAGE & OCR PIPELINES CARRY THEIR OWN IMAGEMAGICK POLICY.
 Until v4.0.5 -fp rewrote the host's policy.xml, for every program on the host. The OCR page split,
 whose sandbox shows no ImageMagick configuration, ran under no policy at all.
@@ -1786,6 +1827,28 @@ WHAT ROOT READS FROM STAGED REACHES ITS TERMINAL WITHOUT CONTROL CHARACTERS. v4.
 --workflow --list reads Staged, which the web server account writes. A problem quotes what a file
 holds, such as a key the format does not know, so a planted file could send root's terminal a
 sequence it obeys. Everything --workflow prints from a file is passed through printableWorkflowText().
+
+FOUND BY USE. A ZIP OF EVERY IMAGE MADE JPG LACKED THE JPG. v4.2.3.
+A conversion reads no file already in the format it makes, because there is nothing to convert, &
+a step taking an earlier step's files took only what it made, so Images to JPG, in one zip, run on a
+jpg, a png & a bmp, zipped two. What a step hands on is what it made & what it would have made had
+there been anything to do. An operation names a Keeps function, a file it keeps is passed on in its
+place, & is neither counted as made nor charged a budget, so the status never claims it. A library's
+Accepts, which Select all & the preview read, names what a first step keeps as well as what it reads.
+
+FOUND BY TESTING. A STEP THAT RESIZES CANNOT PASS ON A FILE IT CANNOT RESIZE. v4.2.3.
+A file already in the format asked for satisfies a step that asks for nothing more, so it is passed
+on. One a step is to resize, rotate or re-encode does not, & v4.2.3 first read it to convert it, as
+if a button would. No button does. Every pipeline excludes converting a format to itself, because a
+lossy format encoded twice comes back visibly worse, so the step failed with 34009. Passing it on
+unchanged would hand a later step a file without the size or the bitrate the workflow promised, so
+such a file is left out & counted as left out, as it was before v4.2.3.
+
+FOUND BY TESTING. AN ACCOUNT SWEEP LOOKED FOR A WORKFLOW IN THE WRONG FOLDER. v4.2.3.
+A web request sweeps accounts before verifyGlobals sets $DirSep, as v4.2.0 found, & the Workflow
+Core named a session's workflow folder with $DirSep, so the sweep asked about a folder that was never
+there & found no workflow running. workflowFolderPath() & workflowSessionIsBusy() name the separator
+with DIRECTORY_SEPARATOR, which is set before anything runs.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1973,6 +2036,27 @@ FOUND BY USE. --account TOLD AN ADMINISTRATOR A RULE INSTEAD OF WHAT TO TYPE. v4
 of actions. Every refusal now names what is missing & shows the form to type, an action written
 with one dash is named with its two & is not run, & root's --remove names the account it asks
 about. -y where a username belongs names no username, because no username begins with a dash.
+
+START OVER IS FOR A VISITOR. v4.2.3.
+Start Over deletes every file a page lists, which empties a scratch space nobody keeps. A signed in
+user's files are kept for them, so one press emptied what an account exists to keep. A signed in
+user deletes a file with its own Delete, or chooses how long their files are kept.
+
+A USER CHOOSES HOW LONG THEIR FILES ARE KEPT, & THE SWEEP KEEPS TO IT. v4.2.3.
+The choice is the account's, so it follows the user to every browser & is kept by no cookie. Never is
+where every account starts, because a user who chose nothing must lose nothing. A file goes once it
+has gone unchanged for longer, so a file made again is kept again. The sweep removes only plain files
+at the top of the folder, & leaves a folder a workflow is running in, because a workflow that lost
+the file it was converting would end in an error the user never caused. The Engine asks the Workflow
+Core, which it loads for the question where the request has not, so the Authentication Manager names
+no workflow.
+
+FOUND BY LOOKING. A FILE AN ARCHIVE HELD WAS AS OLD AS THE ARCHIVE SAID. v4.2.3.
+An extractor gives each file the time the archive recorded for it, & placeSessionFile() links or
+renames it into place, which keeps that time, so a file extracted from an archive made last year
+was removed by the next sweep of a user who keeps files for an hour. A placed file is given the time
+it was placed, as an upload is. Reading the time a file's place changed instead was ruled out,
+because no test can set that time to the past & a deletion nobody can test is not one to ship.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1997,4 +2081,15 @@ has no opcode cache, reported nothing wrong. --touch gives every file the time i
 EDGE IS NOT A RELEASE.
 -u=edge installs the master branch as it stands. It carries whatever version master holds,
 which may match no release at all.
+
+AUTOMATIC UPDATES ARE OFF UNTIL AN ADMINISTRATOR TURNS THEM ON. v4.2.3.
+An update replaces the code a server runs with what a release holds, so it is the administrator's
+decision to allow, & not the release's. config.php is kept across an update, so a server that had
+them keeps them. Off by default, the refusal is the first thing most administrators read about
+updates, & it said only to set $EnableAutoUpdates in config.php, naming no folder & not --config. It
+now names both ways to turn them on, with this installation's own paths, says nothing was changed &
+names the error, & -v lists automatic updates among what is switched off.
+FOUND BY TESTING. Off by default, the four settings of updates were named in --config as having no
+effect on every new installation, in the very screen an administrator opens to turn updates on. Each
+carries NamedWhenChanged, as the settings of accounts do, so only one an administrator changed is named.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

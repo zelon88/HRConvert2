@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -629,6 +629,12 @@ $Gui2Text235 = 'یہ ہر صارف کے لیے {name} کی جگہ لے لیتا 
 $Gui2Text236 = 'ورک فلو تیار نہیں کیا جا سکا۔';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'کوئی تفصیل 500 حروف سے لمبی ہے، یا اس میں ایسا حرف ہے جو دکھایا نہیں جا سکتا۔';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'بغیر تبدیلی کے آگے بھیجی گئیں: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'مشکوک، لیکن انفیکشن کی تصدیق نہیں ہوئی: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'مکمل اسکین نہیں ہو سکیں: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -736,4 +742,24 @@ $GuiAuthText41 = 'آپ کو سائن آؤٹ کر دیا گیا کیونکہ آپ
 $GuiAuthText42 = 'سرور نے جواب نہیں دیا۔ براہ کرم دوبارہ کوشش کریں۔';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'اس سرور پر اکاؤنٹ بحال کرنا دستیاب نہیں ہے۔';
+// / 'Delete my files'
+$GuiAuthText44 = 'میری فائلیں حذف کریں';
+// / 'Never'
+$GuiAuthText45 = 'کبھی نہیں';
+// / 'After 1 hour'
+$GuiAuthText46 = '1 گھنٹے بعد';
+// / 'After 1 day'
+$GuiAuthText47 = '1 دن بعد';
+// / 'After 1 week'
+$GuiAuthText48 = '1 ہفتے بعد';
+// / 'After 30 days'
+$GuiAuthText49 = '30 دن بعد';
+// / 'Save'
+$GuiAuthText50 = 'محفوظ کریں';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'کوئی فائل اتنی دیر تک تبدیل نہ ہو تو حذف کر دی جاتی ہے۔';
+// / 'Saved.'
+$GuiAuthText52 = 'محفوظ ہو گیا۔';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'محفوظ نہیں ہو سکا۔';
 // / -----------------------------------------------------------------------------------

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File information ...
-// / v4.2.1.
+// / v4.2.3.
 // / HRConvert2 Dependency Manifest.
 // / This file is data. It defines nothing & does nothing.
 // / dependencyCore.php reads it. Nothing else may.
@@ -114,7 +114,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v4.2.1';
+$DependsVersion = 'v4.2.3';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -530,8 +530,9 @@ $DependsManifest = array(
   // / grep. Reading rather than running was defensible & was not necessary. The interface
   // / exists & asking the thing itself is the honest answer.
   // / The minimum is the release this one bundles & is tested with, so a copy an older ScanCore replaced is reported rather than trusted.
+  // / v4.2.3 bundles ScanCore v1.9, which opens zip, gzip & tar containers, checks images & says when it could not read a file in full.
   array('Name' => 'ScanCore', 'Binary' => '', 'Type' => 'bundled', 'Package' => '',
-    'MinimumVersion' => '1.8', 'VersionCommand' => 'php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'ScanCore'.DIRECTORY_SEPARATOR.'ScanCore.php').' -version', 'VersionPattern' => '/ScanCore v([0-9]+\\.[0-9]+)/',
+    'MinimumVersion' => '1.9', 'VersionCommand' => 'php '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'ScanCore'.DIRECTORY_SEPARATOR.'ScanCore.php').' -version', 'VersionPattern' => '/ScanCore v([0-9]+\\.[0-9]+)/',
     'Required' => FALSE, 'Subsystem' => 'Virus Scanning', 'Requires' => array('PHP'),
     'License' => 'GPL-3.0', 'Source' => 'Bundled at Resources/ScanCore', 'Purpose' => 'Scans every uploaded file. Written & distributed by this project.'),
   array('Name' => 'ClamAV', 'Binary' => 'clamscan', 'Type' => 'apt', 'Package' => 'clamav clamav-daemon',

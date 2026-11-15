@@ -234,6 +234,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
               'library' => $Gui2Text220, 'pickPipeline' => $Gui2Text162, 'options' => $Gui2Text166, 'back' => $Gui2Text167, 'remove' => $Gui2Text67,
               'take' => $Gui2Text168, 'selectedFiles' => $Gui2Text169, 'stepFiles' => $Gui2Text170, 'sessionFiles' => $Gui2Text227, 'each' => $Gui2Text171, 'together' => $Gui2Text172,
               'fromSelection' => $Gui2Text221, 'fromStep' => $Gui2Text222, 'preview' => $Gui2Text223, 'previewHeadline' => $Gui2Text224, 'leftOut' => $Gui2Text225, 'nothingTaken' => $Gui2Text226,
+              'keeps' => $Gui2Text238, 'suspicious' => $Gui2Text239, 'incomplete' => $Gui2Text240,
               'kinds' => $Gui2Text173, 'extensions' => $Gui2Text174, 'byName' => $Gui2Text131, 'patternHint' => $Gui2Text132, 'smallest' => $Gui2Text175, 'largest' => $Gui2Text176,
               'sortBy' => $Gui2Text104, 'arrival' => $Gui2Text177, 'nameOrder' => $Gui2Text105, 'allFiles' => $Gui2Text178, 'allKind' => $Gui2Text179,
               'name' => $Gui2Text105, 'untitled' => $Gui2Text182, 'newWorkflow' => $Gui2Text183, 'importFile' => $Gui2Text184, 'exportFile' => $Gui2Text185,

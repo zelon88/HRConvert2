@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.2.
+// / v4.2.3.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -107,7 +107,7 @@ $EngineAcceptedPipelines = array(
   // / The third & fourth, from v4.1.6. The Archiver puts a selection of files into archives, & Scan scans the files a user asks it to.
   // / Each was code in convertCore.php until then.
   'Archiver' => 'v4.2.1',
-  'Scan' => 'v4.2.1',
+  'Scan' => 'v4.2.3',
   // / The fifth, from v4.1.7. The Extractor puts every file an archive holds into the session beside it.
   'Extractor' => 'v4.2.1',
   // / The sixth & seventh, from v4.1.8. The Metadata pipeline makes a copy of a file without its metadata, & the PDF pipeline merges PDFs & splits them into pages.
@@ -117,7 +117,7 @@ $EngineAcceptedPipelines = array(
   'ClamAV' => 'v4.2.1',
   // / The first pipeline of kind file. Operations that do not care what is in a file.
   'Files' => 'v4.1.8',
-  'ScanCore' => 'v4.2.1');
+  'ScanCore' => 'v4.2.3');
 
 // / The shared modules a pipeline may load & the exact version each must report.
 // / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.

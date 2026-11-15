@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -629,6 +629,12 @@ $Gui2Text235 = 'ܗܕܐ ܢܣܒܐ ܕܘܟܬܗ ܕ{name} ܠܟܠ ܡܦܠܚܢ.';
 $Gui2Text236 = 'ܠܐ ܐܫܟܚܬ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܠܡܬܛܝܒܘ.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'ܚܕ ܬܘܪܓܡܐ ܐܪܝܟ ܡܢ 500 ܐܬܘ̈ܬܐ، ܐܘ ܐܝܬ ܒܗ ܐܬܘܬܐ ܕܠܐ ܡܫܟܚܐ ܠܡܬܚܙܝܘ.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'ܐܫܬܕܪܘ ܕܠܐ ܫܘܚܠܦܐ: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'ܚܫܝܕ̈ܐ، ܐܠܐ ܠܐ ܐܫܬܪܪ ܕܐܝܬ ܒܗܘܢ ܒܝܪܘܣ: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'ܠܐ ܐܬܒܚܢܘ ܓܡܝܪܐܝܬ: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -736,4 +742,24 @@ $GuiAuthText41 = 'ܢܦܩܬ، ܡܛܠ ܕܡܥܠܢܟ ܐܬܦܠܚ ܒܕܘܟܬܐ ܐܚܪ�
 $GuiAuthText42 = 'ܡܫܡܫܢܐ ܠܐ ܥܢܐ. ܢܣܐ ܬܘܒ.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'ܦܘܢܝܐ ܕܚܘܫܒܢ̈ܐ ܠܐ ܡܫܟܚ ܒܗܢܐ ܡܫܡܫܢܐ.';
+// / 'Delete my files'
+$GuiAuthText44 = 'ܛܠܘܩ ܦܬܩ̈ܝ';
+// / 'Never'
+$GuiAuthText45 = 'ܠܐ ܡܡܬܘܡ';
+// / 'After 1 hour'
+$GuiAuthText46 = 'ܒܬܪ ܫܥܐ ܚܕܐ';
+// / 'After 1 day'
+$GuiAuthText47 = 'ܒܬܪ ܝܘܡܐ ܚܕ';
+// / 'After 1 week'
+$GuiAuthText48 = 'ܒܬܪ ܫܒܘܥܐ ܚܕ';
+// / 'After 30 days'
+$GuiAuthText49 = 'ܒܬܪ 30 ܝܘܡܝܢ';
+// / 'Save'
+$GuiAuthText50 = 'ܢܛܘܪ';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'ܦܬܩܐ ܡܬܛܠܩ ܐܡܬܝ ܕܟܘܠܗ ܗܢܐ ܙܒܢܐ ܩܘܝ ܕܠܐ ܫܘܚܠܦܐ.';
+// / 'Saved.'
+$GuiAuthText52 = 'ܐܬܢܛܪ.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'ܠܐ ܐܫܬܟܚ ܠܡܬܢܛܪܘ.';
 // / -----------------------------------------------------------------------------------

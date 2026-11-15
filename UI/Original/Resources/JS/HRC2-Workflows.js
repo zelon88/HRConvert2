@@ -76,6 +76,7 @@ window.HRC2Workflows = {
     toFormat: 'to {format}', confirmDelete: 'This workflow deletes files. A deleted file cannot be brought back.', confirmRun: 'Delete & Run', cancel: 'Cancel',
     confirmDeleteFiles: 'This workflow deletes these files. A deleted file cannot be brought back.',
     preview: 'Preview', previewHeadline: 'If the workflow ran now, each step would take:', leftOut: 'Left out: ', nothingTaken: 'No files.',
+    keeps: 'Passed on unchanged: ', suspicious: 'Suspicious, but not confirmed infected: ', incomplete: 'Not scanned in full: ',
     kinds: 'Only these kinds: ', extensions: 'Only these extensions: ', byName: 'Select By Name: ', patternHint: 'Use * and ? as wildcards, or write a regular expression between slashes.',
     smallest: 'Smallest size: ', largest: 'Largest size: ', sortBy: 'Sort By: ', arrival: 'In the order they arrive', nameOrder: 'Name',
     allFiles: 'all files', allKind: 'all {kind}', name: 'Name', untitled: 'My workflow', newWorkflow: 'New', importFile: 'Import', exportFile: 'Export',
@@ -1615,25 +1616,38 @@ window.HRC2Workflows = {
   },
 
   // / Show how a workflow ended, & the files it made. Each file can be fetched, as a conversion's can.
+  // / A file an operation found suspicious is named after them, from v4.2.3, because the workflow went on & a user may not read the report.
+  // / So is a file a scanner could not read in full, such as an encrypted archive, because such a file is not known to be clean.
   // / The result stays until the next workflow starts, because the server has already forgotten it.
   showResult: function (line, reply) {
     var self = this;
     var status = self.element('status');
     var made = (reply && self.isList(reply.Produced)) ? reply.Produced.filter(function (name) { return typeof name === 'string' && name !== ''; }) : [];
+    var suspicious = (reply && self.isList(reply.Suspicious)) ? reply.Suspicious.filter(function (name) { return typeof name === 'string' && name !== ''; }) : [];
+    var incomplete = (reply && self.isList(reply.Incomplete)) ? reply.Incomplete.filter(function (name) { return typeof name === 'string' && name !== ''; }) : [];
     var list = null;
     self.showLines([line]);
     if (!status) return;
     status.setAttribute('data-hrc2-result', 'true');
-    if (made.length === 0) return;
-    list = self.make('p', self.text.made, 'hrc2-wf-made-list');
-    made.forEach(function (fileName, index) {
-      var fetch = self.make('button', null, 'hrc2-wf-made');
-      fetch.type = 'button';
-      fetch.appendChild(self.make('bdi', fileName));
-      fetch.addEventListener('click', function () { self.download(fileName); });
-      if (index > 0) list.appendChild(document.createTextNode(' '));
-      list.appendChild(fetch); });
-    status.appendChild(list);
+    if (made.length > 0) {
+      list = self.make('p', self.text.made, 'hrc2-wf-made-list');
+      made.forEach(function (fileName, index) {
+        var fetch = self.make('button', null, 'hrc2-wf-made');
+        fetch.type = 'button';
+        fetch.appendChild(self.make('bdi', fileName));
+        fetch.addEventListener('click', function () { self.download(fileName); });
+        if (index > 0) list.appendChild(document.createTextNode(' '));
+        list.appendChild(fetch); });
+      status.appendChild(list); }
+    if (suspicious.length > 0) status.appendChild(self.labelledNames(self.text.suspicious, suspicious, 'hrc2-wf-suspicious'));
+    if (incomplete.length > 0) status.appendChild(self.labelledNames(self.text.incomplete, incomplete, 'hrc2-wf-incomplete'));
+  },
+
+  // / A line naming files after a label, as namesLine() names them. The label is text, as every name is.
+  labelledNames: function (label, names, className) {
+    var line = this.namesLine(names, [], className);
+    line.insertBefore(document.createTextNode(label), line.firstChild);
+    return line;
   },
 
   // / A line naming files, each as text of its own, & then the words for files that cannot be named yet.
@@ -1658,6 +1672,7 @@ window.HRC2Workflows = {
 
   // / Show what each step would take were the workflow run now, as the server worked it out, & why a run would be refused when it would be.
   // / Each step names the files it would take, & a step whose files cannot be known until an earlier one has run says whose files it takes instead.
+  // / A step names the files it would pass on unchanged on a line of their own, from v4.2.3, as Convert passes on one already in its format.
   // / It stays until the files selected or the workflow change, because then it no longer says what would run.
   showPreview: function (reply) {
     var self = this;
@@ -1669,10 +1684,12 @@ window.HRC2Workflows = {
     status.setAttribute('data-hrc2-preview', 'true');
     steps.forEach(function (step, index) {
       var names = self.isList(step.Takes) ? step.Takes.filter(function (name) { return typeof name === 'string'; }) : [];
+      var keeps = self.isList(step.Keeps) ? step.Keeps.filter(function (name) { return typeof name === 'string'; }) : [];
       var words = self.isList(step.Unknown) ? step.Unknown.map(function (reference) { return self.referenceWords(String(reference)); }) : [];
       var leftOut = Math.max(0, parseInt(step.LeftOut, 10) || 0);
       status.appendChild(self.make('p', self.fill(self.text.step, { step: index + 1, steps: steps.length, operation: self.operationName(String(step.Operation || '')) }), 'hrc2-wf-preview-step'));
-      status.appendChild(self.namesLine(names, words, 'hrc2-wf-preview-files'));
+      if (names.length > 0 || words.length > 0 || keeps.length === 0) status.appendChild(self.namesLine(names, words, 'hrc2-wf-preview-files'));
+      if (keeps.length > 0) status.appendChild(self.labelledNames(self.text.keeps, keeps, 'hrc2-wf-preview-files'));
       if (leftOut > 0) status.appendChild(self.make('p', self.text.leftOut + leftOut, 'hrc2-wf-preview-files')); });
     if (reason !== '' && self.text.refused.hasOwnProperty(reason)) status.appendChild(self.make('p', self.text.refused[reason]));
   },

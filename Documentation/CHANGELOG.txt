@@ -26,6 +26,47 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 
 --------------------
+COMMIT 11/15/2026
+v4.2.3 - A workflow passes on a file already in its format, ScanCore v1.9 is bundled & a user reads what it found suspicious or could not read in full, a signed in user chooses how long files are kept, & automatic updates are off by default.
+
+-v4.2.3.
+-$EnableAutoUpdates is FALSE by default. An installation keeps its own value, because config.php is kept across an update.
+--u refused while automatic updates are off says nothing was changed, names --config & config.php with this installation's own paths, & names error 29009.
+--v lists Automatic updates among the features switched off, & -h says -u needs --Enable Automatic Updates--.
+---config names a setting of updates as having no effect only once it differs from its default, as it names a setting of accounts.
+-Start Over is offered only to a visitor who has not signed in.
+-A signed in user chooses how long their files are kept in the account panel, Never, 1 hour, 1 day, 1 week or 30 days. Every account starts at Never.
+-The account sweep deletes a file a user kept unchanged for longer than they chose, plain files at the top of their folder only, & leaves a folder a workflow is running in for the next sweep.
+-A file an operation places, such as one extracted from an archive, is given the time it was placed, as an upload is, so a lifetime counts from then & the list dates it by then.
+-New SignInAction lifetime, with SignInFileLifetime, answered lifetime-saved, lifetime-invalid or signed-out. $EnginePageState carries FileLifetimes & FileLifetime.
+-New accountFileLifetimes() & setAccountFileLifetime() in the Authentication Core, expireAccountFiles() & sweepAccountFiles() in the Authentication Manager, & engineFolderIsBusy() in the Engine.
+-A Convert step passes on a file already in the format it makes, unchanged & in its place, so Images to JPG, in one zip, zips the jpg it was handed with the rest.
+-A file passed on is not counted as made, takes no budget & is counted in its step's Kept. Produced names only what was made.
+-A Convert step with a Height, a Width, a Rotate or a Bitrate still leaves out a file already in its format, because no pipeline converts a format to itself.
+-A library's Accepts names what a first step keeps as well as what it reads, so a page counts a file already in the format among those a workflow can use. A preview names what each step keeps in Keeps.
+-New Keeps in an operation's entry, a function asked whether the operation passes on a file it does not read.
+-New convertOptionsTransform() & convertOperationKeeps() in the core & operationKeepsExtension() in the Workflow Core. runWorkflowStep() returns Kept & Output beside Produced, & a step hands Output to the steps after it.
+-workflowFolderPath() & workflowSessionIsBusy() use DIRECTORY_SEPARATOR, because an account sweep asks them before $DirSep is set.
+-A ScanCore scan reports each file as infected, suspicious, incomplete or clean, & the user's report carries ScanCore's own lines about it, with the file's name in place of the server's path & no control character.
+-A suspicious file is named in the report & in a warning, & is not treated as infected. A Scan step names it in the status's Suspicious & the workflow goes on. An infected file still ends it.
+-A finished workflow names the files found suspicious beneath what it made.
+-A ScanCore line is read by its earliest word, so a Classified line naming a member Infected: x is no longer a detection. A detection naming no path it was handed still counts.
+-A ScanCore line's word counts only before its first slash, where ScanCore writes it, so a word in a path opens nothing.
+-ScanCore v1.9 is bundled in place of v1.8, & the manifest requires 1.9. It opens zip, gzip & tar, matches their members, checks images & says when it could not read a file in full.
+-The bundled ScanCore is cleaned up until both linters find nothing in it. Run as root, it no longer hands a link or a hard linked file to the installation owner. What it finds is unchanged.
+-A file ScanCore could not read in full, such as an encrypted zip, is incomplete, below suspicious & above clean. The report & a warning say it was not scanned in full.
+-ScanCore's errors 600 & 610 make a file incomplete too, because ScanCore writes no Incomplete line for either & goes on.
+-A Scan step names such a file in the status's new Incomplete & the workflow goes on. A finished workflow names them beneath the suspicious ones.
+-A file any scanner found infected or suspicious is not also named incomplete.
+-New readScanCoreLines() & printableScanCoreLine() in the ScanCore pipeline & cleanScanVerdicts() in the Pipeline Core. A scanner may return its verdicts as a fourth value, & runVirusScan() returns them as a fifth.
+-userVirusScan() returns the suspicious & incomplete files as a sixth & seventh value, userScanWithScanner() the suspicious, infected & incomplete files as a fourth, fifth & sixth, & invokeWorkflowOperation() the suspicious & incomplete files as a fifth & sixth.
+-A scanner's verdict may be incomplete, & an operation's findings may hold Incomplete.
+-Every language pack carries $Gui2Text238 through $Gui2Text240 & $GuiAuthText44 through $GuiAuthText53.
+-ERROR_DESCRIPTIONS documents every new warning & error 29009's new remedy.
+-ABOUT_WORKFLOWS, ABOUT_REST_API, ABOUT_AUTHENTICATION, ABOUT_PIPELINE_COMPONENTS, ABOUT_COMMAND_LINE_ARGUMENTS, ABOUT_QUALITY_CONTROL, INSTALLATION_INSTRUCTIONS, CREATING_GUIS, DEVELOPMENT_NOTES & README.md describe the change.
+-The core, the Engine, the Workflow, Setup, Pipeline & Authentication Cores, the Authentication Manager, the Scan & ScanCore pipelines, the dependency manifest, both interfaces & every language pack are v4.2.3, & every pin to them requires v4.2.3.
+
+--------------------
 COMMIT 11/14/2026
 v4.2.2 - An administrator stages a workflow for every user from a page, with a description in each language, & root installs it.
 

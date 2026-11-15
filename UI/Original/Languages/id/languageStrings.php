@@ -37,7 +37,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -636,6 +636,12 @@ $Gui2Text235 = 'Ini menggantikan {name} bagi setiap pengguna.';
 $Gui2Text236 = 'Alur kerja tidak dapat disiapkan.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'Sebuah deskripsi lebih dari 500 karakter, atau berisi karakter yang tidak dapat ditampilkan.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'Diteruskan tanpa perubahan: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'Mencurigakan, tetapi tidak dipastikan terinfeksi: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'Tidak dipindai sepenuhnya: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -744,4 +750,24 @@ $GuiAuthText41 = 'Anda telah dikeluarkan karena sesi masuk Anda dipakai di tempa
 $GuiAuthText42 = 'Server tidak menjawab. Silakan coba lagi.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'Pemulihan akun tidak tersedia di server ini.';
+// / 'Delete my files'
+$GuiAuthText44 = 'Hapus berkas saya';
+// / 'Never'
+$GuiAuthText45 = 'Tidak pernah';
+// / 'After 1 hour'
+$GuiAuthText46 = 'Setelah 1 jam';
+// / 'After 1 day'
+$GuiAuthText47 = 'Setelah 1 hari';
+// / 'After 1 week'
+$GuiAuthText48 = 'Setelah 1 minggu';
+// / 'After 30 days'
+$GuiAuthText49 = 'Setelah 30 hari';
+// / 'Save'
+$GuiAuthText50 = 'Simpan';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'Sebuah berkas dihapus setelah tidak berubah selama itu.';
+// / 'Saved.'
+$GuiAuthText52 = 'Tersimpan.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'Tidak dapat disimpan.';
 // / -----------------------------------------------------------------------------------

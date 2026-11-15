@@ -19,6 +19,7 @@
 // / The timer runs in a worker where the browser has them, because a browser slows a hidden tab's own timers to once a minute,
 // / & a key that outlives no exchange would end the sign in of anybody who looked away.
 // / A page that loads without being signed in, with a key in window.name, trades it & loads again signed in. That is a reload.
+// / A signed in user chooses how long their files are kept in the account panel, from v4.2.3, & this file saves the choice with the page's key.
 // / Every string the user reads is handed in by the page, because this file is static & cannot read a language pack.
 // /
 // / <3 Open-Source
@@ -208,6 +209,26 @@ var HRC2SignIn = {
     form.submit();
   },
 
+  // / Save how long the account keeps its files, from v4.2.3, & say in the panel whether it was saved.
+  // / A key that signs nobody in ends the sign in, as a failed trade does. The choice is sent as the number the page drew it from.
+  saveLifetime: function (messages) {
+    var self = this;
+    var choice = document.getElementById('hrc2FileLifetime');
+    var button = document.getElementById('hrc2FileLifetimeSave');
+    var status = document.getElementById('hrc2FileLifetimeStatus');
+    var say = function (text) { if (status) status.textContent = text || ''; };
+    if (!choice || !this.key) return;
+    if (button) button.disabled = true;
+    say('');
+    this.ask([['SignInAction', 'lifetime'], ['SignInKey', this.key.replace(/:R$/, '')], ['SignInFileLifetime', String(choice.value)]], function (reply) {
+      var outcome = reply ? String(reply.Outcome || '') : 'no-answer';
+      if (button) button.disabled = false;
+      if (outcome === 'lifetime-saved') say(messages.saved);
+      else if (outcome === 'signed-out') self.end('signed-out');
+      else say(messages[outcome === 'no-answer' ? 'no-answer' : 'failed']);
+    });
+  },
+
   // / Sign out, & go home without a key.
   signOut: function (home) {
     var self = this;
@@ -215,7 +236,8 @@ var HRC2SignIn = {
     this.ask([['SignInAction', 'signout'], ['SignInKey', key]], function () { self.end('signed-out-quietly'); self.go(home, []); });
   },
 
-  // / Begin, once the page has said whether it is signed in. options carries signedIn, life, interval, tokens, workerPath, home & notices.
+  // / Begin, once the page has said whether it is signed in. options carries signedIn, life, interval, tokens, workerPath, home, notices & lifetime.
+  // / lifetime holds what the account panel says once a file lifetime is saved, could not be saved or met no answer, from v4.2.3.
   // / The bar's buttons are bound here, & a sign in that ends says why in the bar & goes home, where the server decides what is shown.
   // / A page that is not signed in with a key in its tab trades it once & loads again, & gives up if it comes back unsigned a second time.
   start: function (options) {
@@ -226,7 +248,9 @@ var HRC2SignIn = {
     var notices = options.notices || {};
     var signOutButton = document.getElementById('hrc2SignOut');
     var signInButton = document.getElementById('hrc2SignInLink');
+    var lifetimeButton = document.getElementById('hrc2FileLifetimeSave');
     if (signOutButton) signOutButton.addEventListener('click', function () { self.signOut(home); });
+    if (lifetimeButton) lifetimeButton.addEventListener('click', function () { self.saveLifetime(options.lifetime || {}); });
     if (signInButton) signInButton.addEventListener('click', function () { self.go(home, [['SignInAction', 'page'], ['SignInPage', 'signin']]); });
     if (!options.onOutcome) options.onOutcome = function (outcome) {
       var bar = document.getElementById('hrc2SignInBar');

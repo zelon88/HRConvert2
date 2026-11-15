@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.2.
+// / v4.2.3.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -255,7 +255,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.2.2';
+  $HRConvertVersion = 'v4.2.3';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -269,13 +269,13 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.2.2';
+  $RequiredGuiVersion = 'v4.2.3';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A Language Pack version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v4.2.2';
+  $RequiredLanguageVersion = 'v4.2.3';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / No Core Manager version is pinned here. Every manager role is a subcomponent of the
   // / Engine & getAcceptedManagers() inside the Engine pins each one exactly.
@@ -283,7 +283,7 @@ function verifyInstallation() {
   // / This is an exact match. A component built for another core may not be called safely.
   // / Raise this when the Setup Core itself changes.
   // / The configuration model is applicationConfigModel() in this file & its defaults are the template, so a new setting raises nothing here.
-  $RequiredSetupCoreVersion = 'v4.2.2';
+  $RequiredSetupCoreVersion = 'v4.2.3';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
@@ -292,24 +292,24 @@ function verifyInstallation() {
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v4.2.1';
+  $RequiredDependsVersion = 'v4.2.3';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
   // / The Pipeline Core component version this core requires.
   // / This is an exact match, because a component built for another core may declare an entry point whose arguments have moved, or capabilities this core cannot honour.
   // / Raise this when the Pipeline Core itself changes & for nothing else.
   // / It is an Engine core, at Resources/Engine/Cores/pipelineCore.php.
   // / The pipelines this application accepts are listed in its contract, in app-engine-config.php, so adding a pipeline or moving one to a new version raises nothing here.
-  $RequiredPipelineCoreVersion = 'v4.2.1';
+  $RequiredPipelineCoreVersion = 'v4.2.3';
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The Workflow Core component version this core requires.
   // / This is an exact match, because a component built for another core may call an operation with arguments that have moved.
   // / Raise this when the Workflow Core itself changes & for nothing else. It is an Engine core, at Resources/Engine/Cores/workflowCore.php.
-  $RequiredWorkflowCoreVersion = 'v4.2.2';
+  $RequiredWorkflowCoreVersion = 'v4.2.3';
   $RequiredWorkflowCoreVersion = ltrim($RequiredWorkflowCoreVersion, 'vV');
   // / The Authentication Core & Email Core component versions this core requires.
   // / Each is an exact match, for the reason every Engine core's is. The Engine loads them where accounts are on.
   // / They are Engine cores, at Resources/Engine/Cores/authenticationCore.php & Resources/Engine/Cores/emailCore.php.
-  $RequiredAuthenticationCoreVersion = 'v4.2.1';
+  $RequiredAuthenticationCoreVersion = 'v4.2.3';
   $RequiredAuthenticationCoreVersion = ltrim($RequiredAuthenticationCoreVersion, 'vV');
   $RequiredEmailCoreVersion = 'v4.2.0';
   $RequiredEmailCoreVersion = ltrim($RequiredEmailCoreVersion, 'vV');
@@ -320,7 +320,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.2.2';
+  $RequiredEngineVersion = 'v4.2.3';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -1335,7 +1335,7 @@ function toolRequirement($manifestName) {
 // / file, because loading twenty version files would overwrite the variable each time.
 function showVersionInfo() {
   // / Set variables.
-  global $EngineActive, $Verbose, $DependsManifest, $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $AllowUserIdentify, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines, $RequiredWorkflowCoreVersion, $RequiredAuthenticationCoreVersion, $RequiredEmailCoreVersion, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport;
+  global $EngineActive, $Verbose, $DependsManifest, $KernelVersion, $ApacheUser, $RequiredKernelVersion, $RequiredEngineVersion, $ManagerSocketDir, $InstLoc, $HostedLoc, $ApplicationLoc, $ServerRootDir, $HRConvertVersion, $ConfigVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $PipelineCoreActive, $PipelineCount, $RequiredSecretVersion, $RequiredConfigScript, $ApplicationName, $SupportedConversionTypes, $SupportedGuis, $SupportedLanguages, $DirSep, $Lol, $UsePyMeshLab, $AllowBootableIsoImage, $RequireSandbox, $RequireSandboxOnDocker, $RunningInContainer, $RunningAsRoot, $CurrentUser, $EnableMemoryProtection, $EnableResourceAwareness, $RequireResourceAwareness, $ResourceAwarenessActive, $CoreManagerVersion, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $ConvertTemp, $MaintainHTAccess, $EngineVersion, $HostArchitecture, $HostMachineString, $AllowUserURLDownload, $AllowUserVirusScan, $VirusScan, $AllowUserShare, $AllowUserIdentify, $EnvironmentManagerMayRepair, $EnablePerConversionLimits, $Pipelines, $RequiredWorkflowCoreVersion, $RequiredAuthenticationCoreVersion, $RequiredEmailCoreVersion, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $EnableAutoUpdates;
   $VersionInfoDisplayed = $modelsAreValid = $ocrToolsAreValid = $archiveToolsAreValid = $libreOfficeIsValid = FALSE;
   $ffmpegBinary = $streamFfmpegBinary = $inkscapeBinary = $diaBinary = $scadBinary = $imageBinary = $ebookBinary = FALSE;
   $assimpBinary = $meshlabBinary = $tesseractBinary = $pdftotextBinary = FALSE;
@@ -1551,6 +1551,7 @@ function showVersionInfo() {
   if ($EnableWorkflows && !$EnableWorkflowImportExport) $disabledFeatures[] = array('Workflow import & export', 'Enable Workflow Import & Export');
   if (!$EnvironmentManagerMayRepair) $disabledFeatures[] = array('Environment repair', 'Environment Manager May Repair');
   if (!$EnablePerConversionLimits) $disabledFeatures[] = array('Per conversion limits', 'Enable Per Conversion Limits');
+  if (!$EnableAutoUpdates) $disabledFeatures[] = array('Automatic updates', 'Enable Automatic Updates');
   if (!empty($disabledFeatures)) {
     print($Lol.'Available & switched off'.$Lol);
     foreach ($disabledFeatures as $disabledFeature) print('  '.str_pad($disabledFeature[0], 28).'--'.$disabledFeature[1].'-- in config.php'.$Lol); }
@@ -1787,7 +1788,7 @@ function showHelpInfo() {
   print('Notes'.$Lol);
   print('  Command line & web requests are mutually exclusive.'.$Lol);
   print('  A command line run starts no session.'.$Lol);
-  print('  -u requires --Enable Automatic Updates-- in config.php.'.$Lol);
+  print('  -u requires --Enable Automatic Updates-- in config.php, which is off by default.'.$Lol);
   print('  -u keeps the previous installation & restores it if the new one fails validation.'.$Lol);
   print($Lol);
   print('Documentation'.$Lol);
@@ -2373,6 +2374,7 @@ function metadataOperationFormats() {
 // / Each operation names the function that runs it, the budget it takes, whether this server allows it, what it reads, its modes & its options.
 // / Every one runs the code a button in an interface runs, so a workflow does nothing a user could not do by hand.
 // / Convert decides what it reads from the extension it is asked to write, because a conversion to jpg reads an image & not a spreadsheet.
+// / Convert passes on a file already in the format it writes, through convertOperationKeeps(), from v4.2.3, so the step after it takes that file too.
 // / Archive's Filename names the one archive every file goes into, & an empty one archives each file under its own name.
 // / Archive offers the formats archiveOperationFormats() lists, which the Archiver pipeline can write, & none without it, so it is offered only where the Archiver is installed.
 // / Archive, OCR, Identify & Scan are each an operation pipeline's, & one whose pipeline is missing is not offered, from v4.1.6, nor one whose tools are not installed, from v4.2.1.
@@ -2408,7 +2410,7 @@ function applicationOperations() {
   $ocrFormats = array_values(array_unique(array_merge(array('pdf'), (array)$DocumentArray)));
   $OperationRegistry = array(
     'Operations' => array(
-      'Convert' => array('Invoke' => 'invokeConvertOperation', 'Budget' => 'conversion', 'Enabled' => (count($convertOutputs) > 0), 'Accepts' => 'convertOperationAccepts', 'Modes' => array('each'),
+      'Convert' => array('Invoke' => 'invokeConvertOperation', 'Budget' => 'conversion', 'Enabled' => (count($convertOutputs) > 0), 'Accepts' => 'convertOperationAccepts', 'Keeps' => 'convertOperationKeeps', 'Modes' => array('each'),
         'Options' => array('Extension' => array('Type' => 'choice', 'Required' => TRUE, 'Choices' => $convertChoices, 'Offered' => $convertOutputs, 'Groups' => convertOperationGroups()), 'Filename' => array('Type' => 'name', 'Default' => ''),
           'Height' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 65535), 'Width' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 65535),
           'Rotate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => -360, 'Maximum' => 360), 'Bitrate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 100000))),
@@ -2437,6 +2439,21 @@ function applicationOperations() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to say whether a Convert step changes a file beyond its format, from v4.2.3.
+// / Accepts the step's options. Returns TRUE when a height, a width, a rotation or a bitrate is asked for.
+// / A value of 0 is what a page sends for one left alone, & asks for nothing.
+function convertOptionsTransform($operationOptions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OptionsTransform = FALSE;
+  $optionName = '';
+  foreach (array('Height', 'Width', 'Rotate', 'Bitrate') as $optionName) if (is_array($operationOptions) && isset($operationOptions[$optionName]) && (int)$operationOptions[$optionName] !== 0) $OptionsTransform = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $optionName, $operationOptions);
+  return $OptionsTransform; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to decide whether Convert reads a file, given the extension it is asked to write.
 // / Accepts the file's extension & the step's options. Returns TRUE when a family reads the one & writes the other.
 // / A file that is already the format asked for is not read, because there is nothing to convert.
@@ -2455,6 +2472,25 @@ function convertOperationAccepts($fileExtension, $operationOptions) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $outputExtension, $inputExtension, $familyName, $familyFormats, $fileExtension, $operationOptions);
   return $OperationAccepts; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether Convert passes a file on unchanged, given the extension it is asked to write, from v4.2.3.
+// / Accepts the file's extension & the step's options. Returns TRUE when the file is already the format asked for & nothing else is asked of it.
+// / Until v4.2.3 such a file was left out of the step, so a later step taking what Convert made never took it, & a zip of every image made jpg lacked the jpg selected.
+// / The Workflow Core asks this only about a file Convert does not read, & passes a kept file on in its place without converting it or counting it as made.
+// / A step that resizes, rotates or re-encodes keeps nothing, & leaves such a file out as before, because no pipeline converts a format to itself,
+// / & a file passed on unchanged would be passed on without what the step asks of it.
+function convertOperationKeeps($fileExtension, $operationOptions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OperationKeeps = FALSE;
+  $outputExtension = '';
+  $outputExtension = (is_array($operationOptions) && isset($operationOptions['Extension'])) ? strtolower((string)$operationOptions['Extension']) : '';
+  if ($outputExtension !== '' && strtolower((string)$fileExtension) === $outputExtension && !convertOptionsTransform($operationOptions)) $OperationKeeps = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $outputExtension, $fileExtension, $operationOptions);
+  return $OperationKeeps; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2593,6 +2629,9 @@ function invokeIdentifyOperation($selectedFiles, $operationOptions) {
 // / Accepts the files & the options, which hold Scanner, all, clamav or scancore.
 // / Returns whether a verdict was reached, whether anything went wrong, the report it kept & what it found, in that order.
 // / What it found holds Halt as threat when any file is found infected, which ends a workflow, so nothing is made from an infected file.
+// / It holds Suspicious, the files found suspicious, from v4.2.3, & the workflow names them & goes on, because a heuristic is not a detection.
+// / It holds Incomplete, the files a scanner could not read in full, from v4.2.3, which the workflow names too & goes on, because an
+// / encrypted archive is an ordinary file & not a threat.
 // / A button's scan hands its report straight to the browser, & a workflow keeps it in the session instead, beside what it scanned.
 // / The report is named User_Virus_Scan_Report.txt, or the next free name when that is taken.
 function invokeScanOperation($selectedFiles, $operationOptions) {
@@ -2602,8 +2641,11 @@ function invokeScanOperation($selectedFiles, $operationOptions) {
   $ProducedFiles = $OperationFindings = array();
   $threatWasFound = $nameWasFound = FALSE;
   $reportPath = $reportName = $keptPath = $keptName = '';
-  list ($OperationSucceeded, $OperationErrors, $threatWasFound, $reportPath, $reportName) = userVirusScan($selectedFiles, strtolower((string)($operationOptions['Scanner'] ?? 'all')));
+  $suspiciousFiles = $incompleteFiles = array();
+  list ($OperationSucceeded, $OperationErrors, $threatWasFound, $reportPath, $reportName, $suspiciousFiles, $incompleteFiles) = userVirusScan($selectedFiles, strtolower((string)($operationOptions['Scanner'] ?? 'all')));
   if ($threatWasFound) $OperationFindings['Halt'] = 'threat';
+  if (count($suspiciousFiles) > 0) $OperationFindings['Suspicious'] = $suspiciousFiles;
+  if (count($incompleteFiles) > 0) $OperationFindings['Incomplete'] = $incompleteFiles;
   clearstatcache(TRUE, (string)$reportPath);
   if (is_file((string)$reportPath)) {
     list ($nameWasFound, $keptPath, $keptName) = array(TRUE, $ConvertDir.'User_Virus_Scan_Report.txt', 'User_Virus_Scan_Report.txt');
@@ -2613,7 +2655,7 @@ function invokeScanOperation($selectedFiles, $operationOptions) {
       $OperationErrors = TRUE;
       warningEntry('A workflow\'s virus scan report could not be kept beside the files it scanned.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $threatWasFound, $nameWasFound, $reportPath, $reportName, $keptPath, $keptName, $selectedFiles, $operationOptions);
+  purgeSensitiveMemory($EnableMemoryProtection, $threatWasFound, $nameWasFound, $reportPath, $reportName, $keptPath, $keptName, $suspiciousFiles, $incompleteFiles, $selectedFiles, $operationOptions);
   return array($OperationSucceeded, $OperationErrors, $ProducedFiles, $OperationFindings); }
 // / -----------------------------------------------------------------------------------
 
@@ -2934,11 +2976,12 @@ function applicationConfigModel() {
     'General Information' => array('Writable' => TRUE, 'Variables' => array(
       'ApplicationName' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Application Name String'),
       'ApplicationTitle' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Application Title String'),
+      // / Automatic updates are off by default from v4.2.3, so each setting that needs them is named as having no effect only once it differs from its default.
       'EnableAutoUpdates' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Automatic Updates'),
-      'AutoUpdateTargetVersion' => array('Type' => 'string', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Automatic Update Target Version'),
-      'UpdateSourceRepository' => array('Type' => 'string', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Update Source Repository'),
-      'MaxUpdatePackageSize' => array('Type' => 'int', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Maximum Update Package Size'),
-      'UpdateConnectionTimeout' => array('Type' => 'int', 'Depends' => 'EnableAutoUpdates', 'Description' => 'Update Connection Timeout'),
+      'AutoUpdateTargetVersion' => array('Type' => 'string', 'Depends' => 'EnableAutoUpdates', 'NamedWhenChanged' => TRUE, 'Description' => 'Automatic Update Target Version'),
+      'UpdateSourceRepository' => array('Type' => 'string', 'Depends' => 'EnableAutoUpdates', 'NamedWhenChanged' => TRUE, 'Description' => 'Update Source Repository'),
+      'MaxUpdatePackageSize' => array('Type' => 'int', 'Depends' => 'EnableAutoUpdates', 'NamedWhenChanged' => TRUE, 'Description' => 'Maximum Update Package Size'),
+      'UpdateConnectionTimeout' => array('Type' => 'int', 'Depends' => 'EnableAutoUpdates', 'NamedWhenChanged' => TRUE, 'Description' => 'Update Connection Timeout'),
       'SupportedGuis' => array('Type' => 'array', 'Default' => 'array(\'Default\', \'Original\')', 'Depends' => '', 'Description' => 'Supported GUIs'),
       'DefaultGui' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default GUI'),
       'AllowUserSelectableGui' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow User Selectable GUI'),
@@ -3352,6 +3395,8 @@ function findFreeOutputName($directory, $baseName, $extension) {
 // / Nothing in the session is ever written over. A name is taken by linking the file to it, which fails rather than replaces when the name was taken in the meantime.
 // / A filesystem that cannot link falls back to a rename, once the name is found to be free.
 // / The Extractor, Metadata & PDF pipelines each place what they make through it, from a folder of their own inside the session.
+// / A placed file is given the time it was placed, from v4.2.3, as an upload is. A file an archive held keeps the time the archive gave it,
+// / so a signed in user's lifetime, which counts from a file's time, would have removed a file extracted a moment before.
 function placeSessionFile($sourcePath, $fileName) {
   // / Set variables.
   global $ConvertDir, $Allowed, $DangerousFiles, $PermissionLevels, $EnableMemoryProtection;
@@ -3384,6 +3429,7 @@ function placeSessionFile($sourcePath, $fileName) {
         if (!file_exists($candidatePath) && !is_link($candidatePath) && @rename((string)$sourcePath, $candidatePath)) $FileWasPlaced = TRUE; } }
     if ($FileWasPlaced) {
       @chmod($candidatePath, $PermissionLevels);
+      @touch($candidatePath);
       $PlacedName = $candidateName; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $cleanName, $fileExtension, $baseName, $candidateName, $candidatePath, $freePath, $nameIsSanitized, $nameWasFound, $attemptNumber, $sourcePath, $fileName);
@@ -4020,7 +4066,9 @@ function convertFiles($ConvertSelected, $UserFilename, $UserExtension, $Height, 
 // / A function to scan the files a user selected with ClamAV, ScanCore or both, & build the
 // / report they download.
 // / Accepts the files & the scan type, which is clamav, scancore or all, in that order.
-// / Returns whether a verdict was reached, whether anything went wrong, whether any file was found infected, the report's path & its name, in that order.
+// / Returns whether a verdict was reached, whether anything went wrong, whether any file was found infected, the report's path, its name
+// / the files found suspicious & the files not scanned in full, in that order. A suspicious file is one ScanCore matched without a hash, from v4.2.3,
+// / & is not an infected one. A file not scanned in full is one ScanCore could not read all of, such as an encrypted archive, from v4.2.3.
 // / The scan is the Scan pipeline's, from v4.1.6. This dispatches to it, names the report, & reads what the scan found.
 // / A missing Scan pipeline is reported rather than read as a scan that found nothing, because a clean verdict nobody reached is the one answer a scan must never give.
 function userVirusScan($FilesToScan, $type) {
@@ -4028,7 +4076,7 @@ function userVirusScan($FilesToScan, $type) {
   global $PipelineCoreActive, $ConsolidatedLogFileName, $EnableMemoryProtection;
   $ScanComplete = $ScanErrors = $UserVirusFound = FALSE;
   $ReportPath = $ReportName = '';
-  $scanFindings = array();
+  $SuspiciousFiles = $IncompleteFiles = $scanFindings = array();
   if (!$PipelineCoreActive or !function_exists('runOperationPipeline')) {
     $ScanErrors = TRUE;
     errorEntry('A virus scan was requested but no Scan pipeline is installed!', 34006, FALSE); }
@@ -4037,10 +4085,12 @@ function userVirusScan($FilesToScan, $type) {
     if (is_array($scanFindings)) {
       $UserVirusFound = (($scanFindings['Threat'] ?? FALSE) === TRUE);
       $ReportPath = is_string($scanFindings['Report'] ?? NULL) ? $scanFindings['Report'] : '';
-      $ReportName = is_string($scanFindings['ReportName'] ?? NULL) ? $scanFindings['ReportName'] : ''; } }
+      $ReportName = is_string($scanFindings['ReportName'] ?? NULL) ? $scanFindings['ReportName'] : '';
+      $SuspiciousFiles = (isset($scanFindings['Suspicious']) && is_array($scanFindings['Suspicious'])) ? array_values(array_filter($scanFindings['Suspicious'], 'is_string')) : array();
+      $IncompleteFiles = (isset($scanFindings['Incomplete']) && is_array($scanFindings['Incomplete'])) ? array_values(array_filter($scanFindings['Incomplete'], 'is_string')) : array(); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $scanFindings, $FilesToScan, $type);
-  return array($ScanComplete, $ScanErrors, $UserVirusFound, $ReportPath, $ReportName); }
+  return array($ScanComplete, $ScanErrors, $UserVirusFound, $ReportPath, $ReportName, $SuspiciousFiles, $IncompleteFiles); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -4772,10 +4822,12 @@ if (!$CommandLineHandled && $UserType === 'web') {
         if (!takeOperationBudget('user virus scan')) print($Alert3.$Lol);
         else {
           logEntry('Initiating User Virus Scanner.');
-          list ($ScanComplete, $ScanErrors, $UserVirusFound) = userVirusScan($FilesToScan, $UserScanType);
+          list ($ScanComplete, $ScanErrors, $UserVirusFound, $UserScanReportPath, $UserScanReportName, $UserSuspiciousFiles, $UserIncompleteFiles) = userVirusScan($FilesToScan, $UserScanType);
           if (!$ScanComplete) errorEntry('User Virus Scan Failed!', 23, TRUE);
           if ($UserVirusFound) logEntry('The User Virus Scan detected infected files.');
           if (!$UserVirusFound) logEntry('The User Virus Scan did not detect any infected files.');
+          if (count($UserSuspiciousFiles) > 0) logEntry('The User Virus Scan found '.count($UserSuspiciousFiles).' suspicious file(s).');
+          if (count($UserIncompleteFiles) > 0) logEntry('The User Virus Scan could not read '.count($UserIncompleteFiles).' file(s) in full.');
           if ($ScanErrors) logEntry('User Virus Scan finished with errors.');
           if ($Verbose) logEntry('User Virus Scan Complete.'); }
         $BudgetWasReleased = giveBackOperationBudget('user virus scan'); }

@@ -262,6 +262,7 @@ the setting while the one it depends on is off, & a Conflict names what follows 
 & $EngineConfigTemplate in Resources/Contract/app-engine-config.php.
 A setting whose model carries NamedWhenChanged, from v4.2.0, is named as having no effect only once it differs from its
 default, so a feature with many settings that most installations leave off, as accounts are, names only what was changed.
+The settings of automatic updates carry it from v4.2.3, when updates became off by default.
 Forgetting the model does not break anything immediately, which is the point. A setting the
 model does not know is reported as unaccounted, can still be edited by hand, & simply cannot
 be reset. Forgetting the list stops the check covering that setting.

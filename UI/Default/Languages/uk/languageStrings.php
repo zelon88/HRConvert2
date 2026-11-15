@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -630,6 +630,12 @@ $Gui2Text235 = 'Він замінить {name} для всіх користув�
 $Gui2Text236 = 'Не вдалося підготувати робочий процес.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'Опис довший за 500 символів або містить символ, який неможливо показати.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'Передано без змін: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'Підозрілі, але зараження не підтверджено: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'Перевірено не повністю: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -737,4 +743,24 @@ $GuiAuthText41 = 'Ви вийшли з системи, бо ваш вхід бу
 $GuiAuthText42 = 'Сервер не відповів. Спробуйте ще раз.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'Відновлення облікових записів на цьому сервері недоступне.';
+// / 'Delete my files'
+$GuiAuthText44 = 'Видаляти мої файли';
+// / 'Never'
+$GuiAuthText45 = 'Ніколи';
+// / 'After 1 hour'
+$GuiAuthText46 = 'Через 1 годину';
+// / 'After 1 day'
+$GuiAuthText47 = 'Через 1 день';
+// / 'After 1 week'
+$GuiAuthText48 = 'Через 1 тиждень';
+// / 'After 30 days'
+$GuiAuthText49 = 'Через 30 днів';
+// / 'Save'
+$GuiAuthText50 = 'Зберегти';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'Файл видаляється, якщо він не змінювався стільки часу.';
+// / 'Saved.'
+$GuiAuthText52 = 'Збережено.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'Не вдалося зберегти.';
 // / -----------------------------------------------------------------------------------

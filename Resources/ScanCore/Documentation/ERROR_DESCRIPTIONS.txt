@@ -136,17 +136,12 @@ FILE READING, BLOCK 600 TO 699
       next file.
 
 
-620   Not fatal. Refused a container entry whose declared expansion exceeds
-      $MaxArchiveCompressionRatio. This is the shape of a decompression bomb and
-      the entry is refused before any of it is decompressed. The rest of the
-      container is still inspected. This is an attacker supplied file handled
-      correctly, so it does not stop the scan.
+620   Retired in v1.9. The number is not reused. A container entry that exceeds
+      $MaxArchiveCompressionRatio is now reported as the finding
+      Bomb.Archive.CompressionRatio.
 
-630   Not fatal. Cannot open a container for inspection, so its contents were not
-      classified. The container may be corrupt, encrypted, or not a zip file
-      despite its header. Neither the zip extension nor the unzip binary was able
-      to list it. Install php-zip, or the unzip package, if this recurs on files
-      that open normally elsewhere.
+630   Retired in v1.9. The number is not reused. A container that cannot be
+      opened is now reported on an Incomplete: line that carries the reason.
 
 
 APPLICATION UPDATES, BLOCK 700 TO 799
@@ -210,3 +205,33 @@ APPLICATION UPDATE ABORT, BLOCK 900 TO 999
       remainder of the run and the message is printed to the console as a warning.
       The scan continues, because a scanner that cannot write a log must still
       scan.
+
+
+WARNINGS
+--------------------------------------------------------------------------------
+Cannot search a block of data for host names, host indicators in it were not
+matched.
+      The pattern engine gave up on one block of a file. Hash, name, data and url
+      indicators were still matched for that block. Raise pcre.backtrack_limit if
+      this recurs.
+
+
+INCOMPLETE REASONS
+--------------------------------------------------------------------------------
+An Incomplete: line is not an error and carries no number. It records that part
+of a file was not read. The reasons are:
+
+      an archive lists N entries & M were inspected
+      the entry budget of N was reached
+      the total decompression budget of N bytes was reached
+      a member larger than the entry budget was inspected in part
+      a compressed stream larger than the entry budget was inspected in part
+      a nested archive larger than the entry budget was not opened
+      an encrypted member cannot be inspected
+      a member uses a compression method that is not read
+      a damaged member could not be read
+      a zip directory could not be read
+      a zip directory is damaged
+      a tar archive ends before its last member does
+      a gzip stream cannot be read without the zlib extension
+      a bzip2 stream is not read

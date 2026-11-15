@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -629,6 +629,12 @@ $Gui2Text235 = 'It takes the place of {name} for every user.';
 $Gui2Text236 = 'The workflow could not be staged.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'A description is longer than 500 characters, or holds a character that cannot be shown.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'Passed on unchanged: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'Suspicious, but not confirmed infected: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'Not scanned in full: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -736,4 +742,24 @@ $GuiAuthText41 = 'You were signed out, because your sign in was used somewhere e
 $GuiAuthText42 = 'The server did not answer. Please try again.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'Recovering an account is unavailable on this server.';
+// / 'Delete my files'
+$GuiAuthText44 = 'Delete my files';
+// / 'Never'
+$GuiAuthText45 = 'Never';
+// / 'After 1 hour'
+$GuiAuthText46 = 'After 1 hour';
+// / 'After 1 day'
+$GuiAuthText47 = 'After 1 day';
+// / 'After 1 week'
+$GuiAuthText48 = 'After 1 week';
+// / 'After 30 days'
+$GuiAuthText49 = 'After 30 days';
+// / 'Save'
+$GuiAuthText50 = 'Save';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'A file is deleted once it has gone unchanged for that long.';
+// / 'Saved.'
+$GuiAuthText52 = 'Saved.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'It could not be saved.';
 // / -----------------------------------------------------------------------------------

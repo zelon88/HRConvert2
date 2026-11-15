@@ -1,26 +1,26 @@
 <?php
 // / -----------------------------------------------------------------------------------
 // / COPYRIGHT INFORMATION ...
-// / ScanCore, Copyright on 3/31/2024 by Justin Grimes, www.github.com/zelon88 
-// / 
+// / ScanCore, Copyright on 3/31/2024 by Justin Grimes, www.github.com/zelon88
+// /
 // / LICENSE INFORMATION ...
 // / This project is protected by the GNU GPLv3 Open-Source license.
 // / BSD or MIT licensing is available. Reach out to @zelon88 for more information.
 // / https://www.gnu.org/licenses/gpl-3.0.html
-// / 
+// /
 // / APPLICATION INFORMATION ...
 // / This application is designed to scan files & folders for viruses.
-// / 
+// /
 // / FILE INFORMATION ...
-// / v1.8.
+// / v1.9.
 // / This file contains the configuration entries of the ScanCore application.
-// / 
+// /
 // / VERSION COMPATIBILITY ...
 // / This file is a minimum match against the core.
 // / A configuration file newer than the core is accepted.
 // / A configuration file older than the core is refused, because entries may be absent.
 // / Any entry that is missing or invalid falls back to a built in default & is reported.
-// / 
+// /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ if (PHP_SAPI !== 'cli') die('ERROR!!! ScanCore_Config.php can only be read by Sc
 
 // / -----------------------------------------------------------------------------------
 // / General Information ...
-// / 
+// /
 // /  --Allow Application Updates--
 // /   Allow application updates. Requires git. Will replace ScanCore_Config.php & rename the original.
 // /   Valid options are TRUE or FALSE.
@@ -70,7 +70,7 @@ $ApplicationBranchName = 'master';
 // /   The copy HRConvert2 bundles leaves out ScanCore_Config.php & index.html, because HRConvert2 keeps its own copy of each.
 // /   An application update would otherwise replace the command line guard at the top of this file & the page this folder serves.
 // /   A ScanCore release that adds a configuration entry refuses this file until the entry is added here by hand.
-$ApplicationUpdateSubscriptions = array('README.md', 'ScanCore.php', 'ScanCore_Classifiers.def', 'Documentation/CHANGELOG.txt', 'Documentation/index.html');
+$ApplicationUpdateSubscriptions = array('README.md', 'ScanCore.php', 'ScanCore_Classifiers.def', 'Documentation/CHANGELOG.txt', 'Documentation/ERROR_DESCRIPTIONS.txt', 'Documentation/DEVELOPMENT_NOTES.txt', 'Documentation/index.html');
 // /  --Allow Definition Updates--
 // /   Allow definition updates.
 // /   Valid options are TRUE or FALSE.
@@ -187,20 +187,27 @@ $ClassifyContent = TRUE;
 // /   Default is all of them.
 $EnabledClassifiers = array('Language', 'SCAD', 'PDF', 'Document', 'Spreadsheet', 'Presentation', 'XPS', 'SVG', 'Markup', 'Stream', 'Transport', 'Model', 'Drawing', 'Ebook', 'Subtitle');
 // /  --Inspect Archived Content--
-// /   Open a zip container & classify the entries inside it.
-// /   A word processing document, a presentation, an ebook & an XPS package are all
-// /   zip files whose interesting content is compressed, so a byte scan of the
-// /   container itself finds nothing at all.
+// /   Open a zip, gzip or tar container & inspect the entries inside it.
+// /   Every entry is matched against the virus definitions & is classified.
+// /   A container found inside a container is opened in turn.
+// /   A zip appended to a file of another format is found & opened as well.
 // /   Every entry is measured against the decompression budget below before it is read.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $InspectArchivedContent = TRUE;
 // /  --Maximum Archive Entries--
 // /   The number of entries ScanCore will look at inside one container.
-// /   This is the first defence against a container holding millions of small members.
+// /   Containers nested inside it draw on the same allowance.
+// /   A file with entries left over is reported as incomplete.
 // /   Must be formatted as an integer, or an equation that evaluates to an integer.
-// /   Default is 512.
-$MaxArchiveEntries = 512;
+// /   Default is 4096.
+$MaxArchiveEntries = 4096;
+// /  --Maximum Archive Depth--
+// /   The number of containers ScanCore will open one inside another.
+// /   A container nested deeper than this is reported as infected & is not opened.
+// /   Must be formatted as an integer, or an equation that evaluates to an integer.
+// /   Default is 5.
+$MaxArchiveDepth = 5;
 // /  --Maximum Archive Entry Size--
 // /   The number of bytes ScanCore will decompress from any single container entry.
 // /   The read is bounded by this value & not by what the container claims, so an entry
@@ -209,19 +216,39 @@ $MaxArchiveEntries = 512;
 // /   Default is 1024*1024*8.
 $MaxArchiveEntrySize = 1024*1024*8;
 // /  --Maximum Archive Total Size--
-// /   The number of bytes ScanCore will decompress from one container in total.
-// /   Reading stops at this point & whatever was found so far is still reported.
+// /   The number of bytes ScanCore will decompress from one file in total.
+// /   Reading stops at this point & the file is reported as incomplete.
+// /   A zip whose entries declare more than this between them is reported as infected.
 // /   Must be formatted as an integer, or an equation that evaluates to an integer.
 // /   Default is 1024*1024*64.
 $MaxArchiveTotalSize = 1024*1024*64;
 // /  --Maximum Archive Compression Ratio--
-// /   The number of times an entry may expand beyond its stored size before it is
-// /   refused. An entry that expands a thousand times is the shape of a decompression
-// /   bomb, & it is refused before any of it is decompressed rather than afterwards.
+// /   The number of times an entry may expand beyond its stored size.
+// /   An entry larger than the entry size limit that also exceeds this ratio is
+// /   reported as infected. It is still read up to the entry size limit.
 // /   Ordinary markup compresses somewhere between five & twenty times.
 // /   Must be formatted as an integer, or an equation that evaluates to an integer.
 // /   Default is 200.
 $MaxArchiveCompressionRatio = 200;
+// /  --Inspect Images--
+// /   Check the structure of a png file & search every image for embedded code.
+// /   Detects a pixel flood, an expanding text chunk, an image data overrun, a damaged
+// /   chunk, data after the end of the image & a file named png that is not one.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$InspectImages = TRUE;
+// /  --Maximum Image Pixels--
+// /   The largest image, as width multiplied by height, that is not reported as infected.
+// /   Set this to the largest image your own decoder can afford to open.
+// /   Must be formatted as an integer, or an equation that evaluates to an integer.
+// /   Default is 16384*16384.
+$MaxImagePixels = 16384*16384;
+// /  --Maximum Image Chunk Size--
+// /   The number of bytes a compressed png text or profile chunk may expand to.
+// /   Image data that inflates this far past its declared size is reported as well.
+// /   Must be formatted as an integer, or an equation that evaluates to an integer.
+// /   Default is 1024*1024*8.
+$MaxImageChunkSize = 1024*1024*8;
 // /  --Classifier File Name--
 // /   The filename for the ScanCore classifier definition file.
 // /   This file ships with the application & is updated with the application.
@@ -300,12 +327,12 @@ $DirectoryPermissions = 0755;
 // /  --Configuration Version--
 // /   The version of this file, used for internal version integrity checks.
 // /   Must be formatted as a string. Must be equal to or newer than the ScanCore.php file.
-$ConfigVersion = 'v1.8';
+$ConfigVersion = 'v1.9';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / Directory locations ...
-// / 
+// /
 // /  --Scan Location--
 // /   The default path to scan if run with no input scan path argument.
 // /   A relative path is resolved against the installation directory.

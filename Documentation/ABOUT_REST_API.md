@@ -97,12 +97,14 @@ Where the administrator has turned accounts on, a caller may sign in and present
 | `resend` | `SignInUsername` | `resent`, `too-many`, whether or not the account exists |
 | `recover` | `SignInUsername` | `recovery-sent`, `too-many`, whether or not the account exists |
 | `reset` | `SignInUsername`, `SignInCode`, `SignInPassword` | `reset-done`, `code-wrong`, `code-expired`, `password-short`, `too-many` |
+| `lifetime` | `SignInKey`, `SignInFileLifetime` | `lifetime-saved`, `signed-out` for a key that signs nobody in, `lifetime-invalid` for a lifetime not offered. From v4.2.3 |
 | `page` | `SignInPage` | Draws `signin`, `register`, `confirm`, `recover` or `reset` as HTML |
 
 * `SignInKey` *(String, 96 hexadecimal digits)*
   * **A signed in caller sends it with every request**, an upload and an operation alike. The newest key inside its life signs a request in, and so does the key before it for a short grace. A request without one is anonymous.
   * Trade it with `exchange` every `Interval` seconds and always use the newest. Presenting a key does not spend it, and trading one does. A key traded twice ends the sign in.
 * `SignInPassword` is sent as typed and is never sanitized. One longer than 1024 bytes is refused.
+* `SignInFileLifetime` *(Integer, seconds)* is `0`, `3600`, `86400`, `604800` or `2592000`, from v4.2.3. The account keeps its files that long, and a file unchanged for longer is deleted, unless a workflow is running. `0` keeps them until they are deleted.
 
 ### 🗄️ B. General File Operations
 * `file` *(Multipart file field, or `file[]` for several)*
@@ -235,6 +237,8 @@ Every reply is one line of JSON under the key `Workflow`, after the doctype line
   * A run that does not start says why in `Reason`, asked in this order: `disabled`, `unknown`, `busy`, `files`, `nothing`, `server` or `start`.
 * `workflowStatus` *(1)*
   * Reports this session's workflow. `State` is `none`, `starting`, `running`, `finished`, `stopped`, `failed` or `interrupted`, with the step, the file, every file it made and the reason it ended.
+  * From v4.2.3 `Suspicious` names every file a step found suspicious, and the workflow went on. Each step's `Kept` counts the files it passed on unchanged, which are not in `Produced`.
+  * From v4.2.3 `Incomplete` names every file a step could not scan in full, such as a zip holding an encrypted member, and the workflow went on. Such a file is not known to be clean. It is not the `Reason` `incomplete`.
   * While it is `starting` or `running`, `Document` holds the workflow in canonical form, so a page loaded again can draw what is running. It is empty once the workflow has ended.
   * **An ended workflow is reported once.** The request that reads it removes it, so the session may start another.
 * `workflowStop` *(1)*
@@ -242,8 +246,8 @@ Every reply is one line of JSON under the key `Workflow`, after the doctype line
 * `workflowDocument` *(String)* with `workflowFiles[]` *(one for each file)*
   * Starts a workflow a page built, sent as its JSON text, and replies as `workflowRun` does. It is checked exactly as a library's workflow is and held to every limit. `Reason` may also be `builder`, when the builder is off, or `invalid`, with `Problems` naming everything to fix in the server's words, which are English. From v4.2.1 a choice this server does not offer, such as a format no installed tool writes, is `invalid` too.
 * `workflowPreview` *(String)* with `workflowFiles[]` *(one for each file)*
-  * Names the files each step of that workflow would take were it run now on those files, and runs nothing, takes no budget and keeps nothing: `{"Workflow":{"Previewed":true,"Reason":"","Steps":[{"Operation":"Convert","From":["selection"],"Known":true,"Takes":["notes.docx"],"LeftOut":1,"Unknown":[],"Consumes":""}]}}`.
-  * `Reason` is what a run would be refused for now, `files` or `nothing`, and is empty when it would start. A preview that is not made says `disabled`, `unknown` or `files`. A step taking what an operation makes is not `Known` until it runs, and `Unknown` names those references. `Consumes` is `deleted` for a step that deletes what it takes.
+  * Names the files each step of that workflow would take were it run now on those files, and runs nothing, takes no budget and keeps nothing: `{"Workflow":{"Previewed":true,"Reason":"","Steps":[{"Operation":"Convert","From":["selection"],"Known":true,"Takes":["notes.docx"],"Keeps":["alpha.pdf"],"LeftOut":1,"Unknown":[],"Consumes":""}]}}`.
+  * `Reason` is what a run would be refused for now, `files` or `nothing`, and is empty when it would start. A preview that is not made says `disabled`, `unknown` or `files`. A step taking what an operation makes is not `Known` until it runs, and `Unknown` names those references. `Consumes` is `deleted` for a step that deletes what it takes. From v4.2.3 `Keeps` names the files a step would pass on unchanged, such as a pdf a conversion to pdf is handed, and they are not in `Takes`.
 * `workflowPreviewDocument` *(String)* with `workflowFiles[]` *(one for each file)*
   * Previews a workflow a page built, sent as its JSON text, and replies as `workflowPreview` does, with `builder` and `invalid` as `workflowDocument` gives them. A request naming a preview and a run is answered as the preview and runs nothing.
 * `workflowOperations` *(1)*

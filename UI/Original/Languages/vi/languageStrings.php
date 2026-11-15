@@ -38,7 +38,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -637,6 +637,12 @@ $Gui2Text235 = 'Nó thay thế {name} cho mọi người dùng.';
 $Gui2Text236 = 'Không thể chuẩn bị quy trình.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'Một mô tả dài hơn 500 ký tự, hoặc chứa ký tự không thể hiển thị.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'Chuyển tiếp nguyên trạng: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'Đáng ngờ, nhưng chưa xác nhận bị nhiễm: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'Chưa quét được toàn bộ: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -745,4 +751,24 @@ $GuiAuthText41 = 'Bạn đã bị đăng xuất vì phiên đăng nhập của b
 $GuiAuthText42 = 'Máy chủ không phản hồi. Vui lòng thử lại.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'Máy chủ này không hỗ trợ khôi phục tài khoản.';
+// / 'Delete my files'
+$GuiAuthText44 = 'Xóa tệp của tôi';
+// / 'Never'
+$GuiAuthText45 = 'Không bao giờ';
+// / 'After 1 hour'
+$GuiAuthText46 = 'Sau 1 giờ';
+// / 'After 1 day'
+$GuiAuthText47 = 'Sau 1 ngày';
+// / 'After 1 week'
+$GuiAuthText48 = 'Sau 1 tuần';
+// / 'After 30 days'
+$GuiAuthText49 = 'Sau 30 ngày';
+// / 'Save'
+$GuiAuthText50 = 'Lưu';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'Một tệp sẽ bị xóa khi nó không thay đổi trong khoảng thời gian đó.';
+// / 'Saved.'
+$GuiAuthText52 = 'Đã lưu.';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'Không thể lưu.';
 // / -----------------------------------------------------------------------------------

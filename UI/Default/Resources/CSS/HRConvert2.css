@@ -552,6 +552,11 @@ select.hrc2-wf-row-control {
 .hrc2-wf-confirm-files {
   padding-inline-start: 12px;
   overflow-wrap: anywhere; }
+/* / A result names the files found suspicious, & those not scanned in full, beneath what it made, from v4.2.3, & a long name wraps anywhere, as a preview's does. */
+.hrc2-wf-status .hrc2-wf-suspicious,
+.hrc2-wf-status .hrc2-wf-incomplete {
+  margin-top: 6px;
+  overflow-wrap: anywhere; }
 
 /* / -----------------------------------------------------------------------------------
    / The workflow builder, drawn where a server allows it.
@@ -988,6 +993,23 @@ input.hrc2-wf-row-control[type='number'] {
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid var(--hrc2-hairline); }
+/* / How long a signed in user's files are kept is under a hairline in the account's panel, from v4.2.3.
+   / The choice is as wide as its longest word in every language, & keeps room at its end for the arrow every choice is drawn with,
+   / which is on the left where the language reads right to left. The choice & its button are centred on one line.
+   / What the choice means, & whether it was saved, is set smaller than the choice. */
+#hrc2FileLifetime {
+  width: auto;
+  min-width: 120px;
+  padding-right: 28px;
+  padding-inline-end: 28px;
+  padding-inline-start: 5px; }
+[dir='rtl'] #hrc2FileLifetime {
+  padding-left: 28px;
+  padding-right: 5px; }
+#hrc2FileLifetimeOptions .hrc2-menu-choices {
+  align-items: center; }
+.hrc2-menu-note {
+  font-size: 13px; }
 
 /* / -----------------------------------------------------------------------------------
    / SIGNING IN, WHERE ACCOUNTS ARE ON.

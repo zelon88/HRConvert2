@@ -334,7 +334,9 @@ clear & share links are guessable over plain HTTP.
 -----UPDATING-----
 
 1. Run  'cd /var/www/html/HRProprietary/HRConvert2'
-2. Run  'sudo php convertCore.php -u'
+2. Turn on --Enable Automatic Updates--, which is off by default. Run  'sudo php convertCore.php --config'
+   & enter  'set EnableAutoUpdates'  in General Information, or set it TRUE in config.php itself.
+3. Run  'sudo php convertCore.php -u'
 
 An update carries every setting over, except an array that differs from the new default. That
 takes the new default & is named, so a deliberate change can be made again. The installation

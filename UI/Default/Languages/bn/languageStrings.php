@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -629,6 +629,12 @@ $Gui2Text235 = 'এটি প্রত্যেক ব্যবহারকা�
 $Gui2Text236 = 'ওয়ার্কফ্লো প্রস্তুত করা যায়নি।';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'একটি বিবরণ ৫০০ অক্ষরের বেশি, অথবা এতে এমন একটি অক্ষর আছে যা দেখানো যায় না।';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'অপরিবর্তিত অবস্থায় পাঠানো হয়েছে: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'সন্দেহজনক, তবে সংক্রমণ নিশ্চিত নয়: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'সম্পূর্ণ স্ক্যান করা যায়নি: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -736,4 +742,24 @@ $GuiAuthText41 = 'আপনাকে সাইন আউট করা হয়�
 $GuiAuthText42 = 'সার্ভার সাড়া দেয়নি। আবার চেষ্টা করুন।';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'এই সার্ভারে অ্যাকাউন্ট পুনরুদ্ধার করা যায় না।';
+// / 'Delete my files'
+$GuiAuthText44 = 'আমার ফাইল মুছে ফেলুন';
+// / 'Never'
+$GuiAuthText45 = 'কখনও না';
+// / 'After 1 hour'
+$GuiAuthText46 = '১ ঘণ্টা পরে';
+// / 'After 1 day'
+$GuiAuthText47 = '১ দিন পরে';
+// / 'After 1 week'
+$GuiAuthText48 = '১ সপ্তাহ পরে';
+// / 'After 30 days'
+$GuiAuthText49 = '৩০ দিন পরে';
+// / 'Save'
+$GuiAuthText50 = 'সংরক্ষণ করুন';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'কোনো ফাইল এত সময় অপরিবর্তিত থাকলে তা মুছে ফেলা হয়।';
+// / 'Saved.'
+$GuiAuthText52 = 'সংরক্ষিত হয়েছে।';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'সংরক্ষণ করা যায়নি।';
 // / -----------------------------------------------------------------------------------

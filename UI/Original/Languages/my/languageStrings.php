@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -629,6 +629,12 @@ $Gui2Text235 = 'အသုံးပြုသူတိုင်းအတွက် 
 $Gui2Text236 = 'လုပ်ငန်းစဉ်ကို ပြင်ဆင်၍ မရပါ။';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = 'ဖော်ပြချက်တစ်ခုသည် စာလုံး ၅၀၀ ထက်ပိုရှည်သည်၊ သို့မဟုတ် ပြသ၍မရသော စာလုံးပါဝင်သည်။';
+// / 'Passed on unchanged: '
+$Gui2Text238 = 'မပြောင်းလဲဘဲ ဆက်ပေးပို့ထားသည်: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = 'သံသယဖြစ်ဖွယ်၊ သို့သော် ကူးစက်ကြောင်း အတည်မပြုရသေး: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = 'အပြည့်အစုံ မစစ်ဆေးနိုင်ခဲ့: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -736,4 +742,24 @@ $GuiAuthText41 = 'သင့်ဝင်ရောက်မှုကို အခ�
 $GuiAuthText42 = 'ဆာဗာက မတုံ့ပြန်ပါ။ ထပ်ကြိုးစားပါ။';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = 'ဤဆာဗာတွင် အကောင့် ပြန်ယူ၍ မရပါ။';
+// / 'Delete my files'
+$GuiAuthText44 = 'ကျွန်ုပ်၏ ဖိုင်များကို ပယ်ဖျက်ရန်';
+// / 'Never'
+$GuiAuthText45 = 'ဘယ်တော့မှ';
+// / 'After 1 hour'
+$GuiAuthText46 = '၁ နာရီအကြာ';
+// / 'After 1 day'
+$GuiAuthText47 = '၁ ရက်အကြာ';
+// / 'After 1 week'
+$GuiAuthText48 = '၁ ပတ်အကြာ';
+// / 'After 30 days'
+$GuiAuthText49 = '၃၀ ရက်အကြာ';
+// / 'Save'
+$GuiAuthText50 = 'သိမ်းဆည်းရန်';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = 'ဖိုင်တစ်ခုသည် ထိုကာလအတွင်း မပြောင်းလဲပါက ပယ်ဖျက်ခံရမည်။';
+// / 'Saved.'
+$GuiAuthText52 = 'သိမ်းဆည်းပြီးပါပြီ။';
+// / 'It could not be saved.'
+$GuiAuthText53 = 'သိမ်းဆည်း၍ မရပါ။';
 // / -----------------------------------------------------------------------------------

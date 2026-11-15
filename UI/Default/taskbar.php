@@ -16,7 +16,9 @@
 // / This file contains the bar at the top of the upload page & the file list, & the panels its buttons open.
 // / Every control the two pages share is here, so both pages draw them alike & neither repeats them.
 // / Back & Refresh are at the start of the bar. Workflows, the settings & Sign in are at its end, so Sign in is never farther from the page than the card's own corner.
-// / The settings open one panel, holding the language, the colour, the interface & Start Over, & a signed in user's name opens another, holding Sign out.
+// / The settings open one panel, holding the language, the colour, the interface & Start Over, & a signed in user's name opens another, holding Sign out
+// / & how long their files are kept, from v4.2.3.
+// / Start Over is offered only to a visitor who has not signed in, from v4.2.3, because a signed in user's files are kept for them & Start Over deletes every one.
 // / The page that requires it sets $taskbarPage, which is upload or files, & the addresses its buttons post to, which are $refreshURL,
 // / $selectorBase, $sessionParams & $sortParams, & on the file list $backURL as well. It reads no request itself.
 // /
@@ -45,14 +47,21 @@ $taskbarUsername = $taskbarIsSignedIn ? (string)($taskbarAccount['Username'] ?? 
 $taskbarOffersWorkflows = (!empty($EnableWorkflows) && ($taskbarOnFiles or $FileCount > 0));
 // / Workflows from the upload page opens the file list with its panel open, & the address after the hash is never sent to the server.
 $taskbarWorkflowsURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams.'#hrc2Workflows';
-// / The settings are offered where there is something in them to choose or to clear.
-$taskbarOffersSettings = ($AllowUserSelectableLanguage or $AllowUserSelectableColor or $AllowUserSelectableGui or $FileCount > 0);
+// / The settings are offered where there is something in them to choose or to clear. A signed in user clears nothing from them.
+$taskbarOffersSettings = ($AllowUserSelectableLanguage or $AllowUserSelectableColor or $AllowUserSelectableGui or ($FileCount > 0 && !$taskbarIsSignedIn));
 $taskbarSwatches = array(
   'red' => '#c0392b',  'green' => '#27ae60',  'blue' => '#3d71b3',  'grey' => '#7f8c8d',
   'orange' => '#e67e22', 'purple' => '#8e44ad', 'dark' => '#2c3e50');
 $taskbarLanguage = $taskbarLabel = $taskbarColor = $taskbarSwatch = $taskbarGui = $taskbarURL = $taskbarWho = '';
 $taskbarIsCurrent = FALSE;
 $taskbarWho = $GuiAuthText17.' '.$taskbarUsername;
+// / The lifetimes a signed in user may choose for their files, in seconds, each with its words, & the one their account holds, from v4.2.3.
+// / The Engine says which are offered, & one with no words here is not drawn.
+$taskbarLifetimeWords = array(0 => $GuiAuthText45, 3600 => $GuiAuthText46, 86400 => $GuiAuthText47, 604800 => $GuiAuthText48, 2592000 => $GuiAuthText49);
+$taskbarLifetimes = array();
+$taskbarLifetime = 0;
+$taskbarFileLifetime = (int)($taskbarAccount['FileLifetime'] ?? 0);
+if ($taskbarIsSignedIn && isset($taskbarAccount['FileLifetimes']) && is_array($taskbarAccount['FileLifetimes'])) foreach ($taskbarAccount['FileLifetimes'] as $taskbarLifetime) if (is_int($taskbarLifetime) && isset($taskbarLifetimeWords[$taskbarLifetime])) $taskbarLifetimes[] = $taskbarLifetime;
 // / -----------------------------------------------------------------------------------
 ?>
       <?php // / The bar is one panel, & each of its buttons is the scheme's button, made the size a bar's button is.
@@ -140,7 +149,7 @@ $taskbarWho = $GuiAuthText17.' '.$taskbarUsername;
           </p>
           <?php } ?>
         </form>
-        <?php if ($FileCount > 0) { ?>
+        <?php if ($FileCount > 0 && !$taskbarIsSignedIn) { ?>
         <div id='startOverOptionsDiv' name='startOverOptionsDiv' class='hrc2-menu-section'>
           <p><strong><?php echo $Gui1Text35; ?></strong></p>
           <input type='submit' id='startOverConfirm' name='startOverConfirm' class='info-button' value='<?php echo htmlspecialchars($Gui1Text36, ENT_QUOTES, 'UTF-8'); ?>'>
@@ -167,6 +176,22 @@ $taskbarWho = $GuiAuthText17.' '.$taskbarUsername;
       <div id='hrc2AccountPanel' name='hrc2AccountPanel' class='hrc2-panel hrc2-menu hrc2-taskbar-panel' style='display:none;'>
         <p><?php echo $GuiAuthText17; ?> <strong><bdi><?php echo htmlspecialchars($taskbarUsername, ENT_QUOTES, 'UTF-8'); ?></bdi></strong></p>
         <button type='button' id='hrc2SignOut' class='info-button'><?php echo $GuiAuthText2; ?></button>
+        <?php if (count($taskbarLifetimes) > 0) {
+              // / How long the account keeps its files. HRC2-SignIn.js saves the choice, & the Engine's account sweep removes a file kept longer. ?>
+        <div id='hrc2FileLifetimeOptions' class='hrc2-menu-section'>
+          <p class='hrc2-menu-label'><label for='hrc2FileLifetime'><strong><?php echo $GuiAuthText44; ?></strong></label></p>
+          <p class='hrc2-menu-choices'>
+            <select id='hrc2FileLifetime'>
+              <?php foreach ($taskbarLifetimes as $taskbarLifetime) { ?>
+              <option value='<?php echo (int)$taskbarLifetime; ?>'<?php if ((int)$taskbarLifetime === $taskbarFileLifetime) echo ' selected'; ?>><?php echo htmlspecialchars($taskbarLifetimeWords[$taskbarLifetime], ENT_QUOTES, 'UTF-8'); ?></option>
+              <?php } ?>
+            </select>
+            <button type='button' id='hrc2FileLifetimeSave' class='info-button'><?php echo $GuiAuthText50; ?></button>
+          </p>
+          <p class='hrc2-menu-note'><?php echo $GuiAuthText51; ?></p>
+          <p id='hrc2FileLifetimeStatus' class='hrc2-menu-note' role='status' aria-live='polite'></p>
+        </div>
+        <?php } ?>
       </div>
       <?php } ?>
       <script type='text/javascript'>
@@ -177,5 +202,7 @@ $taskbarWho = $GuiAuthText17.' '.$taskbarUsername;
 // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
 // / An interface page is not a function, so its temporary variables are nulled & unset, as the other pages do.
 $taskbarOnFiles = $taskbarAccount = $taskbarAccountsAreOn = $taskbarIsSignedIn = $taskbarUsername = $taskbarOffersWorkflows = $taskbarWorkflowsURL = $taskbarOffersSettings = $taskbarSwatches = $taskbarLanguage = $taskbarLabel = $taskbarColor = $taskbarSwatch = $taskbarGui = $taskbarURL = $taskbarWho = $taskbarIsCurrent = NULL;
+$taskbarLifetimeWords = $taskbarLifetimes = $taskbarLifetime = $taskbarFileLifetime = NULL;
 unset($taskbarOnFiles, $taskbarAccount, $taskbarAccountsAreOn, $taskbarIsSignedIn, $taskbarUsername, $taskbarOffersWorkflows, $taskbarWorkflowsURL, $taskbarOffersSettings, $taskbarSwatches, $taskbarLanguage, $taskbarLabel, $taskbarColor, $taskbarSwatch, $taskbarGui, $taskbarURL, $taskbarWho, $taskbarIsCurrent);
+unset($taskbarLifetimeWords, $taskbarLifetimes, $taskbarLifetime, $taskbarFileLifetime);
 ?>

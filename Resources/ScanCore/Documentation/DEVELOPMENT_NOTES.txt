@@ -1,0 +1,146 @@
+ScanCore DEVELOPMENT NOTES
+
+Reasoning that does not belong in a code comment is kept here.
+Newest entries are at the top.
+
+
+v1.9  CONTAINER & IMAGE INSPECTION
+--------------------------------------------------------------------------------
+
+WHY ROOT LEAVES A LINK ALONE
+  Root hands what it creates to the installation owner by name. That owner can
+  write the folders root writes into, so it could put a link where root's file
+  was to go, & chown would follow it & hand over whatever it led to. lchown &
+  lchgrp never follow a link, & a link or a file with a second hard link is
+  left alone. The check & the change are still two steps, & the mode is still
+  set by name, so a link swapped in between them is reached. Keep the
+  installation's folders writable by the account that runs ScanCore & nobody
+  else, & keep fs.protected_hardlinks on.
+
+WHY THE ZIP READER IS OUR OWN
+  ZipArchive & the unzip binary both decide for themselves how much to read.
+  ZipArchive trusts the central directory. The unzip fallback also received
+  member names as arguments, so a member named -x or * steered the command.
+  The v1.9 reader needs only zlib. It reads the central directory, seeks to
+  each local header & inflates through inflate_add() in pieces. Output stops at
+  the byte limit whatever either header claims. There is no shell call.
+
+WHY A BOMB IS REPORTED AS INFECTED
+  HRConvert2 tests the report for the string "Infected: ". A bomb exists to
+  take down whatever opens it next, so it must stop the conversion. Bombs are
+  therefore high confidence. Damage & oddity are medium confidence & report as
+  Suspicious, because broken files are common & mostly innocent.
+
+  High     Bomb.PNG.PixelFlood           Bomb.Archive.NestingDepth
+           Bomb.PNG.ChunkExpansion       Bomb.Archive.OverlappingEntries
+           Bomb.PNG.DataOverrun          Bomb.Archive.TotalExpansion
+           Embedded.PHP                  Bomb.Archive.CompressionRatio
+  Medium   Malformed.PNG                 Malformed.Archive.HeaderMismatch
+           Polyglot.PNG.TrailingData     Polyglot.Archive.Hidden
+           Masquerade.PNG                Embedded.Script, .Shell, .Execution
+
+WHY THERE IS NO PNG COMPRESSION RATIO TEST
+  A blank image compresses at the maximum ratio deflate can reach, which is
+  about 1030 to 1. An honest 8000 by 8000 screenshot of nothing is
+  indistinguishable from a bomb by ratio. The pixel count is the policy
+  instead. Set $MaxImagePixels to what your decoder can afford.
+  Bomb.PNG.DataOverrun is different. It fires when the image data inflates
+  $MaxImageChunkSize past what the header itself declares, which no honest
+  encoder does.
+
+WHY AN ARCHIVE RATIO NEEDS A SIZE AS WELL
+  A small text file of one repeated character exceeds any ratio & is harmless.
+  A declared entry is only a bomb when it is both larger than
+  $MaxArchiveEntrySize & over $MaxArchiveCompressionRatio. A declared total is
+  only a bomb when it is both larger than $MaxArchiveTotalSize & over the ratio
+  against the whole archive. A large archive of photographs trips neither.
+  A member whose headers lie is caught by measurement instead. Reading it
+  reaches the entry limit from a few kilobytes of input.
+
+WHY THE WORD INCOMPLETE EXISTS
+  v1.8 stopped reading at a budget & said nothing. A caller could not tell a
+  clean archive from one ScanCore gave up on, & padding an archive with 512
+  small members hid everything after them. Incomplete is a neutral word. It is
+  never Infected, because an encrypted zip or a large backup is ordinary.
+  A caller that needs certainty treats Incomplete as unscanned.
+
+WHY NESTING DEPTH IS A FINDING & NOT A BUDGET
+  A zip quine contains itself & never ends. Depth is the only limit that stops
+  one. Nothing honest nests six containers deep, so exceeding $MaxArchiveDepth
+  is reported as Bomb.Archive.NestingDepth rather than as Incomplete.
+
+WHY EMBED SIGNATURES UNDER SIX BYTES ONLY MATCH DECODED TEXT
+  Compressed pixels are close to random. Three megabytes of them hold "<?="
+  about a fifth of the time. Six bytes turn up by chance once in 2^48
+  positions. Short signatures are still tested against png text chunks, which
+  are text once decoded.
+  The same reasoning is why a recognised image is no longer handed to the
+  language classifier. v1.8 reported ordinary jpeg files as PHP or Shell source.
+
+KNOWN GAPS
+  bzip2 is detected & reported Incomplete. This build environment had no bz2
+  extension, & an untested reader does not ship.
+  7z, rar, xz & zstd are not recognised.
+  Only the first member of a multi member gzip is read.
+  A v7 tar with no ustar magic is not recognised.
+  The fdAT frames of an animated png are checksummed & are not inflated.
+  jpeg & gif are searched for embedded code. Their structure is not checked.
+  A zip with a wrong base offset or directory size, which some extractors
+  tolerate, is reported Incomplete rather than read.
+
+TEST RESULTS
+  56 crafted fixtures covering every finding above, run under E_ALL.
+  1171 images & 2936 archives found on a development machine. No file was
+  reported Infected. Six png files were reported Suspicious & all six were
+  deliberately invalid test images from the Go source tree.
+  Peak memory across the fixture directory was 32 MB.
+
+
+v1.9  CODE REVIEW OF v1.8
+--------------------------------------------------------------------------------
+Fixed in v1.9.
+
+  1. Hash index, building run. loadDefs() kept full records only while the
+     record count was under $HashIndexThreshold & did not switch to the packed
+     index until the next run. Every hash past the threshold was unmatched on
+     the run that built the index.
+  2. Hash index, mixed sets. The same counter counted string indicators. A set
+     with many host records & few hashes dropped the later hashes on every run.
+  3. Host pattern. The pattern was quadratic on a long run of name characters.
+     200 KB of padding took 74 seconds. 2 MB exhausted the backtrack limit &
+     preg_match_all() returned FALSE, which read as "no hosts found".
+  4. Container members were classified & never matched against definitions.
+     A known sample inside a zip was clean.
+  5. A ratio refusal logged error 620 & produced no finding. HRConvert2 saw a
+     clean file.
+  6. Entries past the entry limit were skipped without a word.
+  7. Member names reached the unzip command line.
+  8. Container inspection only ran when classification was enabled.
+  9. normalizeSwitch() stripped characters, so the relative path -ua.jpg
+     became the update switch.
+ 10. unserialize() of the index file allowed objects.
+ 11. File & member names were written to the report raw. A name could forge a
+     report line or carry terminal escapes.
+ 12. A quoted definition value ended at the first quote, escaped or not.
+ 13. fopen() failing after is_readable() passed aborted the scan with error 10
+     & no summary.
+ 14. The $ApplicationUpdateSubscriptions fallback had drifted from the config.
+ 15. Ordinary jpeg files were classified as source code.
+
+Not changed in v1.9.
+
+  A file whose own name contains "Infected: " appears in the "Scanning file"
+  log line. HRConvert2's strpos() test then reports a clean file as infected.
+  The error is in the safe direction. Anchoring the caller's test to the start
+  of the message would close it.
+
+  Updates are trusted on TLS alone. There is no signature on the downloaded
+  core or definitions.
+
+  The index file is written beside whatever -df names.
+
+  validateConfig() & testInstalledApplication() assume the core is named
+  ScanCore.php.
+
+  -m 100 /path reads -m as the scan path. The path must be the first argument,
+  as documented.

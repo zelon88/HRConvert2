@@ -8,11 +8,12 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.0.
+// / v4.2.3.
 // / This file is the Authentication Manager. It looks after accounts over time, where the Authentication Core answers a request.
 // /
 // / It is not a manager in the sense the four the listener dispatches are. It opens no socket & runs as no role of its own.
 // / The Resource Manager loads it to answer a quota, & sweeps accounts with it on the listener's storage schedule.
+// / A sweep removes every file an account kept longer than its user chose to keep it, from v4.2.3.
 // / A web request loads it to sweep where no listener runs, at most once in ten minutes.
 // / The Engine loads it for --account, the administrator's command for accounts.
 // / Everything it reads & writes is the web server account's, below Accounts & Users, so root hands --account to that account.
@@ -31,7 +32,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.2.0';
+$ManagerVersion = 'v4.2.3';
 // / -----------------------------------------------------------------------------------
 
 
@@ -164,9 +165,76 @@ function sweepAuthentication() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to remove the files a signed in user has kept longer than they chose to keep them, from v4.2.3.
+// / Accepts the account. Returns whether its folder was swept or held nothing to sweep, & how many files were removed, in that order.
+// / Only a plain file directly in the folder is removed, & only once it has gone unchanged for longer than the account's lifetime.
+// / A folder, a link, a name beginning with a dot & index.html are left alone, because none of them is a file the user handed over.
+// / A folder a workflow is starting or running in is left for the next sweep, because the workflow may be reading a file old enough to go.
+// / The folder is never made here, so an account that never kept a file costs nothing.
+function expireAccountFiles($accountRecord) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FolderWasSwept = TRUE;
+  $FilesRemoved = 0;
+  $authenticationSettings = $folderEntries = $entryStatus = array();
+  $fileLifetime = $filesKept = 0;
+  $folderName = $folderPath = $entryName = $entryPath = '';
+  $authenticationSettings = authenticationSettings();
+  $fileLifetime = (int)($accountRecord['FileLifetime'] ?? 0);
+  $folderName = (string)($accountRecord['Folder'] ?? '');
+  if ($fileLifetime > 0 && in_array($fileLifetime, accountFileLifetimes(), TRUE) && $authenticationSettings['UserLoc'] !== '' && preg_match('/^[a-f0-9]{18}$/', $folderName) === 1) {
+    $folderPath = $authenticationSettings['UserLoc'].DIRECTORY_SEPARATOR.$folderName;
+    clearstatcache(TRUE, $folderPath);
+    if (!is_dir($folderPath) or is_link($folderPath)) $folderEntries = array();
+    else if (engineFolderIsBusy($folderPath)) {
+      $FolderWasSwept = FALSE;
+      logEntry('The files of '.(string)($accountRecord['Username'] ?? '').' were left for the next sweep, because a workflow is running on them.'); }
+    else $folderEntries = @scandir($folderPath);
+    if (is_array($folderEntries)) foreach ($folderEntries as $entryName) {
+      if ((string)$entryName === '' or strpos((string)$entryName, '.') === 0 or (string)$entryName === 'index.html') continue;
+      redeclare($entryPath, $folderPath.DIRECTORY_SEPARATOR.$entryName);
+      clearstatcache(TRUE, $entryPath);
+      redeclare($entryStatus, @lstat($entryPath));
+      if (!is_array($entryStatus) or ((int)$entryStatus['mode'] & 0170000) !== 0100000 or (int)$entryStatus['mtime'] + $fileLifetime > time()) continue;
+      if (@unlink($entryPath) or !file_exists($entryPath)) $FilesRemoved++;
+      else $filesKept++; } }
+  if ($FilesRemoved > 0) logEntry('Removed '.$FilesRemoved.' file(s) '.(string)($accountRecord['Username'] ?? '').' kept longer than they chose to keep them.');
+  if ($filesKept > 0) warningEntry($filesKept.' file(s) '.(string)($accountRecord['Username'] ?? '').' kept longer than they chose to keep them could not be removed.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $authenticationSettings, $folderEntries, $entryStatus, $fileLifetime, $filesKept, $folderName, $folderPath, $entryName, $entryPath, $accountRecord);
+  return array($FolderWasSwept, $FilesRemoved); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to remove every file an account kept longer than its user chose to keep it, from v4.2.3.
+// / Accepts nothing. Returns whether every folder was swept & how many files were removed, in that order.
+// / An account is read without its lock, because nothing here changes it, & one that cannot be read is left for the next sweep.
+function sweepAccountFiles() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $EveryFolderSwept = TRUE;
+  $FilesRemoved = 0;
+  $recordPaths = $accountRecord = array();
+  $recordName = $recordPath = '';
+  $accountWasRead = $folderWasSwept = FALSE;
+  $filesFromFolder = 0;
+  $recordPaths = listAuthenticationRecords('Users');
+  foreach ($recordPaths as $recordName => $recordPath) {
+    list ($accountWasRead, $accountRecord) = readAuthenticationRecord($recordPath);
+    if (!$accountWasRead or (int)($accountRecord['FileLifetime'] ?? 0) <= 0) continue;
+    list ($folderWasSwept, $filesFromFolder) = expireAccountFiles($accountRecord);
+    if (!$folderWasSwept) $EveryFolderSwept = FALSE;
+    $FilesRemoved = $FilesRemoved + (int)$filesFromFolder; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $recordPaths, $accountRecord, $recordName, $recordPath, $accountWasRead, $folderWasSwept, $filesFromFolder);
+  return array($EveryFolderSwept, $FilesRemoved); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to sweep accounts when the last sweep is long enough ago.
 // / Accepts the fewest seconds between two sweeps. Returns whether a sweep ran & how many records it removed, in that order.
 // / The time of the last sweep is a marker file's, & it is claimed with a lock that is never waited for, so one request sweeps & the rest go on.
+// / Each file an account kept longer than its user chose is removed in the same sweep, from v4.2.3.
 function sweepAuthenticationIfDue($sweepInterval) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -175,7 +243,8 @@ function sweepAuthenticationIfDue($sweepInterval) {
   $authenticationSettings = array();
   $markerPath = '';
   $markerHandle = NULL;
-  $sweepCompleted = FALSE;
+  $sweepCompleted = $foldersWereSwept = FALSE;
+  $filesRemoved = 0;
   $authenticationSettings = authenticationSettings();
   if ($authenticationSettings['AccountLoc'] !== '' && is_dir($authenticationSettings['AccountLoc']) && !is_link($authenticationSettings['AccountLoc'])) {
     $markerPath = $authenticationSettings['AccountLoc'].DIRECTORY_SEPARATOR.'swept';
@@ -185,12 +254,13 @@ function sweepAuthenticationIfDue($sweepInterval) {
       if (flock($markerHandle, LOCK_EX | LOCK_NB)) {
         @touch($markerPath);
         list ($sweepCompleted, $RecordsRemoved) = sweepAuthentication();
+        list ($foldersWereSwept, $filesRemoved) = sweepAccountFiles();
         $SweepRan = TRUE;
         if (!$sweepCompleted) warningEntry('An account sweep did not finish, & what it left is swept next time.');
         flock($markerHandle, LOCK_UN); }
       fclose($markerHandle); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $authenticationSettings, $markerPath, $markerHandle, $sweepCompleted, $sweepInterval);
+  purgeSensitiveMemory($EnableMemoryProtection, $authenticationSettings, $markerPath, $markerHandle, $sweepCompleted, $foldersWereSwept, $filesRemoved, $sweepInterval);
   return array($SweepRan, $RecordsRemoved); }
 // / -----------------------------------------------------------------------------------
 

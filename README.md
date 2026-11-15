@@ -238,7 +238,7 @@ Arabic, Hebrew, Persian, Urdu and both Syriac script languages get proper right-
 - **🧩 Built on the HRProprietary Engine.** HRConvert2 is a thin application on a reusable engine. The engine provides sandboxing, dependency management, self-repairing configuration, resource budgets, workflows, accounts and data protection. Every conversion, scan and file operation is a version-pinned **pipeline** you can inspect with `--pipeline`.
 - **🔎 Honest about your server.** Each pipeline declares the tools it cannot run without, and a page offers only what your server has the tools for. `-v` names every pipeline it cannot offer, and what it is missing.
 - **⚙️ Resource-aware.** Optional processor and memory budgets keep a busy server responsive, and runaway conversions are stopped. Storage can span several disks, round-robin, least-active or as a standby, and work stops before any of them fills. A missing budget never stops a conversion.
-- **🔄 Updates that roll back.** `php convertCore.php -u` stages a release, swaps it in, and validates it. If the new version can't run, it rolls back on its own. Your configuration is kept.
+- **🔄 Updates that roll back.** `php convertCore.php -u` stages a release, swaps it in, and validates it. If the new version can't run, it rolls back on its own. Your configuration is kept. It's off until you turn on `--Enable Automatic Updates--`.
 - **🎨 Yours to brand.** Each interface and each language is a folder. Fork one, restyle it, and lock your visitors' choices in `config.php`.
 
 Everything is manageable from the terminal, as root:
@@ -258,7 +258,7 @@ php convertCore.php --workflow --export=ID          # Print a workflow as a file
 php convertCore.php --account --list                # List accounts, roles & last sign-ins
 php convertCore.php --account --add NAME EMAIL      # Make an account & show its password once
 php convertCore.php --account --password NAME       # Give an account a new password & show it once
-php convertCore.php -u=latest                       # Update to the newest release
+php convertCore.php -u=latest                       # Update to the newest release, once updates are on
 php convertCore.php -c                              # Clean every expired session now
 ```
 

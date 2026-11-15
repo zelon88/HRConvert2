@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.3.
 // / The Authentication Core, one of the Engine's cores.
 // / It keeps accounts, signs users in & out, confirms an address, recovers an account & limits how often each may be tried.
 // / A signed in page holds a key in its memory & nowhere a browser keeps for a site, so no cookie is ever set.
@@ -16,6 +16,7 @@
 // / Every account, sign in, code & count of failures is a file below Accounts in the data location, outside the web root.
 // / Each is read as text & never executed, & each is changed under a lock on the file itself.
 // / A signed in user's files are kept in a folder of their own below Users, which no sweep removes.
+// / A signed in user may choose how long their files are kept, from v4.2.3, & the Authentication Manager's sweep removes a file kept longer.
 // / The Email Core sends each code. Without it, signing in with valid credentials still works, & every email that would
 // / have been sent & every incorrect password is a warning in the log.
 // / The application pins it exactly via $RequiredAuthenticationCoreVersion, & the Engine loads it where authentication is on.
@@ -37,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by the application without executing this file.
-$AuthenticationCoreVersion = 'v4.2.1';
+$AuthenticationCoreVersion = 'v4.2.3';
 // / -----------------------------------------------------------------------------------
 
 
@@ -87,7 +88,8 @@ function authenticationSettings() {
 // / A function to read one of this core's own fields from a request.
 // / Accepts the field's name & its kind. Returns the value & whether it is one this core may use, in that order.
 // / A field that is missing, is not a string or is longer than any field this core takes is not usable.
-// / A username, a code, a key & an action are sanitized, & refused when sanitizing changed them, so a value is never quietly altered.
+// / A username, a code, a key, an action & a lifetime are sanitized, & refused when sanitizing changed them, so a value is never quietly altered.
+// / A lifetime is usable only where accountFileLifetimes() offers it, from v4.2.3.
 // / An address is checked rather than sanitized, because sanitize() removes the @ every address has.
 // / A password is the one field that is neither. It is checked for its length & its encoding, hashed at once, & never written,
 // / logged or shown. sanitize() removes characters, & two different passwords it reduced to one would both open the account.
@@ -110,8 +112,9 @@ function authenticationInput($fieldName, $fieldKind) {
         if ($fieldKind === 'username' && accountUsernameIsUsable($cleanValue)) list ($InputValue, $InputIsUsable) = array($cleanValue, TRUE);
         else if ($fieldKind === 'code' && preg_match('/^[A-HJ-NP-Z2-9]{10}$/', strtoupper($cleanValue)) === 1) list ($InputValue, $InputIsUsable) = array(strtoupper($cleanValue), TRUE);
         else if ($fieldKind === 'key' && preg_match('/^[a-f0-9]{96}$/', $cleanValue) === 1) list ($InputValue, $InputIsUsable) = array($cleanValue, TRUE);
-        else if ($fieldKind === 'action' && in_array($cleanValue, array('signin', 'signout', 'register', 'confirm', 'resend', 'recover', 'reset', 'exchange', 'page'), TRUE)) list ($InputValue, $InputIsUsable) = array($cleanValue, TRUE);
-        else if ($fieldKind === 'page' && in_array($cleanValue, array('signin', 'register', 'confirm', 'recover', 'reset'), TRUE)) list ($InputValue, $InputIsUsable) = array($cleanValue, TRUE); } } }
+        else if ($fieldKind === 'action' && in_array($cleanValue, array('signin', 'signout', 'register', 'confirm', 'resend', 'recover', 'reset', 'exchange', 'page', 'lifetime'), TRUE)) list ($InputValue, $InputIsUsable) = array($cleanValue, TRUE);
+        else if ($fieldKind === 'page' && in_array($cleanValue, array('signin', 'register', 'confirm', 'recover', 'reset'), TRUE)) list ($InputValue, $InputIsUsable) = array($cleanValue, TRUE);
+        else if ($fieldKind === 'lifetime' && preg_match('/^[0-9]{1,8}$/', $cleanValue) === 1 && in_array((int)$cleanValue, accountFileLifetimes(), TRUE)) list ($InputValue, $InputIsUsable) = array($cleanValue, TRUE); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $rawValue, $cleanValue, $valueWasCleaned, $fieldName, $fieldKind);
   return array($InputValue, $InputIsUsable); }
@@ -1076,6 +1079,47 @@ function signOutKey($signInKey) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to list how long a signed in user may choose to keep their files, from v4.2.3.
+// / Accepts nothing. Returns the lifetimes in seconds, 0 first, which keeps them until the user deletes them.
+// / The choices are fixed, so a page can name each in its own language, & 0 is every account's until its user chooses another.
+// / A file is removed once it has gone unchanged for longer than its account's lifetime. See expireAccountFiles().
+function accountFileLifetimes() {
+  // / Set variables.
+  $FileLifetimes = array(0, 3600, 86400, 604800, 2592000);
+  return $FileLifetimes; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to keep a signed in user's choice of how long their files are kept, from v4.2.3.
+// / Accepts the key of the page asking & the lifetime in seconds, one accountFileLifetimes() offers. Returns what happened, as one of the outcomes the page names.
+// / lifetime-saved means the account holds the choice, signed-out that the key signs nobody in, & unavailable that the account could not be written.
+// / The key is presented & not spent, as every request a page sends presents it, & the account is changed under its lock.
+function setAccountFileLifetime($signInKey, $fileLifetime) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $LifetimeOutcome = 'signed-out';
+  $accountRecord = $lockedRecord = array();
+  $keyIsValid = $recordWasRead = FALSE;
+  $accountName = $signInId = $accountPath = '';
+  $accountHandle = NULL;
+  list ($keyIsValid, $accountRecord, $accountName, $signInId) = presentSignInKey($signInKey);
+  if ($keyIsValid) {
+    $LifetimeOutcome = 'unavailable';
+    $accountPath = authenticationRecordPath('Users', $accountName);
+    list ($accountHandle, $recordWasRead, $lockedRecord) = lockAuthenticationRecord($accountPath, FALSE);
+    if (!$recordWasRead) releaseAuthenticationRecord($accountHandle);
+    else {
+      $lockedRecord['FileLifetime'] = (int)$fileLifetime;
+      if (saveAuthenticationRecord($accountHandle, $lockedRecord)) {
+        $LifetimeOutcome = 'lifetime-saved';
+        logEntry('The account '.(string)($accountRecord['Username'] ?? '').' keeps its files '.(((int)$fileLifetime > 0) ? 'for '.(int)$fileLifetime.' second(s)' : 'until they are deleted').'.'); } }
+    if ($LifetimeOutcome === 'unavailable') warningEntry('How long '.(string)($accountRecord['Username'] ?? '').' keeps their files could not be saved, because their account could not be written.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $accountRecord, $lockedRecord, $keyIsValid, $recordWasRead, $accountName, $signInId, $accountPath, $accountHandle, $signInKey, $fileLifetime);
+  return $LifetimeOutcome; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to name the folder a signed in user's files are kept in, & to make it the first time it is needed.
 // / Accepts the account. Returns whether the folder is there & its path with a separator at its end, in that order.
 // / The folder is named for the account's own random identifier, never for its username, so a path names nobody.
@@ -1105,20 +1149,22 @@ function accountFolderPath($accountRecord) {
 // / Accepts the action. Returns the reply, which names the outcome & carries a key, its life & how often to exchange it where there is one.
 // / A field the action needs that cannot be used is answered as the matching failure, without anything being tried.
 // / An action that would tell a stranger whether a username exists answers the same either way.
+// / lifetime keeps how long a signed in user's files are kept, from v4.2.3, & is answered lifetime-invalid for a lifetime not offered.
 function answerAuthenticationAction($authenticationAction) {
   // / Set variables.
   global $EnableMemoryProtection;
   $AuthenticationReply = array();
   $authenticationSettings = array();
   $actionOutcome = $signInKey = '';
-  $accountUsername = $emailAddress = $accountPassword = $accountCode = $presentedKey = '';
-  $usernameIsUsable = $addressIsUsable = $passwordIsUsable = $codeIsUsable = $keyIsUsable = FALSE;
+  $accountUsername = $emailAddress = $accountPassword = $accountCode = $presentedKey = $fileLifetime = '';
+  $usernameIsUsable = $addressIsUsable = $passwordIsUsable = $codeIsUsable = $keyIsUsable = $lifetimeIsUsable = FALSE;
   $authenticationSettings = authenticationSettings();
   list ($accountUsername, $usernameIsUsable) = authenticationInput('SignInUsername', 'username');
   list ($emailAddress, $addressIsUsable) = authenticationInput('SignInEmail', 'email');
   list ($accountPassword, $passwordIsUsable) = authenticationInput('SignInPassword', 'password');
   list ($accountCode, $codeIsUsable) = authenticationInput('SignInCode', 'code');
   list ($presentedKey, $keyIsUsable) = authenticationInput('SignInKey', 'key');
+  list ($fileLifetime, $lifetimeIsUsable) = authenticationInput('SignInFileLifetime', 'lifetime');
   if ($authenticationAction === 'signin') list ($actionOutcome, $signInKey) = ($usernameIsUsable && $passwordIsUsable) ? signInAccount($accountUsername, $accountPassword) : array('credentials-wrong', '');
   else if ($authenticationAction === 'exchange') list ($actionOutcome, $signInKey) = $keyIsUsable ? exchangeSignInKey($presentedKey) : array('signed-out', '');
   else if ($authenticationAction === 'signout') {
@@ -1136,10 +1182,14 @@ function answerAuthenticationAction($authenticationAction) {
   else if ($authenticationAction === 'reset') {
     if (!$passwordIsUsable) $actionOutcome = 'password-short';
     else $actionOutcome = ($usernameIsUsable && $codeIsUsable) ? resetAccountPassword($accountUsername, $accountCode, $accountPassword) : 'code-wrong'; }
+  else if ($authenticationAction === 'lifetime') {
+    if (!$keyIsUsable) $actionOutcome = 'signed-out';
+    else if (!$lifetimeIsUsable) $actionOutcome = 'lifetime-invalid';
+    else $actionOutcome = setAccountFileLifetime($presentedKey, (int)$fileLifetime); }
   else $actionOutcome = 'unavailable';
   $AuthenticationReply = array('Outcome' => $actionOutcome, 'Key' => $signInKey, 'Life' => $authenticationSettings['KeyLifetime'], 'Interval' => $authenticationSettings['ExchangeInterval']);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $authenticationSettings, $actionOutcome, $signInKey, $accountUsername, $emailAddress, $accountPassword, $accountCode, $presentedKey, $usernameIsUsable, $addressIsUsable, $passwordIsUsable, $codeIsUsable, $keyIsUsable, $authenticationAction);
+  purgeSensitiveMemory($EnableMemoryProtection, $authenticationSettings, $actionOutcome, $signInKey, $accountUsername, $emailAddress, $accountPassword, $accountCode, $presentedKey, $fileLifetime, $usernameIsUsable, $addressIsUsable, $passwordIsUsable, $codeIsUsable, $keyIsUsable, $lifetimeIsUsable, $authenticationAction);
   return $AuthenticationReply; }
 // / -----------------------------------------------------------------------------------
 
@@ -1188,6 +1238,7 @@ function sendOpenerPolicy() {
 // / page means the request may not reach the application, because a visitor must sign in first or asked for one of this core's pages.
 // / A request presenting a key that signs it in names its account in $SignedInAccount, & its files are kept in $SignedInFolder.
 // / $EnginePageState holds everything a page may show about it, & nothing a page could use to sign in.
+// / It holds FileLifetimes, the lifetimes a signed in user may choose for their files, & FileLifetime, the one their account holds, from v4.2.3.
 // / A visitor who must sign in where nobody can, because the accounts folder is missing, is error 43000. The page still says signing in is unavailable.
 // / Only a web request served as the web server account is judged. The command line signs nobody in.
 // / Every such request is sent Cross-Origin-Opener-Policy first, from v4.2.1, as sendOpenerPolicy() says why.
@@ -1206,7 +1257,8 @@ function adoptAuthenticationIdentity() {
   $EnginePageState = array('Enabled' => $authenticationSettings['Enabled'], 'SignedIn' => FALSE, 'Username' => '', 'Role' => '', 'Page' => '', 'Available' => FALSE,
     'AllowAnonymous' => $authenticationSettings['AllowAnonymous'], 'AllowRegistration' => $authenticationSettings['AllowRegistration'], 'RequireConfirmation' => $authenticationSettings['RequireConfirmation'],
     'EmailAvailable' => (emailCoreIsLoaded() && $emailIsAvailable), 'MinimumPasswordLength' => $authenticationSettings['MinimumPasswordLength'],
-    'KeyLifetime' => $authenticationSettings['KeyLifetime'], 'ExchangeInterval' => $authenticationSettings['ExchangeInterval']);
+    'KeyLifetime' => $authenticationSettings['KeyLifetime'], 'ExchangeInterval' => $authenticationSettings['ExchangeInterval'],
+    'FileLifetimes' => accountFileLifetimes(), 'FileLifetime' => 0);
   if ($authenticationSettings['Enabled'] && !$RunningFromCLI && (string)$CurrentUser === (string)$ApacheUser) {
     if (!sendOpenerPolicy()) warningEntry('This page was sent without Cross-Origin-Opener-Policy, because something was written before its headers. A page of another site could reach the key a signed in tab holds.');
     list ($saltIsReady, $accountsSalt) = accountsSalt();
@@ -1225,7 +1277,8 @@ function adoptAuthenticationIdentity() {
       else if ($keyIsValid) {
         $SignedInAccount = array('Name' => $accountName, 'Username' => (string)($accountRecord['Username'] ?? ''), 'Role' => (((string)($accountRecord['Role'] ?? '') === 'admin') ? 'admin' : 'user'), 'Folder' => (string)($accountRecord['Folder'] ?? ''), 'SignIn' => $signInId);
         $SignedInFolder = $folderPath;
-        list ($EnginePageState['SignedIn'], $EnginePageState['Username'], $EnginePageState['Role']) = array(TRUE, $SignedInAccount['Username'], $SignedInAccount['Role']); }
+        list ($EnginePageState['SignedIn'], $EnginePageState['Username'], $EnginePageState['Role']) = array(TRUE, $SignedInAccount['Username'], $SignedInAccount['Role']);
+        $EnginePageState['FileLifetime'] = in_array((int)($accountRecord['FileLifetime'] ?? 0), accountFileLifetimes(), TRUE) ? (int)($accountRecord['FileLifetime'] ?? 0) : 0; }
       if (!$EnginePageState['SignedIn'] && $actionIsUsable && $pageIsUsable) list ($EnginePageState['Page'], $EngineAnswer) = array($requestedPage, 'page');
       else if (!$EnginePageState['SignedIn'] && !$authenticationSettings['AllowAnonymous']) list ($EnginePageState['Page'], $EngineAnswer) = array('signin', 'page');
       if (!$accountsAreAvailable && !$authenticationSettings['AllowAnonymous']) errorEntry('A visitor must sign in & nobody can, because the accounts folder or the users folder is missing or cannot be written. Run -fp as root!', 43000, FALSE); } }

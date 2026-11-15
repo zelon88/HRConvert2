@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.2';
+$LanguageVersion = 'v4.2.3';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -624,6 +624,12 @@ $Gui2Text235 = '모든 사용자에게 {name} 대신 사용됩니다.';
 $Gui2Text236 = '워크플로를 준비하지 못했습니다.';
 // / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
 $Gui2Text237 = '설명이 500자를 넘거나 표시할 수 없는 문자가 들어 있습니다.';
+// / 'Passed on unchanged: '
+$Gui2Text238 = '변경 없이 전달됨: ';
+// / 'Suspicious, but not confirmed infected: '
+$Gui2Text239 = '의심스럽지만 감염은 확인되지 않음: ';
+// / 'Not scanned in full: '
+$Gui2Text240 = '전체를 검사하지 못함: ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -731,4 +737,24 @@ $GuiAuthText41 = '로그인이 다른 곳에서 사용되어 로그아웃되었�
 $GuiAuthText42 = '서버가 응답하지 않았습니다. 다시 시도하세요.';
 // / 'Recovering an account is unavailable on this server.'
 $GuiAuthText43 = '이 서버에서는 계정을 복구할 수 없습니다.';
+// / 'Delete my files'
+$GuiAuthText44 = '내 파일 삭제';
+// / 'Never'
+$GuiAuthText45 = '안 함';
+// / 'After 1 hour'
+$GuiAuthText46 = '1시간 후';
+// / 'After 1 day'
+$GuiAuthText47 = '1일 후';
+// / 'After 1 week'
+$GuiAuthText48 = '1주 후';
+// / 'After 30 days'
+$GuiAuthText49 = '30일 후';
+// / 'Save'
+$GuiAuthText50 = '저장';
+// / 'A file is deleted once it has gone unchanged for that long.'
+$GuiAuthText51 = '파일은 그 기간 동안 변경되지 않으면 삭제됩니다.';
+// / 'Saved.'
+$GuiAuthText52 = '저장되었습니다.';
+// / 'It could not be saved.'
+$GuiAuthText53 = '저장하지 못했습니다.';
 // / -----------------------------------------------------------------------------------

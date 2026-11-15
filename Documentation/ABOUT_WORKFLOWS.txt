@@ -126,8 +126,19 @@ Every step is checked, & every problem is named at once, so one reading says eve
 Run  php convertCore.php --workflow --check=FILE  to read them.
 
 Which files a step reads is decided in this order. The file must still be a plain file in the
-session. The operation must read its extension. Then the filter must pass it. A file left out
-at any of the three is counted, & the status says how many each step left out.
+session. The operation must read its extension, or pass the file on unchanged. Then the filter
+must pass it. A file left out at any of the three is counted, & the status says how many each
+step left out.
+
+A FILE ALREADY IN THE FORMAT ASKED FOR IS PASSED ON, from v4.2.3.
+A Convert step does not convert a file already in the format it makes. It takes the file, runs
+nothing on it & passes it to the steps after it, in its place among what it made, as Output. The
+file is not counted as made, takes no budget & is named in the status as Kept. Until v4.2.3 such a
+file was left out, so a zip of every image made jpg lacked the jpg that was selected. A step that
+resizes, rotates or re-encodes, with a Height, a Width, a Rotate or a Bitrate, still leaves such a
+file out, & counts it as left out. No pipeline converts a format to itself, & passing the file on
+would pass it on without what the step asks of it.
+In together mode a step passes on what it keeps first, then runs once on the rest.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -141,7 +152,7 @@ every budget, as it does once a disk is within --Storage Reserve--.
   Convert    Modes: each. Budget: conversion.
              Reads a file when a family reads its extension & writes the format asked for, so
              a conversion to jpg reads images & not spreadsheets. A file already in that format
-             is not read, because there is nothing to convert.
+             is passed on unchanged, from v4.2.3, & left out where the step resizes, rotates or re-encodes.
              Options: Extension, required, any format a family writes, of which this server
              offers those an installed tool writes. Filename, the name
              without its extension, empty for each file's own. Height & Width, 0 to 65535.
@@ -165,6 +176,12 @@ every budget, as it does once a disk is within --Storage Reserve--.
              All is every scanner this server has, & a scanner it does not have is not offered.
              The report is kept in the session as User_Virus_Scan_Report.txt, or the next free
              name. A file found infected ENDS THE WORKFLOW, so nothing is made from it.
+             A file found suspicious does not, from v4.2.3. ScanCore calls a file suspicious
+             when it matches something other than a known hash, which is not proof of a
+             threat, so the workflow goes on & the status names the file under Suspicious.
+             Nor does a file ScanCore could not read in full, such as a zip holding an
+             encrypted member. It is not known to be clean, & the status names it under
+             Incomplete. A file found suspicious is not named there too.
   Delete     Modes: together. Budget: none. Reads every file. Options: none.
              Deletes the files it takes, as a file's Delete button does, & makes none.
              It CONSUMES what it takes, so a later step taking the same files is refused.
@@ -420,12 +437,14 @@ checks the workflow as a run checks it, & takes no budget, starts no worker & ke
   Reason      What a run would be refused for now, files or nothing, & empty when it would start.
               More files selected than --Maximum Workflow Files-- are not previewed, & say files.
               A preview that is not made says disabled, unknown, builder or invalid, as a run would.
-  Steps       Each step's Operation, From, Known, Takes, LeftOut, Unknown & Consumes, in order.
+  Steps       Each step's Operation, From, Known, Takes, Keeps, LeftOut, Unknown & Consumes, in order.
 
 From lists what a step takes, selection or step N, or session for a Select step. Takes names
-the files it would take, in the order it would take them, & LeftOut counts those its operation
-or its filter would leave out. What an operation makes is not known until it runs, so a step
-taking it lists that reference under Unknown, & Known is false. The selection is known until a
+the files it would run on, in the order it would take them, Keeps those it would pass on
+unchanged, from v4.2.3, & LeftOut counts those its operation or its filter would leave out.
+What an operation makes is not known until it runs, so a step taking it lists that reference
+under Unknown, & Known is false. What it passes on unchanged is known, so a later step taking
+its files names those in Takes, & still lists the reference under Unknown. The selection is known until a
 step that consumes files has run, because that step may have taken some of it by another
 reference. A Select step's files are known until an operation has run, because an operation may
 make files or take them away, & a step taking what a known Select step found takes those files.
@@ -464,15 +483,23 @@ What a page or a caller is told. Nothing else in the file leaves the server.
   StepCount     How many steps it has, StepNumber the one running, & Operation that step's operation.
   FilesDone     How many of the step's files are done, & FilesTotal how many it has.
   Waiting       true while it waits for a budget.
-  Steps         Each step's Operation, State, Inputs, Skipped, Produced & whether it had Errors.
+  Steps         Each step's Operation, State, Inputs, Skipped, Kept, Produced & whether it had Errors.
                 A step's State is waiting, running, done, skipped, stopped or failed.
                 A Select step's Inputs is how many files it found, & its Produced is 0.
+                Kept is how many it passed on unchanged, from v4.2.3, & none of them is in Produced.
   Produced      Every file the workflow made, in the order it made them.
+  Suspicious    Every file an operation found suspicious, from v4.2.3, in the order it was found.
+                The workflow went on. A Scan step names a file ScanCore matched without a hash.
+  Incomplete    Every file an operation could not scan in full, from v4.2.3, in the order it was found.
+                The workflow went on. Such a file is not known to be clean. A Scan step names a file
+                ScanCore could not read all of, such as an encrypted member of a zip, or could not open.
+                It is not the reason incomplete, which ends a workflow before a step that deletes files.
   Elapsed       Seconds since it started, or how long it ran once it ended.
 
 The reasons.
   operation    Every file in a step failed. The log names each failure.
-  threat       A virus scan found a file infected.
+  threat       A virus scan found a file infected. A suspicious file ends nothing, & is named in Suspicious,
+               & nor does a file not scanned in full, which is named in Incomplete.
   runtime      --Maximum Workflow Runtime-- passed.
   files        A step was handed more files than --Maximum Workflow Files--.
   budget       The server could not give a budget before the runtime passed.
@@ -647,10 +674,11 @@ Converting any selected file converts every eligible selected file. Ineligible f
 
 A selected file is eligible when its own row offers the same control, which the core drew for it
 by the same test that drew the one pressed. A conversion leaves out a file already in the
-format asked for. Each eligible file is converted by a request of its own, one after another,
-& named by its own row's name box, so every output keeps the name its row shows. What they made
-is downloaded once all have answered, & the line beside the box at the top says how many of the
-selected files could be used, until the selection changes.
+format asked for, because a button has nothing to pass it on to. Each eligible file is converted
+by a request of its own, one after another, & named by its own row's name box, so every output
+keeps the name its row shows. What they made is downloaded once all have answered, & the line
+beside the box at the top says how many of the selected files could be used, until the selection
+changes.
 
 The same holds for OCR. Archiving a selected file puts every selected file into one archive, under
 the name typed, because an archive is one file made from many.
@@ -686,13 +714,19 @@ An operation is an entry under Operations, keyed by a plain word.
             It returns whether any file succeeded, whether anything went wrong, the names of
             the files it made in the session & what it found, in that order.
             What it found may hold Halt, a short lower case word that ends the workflow, which
-            is how Scan ends one with threat.
+            is how Scan ends one with threat. It may hold Suspicious, from v4.2.3, the files it
+            was handed that it found suspicious, & Incomplete, the files it was handed that it
+            could not scan in full, which the status names & the workflow goes on.
+            A name it was not handed is left out.
   Budget    The budget it takes, named as the Resource Manager names it, or FALSE for one that
             takes none, as Delete & Rename do. A missing or empty budget leaves it out.
   Enabled   Whether this server allows it now.
   Inputs    The extensions it reads. Empty reads every file.
   Accepts   A function deciding whether it reads an extension, given the step's options.
             It wins over Inputs, because what a conversion reads depends on what it writes.
+  Keeps     A function deciding whether it passes a file on unchanged, given its extension &
+            the step's options, from v4.2.3. It is asked only about a file the operation does
+            not read. HRConvert2's Convert keeps a file already in the format asked for.
   Modes     each, together or both. The first is the default.
   Options   Each option's Type, choice, name, integer or boolean, & its Default, Required,
             Choices, Minimum & Maximum where they apply.

@@ -155,7 +155,7 @@ The following is a list of supported POST inputs, organized into sections based 
       Key is empty but where Outcome is signed-in or exchanged. Life is the seconds a key lives & Interval the seconds
       between trades. Every action may also be answered unavailable, where accounts cannot be used on this server.
       SignInAction
-          signin, signout, register, confirm, resend, recover, reset, exchange or page.
+          signin, signout, register, confirm, resend, recover, reset, exchange, lifetime or page.
           signin     With SignInUsername & SignInPassword. signed-in, credentials-wrong, too-many, unconfirmed or disabled.
                      A username no account has is answered credentials-wrong.
           exchange   With SignInKey. exchanged, with a new key, signed-out for a key that is unknown or over, or ended for a
@@ -169,6 +169,9 @@ The following is a list of supported POST inputs, organized into sections based 
           recover    With SignInUsername. recovery-sent or too-many, whether or not the account exists.
           reset      With SignInUsername, SignInCode & SignInPassword. reset-done, code-wrong, code-expired, password-short
                      or too-many.
+          lifetime   With SignInKey & SignInFileLifetime, from v4.2.3. lifetime-saved, signed-out for a key that signs
+                     nobody in, or lifetime-invalid for a lifetime this server does not offer. Keeps how long the
+                     account's files are kept. A file unchanged for longer is deleted, unless a workflow is running.
           page       With SignInPage. Draws that page as HTML, rather than answering with JSON.
       SignInUsername
           String. 3 to 64 letters, digits, dots, dashes & underscores, beginning with a letter or a digit. Any case.
@@ -180,6 +183,8 @@ The following is a list of supported POST inputs, organized into sections based 
           String. The ten characters an email carried.
       SignInPage
           signin, register, confirm, recover or reset.
+      SignInFileLifetime
+          Integer, in seconds. 0, 3600, 86400, 604800 or 2592000, from v4.2.3. 0 keeps files until they are deleted.
       SignInKey
           String. 96 hexadecimal digits.
           A signed in caller sends it with EVERY request, an upload & an operation alike. A request presenting the key it
@@ -453,11 +458,13 @@ The following is a list of supported POST inputs, organized into sections based 
           Names the files each step would take were the workflow run now on the files named in
           workflowFiles[], & runs nothing. It takes no budget, starts no worker & keeps nothing.
           {"Workflow":{"Previewed":true,"Reason":"","Steps":[{"Operation":"Convert","From":["selection"],
-            "Known":true,"Takes":["notes.docx"],"LeftOut":1,"Unknown":[],"Consumes":""}, ...]}}
+            "Known":true,"Takes":["notes.docx"],"Keeps":["alpha.pdf"],"LeftOut":1,"Unknown":[],"Consumes":""}, ...]}}
           Reason is what a run would be refused for now, files or nothing, & is empty when it would start.
           A preview that is not made says disabled, unknown or files, & Previewed is false.
           Known is false for a step taking what an operation makes, which is not known until it runs, &
           Unknown names those references. Consumes is deleted for a step that deletes what it takes.
+          Keeps names the files a step would pass on unchanged, from v4.2.3, such as a pdf a conversion to pdf
+          is handed. They are not in Takes.
           ABOUT_WORKFLOWS.txt describes every key.
       workflowPreviewDocument
           String. A workflow a page built, as JSON text, as workflowDocument sends one.
@@ -473,8 +480,11 @@ The following is a list of supported POST inputs, organized into sections based 
           Reports this session's workflow.
           {"Workflow":{"Available":true,"State":"running","Reason":"","JobId":"...","WorkflowId":"...","Name":"...",
             "StepCount":2,"StepNumber":1,"Operation":"Convert","FilesDone":1,"FilesTotal":3,"Waiting":false,
-            "Steps":[...],"Produced":["notes.pdf"],"Elapsed":4,"Document":"{...}"}}
+            "Steps":[...],"Produced":["notes.pdf"],"Suspicious":[],"Incomplete":[],"Elapsed":4,"Document":"{...}"}}
           State is none, starting, running, finished, stopped, failed or interrupted.
+          Suspicious names every file a step found suspicious, from v4.2.3. The workflow went on.
+          Incomplete names every file a step could not scan in full, from v4.2.3, which is not known to be clean.
+          The workflow went on. It is not the Reason incomplete.
           Document is the workflow in canonical form, as text, while State is starting or running, & is empty
           once it has ended. A page loaded again while a workflow runs draws what is running from it.
           AN ENDED WORKFLOW IS REPORTED ONCE. The request that reads a State of finished, stopped, failed or

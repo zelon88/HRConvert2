@@ -366,6 +366,7 @@ needed at runtime & none of them is loaded by anything.
 
 A clean run is the goal & is not always the state.
 As of v4.0.0 all three checkers report nothing outside Resources/ScanCore.
+From v4.2.3 both linters report nothing inside it either, because the ScanCore v1.9 it bundles was cleaned up to them.
 
 SCANCORE IS CHECKED HERE UNTIL IT HAS TOOLING OF ITS OWN.
 ScanCore is HRProprietary software, so it is held to the same standard as this application,

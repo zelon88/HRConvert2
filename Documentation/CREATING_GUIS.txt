@@ -43,7 +43,7 @@ This document will teach administrators and developers how GUIs are handled and 
 In this document when we refer to a GUI, we refer to a set of files required to render HRConvert2.
 In this document when we refer to a language pack, we refer to the files required to localize a GUI into a specific language.
 
-An HRConvert2 GUI is made up of 10 components. Each component serves a specific function. The 10 components of a GUI are:
+An HRConvert2 GUI is made up of 11 components. Each component serves a specific function. The 11 components of a GUI are:
 
   1. header.php
   2. convertGui1.php
@@ -55,11 +55,12 @@ An HRConvert2 GUI is made up of 10 components. Each component serves a specific 
   8. uiVersionInfo.php
   9. A 'Resources' folder containing 'Image', 'CSS' & 'JS' subdirectories.
   10. engineGui.php, from v4.2.0.
+  11. taskbar.php, from v4.2.1.
 
 These components are stored in a folder named after the GUI.
 That folder is placed inside the 'UI' subdirectory of the installation location.
 The GUI name must also be added to the --Supported GUIs-- section of config.php or it will be ignored.
-If --Allow User Selectable GUI-- is enabled, users can select this GUI with a GET request or from the selector bar in the interface.
+If --Allow User Selectable GUI-- is enabled, users can select this GUI with a GET request or from the settings the taskbar's gear opens.
 Users should not access the GUI directly. All requests should be directed to convertCore.php which will construct the GUI on-demand.
 
 During operation, HRConvert2 initializes the GUI using the following process:
@@ -230,13 +231,41 @@ This file contains the end of the GUI including the Terms of Service & Privacy P
 This file is always displayed.
 Localized text for this file is contained in the 'Languages/<LANGUAGE_CODE>/languageStrings.php' file of the language pack.
 Insert code here that should run at the end of every page that HRConvert2 renders.
-From v4.2.0, where accounts are on, it writes the sign in bar, moves it to the top of the page, & starts HRC2SignIn with
-the strings it shows. $EnginePageState says whether accounts are on & who is signed in. See ABOUT_AUTHENTICATION.txt.
-The bar is written last because the footer is the one file every page shares, & is moved first because that is where a
-reader looks for it. It is part of the page rather than laid over it, so it covers nothing at any width.
-A bar with nothing to say, as on the sign in page, is written with nothing inside it, not even a space, so it is empty
-& the included GUIs draw an empty bar as nothing. They draw it by the hrc2-signin- classes in HRConvert2.css, at the end
-of the line a reader finishes on, so on the left where the language reads right to left.
+From v4.2.0, where accounts are on, it starts HRC2SignIn with the strings it shows, because the footer is the one file
+every page shares & the library must be running before any request is sent. $EnginePageState says whether accounts are
+on & who is signed in. See ABOUT_AUTHENTICATION.txt.
+In v4.2.0 it also wrote the sign in bar & moved it to the top of the window. From v4.2.1 the account's buttons are
+taskbar.php's, at the end of the bar at the top of the card, & the footer writes no bar. The Engine's own page has
+no taskbar & needs no account's buttons, because nobody signed in is ever shown it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About taskbar.php--
+
+This file draws the bar at the top of the upload page & the file list, & the panels its buttons open, from v4.2.1.
+convertGui1.php & convertGui2.php each require it through $GuiTaskbarFile, so the two pages draw their shared controls
+alike & neither repeats them. It is required, as every other file is, so a GUI without it is refused & the core falls
+back to the Default GUI. The page that requires it says which page it is in $taskbarPage, upload or files, & hands it
+the addresses its buttons post to, $refreshURL, $selectorBase, $sessionParams & $sortParams, & on the file list $backURL.
+It reads no request itself.
+  Start of the bar   Back, on the file list, & Refresh. Each is a glyph with a title & an aria-label.
+  End of the bar     Workflows, the settings & the account.
+Workflows is on the file list wherever --Enable Workflows-- is TRUE, & on the upload page once there is a file. There it
+opens the file list with #hrc2Workflows on its address, & the script library opens the panel once the page has been read.
+The settings are one panel, holding the language, the colour & the interface a user may choose, & Start Over, which is
+only drawn where there is something to clear. Start Over asks before it deletes, & nothing deletes on the first press.
+The gear is drawn only where the panel has something in it.
+The account is Sign in for a visitor, & the user's name for one who is signed in, which opens a panel holding Sign out.
+It is only drawn where accounts are on, & keeps the id hrc2SignInBar, because HRC2-SignIn.js binds the buttons in it &
+writes in it why a sign in ended.
+Its buttons are bound by HRC2.bindTaskbar, in HRC2-Functions.js. A button naming a panel in data-hrc2-panel opens it &
+closes the other, so one is open at a time, & says whether it is open in aria-expanded. Escape closes it, & gives the
+focus back to its button where the focus was inside it.
+The Default GUI draws the bar inside the card, & the Original inside a column as wide as the page's, which --GUI
+Maximum Width-- bounds, so the account is never farther from the page than the card's corner or the column's edge.
+Until v4.2.1 the sign in bar was at the corner of the window, which a wide screen put a long way from the page.
+Both draw it by the hrc2-taskbar- & hrc2-menu- classes in HRConvert2.css, with start & end rather than left & right,
+so a page that reads right to left is drawn the other way round. Every string it shows is one the pages already had.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -350,6 +379,10 @@ From v4.2.0 'Resources/JS/HRC2-SignIn.js' holds a signed in page's key, adds it 
 page sends its core, & trades it on a timer. header.php loads it, stamped the same way, only while
 accounts are on. 'Resources/JS/HRC2-SignInTimer.js' is the worker that keeps its time, because a
 browser slows a hidden tab's own timers. A GUI keeps both, or a signed in page cannot stay signed in.
+From v4.2.1, over plain HTTP, HRC2-SignIn.js takes up a key the tab kept only on a reload, on back or
+forward, or on a page reached from one of the GUI's own pages, as ABOUT_AUTHENTICATION says why. A GUI
+that moves between its pages by posting a form, as the included ones do, needs nothing more, & a GUI
+must never set a referrer policy that sends no referrer between its own pages.
 header.php points $JsLibraryPath at it & loads it before anything that calls into it.
 That file is static javascript & CANNOT read a language pack, so every string it shows a
 user is passed in as an argument by the PHP that calls it. Pass those strings through
@@ -421,7 +454,8 @@ This GUI only has access to certain variables. Variables that are available to t
   $EnableMemoryProtection, $Verbose, $LanguageBaselineFile, $ImageOutputArray, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL,
   $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $WorkflowsJsPath,
   $EnableWorkflowBuilder, $EnableWorkflowImportExport, $ArchiveOperationArray, $OfferedOperations,
-  $ExtractOperationArray, $MetadataOperationArray
+  $ExtractOperationArray, $MetadataOperationArray, $GuiEngineFile, $EngineAnswer, $EnginePageState,
+  $GuiTaskbarFile, $OfferedConversionTypes, $OfferedScanners
 This list is the whole contract & it is the list buildGUI() declares.
 $ArchiveOperationArray is the formats a file or a selection may be archived in, which the Archiver
 pipeline writes & config.php allows. Offer it for archiving a file, & keep $ArchiveArray for converting
@@ -430,7 +464,16 @@ $OfferedOperations says which of a file's operations to draw, as Scan, Identify,
 Extract, Rename, StripMetadata, Merge & Split, each TRUE or FALSE. Rename is the Files pipeline's,
 & Merge & Split are the PDF pipeline's, which a page draws for a PDF alone. Each is an operation pipeline's, & one whose pipeline is missing is FALSE,
 so a page draws no button that could only fail, as a workflow offers no step for it. Both are from
-v4.1.6, & Extract is from v4.1.7.
+v4.1.6, & Extract is from v4.1.7. From v4.2.1 one whose pipeline cannot run, because a tool it needs is not
+installed, is FALSE too, & so are $ArchiveOperationArray, $ExtractOperationArray & $MetadataOperationArray empty.
+$OfferedConversionTypes is the conversion types this server can run, from v4.2.1. It is $SupportedConversionTypes
+less every type whose pipeline is not installed or cannot run, because a tool it cannot run without is not installed.
+Draw a conversion control by it, & never by $SupportedConversionTypes, which still names every type the server accepts
+an upload of. Until v4.2.1 a page drew a button for a type whose tool was missing, & every press of it failed.
+$OfferedScanners is the scanners a user may be offered, clamav, scancore or both, from v4.2.1. Draw a scan button for
+each, & one that scans with all of them only where there is more than one. Scan is in $OfferedOperations only where
+there is at least one.
+$GuiTaskbarFile is this GUI's taskbar.php, which both pages require. See About taskbar.php above.
 $ExtractOperationArray is the archives a file may be extracted from, which config.php's $DearchiveArray
 & the Extractor pipeline both name. Draw a file's Extract control only where its extension is in it.
 $MetadataOperationArray is the formats metadata may be stripped from, which the Metadata pipeline
@@ -494,11 +537,13 @@ The $PacmanLoc variable contains the relative path to use for the selected spinn
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
---About The Selector Bar--
+--About The Settings--
 
-The selector bar lets a user change language, colour & interface from within the page.
-It appears in both convertGui1.php & convertGui2.php & is collapsed behind a toggle.
-It floats opposite $GUIAlignment so it sits on the trailing edge in both reading directions.
+The settings let a user change language, colour & interface from within the page.
+They are a panel the gear in the taskbar opens, on both pages, & taskbar.php draws them.
+Until v4.2.1 they were a selector bar of their own, drawn in a design no other panel shared.
+Each choice is a button, & the one in use is outlined, & a word is bold & underlined as well.
+Start Over is the last thing in the panel, under a line, where there is something to clear.
 Token1 & Token2 are carried as hidden POST inputs & are never placed in the query string,
 because $SesHash derives from Token1. A selector that dropped them would discard the
 user's uploaded files, & one that put them in a URL would leak them into history & logs.

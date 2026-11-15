@@ -11,7 +11,10 @@
 // / The page's half of signing in. The server's half is the Engine's Authentication Core.
 // / A signed in page holds a key in its memory & in window.name, & nowhere a browser keeps for a site, so no cookie is ever set.
 // / window.name belongs to the tab. It is never sent to a server, it survives a reload & a link followed in the same tab, & it goes
-// / when the tab closes. A browser clears it when the tab goes to another site, & this file clears it when the user signs out.
+// / when the tab closes. A browser clears it when the tab goes to another site or comes from one, because every page asks for a browsing
+// / context of its own with Cross-Origin-Opener-Policy, which a browser enforces over HTTPS & on localhost. Where it is not enforced, a
+// / page of another site could name the tab before sending it here, so a key the tab kept is taken up only as tabIsTrusted() says.
+// / This file clears it when the user signs out.
 // / The key rides on every request the page sends to the core, & is traded for a new one on a timer, which spends it.
 // / The timer runs in a worker where the browser has them, because a browser slows a hidden tab's own timers to once a minute,
 // / & a key that outlives no exchange would end the sign in of anybody who looked away.
@@ -41,6 +44,26 @@ var HRC2SignIn = {
     var held = String(window.name || '');
     var found = held.indexOf(this.prefix) === 0 ? held.substring(this.prefix.length) : '';
     return /^[a-f0-9]{96}(:R)?$/.test(found) ? found : '';
+  },
+
+  // / Say whether a key the tab kept may be taken up. On a secure page a browser enforcing Cross-Origin-Opener-Policy has cleared any name
+  // / a page of another site gave the tab, so it may. Over plain HTTP it is taken up only on a reload, on back or forward, or on a page
+  // / reached from one of this site's own pages, & never in a tab that came from a page of another site or that such a page still holds.
+  tabIsTrusted: function () {
+    var kind = '';
+    var entries = null;
+    var cameFrom = document.createElement('a');
+    var held = true;
+    if (window.isSecureContext) return true;
+    try { held = !!window.opener; } catch (thrown) { held = true; }
+    try { entries = (window.performance && typeof window.performance.getEntriesByType === 'function') ? window.performance.getEntriesByType('navigation') : null; } catch (thrown) { entries = null; }
+    if (entries && entries.length) kind = String(entries[0].type || '');
+    else if (window.performance && window.performance.navigation) kind = (window.performance.navigation.type === 1) ? 'reload' : ((window.performance.navigation.type === 2) ? 'back_forward' : 'navigate');
+    if (document.referrer) {
+      cameFrom.href = document.referrer;
+      return cameFrom.host === window.location.host;
+    }
+    return !held && (kind === 'reload' || kind === 'back_forward');
   },
 
   // / Keep the key in memory & in the tab, or forget it in both.
@@ -196,7 +219,8 @@ var HRC2SignIn = {
   // / The bar's buttons are bound here, & a sign in that ends says why in the bar & goes home, where the server decides what is shown.
   // / A page that is not signed in with a key in its tab trades it once & loads again, & gives up if it comes back unsigned a second time.
   start: function (options) {
-    var stored = this.stored();
+    var trusted = this.tabIsTrusted();
+    var stored = trusted ? this.stored() : '';
     var self = this;
     var home = options.home || this.endpoint;
     var notices = options.notices || {};
@@ -210,6 +234,8 @@ var HRC2SignIn = {
       if (bar) bar.textContent = notices[outcome] || notices['signed-out'] || '';
       setTimeout(function () { self.go(home, []); }, 1500);
     };
+    // / A key in a tab that may not be trusted is forgotten, so it can neither be taken up now nor found by a page loaded later.
+    if (!trusted && String(window.name || '').indexOf(this.prefix) === 0) this.keep('', false);
     this.signedIn = !!options.signedIn;
     this.life = Number(options.life) || 30;
     this.interval = Number(options.interval) || 6;

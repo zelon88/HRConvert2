@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.2.1.
 // / This file declares the ClamAV scanner pipeline.
 // /
 // / A SCANNER declares no input or output formats & that is not an omission.
@@ -29,7 +29,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines().
-$PipelineVersion = 'v4.0.8';
+$PipelineVersion = 'v4.2.1';
 
 // / A scanner inspects a file & reports on it. It changes nothing.
 $PipelineKind = 'scanner';
@@ -75,5 +75,10 @@ $PipelineDependencies = array('ClamAV');
 
 // / No pair is excluded, because no pair exists.
 $PipelineExclude = array();
+
+// / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
+// / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.
+// / This scanner is clamscan, so it is not offered without it, & all leaves it out.
+$PipelineRequiredDependencies = array('ClamAV');
 // / -----------------------------------------------------------------------------------
 ?>

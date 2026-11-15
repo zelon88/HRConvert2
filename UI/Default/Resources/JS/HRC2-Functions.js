@@ -1107,6 +1107,57 @@ window.HRC2 = {
     element.onclick = function () { self.startOver(); return false; };
   },
 
+  // / Bind the bar at the top of the card, which taskbar.php draws on the upload page & the file list.
+  // / A button that names a panel in data-hrc2-panel opens it & closes the bar's other panel, so one is open at a time.
+  // / Each says whether its panel is open, which is what a screen reader announces, & Escape closes it.
+  // / The upload page's Workflows button opens the file list with #hrc2Workflows on its address. The panel is opened for it
+  // / once the page has been read, by pressing the file list's own Workflows button, so it opens exactly as a press opens it.
+  // / No jQuery here, because the upload page does not load it.
+  bindTaskbar: function (barId) {
+    var self = this;
+    var bar = document.getElementById(barId);
+    var buttons = [];
+    // / Open the panel one button names & close the others. An empty name closes them all.
+    var showPanel = function (panelId) {
+      buttons.forEach(function (button) {
+        var panel = document.getElementById(button.getAttribute('data-hrc2-panel'));
+        var isShown = (!!panel && panel.id === panelId);
+        if (panel) panel.style.display = isShown ? 'block' : 'none';
+        button.setAttribute('aria-expanded', isShown ? 'true' : 'false'); }); };
+    // / Open the Workflows panel the address asks for, unless it is open already, & bring it into view.
+    var openFromAddress = function () {
+      var button = document.getElementById('hrc2WorkflowsButton');
+      var panel = document.getElementById('hrc2Workflows');
+      if (window.location.hash !== '#hrc2Workflows' || !button || !panel || button.type !== 'button') return;
+      if (panel.style.display !== 'block') button.click();
+      panel.scrollIntoView(true); };
+    if (!bar) return false;
+    buttons = Array.prototype.slice.call(bar.querySelectorAll('button[data-hrc2-panel]'));
+    buttons.forEach(function (button) {
+      button.addEventListener('click', function () {
+        var panelId = button.getAttribute('data-hrc2-panel');
+        var panel = document.getElementById(panelId);
+        if (!panel) { self.warn('Cannot open "' + panelId + '". No such element exists on this page.'); return; }
+        showPanel((panel.style.display === 'block') ? '' : panelId); }); });
+    // / Escape closes whichever panel is open. The focus goes back to its button only if it was inside the panel,
+    // / so a key meant for something else on the page does not move the focus away from it.
+    document.addEventListener('keydown', function (event) {
+      var openButton = null;
+      var openPanel = null;
+      var focusWasInside = false;
+      if (event.key !== 'Escape' && event.key !== 'Esc') return;
+      buttons.forEach(function (button) { if (button.getAttribute('aria-expanded') === 'true') openButton = button; });
+      if (!openButton) return;
+      // / Where the focus is is read before the panel is hidden, because hiding it takes the focus with it.
+      openPanel = document.getElementById(openButton.getAttribute('data-hrc2-panel'));
+      focusWasInside = (!!openPanel && openPanel.contains(document.activeElement));
+      showPanel('');
+      if (focusWasInside) openButton.focus(); });
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', openFromAddress);
+    else openFromAddress();
+    return true;
+  },
+
   // / Called once when the document is ready. This is what loads the list.
   init: function () {
     if (document.getElementById('hrc2FileList')) this.refreshFileList();

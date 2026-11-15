@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.8.
+// / v4.2.1.
 // / The PDF pipeline. pipelineCore.php loads it only to dispatch a Merge or a Split operation.
 // / Error block 42000 through 42019 belongs to this pipeline.
 // / It is an operation pipeline, which merges a selection of PDFs into one, or makes a PDF of each page of every PDF it is handed.

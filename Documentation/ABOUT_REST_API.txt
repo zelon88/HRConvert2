@@ -339,6 +339,7 @@ The following is a list of supported POST inputs, organized into sections based 
           Set this input to 'clamav' to perform a virus scan with ClamAV Virus Scanner.
           Set this input to 'scancore' to perform a virus scan with ScanCore Virus Scanner.
           Set this input to 'all' to perform a virus scan with all installed Virus Scanners.
+          From v4.2.1 a scanner whose tool is not installed is left out of all, rather than reported as a scan that failed.
       filesToScan
           String or JSON Array.
           This input is used during Virus Scanning Operations & is what triggers one.
@@ -441,7 +442,8 @@ The following is a list of supported POST inputs, organized into sections based 
           replies as workflowRun does. It is checked exactly as a library's workflow is, & held to every limit.
           Two reasons are asked before the others, & unknown is never given, because it has no identifier.
             builder    --Enable Workflow Builder-- is off.
-            invalid    The workflow does not check, or names an operation this server has off. Problems lists
+            invalid    The workflow does not check, or names an operation this server has off, or a choice it
+                       does not offer, such as a format no installed tool writes, from v4.2.1. Problems lists
                        every problem, in the server's words, which are English.
       workflowPreview
           String. A workflow's identifier, as workflowRun names one.
@@ -491,7 +493,8 @@ The following is a list of supported POST inputs, organized into sections based 
           Builder & ImportExport say whether each is on. Operations & Kinds are empty unless the builder is.
           Only an operation this server has on is described, & BuiltIn is true for Select, the Workflow Core's
           own. Each option has its Name & Type, & its Choices, Default, Required, Minimum & Maximum where it
-          has them. A choice is described in lower case, as a step names it.
+          has them. A choice is described in lower case, as a step names it. Choices are only those this server
+          offers, from v4.2.1, so a format no installed tool writes & a scanner not installed are not described.
           Groups sorts a long list of choices under a kind of file each, as a list of Name & Choices, in the
           order the application gave. A format is in each group of a kind that writes it.
           Consumes is deleted for Delete, renamed for Rename & empty for every other operation. A step taking

@@ -38,24 +38,14 @@
       <p><?php echo $GuiFooterText1; ?></a></p>
     </div>
   <?php }
-    // / The sign in bar, where accounts are on. It names a signed in user & signs them out, & offers a visitor the sign in page.
-    // / It is in the footer so every page carries it, & it starts the sign in library, which must be running before any request is sent.
+    // / The sign in library starts here, where accounts are on. Every page carries the footer, & the library must be running before any request is sent.
     // / The page tells the library only whether it is signed in & how often to trade. The key itself is in the tab & never in a page.
-    // / A bar with nothing to say is written with nothing inside it, not even a space, so it is empty & takes no room.
-    // / It is moved to the top of the page, where a reader looks for it, & HRConvert2.css says how it is drawn.
+    // / The account's buttons are in the bar at the top of the card, which taskbar.php draws, & the library finds them there by their ids.
+    // / The Engine's own page has no bar & needs none, because nobody who is signed in is ever shown it.
     $footerSignIn = (isset($EnginePageState) && is_array($EnginePageState)) ? $EnginePageState : array();
     if (!empty($footerSignIn['Enabled'])) {
-      $footerHome = 'convertCore.php?gui='.rawurlencode((string)$GuiToUse).'&language='.rawurlencode((string)$LanguageToUse).'&color='.rawurlencode((string)$ColorToUse);
-      $footerOnSignInPage = (isset($EngineAnswer) && $EngineAnswer === 'page'); ?>
-    <div id='hrc2SignInBar' class='hrc2-signin-bar'><?php if (!empty($footerSignIn['SignedIn'])) { ?>
-      <span class='hrc2-signin-who'><?php echo $GuiAuthText17; ?> <strong><?php echo htmlspecialchars((string)$footerSignIn['Username'], ENT_QUOTES, 'UTF-8'); ?></strong></span>
-      <button type='button' id='hrc2SignOut' class='info-button'><?php echo $GuiAuthText2; ?></button>
-    <?php } else if (!$footerOnSignInPage) { ?>
-      <button type='button' id='hrc2SignInLink' class='info-button'><?php echo $GuiAuthText1; ?></button>
-    <?php } ?></div>
+      $footerHome = 'convertCore.php?gui='.rawurlencode((string)$GuiToUse).'&language='.rawurlencode((string)$LanguageToUse).'&color='.rawurlencode((string)$ColorToUse); ?>
     <script type='text/javascript'>
-      // / The bar is written last, in the one file every page shares, & shown first.
-      document.body.insertBefore(document.getElementById('hrc2SignInBar'), document.body.firstChild);
       if (typeof HRC2SignIn !== 'undefined' && typeof HRC2SignIn.start === 'function') {
         HRC2SignIn.start(<?php echo json_encode(array('signedIn' => !empty($footerSignIn['SignedIn']), 'life' => (int)($footerSignIn['KeyLifetime'] ?? 30), 'interval' => (int)($footerSignIn['ExchangeInterval'] ?? 6),
           'tokens' => array('Token1' => (string)$Token1, 'Token2' => (string)$Token2), 'workerPath' => $GuiJSDir.'HRC2-SignInTimer.js', 'home' => $footerHome,
@@ -64,8 +54,8 @@
     </script>
     <?php }
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $footerSignIn = $footerHome = $footerOnSignInPage = NULL;
-    unset($footerSignIn, $footerHome, $footerOnSignInPage); ?>
+    $footerSignIn = $footerHome = NULL;
+    unset($footerSignIn, $footerHome); ?>
 
   </body>
 </html>

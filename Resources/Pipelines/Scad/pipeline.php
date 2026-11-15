@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.2.1.
 // / The Scad pipeline's converter. pipelineCore.php loads it only to dispatch a Scad conversion.
 // / Error block 27000 through 27009 belongs to this pipeline.
 // / It holds what OpenSCAD source means.

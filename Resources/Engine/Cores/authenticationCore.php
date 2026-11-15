@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.0.
+// / v4.2.1.
 // / The Authentication Core, one of the Engine's cores.
 // / It keeps accounts, signs users in & out, confirms an address, recovers an account & limits how often each may be tried.
 // / A signed in page holds a key in its memory & nowhere a browser keeps for a site, so no cookie is ever set.
@@ -37,7 +37,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by the application without executing this file.
-$AuthenticationCoreVersion = 'v4.2.0';
+$AuthenticationCoreVersion = 'v4.2.1';
 // / -----------------------------------------------------------------------------------
 
 
@@ -448,15 +448,42 @@ function hashAccountPassword($accountPassword) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to make a hash that no password opens, for a username that has no account.
+// / Accepts nothing. Returns the hash & its scheme, in that order, as hashAccountPassword() returns them.
+// / It is written from the parameters a new hash is made with & from random bytes, & nothing is hashed to make it, so checking a
+// / password against it costs what checking one against a kept hash costs. Until v4.2.1 a hash was made for every such sign in,
+// / which took as long again as checking it, so how long a wrong password took to refuse said whether the username had an account.
+function unknownAccountHash() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PasswordHash = $PasswordScheme = '';
+  $bcryptAlphabet = './ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  $bcryptText = '';
+  $memoryCost = $timeCost = $threadCount = $bcryptCost = $characterIndex = 0;
+  if (defined('PASSWORD_ARGON2ID')) {
+    $memoryCost = defined('PASSWORD_ARGON2_DEFAULT_MEMORY_COST') ? (int)PASSWORD_ARGON2_DEFAULT_MEMORY_COST : 65536;
+    $timeCost = defined('PASSWORD_ARGON2_DEFAULT_TIME_COST') ? (int)PASSWORD_ARGON2_DEFAULT_TIME_COST : 4;
+    $threadCount = defined('PASSWORD_ARGON2_DEFAULT_THREADS') ? (int)PASSWORD_ARGON2_DEFAULT_THREADS : 1;
+    list ($PasswordHash, $PasswordScheme) = array('$argon2id$v=19$m='.$memoryCost.',t='.$timeCost.',p='.$threadCount.'$'.rtrim(base64_encode(random_bytes(16)), '=').'$'.rtrim(base64_encode(random_bytes(32)), '='), 'argon2id'); }
+  else {
+    $bcryptCost = defined('PASSWORD_BCRYPT_DEFAULT_COST') ? (int)PASSWORD_BCRYPT_DEFAULT_COST : 10;
+    for ($characterIndex = 0; $characterIndex < 53; $characterIndex++) $bcryptText .= $bcryptAlphabet[random_int(0, 63)];
+    list ($PasswordHash, $PasswordScheme) = array('$2y$'.sprintf('%02d', $bcryptCost).'$'.$bcryptText, 'bcrypt-hmac'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $bcryptAlphabet, $bcryptText, $memoryCost, $timeCost, $threadCount, $bcryptCost, $characterIndex);
+  return array($PasswordHash, $PasswordScheme); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to check a password against the hash kept for it.
 // / Accepts the password, the hash & its scheme. Returns TRUE when the password is the one the hash was made from.
-// / A missing account is checked against a hash made for nothing, so a wrong username takes as long as a wrong password.
+// / A missing account is checked against unknownAccountHash(), which costs what a kept hash costs, so a wrong username takes as long as a wrong password.
 function verifyAccountPassword($accountPassword, $passwordHash, $passwordScheme) {
   // / Set variables.
   global $EnableMemoryProtection;
   $PasswordIsCorrect = FALSE;
   $comparedHash = $comparedScheme = '';
-  list ($comparedHash, $comparedScheme) = ((string)$passwordHash === '') ? hashAccountPassword(bin2hex(random_bytes(16))) : array((string)$passwordHash, (string)$passwordScheme);
+  list ($comparedHash, $comparedScheme) = ((string)$passwordHash === '') ? unknownAccountHash() : array((string)$passwordHash, (string)$passwordScheme);
   if ($comparedScheme === 'bcrypt-hmac') $PasswordIsCorrect = password_verify(base64_encode(hash_hmac('sha256', (string)$accountPassword, 'HRC2-PASSWORD', TRUE)), $comparedHash);
   else $PasswordIsCorrect = password_verify((string)$accountPassword, $comparedHash);
   if ((string)$passwordHash === '') $PasswordIsCorrect = FALSE;
@@ -711,8 +738,9 @@ function registerAccount($accountUsername, $emailAddress, $accountPassword) {
 // / -----------------------------------------------------------------------------------
 // / A function to confirm a new account's address with the code sent to it.
 // / Accepts the username & the code. Returns what happened, as one of the outcomes the page names.
-// / A username that has no account is answered as a wrong code is, so confirming tells nobody which usernames exist.
-// / Every wrong code is counted against the request's address.
+// / A username that has no account, & an account that has confirmed already, are answered as a wrong code is, so confirming
+// / tells nobody which usernames exist. Until v4.2.1 an account that had confirmed was answered confirmed whatever code was sent.
+// / Every wrong code is counted against the request's address. The fifth wrong try at a code that was sent is answered as expired.
 function confirmAccount($accountUsername, $accountCode) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -726,8 +754,7 @@ function confirmAccount($accountUsername, $accountCode) {
   if (!$attemptIsAllowed) $ConfirmationOutcome = 'too-many';
   else {
     list ($accountWasFound, $accountRecord, $accountName, $accountPath) = accountByUsername($accountUsername);
-    if ($accountWasFound && !empty($accountRecord['Confirmed'])) $ConfirmationOutcome = 'confirmed';
-    else if ($accountWasFound) list ($codeIsCorrect, $codeFinding) = checkAccountCode($accountName, 'confirm', $accountCode);
+    if ($accountWasFound && empty($accountRecord['Confirmed'])) list ($codeIsCorrect, $codeFinding) = checkAccountCode($accountName, 'confirm', $accountCode);
     if ($codeIsCorrect) {
       list ($accountHandle, $recordWasRead, $lockedRecord) = lockAuthenticationRecord($accountPath, FALSE);
       if ($recordWasRead) {
@@ -1137,6 +1164,24 @@ function printAuthenticationReply($authenticationReply) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to keep a page that may hold a key out of the reach of a page of another site.
+// / Accepts nothing. Returns TRUE when the policy was sent.
+// / A signed in page keeps its key in window.name, which belongs to the tab. A browser keeps that name when another site sends the
+// / tab here or a page of another site opens it, so such a page could name the tab with a key of its own, which the tab would take
+// / up, or keep its hold on the tab & later send it to a page of its own, which would read the key. Cross-Origin-Opener-Policy
+// / same-origin gives a page of this site a browsing context of its own whenever it is reached from another site or leaves for one,
+// / so the name is cleared & no other site keeps a hold. A browser enforces it over HTTPS & on localhost. Over plain HTTP, HRC2-SignIn.js
+// / takes up a key only in a tab no page of another site came before or holds, & a key there can still be read, so accounts want HTTPS.
+function sendOpenerPolicy() {
+  // / Set variables.
+  $PolicyWasSent = FALSE;
+  if (!headers_sent()) {
+    header('Cross-Origin-Opener-Policy: same-origin');
+    $PolicyWasSent = TRUE; }
+  return $PolicyWasSent; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to decide who a request is from, & whether this core answers it.
 // / Accepts nothing. Returns how the request is answered: an empty string for the application, page to draw a page of this core's, or answered.
 // / answered means the request was one of this core's actions & its reply was written, so the application draws nothing & runs nothing.
@@ -1145,6 +1190,7 @@ function printAuthenticationReply($authenticationReply) {
 // / $EnginePageState holds everything a page may show about it, & nothing a page could use to sign in.
 // / A visitor who must sign in where nobody can, because the accounts folder is missing, is error 43000. The page still says signing in is unavailable.
 // / Only a web request served as the web server account is judged. The command line signs nobody in.
+// / Every such request is sent Cross-Origin-Opener-Policy first, from v4.2.1, as sendOpenerPolicy() says why.
 function adoptAuthenticationIdentity() {
   // / Set variables.
   global $RunningFromCLI, $CurrentUser, $ApacheUser, $SignedInAccount, $SignedInFolder, $EnginePageState, $EnableMemoryProtection;
@@ -1162,6 +1208,7 @@ function adoptAuthenticationIdentity() {
     'EmailAvailable' => (emailCoreIsLoaded() && $emailIsAvailable), 'MinimumPasswordLength' => $authenticationSettings['MinimumPasswordLength'],
     'KeyLifetime' => $authenticationSettings['KeyLifetime'], 'ExchangeInterval' => $authenticationSettings['ExchangeInterval']);
   if ($authenticationSettings['Enabled'] && !$RunningFromCLI && (string)$CurrentUser === (string)$ApacheUser) {
+    if (!sendOpenerPolicy()) warningEntry('This page was sent without Cross-Origin-Opener-Policy, because something was written before its headers. A page of another site could reach the key a signed in tab holds.');
     list ($saltIsReady, $accountsSalt) = accountsSalt();
     $accountsAreAvailable = ($saltIsReady && $authenticationSettings['UserLoc'] !== '' && is_dir($authenticationSettings['UserLoc']) && !is_link($authenticationSettings['UserLoc']) && is_writable($authenticationSettings['UserLoc']));
     $EnginePageState['Available'] = $accountsAreAvailable;

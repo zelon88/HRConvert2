@@ -811,50 +811,133 @@ input.hrc2-wf-row-control[type='number'] {
     grid-template-columns: minmax(0, 1fr); } }
 
 /* / -----------------------------------------------------------------------------------
-   / SIGNING IN, WHERE ACCOUNTS ARE ON.
-   / The sign in bar is a small card at the top of every page, at the end of the line a
-   / reader of the page's language finishes on, so on the right, & on the left where the
-   / language reads right to left.
-   / It is part of the page rather than laid over it, so no username however long & no
-   / screen however narrow can put it over anything. It was laid over a corner of the page
-   / at first, & on a phone it covered the buttons at the top of the page.
-   / footer.php writes it, because the footer is the one file every page shares, & moves it
-   / to the top of the page. A bar with nothing to say is empty, & an empty bar takes no room.
+   / THE BAR AT THE TOP OF THE PAGE, & THE PANELS ITS BUTTONS OPEN.
+   / taskbar.php draws it at the top of the upload page & the file list, in a column as wide
+   / as the page's, so Sign in is never farther from the page than the column's own edge,
+   / however wide the screen is. It was a small card of its own at the top of the window, at
+   / the end of the line, & on a wide screen that put it a long way from everything it
+   / belonged to.
+   / The bar is a panel, as the file list & the Workflows panels are. Back & Refresh are at
+   / its start, & Workflows, the settings & the account are at its end. Start & end rather
+   / than left & right, so a page that reads right to left is drawn the other way round.
+   / On a narrow screen the end wraps under the start rather than squeezing either.
    / Its buttons are the scheme's buttons made small, so they read as the same buttons.
    / ----------------------------------------------------------------------------------- */
-.hrc2-signin-bar {
+.hrc2-taskbar-column {
+  margin: 0 auto; }
+.hrc2-taskbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 0 0 12px 0;
+  padding: 6px; }
+.hrc2-taskbar-start,
+.hrc2-taskbar-end,
+.hrc2-taskbar-form,
+.hrc2-taskbar-account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0; }
+.hrc2-taskbar-end {
   justify-content: flex-end;
-  gap: 6px 10px;
-  box-sizing: border-box;
-  width: -moz-fit-content;
-  width: fit-content;
-  max-width: calc(100% - 24px);
-  margin-top: 0;
-  margin-bottom: 6px;
+  margin-inline-start: auto; }
+.hrc2-taskbar .info-button {
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 6px 14px;
+  font-size: 14px;
+  line-height: 20px; }
+.hrc2-taskbar .hrc2-taskbar-icon {
+  min-width: 42px;
+  padding: 6px 10px;
+  font-size: 18px; }
+/* / A button whose panel is open looks pressed until the panel closes, so it is plain which panel the bar has open. */
+.hrc2-taskbar .info-button[aria-expanded='true'] {
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45); }
+/* / Back points the way a reader of the page's language reads backwards, so its arrow is turned round where the page reads right to left.
+   / Only the arrow is turned, so the button's shadow still falls the way every other button's does. */
+.hrc2-taskbar-back {
+  display: inline-block; }
+[dir='rtl'] .hrc2-taskbar-back {
+  transform: scaleX(-1); }
+/* / A long name is cut short, & the whole of it is in the button's title & what a screen reader reads. */
+.hrc2-taskbar-name {
+  display: inline-block;
+  max-width: 12em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom; }
+/* / Why a sign in ended is written where the account's button was, so it is never long enough to need room of its own. */
+.hrc2-taskbar-account {
+  font-size: 13px;
+  overflow-wrap: anywhere; }
+/* / The settings & the account open under the bar, one at a time, as panels.
+   / Each setting is its name & then its choices, & the choice in use is outlined in the scheme's accent.
+   / A word is bold & underlined as well, so the choice in use is never told apart by colour alone. */
+/* / The page's column is wide, so a panel is no wider than the old Start Over panel was, & opens under the bar's end, where its button is. */
+.hrc2-taskbar-panel {
+  max-width: 750px;
+  margin: 0 0 12px 0;
   margin-inline-start: auto;
-  margin-inline-end: 12px;
-  padding: 5px 6px;
+  padding: 8px 10px;
+  text-align: center; }
+.hrc2-taskbar-panel p {
+  margin: 0 0 8px 0; }
+.hrc2-taskbar-panel .hrc2-menu-label {
+  margin: 4px 0 4px 0; }
+.hrc2-menu-choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px; }
+.hrc2-menu-choice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 3px;
   background-color: var(--hrc2-surface);
   color: var(--hrc2-ink);
   border: 1px solid var(--hrc2-edge);
-  border-radius: 8px;
-  box-shadow: var(--hrc2-lift);
-  font-size: 13px;
-  overflow-wrap: anywhere; }
-.hrc2-signin-bar:empty {
-  display: none; }
-.hrc2-signin-who {
-  padding-inline-start: 4px; }
-.hrc2-signin-bar .info-button {
-  width: auto;
-  min-width: 0;
-  max-width: none;
-  margin: 0;
-  padding: 6px 16px;
+  border-radius: 5px;
+  font-family: inherit;
+  cursor: pointer; }
+.hrc2-menu-choice:hover {
+  background-color: var(--hrc2-wash); }
+.hrc2-menu-choice img {
+  display: block;
+  height: 16px; }
+.hrc2-menu-choice .swatch {
+  display: block;
+  width: 24px;
+  height: 16px;
+  border-radius: 2px; }
+.hrc2-menu-word {
+  padding: 3px 10px;
   font-size: 14px; }
+.hrc2-menu-current {
+  outline: 2px solid var(--hrc2-accent);
+  outline-offset: 1px; }
+.hrc2-menu-word.hrc2-menu-current {
+  font-weight: 700;
+  text-decoration: underline; }
+/* / Start Over is the last thing in the settings, under a hairline, because it is not a setting. It deletes, & it asks first. */
+.hrc2-menu-section {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hrc2-hairline); }
+
+/* / -----------------------------------------------------------------------------------
+   / SIGNING IN, WHERE ACCOUNTS ARE ON.
+   / The account's place is at the end of the bar above, & this is the Engine's own page.
+   / ----------------------------------------------------------------------------------- */
 /* / The sign in page is one card on the surface the scheme draws a card on.
    / Each field's name is above the field, so a long name in any language never pushes its
    / field onto a line of its own, & each field is as wide as the card.

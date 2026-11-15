@@ -89,35 +89,35 @@ $EngineEnableAuthentication = TRUE;
 // / Accepting a pipeline, or moving one to a new version, is one line here, & no Engine version moves for it.
 // / The order is the order pipelines are enumerated & listed in.
 $EngineAcceptedPipelines = array(
-  'Stream' => 'v4.1.7',
-  'Scad' => 'v4.0.8',
-  'OCR' => 'v4.1.1',
-  'Document' => 'v4.0.8',
-  'Subtitle' => 'v4.0.8',
-  'SVG' => 'v4.0.8',
-  'Drawing' => 'v4.0.8',
-  'Image' => 'v4.0.8',
-  'Model' => 'v4.0.8',
-  'Video' => 'v4.0.8',
-  'Ebook' => 'v4.0.8',
-  'Audio' => 'v4.0.8',
-  'Archive' => 'v4.1.7',
+  'Stream' => 'v4.2.1',
+  'Scad' => 'v4.2.1',
+  'OCR' => 'v4.2.1',
+  'Document' => 'v4.2.1',
+  'Subtitle' => 'v4.2.1',
+  'SVG' => 'v4.2.1',
+  'Drawing' => 'v4.2.1',
+  'Image' => 'v4.2.1',
+  'Model' => 'v4.2.1',
+  'Video' => 'v4.2.1',
+  'Ebook' => 'v4.2.1',
+  'Audio' => 'v4.2.1',
+  'Archive' => 'v4.2.1',
   // / The second operation pipeline. It reads every file & changes none.
   'Identify' => 'v4.1.2',
   // / The third & fourth, from v4.1.6. The Archiver puts a selection of files into archives, & Scan scans the files a user asks it to.
   // / Each was code in convertCore.php until then.
-  'Archiver' => 'v4.1.6',
-  'Scan' => 'v4.1.6',
+  'Archiver' => 'v4.2.1',
+  'Scan' => 'v4.2.1',
   // / The fifth, from v4.1.7. The Extractor puts every file an archive holds into the session beside it.
-  'Extractor' => 'v4.1.8',
+  'Extractor' => 'v4.2.1',
   // / The sixth & seventh, from v4.1.8. The Metadata pipeline makes a copy of a file without its metadata, & the PDF pipeline merges PDFs & splits them into pages.
-  'Metadata' => 'v4.1.8',
-  'PDF' => 'v4.1.8',
+  'Metadata' => 'v4.2.1',
+  'PDF' => 'v4.2.1',
   // / Scanner pipelines. They declare no formats & are chosen by name.
-  'ClamAV' => 'v4.0.8',
+  'ClamAV' => 'v4.2.1',
   // / The first pipeline of kind file. Operations that do not care what is in a file.
   'Files' => 'v4.1.8',
-  'ScanCore' => 'v4.0.8');
+  'ScanCore' => 'v4.2.1');
 
 // / The shared modules a pipeline may load & the exact version each must report.
 // / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.

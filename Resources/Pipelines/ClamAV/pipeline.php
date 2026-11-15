@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.2.1.
 // / This file scans files with ClamAV & reports what it found.
 // /
 // / It changes nothing.

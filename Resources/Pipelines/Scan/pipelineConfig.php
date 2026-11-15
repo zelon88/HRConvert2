@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.6.
+// / v4.2.1.
 // / This file declares what the Scan pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.1.6';
+$PipelineVersion = 'v4.2.1';
 
 // / This is an operation pipeline, as OCR & Identify are.
 // / It takes a selection of files a user asked to have scanned, scans each one with ClamAV, ScanCore or both & writes the report a user reads.
@@ -85,5 +85,11 @@ $PipelineExclude = array();
 // / The tools this pipeline asks for, by their names in depends.php.
 // / It runs no tool of its own. Each scanner is the ClamAV or ScanCore pipeline's, & the subsystem above names both.
 $PipelineDependencies = array();
+
+// / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
+// / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.
+// / Scan runs no tool of its own, so it requires none.
+// / The core offers it where a scanner pipeline is installed with its tools, & all is every scanner that is.
+$PipelineRequiredDependencies = array();
 // / -----------------------------------------------------------------------------------
 ?>

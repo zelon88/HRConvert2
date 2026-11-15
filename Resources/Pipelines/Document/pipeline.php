@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.2.1.
 // / The Document pipeline's converter. pipelineCore.php loads it only to dispatch a Document conversion.
 // / Error block 2005, 7000 through 7001 belongs to this pipeline.
 // / It declares the LibreOffice shared module, which Pipeline Core loads before it.

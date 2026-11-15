@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.1.
+// / v4.2.1.
 // / The OCR pipeline. pipelineCore.php loads it only to dispatch an OCR operation.
 // / Error block 15000 through 15014 belongs to this pipeline.
 // / It also raises 8001 for ImageMagick.

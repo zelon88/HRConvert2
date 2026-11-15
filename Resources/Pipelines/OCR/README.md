@@ -8,12 +8,13 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.1.1
+- **Version** v4.2.1
 - **Kind** operation
 - **Family** OCR
 - **Entry point** ocrFiles
 - **Subsystem** OCR
 - **Available to** every surface
+- **Offered where** Tesseract is installed
 
 ## Formats
 

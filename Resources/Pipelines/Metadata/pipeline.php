@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.8.
+// / v4.2.1.
 // / The Metadata pipeline. pipelineCore.php loads it only to dispatch a Strip Metadata operation.
 // / Error block 41000 through 41019 belongs to this pipeline.
 // / It is an operation pipeline, which takes a selection of files & makes a copy of each one, without the metadata it carries, beside it in the session.

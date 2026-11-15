@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.6.
+// / v4.2.1.
 // / The Scan pipeline. pipelineCore.php loads it only to dispatch a Scan operation.
 // / Error blocks 16000 through 16003, 17000 & 17001, 19000 & 19001, & 20000 & 20001 belong to this pipeline.
 // / Scan is an operation pipeline. It takes the files a user asked to have scanned & changes none of them.
@@ -272,12 +272,19 @@ function scanSelection($FilesToScan, $UserFilename, $UserExtension, $Method) {
   $ScanComplete = $ScanErrors = FALSE;
   $ScanFindings = array('Threat' => FALSE, 'Report' => '', 'ReportName' => '');
   $scan1Complete = $scan1Errors = $scan2Complete = $scan2Errors = $logsExist = $reportExists = $reportErrors = $nameIsSanitized = FALSE;
-  $clamVirusFound = $scanCoreVirusFound = $virusWasFound = FALSE;
+  $clamVirusFound = $scanCoreVirusFound = $virusWasFound = $clamIsInstalled = $scanCoreIsInstalled = FALSE;
   $type = $reportName = $clamLogPath = $scanCoreLogPath = $reportPath = '';
   $defaultReportName = 'User_Consolidated_Virus_Scan_Report.txt';
   // / Check that the scan type is valid.
   $type = strtolower((string)$Method);
   if ($type !== 'all' && $type !== 'clamav' && $type !== 'scancore') $type = 'all';
+  // / All is every scanner this server has, as the bundled workflows describe it, from v4.2.1.
+  // / A scanner whose tools are not installed is left out, rather than reported as a scan that did not run, & where neither is installed both are asked & each says so.
+  if ($type === 'all' && function_exists('scannerIsInstalled')) {
+    $clamIsInstalled = scannerIsInstalled('clamav');
+    $scanCoreIsInstalled = scannerIsInstalled('scancore');
+    if ($clamIsInstalled && !$scanCoreIsInstalled) redeclare($type, 'clamav');
+    if ($scanCoreIsInstalled && !$clamIsInstalled) redeclare($type, 'scancore'); }
   // / The report is named by the caller, & a name that sanitize() changes is not a plain name.
   list ($reportName, $nameIsSanitized) = sanitize((string)$UserFilename, TRUE);
   if (!$nameIsSanitized or !is_string($reportName) or $reportName === '' or $reportName !== (string)$UserFilename or strtolower(substr($reportName, -4)) !== '.txt') {
@@ -304,7 +311,7 @@ function scanSelection($FilesToScan, $UserFilename, $UserExtension, $Method) {
   if (!$reportExists) $ScanComplete = FALSE;
   $ScanFindings = array('Threat' => $virusWasFound, 'Report' => $reportExists ? $reportPath : '', 'ReportName' => $reportExists ? $reportName : '');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors, $logsExist, $reportExists, $reportErrors, $nameIsSanitized, $clamVirusFound, $scanCoreVirusFound, $virusWasFound, $type, $reportName, $clamLogPath, $scanCoreLogPath, $reportPath, $defaultReportName, $FilesToScan, $UserFilename, $UserExtension, $Method);
+  purgeSensitiveMemory($EnableMemoryProtection, $scan1Complete, $scan1Errors, $scan2Complete, $scan2Errors, $logsExist, $reportExists, $reportErrors, $nameIsSanitized, $clamVirusFound, $scanCoreVirusFound, $virusWasFound, $clamIsInstalled, $scanCoreIsInstalled, $type, $reportName, $clamLogPath, $scanCoreLogPath, $reportPath, $defaultReportName, $FilesToScan, $UserFilename, $UserExtension, $Method);
   return array($ScanComplete, $ScanErrors, $ScanFindings); }
 // / -----------------------------------------------------------------------------------
 ?>

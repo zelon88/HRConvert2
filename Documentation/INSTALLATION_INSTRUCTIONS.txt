@@ -261,9 +261,15 @@ that whole build again. PDFInfo comes in the same package as Poppler Utils.
 
 RUN  'sudo php convertCore.php --setup --install-depends --subsystem=Metadata'  AFTER UPDATING TO
 v4.1.8. It installs mat2 from the package manager, which brings ExifTool with it, & 0.13 is the
-oldest it accepts. Until it is installed, Strip Metadata fails with error 41000 & -v says FAILED
-beside MAT2. Merge & Split need nothing new, because PDFUnite & PDFSeparate come in the same
-package as Poppler Utils, & -v names each.
+oldest it accepts. Until it is installed, Strip Metadata is not offered, from v4.2.1, & -v names
+the Metadata pipeline NOT OFFERED. A mat2 older than 0.13 is offered, & fails with error 41000, &
+-v says FAILED beside MAT2. Merge & Split need nothing new, because PDFUnite & PDFSeparate come in
+the same package as Poppler Utils, & -v names each.
+
+FROM v4.2.1 A BUTTON IS DRAWN ONLY WHERE THE TOOL BEHIND IT IS INSTALLED. A conversion, Strip
+Metadata, OCR, Merge, Split or a scanner whose tool is missing is hidden from every page & every
+workflow, & -v names each pipeline that is NOT OFFERED & what it lacks. Install what it names, &
+it is offered on the next page loaded.
 
 DO NOT HAND THE INSTALLATION TO THE WEB SERVER USER WITH chown. Root runs that code. A
 command run as root no longer leaves a logfile or a secret the web server user cannot use.

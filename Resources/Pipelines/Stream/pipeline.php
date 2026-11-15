@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.7.
+// / v4.2.1.
 // / The Stream pipeline's converter. pipelineCore.php loads it only to dispatch a Stream conversion.
 // / Error block 21000 through 21002 belongs to this pipeline.
 // / This is the reference implementation of a detached worker pipeline.

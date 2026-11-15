@@ -63,8 +63,22 @@ folder signs nobody in.
 THE KEY LIVES IN THE PAGE & IN THE TAB, & NOWHERE A BROWSER KEEPS FOR A SITE.
 The page holds it in memory & in window.name, which belongs to the tab. window.name is never
 sent to a server, survives a reload & a link followed in the same tab, & goes when the tab
-closes or goes to another site. The key is never written into a page the server draws, never
-put in an address & never logged.
+closes. The key is never written into a page the server draws, never put in an address & never
+logged.
+
+EVERY PAGE ASKS FOR A BROWSING CONTEXT OF ITS OWN, FROM v4.2.1.
+A browser keeps window.name when a page of another site sends the tab here, & when one opens this
+site in a tab it names. Such a page could name the tab with a key of an account of its own, which
+the tab would take up, so whatever the visitor sent would go to that account. It could also hold a
+tab it opened, & later send the tab to a page of its own, which would read the key it held.
+While accounts are on, every response carries Cross-Origin-Opener-Policy same-origin, which gives a
+page of this site a browsing context of its own whenever it is reached from another site or leaves
+for one, so the name is cleared & no page of another site keeps a hold. A browser enforces it over
+HTTPS & on localhost. Over plain HTTP it ignores it, & says so in its console.
+Over plain HTTP, HRC2-SignIn.js takes up a key the tab kept only on a reload, on back or forward, or
+on a page reached from one of this site's own pages, & never in a tab a page of another site came
+from or still holds, & it forgets any other. A key a tab holds there can still be read by a page of
+another site the tab goes to or that holds it. Serve accounts over HTTPS.
 
 THE KEY IS PRESENTED WITH EVERY REQUEST & TRADED ON A TIMER.
 Every request the page sends to its own core carries the key, a form, a script's request & an
@@ -97,7 +111,7 @@ A SIGN IN ENDS WHEN
   default is 43200 seconds, which is 12 hours, & 0 keeps no limit.
   Its account is disabled, removed or given a new password.
   The install secret is rotated with --rotate-secret. Every account is kept.
-A page whose sign in ended says why in its sign in bar & goes home.
+A page whose sign in ended says why where its account's button was & goes home.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -115,8 +129,9 @@ A PASSWORD is at least --Minimum Password Length-- characters, which is 12 & nev
 most 1024 bytes. Any character may be used. It is never sanitized, written, logged or shown. It is
 hashed with Argon2id where PHP has it, & with bcrypt over an HMAC-SHA256 of the password where it
 does not, because bcrypt reads only the first 72 bytes. A record names the scheme it was hashed
-with. A username no account has is checked against a hash all the same, so a wrong username takes
-as long to refuse as a wrong password.
+with. A username no account has is checked against a hash made from the parameters a new hash is
+made with, & nothing is hashed to make it, so a wrong username takes as long to refuse as a wrong
+password. Until v4.2.1 one was hashed first, which took as long again & said the username was free.
 
 AN ADDRESS is never said to be in use. An address may hold several accounts, & nothing tells a
 visitor whether an address is known here.
@@ -127,6 +142,10 @@ letters & digits that look alike. It is entered on the page where the account wa
 page offers to send another. A code takes five wrong tries & is then spent, & a new one must be
 asked for. An account that does not confirm inside --Unconfirmed Account Lifetime-- is removed by
 a sweep, with the empty folder it was given. Where it is FALSE, a new account may sign in at once.
+An account that has confirmed already, & a username no account has, are answered as a wrong code
+is, so confirming says nothing of which usernames exist. Until v4.2.1 an account that had confirmed
+was answered confirmed, whatever code was sent. The fifth wrong try at a code that was sent is
+answered expired, which says a code was sent, & is counted as every wrong code is.
 
 AN EMAIL CARRIES A CODE & NEVER A LINK. A mail system that checks links opens each one before its
 reader does, & would spend a link that works once.
@@ -195,8 +214,8 @@ Removing an account removes its folder & every file in it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Who May Visit--
 
-  --Allow Anonymous Visitors-- TRUE    Every visitor uses this server as before, & a sign in bar
-                                       is offered in a top corner of every page.
+  --Allow Anonymous Visitors-- TRUE    Every visitor uses this server as before, & Sign in is
+                                       offered at the end of the bar at the top of every page.
   --Allow Anonymous Visitors-- FALSE   A visitor who has not signed in is shown the sign in page,
                                        & nothing they send is accepted.
 
@@ -356,15 +375,20 @@ must sign in or asks for one of them. Sign in, Create an account, Confirm your a
 your account & Choose a new password are sections of one page, & a form is sent by a script, so
 a key comes back to the page that asked for it & never travels in a page.
 
-A SIGN IN BAR sits at the top of every page, at the end of the line a reader finishes on, so on
-the right, & on the left where the language reads right to left. It is part of the page rather
-than laid over it, so it covers nothing at any width & with any username. Signed in, it names the
-user & offers Sign out. Signed out, it offers Sign in. On the sign in page it is empty & takes no
-room.
+THE ACCOUNT IS AT THE END OF THE BAR at the top of the upload page & the file list, beside
+Workflows & the settings, so on the right, & on the left where the language reads right to left.
+The bar is inside the Default interface's card & inside the Original's column, so on a wide screen
+the account is never farther from the page than the card's corner or the column's edge. Signed
+out, it offers Sign in. Signed in, it is the user's name, which opens a panel saying who is signed
+in & offering Sign out. A long name is cut short, & the whole of it is the button's title. The sign
+in page has no bar, because nobody signed in is ever shown it. Until v4.2.1 the account was a sign
+in bar of its own, at the corner of the window, & taskbar.php has drawn it since. CREATING_GUIS
+describes taskbar.php.
 
 HRC2-SignIn.js holds the key, adds it to every request the page sends its own core & to no other,
-trades it on the timer & keeps it in the tab. HRC2-SignInTimer.js is the worker that keeps the
-time. Each interface has both, in its Resources/JS.
+trades it on the timer & keeps it in the tab. Over plain HTTP it takes up a key the tab kept only as
+--Signing In & The Key A Page Holds-- says. HRC2-SignInTimer.js is the worker that keeps the time.
+Each interface has both, in its Resources/JS.
 
 Every string is in every language pack, as $GuiAuthText1 through $GuiAuthText43.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -374,9 +398,11 @@ Every string is in every language pack, as $GuiAuthText1 through $GuiAuthText43.
 
 IT DEFENDS AGAINST
   A guessed password, with the limits on attempts & a slow hash.
-  Learning which usernames & addresses exist, because sign in, confirmation & recovery answer
-  alike for an account that exists & one that does not. Registering says a username is taken,
-  & is limited.
+  Learning which usernames & addresses exist, because sign in answers alike & takes as long for an
+  account that exists & one that does not, & confirmation & recovery answer alike. Registering
+  says a username is taken, & a fifth wrong code says a code was sent, & both are limited.
+  A page of another site naming a tab with a key of its own, or holding a tab & reading its key,
+  over HTTPS & on localhost. See --Signing In & The Key A Page Holds--.
   A key leaking through a log, an address, a Referer header or a cookie, because it is in none.
   A copied key, which ends the sign in the first time both copies are traded.
   A request forged by another site, because a key is never sent by the browser on its own. A page
@@ -390,6 +416,15 @@ IT DOES NOT DEFEND AGAINST
   Somebody who reads the user's email, which is where every code goes.
   A network that can be watched. Serve this application over HTTPS. Nothing here encrypts a
   request on its own.
+  Over plain HTTP, a page of another site reading the key of a tab it holds or that goes to it,
+  because a browser enforces Cross-Origin-Opener-Policy only over HTTPS & on localhost.
+  Behind a reverse proxy, telling visitors apart for the limits on attempts, because every request
+  comes from the proxy's address & a forwarded address is never trusted. Configure the proxy & the
+  remoteip module, so Apache names the visitor's address.
+  Somebody who knows a username keeping its account from signing in, by entering
+  --Sign In Attempt Limit-- wrong passwords in every --Sign In Attempt Window--, because failures
+  are counted for the account as well as for the address.
+  Timing a recovery, because an email is handed to the mail system only for an account that exists.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

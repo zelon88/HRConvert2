@@ -8,12 +8,13 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.0.8
+- **Version** v4.2.1
 - **Kind** scanner
 - **Family** ClamAV
 - **Entry point** scanWithClamAV
 - **Subsystem** Security
 - **Available to** cli, web, gui
+- **Offered where** ClamAV is installed
 
 ## Dependencies
 

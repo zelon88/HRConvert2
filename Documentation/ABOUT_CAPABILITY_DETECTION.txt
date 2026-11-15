@@ -55,6 +55,31 @@ gates on $Allowed. A tool's own opinion of itself is a filter. It is never a sou
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Offering Only What Is Installed--
+
+A FOURTH THING DECIDES WHAT A USER IS OFFERED, FROM v4.2.1. WHETHER THE TOOL IS THERE AT ALL.
+Detection asks an installed tool what it can do. It cannot ask a tool that is not installed, &
+it waits for --setup --detect-capabilities to have run. So a server without ImageMagick offered
+every image conversion in every mode, & every press of those buttons failed.
+A pipeline names what it cannot run without in $PipelineRequiredDependencies, & is offered only
+where that is installed. Whether it is installed is found by looking where a conversion would
+find it, on every request & in every mode. No tool is run, & the answer is kept for the request
+alone, so a tool installed now is offered on the next page loaded.
+
+What is not offered is hidden, & nothing else changes.
+  An interface draws no button for it. $OfferedConversionTypes is $SupportedConversionTypes less
+  every type no installed pipeline can run, & the interfaces draw by it.
+  A workflow offers no step & no format of it, & one already written that needs it is listed as
+  disabled & is not offered.
+  -v names each pipeline NOT OFFERED, with what is missing.
+$SupportedConversionTypes & $Allowed are never narrowed. A file of a type this server cannot
+convert may still be uploaded, archived, scanned, shared & deleted, & a request for its
+conversion is still judged by config.php, & refused by the pipeline that cannot run, as before.
+A pipeline whose requirements cannot be looked for is offered, as every one was before, so a
+fault in finding out never hides one that works. See ABOUT_PIPELINE_COMPONENTS.txt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About The Three States--
 
 A DEPENDENCY IS detected, unknown, OR unavailable. UNKNOWN IS NOT EMPTY.

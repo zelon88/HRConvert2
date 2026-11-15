@@ -156,6 +156,7 @@ It analyzes and reports:
 * Every installed interface and whether its version matches core requirements.
 * Language pack matches and discrepancies across interfaces.
 * Active conversion types enabled within the configuration file.
+* Each installed pipeline that is **not offered**, because a tool it cannot run without is not installed, and that tool, from v4.2.1. One that is not offered is not a failure.
 
 > 🛠️ **Diagnostic Value:** Because these dependency checks are identical to the ones executed by active converters, this flag tells you if conversions will actually work. Any dependency reporting `FAILED` will cleanly refuse to run rather than failing mid-process in a confusing manner. This argument works for **any user**.
 

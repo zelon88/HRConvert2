@@ -348,13 +348,15 @@ Requires the Pipeline Core component. Needs no privileges. It reads & reports & 
 
   --pipeline --list                        Every loaded pipeline with its kind, usage & version.
   --pipeline --describe <Name>             One pipeline in full: kind, usage, entry point, what
-                                           it reads & what it writes.
+                                           it reads, what it writes & what it cannot run without.
   --pipeline --verify                      Compare the pinned pipelines against those that loaded.
-  --pipeline --check-depends               Compare what each pipeline says it needs against the
-                                           dependency manifest.
+  --pipeline --check-depends               Compare what each pipeline says it needs, & what it
+                                           cannot run without, against the dependency manifest.
 
 --verify is the one worth running after any change. A pipeline can be pinned, installed &
 syntactically valid & still never load, & nothing else reports it.
+--describe names what a pipeline cannot run without on its Needs line, & --check-depends says
+where each pipeline is offered, from v4.2.1. See ABOUT_PIPELINE_COMPONENTS.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -451,6 +453,8 @@ It reports the following.
   Every installed interface & whether its version matches what the core requires.
   How many language packs in each interface match, & which ones do not.
   Which conversion types are enabled in the configuration.
+  Each pipeline that is installed & not offered, NOT OFFERED, & what it cannot run without that
+  is not installed, from v4.2.1. One that is not offered is not a failure.
 
 The dependency checks are the identical checks the matching converter performs, so this
 answers whether an installation will actually work rather than what it is configured to do.

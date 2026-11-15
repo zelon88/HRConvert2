@@ -257,6 +257,11 @@ Read these before writing code. They are preconditions, not steps.
   6m. A tool the distribution packages as a Python program names `'Interpreter' => 'python3'`.
       Start it with `verifiedToolCommand()`, never by its path, so the Python that runs it is
       the Python its version was asked of. The Metadata pipeline is the example.
+  6n. Name what your pipeline cannot run without in `$PipelineRequiredDependencies`, from v4.2.1.
+      A server without it is then never offered your pipeline, so no button is drawn that could
+      only fail. An inner array names tools any one of which will do. The Archiver's is the example.
+  6o. Name only what the pipeline truly cannot run without. RAR is optional to the Archive pipeline,
+      so it is not required. A tool named here that is missing hides the whole pipeline.
 
 7. Create `Resources/Pipelines/<Family>/` & write the two files it holds.
   7a. Start by copying the existing pipeline closest to what you want. Ebook is small &

@@ -8,12 +8,13 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.1.7
+- **Version** v4.2.1
 - **Kind** conversion
 - **Family** Stream
 - **Entry point** convertStreams
 - **Subsystem** Audio, Video & Streams
 - **Available to** every surface
+- **Offered where** FFMPEG is installed
 
 ## Formats
 

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.2.1.
 // / The SVG pipeline's converter. pipelineCore.php loads it only to dispatch an SVG conversion.
 // / Error block 25000 through 25002 belongs to this pipeline.
 // / Inkscape comes from verifiedToolPath().

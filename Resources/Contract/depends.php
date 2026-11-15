@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File information ...
-// / v4.1.8.
+// / v4.2.1.
 // / HRConvert2 Dependency Manifest.
 // / This file is data. It defines nothing & does nothing.
 // / dependencyCore.php reads it. Nothing else may.
@@ -114,7 +114,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v4.1.8';
+$DependsVersion = 'v4.2.1';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

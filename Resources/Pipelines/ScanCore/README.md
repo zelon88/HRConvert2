@@ -8,12 +8,13 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.0.8
+- **Version** v4.2.1
 - **Kind** scanner
 - **Family** ScanCore
 - **Entry point** scanWithScanCore
 - **Subsystem** Security
 - **Available to** cli, web, gui
+- **Offered where** ScanCore is installed
 
 ## Dependencies
 

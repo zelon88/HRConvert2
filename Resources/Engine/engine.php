@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.2.0.
+// / v4.2.1.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -41,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.2.0';
+$EngineVersion = 'v4.2.1';
 // / -----------------------------------------------------------------------------------
 
 
@@ -4721,8 +4721,8 @@ function runEnginePipelineCommand($cliTarget, $cliSecondTarget) {
   global $Lol, $Pipelines, $DependsManifest, $CoreLoaded, $InstLoc, $EnableMemoryProtection;
   $CommandStatus = 0;
   $pipelineAction = $pipelineWanted = $pipelineName = $pinnedVersion = $manifestPath = '';
-  $declaredDependency = $missingDependency = '';
-  $pipelineRecord = $pinnedPipelines = $manifestNames = $missingDependencies = $manifestEntry = array();
+  $declaredDependency = $missingDependency = $requiredName = '';
+  $pipelineRecord = $pinnedPipelines = $manifestNames = $missingDependencies = $manifestEntry = $declaredNames = $requiredGroup = $requiredTexts = array();
   $pipelineFailures = $declaringCount = 0;
   $pipelineAction = ($cliTarget !== '') ? $cliTarget : '--list';
   if (!is_array($Pipelines) or empty($Pipelines)) $CommandStatus = 1;
@@ -4750,6 +4750,10 @@ function runEnginePipelineCommand($cliTarget, $cliSecondTarget) {
       printf('  %-16s %s'.$Lol, 'Version', $pipelineRecord['Version']);
       printf('  %-16s %s'.$Lol, 'Entry point', $pipelineRecord['EntryPoint']);
       printf('  %-16s %s'.$Lol, 'Subsystem', isset($pipelineRecord['Subsystem']) ? $pipelineRecord['Subsystem'] : 'none');
+      // / What it cannot run without, from v4.2.1, which decides where it is offered.
+      redeclare($requiredTexts, array());
+      foreach ((array)($pipelineRecord['Required'] ?? array()) as $requiredGroup) $requiredTexts[] = implode(' or ', (array)$requiredGroup);
+      printf('  %-16s %s'.$Lol, 'Needs', empty($requiredTexts) ? 'nothing it names' : implode(' & ', $requiredTexts));
       // / The record keeps the declared formats as Input & Output.
       printf('  %-16s %s'.$Lol, 'Reads', empty($pipelineRecord['Input']) ? 'every file' : implode(' ', $pipelineRecord['Input']));
       printf('  %-16s %s'.$Lol, 'Writes', empty($pipelineRecord['Output']) ? 'nothing' : implode(' ', $pipelineRecord['Output']));
@@ -4790,17 +4794,22 @@ function runEnginePipelineCommand($cliTarget, $cliSecondTarget) {
       $CommandStatus = 1;
       warningEntry('The dependency manifest could not be read, so nothing could be compared against it.'); }
     $missingDependencies = array();
+    // / What a pipeline cannot run without is compared too, from v4.2.1, because a name the manifest does not have is believed installed & would never hide anything.
     foreach ($Pipelines as $pipelineName => $pipelineRecord) {
-      if (empty($pipelineRecord['Dependencies'])) continue;
-      foreach ($pipelineRecord['Dependencies'] as $declaredDependency) {
+      redeclare($declaredNames, (array)($pipelineRecord['Dependencies'] ?? array()));
+      foreach ((array)($pipelineRecord['Required'] ?? array()) as $requiredGroup) foreach ((array)$requiredGroup as $requiredName) $declaredNames[] = (string)$requiredName;
+      foreach (array_values(array_unique($declaredNames)) as $declaredDependency) {
         if (in_array($declaredDependency, $manifestNames, TRUE)) continue;
         $missingDependencies[] = $pipelineName.' needs '.$declaredDependency; } }
     print($Lol.'Pipeline dependencies against the manifest'.$Lol.$Lol);
     $declaringCount = 0;
     foreach ($Pipelines as $pipelineName => $pipelineRecord) {
-      if (empty($pipelineRecord['Dependencies'])) continue;
+      if (empty($pipelineRecord['Dependencies']) && empty($pipelineRecord['Required'])) continue;
       $declaringCount++;
-      printf('  %-14s %s'.$Lol, $pipelineName, implode(', ', $pipelineRecord['Dependencies'])); }
+      printf('  %-14s %s'.$Lol, $pipelineName, (empty($pipelineRecord['Dependencies']) ? 'Names no dependency of its own.' : implode(', ', $pipelineRecord['Dependencies'])));
+      redeclare($requiredTexts, array());
+      foreach ((array)($pipelineRecord['Required'] ?? array()) as $requiredGroup) $requiredTexts[] = implode(' or ', (array)$requiredGroup);
+      if (!empty($requiredTexts)) printf('  %-14s %s'.$Lol, '', 'Offered where '.implode(' & ', $requiredTexts).' '.(count($requiredTexts) === 1 ? 'is' : 'are').' installed.'); }
     if ($declaringCount === 0) print('  No pipeline declares a dependency yet.'.$Lol);
     if (!empty($missingDependencies)) $CommandStatus = 1;
     if (empty($missingDependencies)) print($Lol.'Every declared dependency is in the manifest.'.$Lol.$Lol);
@@ -4812,7 +4821,7 @@ function runEnginePipelineCommand($cliTarget, $cliSecondTarget) {
     $CommandStatus = 2;
     print($Lol.'Unrecognized. --pipeline accepts --list, --describe, --verify & --check-depends.'.$Lol.$Lol); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pipelineAction, $pipelineWanted, $pipelineName, $pinnedVersion, $manifestPath, $declaredDependency, $missingDependency, $pipelineRecord, $pinnedPipelines, $manifestNames, $missingDependencies, $manifestEntry, $pipelineFailures, $declaringCount, $cliTarget, $cliSecondTarget);
+  purgeSensitiveMemory($EnableMemoryProtection, $pipelineAction, $pipelineWanted, $pipelineName, $pinnedVersion, $manifestPath, $declaredDependency, $missingDependency, $requiredName, $pipelineRecord, $pinnedPipelines, $manifestNames, $missingDependencies, $manifestEntry, $declaredNames, $requiredGroup, $requiredTexts, $pipelineFailures, $declaringCount, $cliTarget, $cliSecondTarget);
   return $CommandStatus; }
 // / -----------------------------------------------------------------------------------
 

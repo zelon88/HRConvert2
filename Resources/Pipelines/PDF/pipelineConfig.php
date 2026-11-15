@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.8.
+// / v4.2.1.
 // / This file declares what the PDF pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.1.8';
+$PipelineVersion = 'v4.2.1';
 
 // / This is an operation pipeline, as the Extractor is.
 // / It serves two operations, & the method it is handed says which. merge puts a selection of PDFs into one, & split makes a PDF of each page of every PDF it is handed.
@@ -83,5 +83,11 @@ $PipelineExclude = array();
 // / The tools this pipeline asks for, by their names in depends.php.
 // / PDFUnite merges, PDFSeparate splits, PDFInfo counts the pages of a PDF before it is split, & Bubblewrap is named because each runs in the sandbox.
 $PipelineDependencies = array('PDFUnite', 'PDFSeparate', 'PDFInfo', 'Bubblewrap');
+
+// / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
+// / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.
+// / PDFUnite merges, PDFSeparate splits & PDFInfo counts the pages PDFSeparate is handed.
+// / Poppler installs all three together, so Merge & Split are offered where all three are.
+$PipelineRequiredDependencies = array('PDFUnite', 'PDFSeparate', 'PDFInfo');
 // / -----------------------------------------------------------------------------------
 ?>

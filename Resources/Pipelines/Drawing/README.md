@@ -8,12 +8,13 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.0.8
+- **Version** v4.2.1
 - **Kind** conversion
 - **Family** Drawing
 - **Entry point** convertDrawings
 - **Subsystem** Drawings
 - **Available to** every surface
+- **Offered where** Dia is installed
 
 ## Formats
 

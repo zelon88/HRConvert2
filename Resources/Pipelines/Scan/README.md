@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.1.6
+- **Version** v4.2.1
 - **Kind** operation
 - **Family** Scan
 - **Entry point** scanSelection

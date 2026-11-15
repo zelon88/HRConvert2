@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.0.
+// / v4.2.1.
 // / The Workflow Core, one of the Engine's cores.
 // / A workflow is a list of steps, & each step runs one of the application's operations on files a user selected or an earlier step made.
 // / This file reads, checks & runs workflows, & keeps the status a page reads while one runs.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by the application without executing this file.
-$WorkflowCoreVersion = 'v4.2.0';
+$WorkflowCoreVersion = 'v4.2.1';
 // / -----------------------------------------------------------------------------------
 
 
@@ -85,6 +85,8 @@ function workflowSettings() {
 // / An empty list of extensions reads every file. A function named by Accepts decides for each file, given the step's options.
 // / The first mode is the one a step that names none runs in.
 // / Consumes says what becomes of the files an operation takes, deleted or renamed, & is empty for an operation that leaves them as they were.
+// / A choice option may name the choices this server runs in Offered, from v4.2.1, & Choices is then every choice the application knows.
+// / An Offered that is not a list is set aside & named, & every choice is offered, because a provider's mistake must not hide what works.
 function validateOperationEntry($operationName, $operationEntry) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -103,7 +105,11 @@ function validateOperationEntry($operationName, $operationEntry) {
     if (isset($operationEntry['Modes']) && is_array($operationEntry['Modes'])) foreach ($operationEntry['Modes'] as $modeName) if (in_array($modeName, array('each', 'together'), TRUE) && !in_array($modeName, $cleanModes, TRUE)) $cleanModes[] = $modeName;
     if (isset($operationEntry['Options']) && is_array($operationEntry['Options'])) foreach ($operationEntry['Options'] as $optionName => $optionSpec) {
       redeclare($optionType, (is_array($optionSpec) && isset($optionSpec['Type']) && is_string($optionSpec['Type'])) ? $optionSpec['Type'] : '');
-      if (is_string($optionName) && preg_match('/^[A-Za-z][A-Za-z0-9]{0,31}$/', $optionName) === 1 && in_array($optionType, array('choice', 'name', 'integer', 'boolean'), TRUE)) $cleanOptions[$optionName] = $optionSpec;
+      if (is_string($optionName) && preg_match('/^[A-Za-z][A-Za-z0-9]{0,31}$/', $optionName) === 1 && in_array($optionType, array('choice', 'name', 'integer', 'boolean'), TRUE)) {
+        if (array_key_exists('Offered', $optionSpec) && !is_array($optionSpec['Offered'])) {
+          warningEntry('The '.$operationName.' operation\'s '.$optionName.' option declares Offered as something other than a list. Every one of its choices is offered.');
+          unset($optionSpec['Offered']); }
+        $cleanOptions[$optionName] = $optionSpec; }
       else warningEntry('The '.$operationName.' operation declares an option that is not usable. It was left out of the operation.'); }
     if (empty($cleanModes)) warningEntry('The '.$operationName.' operation declares no mode it runs in. It was left out.');
     else if ($acceptsFunction !== '' && !function_exists($acceptsFunction)) warningEntry('The '.$operationName.' operation names '.$acceptsFunction.' to decide which files it reads, & no such function exists. It was left out.');
@@ -441,29 +447,53 @@ function validateWorkflow($workflowDocument, $operations, $fileTypes, $workflowS
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to say whether this server can run a valid workflow.
+// / Accepts the workflow as the runner reads it & the operations. Returns whether it is usable & what stops it, in that order.
+// / A workflow is usable when every operation it names is enabled & every choice it makes is one its option offers, from v4.2.1.
+// / Each step naming an operation that is not, & each choice that is not, is a problem of its own.
+// / A choice outside Offered is still a choice the application knows, so the workflow is valid, & is not offered here because this server cannot run it.
+function workflowUsabilityProblems($normalizedWorkflow, $operations) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $WorkflowIsUsable = TRUE;
+  $UsabilityProblems = $normalizedStep = $optionSpec = array();
+  $stepIndex = 0;
+  $optionName = $chosenValue = '';
+  foreach ($normalizedWorkflow['Steps'] as $stepIndex => $normalizedStep) {
+    if (empty($operations[$normalizedStep['Operation']]['Enabled'])) {
+      $UsabilityProblems[] = 'Step '.($stepIndex + 1).' uses '.$normalizedStep['Operation'].', which is turned off on this server.';
+      continue; }
+    foreach ($operations[$normalizedStep['Operation']]['Options'] as $optionName => $optionSpec) {
+      if (!isset($optionSpec['Offered']) or !is_array($optionSpec['Offered']) or !isset($normalizedStep['Options'][$optionName]) or !is_string($normalizedStep['Options'][$optionName])) continue;
+      redeclare($chosenValue, strtolower($normalizedStep['Options'][$optionName]));
+      if (!in_array($chosenValue, array_map('strtolower', array_map('strval', array_filter($optionSpec['Offered'], 'is_scalar'))), TRUE)) $UsabilityProblems[] = 'Step '.($stepIndex + 1).' gives '.$optionName.' '.$chosenValue.', which this server does not offer.'; } }
+  $WorkflowIsUsable = empty($UsabilityProblems);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $normalizedStep, $optionSpec, $stepIndex, $optionName, $chosenValue, $normalizedWorkflow, $operations);
+  return array($WorkflowIsUsable, $UsabilityProblems); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to read a workflow's text & check it against this application, in one reading.
 // / Accepts the text, the operations, the kinds of file & the settings, in that order.
 // / Returns whether it is valid, the workflow as the runner reads it, every problem found & whether it is usable, in that order.
-// / A workflow is usable when it is valid & every operation it names is enabled. Each step naming one that is not is a problem of its own.
+// / A workflow is usable when it is valid & workflowUsabilityProblems() finds nothing that stops this server running it.
 // / A library's file, a file the command line names & a workflow a page sends are all read here, so each is held to the same rules.
 function checkWorkflowText($workflowText, $operations, $fileTypes, $workflowSettings) {
   // / Set variables.
   global $EnableMemoryProtection;
   $WorkflowIsValid = $WorkflowIsUsable = FALSE;
   $NormalizedWorkflow = $WorkflowProblems = array();
-  $workflowDocument = $parseProblems = $validationProblems = $normalizedStep = array();
+  $workflowDocument = $parseProblems = $validationProblems = $usabilityProblems = array();
   $workflowIsReadable = FALSE;
-  $stepIndex = 0;
   list ($workflowIsReadable, $workflowDocument, $parseProblems) = parseWorkflowText($workflowText);
   if ($workflowIsReadable) list ($WorkflowIsValid, $NormalizedWorkflow, $validationProblems) = validateWorkflow($workflowDocument, $operations, $fileTypes, $workflowSettings);
   $WorkflowProblems = array_merge($parseProblems, $validationProblems);
   if ($WorkflowIsValid) {
-    $WorkflowIsUsable = TRUE;
-    foreach ($NormalizedWorkflow['Steps'] as $stepIndex => $normalizedStep) if (empty($operations[$normalizedStep['Operation']]['Enabled'])) {
-      $WorkflowIsUsable = FALSE;
-      $WorkflowProblems[] = 'Step '.($stepIndex + 1).' uses '.$normalizedStep['Operation'].', which is turned off on this server.'; } }
+    list ($WorkflowIsUsable, $usabilityProblems) = workflowUsabilityProblems($NormalizedWorkflow, $operations);
+    $WorkflowProblems = array_merge($WorkflowProblems, $usabilityProblems); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $workflowDocument, $parseProblems, $validationProblems, $normalizedStep, $workflowIsReadable, $stepIndex, $workflowText, $operations, $fileTypes, $workflowSettings);
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowDocument, $parseProblems, $validationProblems, $usabilityProblems, $workflowIsReadable, $workflowText, $operations, $fileTypes, $workflowSettings);
   return array($WorkflowIsValid, $NormalizedWorkflow, $WorkflowProblems, $WorkflowIsUsable); }
 // / -----------------------------------------------------------------------------------
 
@@ -595,7 +625,8 @@ function readWorkflowSourceFile($sourcePath) {
 // / A workflow's file is named for its identifier followed by -workflow.json, & an identifier is 1 to 64 letters, digits, dashes & underscores.
 // / Every file is read with readFileWithoutFollowing(), so a library is read only from a folder no account but root can change.
 // / A workflow that does not read or does not validate is kept with its problems, so the command line can name them, & is never offered.
-// / A workflow is usable when it is valid & every operation it names is enabled.
+// / A workflow is usable when it is valid & workflowUsabilityProblems() finds nothing that stops this server running it.
+// / One that is valid & not usable is not warned about, because it is not broken. It needs something this server does not have or has turned off.
 function readWorkflowFolder($folderPath, $libraryName, $operations, $fileTypes, $workflowSettings) {
   // / Set variables.
   global $DirSep, $EnableMemoryProtection;
@@ -1435,7 +1466,7 @@ function workflowFileName($workflowName) {
 // / A function to check a workflow a page holds, for its builder, an import or an export.
 // / Accepts the workflow as text. Returns the reply, holding Available & Allowed, & Valid, Usable, Problems, Document & FileName when it was checked.
 // / Allowed is true when the builder, or import & export, is turned on, because each is what a page checks a workflow for.
-// / Usable is true when it is valid & every operation it names is turned on here. Problems names everything to fix, & is about the workflow alone.
+// / Usable is true when it is valid & every operation it names is turned on here, & every choice it makes is offered here. Problems names everything to fix, & is about the workflow alone.
 // / Document is the workflow in canonical form, which is what an export saves & what a page's builder opens, & FileName is the name an export saves it under.
 // / Nothing is run & nothing is kept.
 function checkWorkflowDocument($workflowText) {
@@ -1504,6 +1535,7 @@ function describeChoiceGroups($choiceGroups, $offeredChoices) {
 // / Accepts nothing. Returns the reply, holding Available, Builder, ImportExport, MaxSteps & MaxFiles, & Operations & Kinds, which are empty unless the builder is on.
 // / Each operation is described by its name, whether it is this core's own, its modes, its options & what becomes of the files it takes.
 // / Each option is described by its name, its type, & its choices, default, bounds & whether it is required where it has them. A choice is described as a step names it.
+// / An option that names what it offers is described by those choices alone, from v4.2.1, so a builder never offers a choice this server cannot run.
 // / An option whose choices are sorted into groups is described with its groups, which describeChoiceGroups() checks.
 // / Only an operation this server has turned on is described, because a step using any other could not run here.
 // / Kinds names the kinds of file a filter may name. Nothing else about this server is described.
@@ -1524,7 +1556,8 @@ function describeWorkflowOperations() {
         redeclare($optionSummaries, array());
         foreach ($operationEntry['Options'] as $optionName => $optionSpec) {
           redeclare($optionSummary, array_merge(array('Name' => (string)$optionName), array_intersect_key($optionSpec, array_flip(array('Type', 'Default', 'Required', 'Minimum', 'Maximum')))));
-          if (isset($optionSpec['Choices']) && is_array($optionSpec['Choices'])) $optionSummary['Choices'] = array_values(array_unique(array_map('strtolower', array_map('strval', $optionSpec['Choices']))));
+          if (isset($optionSpec['Offered']) && is_array($optionSpec['Offered'])) $optionSummary['Choices'] = array_values(array_unique(array_map('strtolower', array_map('strval', array_filter($optionSpec['Offered'], 'is_scalar')))));
+          else if (isset($optionSpec['Choices']) && is_array($optionSpec['Choices'])) $optionSummary['Choices'] = array_values(array_unique(array_map('strtolower', array_map('strval', $optionSpec['Choices']))));
           if (isset($optionSummary['Choices']) && isset($optionSpec['Groups']) && is_array($optionSpec['Groups'])) $optionSummary['Groups'] = describeChoiceGroups($optionSpec['Groups'], $optionSummary['Choices']);
           $optionSummaries[] = $optionSummary; }
         $OperationsReply['Operations'][] = array('Name' => (string)$operationName, 'BuiltIn' => !empty($operationEntry['BuiltIn']), 'Modes' => $operationEntry['Modes'], 'Options' => $optionSummaries, 'Consumes' => (string)($operationEntry['Consumes'] ?? '')); }

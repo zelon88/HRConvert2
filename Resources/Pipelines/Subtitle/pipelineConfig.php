@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.2.1.
 // / This file declares what the Subtitle conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.0.8';
+$PipelineVersion = 'v4.2.1';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -90,5 +90,10 @@ $Capabilities = array(
 $PipelineExclude = array(
   'srt>srt', 'ass>ass', 'ssa>ssa', 'vtt>vtt', 'sub>sub', 'jacosub>jacosub',
   'mpl2>mpl2', 'ttml>ttml');
+
+// / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
+// / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.
+// / FFMPEG converts every subtitle, so nothing is converted without it.
+$PipelineRequiredDependencies = array('FFMPEG');
 // / -----------------------------------------------------------------------------------
 ?>

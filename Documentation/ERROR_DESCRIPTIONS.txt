@@ -7333,6 +7333,63 @@ ERROR NUMBER RESERVATION
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT PIPELINES
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Pipeline Core raises these, from Resources/Engine/Cores/pipelineCore.php. Until v4.2.1 none of them was documented here.
+    WARNING!!! The application's <LIST> is not a list, so nothing in it was accepted.
+    WARNING!!! The application's <LIST> names <NAME>, which is not a plain name. It was refused.
+    WARNING!!! The application's <LIST> pins <NAME> to something that is not a version. It was refused.
+      <LIST> is the list of accepted pipelines or of accepted shared modules, which Resources/Contract/app-engine-config.php sets.
+      A bad entry costs that entry & nothing else.
+    WARNING!!! This application accepts no pipeline. They are named in $EngineAcceptedPipelines, which <FILE_PATH> sets.
+      No pipeline is read, & 34001 follows it. What is missing is the list, & not anything in a pipeline's folder.
+    WARNING!!! A pipeline asked for the shared module <NAME>, which this Pipeline Core does not accept.
+    WARNING!!! The shared module <NAME> is not installed at <FILE_PATH>.
+    WARNING!!! The shared module <NAME> could not be read.
+    WARNING!!! The shared module <NAME> reports no version & was refused.
+    WARNING!!! The shared module <NAME> reports v<VERSION> & this manager requires v<VERSION>. It was refused.
+      A shared module the pipeline declared did not load, so the functions its converter calls may not exist. 34002 usually follows.
+    WARNING!!! The <PIPELINE> pipeline is not installed at <FOLDER>.
+    WARNING!!! The <PIPELINE> pipeline has no pipelineConfig.php at <FILE_PATH>.
+    WARNING!!! The <PIPELINE> pipeline configuration at <FILE_PATH> could not be read.
+    WARNING!!! The <PIPELINE> pipeline reports no version & was refused.
+    WARNING!!! The <PIPELINE> pipeline reports v<VERSION> & this manager requires v<VERSION>. It was refused.
+      An accepted pipeline is missing, cannot be read or is not the version it is pinned to, which must match exactly. It is not offered.
+      Run -v, which counts the pipelines of each kind that verified.
+    WARNING!!! The <PIPELINE> pipeline declared no family & was refused.
+    WARNING!!! The <PIPELINE> pipeline declared an unusable entry point name & was refused.
+    WARNING!!! The <PIPELINE> pipeline declared no usable capabilities & was refused.
+    WARNING!!! The <PIPELINE> pipeline declared capabilities that are not arrays & was refused.
+    WARNING!!! The <PIPELINE> pipeline declared an empty capability list & was refused.
+      Its pipelineConfig.php leaves out or misstates something every pipeline declares. ABOUT_PIPELINE_COMPONENTS lists each.
+    WARNING!!! The <PIPELINE> pipeline declared a usage naming nothing recognized. It was left at web & gui.
+    WARNING!!! The <PIPELINE> pipeline declares $PipelineRequiredDependencies as something other than an array, so it requires nothing.
+    WARNING!!! The <PIPELINE> pipeline declares a required dependency that names no tool. It was left out.
+      From v4.2.1. $PipelineRequiredDependencies names the tools a pipeline cannot run without, by the names the dependency manifest
+      gives them, & a pipeline is offered only where they are installed. A requirement that cannot be read requires nothing, so a
+      mistake in declaring one never hides a pipeline that works.
+    WARNING!!! The <PIPELINE> pipeline cannot run without <NAME>, which the dependency manifest does not name, so it is believed installed.
+      From v4.2.1. A required tool is looked for by its manifest entry, & a name the manifest lacks cannot be looked for, so the
+      pipeline is offered. The name must match the manifest's exactly. --pipeline --check-depends names every one that does not.
+    WARNING!!! Capability mismatch. The <FAMILY> pipeline claims <FILE_TYPE> to <FILE_TYPE> & <SUBSYSTEM> reports it cannot. A narrowing mode would refuse this conversion. Check the alias table in depends.php before enabling one.
+      Raised only in the detected-advisory mode, which converts as declared & says what a narrowing mode would have refused.
+      ABOUT_CAPABILITY_DETECTION describes the modes.
+    WARNING!!! Dispatch asked for the <PIPELINE> pipeline, which was never verified.
+    WARNING!!! The <PIPELINE> pipeline permits <USAGE> & was asked for from <SURFACE>. It was refused.
+      A caller asked for a pipeline that did not verify, or from a surface its $PipelineUsage does not permit. Nothing ran.
+    WARNING!!! The dependency manifest could not be read, so <NAME> could not be verified.
+    WARNING!!! The Dependency Core is unavailable, so <NAME> could not be verified.
+    WARNING!!! No manifest entry is named <NAME>, so it could not be verified.
+    WARNING!!! <NAME> is <STATUS> & will not be used.
+      A pipeline asked for a tool before running it, & it was not verified. The pipeline's own error follows.
+      <STATUS> is what --setup --check-depends says of the tool. A tool the manifest does not mark Required is logged rather than warned about.
+    WARNING!!! The <FAMILY> pipeline dispatcher was called for <FILE_TYPE> to <FILE_TYPE>, which no installed pipeline claims.
+    WARNING!!! The <PIPELINE> pipeline could not complete a <FILE_TYPE> to <FILE_TYPE> conversion. Falling back to the next implementation.
+      Where more than one installed pipeline converts a pair, the next is tried when one fails, & each is named as it fails.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! Kernel-35000, The kernel cannot be loaded directly!
 
@@ -7729,12 +7786,17 @@ WARNINGS ABOUT WORKFLOWS
     WARNING!!! The <OPERATION> operation says it consumes its files in a way this core does not know. It is read as leaving them as they were.
       From v4.1.8. Consumes is deleted, renamed or empty. Any other value is read as empty, so the operation is offered & a step
       taking the files it took is not refused, which is the safer mistake. The operation provider should be corrected.
+    WARNING!!! The <OPERATION> operation's <OPTION> option declares Offered as something other than a list. Every one of its choices is offered.
+      From v4.2.1. A choice option may name the choices this server runs in Offered, & its Choices are then every choice the
+      application knows. One whose Offered cannot be read offers every choice, so a mistake never hides one that works.
     WARNING!!! The operation provider <FUNCTION_NAME> declared Select, which is the Workflow Core's own step. It was left out.
       From v4.1.5. The name Select is the Workflow Core's, so an application's operation of that name is never run.
     WARNING!!! The operation provider <FUNCTION_NAME> names <FUNCTION_NAME> to list a session's files, & no such function exists. Select is not offered.
       From v4.1.5. Every other operation is offered, & a workflow with a Select step does not check until the function exists.
     WARNING!!! The operation provider <FUNCTION_NAME> returned no usable operation, so no workflow can run.
     WARNING!!! The <LIBRARY> workflow <FILE_NAME> is not valid & is not offered. Run --workflow --list to read why.
+      From v4.2.1 a workflow naming a format or a scanner this server does not offer is valid & is not warned about. It is listed as
+      disabled, as one using an operation that is turned off is, & is offered wherever the tool it needs is installed.
     WARNING!!! A session's workflow folder could not be made ready, so no workflow can run in it.
     WARNING!!! The folder running workflows are counted in could not be locked, so the limit on running workflows is not applied to this one.
     WARNING!!! A workflow was asked to stop & the request could not be recorded.
@@ -8585,6 +8647,10 @@ WARNINGS ABOUT ACCOUNTS
       A signed in user started a workflow, & before its worker began the account was removed or disabled, or its folder in
       Users could not be made. The worker finds no job & stops, & the workflow does not run. Nothing was wrong with this server
       unless the folder could not be made, which -fp corrects.
+    WARNING!!! This page was sent without Cross-Origin-Opener-Policy, because something was written before its headers. A page of another site could reach the key a signed in tab holds.
+      From v4.2.1. While accounts are on, every response carries the policy, so a page of another site can neither name a
+      tab with a key of its own nor hold a tab & read its key. Something was printed before the Engine judged the request,
+      which is usually a PHP notice shown because display_errors is on. Turn display_errors off, & put right what it printed.
   The Email Core raises these, from Resources/Engine/Cores/emailCore.php.
     WARNING!!! The email sender <ADDRESS> set by --Email Sender-- cannot be used, so the host's mail system names the sender.
       --Email Sender-- is not one plain address. The email is still sent, from whatever address the mail system uses.

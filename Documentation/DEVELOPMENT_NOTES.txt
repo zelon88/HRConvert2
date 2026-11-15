@@ -1534,6 +1534,23 @@ A PATTERN'S TEST IS LINEAR.
 The builder marks an extensions box whose text cannot be a list of extensions. Its test requires
 a separator between two extensions, because a test that lets a run of letters be split into
 extensions every way it can takes exponential time on a long word that fails.
+
+ONE BAR, AT THE TOP OF THE CARD. v4.2.1.
+The upload page drew Refresh, the settings & Start Over as wide buttons across the middle of the page,
+& the file list drew Back, the settings & Refresh, & Workflows beneath them. The settings opened a
+selector drawn in a design of its own, & the sign in bar was at the corner of the window, which on a
+wide screen was a long way from the page it belonged to. taskbar.php draws one bar for both pages,
+inside the Default interface's card & inside the Original's column. Back & Refresh are at its start,
+& Workflows, the settings & the account at its end. The settings, with Start Over last, open one
+panel, & a signed in name opens another, each drawn as the file list & the Workflows panels are.
+Every string it shows is one the pages already had, so no language pack changed.
+
+A PAGE OFFERS WHAT THE SERVER CAN RUN. v4.2.1.
+A page drew a button for every type config.php names, so a server without ImageMagick offered every
+image conversion, & every press of one failed. Each pipeline names what it cannot run without, & a
+page draws by $OfferedConversionTypes, which leaves out a type whose tool is not installed. $Allowed &
+$SupportedConversionTypes are not narrowed, because a file a server cannot convert is still one it
+can upload, archive, scan, share & delete.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1729,6 +1746,14 @@ when it was pressed. Once it names files, a selection changed while it asks woul
 never named. The page keeps what it asked about, runs that only while it is still what the page
 would run, & asks again otherwise. A preview & a question are taken back as soon as the workflow
 or the selection changes.
+
+A WORKFLOW THIS SERVER CANNOT RUN IS NOT A BROKEN ONE. v4.2.1.
+Offering Convert only the formats an installed tool writes made the shipped Images to JPG workflow
+invalid on a server without ImageMagick, & a warning that it was not valid was written on every
+request that read the library. A choice option names what this server offers in Offered, apart from
+Choices, which is every choice the application knows. A workflow making a choice that is not offered
+is valid & disabled, as one using an operation turned off is, & nothing warns about it. Found in the
+first screenshots of v4.2.1, before it was released.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1831,8 +1856,20 @@ so it cannot forge a request that is signed in.
 THE KEY IS KEPT IN window.name, BECAUSE A RELOAD MUST NOT SIGN A USER OUT.
 Page memory dies with every navigation, & every form this application posts is one. window.name
 belongs to the tab rather than to the site, is never sent to a server, survives a reload & a link
-followed in the same tab, & is cleared when the tab goes to another site. Web storage is kept for the
-site, & local storage outlives the tab, which is what a cookie does & what this avoids.
+followed in the same tab, & is cleared when the tab goes to another site where a browser enforces the
+policy below. Web storage is kept for the site, & local storage outlives the tab, which is what a
+cookie does & what this avoids.
+
+A SIGNED IN TAB IS A BROWSING CONTEXT OF ITS OWN, BECAUSE window.name IS NOT. v4.2.1.
+A browser keeps window.name when a page of another site sends the tab here or opens this site in a
+tab it names, & keeps its hold on a tab it opened, so another site could plant a key of an account of
+its own or read the key a tab held. Every response carries Cross-Origin-Opener-Policy same-origin
+while accounts are on, which clears the name & cuts the hold. It is sent however a request looks,
+because behind a proxy that ends HTTPS the server cannot tell a secure page from a plain one, & a
+policy left out where it would work is protection lost without a word. Over plain HTTP a browser
+ignores it & says so in its console, which is the browser's own notice that accounts want HTTPS, &
+the page takes up a key there only where it came from this site, by a reload, back or forward, or
+one of its own pages. A referrer is what tells, because a page of another site cannot forge it.
 
 A KEY IS PRESENTED OFTEN & TRADED SELDOM.
 Were every request to trade its key, two requests in flight at once would each spend the key the

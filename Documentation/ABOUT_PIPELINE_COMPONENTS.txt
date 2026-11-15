@@ -221,6 +221,11 @@ Every administrator facing setting lives in config.php & is owned by Setup Core.
   $PipelineDependencies  Array of names from the dependency manifest. Optional. What the
                          pipeline shells out to. --pipeline --check-depends reports any name the
                          manifest does not have.
+  $PipelineRequiredDependencies  Array of names from the dependency manifest. Optional, from v4.2.1.
+                         What the pipeline cannot run without. An inner array names tools any one
+                         of which will do, as array(array('7-Zip', 'Zip', 'Tar')). A pipeline is
+                         offered to a user & a workflow only where each is installed. Undeclared
+                         or empty, it requires nothing & is offered wherever it verifies.
   $PipelineSharedModules Array of shared module file names to load first. Optional.
 
 $PipelineEntryPoint MUST BE UNIQUE ACROSS EVERY INSTALLED PIPELINE.
@@ -237,6 +242,20 @@ rename its entry point is refused with a warning naming both folders.
   not portable. It fails the first time it is copied into a different application.
   A tool the distribution packages as a Python program is started by verifiedToolCommand(),
   so the Python that runs it is the Python its version was asked of.
+
+A PIPELINE IS OFFERED ONLY WHERE WHAT IT CANNOT RUN WITHOUT IS INSTALLED, from v4.2.1.
+$PipelineRequiredDependencies names it, & the Pipeline Core's pipelineToolsAreInstalled() asks
+the Dependency Core's dependencyIsInstalled() whether each is there. It never runs a tool to answer.
+A tool is installed where this application's own build of it is in service, or where its program
+is found where --setup --install-depends looks for it. A library, which has no program, is believed
+installed. One the architecture rules, the licence gates or the manifest's own entry refuse is not.
+Where the manifest or the Dependency Core cannot be read, every pipeline is offered, as every one
+was before v4.2.1, because a fault in finding out must never hide a pipeline that works.
+A pipeline that is not offered is still verified & installed. The interfaces draw no button for it,
+a workflow offers no step & no format of it, -v names it NOT OFFERED with what is missing, &
+--pipeline names what it needs. Install the tool & it is offered on the next request.
+Presence is not a version check. A tool that is installed & too old is offered, & verifiedToolPath()
+still refuses it when the pipeline runs, as before.
 
 CAPABILITIES ARE A CROSS PRODUCT, NARROWED BY EXCLUSIONS.
 Every input extension is assumed convertible to every output extension unless a pair appears

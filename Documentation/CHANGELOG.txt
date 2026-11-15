@@ -26,6 +26,37 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 
 --------------------
+COMMIT 11/14/2026
+v4.2.1 - One bar at the top of every page holds Workflows, the settings & Sign in, & a page offers only what this server's installed tools can run.
+
+-v4.2.1.
+-New taskbar.php in both interfaces, a bar at the top of the upload page & the file list. Back & Refresh are at its start, & Workflows, the settings & the account at its end.
+-The Default interface draws it inside the card & the Original inside the page's column, so Sign in is never farther from the page than the card's corner or the column's edge.
+-The settings are one panel, with the language, the colour, the interface & Start Over last. The selector & the Start Over button & panel they replace are gone.
+-A signed in user's name opens a panel with Sign out. footer.php writes no sign in bar, & still starts HRC2SignIn.
+-Workflows is on the upload page once there is a file, & opens the file list with its panel open.
+-New HRC2.bindTaskbar(). One of the bar's panels is open at a time, its button says so & looks pressed, & Escape closes it. Back's arrow turns round where a page reads right to left.
+-New $PipelineRequiredDependencies. A pipeline names what it cannot run without, & is offered only where that is installed. Every pipeline but Identify & Files declares it.
+-New dependencyIsInstalled() in the Dependency Core, & pipelineToolsAreInstalled(), readPipelineRequirements(), loadDependencyKnowledge(), manifestEntryNamed(), scannerPipelineFolder() & scannerIsInstalled() in the Pipeline Core. No tool is run to answer.
+-New $OfferedConversionTypes & $OfferedScanners for an interface. Both interfaces draw a conversion by $OfferedConversionTypes, a scan button for each installed scanner, & the one scanning with both only where both are.
+-$SupportedConversionTypes & $Allowed are not narrowed, so a file this server cannot convert is still uploaded, archived, scanned, shared & deleted.
+-New offeredConversionTypes(), offeredConversionFamilies(), offeredScanners(), pipelineIsOffered() & operationFamilyFormats() in the core. operationPipelineIsOffered() replaces operationPipelineIsInstalled().
+-A workflow is offered no step, format or scanner this server cannot run. Scan's all is every installed scanner.
+-New Offered for a choice option of an operation. A workflow choosing what is not offered is valid & disabled, & is not warned about. A page's builder is offered Offered alone.
+-New workflowUsabilityProblems() in the Workflow Core.
+--v names each pipeline NOT OFFERED & what it lacks. --pipeline --describe names what a pipeline needs, & --pipeline --check-depends checks those names & says where each pipeline is offered.
+-hrconvert2-approvals.py writes where each pipeline is offered into its README.
+-FIX. The upload page never purged what its selector made, & the file list never purged the two values its scan panel encoded for each file.
+-FIX. Confirming an address answered confirmed for an account that had confirmed, whatever code was sent, so it said which usernames existed. It is answered as a wrong code.
+-FIX. A username with no account hashed a password before checking one, so a wrong username took twice as long as a wrong password. New unknownAccountHash() in the Authentication Core.
+-FIX. A page of another site could name a tab with a key of its own account, which the tab took up, or hold a tab it opened & later read its key. New sendOpenerPolicy() sends Cross-Origin-Opener-Policy same-origin with every response while accounts are on, & over plain HTTP HRC2-SignIn.js takes up a key only on a reload, back or forward, or a page reached from this site.
+-ERROR_DESCRIPTIONS documents every warning the Pipeline Core raises, none of which it had, the new Offered warning & the Authentication Core's new warning.
+-CREATING_GUIS, ABOUT_AUTHENTICATION, ABOUT_PIPELINE_COMPONENTS, CREATING_CONVERSION_PIPELINES, ABOUT_CAPABILITY_DETECTION, ABOUT_DEPENDENCIES, ABOUT_COMMAND_LINE_ARGUMENTS, ABOUT_WORKFLOWS, ABOUT_REST_API, CREATING_LANGUAGE_PACKS, INSTALLATION_INSTRUCTIONS & DEVELOPMENT_NOTES describe the change.
+-ABOUT_RESOURCE_RATE_LIMITING & CODING_CONVENTIONS carry the edits v4.1.9 made, which the v4.2.0 commit left out.
+-README.md describes workflows & accounts, with new screenshots of the bar, the Workflows panel & signing in. Documentation/README.md lists ABOUT_AUTHENTICATION.
+-The core, the Engine, the Dependency, Pipeline, Workflow & Authentication Cores, the manifest, both interfaces & every pipeline but Identify & Files are v4.2.1, & every pin to them requires v4.2.1. The kernel & every language pack are still v4.2.0.
+
+--------------------
 COMMIT 11/13/2026
 v4.2.0 - Optional accounts. A user may sign in & keep files of their own, & no cookie is ever set.
 

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.7.
+// / v4.2.1.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v4.1.7';
+$DependencyCoreVersion = 'v4.2.1';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -839,6 +839,36 @@ function resolveDependencyChoice($dependencyEntry) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $architectureIsSupported, $ownIsTrusted, $ownIsPresent, $ownIsRunnable, $unsupportedReason, $ownFolder, $ownPath, $ownNotice, $ownLead, $ownAdvice, $ownVersion, $ownStatus, $ownOutput, $runAccount, $dependencyEntry);
   return array($DependencyIsPresent, $DetectedVersion, $DependencyStatus, $RawOutput, $BinaryPath, $BinaryOrigin); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether a dependency is installed, without running it.
+// / Accepts one manifest entry. Returns whether it is installed.
+// / It looks where resolveDependencyChoice() looks, at this application's own build in service first & then at the program the manifest names.
+// / An entry this architecture cannot run, or a policy refuses, is not installed, because no conversion would ever use it.
+// / A library names no program, so it is believed installed. Only its version command could say otherwise.
+// / A page asks this for each tool a pipeline cannot run without, on every load, so it never runs the tool. It costs a few lookups,
+// / & a shell asking command -v for a program locateDependency() finds in none of the usual folders.
+// / Whether an installed program is too old is not asked, because only running it could say.
+function dependencyIsInstalled($dependencyEntry) {
+  // / Set variables.
+  global $HostArchitecture, $EnableMemoryProtection;
+  $DependencyIsInstalled = FALSE;
+  $resolvedEntry = $serviceEntry = array();
+  $architectureIsSupported = $entryIsComplete = $entryIsLicenseClear = FALSE;
+  $unsupportedReason = $gateReason = $servicePath = $programName = '';
+  list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
+  list ($entryIsComplete, $entryIsLicenseClear, $gateReason) = judgeDependencyEntry($resolvedEntry);
+  if ($architectureIsSupported && $entryIsComplete && $entryIsLicenseClear) {
+    list ($serviceEntry, $servicePath) = ownBuildInService($dependencyEntry);
+    $programName = (string)($resolvedEntry['Binary'] ?? '');
+    if ($servicePath !== '' or $programName === '') $DependencyIsInstalled = TRUE;
+    // / A path is looked for where the manifest puts it, & a name as locateDependency() finds it, as resolveDependencyState() looks.
+    else if (strpos($programName, DIRECTORY_SEPARATOR) !== FALSE) $DependencyIsInstalled = (is_file($programName) && is_executable($programName));
+    else $DependencyIsInstalled = (locateDependency($programName) !== ''); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $serviceEntry, $architectureIsSupported, $entryIsComplete, $entryIsLicenseClear, $unsupportedReason, $gateReason, $servicePath, $programName, $dependencyEntry);
+  return $DependencyIsInstalled; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.0.
+// / v4.2.1.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -255,7 +255,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.2.0';
+  $HRConvertVersion = 'v4.2.1';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -269,7 +269,7 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.2.0';
+  $RequiredGuiVersion = 'v4.2.1';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -287,29 +287,29 @@ function verifyInstallation() {
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v4.1.7';
+  $RequiredDependencyCoreVersion = 'v4.2.1';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v4.1.8';
+  $RequiredDependsVersion = 'v4.2.1';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
   // / The Pipeline Core component version this core requires.
   // / This is an exact match, because a component built for another core may declare an entry point whose arguments have moved, or capabilities this core cannot honour.
   // / Raise this when the Pipeline Core itself changes & for nothing else.
   // / It is an Engine core, at Resources/Engine/Cores/pipelineCore.php.
   // / The pipelines this application accepts are listed in its contract, in app-engine-config.php, so adding a pipeline or moving one to a new version raises nothing here.
-  $RequiredPipelineCoreVersion = 'v4.1.7';
+  $RequiredPipelineCoreVersion = 'v4.2.1';
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The Workflow Core component version this core requires.
   // / This is an exact match, because a component built for another core may call an operation with arguments that have moved.
   // / Raise this when the Workflow Core itself changes & for nothing else. It is an Engine core, at Resources/Engine/Cores/workflowCore.php.
-  $RequiredWorkflowCoreVersion = 'v4.2.0';
+  $RequiredWorkflowCoreVersion = 'v4.2.1';
   $RequiredWorkflowCoreVersion = ltrim($RequiredWorkflowCoreVersion, 'vV');
   // / The Authentication Core & Email Core component versions this core requires.
   // / Each is an exact match, for the reason every Engine core's is. The Engine loads them where accounts are on.
   // / They are Engine cores, at Resources/Engine/Cores/authenticationCore.php & Resources/Engine/Cores/emailCore.php.
-  $RequiredAuthenticationCoreVersion = 'v4.2.0';
+  $RequiredAuthenticationCoreVersion = 'v4.2.1';
   $RequiredAuthenticationCoreVersion = ltrim($RequiredAuthenticationCoreVersion, 'vV');
   $RequiredEmailCoreVersion = 'v4.2.0';
   $RequiredEmailCoreVersion = ltrim($RequiredEmailCoreVersion, 'vV');
@@ -320,7 +320,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.2.0';
+  $RequiredEngineVersion = 'v4.2.1';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -671,7 +671,7 @@ function verifyColors($ButtonStyle) {
 // / A function to set the GUI to use for the session.
 function verifyGui() {
   // / Set variables.
-  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GuiEngineFile, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font, $GuiVersion, $RequiredGuiVersion, $EnableMemoryProtection, $CoreLoaded, $GuiWidth, $GuiMaxWidth, $GUIAlignment;
+  global $GUI, $DefaultGui, $SupportedGuis, $AllowUserSelectableGui, $GuiFiles, $GuiDir, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GuiEngineFile, $GuiTaskbarFile, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $OrangeButtonCode, $PurpleButtonCode, $DarkButtonCode, $DefaultButtonCode, $Font, $GuiVersion, $RequiredGuiVersion, $EnableMemoryProtection, $CoreLoaded, $GuiWidth, $GuiMaxWidth, $GUIAlignment;
   // / The interface width is decided ONCE, here, before the stylesheet that uses it loads.
   // / $GuiWidth is FLUID rather than fixed. min() takes whichever is smaller, so a phone is
   // / bounded by its own viewport & a wide monitor by the configured ceiling.
@@ -719,12 +719,14 @@ function verifyGui() {
     $GuiUI2File = $GuiDir.'convertGui2.php';
     // / The page the Engine names, drawn in place of the two above when the Engine answers a request with a page of its own.
     $GuiEngineFile = $GuiDir.'engineGui.php';
+    // / The bar at the top of both pages, from v4.2.1. Both pages draw it, so it is drawn once.
+    $GuiTaskbarFile = $GuiDir.'taskbar.php';
     $guiVersionFile = $GuiDir.'uiVersionInfo.php';
     $GuiResourcesDir = $GuiDir.'Resources/';
     $GuiImageDir = $GuiResourcesDir.'Image/';
     $GuiCSSDir = $GuiResourcesDir.'CSS/';
     $GuiJSDir = $GuiResourcesDir.'JS/';
-    $guiFiles = array($GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GuiEngineFile, $styleCoreFile, $guiVersionFile);
+    $guiFiles = array($GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $GuiEngineFile, $GuiTaskbarFile, $styleCoreFile, $guiVersionFile);
     // / The resources folder is part of a GUI, not an optional extra.
     // / It began as an optional convenience & the documentation still called it optional,
     // / but the core had quietly come to depend on it. header.php builds five asset paths
@@ -1333,6 +1335,9 @@ function showVersionInfo() {
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
   $fileBinary = $probeBinary = $pdfInfoBinary = FALSE;
   $pdfUniteBinary = $pdfSeparateBinary = $mat2Binary = FALSE;
+  $pipelineIsOffered = FALSE;
+  $pipelineName = '';
+  $unmetRequirements = array();
   $listenerIsRunning = $bwrapBinary = $listenerIsAsked = FALSE;
   $sandboxLauncher = '';
   $listenerStatus = array();
@@ -1449,7 +1454,12 @@ function showVersionInfo() {
       'operation' => 'Operation pipelines', 'scanner' => 'Security pipelines');
     foreach ($pipelineKindCounts as $pipelineKind => $pipelineKindCount) {
       if ($pipelineKindCount === 0) continue;
-      print('  '.str_pad($pipelineKindLabels[$pipelineKind], 28).$pipelineKindCount.' of '.$pipelineKindCount.' OK'.$Lol); } }
+      print('  '.str_pad($pipelineKindLabels[$pipelineKind], 28).$pipelineKindCount.' of '.$pipelineKindCount.' OK'.$Lol); }
+    // / A pipeline whose tools are not installed is verified & still not offered, from v4.2.1, so it is named with the tool to install.
+    // / It is not a failure, because an optional tool that is missing costs a feature rather than the application.
+    if (is_array($Pipelines) && function_exists('pipelineToolsAreInstalled')) foreach ($Pipelines as $pipelineName => $pipelineRecord) {
+      list ($pipelineIsOffered, $unmetRequirements) = pipelineToolsAreInstalled($pipelineName);
+      if (!$pipelineIsOffered) print('  '.str_pad((string)$pipelineRecord['DisplayName'], 28).'NOT OFFERED, '.implode(' & ', $unmetRequirements).' '.(count($unmetRequirements) === 1 ? 'is' : 'are').' not installed'.$Lol); } }
 
   // / Dependencies. An optional one says so, because losing it costs a feature rather than
   // / a subsystem.
@@ -1679,7 +1689,7 @@ function showVersionInfo() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $listenerIsAsked, $secretRows, $secretRow, $secretGroupWasFound, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $fileBinary, $probeBinary, $pdfInfoBinary, $pdfUniteBinary, $pdfSeparateBinary, $mat2Binary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $listenerIsAsked, $secretRows, $secretRow, $secretGroupWasFound, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $pipelineIsOffered, $pipelineName, $unmetRequirements, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $ffmpegBinary, $streamFfmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $fileBinary, $probeBinary, $pdfInfoBinary, $pdfUniteBinary, $pdfSeparateBinary, $mat2Binary, $bwrapBinary, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $guiMatches, $langMatches, $langOk, $langTotal, $ebookBinary, $listenerStatus, $listenerIsRunning, $socketMode, $componentChecks, $componentPair, $componentName, $dependencyChecks, $dependencyState, $dependencyName, $subsystemChecks, $subsystemIsReady, $subsystemName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 
@@ -2178,20 +2188,96 @@ function applicationFileTypes() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to say whether an operation pipeline of a family is installed & verified.
-// / Accepts the family. Returns TRUE when the Pipeline Core holds an operation pipeline of that family.
-// / An operation whose pipeline is missing is offered to no workflow, so a workflow that needs it reads as turned off on this server rather than failing as it runs.
-function operationPipelineIsInstalled($operationFamily) {
+// / A function to say whether a verified pipeline may be offered to a user.
+// / Accepts the pipeline's folder name. Returns TRUE where the tools it cannot run without are installed, from v4.2.1.
+// / The Pipeline Core answers, from what the pipeline declares in $PipelineRequiredDependencies, & never runs a tool to answer.
+// / A pipeline is offered wherever the Pipeline Core cannot be asked, as every pipeline was before v4.2.1, so a fault in finding out never hides one that works.
+function pipelineIsOffered($pipelineFolderName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PipelineIsOffered = TRUE;
+  $unmetRequirements = array();
+  if (function_exists('pipelineToolsAreInstalled')) list ($PipelineIsOffered, $unmetRequirements) = pipelineToolsAreInstalled($pipelineFolderName);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $unmetRequirements, $pipelineFolderName);
+  return $PipelineIsOffered; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether an operation pipeline of a family is installed & may be offered.
+// / Accepts the family. Returns TRUE when the Pipeline Core holds an operation pipeline of that family whose tools are installed.
+// / An operation whose pipeline is missing, or whose tools are, is offered to no page & no workflow, so a workflow that needs it reads as turned off on this server rather than failing as it runs.
+// / Until v4.2.1 this was operationPipelineIsInstalled(), which offered an operation whose tool was not installed, & every press of its button failed.
+function operationPipelineIsOffered($operationFamily) {
   // / Set variables.
   global $PipelineCoreActive, $Pipelines, $EnableMemoryProtection;
-  $PipelineIsInstalled = FALSE;
+  $PipelineIsOffered = FALSE;
   $folderName = '';
   $pipelineRecord = array();
   if (!empty($PipelineCoreActive) && is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
-    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'operation' && (string)($pipelineRecord['Family'] ?? '') === (string)$operationFamily) $PipelineIsInstalled = TRUE; }
+    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'operation' && (string)($pipelineRecord['Family'] ?? '') === (string)$operationFamily && pipelineIsOffered($folderName)) $PipelineIsOffered = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $folderName, $pipelineRecord, $operationFamily);
-  return $PipelineIsInstalled; }
+  return $PipelineIsOffered; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the scanners a user may be offered.
+// / Accepts nothing. Returns each scanner, named as runVirusScan() names it, whose pipeline is installed & whose tools are.
+// / Scan is offered where one is, & a file's Scan panel draws a button for each one.
+function offeredScanners() {
+  // / Set variables.
+  global $PipelineCoreActive, $Pipelines, $EnableMemoryProtection;
+  $OfferedScanners = $pipelineRecord = array();
+  $folderName = '';
+  if (!empty($PipelineCoreActive) && is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
+    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'scanner' && pipelineIsOffered($folderName)) $OfferedScanners[] = strtolower((string)($pipelineRecord['Family'] ?? '')); }
+  $OfferedScanners = array_values(array_unique($OfferedScanners));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $pipelineRecord, $folderName);
+  return $OfferedScanners; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the conversion types a user may be offered.
+// / Accepts nothing. Returns each type --Supported Conversion Types-- names that this server can run, from v4.2.1.
+// / A type is offered where a conversion pipeline of its family is installed & the tools it cannot run without are. XPS is the Document family's.
+// / OCR is the OCR operation pipeline's, & is offered where it may be.
+// / Where the Pipeline Core is unavailable, every type is offered as configured, because a fault in finding out must never hide one that works.
+// / $SupportedConversionTypes is never narrowed, because an upload is accepted for every format it names & a request is judged by it.
+// / What an interface offers is $OfferedConversionTypes, which buildGUI() sets from this.
+function offeredConversionTypes() {
+  // / Set variables.
+  global $SupportedConversionTypes, $PipelineCoreActive, $Pipelines, $EnableMemoryProtection;
+  $OfferedTypes = $pipelineRecord = $offeredFamilies = array();
+  $folderName = $conversionType = $typeFamily = '';
+  if (empty($PipelineCoreActive) or !is_array($Pipelines)) $OfferedTypes = array_values((array)$SupportedConversionTypes);
+  else {
+    foreach ($Pipelines as $folderName => $pipelineRecord) {
+      if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'conversion' && pipelineIsOffered($folderName)) $offeredFamilies[(string)($pipelineRecord['Family'] ?? '')] = TRUE; }
+    foreach ((array)$SupportedConversionTypes as $conversionType) {
+      redeclare($typeFamily, ((string)$conversionType === 'XPS') ? 'Document' : (string)$conversionType);
+      if ($typeFamily === 'OCR') { if (operationPipelineIsOffered('OCR')) $OfferedTypes[] = (string)$conversionType; }
+      else if (isset($offeredFamilies[$typeFamily])) $OfferedTypes[] = (string)$conversionType; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $pipelineRecord, $offeredFamilies, $folderName, $conversionType, $typeFamily);
+  return $OfferedTypes; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the conversion families a user may be offered, & what each reads & writes.
+// / Accepts nothing. Returns the families applicationConversionFamilies() names, less any offeredConversionTypes() leaves out.
+// / A workflow's Convert offers these, so a step cannot ask for a format no installed tool writes, & leaves out a file no installed tool reads.
+function offeredConversionFamilies() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OfferedFamilies = $offeredTypes = $familyFormats = array();
+  $familyName = '';
+  $offeredTypes = offeredConversionTypes();
+  foreach (applicationConversionFamilies() as $familyName => $familyFormats) if (in_array($familyName, $offeredTypes, TRUE)) $OfferedFamilies[$familyName] = $familyFormats;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $offeredTypes, $familyFormats, $familyName);
+  return $OfferedFamilies; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2212,56 +2298,61 @@ function filesPipelineIsInstalled() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to list the formats the operation pipelines of one family read or write.
+// / Accepts the family, the list to read, which is Input or Output, & whether to leave out a pipeline that may not be offered, in that order.
+// / Returns every format those pipelines declare in that list, lowercased & each once.
+// / A workflow is checked against every format a family declares & runs only those it may be offered, from v4.2.1,
+// / so a step naming a format whose tool is not installed here is a workflow this server cannot run, & not a mistake in the workflow.
+function operationFamilyFormats($operationFamily, $formatList, $offeredOnly) {
+  // / Set variables.
+  global $PipelineCoreActive, $Pipelines, $EnableMemoryProtection;
+  $FamilyFormats = $pipelineRecord = array();
+  $folderName = '';
+  if (!empty($PipelineCoreActive) && is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
+    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'operation' && (string)($pipelineRecord['Family'] ?? '') === (string)$operationFamily && is_array($pipelineRecord[(string)$formatList] ?? NULL) && ($offeredOnly !== TRUE or pipelineIsOffered($folderName))) redeclare($FamilyFormats, array_merge($FamilyFormats, $pipelineRecord[(string)$formatList])); }
+  $FamilyFormats = array_values(array_unique(array_map('strtolower', array_map('strval', $FamilyFormats))));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $pipelineRecord, $folderName, $operationFamily, $formatList, $offeredOnly);
+  return $FamilyFormats; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to list the formats an archive of a selection of files may be made in.
-// / Accepts nothing. Returns the formats config.php offers that the installed Archiver pipeline says it can write, with zip first.
+// / Accepts nothing. Returns the formats config.php offers that the installed Archiver pipeline says it can write, with zip first, & none where it may not be offered.
 // / config.php's list serves the Archive pipeline as well, which converts one archive into another & makes a bootable disk
 // / image from an archive holding a bootloader. The Archiver makes neither, so a bootable image is not offered for a selection.
 // / Until v4.1.6 it was, & every file of such a request failed with error 4004.
 function archiveOperationFormats() {
   // / Set variables.
-  global $PipelineCoreActive, $Pipelines, $ArchiveArray, $EnableMemoryProtection;
-  $ArchiveFormats = $writableFormats = $offeredFormats = $pipelineRecord = array();
-  $folderName = '';
-  if (!empty($PipelineCoreActive) && is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
-    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'operation' && (string)($pipelineRecord['Family'] ?? '') === 'Archive' && is_array($pipelineRecord['Output'] ?? NULL)) redeclare($writableFormats, array_merge($writableFormats, $pipelineRecord['Output'])); }
-  $offeredFormats = array_values(array_unique(array_map('strtolower', array_merge(array('zip'), (array)$ArchiveArray))));
-  $ArchiveFormats = array_values(array_intersect($offeredFormats, $writableFormats));
+  global $ArchiveArray, $EnableMemoryProtection;
+  $ArchiveFormats = $configuredFormats = array();
+  $configuredFormats = array_values(array_unique(array_map('strtolower', array_merge(array('zip'), (array)$ArchiveArray))));
+  $ArchiveFormats = array_values(array_intersect($configuredFormats, operationFamilyFormats('Archive', 'Output', TRUE)));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $writableFormats, $offeredFormats, $pipelineRecord, $folderName);
+  purgeSensitiveMemory($EnableMemoryProtection, $configuredFormats);
   return $ArchiveFormats; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to list the formats an archive may be extracted from.
-// / Accepts nothing. Returns the formats config.php lists as archives this server reads that the installed Extractor pipeline says it reads.
+// / Accepts nothing. Returns the formats config.php lists as archives this server reads that the installed Extractor pipeline says it reads, & none where it may not be offered.
 // / config.php's list is the one a file's other archive controls are drawn from, so an archive this server would not read is never offered for extraction.
 // / A .tar.gz is listed by its last extension, gz, as every file is. With Archive conversions off, config.php lists none, & nothing is offered.
 function extractOperationFormats() {
   // / Set variables.
-  global $PipelineCoreActive, $Pipelines, $DearchiveArray, $EnableMemoryProtection;
-  $ExtractFormats = $readableFormats = $pipelineRecord = array();
-  $folderName = '';
-  if (!empty($PipelineCoreActive) && is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
-    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'operation' && (string)($pipelineRecord['Family'] ?? '') === 'Extract' && is_array($pipelineRecord['Input'] ?? NULL)) redeclare($readableFormats, array_merge($readableFormats, $pipelineRecord['Input'])); }
-  $ExtractFormats = array_values(array_intersect(array_values(array_unique(array_map('strtolower', (array)$DearchiveArray))), $readableFormats));
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $readableFormats, $pipelineRecord, $folderName);
+  global $DearchiveArray;
+  $ExtractFormats = array();
+  $ExtractFormats = array_values(array_intersect(array_values(array_unique(array_map('strtolower', (array)$DearchiveArray))), operationFamilyFormats('Extract', 'Input', TRUE)));
   return $ExtractFormats; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 // / A function to list the formats metadata may be stripped from.
-// / Accepts nothing. Returns the formats the installed Metadata pipeline says it reads, & none without it.
+// / Accepts nothing. Returns the formats the installed Metadata pipeline says it reads, & none without it or without the tools it cannot run without, MAT2 among them.
 function metadataOperationFormats() {
   // / Set variables.
-  global $PipelineCoreActive, $Pipelines, $EnableMemoryProtection;
-  $MetadataFormats = $pipelineRecord = array();
-  $folderName = '';
-  if (!empty($PipelineCoreActive) && is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
-    if (is_array($pipelineRecord) && (string)($pipelineRecord['Kind'] ?? '') === 'operation' && (string)($pipelineRecord['Family'] ?? '') === 'Metadata' && is_array($pipelineRecord['Input'] ?? NULL)) redeclare($MetadataFormats, array_merge($MetadataFormats, $pipelineRecord['Input'])); }
-  $MetadataFormats = array_values(array_unique(array_map('strtolower', $MetadataFormats)));
-  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pipelineRecord, $folderName);
+  $MetadataFormats = array();
+  $MetadataFormats = operationFamilyFormats('Metadata', 'Input', TRUE);
   return $MetadataFormats; }
 // / -----------------------------------------------------------------------------------
 
@@ -2273,7 +2364,11 @@ function metadataOperationFormats() {
 // / Convert decides what it reads from the extension it is asked to write, because a conversion to jpg reads an image & not a spreadsheet.
 // / Archive's Filename names the one archive every file goes into, & an empty one archives each file under its own name.
 // / Archive offers the formats archiveOperationFormats() lists, which the Archiver pipeline can write, & none without it, so it is offered only where the Archiver is installed.
-// / Archive, OCR, Identify & Scan are each an operation pipeline's, & one whose pipeline is missing is not offered, from v4.1.6.
+// / Archive, OCR, Identify & Scan are each an operation pipeline's, & one whose pipeline is missing is not offered, from v4.1.6, nor one whose tools are not installed, from v4.2.1.
+// / Convert offers the formats of the families offeredConversionFamilies() names, so a step cannot ask for a format no installed tool writes.
+// / Scan is offered where a scanner is, & its Scanner offers all & each scanner offeredScanners() names. All is every scanner this server has.
+// / A choice that is only offered on some servers is declared twice, from v4.2.1. Choices is every choice this application knows & Offered is the ones this server runs.
+// / A workflow naming a choice this server does not offer is valid & is not offered here, so a shipped workflow whose tool is not installed is not called a broken one.
 // / Extract is the Extractor pipeline's, from v4.1.7. It reads the archives extractOperationFormats() lists, one at a time, & names no option, because every file is named as its archive names it.
 // / What it places joins the session beside the archive, so the step after it reads those files as it reads any other.
 // / Delete & Rename hand their work to the Files pipeline, through deleteFiles() & renameFiles(). Each says it consumes the files it takes, so the Workflow Core refuses a later step taking them.
@@ -2286,43 +2381,47 @@ function metadataOperationFormats() {
 // / See Documentation/ABOUT_WORKFLOWS.txt.
 function applicationOperations() {
   // / Set variables.
-  global $SupportedConversionTypes, $AllowUserIdentify, $AllowUserVirusScan, $DocumentArray, $PDFWorkArr, $EnableMemoryProtection;
+  global $SupportedConversionTypes, $AllowUserIdentify, $AllowUserVirusScan, $DocumentArray, $PDFWorkArr, $ArchiveArray, $EnableMemoryProtection;
   $OperationRegistry = array();
-  $convertOutputs = $archiveFormats = $extractFormats = $ocrFormats = $metadataFormats = $familyFormats = array();
+  $convertOutputs = $convertChoices = $archiveFormats = $archiveChoices = $extractFormats = $ocrFormats = $metadataFormats = $familyFormats = $scanners = array();
   $familyName = '';
-  foreach (applicationConversionFamilies() as $familyName => $familyFormats) if (is_array($familyFormats[1])) redeclare($convertOutputs, array_merge($convertOutputs, $familyFormats[1]));
+  foreach (offeredConversionFamilies() as $familyName => $familyFormats) if (is_array($familyFormats[1])) redeclare($convertOutputs, array_merge($convertOutputs, $familyFormats[1]));
   redeclare($convertOutputs, array_values(array_unique(array_map('strtolower', $convertOutputs))));
+  foreach (applicationConversionFamilies() as $familyName => $familyFormats) if (is_array($familyFormats[1])) redeclare($convertChoices, array_merge($convertChoices, $familyFormats[1]));
+  redeclare($convertChoices, array_values(array_unique(array_map('strtolower', $convertChoices))));
+  $scanners = offeredScanners();
   $archiveFormats = archiveOperationFormats();
+  $archiveChoices = array_values(array_intersect(array_values(array_unique(array_map('strtolower', array_merge(array('zip'), (array)$ArchiveArray)))), operationFamilyFormats('Archive', 'Output', FALSE)));
   $extractFormats = extractOperationFormats();
   $metadataFormats = metadataOperationFormats();
   $ocrFormats = array_values(array_unique(array_merge(array('pdf'), (array)$DocumentArray)));
   $OperationRegistry = array(
     'Operations' => array(
       'Convert' => array('Invoke' => 'invokeConvertOperation', 'Budget' => 'conversion', 'Enabled' => (count($convertOutputs) > 0), 'Accepts' => 'convertOperationAccepts', 'Modes' => array('each'),
-        'Options' => array('Extension' => array('Type' => 'choice', 'Required' => TRUE, 'Choices' => $convertOutputs, 'Groups' => convertOperationGroups()), 'Filename' => array('Type' => 'name', 'Default' => ''),
+        'Options' => array('Extension' => array('Type' => 'choice', 'Required' => TRUE, 'Choices' => $convertChoices, 'Offered' => $convertOutputs, 'Groups' => convertOperationGroups()), 'Filename' => array('Type' => 'name', 'Default' => ''),
           'Height' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 65535), 'Width' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 65535),
           'Rotate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => -360, 'Maximum' => 360), 'Bitrate' => array('Type' => 'integer', 'Default' => 0, 'Minimum' => 0, 'Maximum' => 100000))),
       'Archive' => array('Invoke' => 'invokeArchiveOperation', 'Budget' => 'archive', 'Enabled' => (in_array('Archive', (array)$SupportedConversionTypes, TRUE) && in_array('zip', $archiveFormats, TRUE)), 'Inputs' => array(), 'Modes' => array('together', 'each'),
-        'Options' => array('Extension' => array('Type' => 'choice', 'Default' => 'zip', 'Choices' => $archiveFormats), 'Filename' => array('Type' => 'name', 'Default' => 'Workflow_Files'))),
+        'Options' => array('Extension' => array('Type' => 'choice', 'Default' => 'zip', 'Choices' => $archiveChoices, 'Offered' => $archiveFormats), 'Filename' => array('Type' => 'name', 'Default' => 'Workflow_Files'))),
       'Extract' => array('Invoke' => 'invokeExtractOperation', 'Budget' => 'extract', 'Enabled' => (in_array('Archive', (array)$SupportedConversionTypes, TRUE) && count($extractFormats) > 0), 'Inputs' => $extractFormats, 'Modes' => array('each'), 'Options' => array()),
-      'OCR' => array('Invoke' => 'invokeOcrOperation', 'Budget' => 'OCR', 'Enabled' => (in_array('OCR', (array)$SupportedConversionTypes, TRUE) && in_array('Document', (array)$SupportedConversionTypes, TRUE) && operationPipelineIsInstalled('OCR')), 'Inputs' => (array)$PDFWorkArr, 'Modes' => array('each'),
+      'OCR' => array('Invoke' => 'invokeOcrOperation', 'Budget' => 'OCR', 'Enabled' => (in_array('OCR', (array)$SupportedConversionTypes, TRUE) && in_array('Document', (array)$SupportedConversionTypes, TRUE) && operationPipelineIsOffered('OCR')), 'Inputs' => (array)$PDFWorkArr, 'Modes' => array('each'),
         'Options' => array('Extension' => array('Type' => 'choice', 'Default' => 'pdf', 'Choices' => $ocrFormats), 'Method' => array('Type' => 'choice', 'Default' => '0', 'Choices' => array('0', '1', '2')), 'Filename' => array('Type' => 'name', 'Default' => ''))),
-      'Identify' => array('Invoke' => 'invokeIdentifyOperation', 'Budget' => 'Identify', 'Enabled' => ($AllowUserIdentify === TRUE && operationPipelineIsInstalled('Identify')), 'Inputs' => array(), 'Modes' => array('together'),
+      'Identify' => array('Invoke' => 'invokeIdentifyOperation', 'Budget' => 'Identify', 'Enabled' => ($AllowUserIdentify === TRUE && operationPipelineIsOffered('Identify')), 'Inputs' => array(), 'Modes' => array('together'),
         'Options' => array('Report' => array('Type' => 'boolean', 'Default' => TRUE), 'Filename' => array('Type' => 'name', 'Default' => 'User_Identify_Report'))),
-      'Scan' => array('Invoke' => 'invokeScanOperation', 'Budget' => 'user virus scan', 'Enabled' => ($AllowUserVirusScan === TRUE && operationPipelineIsInstalled('Scan')), 'Inputs' => array(), 'Modes' => array('together'),
-        'Options' => array('Scanner' => array('Type' => 'choice', 'Default' => 'all', 'Choices' => array('all', 'clamav', 'scancore')))),
+      'Scan' => array('Invoke' => 'invokeScanOperation', 'Budget' => 'user virus scan', 'Enabled' => ($AllowUserVirusScan === TRUE && operationPipelineIsOffered('Scan') && count($scanners) > 0), 'Inputs' => array(), 'Modes' => array('together'),
+        'Options' => array('Scanner' => array('Type' => 'choice', 'Default' => 'all', 'Choices' => array('all', 'clamav', 'scancore'), 'Offered' => array_values(array_unique(array_merge(array('all'), $scanners)))))),
       'Delete' => array('Invoke' => 'invokeDeleteOperation', 'Budget' => FALSE, 'Enabled' => filesPipelineIsInstalled(), 'Inputs' => array(), 'Modes' => array('together'), 'Consumes' => 'deleted', 'Options' => array()),
       'Rename' => array('Invoke' => 'invokeRenameOperation', 'Budget' => FALSE, 'Enabled' => filesPipelineIsInstalled(), 'Inputs' => array(), 'Modes' => array('together'), 'Consumes' => 'renamed',
         'Options' => array('Pattern' => array('Type' => 'name', 'Default' => '{name}-{n}'))),
       'StripMetadata' => array('Invoke' => 'invokeStripMetadataOperation', 'Budget' => 'metadata', 'Enabled' => (count($metadataFormats) > 0), 'Inputs' => $metadataFormats, 'Modes' => array('each'),
         'Options' => array('Filename' => array('Type' => 'name', 'Default' => ''))),
-      'Merge' => array('Invoke' => 'invokeMergeOperation', 'Budget' => 'merge', 'Enabled' => operationPipelineIsInstalled('PDF'), 'Inputs' => array('pdf'), 'Modes' => array('together'),
+      'Merge' => array('Invoke' => 'invokeMergeOperation', 'Budget' => 'merge', 'Enabled' => operationPipelineIsOffered('PDF'), 'Inputs' => array('pdf'), 'Modes' => array('together'),
         'Options' => array('Filename' => array('Type' => 'name', 'Default' => 'Merged'))),
-      'Split' => array('Invoke' => 'invokeSplitOperation', 'Budget' => 'split', 'Enabled' => operationPipelineIsInstalled('PDF'), 'Inputs' => array('pdf'), 'Modes' => array('each'), 'Options' => array())),
+      'Split' => array('Invoke' => 'invokeSplitOperation', 'Budget' => 'split', 'Enabled' => operationPipelineIsOffered('PDF'), 'Inputs' => array('pdf'), 'Modes' => array('each'), 'Options' => array())),
     'FileTypes' => applicationFileTypes(),
     'SessionFiles' => 'getFiles');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $convertOutputs, $archiveFormats, $extractFormats, $ocrFormats, $metadataFormats, $familyFormats, $familyName);
+  purgeSensitiveMemory($EnableMemoryProtection, $convertOutputs, $convertChoices, $archiveFormats, $archiveChoices, $extractFormats, $ocrFormats, $metadataFormats, $familyFormats, $scanners, $familyName);
   return $OperationRegistry; }
 // / -----------------------------------------------------------------------------------
 
@@ -2330,7 +2429,8 @@ function applicationOperations() {
 // / A function to decide whether Convert reads a file, given the extension it is asked to write.
 // / Accepts the file's extension & the step's options. Returns TRUE when a family reads the one & writes the other.
 // / A file that is already the format asked for is not read, because there is nothing to convert.
-// / It asks the lists convertFiles() asks, so a workflow leaves out a file the converter would refuse.
+// / It asks the lists convertFiles() asks, less any family this server does not offer, so a workflow leaves out a file the converter would refuse,
+// / & one no installed tool reads, from v4.2.1.
 function convertOperationAccepts($fileExtension, $operationOptions) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -2339,7 +2439,7 @@ function convertOperationAccepts($fileExtension, $operationOptions) {
   $familyFormats = array();
   $inputExtension = strtolower((string)$fileExtension);
   $outputExtension = (is_array($operationOptions) && isset($operationOptions['Extension'])) ? strtolower((string)$operationOptions['Extension']) : '';
-  foreach (applicationConversionFamilies() as $familyName => $familyFormats) if (is_array($familyFormats[0]) && is_array($familyFormats[1]) && in_array($inputExtension, $familyFormats[0]) && in_array($outputExtension, $familyFormats[1])) $OperationAccepts = TRUE;
+  foreach (offeredConversionFamilies() as $familyName => $familyFormats) if (is_array($familyFormats[0]) && is_array($familyFormats[1]) && in_array($inputExtension, $familyFormats[0]) && in_array($outputExtension, $familyFormats[1])) $OperationAccepts = TRUE;
   if ($inputExtension === $outputExtension) $OperationAccepts = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $outputExtension, $inputExtension, $familyName, $familyFormats, $fileExtension, $operationOptions);
@@ -3357,10 +3457,10 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $GuiEngineFile, $EngineAnswer, $EnginePageState;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $GuiEngineFile, $GuiTaskbarFile, $EngineAnswer, $EnginePageState;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
-  $Files = $FileDetails = $ArchiveOperationArray = $ExtractOperationArray = $MetadataOperationArray = $OfferedOperations = array();
+  $Files = $FileDetails = $ArchiveOperationArray = $ExtractOperationArray = $MetadataOperationArray = $OfferedOperations = $OfferedConversionTypes = $OfferedScanners = array();
   $FileCount = 0;
   // / Make sure the $guiType is valid.
   // / A non numeric type cannot be compared against a range, so it is replaced outright.
@@ -3391,13 +3491,19 @@ function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   $ExtractOperationArray = extractOperationFormats();
   // / The formats metadata may be stripped from, which an interface draws a file's Strip Metadata button for.
   $MetadataOperationArray = metadataOperationFormats();
+  // / The conversion types an interface offers, which are --Supported Conversion Types-- less any this server cannot run, from v4.2.1.
+  // / An interface draws a conversion from these, never from $SupportedConversionTypes, which still decides what may be uploaded.
+  $OfferedConversionTypes = offeredConversionTypes();
+  // / The scanners a file's Scan panel draws a button for, as clamav & scancore.
+  $OfferedScanners = offeredScanners();
   // / Which of a file's operations an interface offers. Each is an operation pipeline's, & one whose pipeline is missing is not offered, as a workflow does not offer it.
-  // / A button that could only fail is not drawn, & -v names the pipeline that is missing.
+  // / Nor is one whose tools are not installed, from v4.2.1, so Strip Metadata is not drawn where MAT2 is not installed.
+  // / A button that could only fail is not drawn, & -v names the pipeline that is missing & the tool it cannot run without.
   // / Rename is the Files pipeline's, & Merge & Split are the PDF pipeline's, each drawn only for a PDF.
-  $OfferedOperations = array('Scan' => ($AllowUserVirusScan === TRUE && operationPipelineIsInstalled('Scan')), 'Identify' => ($AllowUserIdentify === TRUE && operationPipelineIsInstalled('Identify')),
-    'OCR' => (in_array('OCR', (array)$SupportedConversionTypes, TRUE) && operationPipelineIsInstalled('OCR')), 'Archive' => (count($ArchiveOperationArray) > 0),
+  $OfferedOperations = array('Scan' => ($AllowUserVirusScan === TRUE && operationPipelineIsOffered('Scan') && count($OfferedScanners) > 0), 'Identify' => ($AllowUserIdentify === TRUE && operationPipelineIsOffered('Identify')),
+    'OCR' => (in_array('OCR', $OfferedConversionTypes, TRUE) && operationPipelineIsOffered('OCR')), 'Archive' => (count($ArchiveOperationArray) > 0),
     'Extract' => (in_array('Archive', (array)$SupportedConversionTypes, TRUE) && count($ExtractOperationArray) > 0),
-    'Rename' => filesPipelineIsInstalled(), 'StripMetadata' => (count($MetadataOperationArray) > 0), 'Merge' => operationPipelineIsInstalled('PDF'), 'Split' => operationPipelineIsInstalled('PDF'));
+    'Rename' => filesPipelineIsInstalled(), 'StripMetadata' => (count($MetadataOperationArray) > 0), 'Merge' => operationPipelineIsOffered('PDF'), 'Split' => operationPipelineIsOffered('PDF'));
   // / An interface that renders an empty list has either been handed the wrong directory
   // / or a directory with nothing in it, & those are different faults with different
   // / fixes. Saying which directory was read, & whether this was the framed request, is

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.6.
+// / v4.2.1.
 // / This file declares what the Archiver pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -34,7 +34,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.1.6';
+$PipelineVersion = 'v4.2.1';
 
 // / This is an operation pipeline, as OCR & Identify are.
 // / It takes a selection of files & puts them into an archive, one archive for the selection or one for each file.
@@ -93,5 +93,11 @@ $PipelineExclude = array();
 // / Bubblewrap is named because every archiver here runs in the sandbox.
 // / Each archiver gates only the formats it writes, so a missing RAR costs rar & nothing else.
 $PipelineDependencies = array('7-Zip', 'Zip', 'Tar', 'RAR', 'Genisoimage', 'Bubblewrap');
+
+// / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
+// / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.
+// / Each format gates on its own archiver, so any one of them is enough to offer Archive.
+// / A format whose archiver is missing is refused with its own error, as it always was.
+$PipelineRequiredDependencies = array(array('7-Zip', 'Zip', 'Tar', 'RAR', 'Genisoimage'));
 // / -----------------------------------------------------------------------------------
 ?>

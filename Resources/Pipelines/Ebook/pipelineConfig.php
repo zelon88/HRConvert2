@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.2.1.
 // / This file declares what the Ebook conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.0.8';
+$PipelineVersion = 'v4.2.1';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -95,5 +95,10 @@ $Capabilities = array(
 $PipelineExclude = array(
   'epub>epub', 'mobi>mobi', 'azw3>azw3', 'fb2>fb2', 'lit>lit', 'lrf>lrf',
   'pdb>pdb', 'pml>pml', 'rb>rb', 'snb>snb', 'tcr>tcr', 'txtz>txtz', 'htmlz>htmlz');
+
+// / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
+// / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.
+// / Calibre converts every ebook, so nothing is converted without it.
+$PipelineRequiredDependencies = array('Calibre');
 // / -----------------------------------------------------------------------------------
 ?>

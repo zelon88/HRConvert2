@@ -61,7 +61,7 @@ The language code must also be added to the --Supported Languages-- section of c
 The $SupportedLanguages variable is a keyed array of language code & endonym.
 The KEY is the language code & the folder name.
 The VALUE is the endonym, which is the name of the language written in that language itself.
-The endonym is used as the alt text & title of the flag button in the selector bar.
+The endonym is used as the alt text & title of the flag button in the settings.
 A user who has landed on a language they cannot read still recognizes their own.
 Adding an entry as a flat list value rather than as a key will break language verification.
 
@@ -217,7 +217,7 @@ a plural helper would otherwise be needed. {kind} is the name of a kind of file,
 $Gui2Text127 give it, so a language whose words for all agree with the noun writes the sentence around
 it, as all files: {kind}.
 Do not repeat a closing HTML tag that footer.php already supplies. $GuiFooterText1 ends without its final closing anchor tag for this reason.
-From v4.2.0 a pack carries $GuiAuthText1 through $GuiAuthText43, the words of the sign in bar & the sign in pages,
+From v4.2.0 a pack carries $GuiAuthText1 through $GuiAuthText43, the words of the account's buttons & the sign in pages,
 under Set GUI - Sign In Related Variables. $GuiAuthText30 is followed by a number on the page, so it ends where
 a number reads correctly after it, as a colon does in English. Sign in is a verb on a button, & reads as one.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -227,7 +227,7 @@ a number reads correctly after it, as a colon does in English. Sign in is a verb
 
 Every language pack must contain a flag.png.
 The image is 24 pixels wide by 18 pixels tall, which is the 4:3 ratio used by the flag set.
-It appears as the face of that language's button in the selector bar.
+It appears as the face of that language's button in the settings.
 The endonym from $SupportedLanguages is used as the alt text & title, so the image never
 carries meaning on its own.
 The stock flags are from https://github.com/lipis/flag-icons by lipis, under the MIT

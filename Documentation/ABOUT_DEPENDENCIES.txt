@@ -94,6 +94,15 @@ pipeline must then report that & refuse rather than guess.
 This is what makes a pipeline portable. A pipeline names a dependency & knows nothing else
 about it, so the same pipeline runs against any installation & any host layout.
 
+A PIPELINE IS OFFERED ONLY WHERE WHAT IT CANNOT RUN WITHOUT IS INSTALLED, from v4.2.1.
+It names those in $PipelineRequiredDependencies, & dependencyIsInstalled() in the Dependency
+Core says whether each is there. It looks where resolveDependencyChoice() looks, at this
+application's own build in service & then at the program the entry names, & never runs the
+tool, so a page asks on every load. A library, which names no program, is believed installed.
+An entry the architecture rules or a policy gate refuses is not. Whether an installed program
+is too old is not asked, because only running it could say, & verifiedToolPath() still
+refuses it when the pipeline runs. -v names a pipeline that is not offered & what it lacks.
+
   $command = verifiedToolCommand('MAT2', $binary);
   list ($status, $reason) = verifiedToolVerdict('MAT2');
 
@@ -317,6 +326,8 @@ The tool works it out from three places, because no single one is complete. It r
 the pipeline passes to verifiedToolPath, it adds Bubblewrap when the pipeline isolates a
 command, & it adds anything in the manifest whose Subsystem matches the one the pipeline
 declares. A pipeline that declares $PipelineDependencies is believed before any of that.
+The README it writes for a pipeline that declares $PipelineRequiredDependencies says where
+that pipeline is offered, from v4.2.1.
 
 Dependencies the application needs in order to run at all, such as PHP, Apache & Curl, are
 recorded once in Documentation rather than repeated in every pipeline, because removing one

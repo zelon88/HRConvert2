@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.8.
+// / v4.2.1.
 // / The Extractor pipeline. pipelineCore.php loads it only to dispatch an Extract operation.
 // / Error block 39100 through 39104 belongs to this pipeline.
 // / It also raises 39000 through 39003, which belong to the archiveExtraction.php shared module it uses.

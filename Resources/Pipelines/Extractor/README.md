@@ -8,12 +8,13 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.1.8
+- **Version** v4.2.1
 - **Kind** operation
 - **Family** Extract
 - **Entry point** extractSelection
 - **Subsystem** Archives
 - **Available to** every surface
+- **Offered where** 7-Zip is installed
 
 ## Formats
 

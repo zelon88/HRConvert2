@@ -8,7 +8,7 @@
 # / https://www.gnu.org/licenses/gpl-3.0.html
 # /
 # / FILE INFORMATION ...
-# / v3.9.7.
+# / v4.2.1.
 # / This file writes the two documents that ship beside every pipeline. The dependency
 # / approval record, & the README that introduces the pipeline & lists what it depends on.
 # /
@@ -199,6 +199,15 @@ def read_pipeline_config(path):
         facts[field] = re.findall(r"'([^']+)'", block.group(1)) if block else []
     usage = re.search(r"\$PipelineUsage\s*=\s*array\(([^)]*)\)", text)
     facts['Usage'] = re.findall(r"'([^']+)'", usage.group(1)) if usage else []
+    # / What the pipeline cannot run without, from v4.2.1. An entry is a name, or an array of names any one of which will do.
+    # / A group is read whole, so the names inside an array are never read again as entries of their own.
+    required = re.search(r"\$PipelineRequiredDependencies\s*=\s*array\((.*?)\);", text, re.S)
+    facts['Required'] = []
+    if required:
+        for group, name in re.findall(r"array\(([^)]*)\)|'([^']+)'", required.group(1)):
+            members = re.findall(r"'([^']+)'", group) if group else [name]
+            if members:
+                facts['Required'].append(members)
     return facts
 
 
@@ -248,6 +257,11 @@ def render_readme(folder, facts, names, manifest):
                          ('Subsystem', facts['PipelineSubsystem']),
                          ('Available to', ', '.join(facts['Usage']) or 'every surface')):
         lines.append('- **' + label + '** ' + (value or '-'))
+    # / A pipeline is offered only where what it cannot run without is installed, so the README says what that is.
+    if facts['Required']:
+        needed = [' or '.join(group) for group in facts['Required']]
+        lines.append('- **Offered where** ' + (', '.join(needed[:-1]) + ' & ' if len(needed) > 1 else '') + needed[-1]
+                     + (' is' if len(needed) == 1 else ' are') + ' installed')
     if facts['Input'] or facts['Output']:
         lines.append('')
         lines.append('## Formats')

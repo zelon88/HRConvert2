@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.7.
+// / v4.2.1.
 // / The Pipeline Core, one of the Engine's cores.
 // / It verifies, describes & dispatches the pipelines under Resources/Pipelines, each at the exact version the application pins.
 // / Which pipelines are accepted is the application's decision, read from its contract, so this file names none of them.
@@ -37,7 +37,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v4.1.7';
+$PipelineCoreVersion = 'v4.2.1';
 // / -----------------------------------------------------------------------------------
 
 
@@ -183,15 +183,17 @@ function verifyPipelineComponent($pipelineFolderName, $requiredPipelineVersion) 
         // / Clear every declaration so a config that omits one cannot inherit the last one.
         $PipelineVersion = $PipelineFamily = $PipelineDisplayName = $PipelineEntryPoint = $PipelineSubsystem = NULL;
         $PipelinePriority = $PipelineRequestFields = $Capabilities = $PipelineExclude = NULL;
-        $PipelineKind = $PipelineSharedModules = $PipelineUsage = $PipelineDependencies = NULL;
+        $PipelineKind = $PipelineSharedModules = $PipelineUsage = $PipelineDependencies = $PipelineRequiredDependencies = NULL;
         require ($configPath);
         list ($declarationsAreValid, $PipelineRecord) = validatePipelineDeclarations($pipelineFolderName, $converterPath, $PipelineFamily, $PipelineDisplayName, $PipelinePriority, $PipelineEntryPoint, $PipelineSubsystem, $PipelineRequestFields, $Capabilities, $PipelineExclude, $PipelineKind, $PipelineSharedModules, $PipelineUsage, $PipelineDependencies);
         if ($declarationsAreValid) {
           $PipelineRecord['Version'] = $cleanDetected;
+          // / What the pipeline cannot run without, from v4.2.1. It decides where the pipeline is offered & never whether it is verified.
+          $PipelineRecord['Required'] = readPipelineRequirements($pipelineFolderName, $PipelineRequiredDependencies);
           $PipelineIsAvailable = TRUE; } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $PipelineRecord is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $pipelineFolder, $configPath, $converterPath, $configContents, $detectedVersion, $cleanDetected, $cleanRequired, $versionMatches, $declarationsAreValid, $PipelineVersion, $PipelineFamily, $PipelineDisplayName, $PipelinePriority, $PipelineEntryPoint, $PipelineSubsystem, $PipelineRequestFields, $Capabilities, $PipelineExclude, $PipelineKind, $PipelineSharedModules, $pipelineFolderName, $requiredPipelineVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $pipelineFolder, $configPath, $converterPath, $configContents, $detectedVersion, $cleanDetected, $cleanRequired, $versionMatches, $declarationsAreValid, $PipelineVersion, $PipelineFamily, $PipelineDisplayName, $PipelinePriority, $PipelineEntryPoint, $PipelineSubsystem, $PipelineRequestFields, $Capabilities, $PipelineExclude, $PipelineKind, $PipelineSharedModules, $PipelineUsage, $PipelineDependencies, $PipelineRequiredDependencies, $pipelineFolderName, $requiredPipelineVersion);
   return array($PipelineIsAvailable, $PipelineRecord); }
 // / -----------------------------------------------------------------------------------
 
@@ -277,6 +279,31 @@ function validatePipelineDeclarations($pipelineFolderName, $pipelineConverterPat
   // / $PipelineRecord is not purged, because it is a return value.
   purgeSensitiveMemory($EnableMemoryProtection, $declaredDependencies, $dependencyEntry, $declaredUsage, $acceptedUsage, $usageEntry, $inputExtensions, $outputExtensions, $cleanExclusions, $pipelineFolderName, $pipelineConverterPath, $declaredFamily, $declaredDisplayName, $declaredPriority, $declaredEntryPoint, $declaredSubsystem, $declaredRequestFields, $declaredCapabilities, $declaredExclusions, $declaredKind, $declaredSharedModules);
   return array($DeclarationsAreValid, $PipelineRecord); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read what a pipeline says it cannot run without.
+// / Accepts the folder name & the $PipelineRequiredDependencies the pipeline declared, in that order.
+// / Returns the requirements as a list of groups, each a list of manifest names, any one of which will do.
+// / A name on its own is a group of one, & an array of names is a group of them, as ClamAV or ScanCore would be.
+// / A pipeline that declares nothing requires nothing, & is offered wherever it is installed, as every pipeline was before v4.2.1.
+// / A malformed entry is left out with a warning, so a mistake in a declaration never hides a pipeline that works.
+function readPipelineRequirements($pipelineFolderName, $declaredRequirements) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $RequirementGroups = $requirementGroup = array();
+  $requirementEntry = $groupMember = NULL;
+  if ($declaredRequirements !== NULL && !is_array($declaredRequirements)) warningEntry('The '.$pipelineFolderName.' pipeline declares $PipelineRequiredDependencies as something other than an array, so it requires nothing.');
+  else if (is_array($declaredRequirements)) foreach ($declaredRequirements as $requirementEntry) {
+    redeclare($requirementGroup, array());
+    if (is_string($requirementEntry) && trim($requirementEntry) !== '') $requirementGroup[] = trim($requirementEntry);
+    else if (is_array($requirementEntry)) foreach ($requirementEntry as $groupMember) if (is_string($groupMember) && trim($groupMember) !== '') $requirementGroup[] = trim($groupMember);
+    if (empty($requirementGroup)) warningEntry('The '.$pipelineFolderName.' pipeline declares a required dependency that names no tool. It was left out.');
+    else $RequirementGroups[] = array_values(array_unique($requirementGroup)); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $RequirementGroups is not purged, because it is a return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $requirementGroup, $requirementEntry, $groupMember, $pipelineFolderName, $declaredRequirements);
+  return $RequirementGroups; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -604,6 +631,91 @@ function loadPipelineCore($pipelineFolderName) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to load the dependency manifest & the Dependency Core where a request has not loaded them.
+// / Accepts nothing. Returns whether the manifest is loaded & whether the Dependency Core is, in that order.
+// / The manifest is loaded by the Dependency Core & the Dependency Core only loads for --setup, so on a request both are loaded here.
+// / verifyCoreComponent requires once, so asking on every call costs nothing, & it honours the version pin, which a bare require would not.
+// / $CoreLoaded & $InstLoc are declared because the manifest is required INSIDE this function, & it reads both at file scope.
+// / Without $CoreLoaded the require sees an undefined variable & the manifest refuses to load, which reads as a missing manifest rather than a scope mistake.
+// / Without $InstLoc every bundled dependency's path is built from nothing, & PHP warns about it once for each of them.
+function loadDependencyKnowledge() {
+  // / Set variables.
+  global $CoreLoaded, $InstLoc, $DependsManifest, $DirSep, $RequiredDependencyCoreVersion, $EnableMemoryProtection;
+  $ManifestIsLoaded = $DependencyCoreIsLoaded = $dependencyCoreLoaded = FALSE;
+  $manifestPath = $dependencyCoreVersion = '';
+  if (!isset($DependsManifest) or !is_array($DependsManifest)) {
+    $manifestPath = contractPath('depends.php');
+    if (file_exists($manifestPath)) require_once($manifestPath); }
+  if (!function_exists('resolveDependencyState') && function_exists('verifyCoreComponent')) list ($dependencyCoreLoaded, $dependencyCoreVersion) = verifyCoreComponent('Dependency Core', 'Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion', (string)$RequiredDependencyCoreVersion);
+  $ManifestIsLoaded = (isset($DependsManifest) && is_array($DependsManifest));
+  $DependencyCoreIsLoaded = function_exists('resolveDependencyChoice');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $dependencyCoreLoaded, $manifestPath, $dependencyCoreVersion);
+  return array($ManifestIsLoaded, $DependencyCoreIsLoaded); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to find a dependency's entry in the manifest by the name the manifest spells it.
+// / Accepts the name. Returns whether an entry has that name & the first entry that does, in that order.
+// / The manifest must already be loaded, which loadDependencyKnowledge() does. An unloaded manifest has no entry.
+function manifestEntryNamed($manifestName) {
+  // / Set variables.
+  global $DependsManifest, $EnableMemoryProtection;
+  $EntryWasFound = FALSE;
+  $ManifestEntry = $candidateEntry = array();
+  if (isset($DependsManifest) && is_array($DependsManifest)) foreach ($DependsManifest as $candidateEntry) {
+    if (!is_array($candidateEntry) or (string)($candidateEntry['Name'] ?? '') !== (string)$manifestName) continue;
+    $ManifestEntry = $candidateEntry;
+    $EntryWasFound = TRUE;
+    break; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $candidateEntry, $manifestName);
+  return array($EntryWasFound, $ManifestEntry); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether the tools a pipeline cannot run without are installed.
+// / Accepts the pipeline's folder name. Returns whether they are & each requirement that is not met, in that order.
+// / Each requirement is a group of tools, any one of which will do, & a group with no tool installed is not met.
+// / No tool is run. dependencyIsInstalled() looks where a conversion would find each tool, so a page asks on every load & stays quick.
+// / A tool that is installed but too old is believed, because only running it could say, & its pipeline says why when it is refused the tool.
+// / Where the manifest or the Dependency Core cannot be loaded, or the manifest has no entry by a name, the requirement is believed met,
+// / so a fault in finding out never hides a pipeline that works.
+// / The answer is kept for the request in $PipelineToolAnswers, because a page asks about one pipeline for every file it lists.
+function pipelineToolsAreInstalled($pipelineFolderName) {
+  // / Set variables.
+  global $Pipelines, $PipelineToolAnswers, $Verbose, $EnableMemoryProtection;
+  $ToolsAreInstalled = TRUE;
+  $UnmetRequirements = $requirementGroups = $requirementGroup = $manifestEntry = array();
+  $manifestIsLoaded = $dependencyCoreIsLoaded = $groupIsMet = $entryWasFound = FALSE;
+  $toolName = '';
+  if (!isset($PipelineToolAnswers) or !is_array($PipelineToolAnswers)) $PipelineToolAnswers = array();
+  if (isset($PipelineToolAnswers[(string)$pipelineFolderName])) list ($ToolsAreInstalled, $UnmetRequirements) = $PipelineToolAnswers[(string)$pipelineFolderName];
+  else {
+    $requirementGroups = (is_array($Pipelines) && isset($Pipelines[(string)$pipelineFolderName]['Required']) && is_array($Pipelines[(string)$pipelineFolderName]['Required'])) ? $Pipelines[(string)$pipelineFolderName]['Required'] : array();
+    if (!empty($requirementGroups)) list ($manifestIsLoaded, $dependencyCoreIsLoaded) = loadDependencyKnowledge();
+    if (!empty($requirementGroups) && (!$manifestIsLoaded or !$dependencyCoreIsLoaded or !function_exists('dependencyIsInstalled'))) {
+      if ($Verbose) logEntry('The tools the '.$pipelineFolderName.' pipeline cannot run without could not be looked for, so it is offered.'); }
+    else foreach ($requirementGroups as $requirementGroup) {
+      redeclare($groupIsMet, FALSE);
+      foreach ($requirementGroup as $toolName) {
+        list ($entryWasFound, $manifestEntry) = manifestEntryNamed($toolName);
+        if (!$entryWasFound) warningEntry('The '.$pipelineFolderName.' pipeline cannot run without '.$toolName.', which the dependency manifest does not name, so it is believed installed.');
+        if (!$entryWasFound or dependencyIsInstalled($manifestEntry)) {
+          $groupIsMet = TRUE;
+          break; } }
+      if (!$groupIsMet) {
+        $ToolsAreInstalled = FALSE;
+        $UnmetRequirements[] = implode(' or ', $requirementGroup); } }
+    if (!$ToolsAreInstalled && $Verbose) logEntry('The '.$pipelineFolderName.' pipeline is not offered, because '.implode(' & ', $UnmetRequirements).' '.(count($UnmetRequirements) === 1 ? 'is' : 'are').' not installed.');
+    $PipelineToolAnswers[(string)$pipelineFolderName] = array($ToolsAreInstalled, $UnmetRequirements); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $UnmetRequirements is not purged, because it is a return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $requirementGroups, $requirementGroup, $manifestEntry, $manifestIsLoaded, $dependencyCoreIsLoaded, $groupIsMet, $entryWasFound, $toolName, $pipelineFolderName);
+  return array($ToolsAreInstalled, $UnmetRequirements); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to hand a pipeline a verified tool by manifest name.
 // / Accepts the name as the dependency manifest spells it. Returns the path to the binary,
 // / or FALSE when it is missing, too old or unusable.
@@ -616,31 +728,17 @@ function loadPipelineCore($pipelineFolderName) {
 // / The verdict is kept, so verifiedToolVerdict() can say why a tool was refused, & verifiedToolCommand() starts what was verified.
 function verifiedToolPath($manifestName) {
   // / Set variables.
-  // / $CoreLoaded is declared because the manifest is required INSIDE this function, & every
-  // / component checks it at file scope. Without it the require sees an undefined variable &
-  // / the component refuses to load, which reads as a missing manifest rather than a scope
-  // / mistake.
-  global $CoreLoaded, $DependsManifest, $InstLoc, $DirSep, $Verbose, $EnableMemoryProtection, $RequiredDependencyCoreVersion, $ToolVerdicts;
+  global $Verbose, $EnableMemoryProtection, $ToolVerdicts;
   $VerifiedPath = FALSE;
-  $manifestPath = $dependencyStatus = $detectedVersion = $rawOutput = $binaryPath = $binaryOrigin = '';
+  $dependencyStatus = $detectedVersion = $rawOutput = $binaryPath = $binaryOrigin = '';
   $manifestEntry = array();
-  $entryWasFound = $dependencyIsPresent = $dependencyCoreLoaded = $toolIsRequired = FALSE;
-  $dependencyCoreVersion = '';
-  // / The manifest is loaded by the Dependency Core & the Dependency Core only loads for
-  // / --setup, so on a conversion request the global is empty & is required here.
-  if (!isset($DependsManifest) or !is_array($DependsManifest)) {
-    $manifestPath = contractPath('depends.php');
-    if (file_exists($manifestPath)) require_once($manifestPath); }
-  // / The Dependency Core is loaded here, because nothing else loads it on a conversion.
-  // / It loads for --setup & for nothing else, so without this a conversion request has no resolveDependencyState, & every pipeline reports its tool missing.
-  // / verifyCoreComponent requires once, so asking on every call costs nothing, & it honours the version pin, which a bare require would not.
-  if (!function_exists('resolveDependencyState') && function_exists('verifyCoreComponent')) list ($dependencyCoreLoaded, $dependencyCoreVersion) = verifyCoreComponent('Dependency Core', 'Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion', (string)$RequiredDependencyCoreVersion);
-  if (!isset($DependsManifest) or !is_array($DependsManifest)) warningEntry('The dependency manifest could not be read, so '.(string)$manifestName.' could not be verified.');
-  else if (!function_exists('resolveDependencyChoice')) warningEntry('The Dependency Core is unavailable, so '.(string)$manifestName.' could not be verified.');
+  $entryWasFound = $dependencyIsPresent = $manifestIsLoaded = $dependencyCoreIsLoaded = $toolIsRequired = FALSE;
+  list ($manifestIsLoaded, $dependencyCoreIsLoaded) = loadDependencyKnowledge();
+  if (!$manifestIsLoaded) warningEntry('The dependency manifest could not be read, so '.(string)$manifestName.' could not be verified.');
+  else if (!$dependencyCoreIsLoaded) warningEntry('The Dependency Core is unavailable, so '.(string)$manifestName.' could not be verified.');
   else {
-    foreach ($DependsManifest as $manifestEntry) {
-      if ((string)$manifestEntry['Name'] !== (string)$manifestName) continue;
-      $entryWasFound = TRUE;
+    list ($entryWasFound, $manifestEntry) = manifestEntryNamed($manifestName);
+    if ($entryWasFound) {
       // / SIX values & the status is THIRD. Guessing the shape returned the presence flag
       // / as the status, so every tool reported as status 1 & was refused.
       // / The path is FIFTH & is the program that answered inside the window, which is this
@@ -663,11 +761,10 @@ function verifiedToolPath($manifestName) {
       else {
         $toolIsRequired = (isset($manifestEntry['Required']) && $manifestEntry['Required'] === TRUE);
         if ($toolIsRequired) warningEntry((string)$manifestName.' is '.$dependencyStatus.' & will not be used.');
-        else logEntry((string)$manifestName.' is '.$dependencyStatus.' & will not be used.'); }
-      break; }
-    if (!$entryWasFound) warningEntry('No manifest entry is named '.(string)$manifestName.', so it could not be verified.'); }
+        else logEntry((string)$manifestName.' is '.$dependencyStatus.' & will not be used.'); } }
+    else warningEntry('No manifest entry is named '.(string)$manifestName.', so it could not be verified.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $toolIsRequired, $dependencyCoreLoaded, $dependencyCoreVersion, $dependencyIsPresent, $dependencyStatus, $detectedVersion, $rawOutput, $binaryPath, $binaryOrigin, $manifestEntry, $entryWasFound, $manifestName);
+  purgeSensitiveMemory($EnableMemoryProtection, $toolIsRequired, $manifestIsLoaded, $dependencyCoreIsLoaded, $dependencyIsPresent, $dependencyStatus, $detectedVersion, $rawOutput, $binaryPath, $binaryOrigin, $manifestEntry, $entryWasFound, $manifestName);
   return $VerifiedPath; }
 // / -----------------------------------------------------------------------------------
 
@@ -679,19 +776,19 @@ function verifiedToolPath($manifestName) {
 // / so the program that runs is started as the program that was verified. A tool whose entry names no interpreter is started by its path.
 function verifiedToolCommand($manifestName, $verifiedPath) {
   // / Set variables.
-  global $DependsManifest, $EnableMemoryProtection;
+  global $EnableMemoryProtection;
   $ToolCommand = '';
   $interpreterCommand = '';
   $manifestEntry = array();
+  $entryWasFound = FALSE;
   if (is_string($verifiedPath) && $verifiedPath !== '') {
     $ToolCommand = escapeshellarg($verifiedPath);
-    if (is_array($DependsManifest) && function_exists('dependencyInterpreterCommand')) foreach ($DependsManifest as $manifestEntry) {
-      if ((string)$manifestEntry['Name'] !== (string)$manifestName) continue;
+    list ($entryWasFound, $manifestEntry) = manifestEntryNamed($manifestName);
+    if ($entryWasFound && function_exists('dependencyInterpreterCommand')) {
       $interpreterCommand = dependencyInterpreterCommand($manifestEntry, $verifiedPath);
-      if ($interpreterCommand !== '') $ToolCommand = $interpreterCommand;
-      break; } }
+      if ($interpreterCommand !== '') $ToolCommand = $interpreterCommand; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $interpreterCommand, $manifestEntry, $manifestName, $verifiedPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $interpreterCommand, $manifestEntry, $entryWasFound, $manifestName, $verifiedPath);
   return $ToolCommand; }
 // / -----------------------------------------------------------------------------------
 
@@ -779,14 +876,12 @@ function pipelineOutputIsUsable($outputPath) {
 // / The caller writes them to the worker log & the user facing log, so a scanner never writes to a log itself.
 function runVirusScan($pathsToScan, $requestedScanner) {
   // / Set variables.
-  global $Pipelines, $Verbose, $EnableMemoryProtection;
+  global $Verbose, $EnableMemoryProtection;
   $ScanCompleted = FALSE;
   $ThreatWasFound = FALSE;
   $ScanFindings = array();
   $ScannerUsed = '';
   $chosenFolder = $chosenScanner = $entryPointName = '';
-  $folderName = '';
-  $pipelineRecord = array();
   $pipelineIsReady = FALSE;
   // / With no scanner named, the application's default is read by the name the Pipeline Core knows it by.
   $chosenScanner = (is_string($requestedScanner) && trim($requestedScanner) !== '') ? strtolower(trim($requestedScanner)) : strtolower(trim((string)applicationSetting('DefaultScanner', '')));
@@ -794,12 +889,7 @@ function runVirusScan($pathsToScan, $requestedScanner) {
     errorEntry('A virus scan was requested & no scanner was named or configured!', 34007, FALSE);
     $ScanFindings[] = 'No scanner was named & no default is configured.'; }
   else {
-    if (is_array($Pipelines)) {
-      foreach ($Pipelines as $folderName => $pipelineRecord) {
-        if ($pipelineRecord['Kind'] !== 'scanner') continue;
-        if (strtolower((string)$pipelineRecord['Family']) !== $chosenScanner) continue;
-        $chosenFolder = $folderName;
-        break; } }
+    $chosenFolder = scannerPipelineFolder($chosenScanner);
     if ($chosenFolder === '') {
       errorEntry('The '.$chosenScanner.' scanner was requested & no pipeline provides it!', 34008, FALSE);
       $ScanFindings[] = 'The '.$chosenScanner.' scanner is not installed.'; }
@@ -812,8 +902,45 @@ function runVirusScan($pathsToScan, $requestedScanner) {
         $ScannerUsed = $chosenScanner;
         if (!is_array($ScanFindings)) $ScanFindings = array(); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $chosenFolder, $chosenScanner, $entryPointName, $folderName, $pipelineRecord, $pipelineIsReady, $pathsToScan, $requestedScanner);
+  purgeSensitiveMemory($EnableMemoryProtection, $chosenFolder, $chosenScanner, $entryPointName, $pipelineIsReady, $pathsToScan, $requestedScanner);
   return array($ScanCompleted, $ThreatWasFound, $ScanFindings, $ScannerUsed); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the folder of the scanner pipeline that provides a scanner.
+// / Accepts the scanner's name, as runVirusScan() is handed it, such as clamav or scancore.
+// / Returns the folder of the first installed scanner pipeline of that family, or an empty string where none provides it.
+function scannerPipelineFolder($scannerName) {
+  // / Set variables.
+  global $Pipelines, $EnableMemoryProtection;
+  $ScannerFolder = '';
+  $folderName = '';
+  $pipelineRecord = array();
+  if (is_array($Pipelines)) foreach ($Pipelines as $folderName => $pipelineRecord) {
+    if (!is_array($pipelineRecord) or (string)($pipelineRecord['Kind'] ?? '') !== 'scanner') continue;
+    if (strtolower((string)($pipelineRecord['Family'] ?? '')) !== strtolower(trim((string)$scannerName))) continue;
+    $ScannerFolder = (string)$folderName;
+    break; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderName, $pipelineRecord, $scannerName);
+  return $ScannerFolder; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether a scanner is installed, with the tools it cannot run without.
+// / Accepts the scanner's name, such as clamav or scancore. Returns TRUE where its pipeline is installed & its tools are.
+// / The Scan pipeline asks it, so all is every scanner this server has, & a scanner that is not installed is left out rather than reported as a scan that did not run.
+function scannerIsInstalled($scannerName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ScannerIsInstalled = FALSE;
+  $scannerFolder = '';
+  $unmetRequirements = array();
+  $scannerFolder = scannerPipelineFolder($scannerName);
+  if ($scannerFolder !== '') list ($ScannerIsInstalled, $unmetRequirements) = pipelineToolsAreInstalled($scannerFolder);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $scannerFolder, $unmetRequirements, $scannerName);
+  return $ScannerIsInstalled; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

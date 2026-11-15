@@ -104,7 +104,7 @@ Workers ───[ Encrypted Messages ]───► Request Manager Socket
 
 Every core-to-core startup call is cryptographically keyed against the main install secret.
 
-- **The Token:** An HMAC calculated over the authorized purpose and a temporary time bucket of ten seconds (`$StartupKeyWindow`).
+- **The Token:** A launch number drawn at random, and an HMAC calculated over the authorized purpose, a temporary time bucket of ten seconds (`$StartupKeyWindow`) and that number. Every launch has its own.
 - **Clock Tolerance:** The current and immediately preceding time buckets are accepted to accommodate launch delays.
 - **Expiration:** A key becomes useless after a few seconds.
 

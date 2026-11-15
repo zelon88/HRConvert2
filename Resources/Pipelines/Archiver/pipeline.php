@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.6.
+// / v4.2.1.
 // / The Archiver pipeline. pipelineCore.php loads it only to dispatch an Archive operation.
 // / Error block 4000 through 4006 belongs to this pipeline, & so does 13012.
 // / It also raises 13006, 13008, 13009 & 13010, which it shares with the Archive pipeline.

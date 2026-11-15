@@ -141,7 +141,8 @@ every budget, as it does once a disk is within --Storage Reserve--.
              Reads a file when a family reads its extension & writes the format asked for, so
              a conversion to jpg reads images & not spreadsheets. A file already in that format
              is not read, because there is nothing to convert.
-             Options: Extension, required, any format a family writes. Filename, the name
+             Options: Extension, required, any format a family writes, of which this server
+             offers those an installed tool writes. Filename, the name
              without its extension, empty for each file's own. Height & Width, 0 to 65535.
              Rotate, -360 to 360. Bitrate, 0 to 100000. A 0 is none, as a page sends it.
   Archive    Modes: together, each. Budget: archive. Reads every file.
@@ -160,6 +161,7 @@ every budget, as it does once a disk is within --Storage Reserve--.
              User_Identify_Report by default. Needs --User File Identification--.
   Scan       Modes: together. Budget: user virus scan. Reads every file.
              Options: Scanner, all by default, or clamav or scancore. Needs --User Virus Scanning--.
+             All is every scanner this server has, & a scanner it does not have is not offered.
              The report is kept in the session as User_Virus_Scan_Report.txt, or the next free
              name. A file found infected ENDS THE WORKFLOW, so nothing is made from it.
   Delete     Modes: together. Budget: none. Reads every file. Options: none.
@@ -195,6 +197,10 @@ renamed is not named among the files it made.
 An operation the server has switched off is still a valid step, because a valid workflow stays
 valid while an administrator turns a feature off & on. A workflow using one is not offered, &
 --workflow --list says why.
+So is a choice the server does not offer, from v4.2.1. A step converting to jpg is valid on a
+server without ImageMagick, & is not offered there, because no installed tool writes jpg.
+--workflow --list calls it disabled & names the choice, as it names an operation turned off, & it
+is offered wherever the tool is installed. Until v4.2.1 it was offered, & failed as it ran.
 
 A name a step gives is checked before it is used. It is up to 64 characters, with no slash, no
 backslash, no control character & no leading dot. The operation then cleans it as it cleans a
@@ -627,6 +633,10 @@ An operation is an entry under Operations, keyed by a plain word.
   Modes     each, together or both. The first is the default.
   Options   Each option's Type, choice, name, integer or boolean, & its Default, Required,
             Choices, Minimum & Maximum where they apply.
+            A choice option may name the choices this server runs in Offered, from v4.2.1, & its
+            Choices are then every choice the application knows. A step making a choice outside
+            Offered is valid & is not usable here, & a page's builder is offered Offered alone.
+            HRConvert2 declares Offered for Convert's Extension, Archive's & Scan's Scanner.
   Consumes  What becomes of the files it takes, deleted or renamed, & empty for an operation that
             leaves them as they were. A later step taking what it consumed is refused, & a step
             that deletes does not run once an earlier step has had errors.

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.2.1.
 // / This file declares what the Model conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.0.8';
+$PipelineVersion = 'v4.2.1';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -103,5 +103,11 @@ $PipelineExclude = array(
     // / dxf is an input & an output, so the pair exists.
     // / A format that is only an output cannot pair with itself, so adding one as an input adds a line here.
     'dxf>dxf', 'x>x', 'ctm>ctm', '3mf>3mf');
+
+// / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
+// / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.
+// / Assimp reads every model this pipeline converts, so nothing is converted without it.
+// / MeshLab, or PyMeshLab where it is on, writes what Assimp cannot, & a format neither writes is refused with its own error.
+$PipelineRequiredDependencies = array('Assimp');
 // / -----------------------------------------------------------------------------------
 ?>

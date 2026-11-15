@@ -1754,6 +1754,38 @@ request that read the library. A choice option names what this server offers in 
 Choices, which is every choice the application knows. A workflow making a choice that is not offered
 is valid & disabled, as one using an operation turned off is, & nothing warns about it. Found in the
 first screenshots of v4.2.1, before it was released.
+
+A PAGE STAGES & ROOT INSTALLS, BECAUSE THE LIBRARY STAYS ROOT'S. v4.2.2.
+An administrator's account was to install a workflow for every user from a page. A request runs as
+the web server account, & letting it write the installed library would let that account write a
+workflow every user then runs. Root's timer could have installed what a page staged, but the
+Environment Manager takes no requests, because a root process that takes them can be asked for
+something else. So a page stages, & root installs with one command that checks what it reads before
+it writes anything. A page is given the identifier & the command, & never a path, as no page ever is.
+
+DESCRIPTIONS LIVE BESIDE A WORKFLOW. v4.2.2.
+A workflow file is shared between servers, & its Description is its author's. What an administrator
+writes to describe it to their own users, in every language, is theirs, so it is a file of its own
+beside the workflow & is never exported with it. A page chooses which to show, because the page
+knows its language & the Workflow Core's functions were not changed to be told it.
+
+ROOT TURNS A STAGED WORKFLOW DOWN THROUGH THE WEB SERVER ACCOUNT. v4.2.2.
+Root never removes a name in a folder another account can change, so root could install what was
+staged & never discard it, & a workflow root would not install waited in Staged for good. Root hands
+--workflow --discard-staged to the web server account, as it hands over -c & --account, & that
+account removes only what it could already remove. Nothing written for it runs as root.
+
+A COPY IS STAGED UNDER THE IDENTIFIER OF WHAT IT COPIES. v4.2.2.
+A shipped workflow's identifier is chosen by hand, & the builder's export names a file for the
+workflow's name, so a shipped workflow exported, changed & staged again took another identifier &
+was installed beside the one it copied, under the same name. A workflow is staged under the
+identifier of the library's workflow of the same name, so installing it replaces that one, & the
+page names it before root does anything.
+
+WHAT ROOT READS FROM STAGED REACHES ITS TERMINAL WITHOUT CONTROL CHARACTERS. v4.2.2.
+--workflow --list reads Staged, which the web server account writes. A problem quotes what a file
+holds, such as a key the format does not know, so a planted file could send root's terminal a
+sequence it obeys. Everything --workflow prints from a file is passed through printableWorkflowText().
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

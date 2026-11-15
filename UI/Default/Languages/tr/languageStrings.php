@@ -39,7 +39,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -625,6 +625,22 @@ $Gui2Text227 = 'adım çalıştığında listedeki tüm dosyalar';
 $Gui2Text228 = 'Bu iş akışı bu dosyaları siler. Silinen bir dosya geri getirilemez.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'Bir adımda hatalar oldu, bu yüzden iş akışı dosyaları silen adımdan önce durdu.';
+// / 'Install for all users'
+$Gui2Text230 = 'Tüm kullanıcılar için yükle';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'Her kullanıcıya gösterilen açıklama';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'Diğer dillerdeki açıklamalar';
+// / 'Stage for root to install'
+$Gui2Text233 = 'root tarafından yüklenmek üzere hazırla';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'Hazırlandı. Her kullanıcı için yüklemek üzere bunu sunucuda root olarak çalıştırın:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'Her kullanıcı için {name} iş akışının yerini alır.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'İş akışı hazırlanamadı.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'Bir açıklama 500 karakterden uzun veya gösterilemeyen bir karakter içeriyor.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

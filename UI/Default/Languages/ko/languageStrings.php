@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -608,6 +608,22 @@ $Gui2Text227 = '단계가 실행될 때 목록에 있는 모든 파일';
 $Gui2Text228 = '이 워크플로는 다음 파일을 삭제합니다. 삭제한 파일은 되돌릴 수 없습니다.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = '한 단계에서 오류가 발생하여 파일을 삭제하는 단계 전에 워크플로가 멈췄습니다.';
+// / 'Install for all users'
+$Gui2Text230 = '모든 사용자에게 설치';
+// / 'Description, shown to every user'
+$Gui2Text231 = '모든 사용자에게 표시되는 설명';
+// / 'Descriptions in other languages'
+$Gui2Text232 = '다른 언어로 된 설명';
+// / 'Stage for root to install'
+$Gui2Text233 = 'root가 설치하도록 준비';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = '준비되었습니다. 모든 사용자에게 설치하려면 서버에서 root로 다음을 실행하세요:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = '모든 사용자에게 {name} 대신 사용됩니다.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = '워크플로를 준비하지 못했습니다.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = '설명이 500자를 넘거나 표시할 수 없는 문자가 들어 있습니다.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

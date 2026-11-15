@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.2.0.
+// / v4.2.2.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.2.0';
+$SetupCoreVersion = 'v4.2.2';
 // / -----------------------------------------------------------------------------------
 
 
@@ -1693,14 +1693,14 @@ function namesToList($entryNames) {
 // / A folder that is not held is named, & nothing is moved into it.
 function provisionAndMigrateDataRoot($webAccount) {
   // / Set variables.
-  global $DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $WorkflowLoc, $AccountLoc, $UserLoc, $EngineEnableAuthentication, $ManagerSocketDir, $AdditionalConvertLocs, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
+  global $DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $WorkflowLoc, $AccountLoc, $UserLoc, $WorkflowStageLoc, $EngineEnableAuthentication, $ManagerSocketDir, $AdditionalConvertLocs, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
   $FoldersAreReady = TRUE;
   $MovedCount = 0;
   $primaryFolders = $additionalEntry = $additionalRoots = $rootEntries = $sessionEntries = $cacheStatus = $foreignEntries = $sessionNames = $strangerEntries = $entryStatus = $webRecord = array();
   $folderPath = $additionalRoot = $rootToMigrate = $sessionTarget = $rootEntry = $entryPath = $holdNotice = $cacheSource = $cacheTarget = $sessionName = $removalNotice = '';
   $targetIsHeld = $cacheIsHeld = $rootWasTaken = $cacheWasRemoved = FALSE;
   $webUid = -1;
-  $reservedNames = array('.', '..', 'Sessions', 'Cache', 'Logs', 'Sockets', 'Engine', 'Secrets', 'Workflows', 'Accounts', 'Users', 'Last-Installed-Version', 'Application', 'lost+found', '.cache', '.config');
+  $reservedNames = array('.', '..', 'Sessions', 'Cache', 'Logs', 'Sockets', 'Engine', 'Secrets', 'Workflows', 'Accounts', 'Users', 'Staged', 'Last-Installed-Version', 'Application', 'lost+found', '.cache', '.config');
   if (!$RunningAsRoot) { warningEntry('The data root can only be provisioned while running as root, so nothing was created or moved.'); $FoldersAreReady = FALSE; }
   else {
     // / Create the primary root & give it back to root first, so every folder below it is
@@ -1712,6 +1712,8 @@ function provisionAndMigrateDataRoot($webAccount) {
     // / The accounts & the users' files are made only where the application offers accounts, from v4.2.0, & their role makes them the web server account's.
     // / Both are made whether or not an administrator has turned accounts on, so turning them on later needs nothing else.
     if ((!isset($EngineEnableAuthentication) or $EngineEnableAuthentication === TRUE) && isset($AccountLoc, $UserLoc) && is_string($AccountLoc) && is_string($UserLoc) && $AccountLoc !== '' && $UserLoc !== '') array_push($primaryFolders, $AccountLoc, $UserLoc);
+    // / The staging folder is made where the application offers accounts & names an installed library, from v4.2.2, because only an administrator's account stages a workflow for root to install.
+    if ((!isset($EngineEnableAuthentication) or $EngineEnableAuthentication === TRUE) && isset($WorkflowLoc, $WorkflowStageLoc) && is_string($WorkflowLoc) && is_string($WorkflowStageLoc) && $WorkflowLoc !== '' && $WorkflowStageLoc !== '') $primaryFolders[] = $WorkflowStageLoc;
     foreach ($primaryFolders as $folderPath) {
       if ((string)$folderPath === '') continue;
       if (!createHeldFolder($folderPath)) $FoldersAreReady = FALSE; }

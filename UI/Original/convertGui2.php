@@ -177,6 +177,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
       // / A pattern is code in any language, so the box it is typed into reads left to right.
       // / Where the builder is on, the Pipelines panel offers a tab for the library & one for each operation, & the workflow's box becomes a box for each step.
       // / The box that runs them is split, & its add button adds a step to its left. The library draws the tabs, the steps & their options.
+      // / Beneath the workflow's name an administrator's page is offered a staging box, from v4.2.2, which the library draws only where the server allows it.
       // / Its preview button asks which files each step would take, & the Status panel shows the answer, as it shows the question a workflow that deletes asks first.
       // / Each of its buttons is named beside it where the box has the room, & the name is a label, so pressing it presses the button.
       // / The Status panel says whether a workflow is running, how far it has got & how it ended, & a page loaded again while one runs draws it there.
@@ -187,6 +188,7 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
           <div id='hrc2WfTabs' class='hrc2-wf-tabs' role='tablist' aria-label='<?php echo htmlspecialchars($Gui2Text161, ENT_QUOTES, 'UTF-8'); ?>'></div>
           <div id='hrc2WfTabPanel' class='hrc2-wf-tab-panel' role='tabpanel'></div>
           <div id='hrc2WfTools' class='hrc2-wf-tools'></div>
+          <div id='hrc2WfStage' class='hrc2-wf-stage' hidden></div>
         </div>
         <div id='hrc2WfBoxes' class='hrc2-wf-boxes' hidden>
           <div id='hrc2WfFilesBox' class='hrc2-wf-box'>
@@ -223,6 +225,8 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
         <script type='text/javascript'>
           HRC2.startWorkflows(<?php echo json_encode(array(
             'builder' => ($EnableWorkflowBuilder === TRUE), 'importExport' => ($EnableWorkflowImportExport === TRUE),
+            // / The page's language, & every language this server offers as a code & its name in itself, for an administrator's descriptions of a staged workflow.
+            'language' => (string)$LanguageToUse, 'languages' => array_map(NULL, array_map('strval', array_keys((array)$SupportedLanguages)), array_map('strval', array_values((array)$SupportedLanguages))),
             'text' => array('selected' => $Gui2Text113, 'pickFiles' => $Gui2Text130, 'choose' => $Gui2Text134, 'usable' => $Gui2Text137, 'step' => $Gui2Text138, 'file' => $Gui2Text139,
               'waiting' => $Gui2Text140, 'starting' => $Gui2Text141, 'finished' => $Gui2Text142, 'stopping' => $Gui2Text143, 'stopped' => $Gui2Text144, 'made' => $Gui2Text145,
               'running' => $Gui2Text190, 'idle' => $Gui2Text191,
@@ -234,6 +238,8 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
               'sortBy' => $Gui2Text104, 'arrival' => $Gui2Text177, 'nameOrder' => $Gui2Text105, 'allFiles' => $Gui2Text178, 'allKind' => $Gui2Text179,
               'name' => $Gui2Text105, 'untitled' => $Gui2Text182, 'newWorkflow' => $Gui2Text183, 'importFile' => $Gui2Text184, 'exportFile' => $Gui2Text185,
               'notWorkflow' => $Gui2Text186, 'unreadable' => $Gui2Text187,
+              'stageTick' => $Gui2Text230, 'stageLegend' => $Gui2Text231, 'stageMore' => $Gui2Text232, 'stageButton' => $Gui2Text233,
+              'staged' => $Gui2Text234, 'stageReplaces' => $Gui2Text235, 'stageFailed' => $Gui2Text236, 'stageDescriptions' => $Gui2Text237,
               'toFormat' => $Gui2Text197, 'confirmDelete' => $Gui2Text198, 'confirmRun' => $Gui2Text199, 'cancel' => $Gui2Text200, 'confirmDeleteFiles' => $Gui2Text228,
               'refused' => array('disabled' => $Gui2Text146, 'unknown' => $Gui2Text148, 'nothing' => $Gui2Text149, 'files' => $Gui2Text150, 'server' => $Gui2Text151, 'busy' => $Gui2Text152, 'start' => $Gui2Text153, 'builder' => $Gui2Text188, 'invalid' => $Gui2Text186),
               'failed' => array('operation' => $Gui2Text154, 'threat' => $Gui2Text155, 'runtime' => $Gui2Text156, 'files' => $Gui2Text157, 'budget' => $Gui2Text158, 'unavailable' => $Gui2Text159, 'halted' => $Gui2Text160, 'stopped' => $Gui2Text144, 'incomplete' => $Gui2Text229)),

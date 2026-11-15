@@ -418,11 +418,14 @@ The following is a list of supported POST inputs, organized into sections based 
           Lists the workflows this session may run.
           {"Workflow":{"Available":true,"Library":[{"Id":"documents-to-pdf-zip","Name":"...","Description":"...",
             "Steps":[{"Operation":"Convert","Mode":"each","Options":{...}}, ...],"AcceptsAll":false,"Accepts":["doc","docx", ...],
-            "NeedsSelection":true,"Deletes":false}]}}
+            "NeedsSelection":true,"Deletes":false,"Descriptions":[{"Language":"fr","Text":"..."}, ...]}]}}
           Only a usable workflow is listed. AcceptsAll is true when its first step reads every file, & Accepts
           otherwise lists the extensions its first step reads. It is a hint, & the server decides.
           NeedsSelection is false when a Select step finds files of its own, so it may be run with none named.
           Deletes is true when a step deletes files, so a page asks before it runs the workflow.
+          Descriptions lists what an administrator wrote to describe it, from v4.2.2, each a Language & its
+          Text, in the order written. A page shows the one in its language, or else the first, or else
+          Description, which is the workflow's own.
       workflowRun
           String.
           Starts the workflow with that identifier on the files named in workflowFiles[], in the order given.
@@ -491,6 +494,8 @@ The following is a list of supported POST inputs, organized into sections based 
             "Type":"choice","Required":true,"Choices":["pdf", ...],"Groups":[{"Name":"Document","Choices":["pdf", ...]}, ...]},
             ...],"Consumes":""}, ...],"Kinds":["Document", ...]}}
           Builder & ImportExport say whether each is on. Operations & Kinds are empty unless the builder is.
+          Stage is true where the request is signed in to an account whose role is admin, from v4.2.2, & a
+          page then offers to stage what its builder holds for every user.
           Only an operation this server has on is described, & BuiltIn is true for Select, the Workflow Core's
           own. Each option has its Name & Type, & its Choices, Default, Required, Minimum & Maximum where it
           has them. A choice is described in lower case, as a step names it. Choices are only those this server
@@ -515,4 +520,18 @@ The following is a list of supported POST inputs, organized into sections based 
             "FileName":"documents-to-pdf-zip-workflow.json"}}
           Allowed is true when the builder or import & export is on. Only a workflow this session is offered is
           found. Document is the workflow in canonical form, as text. See ABOUT_WORKFLOWS.txt for that form.
+      workflowStage
+          String. A workflow, as JSON text, sent with workflowStageDescriptions. From v4.2.2.
+          Stages it for root to install for every user.
+          {"Workflow":{"Available":true,"Allowed":true,"Staged":true,"Id":"My-workflow",
+            "Command":"sudo php convertCore.php --workflow --install-staged=My-workflow","Replaces":""}}
+          Allowed is true only for a request signed in to an account whose role is admin, where the builder &
+          import & export are on, & nothing else is said when it is not. A workflow that is not staged says
+          why in Reason, invalid or descriptions, with Problems, or server. Id is the identifier of the
+          library's workflow of the same name, or else the one the name gives it. Replaces names the workflow
+          the install takes the place of, & is empty where there is none. No path is ever given.
+          See --Staging For Every User-- in ABOUT_WORKFLOWS.txt.
+      workflowStageDescriptions
+          String. A JSON object, each key a language code & each value its description, sent with workflowStage
+          alone. An empty description is left out, & one that is sent empty or not at all stages none.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

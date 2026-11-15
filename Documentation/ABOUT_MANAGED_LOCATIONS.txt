@@ -65,7 +65,7 @@ account root is protecting itself from.
   secret      $SecretLoc, Secrets                    root:www-data, 0750, never walked
   web         $SessionLoc, $CacheLoc, $LogDir,       the web server account, 0700
               $ManagerSocketDir, $AccountLoc,
-              $UserLoc
+              $UserLoc, $WorkflowStageLoc
   served      $ConvertTemp, DATA                     the web server account, 0700, served inert
   root-only   $EngineDir, $BackupLoc                  root:root, folders 0700, files 0600
   library     $WorkflowLoc, Workflows                root:root, folders 0755, files 0644
@@ -77,6 +77,7 @@ where $ConvertLoc has been narrowed to the session area a request uses. Sessions
 Sessions, the web server account's caches & its home in Cache, its logs in Logs & its sockets
 in Sockets, & from v4.1.4 the workflows an administrator installs are in Workflows. Root's own log folder is Engine & the previous installation is Last-Installed-Version.
 From v4.2.0 accounts are kept in Accounts & the files each signed in user keeps in Users, where the application offers accounts.
+From v4.2.2 a workflow an administrator stages from a page waits in Staged for root to install.
 The install secret is kept in Secrets, from v4.0.4, which only root may change & only the web
 server account's group may enter, & a copy with the same key stays at the top for every release
 that reads it there. The Environment Manager's state sits at the top of the data location,
@@ -141,6 +142,11 @@ Accounts & Users are web folders too, from v4.2.0, & -fp makes both whether or n
 turned on, so turning them on later needs nothing else. Neither is a session area, so no sweep of
 sessions reaches them. Only the web server account works in either. Root's --account command is
 handed to that account, so root never reads or writes an account. See ABOUT_AUTHENTICATION.txt.
+Staged is a web folder too, from v4.2.2, made where the application offers accounts & an installed
+library. The web server account writes it & clears it. Root only reads it, for --workflow
+--install-staged, & writes what it read into the installed library, which is root's. Root's
+--workflow --discard-staged is handed to that account, so root never removes a name in it. See
+ABOUT_WORKFLOWS.txt.
 
 SERVED.
 A web folder the web server hands to browsers, from v4.0.5. HRConvert2's is DATA in the hosted

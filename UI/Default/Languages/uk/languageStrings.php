@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -614,6 +614,22 @@ $Gui2Text227 = 'усі файли списку на момент запуску 
 $Gui2Text228 = 'Цей робочий процес видаляє ці файли. Видалений файл неможливо відновити.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'В одному з кроків були помилки, тому робочий процес зупинився перед кроком, що видаляє файли.';
+// / 'Install for all users'
+$Gui2Text230 = 'Встановити для всіх користувачів';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'Опис, який бачить кожен користувач';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'Описи іншими мовами';
+// / 'Stage for root to install'
+$Gui2Text233 = 'Підготувати до встановлення від імені root';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'Підготовлено. Виконайте це на сервері від імені root, щоб установити його для всіх користувачів:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'Він замінить {name} для всіх користувачів.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'Не вдалося підготувати робочий процес.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'Опис довший за 500 символів або містить символ, який неможливо показати.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

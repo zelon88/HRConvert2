@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -616,6 +616,22 @@ $Gui2Text227 = 'كل ملف في القائمة عند تشغيل الخطوة';
 $Gui2Text228 = 'يحذف سير العمل هذا هذه الملفات. لا يمكن استعادة الملف المحذوف.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'حدثت أخطاء في إحدى الخطوات، لذلك توقف سير العمل قبل الخطوة التي تحذف الملفات.';
+// / 'Install for all users'
+$Gui2Text230 = 'التثبيت لجميع المستخدمين';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'الوصف الذي يُعرض على كل مستخدم';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'الأوصاف بلغات أخرى';
+// / 'Stage for root to install'
+$Gui2Text233 = 'تجهيز للتثبيت بواسطة root';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'تم التجهيز. شغّل هذا على الخادم بصفة root لتثبيته لكل المستخدمين:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'يحل محل {name} لكل المستخدمين.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'تعذّر تجهيز سير العمل.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'يتجاوز أحد الأوصاف 500 حرف، أو يحتوي على حرف لا يمكن عرضه.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

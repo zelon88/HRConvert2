@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -610,6 +610,22 @@ $Gui2Text227 = 'tous les fichiers de la liste au moment où l’étape s’exéc
 $Gui2Text228 = 'Ce flux de travail supprime ces fichiers. Un fichier supprimé ne peut pas être récupéré.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'Une étape a eu des erreurs, donc le flux de travail s’est arrêté avant l’étape qui supprime des fichiers.';
+// / 'Install for all users'
+$Gui2Text230 = 'Installer pour tous les utilisateurs';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'Description, montrée à chaque utilisateur';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'Descriptions dans d’autres langues';
+// / 'Stage for root to install'
+$Gui2Text233 = 'Préparer pour l’installation par root';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'Prêt. Exécutez ceci sur le serveur en tant que root pour l’installer pour chaque utilisateur :';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'Il remplace {name} pour chaque utilisateur.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'Le flux de travail n’a pas pu être préparé.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'Une description dépasse 500 caractères, ou contient un caractère qui ne peut pas être affiché.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -285,8 +285,9 @@ web server's log, beside the sign ins it changed.
 
 The commands work while accounts are off, so an administrator may prepare accounts first.
 
-A ROLE is user or admin. A page is told the role of the user it was drawn for. Nothing yet does more
-with it. See --Not Yet--.
+A ROLE is user or admin. A page is told the role of the user it was drawn for. From v4.2.2 an admin's
+page may stage a workflow for every user, with a description in each language, which root installs.
+See --Staging For Every User-- in ABOUT_WORKFLOWS.txt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -430,8 +431,7 @@ IT DOES NOT DEFEND AGAINST
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Not Yet--
 
-v4.2.0 is the first round of accounts. These are planned & are not in this version.
-  An administrator's account marked admin may install a workflow for every user from a page, with
-  a description in each language.
+v4.2.0 is the first round of accounts, & v4.2.2 let an admin's page stage a workflow for every user.
+This is planned & is not in this version.
   A user may change their own password or address while signed in.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

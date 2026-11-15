@@ -27,6 +27,31 @@ The authoritative list of dependencies is Resources/Contract/depends.php & nothi
 
 --------------------
 COMMIT 11/14/2026
+v4.2.2 - An administrator stages a workflow for every user from a page, with a description in each language, & root installs it.
+
+-v4.2.2.
+-New Install for all users in the builder of an administrator's page, beneath the workflow's name, where the builder & import & export are on.
+-Its description box is greyed out until it is ticked, & a + after it shows a box for every other language, each named in its own language.
+-Stage sends what the builder holds, imported or built, & every description. The server checks both & keeps them in Staged, & the page shows the line root runs. No path is ever sent.
+-A copy of a library workflow is staged under that workflow's identifier, found by its name, so installing it replaces the workflow rather than adding a second of one name.
+-New --workflow --install-staged=ID. It checks a staged workflow & its descriptions again & installs them.
+-New --workflow --discard-staged=ID. Root hands it to the web server account, which removes a staged workflow & its descriptions & installs nothing.
+-New ID-descriptions.json beside a workflow, never inside it. --check & --install read one beside the file named, --remove takes it with the workflow, & --list names each workflow's languages & what waits in Staged.
+-A library's workflow is described in the page's language, or else in the first language its administrator wrote, or else by its own Description.
+-A library's workflow opened in the builder fills the staging box with its descriptions, so staging it again keeps every language.
+-The web server account clears a staged workflow once root has installed it, because root never removes a name in a folder that account can change.
+-Every name & problem --workflow prints from a file shows a control character as ?, because --list now reads Staged, which the web server account can write.
+-A --workflow --install, --install-staged or --remove refused to an account but root repeats the option as typed, because an identifier & a path keep their case.
+-New stagingIsOffered(), stageWorkflowForEveryone(), writeStagedWorkflow(), clearInstalledStagedWorkflows(), stagedDescriptionsAreInstalled(), normalizeWorkflowDescriptions(), readWorkflowDescriptions(), workflowDescriptionsText(), readDescriptionsBeside(), readSourceDescriptions(), printStagedWorkflows(), installCheckedWorkflow(), printableWorkflowText(), stagedWorkflowIdentifier() & discardStagedWorkflow() in the Workflow Core.
+-New Staged in the data root, $WorkflowStageLoc, of the web role, & the WorkflowStaging setting in the contract. -fp makes it where the application offers accounts.
+-workflowOperations answers Stage, workflowLibrary answers Descriptions, & the new workflowStage request stages, with workflowStageDescriptions.
+-Every language pack carries $Gui2Text230 through $Gui2Text237.
+-New errors 38007 & 38008. ERROR_DESCRIPTIONS documents both & every new warning, & the Engine's two refusals of --workflow.
+-ABOUT_WORKFLOWS, ABOUT_REST_API, ABOUT_COMMAND_LINE_ARGUMENTS, ABOUT_MANAGED_LOCATIONS, ABOUT_ENGINE_CONTRACT, ABOUT_AUTHENTICATION, CREATING_GUIS, CREATING_LANGUAGE_PACKS, DEVELOPMENT_NOTES & README.md describe the change.
+-The core, the Engine, the Workflow & Setup Cores, the contract, both interfaces & every language pack are v4.2.2, & every pin to them requires v4.2.2.
+
+--------------------
+COMMIT 11/14/2026
 v4.2.1 - One bar at the top of every page holds Workflows, the settings & Sign in, & a page offers only what this server's installed tools can run.
 
 -v4.2.1.

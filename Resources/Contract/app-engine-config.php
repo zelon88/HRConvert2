@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.0.
+// / v4.2.2.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -166,6 +166,8 @@ $EnginePinSources = array(
 // / SecretLoc is Secrets, where this application keeps its install secret.
 // / AccountLoc is Accounts, where the Engine keeps each account, sign in & code, & UserLoc is Users, where each signed in user's files are kept.
 // / Both are the web server account's, because a request is what signs a user in & what writes their files, & neither is ever swept.
+// / WorkflowStageLoc is Staged, from v4.2.2, where an administrator signed in to a page stages a workflow for root to install with --workflow --install-staged.
+// / It is the web server account's, because a request is what stages one, & root only ever reads it.
 // / Root writes it & the web server account's group reads it, & no other account can list the folder.
 // / The data location is named by $DataRootLoc here, not $ConvertLoc. $ConvertLoc is narrowed to
 // / the session area a request uses, so it is not the root on the command line where this is
@@ -184,6 +186,7 @@ $EngineManagedLocations = array(
   'WorkflowLoc' => 'library',
   'AccountLoc' => 'web',
   'UserLoc' => 'web',
+  'WorkflowStageLoc' => 'web',
   'EngineDir' => 'root-only',
   'BackupLoc' => 'root-only');
 
@@ -257,6 +260,7 @@ $EngineSettingNames = array(
   'SessionFolder' => 'ConvertDir',
   'SessionContext' => 'SesHash3',
   'WorkflowLibrary' => 'WorkflowLoc',
+  'WorkflowStaging' => 'WorkflowStageLoc',
   'EnableAuthentication' => 'EnableAuthentication',
   'AllowAnonymousVisitors' => 'AllowAnonymousVisitors',
   'AllowRegistration' => 'AllowRegistration',

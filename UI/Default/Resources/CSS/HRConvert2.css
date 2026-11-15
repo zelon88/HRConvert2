@@ -692,6 +692,76 @@ select.hrc2-wf-row-control {
   cursor: pointer; }
 .hrc2-wf-about .hrc2-wf-tool {
   margin-top: 4px; }
+/* / The staging box an administrator's page is offered beneath the workflow's name, from v4.2.2.
+   / The descriptions are a fieldset, greyed out until the box above them is ticked. Each row is a language's name in itself & its box,
+   / & the + after the first shows the other languages. Every row keeps a column for the +, so every box lines up. */
+.hrc2-wf-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--hrc2-hairline); }
+.hrc2-wf-stage[hidden],
+.hrc2-wf-stage-more-list[hidden] {
+  display: none; }
+.hrc2-wf-stage-tick {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer; }
+.hrc2-wf-stage-texts {
+  margin: 0;
+  padding: 2px 8px 8px 8px;
+  border: 1px solid var(--hrc2-edge);
+  border-radius: 4px;
+  min-width: 0; }
+.hrc2-wf-stage-texts:disabled {
+  opacity: 0.5; }
+.hrc2-wf-stage-texts legend {
+  padding: 0 4px;
+  font-size: 12px; }
+.hrc2-wf-stage-row {
+  display: grid;
+  grid-template-columns: 8em minmax(0, 1fr) 2em;
+  align-items: start;
+  gap: 6px;
+  margin-top: 4px; }
+.hrc2-wf-stage-language {
+  padding-top: 2px;
+  overflow-wrap: anywhere; }
+.hrc2-wf-stage-row textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  font: inherit; }
+.hrc2-wf-stage-more {
+  width: 2em;
+  height: 2em;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--hrc2-edge);
+  border-radius: 50%;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer; }
+.hrc2-wf-stage-more:disabled {
+  cursor: default; }
+.hrc2-wf-stage-more:focus-visible,
+.hrc2-wf-stage-tick input:focus-visible {
+  outline: 2px solid var(--hrc2-accent);
+  outline-offset: 1px; }
+.hrc2-wf-stage-button {
+  align-self: flex-start; }
+/* / The line root runs to install what was staged. It reads left to right in any language, & a click selects all of it to copy. */
+.hrc2-wf-command {
+  overflow-wrap: anywhere;
+  text-align: left; }
+.hrc2-wf-command code {
+  font-family: monospace;
+  user-select: all; }
 .hrc2-wf-box[hidden] {
   display: none; }
 .hrc2-wf-step-heading {

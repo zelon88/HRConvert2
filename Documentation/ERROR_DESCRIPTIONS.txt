@@ -7731,7 +7731,9 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  --workflow --install checked the workflow, found it valid & could not write it into the installed library.
+  --workflow --install checked the workflow, found it valid & could not write it into the installed library. From v4.2.2
+  --install-staged raises it as well, & so does a workflow that was written & whose descriptions were not, where <REASON> begins
+  The workflow was installed & its descriptions were not. Install it again to install them.
   The installed library is the Workflows folder in the data root. <REASON> says which of these it was.
     The installed library does not exist yet.           -fp creates it. Run  sudo php convertCore.php -fp  & install again.
     A reason naming a folder another account can change  Root writes only into a folder no other account can change. -fp gives the
@@ -7759,14 +7761,62 @@ ERROR DESCRIPTION
   Root removes a file only from a folder no other account can change, & never through a link. <REASON> is the kernel's.
   Run  sudo php convertCore.php -fp , which gives the library back to root, & remove it again.
   A shipped workflow is part of the release & is never removed by this command. To replace one, install a workflow with the same identifier.
+  From v4.2.2 its descriptions are removed with it. Where the workflow was removed & its descriptions were not, <REASON> begins
+  The workflow <WORKFLOW_ID> was removed & its descriptions were not. Remove the file named for it followed by -descriptions.json
+  from the installed library by hand.
   The command exits 1.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-38007, <SESSION_IDENTIFIER>: The workflow <WORKFLOW_ID> could not be staged for every user. <REASON>
+
+FILE
+  Resources/Engine/Cores/workflowCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.2. An administrator's page asked to stage a valid workflow for every user, & it could not be written into Staged, the
+  folder in the data root where a staged workflow waits for root. <REASON> says why.
+    The staging folder <PATH> does not exist.  -fp makes it where the application offers accounts. Run  sudo php convertCore.php -fp .
+    A reason from the write                    The kernel refused to write through a link, or the disk is full or read only.
+  Nothing was staged, & a staged workflow whose descriptions could not be written is taken away, so root never installs half of
+  what was staged. The page says the workflow could not be staged.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-38008, <SESSION_IDENTIFIER>: The staged workflow <WORKFLOW_ID> could not be discarded. <REASON>
+
+FILE
+  Resources/Engine/Cores/workflowCore.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.2. --workflow --discard-staged found a workflow staged under <WORKFLOW_ID> & could not remove it, or its descriptions,
+  from Staged. Root hands the discard to the web server account, which owns Staged, so this is that account's error, & root prints
+  what it printed. <REASON> is the kernel's. The descriptions are removed first, so a workflow is never left staged without them.
+  Run  sudo php convertCore.php -fp , which gives Staged back to the web server account, & discard it again. Nothing installed was
+  touched. The command exits 1.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR NUMBER RESERVATION
-  38000 through 38019 are reserved for workflows, & 38007 through 38019 are currently unused.
-  38000 through 38006 are raised by the Workflow Core, & are documented above.
+  38000 through 38019 are reserved for workflows, & 38009 through 38019 are currently unused.
+  38000 through 38008 are raised by the Workflow Core, & are documented above.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -7797,6 +7847,19 @@ WARNINGS ABOUT WORKFLOWS
     WARNING!!! The <LIBRARY> workflow <FILE_NAME> is not valid & is not offered. Run --workflow --list to read why.
       From v4.2.1 a workflow naming a format or a scanner this server does not offer is valid & is not warned about. It is listed as
       disabled, as one using an operation that is turned off is, & is offered wherever the tool it needs is installed.
+      From v4.2.2 <LIBRARY> may be staged, for a workflow --workflow --list reads in Staged, which is never offered until root
+      installs it, & --install-staged refuses one that is not valid.
+    WARNING!!! The descriptions of the <LIBRARY> workflow <WORKFLOW_ID> are not valid & are not shown. Run --workflow --list to read why.
+      From v4.2.2. A workflow's descriptions are kept beside it, named for its identifier followed by -descriptions.json. The
+      workflow is offered with its own Description, & --workflow --list names every problem with them. Correct the file, or stage
+      the workflow again with its descriptions & install it.
+    WARNING!!! A request asked to stage a workflow for every user, & is not signed in as an administrator where staging is offered. It was refused.
+      From v4.2.2. Only a page signed in to an account whose role is admin is offered staging, where the builder & import & export
+      are on. A request that asks otherwise was made by hand, or its sign in ended, or its role changed, since its page was drawn.
+      Nothing was staged.
+    WARNING!!! The staged workflow <WORKFLOW_ID> is installed & could not be cleared from the staging folder. <REASON>
+      From v4.2.2. Root installed the workflow, & the web server account could not remove the staged copy. It is harmless, because
+      installing it again changes nothing. <REASON> is the kernel's. -fp gives Staged back to the web server account.
     WARNING!!! A session's workflow folder could not be made ready, so no workflow can run in it.
     WARNING!!! The folder running workflows are counted in could not be locked, so the limit on running workflows is not applied to this one.
     WARNING!!! A workflow was asked to stop & the request could not be recorded.
@@ -7814,10 +7877,16 @@ WARNINGS ABOUT WORKFLOWS
     WARNING!!! A workflow's virus scan report could not be kept beside the files it scanned.
     WARNING!!! A request carried <INPUT> as something other than text, & it was refused.
       From v4.1.5. streamBaseURL, userURLDownload, workflowDocument & workflowCheck are read as text, & so is
-      workflowPreviewDocument from v4.1.8. A list sent in place of one is read as nothing. No page this server draws sends
-      one, so a request that does was made by hand.
-  The Engine raises this, from Resources/Engine/engine.php.
+      workflowPreviewDocument from v4.1.8, & workflowStage & workflowStageDescriptions from v4.2.2. A list sent in place of one
+      is read as nothing. No page this server draws sends one, so a request that does was made by hand.
+  The Engine raises these, from Resources/Engine/engine.php.
     WARNING!!! The command <COMMAND> was refused because the Workflow Core is unavailable.
+    WARNING!!! A workflow command that writes the installed library was refused for an unauthorized user.
+      --workflow --install, --install-staged & --remove write the installed library, which is root's, so only root runs them.
+      The refusal repeats the option as it was typed, from v4.2.2, & shows the command to run with sudo. Nothing was changed.
+    WARNING!!! A workflow command that discards a staged workflow was refused for an unauthorized user.
+      From v4.2.2. --workflow --discard-staged removes names in Staged, which is the web server account's, so only root, which
+      hands it to that account, & that account run it. The refusal shows the command to run with sudo. Nothing was changed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

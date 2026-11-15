@@ -30,6 +30,10 @@
 // / The status holds a running workflow as a document, & a page loaded again draws it from that, locked until it ends.
 // / A server without the builder, or one whose answer this cannot read, is given the panel as it was before the builder.
 // /
+// / An administrator's page may stage what the builder holds for every user, from v4.2.2, & root installs it.
+// / The server says whether this page may, & checks the workflow & every description again, so nothing here decides who may stage.
+// / A library's workflow is described in the page's language where its administrator wrote that, or else in the first language they wrote, or else as its author did.
+// /
 // / HARDWARE REQUIREMENTS ...
 // / This application requires at least a Raspberry Pi Model B+ or greater.
 // / This application will run on just about any x86 or x64 computer.
@@ -58,7 +62,7 @@ window.HRC2Workflows = {
     panel: 'hrc2Workflows', button: 'hrc2WorkflowsButton', boxes: 'hrc2WfBoxes', filesBox: 'hrc2WfFilesBox', files: 'hrc2WfFiles',
     pattern: 'hrc2WfPattern', pickBox: 'hrc2WfPickBox', select: 'hrc2WfSelect', about: 'hrc2WfAbout', runBox: 'hrc2WfRunBox',
     preview: 'hrc2WfPreview', run: 'hrc2WfRun', stop: 'hrc2WfStop', status: 'hrc2WfStatus',
-    pipelines: 'hrc2WfPipelines', tabs: 'hrc2WfTabs', tabPanel: 'hrc2WfTabPanel', tools: 'hrc2WfTools', add: 'hrc2WfAdd', addMenu: 'hrc2WfAddMenu' },
+    pipelines: 'hrc2WfPipelines', tabs: 'hrc2WfTabs', tabPanel: 'hrc2WfTabPanel', tools: 'hrc2WfTools', add: 'hrc2WfAdd', addMenu: 'hrc2WfAddMenu', stage: 'hrc2WfStage' },
   // / The panel's words. The page supplies them from the language pack. The English defaults are a last resort.
   text: {
     selected: 'Selected: ', pickFiles: 'Select files in the list below.', choose: 'Choose a workflow',
@@ -76,6 +80,9 @@ window.HRC2Workflows = {
     smallest: 'Smallest size: ', largest: 'Largest size: ', sortBy: 'Sort By: ', arrival: 'In the order they arrive', nameOrder: 'Name',
     allFiles: 'all files', allKind: 'all {kind}', name: 'Name', untitled: 'My workflow', newWorkflow: 'New', importFile: 'Import', exportFile: 'Export',
     notWorkflow: 'This workflow is not one this server can run.', unreadable: 'The file could not be read.',
+    stageTick: 'Install for all users', stageLegend: 'Description, shown to every user', stageMore: 'Descriptions in other languages', stageButton: 'Stage for root to install',
+    staged: 'Staged. Run this on the server as root to install it for every user:', stageReplaces: 'It takes the place of {name} for every user.',
+    stageFailed: 'The workflow could not be staged.', stageDescriptions: 'A description is longer than 500 characters, or holds a character that cannot be shown.',
     refused: {
       disabled: 'Workflows are not available on this server.', unknown: 'That workflow is no longer available.',
       nothing: 'None of the selected files can be used by this workflow.', files: 'Too many files are selected for one workflow.',
@@ -98,6 +105,9 @@ window.HRC2Workflows = {
   // / Whether the page offers the builder & import & export. The server's answer decides whether either is drawn.
   builder: false,
   importExport: false,
+  // / The page's own language, & every language the server offers, each a code & its name in itself, which the page supplies.
+  language: 'en',
+  languages: [],
   // / What the page lets this reach. Each one is optional, & each default does nothing.
   // / listSelection returns the selected files in the order they were selected, & listFiles returns every file the list shows.
   // / selectNames selects exactly the files it is given, filesChanged asks for the list to be drawn again & download fetches one file.
@@ -122,6 +132,12 @@ window.HRC2Workflows = {
   // / sourceId names the library's workflow the steps came from, & while nothing has been changed that workflow is run & exported by its identifier.
   buildState: 'off',
   canExport: false,
+  // / Whether the server lets this page stage a workflow for every user, which it allows only an administrator's page.
+  // / What the staging box holds: whether it is ticked, what is typed for each language & whether the other languages are shown.
+  canStage: false,
+  stageTicked: false,
+  stageTexts: {},
+  stageMore: false,
   catalog: [],
   catalogKinds: [],
   maxSteps: 16,
@@ -377,6 +393,7 @@ window.HRC2Workflows = {
 
   // / Keep each workflow's identifier, name, description, steps, what its first step reads & whether it needs selected files, & nothing else.
   // / A server that does not say whether a workflow needs selected files is taken to mean that it does.
+  // / The description kept is the one describedIn() chooses for the page's language, & every one written is kept too, for the staging box.
   cleanLibrary: function (entries) {
     var self = this;
     var cleaned = [];
@@ -385,10 +402,28 @@ window.HRC2Workflows = {
       if (!entry || typeof entry.Id !== 'string' || entry.Id === '' || typeof entry.Name !== 'string') return;
       if (self.isList(entry.Steps)) entry.Steps.forEach(function (step) {
         if (step && typeof step.Operation === 'string') steps.push({ Operation: step.Operation, Options: (step.Options && typeof step.Options === 'object') ? step.Options : {} }); });
-      cleaned.push({ Id: entry.Id, Name: entry.Name, Description: (typeof entry.Description === 'string') ? entry.Description : '', Steps: steps,
+      cleaned.push({ Id: entry.Id, Name: entry.Name, Description: self.describedIn(entry), Descriptions: self.writtenDescriptions(entry), Steps: steps,
         AcceptsAll: entry.AcceptsAll === true, Accepts: self.isList(entry.Accepts) ? entry.Accepts.filter(function (value) { return typeof value === 'string'; }) : [],
         NeedsSelection: entry.NeedsSelection !== false, Deletes: entry.Deletes === true }); });
     return cleaned;
+  },
+
+  // / What an administrator wrote to describe a library's workflow, each a Language & its Text, in the order written, & nothing else.
+  writtenDescriptions: function (entry) {
+    var self = this;
+    if (!self.isList(entry.Descriptions)) return [];
+    return entry.Descriptions.filter(function (one) { return one && typeof one.Language === 'string' && one.Language !== '' && typeof one.Text === 'string' && one.Text !== ''; }).map(function (one) {
+      return { Language: one.Language, Text: one.Text }; });
+  },
+
+  // / What describes a library's workflow in the page's language: its administrator's words in that language, or else the first they wrote, or else its own Description.
+  describedIn: function (entry) {
+    var self = this;
+    var written = self.writtenDescriptions(entry);
+    var own = written.filter(function (one) { return one.Language === self.language; });
+    if (own.length > 0) return own[0].Text;
+    if (written.length > 0) return written[0].Text;
+    return (typeof entry.Description === 'string') ? entry.Description : '';
   },
 
   // / Ask what the builder may use, where the page offers the builder or import & export.
@@ -404,6 +439,7 @@ window.HRC2Workflows = {
       var catalog = [];
       var isUsable = !!(reply && reply.Available === true);
       self.canExport = (isUsable && self.importExport && reply.ImportExport === true);
+      self.canStage = (self.canExport && self.builder && reply.Builder === true && reply.Stage === true);
       if (isUsable && self.builder && reply.Builder === true && self.isList(reply.Operations)) catalog = self.cleanCatalog(reply.Operations);
       if (catalog.length > 0) {
         self.buildState = 'ready';
@@ -510,6 +546,14 @@ window.HRC2Workflows = {
     this.isModified = false;
     this.isRenamed = false;
     this.openStep = -1;
+    this.clearStage();
+  },
+
+  // / Empty the staging box, because what it describes is the workflow the builder held, & a new one is another.
+  clearStage: function () {
+    this.stageTicked = false;
+    this.stageTexts = {};
+    this.stageMore = false;
   },
 
   // / A new step for an operation, placed at an index. A step after the first takes what the step before it made.
@@ -653,6 +697,7 @@ window.HRC2Workflows = {
     self.isModified = false;
     self.isRenamed = false;
     self.openStep = -1;
+    self.clearStage();
     return true;
   },
 
@@ -940,6 +985,7 @@ window.HRC2Workflows = {
     if (self.activeTab === '-library') self.drawLibraryTab(panel, isIdle);
     else self.drawOperationTab(panel, self.catalogEntry(self.activeTab), isIdle);
     if (tools) self.drawTools(tools, isIdle);
+    self.drawStage(isIdle);
   },
 
   // / Hand the focus to a tab.
@@ -952,6 +998,7 @@ window.HRC2Workflows = {
   drawLibraryTab: function (panel, isIdle) {
     var self = this;
     var chips = self.make('div', null, 'hrc2-wf-chips');
+    var shown = self.workflowDescription;
     self.library.forEach(function (entry) {
       var chip = self.makeButton(entry.Name, 'hrc2-wf-chip');
       chip.setAttribute('data-hrc2-workflow', entry.Id);
@@ -961,7 +1008,9 @@ window.HRC2Workflows = {
       chip.addEventListener('click', function () { self.openLibraryWorkflow(entry.Id); });
       chips.appendChild(chip); });
     panel.appendChild(chips);
-    if (self.workflowDescription !== '') panel.appendChild(self.make('p', self.workflowDescription, 'hrc2-wf-description'));
+    // / A library's workflow opened & left as it was is described as the library describes it, in the page's language where it can be.
+    self.library.forEach(function (entry) { if (self.matchesLibrary() && entry.Id === self.sourceId) shown = entry.Description; });
+    if (shown !== '') panel.appendChild(self.make('p', shown, 'hrc2-wf-description'));
   },
 
   // / An operation's tab. Its choices are what its first choice offers, such as every format Convert writes.
@@ -1081,6 +1130,83 @@ window.HRC2Workflows = {
     if (!panel) return;
     Array.prototype.forEach.call(panel.querySelectorAll('[data-hrc2-workflow]'), function (chip) {
       chip.setAttribute('aria-pressed', (self.matchesLibrary() && self.sourceId === chip.getAttribute('data-hrc2-workflow')) ? 'true' : 'false'); });
+  },
+
+  // / The languages a description may be written in, the page's own first, each a code & its name in itself.
+  // / A language the page did not name is written as its code, so the first box always has a name.
+  stageLanguages: function () {
+    var self = this;
+    var listed = self.isList(self.languages) ? self.languages.filter(function (language) { return self.isList(language) && typeof language[0] === 'string' && language[0] !== '' && typeof language[1] === 'string'; }) : [];
+    var own = listed.filter(function (language) { return language[0] === self.language; });
+    if (own.length === 0) own = [[String(self.language || 'en'), String(self.language || 'en')]];
+    return own.slice(0, 1).concat(listed.filter(function (language) { return language[0] !== own[0][0]; }));
+  },
+
+  // / The staging box, where an administrator stages what the builder holds for root to install for every user.
+  // / It is drawn only where the server said this page may stage. It holds a box to tick, a description in the page's language,
+  // / a button that shows a box for every other language, each named in its own language, & the button that stages.
+  // / The descriptions are greyed out until the box is ticked, & stay as they were typed however often the panel is drawn.
+  drawStage: function (isIdle) {
+    var self = this;
+    var box = self.element('stage');
+    var languages = self.stageLanguages();
+    var tickLabel = self.make('label', null, 'hrc2-wf-stage-tick');
+    var tick = document.createElement('input');
+    var texts = document.createElement('fieldset');
+    var more = self.make('div', null, 'hrc2-wf-stage-more-list');
+    var moreButton = self.makeButton(self.stageMore ? '\u2212' : '+', 'hrc2-wf-stage-more', self.text.stageMore);
+    var stageButton = self.makeButton(self.text.stageButton, 'hrc2-wf-tool hrc2-wf-stage-button');
+    var row = function (language, isFirst) {
+      var line = self.make('div', null, 'hrc2-wf-stage-row');
+      var field = document.createElement('textarea');
+      var caption = self.make('label', language[1], 'hrc2-wf-stage-language');
+      field.id = 'hrc2WfStageText-' + language[0];
+      field.rows = 2;
+      field.maxLength = 500;
+      field.dir = 'auto';
+      field.lang = language[0];
+      field.value = String(self.stageTexts[language[0]] || '');
+      field.addEventListener('input', function () { self.stageTexts[language[0]] = field.value; });
+      caption.htmlFor = field.id;
+      caption.lang = language[0];
+      line.appendChild(caption);
+      line.appendChild(field);
+      if (isFirst && languages.length > 1) line.appendChild(moreButton);
+      return line; };
+    if (!box) return;
+    self.clear(box);
+    box.hidden = !(self.canStage && self.isBuilding());
+    if (box.hidden) return;
+    tick.type = 'checkbox';
+    tick.id = 'hrc2WfStageTick';
+    tick.checked = self.stageTicked;
+    tick.disabled = !isIdle;
+    tick.addEventListener('change', function () {
+      self.stageTicked = tick.checked;
+      self.drawStage(self.jobState === 'idle'); });
+    tickLabel.appendChild(tick);
+    tickLabel.appendChild(document.createTextNode(' ' + self.text.stageTick));
+    box.appendChild(tickLabel);
+    texts.className = 'hrc2-wf-stage-texts';
+    texts.disabled = !self.stageTicked || !isIdle;
+    texts.appendChild(self.make('legend', self.text.stageLegend));
+    texts.appendChild(row(languages[0], true));
+    more.id = 'hrc2WfStageMore';
+    more.hidden = !self.stageMore;
+    languages.slice(1).forEach(function (language) { more.appendChild(row(language, false)); });
+    moreButton.setAttribute('aria-expanded', self.stageMore ? 'true' : 'false');
+    moreButton.setAttribute('aria-controls', more.id);
+    moreButton.addEventListener('click', function () {
+      self.stageMore = !self.stageMore;
+      more.hidden = !self.stageMore;
+      moreButton.textContent = self.stageMore ? '\u2212' : '+';
+      moreButton.setAttribute('aria-expanded', self.stageMore ? 'true' : 'false'); });
+    texts.appendChild(more);
+    box.appendChild(texts);
+    stageButton.id = 'hrc2WfStageButton';
+    stageButton.disabled = !(self.stageTicked && isIdle && self.isComplete());
+    stageButton.addEventListener('click', function () { self.stage(); });
+    box.appendChild(stageButton);
   },
 
   // / Draw a box for each step, before the box that runs them.
@@ -1451,6 +1577,7 @@ window.HRC2Workflows = {
     status.removeAttribute('data-hrc2-notice');
     status.removeAttribute('data-hrc2-preview');
     status.removeAttribute('data-hrc2-confirm');
+    status.removeAttribute('data-hrc2-staged');
     (lines || []).forEach(function (line) { if (line !== '') status.appendChild(self.make('p', line)); });
   },
 
@@ -1703,9 +1830,55 @@ window.HRC2Workflows = {
         self.becomeUnavailable();
         return; }
       if (reply.Allowed === true && reply.Found === true && self.loadDocument(reply.Document, workflowId)) {
+        self.fillStage(workflowId);
         self.showLines([]);
         self.drawAll(); }
       else self.showNotice(self.text.refused.unknown, []); });
+  },
+
+  // / Fill the staging box with what describes the library's workflow just opened, so staging it again keeps every language.
+  // / The box stays unticked, & the other languages are shown where one of them was written.
+  fillStage: function (workflowId) {
+    var self = this;
+    self.library.forEach(function (entry) {
+      if (entry.Id !== workflowId) return;
+      entry.Descriptions.forEach(function (one) { self.stageTexts[one.Language] = one.Text; });
+      self.stageMore = entry.Descriptions.some(function (one) { return one.Language !== self.language; }); });
+  },
+
+  // / Stage what the builder holds for root to install for every user, with what the administrator wrote in each language.
+  // / The page's own language is sent first, because a page whose language has no description shows the first.
+  // / The server checks the workflow & every description, & names the line root runs, which the status shows.
+  stage: function () {
+    var self = this;
+    var descriptions = {};
+    if (!self.canStage || !self.stageTicked || !self.isComplete() || self.jobState !== 'idle') return;
+    self.stageLanguages().forEach(function (language) {
+      var typed = String(self.stageTexts[language[0]] || '').trim();
+      if (typed !== '') descriptions[language[0]] = typed; });
+    self.request([['workflowStage', self.documentText()], ['workflowStageDescriptions', JSON.stringify(descriptions)]], function (reply) {
+      if (!reply || reply.Available !== true) {
+        self.becomeUnavailable();
+        return; }
+      if (reply.Allowed === true && reply.Staged === true && typeof reply.Command === 'string') self.showStaged(reply);
+      else if (reply.Allowed === true && reply.Reason === 'invalid') self.showNotice(self.text.notWorkflow, reply.Problems);
+      else if (reply.Allowed === true && reply.Reason === 'descriptions') self.showNotice(self.text.stageDescriptions, reply.Problems);
+      else self.showNotice(self.text.stageFailed, []); });
+  },
+
+  // / Say that a workflow was staged, & show the line root runs to install it, left to right & selectable, & the workflow it takes the place of where there is one.
+  showStaged: function (reply) {
+    var self = this;
+    var status = self.element('status');
+    var line = self.make('p', null, 'hrc2-wf-command');
+    self.showLines([self.text.staged]);
+    if (!status) return;
+    status.setAttribute('data-hrc2-notice', 'true');
+    status.setAttribute('data-hrc2-staged', String(reply.Id || ''));
+    line.dir = 'ltr';
+    line.appendChild(self.make('code', String(reply.Command)));
+    status.appendChild(line);
+    if (typeof reply.Replaces === 'string' && reply.Replaces !== '') status.appendChild(self.make('p', self.fill(self.text.stageReplaces, { name: reply.Replaces })));
   },
 
   // / -------------------------------------------------------------------------------

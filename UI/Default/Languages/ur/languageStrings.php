@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -613,6 +613,22 @@ $Gui2Text227 = 'مرحلہ چلنے کے وقت فہرست کی ہر فائل';
 $Gui2Text228 = 'یہ ورک فلو یہ فائلیں حذف کرتا ہے۔ حذف شدہ فائل واپس نہیں لائی جا سکتی۔';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'ایک مرحلے میں خرابیاں ہوئیں، اس لیے ورک فلو فائلیں حذف کرنے والے مرحلے سے پہلے رک گیا۔';
+// / 'Install for all users'
+$Gui2Text230 = 'تمام صارفین کے لیے انسٹال کریں';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'تفصیل، جو ہر صارف کو دکھائی جاتی ہے';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'دوسری زبانوں میں تفصیلات';
+// / 'Stage for root to install'
+$Gui2Text233 = 'root کے ذریعے انسٹال کرنے کے لیے تیار کریں';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'تیار ہے۔ ہر صارف کے لیے انسٹال کرنے کے لیے سرور پر root کے طور پر یہ چلائیں:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'یہ ہر صارف کے لیے {name} کی جگہ لے لیتا ہے۔';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'ورک فلو تیار نہیں کیا جا سکا۔';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'کوئی تفصیل 500 حروف سے لمبی ہے، یا اس میں ایسا حرف ہے جو دکھایا نہیں جا سکتا۔';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

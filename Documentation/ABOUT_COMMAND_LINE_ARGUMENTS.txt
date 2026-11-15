@@ -155,7 +155,8 @@ same reason, & --rotate-secret stops & restarts the listener through it. See the
 Root refuses an installation another account could change, & only the repairs run on one.
 See --CLI User Account Considerations--.
 The -v, -h, --status & --pipeline arguments work when run as any user, & so do --workflow --list, --check & --export.
---workflow --install & --remove require root.
+--workflow --install, --install-staged & --remove require root.
+--workflow --discard-staged requires root or the web server user, & root hands it to the web server user.
 --account requires root or the web server user, & root hands it to the web server user.
 --build needs write access to the source tree & nothing more. It is the developer's build
 step. It rewrites source files, & an operator never has a reason to run it.
@@ -181,8 +182,9 @@ to. --status needs the Engine to build its report, so without one it is refused 
 A check exits 1 when it finds a fault. --setup --check-depends exits 1 when a REQUIRED
 dependency is missing or too old. An optional one costs a feature & does not fail the check.
 --pipeline --verify exits 1 when a pinned pipeline did not load.
---workflow --list exits 1 when a workflow in either library is not valid, --check when the file is not, & --export
-when no valid workflow in either library has the identifier named.
+--workflow --list exits 1 when a workflow in either library, or the descriptions beside one, is not valid, --check
+when the file or the descriptions beside it are not, & --export when no valid workflow in either library has the
+identifier named.
 --build --pins exits 1 when a pin differs from what ships or cannot be built. With --write
 it exits 1 only when a pin could not be built or could not be written.
 
@@ -376,13 +378,21 @@ Requires the Workflow Core component. --list, --check & --export need no privile
                                            it can be written to a file with >.
   --workflow --install=<file>              Check a workflow & install the text that was checked
                                            into the installed library. Requires root.
-  --workflow --remove=<id>                 Remove an installed workflow. Requires root.
+  --workflow --install-staged=<id>         Install a workflow an administrator staged from a page, as
+                                           --install installs a file, from v4.2.2. Requires root.
+  --workflow --discard-staged=<id>         Discard a workflow an administrator staged, & install
+                                           nothing, from v4.2.2. Root hands it to the web server user.
+  --workflow --remove=<id>                 Remove an installed workflow & its descriptions. Requires root.
 
 A workflow file is named for its identifier followed by -workflow.json, & it is installed under
 that name. --install never installs a file that does not check, & a file changed after the
 check cannot be installed, because what is written is the text that was checked. --remove never
 touches the shipped library. A workflow installed with the identifier of a shipped one takes its
 place, which is how one is replaced.
+From v4.2.2 a descriptions file beside the workflow file, named for its identifier followed by
+-descriptions.json, is checked & installed with it, & one that is not valid stops both. --list
+names the languages each workflow is described in, & prints what waits in Staged with the lines that
+install & discard it. See --Staging For Every User-- in ABOUT_WORKFLOWS.txt.
 
 --run-workflow <job> is not an operator command. It is how a workflow's worker is started, & a
 worker without the startup key for its job & its session refuses the job & does nothing.

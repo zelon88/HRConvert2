@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -613,6 +613,22 @@ $Gui2Text227 = 'כל קובץ ברשימה בזמן שהשלב רץ';
 $Gui2Text228 = 'תהליך עבודה זה מוחק את הקבצים האלה. אי אפשר לשחזר קובץ שנמחק.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'בשלב אחד היו שגיאות, ולכן תהליך העבודה נעצר לפני השלב שמוחק קבצים.';
+// / 'Install for all users'
+$Gui2Text230 = 'התקנה לכל המשתמשים';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'תיאור, שמוצג לכל משתמש';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'תיאורים בשפות אחרות';
+// / 'Stage for root to install'
+$Gui2Text233 = 'הכנה להתקנה על ידי root';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'הוכן. יש להריץ את זה בשרת כ-root כדי להתקין אותו לכל המשתמשים:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'הוא יחליף את {name} לכל המשתמשים.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'לא ניתן היה להכין את תהליך העבודה.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'תיאור ארוך מ-500 תווים, או שיש בו תו שאי אפשר להציג.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

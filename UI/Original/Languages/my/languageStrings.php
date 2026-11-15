@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -613,6 +613,22 @@ $Gui2Text227 = 'အဆင့် လုပ်ဆောင်ချိန်တွ
 $Gui2Text228 = 'ဤလုပ်ငန်းစဉ်သည် ဤဖိုင်များကို ပယ်ဖျက်သည်။ ပယ်ဖျက်ပြီးသော ဖိုင်ကို ပြန်ယူ၍ မရပါ။';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'အဆင့်တစ်ခုတွင် အမှားများ ရှိခဲ့သဖြင့် ဖိုင်များကို ပယ်ဖျက်သည့် အဆင့်မတိုင်မီ လုပ်ငန်းစဉ် ရပ်သွားသည်။';
+// / 'Install for all users'
+$Gui2Text230 = 'အသုံးပြုသူအားလုံးအတွက် ထည့်သွင်းရန်';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'အသုံးပြုသူတိုင်းကို ပြသမည့် ဖော်ပြချက်';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'အခြားဘာသာစကားများဖြင့် ဖော်ပြချက်များ';
+// / 'Stage for root to install'
+$Gui2Text233 = 'root က ထည့်သွင်းနိုင်ရန် ပြင်ဆင်ရန်';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'ပြင်ဆင်ပြီးပါပြီ။ အသုံးပြုသူတိုင်းအတွက် ထည့်သွင်းရန် ဆာဗာပေါ်တွင် root အဖြစ် ဤအရာကို လုပ်ဆောင်ပါ -';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'အသုံးပြုသူတိုင်းအတွက် {name} ၏နေရာကို အစားထိုးပါမည်။';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'လုပ်ငန်းစဉ်ကို ပြင်ဆင်၍ မရပါ။';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'ဖော်ပြချက်တစ်ခုသည် စာလုံး ၅၀၀ ထက်ပိုရှည်သည်၊ သို့မဟုတ် ပြသ၍မရသော စာလုံးပါဝင်သည်။';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

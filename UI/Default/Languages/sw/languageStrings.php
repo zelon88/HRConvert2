@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -613,6 +613,22 @@ $Gui2Text227 = 'kila faili kwenye orodha wakati hatua inapoendeshwa';
 $Gui2Text228 = 'Mtiririko huu wa kazi unafuta faili hizi. Faili lililofutwa haliwezi kurejeshwa.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'Hatua moja ilikuwa na hitilafu, kwa hivyo mtiririko wa kazi ulisimama kabla ya hatua inayofuta faili.';
+// / 'Install for all users'
+$Gui2Text230 = 'Sakinisha kwa watumiaji wote';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'Maelezo, yanayoonyeshwa kwa kila mtumiaji';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'Maelezo kwa lugha nyingine';
+// / 'Stage for root to install'
+$Gui2Text233 = 'Andaa kwa ajili ya root kusakinisha';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'Imeandaliwa. Endesha hii kwenye seva kama root ili kuusakinisha kwa kila mtumiaji:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'Unachukua nafasi ya {name} kwa kila mtumiaji.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'Mtiririko wa kazi haukuweza kuandaliwa.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'Maelezo moja yana herufi zaidi ya 500, au yana herufi isiyoweza kuonyeshwa.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

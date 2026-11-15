@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -613,6 +613,22 @@ $Gui2Text227 = 'elk bestand in de lijst wanneer de stap wordt uitgevoerd';
 $Gui2Text228 = 'Deze workflow verwijdert deze bestanden. Een verwijderd bestand kan niet worden teruggehaald.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'Een stap had fouten, dus de workflow stopte vóór de stap die bestanden verwijdert.';
+// / 'Install for all users'
+$Gui2Text230 = 'Installeren voor alle gebruikers';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'Beschrijving, voor elke gebruiker zichtbaar';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'Beschrijvingen in andere talen';
+// / 'Stage for root to install'
+$Gui2Text233 = 'Klaarzetten voor installatie door root';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'Klaargezet. Voer dit op de server uit als root om hem voor elke gebruiker te installeren:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'Hij neemt de plaats in van {name} voor elke gebruiker.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'De workflow kon niet worden klaargezet.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'Een beschrijving is langer dan 500 tekens of bevat een teken dat niet kan worden weergegeven.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

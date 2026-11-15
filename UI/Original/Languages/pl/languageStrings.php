@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -650,6 +650,22 @@ $Gui2Text227 = 'wszystkie pliki z listy w chwili uruchomienia kroku';
 $Gui2Text228 = 'Ten przepływ pracy usuwa te pliki. Usuniętego pliku nie można przywrócić.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'Jeden z kroków miał błędy, więc przepływ pracy zatrzymał się przed krokiem, który usuwa pliki.';
+// / 'Install for all users'
+$Gui2Text230 = 'Zainstaluj dla wszystkich użytkowników';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'Opis widoczny dla każdego użytkownika';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'Opisy w innych językach';
+// / 'Stage for root to install'
+$Gui2Text233 = 'Przygotuj do instalacji przez roota';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'Przygotowano. Uruchom to na serwerze jako root, aby zainstalować go dla każdego użytkownika:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'Zastępuje {name} dla każdego użytkownika.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'Nie udało się przygotować przepływu pracy.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'Opis ma więcej niż 500 znaków lub zawiera znak, którego nie można wyświetlić.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

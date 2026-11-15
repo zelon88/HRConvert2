@@ -46,6 +46,7 @@ The pieces, & where each one lives.
                                             $EngineOperationProvider gives it in Resources/Contract/app-engine-config.php.
   Resources/Workflows                       The shipped library. The workflows that come with a release.
   <data root>/Workflows                     The installed library. Where an administrator adds workflows.
+  <data root>/Staged                        Where an administrator stages a workflow from a page, for root to install, from v4.2.2.
   <session>/Workflow                        One session's job & status, while a workflow runs & until it is read.
   UI/<interface>/Resources/JS/HRC2-Workflows.js
                                             The Workflows panel. A library of its own that needs no other.
@@ -278,10 +279,67 @@ validate, is never offered, & --workflow --list names every problem with it.
   php convertCore.php --workflow --check=FILE       Check a workflow file against this installation.
   sudo php convertCore.php --workflow --install=FILE
                                                     Check a workflow & install what was checked.
-  sudo php convertCore.php --workflow --remove=ID   Remove an installed workflow.
+  sudo php convertCore.php --workflow --install-staged=ID
+                                                    Install what an administrator staged from a page.
+  sudo php convertCore.php --workflow --discard-staged=ID
+                                                    Discard it instead, & install nothing.
+  sudo php convertCore.php --workflow --remove=ID   Remove an installed workflow & its descriptions.
 
 --install installs the text it checked, under the file's own name, so a file changed after the
-check cannot be installed. Neither command touches the shipped library.
+check cannot be installed. Neither command touches the shipped library. See --Staging For Every User--
+for --install-staged & the descriptions a workflow may carry beside it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Staging For Every User--
+
+AN ADMINISTRATOR STAGES A WORKFLOW FROM A PAGE, & ROOT INSTALLS IT, FROM v4.2.2.
+The installed library is root's, so the web server account never writes a workflow it will then
+run. A page signed in to an account whose role is admin is offered Install for all users in the
+builder, beneath the workflow's name, where the builder & import & export are on. Ticking it opens
+a description in the page's language, & a + beside it shows a box for every other language this
+server offers, each named in its own language. A library's workflow opened in the builder fills
+the boxes with the descriptions it already carries, so staging it again keeps every language.
+Stage sends what the builder holds & every description to the server, which checks both & writes
+them into Staged, a folder in the data root that is the web server account's. The page then shows
+the line root runs.
+  sudo php convertCore.php --workflow --install-staged=ID
+--install-staged reads the staged workflow & its descriptions as --install reads a file, checks
+both again & installs the text it checked. The page is never sent a path, & nothing staged is
+offered to anybody until root installs it.
+
+A workflow is staged under the identifier of the library's workflow of the same name, whatever the
+case of its letters, so a copy imported from a shipped or an installed workflow replaces it rather
+than standing beside it under the same name. A shipped workflow's identifier is chosen by hand, so
+its name is what a copy still carries. A workflow of a new name is staged under the identifier its
+name gives it, which is the identifier the builder's export carries. Staging it again replaces what
+was staged before. Installing it replaces the workflow of that identifier, & the page names the one
+it takes the place of. The web server account clears a staged workflow once the installed library
+holds the same text, because root never removes a name in a folder another account can change.
+--workflow --list prints what waits in Staged, after the library, with the lines that install &
+discard each. Root turns one down with --workflow --discard-staged=ID, which root hands to the web
+server account, as --account is handed over. That account removes the staged workflow & its
+descriptions, & nothing is installed. Every name & problem --workflow prints from a file shows a
+control character as ?, because the web server account can write Staged & a terminal obeys some of
+them.
+
+A WORKFLOW'S DESCRIPTIONS ARE KEPT BESIDE IT, NEVER INSIDE IT. A workflow file is shared between
+servers, & what an administrator writes for their own users is theirs. They are kept in a file named
+for the identifier followed by -descriptions.json, in the folder the workflow is in.
+  {
+    "Format": "HRProprietary Workflow Descriptions",
+    "Version": 1,
+    "Descriptions": { "en": "Converts every document to PDF.", "fr": "Convertit chaque document en PDF." }
+  }
+The file holds those three keys & nothing else, & one description at least. A language is named by
+its code, two or three small letters, & a dash & a region where one is needed. A description is text
+of up to 500 characters with no control character but a tab or a new line, as a workflow's own
+Description is. A page shows the description in its own language, or else the first one written, or
+else the workflow's own Description, & always as text. Descriptions that are not valid are never
+shown, are named by --workflow --list, & leave the workflow offered without them.
+--install installs a descriptions file it finds beside the file it is given, & one that is not valid
+stops the install. A workflow installed with no descriptions keeps the ones it had, & --remove takes
+both.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -578,6 +636,8 @@ the server, which checks it & runs nothing. It is opened only when it is valid &
 it names is on here, & otherwise the page names every problem. It opens with no identifier, so it
 runs & exports as a workflow a page built. Import needs the builder, because a workflow is opened
 in it, & export does not, because a workflow from the library can be exported without it.
+From v4.2.2 an administrator's page may stage what the builder holds, imported or built, for every
+user. See --Staging For Every User--.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -612,11 +672,14 @@ An application supplies three things, in Resources/Contract/app-engine-config.ph
   $EngineSettingNames        The names of its settings for EnableWorkflows, MaxWorkflowSteps,
                              MaxWorkflowFiles, MaxWorkflowRuntime, MaxConcurrentWorkflows,
                              EnableWorkflowBuilder, EnableWorkflowImportExport, SessionFolder,
-                             SessionContext & WorkflowLibrary. An application that maps neither
-                             switch has no builder & no import or export.
+                             SessionContext & WorkflowLibrary, & from v4.2.2 WorkflowStaging. An
+                             application that maps neither switch has no builder & no import or export.
 SessionFolder is the folder of the session a request serves. SessionContext names that session
 in a form the application can adopt again in a worker, & HRConvert2 gives its two halves.
-WorkflowLibrary is the installed library, a location of the library role.
+WorkflowLibrary is the installed library, a location of the library role. WorkflowStaging is the
+folder an administrator stages a workflow into, a location of the web role, which root reads & never
+writes. An application that maps no WorkflowStaging offers no staging, & one that offers no accounts
+has nobody to stage.
 
 An operation is an entry under Operations, keyed by a plain word.
   Invoke    The function that runs it, called with the files & the step's options.
@@ -658,7 +721,7 @@ checked against that session before anything is acted on.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Errors--
 
-Error block 38000 through 38019 is reserved for workflows. 38000 through 38006 are raised by the
+Error block 38000 through 38019 is reserved for workflows. 38000 through 38007 are raised by the
 Workflow Core & are described in ERROR_DESCRIPTIONS.txt. None is fatal to the page.
   38000   The application names no operation provider.
   38001   The operation provider returned no list of operations.
@@ -667,6 +730,7 @@ Workflow Core & are described in ERROR_DESCRIPTIONS.txt. None is fatal to the pa
   38004   A worker halted before its workflow ended.
   38005   A workflow could not be installed.
   38006   A workflow could not be removed.
+  38007   A workflow could not be staged for every user.
 
 Every warning a workflow raises is logged under the session it serves. A worker logs under the
 role Workflow, so its entries are kept in a log of their own beside the web server's.

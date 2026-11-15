@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -613,6 +613,22 @@ $Gui2Text227 = 'ধাপটি চলার সময় তালিকার 
 $Gui2Text228 = 'এই ওয়ার্কফ্লো এই ফাইলগুলো মুছে ফেলে। মুছে ফেলা ফাইল আর ফেরত আনা যায় না।';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'একটি ধাপে ত্রুটি হয়েছে, তাই ফাইল মোছার ধাপের আগেই ওয়ার্কফ্লো থেমে গেছে।';
+// / 'Install for all users'
+$Gui2Text230 = 'সব ব্যবহারকারীর জন্য ইনস্টল করুন';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'বিবরণ, যা প্রত্যেক ব্যবহারকারী দেখবেন';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'অন্যান্য ভাষায় বিবরণ';
+// / 'Stage for root to install'
+$Gui2Text233 = 'root যাতে ইনস্টল করতে পারে তার জন্য প্রস্তুত করুন';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'প্রস্তুত। প্রত্যেক ব্যবহারকারীর জন্য ইনস্টল করতে সার্ভারে root হিসেবে এটি চালান:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'এটি প্রত্যেক ব্যবহারকারীর জন্য {name}-এর জায়গা নেবে।';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'ওয়ার্কফ্লো প্রস্তুত করা যায়নি।';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'একটি বিবরণ ৫০০ অক্ষরের বেশি, অথবা এতে এমন একটি অক্ষর আছে যা দেখানো যায় না।';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

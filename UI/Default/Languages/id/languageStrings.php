@@ -37,7 +37,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -620,6 +620,22 @@ $Gui2Text227 = 'semua berkas di daftar saat langkah itu berjalan';
 $Gui2Text228 = 'Alur kerja ini menghapus berkas-berkas ini. Berkas yang dihapus tidak dapat dikembalikan.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'Sebuah langkah mengalami kesalahan, jadi alur kerja berhenti sebelum langkah yang menghapus berkas.';
+// / 'Install for all users'
+$Gui2Text230 = 'Pasang untuk semua pengguna';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'Deskripsi, ditampilkan kepada setiap pengguna';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'Deskripsi dalam bahasa lain';
+// / 'Stage for root to install'
+$Gui2Text233 = 'Siapkan untuk dipasang oleh root';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'Disiapkan. Jalankan ini di server sebagai root untuk memasangnya bagi setiap pengguna:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'Ini menggantikan {name} bagi setiap pengguna.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'Alur kerja tidak dapat disiapkan.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'Sebuah deskripsi lebih dari 500 karakter, atau berisi karakter yang tidak dapat ditampilkan.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

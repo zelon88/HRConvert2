@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.2.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -213,7 +213,7 @@ function verifyCodeIsTrustedByRoot($treePath) {
 // / A process that may hold none fails verification.
 function verifyInstallation() {
   // / Set variables.
-  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $AllowUserIdentify, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $LowStorageWarning, $StorageReserve, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $WorkflowLoc, $AccountLoc, $UserLoc, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $MaxWorkflowSteps, $MaxWorkflowFiles, $MaxWorkflowRuntime, $MaxConcurrentWorkflows, $MaxExtractedSize, $MaxExtractedFiles, $RequiredWorkflowCoreVersion, $RequiredAuthenticationCoreVersion, $RequiredEmailCoreVersion, $EnableAuthentication, $AllowAnonymousVisitors, $AllowRegistration, $RequireEmailConfirmation, $UserStorageQuota, $SignInKeyLifetime, $SignInExchangeInterval, $SignInMaximumLifetime, $MinimumPasswordLength, $SignInAttemptLimit, $SignInAttemptWindow, $UnconfirmedAccountLifetime, $RecoveryCodeLifetime, $EmailSender, $EmailConfirmationSubject, $EmailConfirmationBody, $EmailRecoverySubject, $EmailRecoveryBody,
+  global $URL, $VirusScan, $AllowUserVirusScan, $InstLoc, $ServerRootDir, $ConvertLoc, $LogDir, $LogFile, $ApplicationName, $ApplicationTitle, $SupportedLanguages, $DefaultLanguage, $AllowUserSelectableLanguage, $SupportedGuis, $DefaultGui, $AllowUserSelectableGui, $DeleteThreshold, $Verbose, $MaxLogSize, $Font, $ButtonStyle, $SupportedColors, $AllowUserSelectableColor, $ColorToUse, $ShowGUI, $ShowFinePrint, $TOSURL, $PPURL, $ScanCoreMemoryLimit, $ScanCoreChunkSize, $ScanCoreDebug, $ScanCoreVerbose, $SpinnerStyle, $SpinnerColor, $AllowUserShare, $AllowUserIdentify, $SupportedConversionTypes, $VersionInfoFile, $Version, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserXPSInputArray, $UserXPSOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RARArchiveMethod, $RetryCount, $HomeLoc, $ProprietaryLoc, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $UniqueDailyLogHash, $AppendLogHashToLogFiles, $SecretKey, $SecretFile, $RequiredSecretVersion, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $ConfigVersion, $HRConvertVersion, $DeleteBuildEnvironment, $DeleteDevelopmentDocumentation, $RequiredGuiVersion, $RequiredLanguageVersion, $UsePyMeshLab, $RequiredConfigVersion, $EnableAutoUpdates, $AutoUpdateTargetVersion, $UpdateSourceRepository, $MaxUpdatePackageSize, $UpdateConnectionTimeout, $BackupLoc, $RequireSandbox, $ThrowSandboxWarning, $RequireSandboxOnDocker, $RunningFromCLI, $CurrentUser, $RunningAsRoot, $RunningInContainer, $ApacheUser, $PermissionLevels, $AllowBootableIsoImage, $UserBootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EnableMemoryProtection, $ResourceAwarenessActive, $EnableResourceAwareness, $RequireResourceAwareness, $ManagerSocketDir, $DirSep, $CoreManagerVersion, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $LowStorageWarning, $StorageReserve, $CoreLoaded, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $RequiredSetupCoreVersion, $RequiredConfigScript, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredEngineVersion, $AllowUnprivilegedNamespaces, $MaintainHTAccess, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $WorkflowLoc, $AccountLoc, $UserLoc, $WorkflowStageLoc, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $MaxWorkflowSteps, $MaxWorkflowFiles, $MaxWorkflowRuntime, $MaxConcurrentWorkflows, $MaxExtractedSize, $MaxExtractedFiles, $RequiredWorkflowCoreVersion, $RequiredAuthenticationCoreVersion, $RequiredEmailCoreVersion, $EnableAuthentication, $AllowAnonymousVisitors, $AllowRegistration, $RequireEmailConfirmation, $UserStorageQuota, $SignInKeyLifetime, $SignInExchangeInterval, $SignInMaximumLifetime, $MinimumPasswordLength, $SignInAttemptLimit, $SignInAttemptWindow, $UnconfirmedAccountLifetime, $RecoveryCodeLifetime, $EmailSender, $EmailConfirmationSubject, $EmailConfirmationBody, $EmailRecoverySubject, $EmailRecoveryBody,
     $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $EngineApplicationVersion, $CodeIsTrusted, $HostedLoc, $ApplicationLoc;
   $rootRecord = array();
   $homeTarget = '';
@@ -255,7 +255,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.2.1';
+  $HRConvertVersion = 'v4.2.2';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -269,13 +269,13 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.2.1';
+  $RequiredGuiVersion = 'v4.2.2';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A Language Pack version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v4.2.0';
+  $RequiredLanguageVersion = 'v4.2.2';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / No Core Manager version is pinned here. Every manager role is a subcomponent of the
   // / Engine & getAcceptedManagers() inside the Engine pins each one exactly.
@@ -283,7 +283,7 @@ function verifyInstallation() {
   // / This is an exact match. A component built for another core may not be called safely.
   // / Raise this when the Setup Core itself changes.
   // / The configuration model is applicationConfigModel() in this file & its defaults are the template, so a new setting raises nothing here.
-  $RequiredSetupCoreVersion = 'v4.2.0';
+  $RequiredSetupCoreVersion = 'v4.2.2';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
@@ -304,7 +304,7 @@ function verifyInstallation() {
   // / The Workflow Core component version this core requires.
   // / This is an exact match, because a component built for another core may call an operation with arguments that have moved.
   // / Raise this when the Workflow Core itself changes & for nothing else. It is an Engine core, at Resources/Engine/Cores/workflowCore.php.
-  $RequiredWorkflowCoreVersion = 'v4.2.1';
+  $RequiredWorkflowCoreVersion = 'v4.2.2';
   $RequiredWorkflowCoreVersion = ltrim($RequiredWorkflowCoreVersion, 'vV');
   // / The Authentication Core & Email Core component versions this core requires.
   // / Each is an exact match, for the reason every Engine core's is. The Engine loads them where accounts are on.
@@ -320,7 +320,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.2.1';
+  $RequiredEngineVersion = 'v4.2.2';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -453,6 +453,8 @@ function verifyInstallation() {
   $WorkflowLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Workflows';
   $AccountLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Accounts';
   $UserLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Users';
+  // / Staged holds what an administrator stages from a page for root to install, from v4.2.2.
+  $WorkflowStageLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Staged';
   // / Every account but root runs its tools with its home in the cache folder, set now that
   // / config.php has been read. A $HomeLoc that still names the data location, as an older
   // / config.php does, is the data location root now owns, so the cache folder is used instead
@@ -500,7 +502,7 @@ function verifyInputs() {
   // / Set variables.
   global $ShowGUI, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $StreamBaseURL, $UserURLDownload, $LogoURL, $ResolvedLogoURL, $SupportedLanguages, $SupportedColors, $SupportedGuis;
   $InputsAreVerified = TRUE;
-  $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $IdentifyReport = $IdentifyFilename = $Sort = $WorkflowName = $WorkflowDocument = $WorkflowCheck = $WorkflowExport = $WorkflowPreview = $WorkflowPreviewDocument = $RenamePattern = $var = $rawInput = '';
+  $GUI = $Color = $Language = $Token1 = $Token2 = $Height = $Width = $Rotate = $Bitrate = $Method = $Download = $UserFilename = $UserExtension = $Archive = $UserScanType = $IdentifyReport = $IdentifyFilename = $Sort = $WorkflowName = $WorkflowDocument = $WorkflowCheck = $WorkflowExport = $WorkflowPreview = $WorkflowPreviewDocument = $WorkflowStage = $WorkflowStageDescriptions = $RenamePattern = $var = $rawInput = '';
   $variableIsSanitized = $ConvertSelected = $PDFWorkSelected = $FilesToArchive = $FilesToScan = $FilesToDelete = $FilesToIdentify = $FilesToExtract = $FilesToRename = $FilesToStrip = $FilesToMerge = $FilesToSplit = $WorkflowFiles = $logoParts = $logoQuery = array();
   $key = 0;
   // / Determine whether or not to display a full GUI or a minimalized GUI.
@@ -600,8 +602,12 @@ function verifyInputs() {
   if (isset($_POST['workflowDocument']) && is_string($_POST['workflowDocument'])) $WorkflowDocument = $_POST['workflowDocument'];
   if (isset($_POST['workflowCheck']) && is_string($_POST['workflowCheck'])) $WorkflowCheck = $_POST['workflowCheck'];
   if (isset($_POST['workflowPreviewDocument']) && is_string($_POST['workflowPreviewDocument'])) $WorkflowPreviewDocument = $_POST['workflowPreviewDocument'];
+  // / A workflow an administrator stages for every user is read raw for the same reason, & so is what describes it, which is JSON too, from v4.2.2.
+  // / The Workflow Core checks both as it checks any workflow a page sends, & only for a request signed in to an administrator's account.
+  if (isset($_POST['workflowStage']) && is_string($_POST['workflowStage'])) $WorkflowStage = $_POST['workflowStage'];
+  if (isset($_POST['workflowStageDescriptions']) && is_string($_POST['workflowStageDescriptions'])) $WorkflowStageDescriptions = $_POST['workflowStageDescriptions'];
   // / A raw input is read only when it is text. Anything else is refused & named, because casting a list to text is a PHP warning, & no page sends one.
-  foreach (array('streamBaseURL', 'userURLDownload', 'workflowDocument', 'workflowCheck', 'workflowPreviewDocument') as $rawInput) if (isset($_POST[$rawInput]) && !is_string($_POST[$rawInput])) warningEntry('A request carried '.$rawInput.' as something other than text, & it was refused.');
+  foreach (array('streamBaseURL', 'userURLDownload', 'workflowDocument', 'workflowCheck', 'workflowPreviewDocument', 'workflowStage', 'workflowStageDescriptions') as $rawInput) if (isset($_POST[$rawInput]) && !is_string($_POST[$rawInput])) warningEntry('A request carried '.$rawInput.' as something other than text, & it was refused.');
   if (isset($_POST['pdfextension'])) list ($UserExtension, $variableIsSanitized[$key++]) = sanitize($_POST['pdfextension'], TRUE);
   if (isset($_POST['userpdfconvertfilename'])) list ($UserFilename, $variableIsSanitized[$key++]) = sanitize($_POST['userpdfconvertfilename'], TRUE);
   if (isset($_POST['scantype'])) list ($UserScanType, $variableIsSanitized[$key++]) = sanitize($_POST['scantype'], TRUE);
@@ -629,7 +635,7 @@ function verifyInputs() {
   foreach ($variableIsSanitized as $var) if (!$var) ($InputsAreVerified = FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $logoParts, $logoQuery, $variableIsSanitized, $key, $var, $rawInput);
-  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport, $FilesToExtract, $FilesToRename, $RenamePattern, $FilesToStrip, $FilesToMerge, $FilesToSplit, $WorkflowPreview, $WorkflowPreviewDocument); }
+  return array($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport, $FilesToExtract, $FilesToRename, $RenamePattern, $FilesToStrip, $FilesToMerge, $FilesToSplit, $WorkflowPreview, $WorkflowPreviewDocument, $WorkflowStage, $WorkflowStageDescriptions); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -863,7 +869,7 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set global variables to be used through the entire application.
   global $URL, $URLEcho, $Date, $Time, $SesHash, $SesHash2, $SesHash3, $SesHash4, $CoreLoaded, $ConvertDir, $InstLoc, $ConvertTemp, $ConvertTempDir, $ConvertGuiCounter1, $DefaultApps, $RequiredDirs, $RequiredIndexes, $DangerousFiles, $Allowed, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $UserSVGInputArray, $SVGInputArray, $UserSVGOutputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $ConvertLoc, $DirSep, $SupportedConversionTypes, $Lol, $Lolol, $Append, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $SpinnerStyle, $SpinnerColor, $FullURL, $ServerRootDir, $StopCounter, $SleepTimer, $CurrentUser, $File, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserModelArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $RetryCount, $HomeLoc, $ProprietaryLoc, $RequiredCleanupFolders, $StreamTemp, $StreamWatchTimeout, $StreamConnectionTimeout, $AllowStreamOverHTTP, $StreamInspectionLayers, $StreamInspectionFilesPerLayer, $DefaultStreamInspectionForfeitAction, $MaxStreamInspectionFileSize, $WaitForStream, $StreamPID, $StreamOutputPath, $LogDir, $StreamOutputArray, $ScadTemp, $AllowSCADIncludeResolution, $SCADConversionTimeout, $UserSCADArray, $SCADArray, $SCADOutputArray, $ProtectedRootDirs, $ResourcesDir, $BootloadersDir, $AllowBootableIsoImage, $UserBootableIsoArray, $BootableIsoArray, $UserEbookInputArray, $UserEbookOutputArray, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $ManagerSocketDir, $ManagerSocketTimeout, $ManagerMessageBatchSize, $ManagerMessageSkew, $StartupKeyWindow, $ResourceAwarenessActive, $CoreManagerVersion, $EnableResourceAwareness, $RequireResourceAwareness, $CoreManagerSubprocessPollInterval, $ResourcePollInterval, $WorkerReapInterval, $WorkerStaleGracePeriod, $TotalResourceBudget, $ReserveResourcePercentage, $MaxConcurrentWorkers, $MaxExpectedRuntime, $MaxRuntimeExtensions, $DefaultConversionCost, $DefaultExpectedRuntime, $PrimaryConvertLoc, $AdditionalConvertLocs, $StorageCleanupInterval, $EffectiveConversionLimits, $EnablePerConversionLimits, $MaximumPerConversionResources, $DefaultPerConversionResources, $MinimumPerConversionResources, $AllowUnprivilegedNamespaces, $PipelineCoreActive, $PipelinesAreEnumerated, $Pipelines, $PipelineCount, $LogSequence, $LogBuffer, $LogBufferOverflowed, $LogRole, $EngineSandboxProfiles, $ModelInputArray, $ModelOutputArray, $ImageInputArray, $ImageOutputArray, $SCADInputArray, $DrawingInputArray, $DrawingOutputArray,
-    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $HostedLoc, $ApplicationLoc, $WorkflowLoc, $AccountLoc, $UserLoc;
+    $UserModelInputArray, $UserModelOutputArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserImageInputArray, $UserImageOutputArray, $UserSCADInputArray, $UserSCADOutputArray, $EnvironmentManagerMayRepair, $EnvironmentManagerMayRewriteConfigs, $AllowUserURLDownload, $GuiMaxWidth, $DefaultVirusScanner, $HostArchitecture, $HostMachineString, $URLDownloadMaximumBytes, $URLDownloadsPerSession, $ScanURLDownloads, $LogoURL, $ResolvedLogoURL, $PermittedPrivateRanges, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $HostedLoc, $ApplicationLoc, $WorkflowLoc, $AccountLoc, $UserLoc, $WorkflowStageLoc;
   // / Application related variables.
   $GlobalsAreVerified = $sanitizeGlobalCheck = $sanitizeGlobalCheckA = $sanitizeGlobalCheckB = $sanitizeGlobalCheckC = $sanitizeGlobalCheckD = $sanitizeGlobalCheckE = FALSE;
   $SleepTimer = 0;
@@ -950,6 +956,7 @@ function verifyGlobals() {
   $WorkflowLoc = $DataRootLoc.$DirSep.'Workflows';
   $AccountLoc = $DataRootLoc.$DirSep.'Accounts';
   $UserLoc = $DataRootLoc.$DirSep.'Users';
+  $WorkflowStageLoc = $DataRootLoc.$DirSep.'Staged';
   $PrimaryConvertLoc = $SessionLoc;
   // / Each additional data location is a root too, so its session area is the pool member.
   if (is_array($AdditionalConvertLocs)) {
@@ -1739,6 +1746,10 @@ function showHelpInfo() {
   print('  --workflow --check=FILE     Check a workflow file against this installation.'.$Lol);
   print('  --workflow --export=ID      Print a workflow from the library as a file a page can import.'.$Lol);
   print('  --workflow --install=FILE   Check a workflow & install it. Root only.'.$Lol);
+  print('  --workflow --install-staged=ID'.$Lol);
+  print('                              Install a workflow an administrator staged. Root only.'.$Lol);
+  print('  --workflow --discard-staged=ID'.$Lol);
+  print('                              Discard a staged workflow. Root hands it to the web server account.'.$Lol);
   print('  --workflow --remove=ID      Remove an installed workflow. Root only.'.$Lol);
   print('  --build --pins              Check every version pin against what ships.'.$Lol);
   print('  --build --pins --write      Rewrite every pin that differs. A developer step.'.$Lol);
@@ -4312,7 +4323,7 @@ list ($InstallationIsVerified, $ConfigFile, $Version, $CoreLoaded) = verifyInsta
 if (!$InstallationIsVerified) quickDie('Could not verify installation!', 5);
 
 // / The following code verifies that string inputs to the core are properly sanitized.
-list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport, $FilesToExtract, $FilesToRename, $RenamePattern, $FilesToStrip, $FilesToMerge, $FilesToSplit, $WorkflowPreview, $WorkflowPreviewDocument) = verifyInputs();
+list ($InputsAreVerified, $ShowGUI, $GUI, $Color, $Language, $Token1, $Token2, $Height, $Width, $Rotate, $Bitrate, $Method, $Download, $UserFilename, $UserExtension, $FilesToArchive, $PDFWorkSelected, $ConvertSelected, $FilesToScan, $FilesToDelete, $UserScanType, $UserURLDownload, $FilesToIdentify, $IdentifyReport, $IdentifyFilename, $Sort, $WorkflowName, $WorkflowFiles, $WorkflowDocument, $WorkflowCheck, $WorkflowExport, $FilesToExtract, $FilesToRename, $RenamePattern, $FilesToStrip, $FilesToMerge, $FilesToSplit, $WorkflowPreview, $WorkflowPreviewDocument, $WorkflowStage, $WorkflowStageDescriptions) = verifyInputs();
 if (!$InputsAreVerified) quickDie('Could not verify inputs!', 6);
 
 // / The following code verifies enough user information to generate a unique session identifier.
@@ -4509,7 +4520,7 @@ if (!$CommandLineHandled && $UserType === 'web') {
     // / A file operation returns a filename or an error, & never a page.
     // / An upload is known by its files, because Dropzone sends the file & the two tokens & no upload field.
     // / A request the Engine wrote the whole answer to draws nothing here.
-    if ($EngineAnswer !== 'answered' && !isset($_POST['filesToArchive']) && !isset($_POST['filesToExtract']) && !isset($_POST['filesToRename']) && !isset($_POST['filesToStrip']) && !isset($_POST['filesToMerge']) && !isset($_POST['filesToSplit']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete']) && !isset($_POST['filesToIdentify']) && !isset($_POST['workflowLibrary']) && !isset($_POST['workflowRun']) && !isset($_POST['workflowDocument']) && !isset($_POST['workflowStatus']) && !isset($_POST['workflowStop']) && !isset($_POST['workflowOperations']) && !isset($_POST['workflowCheck']) && !isset($_POST['workflowExport']) && !isset($_POST['workflowPreview']) && !isset($_POST['workflowPreviewDocument'])) {
+    if ($EngineAnswer !== 'answered' && !isset($_POST['filesToArchive']) && !isset($_POST['filesToExtract']) && !isset($_POST['filesToRename']) && !isset($_POST['filesToStrip']) && !isset($_POST['filesToMerge']) && !isset($_POST['filesToSplit']) && !isset($_POST['convertSelected']) && !isset($_POST['pdfworkSelected']) && !isset($_POST['download']) && !isset($_POST['upload']) && empty($_FILES) && !isset($_POST['filesToScan']) && !isset($_POST['filesToDelete']) && !isset($_POST['filesToIdentify']) && !isset($_POST['workflowLibrary']) && !isset($_POST['workflowRun']) && !isset($_POST['workflowDocument']) && !isset($_POST['workflowStatus']) && !isset($_POST['workflowStop']) && !isset($_POST['workflowOperations']) && !isset($_POST['workflowCheck']) && !isset($_POST['workflowExport']) && !isset($_POST['workflowPreview']) && !isset($_POST['workflowPreviewDocument']) && !isset($_POST['workflowStage'])) {
 
       // / The following code sets the GUI for the session.
       list ($GuiIsSet, $GuiToUse, $GuiDir, $GuiFiles) = verifyGui();
@@ -4773,10 +4784,11 @@ if (!$CommandLineHandled && $UserType === 'web') {
       // / Each answer is one line of JSON under the key Workflow, as Identify answers under its own.
       // / The work is the Workflow Core's. A workflow runs in a worker of its own, so a request here lists, starts, reads or stops one.
       // / A page's builder asks what it may build from, has a workflow checked or a library's workflow given as a document, & runs what it built.
+      // / An administrator's page stages what its builder holds for root to install for every user, from v4.2.2. Whether the request is an administrator's is the Engine's to say.
       // / Which files a user may name is this application's policy, so a run & a preview are handed only files this session lists.
       // / A preview names the files each step would take & runs nothing. It is answered before a run is looked for, so a request naming both runs nothing.
       // / A server with workflows off, or without the Workflow Core, answers that none are available, & says why in its log.
-      if (isset($_POST['workflowLibrary']) or isset($_POST['workflowRun']) or isset($_POST['workflowDocument']) or isset($_POST['workflowStatus']) or isset($_POST['workflowStop']) or isset($_POST['workflowOperations']) or isset($_POST['workflowCheck']) or isset($_POST['workflowExport']) or isset($_POST['workflowPreview']) or isset($_POST['workflowPreviewDocument'])) {
+      if (isset($_POST['workflowLibrary']) or isset($_POST['workflowRun']) or isset($_POST['workflowDocument']) or isset($_POST['workflowStatus']) or isset($_POST['workflowStop']) or isset($_POST['workflowOperations']) or isset($_POST['workflowCheck']) or isset($_POST['workflowExport']) or isset($_POST['workflowPreview']) or isset($_POST['workflowPreviewDocument']) or isset($_POST['workflowStage'])) {
         if (!$EnableWorkflows or !$WorkflowCoreActive or !function_exists('encodeWorkflowReply')) {
           warningEntry('A workflow was requested & '.($EnableWorkflows ? 'the Workflow Core is unavailable.' : 'workflows are disabled.'));
           print('{"Workflow":{"Available":false}}'.$Lol); }
@@ -4788,6 +4800,7 @@ if (!$CommandLineHandled && $UserType === 'web') {
         else if (isset($_POST['workflowStatus'])) print(encodeWorkflowReply(reportWorkflowStatus()).$Lol);
         else if (isset($_POST['workflowCheck'])) print(encodeWorkflowReply(checkWorkflowDocument($WorkflowCheck)).$Lol);
         else if (isset($_POST['workflowExport'])) print(encodeWorkflowReply(exportWorkflowDocument($WorkflowExport)).$Lol);
+        else if (isset($_POST['workflowStage'])) print(encodeWorkflowReply(stageWorkflowForEveryone($WorkflowStage, $WorkflowStageDescriptions)).$Lol);
         else if (isset($_POST['workflowOperations'])) print(encodeWorkflowReply(describeWorkflowOperations()).$Lol);
         else print(encodeWorkflowReply(describeWorkflowLibrary()).$Lol); }
 

@@ -717,10 +717,19 @@ hrc2-wf-subtab, each named as its kind of file is & with the id hrc2WfGroup-OPER
   hrc2WfTabs            Where it draws the tabs. Give it role tablist.
   hrc2WfTabPanel        Where it draws a tab's choices. Give it role tabpanel.
   hrc2WfTools           Where it draws the workflow's name, New, Import & Export.
+  hrc2WfStage           Where it draws the staging box an administrator's page is offered, from v4.2.2,
+                        beneath hrc2WfTools. Give it hidden. The library shows it only where the server
+                        allows it, & writes what was staged into hrc2WfStatus.
   hrc2WfAdd             The add button, in hrc2WfRunBox before hrc2WfRun, hidden until the builder is drawn.
   hrc2WfAddMenu         Its menu, hidden, holding two buttons with data-hrc2-add of pipeline & files.
                         The library places the menu under the button, opening toward the boxes it
                         adds to, & keeps it on the screen.
+From v4.2.2 settings carries language, the page's language code, & languages, every language the
+server offers as a list of a code & its name in itself, which the staging box names its descriptions
+by. text carries stageTick, stageLegend, stageMore, stageButton, staged, stageReplaces, which holds
+{name}, stageFailed & stageDescriptions. A library's workflow is described in language where its
+administrator wrote that, & one opened in the builder fills the staging box with every description
+it carries.
 The library draws a box for each step into hrc2WfBoxes, before hrc2WfRunBox, & hides hrc2WfPickBox
 while the builder is drawn. Give hrc2WfRunBox position relative, so the menu is placed against it.
 The included GUIs style what it draws by the hrc2-wf- classes in HRConvert2.css.

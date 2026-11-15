@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -613,6 +613,22 @@ $Gui2Text227 = 'ܟܠ ܦܬܩܐ ܕܒܣܕܪܐ ܡܐ ܕܕܪܓܐ ܫܪܐ';
 $Gui2Text228 = 'ܗܕܐ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܛܠܩܐ ܗܠܝܢ ܦܬܩ̈ܐ. ܦܬܩܐ ܛܠܝܩܐ ܠܐ ܡܫܟܚ ܕܢܗܦܟ.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'ܚܕ ܕܪܓܐ ܗܘܘ ܠܗ ܦܘܕ̈ܢܐ، ܘܡܛܠ ܗܢܐ ܐܬܟܠܝܬ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܩܕܡ ܕܪܓܐ ܕܛܠܩ ܦܬܩ̈ܐ.';
+// / 'Install for all users'
+$Gui2Text230 = 'ܐܩܝܡ ܠܟܠ ܡܦܠܚܢ̈ܐ';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'ܬܘܪܓܡܐ، ܕܡܬܚܙܐ ܠܟܠ ܡܦܠܚܢ';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'ܬܘܪܓܡ̈ܐ ܒܠܫܢ̈ܐ ܐܚܪ̈ܢܐ';
+// / 'Stage for root to install'
+$Gui2Text233 = 'ܛܝܒ ܠܡܩܡܘ ܒܝܕ root';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'ܐܬܛܝܒܬ. ܥܒܕ ܗܕܐ ܥܠ ܡܫܡܫܢܐ ܐܝܟ root ܕܬܩܝܡܝܗ̇ ܠܟܠ ܡܦܠܚܢ:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'ܗܕܐ ܢܣܒܐ ܕܘܟܬܗ ܕ{name} ܠܟܠ ܡܦܠܚܢ.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'ܠܐ ܐܫܟܚܬ ܡܪܕܝܬܐ ܕܦܘܠܚܢܐ ܠܡܬܛܝܒܘ.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'ܚܕ ܬܘܪܓܡܐ ܐܪܝܟ ܡܢ 500 ܐܬܘ̈ܬܐ، ܐܘ ܐܝܬ ܒܗ ܐܬܘܬܐ ܕܠܐ ܡܫܟܚܐ ܠܡܬܚܙܝܘ.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

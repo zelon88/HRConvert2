@@ -126,6 +126,8 @@ sudo php /var/www/html/HRProprietary/HRConvert2/convertCore.php -fp
 | `--pipeline <argument>` | List, describe & verify the installed pipelines. | any user |
 | `--workflow --list` / `--check=<file>` / `--export=<id>` | List every workflow & why one is not usable, check a workflow file, or print a workflow from the library as a file a page can import. | any user |
 | `--workflow --install=<file>` / `--remove=<id>` | Install a checked workflow into the installed library, or remove one. | root |
+| `--workflow --install-staged=<id>` | Install a workflow an administrator staged from a page, with its descriptions. | root |
+| `--workflow --discard-staged=<id>` | Discard a workflow an administrator staged, & install nothing. Root hands it to the web server user. | root or `www-data` |
 | `--account --list` / `--add <username> <address>` | List every account, or add one, confirmed, & show its password once. | root or `www-data` |
 | `--account --confirm` / `--disable` / `--enable` / `--admin` / `--user` / `--password` / `--remove <username>` | Change one account. `--password` shows a new password once, & `--remove` asks first & takes the user's files with it. | root or `www-data` |
 | `--build --pins [--write]` | Check every version pin against what ships, or rewrite every pin that differs. A developer step that rewrites source files. | write access to the tree |

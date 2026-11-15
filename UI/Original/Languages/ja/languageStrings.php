@@ -35,7 +35,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -618,6 +618,22 @@ $Gui2Text227 = 'ステップの実行時に一覧にあるすべてのファイ�
 $Gui2Text228 = 'このワークフローは次のファイルを削除します。削除したファイルは元に戻せません。';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'ステップでエラーが発生したため、ファイルを削除するステップの前でワークフローを停止しました。';
+// / 'Install for all users'
+$Gui2Text230 = 'すべてのユーザーにインストール';
+// / 'Description, shown to every user'
+$Gui2Text231 = '説明（すべてのユーザーに表示）';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'ほかの言語での説明';
+// / 'Stage for root to install'
+$Gui2Text233 = 'root がインストールできるよう準備';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = '準備しました。すべてのユーザーにインストールするには、サーバーで root として次を実行してください：';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'すべてのユーザーに対して {name} を置き換えます。';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'ワークフローを準備できませんでした。';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = '説明が 500 文字を超えているか、表示できない文字が含まれています。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

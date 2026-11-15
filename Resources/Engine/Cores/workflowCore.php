@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.2.
 // / The Workflow Core, one of the Engine's cores.
 // / A workflow is a list of steps, & each step runs one of the application's operations on files a user selected or an earlier step made.
 // / This file reads, checks & runs workflows, & keeps the status a page reads while one runs.
@@ -20,8 +20,10 @@
 // / Which operations exist is the application's, read through $EngineOperationProvider, so this file names none of them.
 // / Select is this file's own step. It reads the session's files again through the lister the application names, & runs nothing.
 // / An operation may say it consumes the files it takes, as one that deletes or renames them does, & a later step taking those files is refused.
+// / An administrator signed in to a page may stage a workflow, & what describes it in each language, for root to install for every user.
+// / Root installs what was staged, or discards it through the web server account, which owns the folder it waits in.
 // / The application pins it exactly via $RequiredWorkflowCoreVersion & loads it only when a workflow is asked for.
-// / Error block 38000 through 38019 is reserved for workflows, & 38000 through 38006 are raised here.
+// / Error block 38000 through 38019 is reserved for workflows, & 38000 through 38008 are raised here.
 // / See Documentation/ABOUT_WORKFLOWS.txt for the format & the contract this file enforces.
 // /
 // / <3 Open-Source
@@ -39,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by the application without executing this file.
-$WorkflowCoreVersion = 'v4.2.1';
+$WorkflowCoreVersion = 'v4.2.2';
 // / -----------------------------------------------------------------------------------
 
 
@@ -50,6 +52,7 @@ $WorkflowCoreVersion = 'v4.2.1';
 // / Builder lets a page run a workflow it built, & ImportExport lets a page export a workflow & import one into its builder.
 // / A limit below one is raised to one, & the runtime is returned in seconds.
 // / The shipped library is named by $EngineShippedWorkflows relative to the installation, & the installed one by the WorkflowLibrary setting.
+// / The staging folder is named by the WorkflowStaging setting, from v4.2.2. An administrator signed in to a page stages a workflow there for root to install.
 // / The run folder is where every running worker is counted, below the socket folder, which every request & worker of this application can write.
 function workflowSettings() {
   // / Set variables.
@@ -69,6 +72,7 @@ function workflowSettings() {
     'SessionFolder' => rtrim((string)applicationSetting('SessionFolder', ''), $DirSep),
     'SessionContext' => (string)applicationSetting('SessionContext', ''),
     'InstalledFolder' => rtrim((string)applicationSetting('WorkflowLibrary', ''), $DirSep),
+    'StagingFolder' => rtrim((string)applicationSetting('WorkflowStaging', ''), $DirSep),
     'ShippedFolder' => $shippedFolder,
     'RunFolder' => $runFolder);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -619,6 +623,109 @@ function readWorkflowSourceFile($sourcePath) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to check what an administrator wrote to describe a workflow, in each language, from v4.2.2.
+// / Accepts the descriptions, keyed by language code. Returns whether they are usable, the descriptions kept & the problems found, in that order.
+// / A language code is two or three small letters, & may end in a dash & a region, as pt-BR would.
+// / A description is text of up to 500 characters with no control character but a tab or a new line, as a workflow's own Description is.
+// / A description left empty is left out, so a page may send every box it has. The order given is kept, because a page shows the first where its own language has none.
+function normalizeWorkflowDescriptions($descriptionEntries) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $DescriptionsAreUsable = FALSE;
+  $CleanDescriptions = $DescriptionProblems = array();
+  $languageCode = $descriptionText = '';
+  $descriptionValue = NULL;
+  if (!is_array($descriptionEntries)) $DescriptionProblems[] = 'The descriptions are not a list of languages, each with its text.';
+  else if (count($descriptionEntries) > 64) $DescriptionProblems[] = 'The descriptions name more than 64 languages.';
+  else foreach ($descriptionEntries as $languageCode => $descriptionValue) {
+    if (!is_string($languageCode) or preg_match('/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$/', $languageCode) !== 1) {
+      $DescriptionProblems[] = 'A description is keyed by '.substr((string)preg_replace('/[^A-Za-z0-9_-]/', '?', (string)$languageCode), 0, 16).', which is not a language code.';
+      continue; }
+    if (!is_string($descriptionValue)) {
+      $DescriptionProblems[] = 'The '.$languageCode.' description is not text.';
+      continue; }
+    redeclare($descriptionText, trim($descriptionValue));
+    if ($descriptionText === '') continue;
+    if (preg_match('/^[^\x00-\x08\x0B-\x1F\x7F]{1,500}$/u', $descriptionText) !== 1) $DescriptionProblems[] = 'The '.$languageCode.' description is longer than 500 characters, or holds a character that cannot be shown.';
+    else $CleanDescriptions[$languageCode] = $descriptionText; }
+  $DescriptionsAreUsable = (count($DescriptionProblems) === 0);
+  if (!$DescriptionsAreUsable) $CleanDescriptions = array();
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $languageCode, $descriptionText, $descriptionValue, $descriptionEntries);
+  return array($DescriptionsAreUsable, $CleanDescriptions, $DescriptionProblems); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the text of a workflow's descriptions file, from v4.2.2.
+// / Accepts the text. Returns whether it is usable, the descriptions & the problems found, in that order.
+// / The file is JSON of up to 64 KiB holding Format, which is HRProprietary Workflow Descriptions, Version, which is 1, & Descriptions, & nothing else.
+// / It is kept beside a workflow & never inside it, because a workflow file is shared between servers, & what an administrator writes for their own users is theirs.
+// / A file holding no description is not usable, because it would describe nothing.
+function readWorkflowDescriptions($descriptionsText) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $DescriptionsAreUsable = FALSE;
+  $CleanDescriptions = $DescriptionProblems = array();
+  $descriptionsDocument = NULL;
+  $entryProblems = array();
+  $documentKey = '';
+  $entriesAreUsable = FALSE;
+  if (!is_string($descriptionsText) or strlen($descriptionsText) > 65536) $DescriptionProblems[] = 'The descriptions are not text of 64 KiB or less.';
+  else {
+    $descriptionsDocument = json_decode($descriptionsText, TRUE, 4);
+    if (!is_array($descriptionsDocument)) $DescriptionProblems[] = 'The descriptions are not a JSON object.';
+    else {
+      foreach (array_keys($descriptionsDocument) as $documentKey) if (!in_array($documentKey, array('Format', 'Version', 'Descriptions'), TRUE)) $DescriptionProblems[] = 'The descriptions hold '.substr((string)preg_replace('/[^A-Za-z0-9_-]/', '?', (string)$documentKey), 0, 32).', which they may not.';
+      if (($descriptionsDocument['Format'] ?? '') !== 'HRProprietary Workflow Descriptions') $DescriptionProblems[] = 'The descriptions do not say they are HRProprietary Workflow Descriptions.';
+      if (($descriptionsDocument['Version'] ?? 0) !== 1) $DescriptionProblems[] = 'The descriptions are not of version 1.';
+      list ($entriesAreUsable, $CleanDescriptions, $entryProblems) = normalizeWorkflowDescriptions($descriptionsDocument['Descriptions'] ?? NULL);
+      $DescriptionProblems = array_merge($DescriptionProblems, $entryProblems);
+      if ($entriesAreUsable && count($CleanDescriptions) === 0) $DescriptionProblems[] = 'The descriptions hold no description.'; } }
+  $DescriptionsAreUsable = (count($DescriptionProblems) === 0);
+  if (!$DescriptionsAreUsable) $CleanDescriptions = array();
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $descriptionsDocument, $entryProblems, $documentKey, $entriesAreUsable, $descriptionsText);
+  return array($DescriptionsAreUsable, $CleanDescriptions, $DescriptionProblems); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write a workflow's descriptions as the text of a descriptions file, from v4.2.2.
+// / Accepts the descriptions, as normalizeWorkflowDescriptions() keeps them. Returns the text, which readWorkflowDescriptions() reads back as the same descriptions.
+function workflowDescriptionsText($cleanDescriptions) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $DescriptionsText = '';
+  $DescriptionsText = (string)json_encode(array('Format' => 'HRProprietary Workflow Descriptions', 'Version' => 1, 'Descriptions' => (object)$cleanDescriptions), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE).PHP_EOL;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanDescriptions);
+  return $DescriptionsText; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the descriptions file kept beside a workflow, from v4.2.2.
+// / Accepts the folder & the workflow's identifier. Returns whether a file is there, whether it is usable, the descriptions & the problems found, in that order.
+// / The file is named for the identifier followed by -descriptions.json, & is read with readFileWithoutFollowing(), as the workflow beside it is.
+// / A workflow with no such file has no descriptions, which is not a problem.
+function readDescriptionsBeside($folderPath, $workflowId) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $FileIsThere = $DescriptionsAreUsable = FALSE;
+  $CleanDescriptions = $DescriptionProblems = array();
+  $descriptionsPath = $descriptionsText = $readNotice = '';
+  $textWasRead = FALSE;
+  $descriptionsPath = rtrim((string)$folderPath, $DirSep).$DirSep.(string)$workflowId.'-descriptions.json';
+  clearstatcache(TRUE, $descriptionsPath);
+  $FileIsThere = ((string)$folderPath !== '' && @lstat($descriptionsPath) !== FALSE);
+  if ($FileIsThere) {
+    list ($textWasRead, $descriptionsText, $readNotice) = readFileWithoutFollowing($descriptionsPath, 65537);
+    if (!$textWasRead) $DescriptionProblems[] = 'The descriptions file could not be read. '.$readNotice;
+    else list ($DescriptionsAreUsable, $CleanDescriptions, $DescriptionProblems) = readWorkflowDescriptions($descriptionsText); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $descriptionsPath, $descriptionsText, $readNotice, $textWasRead, $folderPath, $workflowId);
+  return array($FileIsThere, $DescriptionsAreUsable, $CleanDescriptions, $DescriptionProblems); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to read every workflow in one library folder.
 // / Accepts the folder, the name of the library it is, the operations, the kinds of file & the settings, in that order.
 // / Returns whether the folder could be read & the workflows in it, keyed by identifier, in that order.
@@ -627,14 +734,16 @@ function readWorkflowSourceFile($sourcePath) {
 // / A workflow that does not read or does not validate is kept with its problems, so the command line can name them, & is never offered.
 // / A workflow is usable when it is valid & workflowUsabilityProblems() finds nothing that stops this server running it.
 // / One that is valid & not usable is not warned about, because it is not broken. It needs something this server does not have or has turned off.
+// / From v4.2.2 the descriptions file beside a workflow is read too. Descriptions that are not usable are kept as problems of their own & are never offered,
+// / & the workflow is offered without them, because what describes it is not what runs.
 function readWorkflowFolder($folderPath, $libraryName, $operations, $fileTypes, $workflowSettings) {
   // / Set variables.
   global $DirSep, $EnableMemoryProtection;
   $FolderWasRead = FALSE;
   $FolderWorkflows = array();
-  $folderEntries = $nameMatch = $normalizedWorkflow = $workflowProblems = array();
+  $folderEntries = $nameMatch = $normalizedWorkflow = $workflowProblems = $cleanDescriptions = $descriptionProblems = array();
   $folderEntry = $entryPath = $workflowText = $workflowId = $readNotice = '';
-  $workflowIsValid = $workflowIsUsable = $textWasRead = FALSE;
+  $workflowIsValid = $workflowIsUsable = $textWasRead = $descriptionsAreThere = $descriptionsAreUsable = FALSE;
   if ((string)$folderPath !== '' && is_dir($folderPath) && !is_link($folderPath)) {
     $folderEntries = @scandir($folderPath);
     if (is_array($folderEntries)) {
@@ -646,10 +755,13 @@ function readWorkflowFolder($folderPath, $libraryName, $operations, $fileTypes, 
         list ($textWasRead, $workflowText, $readNotice) = readFileWithoutFollowing($entryPath, 65537);
         if (!$textWasRead) list ($workflowIsValid, $normalizedWorkflow, $workflowProblems, $workflowIsUsable) = array(FALSE, array(), array('The file could not be read. '.$readNotice), FALSE);
         else list ($workflowIsValid, $normalizedWorkflow, $workflowProblems, $workflowIsUsable) = checkWorkflowText($workflowText, $operations, $fileTypes, $workflowSettings);
-        $FolderWorkflows[$workflowId] = array('Id' => $workflowId, 'Library' => $libraryName, 'File' => $folderEntry, 'Valid' => $workflowIsValid, 'Usable' => $workflowIsUsable, 'Workflow' => $normalizedWorkflow, 'Problems' => $workflowProblems);
-        if (!$workflowIsValid) warningEntry('The '.$libraryName.' workflow '.$folderEntry.' is not valid & is not offered. Run --workflow --list to read why.'); } } }
+        list ($descriptionsAreThere, $descriptionsAreUsable, $cleanDescriptions, $descriptionProblems) = readDescriptionsBeside($folderPath, $workflowId);
+        $FolderWorkflows[$workflowId] = array('Id' => $workflowId, 'Library' => $libraryName, 'File' => $folderEntry, 'Valid' => $workflowIsValid, 'Usable' => $workflowIsUsable, 'Workflow' => $normalizedWorkflow, 'Problems' => $workflowProblems,
+          'Descriptions' => $cleanDescriptions, 'DescriptionProblems' => $descriptionProblems);
+        if (!$workflowIsValid) warningEntry('The '.$libraryName.' workflow '.$folderEntry.' is not valid & is not offered. Run --workflow --list to read why.');
+        else if ($descriptionsAreThere && !$descriptionsAreUsable) warningEntry('The descriptions of the '.$libraryName.' workflow '.$workflowId.' are not valid & are not shown. Run --workflow --list to read why.'); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $folderEntries, $nameMatch, $normalizedWorkflow, $workflowProblems, $folderEntry, $entryPath, $workflowText, $workflowId, $readNotice, $workflowIsValid, $workflowIsUsable, $textWasRead, $folderPath, $libraryName, $operations, $fileTypes, $workflowSettings);
+  purgeSensitiveMemory($EnableMemoryProtection, $folderEntries, $nameMatch, $normalizedWorkflow, $workflowProblems, $cleanDescriptions, $descriptionProblems, $folderEntry, $entryPath, $workflowText, $workflowId, $readNotice, $workflowIsValid, $workflowIsUsable, $textWasRead, $descriptionsAreThere, $descriptionsAreUsable, $folderPath, $libraryName, $operations, $fileTypes, $workflowSettings);
   return array($FolderWasRead, $FolderWorkflows); }
 // / -----------------------------------------------------------------------------------
 
@@ -710,14 +822,16 @@ function describeStepAccepts($normalizedStep, $operations, $fileTypes) {
 // / AcceptsAll is true when the first step reads every file, & Accepts otherwise lists the extensions it reads.
 // / NeedsSelection is false when a Select step finds files of its own, so the workflow may be run with no file selected.
 // / Deletes is true when a step deletes files, so a page asks before running it.
+// / Descriptions lists what an administrator wrote to describe it, each a Language & its Text, in the order written, from v4.2.2.
+// / A page shows the one in its own language, or else the first, or else Description, which is the workflow's own.
 // / Nothing is described that a user does not need, so no path & no problem with the library is ever sent to a browser.
 function describeWorkflowLibrary() {
   // / Set variables.
   global $EnableMemoryProtection;
   $LibraryReply = array('Available' => FALSE, 'Library' => array());
-  $workflowSettings = $workflowLibrary = $operations = $fileTypes = $workflowRecord = $normalizedStep = $stepSummaries = $acceptedExtensions = array();
+  $workflowSettings = $workflowLibrary = $operations = $fileTypes = $workflowRecord = $normalizedStep = $stepSummaries = $acceptedExtensions = $descriptionList = array();
   $libraryWasRead = $acceptsEveryFile = $needsSelection = $deletesFiles = FALSE;
-  $workflowId = '';
+  $workflowId = $languageCode = $descriptionText = '';
   $workflowSettings = workflowSettings();
   if ($workflowSettings['Enabled']) {
     list ($libraryWasRead, $workflowLibrary, $operations, $fileTypes) = readWorkflowLibrary($workflowSettings);
@@ -732,9 +846,11 @@ function describeWorkflowLibrary() {
         if ((string)($operations[$normalizedStep['Operation']]['Consumes'] ?? '') === 'deleted') $deletesFiles = TRUE;
         if (in_array('session', $normalizedStep['Input'], TRUE)) $needsSelection = FALSE; }
       list ($acceptsEveryFile, $acceptedExtensions) = describeStepAccepts($workflowRecord['Workflow']['Steps'][0], $operations, $fileTypes);
-      $LibraryReply['Library'][] = array('Id' => (string)$workflowId, 'Name' => $workflowRecord['Workflow']['Name'], 'Description' => $workflowRecord['Workflow']['Description'], 'Steps' => $stepSummaries, 'AcceptsAll' => $acceptsEveryFile, 'Accepts' => $acceptedExtensions, 'NeedsSelection' => $needsSelection, 'Deletes' => $deletesFiles); } }
+      redeclare($descriptionList, array());
+      foreach ($workflowRecord['Descriptions'] as $languageCode => $descriptionText) $descriptionList[] = array('Language' => (string)$languageCode, 'Text' => (string)$descriptionText);
+      $LibraryReply['Library'][] = array('Id' => (string)$workflowId, 'Name' => $workflowRecord['Workflow']['Name'], 'Description' => $workflowRecord['Workflow']['Description'], 'Descriptions' => $descriptionList, 'Steps' => $stepSummaries, 'AcceptsAll' => $acceptsEveryFile, 'Accepts' => $acceptedExtensions, 'NeedsSelection' => $needsSelection, 'Deletes' => $deletesFiles); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $workflowLibrary, $operations, $fileTypes, $workflowRecord, $normalizedStep, $stepSummaries, $acceptedExtensions, $libraryWasRead, $acceptsEveryFile, $needsSelection, $deletesFiles, $workflowId);
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $workflowLibrary, $operations, $fileTypes, $workflowRecord, $normalizedStep, $stepSummaries, $acceptedExtensions, $descriptionList, $libraryWasRead, $acceptsEveryFile, $needsSelection, $deletesFiles, $workflowId, $languageCode, $descriptionText);
   return $LibraryReply; }
 // / -----------------------------------------------------------------------------------
 
@@ -1539,16 +1655,20 @@ function describeChoiceGroups($choiceGroups, $offeredChoices) {
 // / An option whose choices are sorted into groups is described with its groups, which describeChoiceGroups() checks.
 // / Only an operation this server has turned on is described, because a step using any other could not run here.
 // / Kinds names the kinds of file a filter may name. Nothing else about this server is described.
+// / Stage is true where stagingIsOffered() allows this request to stage a workflow for every user, from v4.2.2, & a page then offers it.
+// / Each time it is, the staging folder is cleared of what root has installed since.
 function describeWorkflowOperations() {
   // / Set variables.
   global $EnableMemoryProtection;
-  $OperationsReply = array('Available' => FALSE, 'Builder' => FALSE, 'ImportExport' => FALSE);
+  $OperationsReply = array('Available' => FALSE, 'Builder' => FALSE, 'ImportExport' => FALSE, 'Stage' => FALSE);
   $workflowSettings = $operations = $fileTypes = $operationEntry = $optionSpec = $optionSummary = $optionSummaries = array();
-  $registryIsUsable = FALSE;
+  $registryIsUsable = $stagingIsOffered = FALSE;
   $operationName = $optionName = '';
   $workflowSettings = workflowSettings();
   if ($workflowSettings['Enabled']) {
-    $OperationsReply = array('Available' => TRUE, 'Builder' => $workflowSettings['Builder'], 'ImportExport' => $workflowSettings['ImportExport'], 'MaxSteps' => (int)$workflowSettings['MaxSteps'], 'MaxFiles' => (int)$workflowSettings['MaxFiles'], 'Operations' => array(), 'Kinds' => array());
+    $stagingIsOffered = stagingIsOffered($workflowSettings);
+    if ($stagingIsOffered) clearInstalledStagedWorkflows($workflowSettings);
+    $OperationsReply = array('Available' => TRUE, 'Builder' => $workflowSettings['Builder'], 'ImportExport' => $workflowSettings['ImportExport'], 'Stage' => $stagingIsOffered, 'MaxSteps' => (int)$workflowSettings['MaxSteps'], 'MaxFiles' => (int)$workflowSettings['MaxFiles'], 'Operations' => array(), 'Kinds' => array());
     if ($workflowSettings['Builder']) {
       list ($registryIsUsable, $operations, $fileTypes) = readOperationRegistry();
       foreach ($operations as $operationName => $operationEntry) {
@@ -1563,8 +1683,176 @@ function describeWorkflowOperations() {
         $OperationsReply['Operations'][] = array('Name' => (string)$operationName, 'BuiltIn' => !empty($operationEntry['BuiltIn']), 'Modes' => $operationEntry['Modes'], 'Options' => $optionSummaries, 'Consumes' => (string)($operationEntry['Consumes'] ?? '')); }
       $OperationsReply['Kinds'] = array_map('strval', array_keys($fileTypes)); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $operations, $fileTypes, $operationEntry, $optionSpec, $optionSummary, $optionSummaries, $registryIsUsable, $operationName, $optionName);
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $operations, $fileTypes, $operationEntry, $optionSpec, $optionSummary, $optionSummaries, $registryIsUsable, $stagingIsOffered, $operationName, $optionName);
   return $OperationsReply; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether this request may stage a workflow for every user, from v4.2.2.
+// / Accepts the settings. Returns TRUE when it may.
+// / It may where workflows, the builder & import & export are on, a staging folder is named, & the request is signed in to an account whose role is admin.
+// / The role is the one the Authentication Core read from the account for this request, so a page can never claim it.
+function stagingIsOffered($workflowSettings) {
+  // / Set variables.
+  global $SignedInAccount, $EnableMemoryProtection;
+  $StagingIsOffered = FALSE;
+  $StagingIsOffered = ($workflowSettings['Enabled'] && $workflowSettings['Builder'] && $workflowSettings['ImportExport'] && $workflowSettings['StagingFolder'] !== ''
+    && isset($SignedInAccount) && is_array($SignedInAccount) && (string)($SignedInAccount['Role'] ?? '') === 'admin');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings);
+  return $StagingIsOffered; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write a workflow & its descriptions into the staging folder, from v4.2.2.
+// / Accepts the settings, the identifier, the workflow's text & the descriptions, in that order. Returns whether both were written & the reason they were not, in that order.
+// / The workflow goes in under its identifier followed by -workflow.json, & the descriptions under it followed by -descriptions.json.
+// / A workflow staged with no descriptions takes away any staged before under its identifier, so what waits for root is what was staged last.
+// / A workflow whose descriptions could not be written is taken away too, so root never installs half of what was staged.
+function writeStagedWorkflow($workflowSettings, $workflowId, $workflowText, $cleanDescriptions) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $StagedWasWritten = FALSE;
+  $WriteNotice = '';
+  $stagedPath = $descriptionsPath = $removalNotice = '';
+  $workflowWasWritten = $descriptionsWereWritten = $workflowWasRemoved = FALSE;
+  $stagedPath = $workflowSettings['StagingFolder'].$DirSep.$workflowId.'-workflow.json';
+  $descriptionsPath = $workflowSettings['StagingFolder'].$DirSep.$workflowId.'-descriptions.json';
+  if (!is_dir($workflowSettings['StagingFolder']) or is_link($workflowSettings['StagingFolder'])) $WriteNotice = 'The staging folder '.$workflowSettings['StagingFolder'].' does not exist. Run -fp as root to create it.';
+  else {
+    list ($workflowWasWritten, $WriteNotice) = writeFileWithoutFollowing($stagedPath, $workflowText, 0600);
+    if ($workflowWasWritten && count($cleanDescriptions) > 0) list ($descriptionsWereWritten, $WriteNotice) = writeFileWithoutFollowing($descriptionsPath, workflowDescriptionsText($cleanDescriptions), 0600);
+    else if ($workflowWasWritten) list ($descriptionsWereWritten, $WriteNotice) = removeFileWithoutFollowing($descriptionsPath);
+    if ($workflowWasWritten && !$descriptionsWereWritten) list ($workflowWasRemoved, $removalNotice) = removeFileWithoutFollowing($stagedPath);
+    $StagedWasWritten = ($workflowWasWritten && $descriptionsWereWritten); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $stagedPath, $descriptionsPath, $removalNotice, $workflowWasWritten, $descriptionsWereWritten, $workflowWasRemoved, $workflowSettings, $workflowId, $workflowText, $cleanDescriptions);
+  return array($StagedWasWritten, $WriteNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to clear what the staging folder holds once root has installed it, from v4.2.2.
+// / Accepts the settings. Returns how many staged workflows were cleared.
+// / A staged workflow is cleared when the installed library holds the same text under its identifier, & the same descriptions where any were staged.
+// / Root never removes a name in a folder the web server account can change, so the web server account clears what it staged, & nothing else does.
+function clearInstalledStagedWorkflows($workflowSettings) {
+  // / Set variables.
+  global $RunningAsRoot, $DirSep, $EnableMemoryProtection;
+  $ClearedCount = 0;
+  $folderEntries = $nameMatch = array();
+  $folderEntry = $workflowId = $stagedText = $installedText = $readNotice = $removalNotice = '';
+  $stagedWasRead = $installedWasRead = $descriptionsMatch = $descriptionsWereRemoved = $workflowWasRemoved = FALSE;
+  if (!$RunningAsRoot && $workflowSettings['StagingFolder'] !== '' && $workflowSettings['InstalledFolder'] !== '' && is_dir($workflowSettings['StagingFolder']) && !is_link($workflowSettings['StagingFolder'])) {
+    $folderEntries = @scandir($workflowSettings['StagingFolder']);
+    foreach ((array)$folderEntries as $folderEntry) {
+      if (preg_match('/^([A-Za-z0-9][A-Za-z0-9_-]{0,63})-workflow\.json$/', (string)$folderEntry, $nameMatch) !== 1) continue;
+      redeclare($workflowId, (string)$nameMatch[1]);
+      redeclare($workflowWasRemoved, FALSE);
+      list ($stagedWasRead, $stagedText, $readNotice) = readFileWithoutFollowing($workflowSettings['StagingFolder'].$DirSep.$folderEntry, 65537);
+      list ($installedWasRead, $installedText, $readNotice) = readFileWithoutFollowing($workflowSettings['InstalledFolder'].$DirSep.$folderEntry, 65537);
+      if (!$stagedWasRead or !$installedWasRead or $stagedText !== $installedText) continue;
+      redeclare($descriptionsMatch, stagedDescriptionsAreInstalled($workflowSettings, $workflowId));
+      if (!$descriptionsMatch) continue;
+      list ($descriptionsWereRemoved, $removalNotice) = removeFileWithoutFollowing($workflowSettings['StagingFolder'].$DirSep.$workflowId.'-descriptions.json');
+      if ($descriptionsWereRemoved) list ($workflowWasRemoved, $removalNotice) = removeFileWithoutFollowing($workflowSettings['StagingFolder'].$DirSep.$folderEntry);
+      if ($descriptionsWereRemoved && $workflowWasRemoved) {
+        $ClearedCount++;
+        logEntry('Cleared the staged workflow '.$workflowId.', which root has installed.'); }
+      else warningEntry('The staged workflow '.$workflowId.' is installed & could not be cleared from the staging folder. '.$removalNotice); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderEntries, $nameMatch, $folderEntry, $workflowId, $stagedText, $installedText, $readNotice, $removalNotice, $stagedWasRead, $installedWasRead, $descriptionsMatch, $descriptionsWereRemoved, $workflowWasRemoved, $workflowSettings);
+  return $ClearedCount; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to decide whether what was staged to describe a workflow is what the installed library holds, from v4.2.2.
+// / Accepts the settings & the identifier. Returns TRUE when no descriptions were staged, or the installed ones are the same text.
+function stagedDescriptionsAreInstalled($workflowSettings, $workflowId) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $DescriptionsAreInstalled = FALSE;
+  $stagedPath = $stagedText = $installedText = $readNotice = '';
+  $stagedWasRead = $installedWasRead = FALSE;
+  $stagedPath = $workflowSettings['StagingFolder'].$DirSep.$workflowId.'-descriptions.json';
+  clearstatcache(TRUE, $stagedPath);
+  if (@lstat($stagedPath) === FALSE) $DescriptionsAreInstalled = TRUE;
+  else {
+    list ($stagedWasRead, $stagedText, $readNotice) = readFileWithoutFollowing($stagedPath, 65537);
+    list ($installedWasRead, $installedText, $readNotice) = readFileWithoutFollowing($workflowSettings['InstalledFolder'].$DirSep.$workflowId.'-descriptions.json', 65537);
+    $DescriptionsAreInstalled = ($stagedWasRead && $installedWasRead && $stagedText === $installedText); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $stagedPath, $stagedText, $installedText, $readNotice, $stagedWasRead, $installedWasRead, $workflowSettings, $workflowId);
+  return $DescriptionsAreInstalled; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to choose the identifier a workflow is staged under, from v4.2.2.
+// / Accepts the workflow's name & the library. Returns the identifier.
+// / It is the identifier the name gives it, as the builder's export names its file, unless the library holds no workflow of that identifier
+// / & does hold a valid one of the same name, whatever the case of its letters. It is then that workflow's, so a page that imports a shipped
+// / or an installed workflow & stages it again replaces it, rather than offering every user two workflows of one name.
+// / A shipped workflow's identifier is chosen by hand & is not the one its name gives it, so the name is what an imported copy still carries.
+function stagedWorkflowIdentifier($workflowName, $workflowLibrary) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $WorkflowId = '';
+  $libraryId = $comparedName = '';
+  $libraryRecord = array();
+  $WorkflowId = substr(workflowFileName($workflowName), 0, -strlen('-workflow.json'));
+  $comparedName = strtolower(trim((string)$workflowName));
+  if (!isset($workflowLibrary[$WorkflowId])) foreach ($workflowLibrary as $libraryId => $libraryRecord) {
+    if (!$libraryRecord['Valid'] or strtolower(trim((string)($libraryRecord['Workflow']['Name'] ?? ''))) !== $comparedName) continue;
+    $WorkflowId = (string)$libraryId;
+    break; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $libraryId, $comparedName, $libraryRecord, $workflowName, $workflowLibrary);
+  return $WorkflowId; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to stage a workflow a page holds, & what an administrator wrote to describe it, for root to install for every user, from v4.2.2.
+// / Accepts the workflow as text & the descriptions as JSON text, an object keyed by language code. Returns the reply.
+// / The reply holds Available & Allowed, & then Staged. A workflow that was staged has its Id, the Command root runs & Replaces, & one that was not has a Reason & Problems.
+// / Allowed is true only for a request stagingIsOffered() allows. Reason is invalid, descriptions or server.
+// / The web server account cannot write the installed library, which is root's, so the workflow waits in the staging folder for --workflow --install-staged, which checks it again.
+// / It is staged as the canonical text a builder exports, under the identifier stagedWorkflowIdentifier() chooses.
+// / Replaces names the workflow of that identifier the library holds now, which the install takes the place of, & is empty where there is none.
+// / Nothing is described that the page does not need, so no path is ever sent.
+function stageWorkflowForEveryone($workflowText, $descriptionsText) {
+  // / Set variables.
+  global $SignedInAccount, $EngineEntryPoint, $EnableMemoryProtection;
+  $StageReply = array('Available' => FALSE, 'Allowed' => FALSE);
+  $workflowSettings = $normalizedWorkflow = $workflowProblems = $operations = $fileTypes = $cleanDescriptions = $descriptionProblems = $workflowLibrary = $libraryOperations = $libraryTypes = array();
+  $descriptionEntries = NULL;
+  $workflowIsValid = $workflowIsUsable = $descriptionsAreUsable = $stagedWasWritten = $libraryWasRead = FALSE;
+  $workflowId = $writeNotice = $entryPoint = '';
+  $workflowSettings = workflowSettings();
+  if ($workflowSettings['Enabled']) {
+    $StageReply = array('Available' => TRUE, 'Allowed' => stagingIsOffered($workflowSettings));
+    if (!$StageReply['Allowed']) warningEntry('A request asked to stage a workflow for every user, & is not signed in as an administrator where staging is offered. It was refused.');
+    else {
+      list ($workflowIsValid, $normalizedWorkflow, $workflowProblems, $workflowIsUsable, $operations, $fileTypes) = checkSentWorkflow($workflowText, $workflowSettings);
+      // / A request that sends no descriptions stages none, as one that sends every box empty does.
+      $descriptionEntries = (!is_string($descriptionsText) or trim($descriptionsText) === '') ? array() : json_decode($descriptionsText, TRUE, 3);
+      list ($descriptionsAreUsable, $cleanDescriptions, $descriptionProblems) = normalizeWorkflowDescriptions($descriptionEntries);
+      if (!$workflowIsValid) $StageReply = array_merge($StageReply, array('Staged' => FALSE, 'Reason' => 'invalid', 'Problems' => $workflowProblems));
+      else if (!$descriptionsAreUsable) $StageReply = array_merge($StageReply, array('Staged' => FALSE, 'Reason' => 'descriptions', 'Problems' => $descriptionProblems));
+      else {
+        list ($libraryWasRead, $workflowLibrary, $libraryOperations, $libraryTypes) = readWorkflowLibrary($workflowSettings);
+        $workflowId = stagedWorkflowIdentifier($normalizedWorkflow['Name'], $workflowLibrary);
+        clearInstalledStagedWorkflows($workflowSettings);
+        list ($stagedWasWritten, $writeNotice) = writeStagedWorkflow($workflowSettings, $workflowId, canonicalWorkflowText($normalizedWorkflow, $operations), $cleanDescriptions);
+        if (!$stagedWasWritten) {
+          errorEntry('The workflow '.$workflowId.' could not be staged for every user. '.$writeNotice, 38007, FALSE);
+          $StageReply = array_merge($StageReply, array('Staged' => FALSE, 'Reason' => 'server', 'Problems' => array())); }
+        else {
+          $entryPoint = (isset($EngineEntryPoint) && is_string($EngineEntryPoint) && $EngineEntryPoint !== '') ? $EngineEntryPoint : 'convertCore.php';
+          logEntry('The administrator '.(string)($SignedInAccount['Username'] ?? '').' staged the workflow '.$workflowId.' for every user, with '.count($cleanDescriptions).' description(s). Root installs it with --workflow --install-staged='.$workflowId.'.');
+          $StageReply = array_merge($StageReply, array('Staged' => TRUE, 'Id' => $workflowId, 'Command' => 'sudo php '.$entryPoint.' --workflow --install-staged='.$workflowId,
+            'Replaces' => isset($workflowLibrary[$workflowId]) ? (string)($workflowLibrary[$workflowId]['Workflow']['Name'] ?? $workflowId) : '')); } } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $normalizedWorkflow, $workflowProblems, $operations, $fileTypes, $cleanDescriptions, $descriptionProblems, $workflowLibrary, $libraryOperations, $libraryTypes, $descriptionEntries, $workflowIsValid, $workflowIsUsable, $descriptionsAreUsable, $stagedWasWritten, $libraryWasRead, $workflowId, $writeNotice, $entryPoint, $workflowText, $descriptionsText);
+  return $StageReply; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1944,10 +2232,30 @@ function runWorkflowWorker($jobId) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to make text read from a workflow file safe to print on a terminal, from v4.2.2.
+// / Accepts the text. Returns it with every control character shown as a question mark, & every byte outside printable ASCII too where it is not UTF-8.
+// / --workflow --list reads the staging folder, which the web server account can write, & a name or a problem quoting a file's own text could carry a sequence a terminal obeys.
+// / C1 control characters are replaced as well as C0 ones, because some terminals obey them as the start of a sequence.
+function printableWorkflowText($untrustedText) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $PrintableText = '';
+  $PrintableText = preg_replace('/[\x00-\x1F\x7F\x{80}-\x{9F}]/u', '?', (string)$untrustedText);
+  // / Text that is not UTF-8 fails the pattern above & comes back as NULL, so every byte outside printable ASCII is replaced instead.
+  if (!is_string($PrintableText)) $PrintableText = (string)preg_replace('/[^\x20-\x7E]/', '?', (string)$untrustedText);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $untrustedText);
+  return $PrintableText; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to print the library, for --workflow --list.
 // / Accepts the settings & the library, in that order. Returns TRUE when every workflow in it is valid.
 // / A workflow is usable, disabled when an operation it names is turned off, or invalid.
 // / A disabled or an invalid one is printed with every problem found. A disabled one's problems name each step whose operation is turned off.
+// / From v4.2.2 the languages a workflow is described in are printed beneath it, & descriptions that are not valid are printed as problems & make the library invalid.
+// / What waits in the staging folder is printed after the library, by printStagedWorkflows().
+// / A name & a problem are printed through printableWorkflowText(), from v4.2.2.
 function printWorkflowLibrary($workflowSettings, $workflowLibrary) {
   // / Set variables.
   global $Lol, $EnableMemoryProtection;
@@ -1957,70 +2265,220 @@ function printWorkflowLibrary($workflowSettings, $workflowLibrary) {
   print($Lol.'Workflows'.$Lol.$Lol);
   print('  '.str_pad('Enabled', 24).($workflowSettings['Enabled'] ? 'yes' : 'no, see --Enable Workflows-- in config.php').$Lol);
   print('  '.str_pad('Shipped library', 24).($workflowSettings['ShippedFolder'] === '' ? 'none' : $workflowSettings['ShippedFolder']).$Lol);
-  print('  '.str_pad('Installed library', 24).($workflowSettings['InstalledFolder'] === '' ? 'none' : $workflowSettings['InstalledFolder'].(is_dir($workflowSettings['InstalledFolder']) ? '' : ', missing. Run -fp as root to create it.')).$Lol.$Lol);
+  print('  '.str_pad('Installed library', 24).($workflowSettings['InstalledFolder'] === '' ? 'none' : $workflowSettings['InstalledFolder'].(is_dir($workflowSettings['InstalledFolder']) ? '' : ', missing. Run -fp as root to create it.')).$Lol);
+  print('  '.str_pad('Staging folder', 24).($workflowSettings['StagingFolder'] === '' ? 'none' : $workflowSettings['StagingFolder'].(is_dir($workflowSettings['StagingFolder']) ? '' : ', missing. Run -fp as root to create it.')).$Lol.$Lol);
   if (empty($workflowLibrary)) print('  No workflow is installed.'.$Lol);
   foreach ($workflowLibrary as $workflowId => $workflowRecord) {
     redeclare($usabilityWord, $workflowRecord['Usable'] ? 'usable' : ($workflowRecord['Valid'] ? 'disabled' : 'INVALID'));
-    print('  '.str_pad((string)$workflowId, 28).str_pad($workflowRecord['Library'], 11).str_pad($usabilityWord, 10).($workflowRecord['Valid'] ? $workflowRecord['Workflow']['Name'] : $workflowRecord['File']).$Lol);
-    if (!$workflowRecord['Valid']) $LibraryIsValid = FALSE;
-    foreach ($workflowRecord['Problems'] as $workflowProblem) print('  '.str_repeat(' ', 49).$workflowProblem.$Lol); }
+    print('  '.str_pad((string)$workflowId, 28).str_pad($workflowRecord['Library'], 11).str_pad($usabilityWord, 10).printableWorkflowText($workflowRecord['Valid'] ? $workflowRecord['Workflow']['Name'] : $workflowRecord['File']).$Lol);
+    if (!$workflowRecord['Valid'] or count($workflowRecord['DescriptionProblems']) > 0) $LibraryIsValid = FALSE;
+    foreach ($workflowRecord['Problems'] as $workflowProblem) print('  '.str_repeat(' ', 49).printableWorkflowText($workflowProblem).$Lol);
+    if (count($workflowRecord['Descriptions']) > 0) print('  '.str_repeat(' ', 49).'Described in '.implode(', ', array_keys($workflowRecord['Descriptions'])).'.'.$Lol);
+    foreach ($workflowRecord['DescriptionProblems'] as $workflowProblem) print('  '.str_repeat(' ', 49).'Descriptions not shown. '.printableWorkflowText($workflowProblem).$Lol); }
   print($Lol);
+  printStagedWorkflows($workflowSettings);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $workflowRecord, $workflowId, $workflowProblem, $usabilityWord, $workflowSettings, $workflowLibrary);
   return $LibraryIsValid; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to print what waits in the staging folder, for --workflow --list, from v4.2.2.
+// / Accepts the settings. Returns how many staged workflows were printed.
+// / Each is printed as the library's are, with the line root runs to install it & the line that discards it. Nothing staged is offered to anybody until root installs it.
+// / A staged workflow that is not valid is printed with its problems & does not make the library invalid, because nothing reads it but --install-staged, which refuses it.
+// / The web server account can write the staging folder, so a name & a problem are printed through printableWorkflowText().
+function printStagedWorkflows($workflowSettings) {
+  // / Set variables.
+  global $Lol, $EngineEntryPoint, $EnableMemoryProtection;
+  $StagedCount = 0;
+  $stagedWorkflows = $operations = $fileTypes = $workflowRecord = array();
+  $registryIsUsable = $folderWasRead = FALSE;
+  $workflowId = $workflowProblem = $usabilityWord = $entryPoint = '';
+  if ($workflowSettings['StagingFolder'] !== '') {
+    list ($registryIsUsable, $operations, $fileTypes) = readOperationRegistry();
+    if ($registryIsUsable) list ($folderWasRead, $stagedWorkflows) = readWorkflowFolder($workflowSettings['StagingFolder'], 'staged', $operations, $fileTypes, $workflowSettings);
+    $entryPoint = (isset($EngineEntryPoint) && is_string($EngineEntryPoint) && $EngineEntryPoint !== '') ? $EngineEntryPoint : 'convertCore.php';
+    if (count($stagedWorkflows) > 0) print('  Staged for root to install'.$Lol.$Lol);
+    foreach ($stagedWorkflows as $workflowId => $workflowRecord) {
+      redeclare($usabilityWord, $workflowRecord['Usable'] ? 'usable' : ($workflowRecord['Valid'] ? 'disabled' : 'INVALID'));
+      print('  '.str_pad((string)$workflowId, 28).str_pad('staged', 11).str_pad($usabilityWord, 10).printableWorkflowText($workflowRecord['Valid'] ? $workflowRecord['Workflow']['Name'] : $workflowRecord['File']).$Lol);
+      foreach ($workflowRecord['Problems'] as $workflowProblem) print('  '.str_repeat(' ', 49).printableWorkflowText($workflowProblem).$Lol);
+      if (count($workflowRecord['Descriptions']) > 0) print('  '.str_repeat(' ', 49).'Described in '.implode(', ', array_keys($workflowRecord['Descriptions'])).'.'.$Lol);
+      foreach ($workflowRecord['DescriptionProblems'] as $workflowProblem) print('  '.str_repeat(' ', 49).'Descriptions not valid. '.printableWorkflowText($workflowProblem).$Lol);
+      if ($workflowRecord['Valid']) print('  '.str_repeat(' ', 49).'sudo php '.$entryPoint.' --workflow --install-staged='.$workflowId.$Lol);
+      print('  '.str_repeat(' ', 49).'sudo php '.$entryPoint.' --workflow --discard-staged='.$workflowId.$Lol);
+      $StagedCount++; }
+    if ($StagedCount > 0) print($Lol); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $stagedWorkflows, $operations, $fileTypes, $workflowRecord, $registryIsUsable, $folderWasRead, $workflowId, $workflowProblem, $usabilityWord, $entryPoint, $workflowSettings);
+  return $StagedCount; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the descriptions file beside a workflow file root was named, from v4.2.2.
+// / Accepts the workflow file's path & its identifier. Returns whether a file is there, whether it is usable, the descriptions & the problems found, in that order.
+// / It is read as the workflow file is, by readWorkflowSourceFile(), so its folder need not be held for root, & it is only ever read as data.
+function readSourceDescriptions($sourcePath, $workflowId) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $FileIsThere = $DescriptionsAreUsable = FALSE;
+  $CleanDescriptions = $DescriptionProblems = array();
+  $descriptionsPath = $descriptionsText = $readRefusal = '';
+  $textWasRead = FALSE;
+  $descriptionsPath = dirname((string)$sourcePath).$DirSep.(string)$workflowId.'-descriptions.json';
+  clearstatcache(TRUE, $descriptionsPath);
+  $FileIsThere = (@lstat($descriptionsPath) !== FALSE);
+  if ($FileIsThere) {
+    list ($textWasRead, $descriptionsText, $readRefusal) = readWorkflowSourceFile($descriptionsPath);
+    if (!$textWasRead) $DescriptionProblems[] = $readRefusal;
+    else list ($DescriptionsAreUsable, $CleanDescriptions, $DescriptionProblems) = readWorkflowDescriptions($descriptionsText); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $descriptionsPath, $descriptionsText, $readRefusal, $textWasRead, $sourcePath, $workflowId);
+  return array($FileIsThere, $DescriptionsAreUsable, $CleanDescriptions, $DescriptionProblems); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to install a workflow that was checked, & the descriptions checked with it, into the installed library.
+// / Accepts the settings, the identifier, the workflow's text & the descriptions' text, which is empty where none came with it, in that order.
+// / Returns whether everything was installed, & the notice that says why it was not, in that order.
+// / Root writes only in a folder folderIsHeldForRoot holds, & the installed library is root's, so it must be one.
+// / The workflow is written first. A workflow installed with no descriptions keeps the ones installed with it before, & --remove takes both.
+function installCheckedWorkflow($workflowSettings, $workflowId, $workflowText, $descriptionsText) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $WorkflowWasInstalled = FALSE;
+  $InstallNotice = '';
+  $folderIsHeld = $fileWasWritten = $descriptionsWereWritten = FALSE;
+  $holdNotice = $writeNotice = '';
+  if ($workflowSettings['InstalledFolder'] === '' or !is_dir($workflowSettings['InstalledFolder'])) $InstallNotice = 'The installed library does not exist yet. Run -fp as root to create it.';
+  else {
+    list ($folderIsHeld, $holdNotice) = folderIsHeldForRoot($workflowSettings['InstalledFolder']);
+    if (!$folderIsHeld) $InstallNotice = $holdNotice;
+    else {
+      list ($fileWasWritten, $writeNotice) = writeFileWithoutFollowing($workflowSettings['InstalledFolder'].$DirSep.$workflowId.'-workflow.json', $workflowText, 0644);
+      if ($fileWasWritten && $descriptionsText !== '') list ($descriptionsWereWritten, $writeNotice) = writeFileWithoutFollowing($workflowSettings['InstalledFolder'].$DirSep.$workflowId.'-descriptions.json', $descriptionsText, 0644);
+      else $descriptionsWereWritten = $fileWasWritten;
+      $WorkflowWasInstalled = ($fileWasWritten && $descriptionsWereWritten);
+      if (!$WorkflowWasInstalled) $InstallNotice = ($fileWasWritten ? 'The workflow was installed & its descriptions were not. ' : '').$writeNotice; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $folderIsHeld, $fileWasWritten, $descriptionsWereWritten, $holdNotice, $writeNotice, $workflowSettings, $workflowId, $workflowText, $descriptionsText);
+  return array($WorkflowWasInstalled, $InstallNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to discard a workflow an administrator staged, for --workflow --discard-staged, from v4.2.2.
+// / Accepts the settings & the identifier. Returns the exit status & what to print, in that order.
+// / Root never removes a name in a folder the web server account can change, so root hands the discard to that account,
+// / as -c & --account are handed over, & prints what that account printed. That account removes the staged workflow & its descriptions.
+// / Nothing installed is touched, & a staged workflow is discarded whether or not it is valid, because one that is not can only be discarded.
+function discardStagedWorkflow($workflowSettings, $workflowId) {
+  // / Set variables.
+  global $RunningAsRoot, $ApacheUser, $InstLoc, $DirSep, $Lol, $EnableMemoryProtection;
+  $DiscardStatus = 1;
+  $DiscardNotice = '';
+  $stagedPath = $descriptionsPath = $handedCommand = $removalNotice = '';
+  $accountOutput = array();
+  $accountExit = 1;
+  $workflowWasRemoved = $descriptionsWereRemoved = FALSE;
+  if (preg_match('/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/', (string)$workflowId) !== 1) $DiscardNotice = 'Name the staged workflow by its identifier, as --workflow --list prints it.';
+  else if ($workflowSettings['StagingFolder'] === '') $DiscardNotice = 'This application names no staging folder, so nothing is ever staged.';
+  else if ($RunningAsRoot) {
+    logEntry('Command line invocation. Handing --workflow --discard-staged='.$workflowId.' to '.$ApacheUser.'.');
+    $handedCommand = 'php '.escapeshellarg(rtrim((string)$InstLoc, $DirSep).$DirSep.engineApplicationEntryPoint()).' --workflow '.escapeshellarg('--discard-staged='.$workflowId).' 2>&1';
+    list ($accountOutput, $accountExit) = runAsAccount($handedCommand, (string)$ApacheUser);
+    $DiscardNotice = trim(implode($Lol, (array)$accountOutput));
+    if ($accountExit === 0) $DiscardStatus = 0; }
+  else {
+    $stagedPath = $workflowSettings['StagingFolder'].$DirSep.$workflowId.'-workflow.json';
+    $descriptionsPath = $workflowSettings['StagingFolder'].$DirSep.$workflowId.'-descriptions.json';
+    clearstatcache(TRUE, $stagedPath);
+    clearstatcache(TRUE, $descriptionsPath);
+    if (@lstat($stagedPath) === FALSE && @lstat($descriptionsPath) === FALSE) $DiscardNotice = 'No workflow is staged as '.$workflowId.'.';
+    else {
+      // / The descriptions go first, so a workflow is never left staged without the descriptions it was staged with.
+      list ($descriptionsWereRemoved, $removalNotice) = removeFileWithoutFollowing($descriptionsPath);
+      if ($descriptionsWereRemoved) list ($workflowWasRemoved, $removalNotice) = removeFileWithoutFollowing($stagedPath);
+      if (!$descriptionsWereRemoved or !$workflowWasRemoved) {
+        errorEntry('The staged workflow '.$workflowId.' could not be discarded. '.$removalNotice, 38008, FALSE);
+        $DiscardNotice = 'Not discarded. '.$removalNotice; }
+      else {
+        logEntry('Discarded the staged workflow '.$workflowId.'.');
+        $DiscardNotice = 'Discarded the staged workflow '.$workflowId.'.';
+        $DiscardStatus = 0; } } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $stagedPath, $descriptionsPath, $handedCommand, $removalNotice, $accountOutput, $accountExit, $workflowWasRemoved, $descriptionsWereRemoved, $workflowSettings, $workflowId);
+  return array($DiscardStatus, $DiscardNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to answer --workflow from the command line.
 // / Accepts the arguments, the option given & whether the command was confirmed, in that order. Returns the exit status.
-// / --list prints the library & is the default. --check=FILE checks a workflow file against this installation.
+// / --list prints the library & what is staged, & is the default. --check=FILE checks a workflow file against this installation.
 // / --export=ID prints a valid workflow from the library in canonical form, the form a page exports & imports, & prints nothing else, so it can be saved to a file. Any account may run these three.
-// / --install=FILE checks a workflow & writes what it checked into the installed library, & --remove=ID removes one. Both need root.
+// / --install=FILE checks a workflow & writes what it checked into the installed library, & --remove=ID removes one & its descriptions. Both need root.
+// / --install-staged=ID does what --install does to the workflow an administrator staged from a page under that identifier, from v4.2.2, & needs root too.
+// / --discard-staged=ID discards one instead, through discardStagedWorkflow(), from v4.2.2. Root & the web server account may run it.
 // / A file is installed under its own name, which must be an identifier followed by -workflow.json.
+// / A descriptions file beside it, named for the identifier followed by -descriptions.json, is checked & installed with it, from v4.2.2. One that is not valid stops both.
 // / What is written is the text that was checked, so a file changed after the check cannot be installed.
+// / A problem is printed through printableWorkflowText(), because it can quote the file's own text, from v4.2.2.
 function runWorkflowAdminCommand($cliArguments, $cliTarget, $cliConfirmed) {
   // / Set variables.
   global $RunningAsRoot, $Lol, $DirSep, $EnableMemoryProtection;
   $CommandStatus = 0;
-  $workflowSettings = $workflowLibrary = $operations = $fileTypes = $nameMatch = $normalizedWorkflow = $workflowProblems = array();
-  $libraryWasRead = $sourceWasRead = $workflowIsValid = $folderIsHeld = $fileWasWritten = $fileWasRemoved = $registryIsUsable = FALSE;
-  $optionName = $sourcePath = $sourceText = $sourceRefusal = $targetPath = $workflowProblem = $holdNotice = $writeNotice = $removalNotice = $exportNotice = $workflowId = '';
+  $workflowSettings = $workflowLibrary = $operations = $fileTypes = $nameMatch = $normalizedWorkflow = $workflowProblems = $cleanDescriptions = $descriptionProblems = array();
+  $libraryWasRead = $sourceWasRead = $workflowIsValid = $fileWasRemoved = $descriptionsWereRemoved = $registryIsUsable = $isStaged = $isInstall = $descriptionsAreThere = $descriptionsAreUsable = $workflowWasInstalled = FALSE;
+  $optionName = $sourcePath = $sourceText = $sourceRefusal = $workflowProblem = $installNotice = $removalNotice = $exportNotice = $workflowId = $descriptionsText = $installedPath = $discardNotice = '';
   $workflowSettings = workflowSettings();
   $optionName = (string)$cliTarget;
+  $isStaged = (strpos($optionName, '--install-staged') === 0);
+  $isInstall = (strpos($optionName, '--install') === 0);
   if ($optionName === '' or $optionName === '--list') {
     list ($libraryWasRead, $workflowLibrary, $operations, $fileTypes) = readWorkflowLibrary($workflowSettings);
     if (!printWorkflowLibrary($workflowSettings, $workflowLibrary)) $CommandStatus = 1; }
-  else if (strpos($optionName, '--check') === 0 or strpos($optionName, '--install') === 0) {
-    $sourcePath = (strpos($optionName, '--check') === 0) ? extractCliOption($cliArguments, '--check') : extractCliOption($cliArguments, '--install');
+  else if (strpos($optionName, '--check') === 0 or $isInstall) {
+    // / A staged workflow is named by its identifier, & is read from the staging folder, where an administrator staged it from a page.
+    if ($isStaged) {
+      $workflowId = extractCliOption($cliArguments, '--install-staged');
+      if (preg_match('/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/', $workflowId) !== 1) $sourceRefusal = 'Name the staged workflow by its identifier, as --workflow --list prints it.';
+      else if ($workflowSettings['StagingFolder'] === '') $sourceRefusal = 'This application names no staging folder, so nothing is ever staged.';
+      else $sourcePath = $workflowSettings['StagingFolder'].$DirSep.$workflowId.'-workflow.json'; }
+    else $sourcePath = (strpos($optionName, '--check') === 0) ? extractCliOption($cliArguments, '--check') : extractCliOption($cliArguments, '--install');
     list ($registryIsUsable, $operations, $fileTypes) = readOperationRegistry();
-    list ($sourceWasRead, $sourceText, $sourceRefusal) = readWorkflowSourceFile($sourcePath);
-    if (strpos($optionName, '--install') === 0 && !$RunningAsRoot) list ($CommandStatus, $sourceRefusal) = array(1, 'Installing a workflow needs root.');
+    if ($sourceRefusal === '') list ($sourceWasRead, $sourceText, $sourceRefusal) = readWorkflowSourceFile($sourcePath);
+    if ($isInstall && !$RunningAsRoot) list ($CommandStatus, $sourceRefusal) = array(1, 'Installing a workflow needs root.');
     else if (!$sourceWasRead) $CommandStatus = 1;
     else if (preg_match('/^([A-Za-z0-9][A-Za-z0-9_-]{0,63})-workflow\.json$/', basename($sourcePath), $nameMatch) !== 1) list ($CommandStatus, $sourceRefusal) = array(1, 'A workflow file is named for its identifier followed by -workflow.json, & an identifier is 1 to 64 letters, digits, dashes & underscores.');
     else if (!$registryIsUsable) list ($CommandStatus, $sourceRefusal) = array(1, 'This application offers no operation, so no workflow can be checked.');
     else {
       // / A valid workflow using an operation this server has turned off is installed, & each step using one is named, because it is offered once the operation is turned on.
       list ($workflowIsValid, $normalizedWorkflow, $workflowProblems) = checkWorkflowText($sourceText, $operations, $fileTypes, $workflowSettings);
-      if (!$workflowIsValid) $CommandStatus = 1; }
+      list ($descriptionsAreThere, $descriptionsAreUsable, $cleanDescriptions, $descriptionProblems) = readSourceDescriptions($sourcePath, (string)$nameMatch[1]);
+      if (!$workflowIsValid or ($descriptionsAreThere && !$descriptionsAreUsable)) $CommandStatus = 1; }
     if ($sourceWasRead && $sourceRefusal === '') print($Lol.($CommandStatus === 0 ? 'VALID     ' : 'INVALID   ').(string)$sourcePath.$Lol);
-    else print($Lol.'NOT READ  '.(string)$sourcePath.$Lol);
+    else print($Lol.'NOT READ  '.(((string)$sourcePath !== '') ? (string)$sourcePath : (string)$workflowId).$Lol);
     if ($sourceRefusal !== '') print('  '.$sourceRefusal.$Lol);
-    foreach ($workflowProblems as $workflowProblem) print('  '.$workflowProblem.$Lol);
-    if ($CommandStatus === 0 && strpos($optionName, '--install') === 0) {
+    foreach ($workflowProblems as $workflowProblem) print('  '.printableWorkflowText($workflowProblem).$Lol);
+    if ($descriptionsAreUsable) print('  Described in '.implode(', ', array_keys($cleanDescriptions)).'.'.$Lol);
+    foreach ($descriptionProblems as $workflowProblem) print('  Descriptions not valid. '.printableWorkflowText($workflowProblem).$Lol);
+    if ($CommandStatus === 0 && $isInstall) {
       $workflowId = (string)$nameMatch[1];
-      $targetPath = $workflowSettings['InstalledFolder'].$DirSep.$workflowId.'-workflow.json';
-      if ($workflowSettings['InstalledFolder'] === '' or !is_dir($workflowSettings['InstalledFolder'])) list ($CommandStatus, $holdNotice) = array(1, 'The installed library does not exist yet. Run -fp as root to create it.');
-      else list ($folderIsHeld, $holdNotice) = folderIsHeldForRoot($workflowSettings['InstalledFolder']);
-      if ($CommandStatus === 0 && !$folderIsHeld) $CommandStatus = 1;
-      if ($CommandStatus === 0) list ($fileWasWritten, $writeNotice) = writeFileWithoutFollowing($targetPath, $sourceText, 0644);
-      if ($CommandStatus === 0 && !$fileWasWritten) $CommandStatus = 1;
-      if ($CommandStatus === 0) {
-        logEntry('Installed the workflow '.$workflowId.' at '.$targetPath.'.');
-        print('  Installed as '.$workflowId.' at '.$targetPath.'.'.$Lol); }
+      $installedPath = $workflowSettings['InstalledFolder'].$DirSep.$workflowId.'-workflow.json';
+      $descriptionsText = $descriptionsAreUsable ? workflowDescriptionsText($cleanDescriptions) : '';
+      list ($workflowWasInstalled, $installNotice) = installCheckedWorkflow($workflowSettings, $workflowId, $sourceText, $descriptionsText);
+      if ($workflowWasInstalled) {
+        logEntry('Installed the '.($isStaged ? 'staged ' : '').'workflow '.$workflowId.' at '.$installedPath.($descriptionsText !== '' ? ', with its descriptions.' : '.'));
+        print('  Installed as '.$workflowId.' at '.$installedPath.'.'.$Lol);
+        if ($descriptionsText !== '') print('  Its descriptions were installed beside it.'.$Lol); }
       else {
-        errorEntry('The workflow '.$workflowId.' could not be installed. '.$holdNotice.' '.$writeNotice, 38005, FALSE);
-        print('  Not installed. '.trim($holdNotice.' '.$writeNotice).$Lol); } }
+        $CommandStatus = 1;
+        errorEntry('The workflow '.$workflowId.' could not be installed. '.$installNotice, 38005, FALSE);
+        print('  Not installed. '.$installNotice.$Lol); } }
     print($Lol); }
+  else if (strpos($optionName, '--discard-staged') === 0) {
+    list ($CommandStatus, $discardNotice) = discardStagedWorkflow($workflowSettings, extractCliOption($cliArguments, '--discard-staged'));
+    print($Lol.$discardNotice.$Lol.$Lol); }
   else if (strpos($optionName, '--remove') === 0) {
     $workflowId = extractCliOption($cliArguments, '--remove');
     if (!$RunningAsRoot) list ($CommandStatus, $removalNotice) = array(1, 'Removing a workflow needs root.');
@@ -2028,8 +2486,11 @@ function runWorkflowAdminCommand($cliArguments, $cliTarget, $cliConfirmed) {
     else if ($workflowSettings['InstalledFolder'] === '' or !is_file($workflowSettings['InstalledFolder'].$DirSep.$workflowId.'-workflow.json')) list ($CommandStatus, $removalNotice) = array(1, 'No installed workflow is named '.$workflowId.'. A shipped workflow is part of the release & is not removed.');
     else {
       list ($fileWasRemoved, $removalNotice) = removeFileWithoutFollowing($workflowSettings['InstalledFolder'].$DirSep.$workflowId.'-workflow.json');
-      if (!$fileWasRemoved) {
+      // / Its descriptions go with it. A workflow that never had any counts as having them removed.
+      if ($fileWasRemoved) list ($descriptionsWereRemoved, $removalNotice) = removeFileWithoutFollowing($workflowSettings['InstalledFolder'].$DirSep.$workflowId.'-descriptions.json');
+      if (!$fileWasRemoved or !$descriptionsWereRemoved) {
         $CommandStatus = 1;
+        if ($fileWasRemoved) $removalNotice = 'The workflow '.$workflowId.' was removed & its descriptions were not. '.$removalNotice;
         errorEntry('The workflow '.$workflowId.' could not be removed. '.$removalNotice, 38006, FALSE); }
       else {
         $removalNotice = 'Removed '.$workflowId.'.';
@@ -2044,9 +2505,9 @@ function runWorkflowAdminCommand($cliArguments, $cliTarget, $cliConfirmed) {
     else print($Lol.$exportNotice.$Lol.$Lol); }
   else {
     $CommandStatus = 2;
-    print($Lol.'--workflow takes --list, --check=FILE, --export=ID, --install=FILE or --remove=ID.'.$Lol.$Lol); }
+    print($Lol.'--workflow takes --list, --check=FILE, --export=ID, --install=FILE, --install-staged=ID, --discard-staged=ID or --remove=ID.'.$Lol.$Lol); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $workflowLibrary, $operations, $fileTypes, $nameMatch, $normalizedWorkflow, $workflowProblems, $libraryWasRead, $sourceWasRead, $workflowIsValid, $folderIsHeld, $fileWasWritten, $fileWasRemoved, $registryIsUsable, $optionName, $sourcePath, $sourceText, $sourceRefusal, $targetPath, $workflowProblem, $holdNotice, $writeNotice, $removalNotice, $exportNotice, $workflowId, $cliArguments, $cliTarget, $cliConfirmed);
+  purgeSensitiveMemory($EnableMemoryProtection, $workflowSettings, $workflowLibrary, $operations, $fileTypes, $nameMatch, $normalizedWorkflow, $workflowProblems, $cleanDescriptions, $descriptionProblems, $libraryWasRead, $sourceWasRead, $workflowIsValid, $fileWasRemoved, $descriptionsWereRemoved, $registryIsUsable, $isStaged, $isInstall, $descriptionsAreThere, $descriptionsAreUsable, $workflowWasInstalled, $optionName, $sourcePath, $sourceText, $sourceRefusal, $workflowProblem, $installNotice, $removalNotice, $exportNotice, $workflowId, $descriptionsText, $installedPath, $discardNotice, $cliArguments, $cliTarget, $cliConfirmed);
   return $CommandStatus; }
 // / -----------------------------------------------------------------------------------
 ?>

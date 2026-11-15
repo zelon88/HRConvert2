@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.2.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -41,7 +41,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.2.1';
+$EngineVersion = 'v4.2.2';
 // / -----------------------------------------------------------------------------------
 
 
@@ -4540,7 +4540,7 @@ function engineSubOptionOwners() {
     '--list' => '--pipeline', '--describe' => '--pipeline', '--verify' => '--pipeline',
     '--check-depends' => '--pipeline',
     // / --workflow reads, checks, exports & installs workflows, the way --pipeline reads pipelines.
-    '--check' => '--workflow', '--export' => '--workflow', '--install' => '--workflow', '--remove' => '--workflow');
+    '--check' => '--workflow', '--export' => '--workflow', '--install' => '--workflow', '--install-staged' => '--workflow', '--discard-staged' => '--workflow', '--remove' => '--workflow');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection);
   return $SubOptionOwners; }
@@ -5571,7 +5571,7 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
   $CommandWasHandled = TRUE;
   $CommandStatus = 0;
   $cliListenerAuthorized = $cliPinsMatch = FALSE;
-  $cliWhoami = '';
+  $cliWhoami = $typedTarget = '';
   // / Every command the listener owns. Recognized for all users & refused for the wrong one.
   $listenerCommands = array('-l', '--listen', '-k', '--kill', '--kill-all-workers', '--kill-every-worker');
   // / Every command Setup Core, Dependency Core & Pipeline Core answer.
@@ -5594,6 +5594,8 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
   // / account holds is the kernel's to decide, before this Engine is loaded.
   if ($RunningAsRoot or $CurrentUser === $ApacheUser) $cliListenerAuthorized = TRUE;
   $cliWhoami = ($CurrentUser === '' ? 'an unidentified user' : $CurrentUser);
+  // / parseArgumentVector lowercases a target, & a refusal that suggests a command repeats the target as it was typed, because an identifier & a path keep their case.
+  $typedTarget = (isset($cliArguments[0]) && strpos((string)$cliArguments[0], '=') !== FALSE) ? trim(explode('=', (string)$cliArguments[0], 2)[1]) : trim((string)($cliArguments[1] ?? ''));
   if (in_array($cliCommand, $managerCommands, TRUE)) $CommandStatus = runEngineManagerEntry($cliCommand, $cliTarget, $cliSecondTarget);
   else if ($cliCommand === '--status') $CommandStatus = showEngineStatus($cliWhoami, $cliListenerAuthorized);
   // / A build that reports no failure but no match is still a failure, so the second value is
@@ -5625,13 +5627,16 @@ function dispatchEngineCommand($cliArguments, $cliCommand, $cliTarget, $cliSecon
     warningEntry('Command line invocation. Rotating the install secret.');
     if (!rotateInstallSecret($cliConfirmed)) $CommandStatus = 1; }
   // / Installing & removing a workflow write the installed library, which is root's, so both are refused here for anybody else.
+  // / --install-staged begins with --install, so a workflow an administrator staged is installed by root alone too.
   // / --workflow is refused by what it was asked to do, because --list & --check are anybody's & only a write is root's.
   // / So the refusal names the option as typed, & the command it suggests is the whole one.
-  else if ($cliCommand === '--workflow' && !$RunningAsRoot && (strpos((string)$cliTarget, '--install') === 0 or strpos((string)$cliTarget, '--remove') === 0)) $CommandStatus = refuseCommandForUser($cliCommand.' '.(string)$cliTarget, $cliWhoami, 'A workflow command that writes the installed library was refused for an unauthorized user.');
+  else if ($cliCommand === '--workflow' && !$RunningAsRoot && (strpos((string)$cliTarget, '--install') === 0 or strpos((string)$cliTarget, '--remove') === 0)) $CommandStatus = refuseCommandForUser($cliCommand.' '.$typedTarget, $cliWhoami, 'A workflow command that writes the installed library was refused for an unauthorized user.');
+  // / Discarding a staged workflow removes names in Staged, which is the web server account's, so root hands it to that account & nobody else may run it, as --account.
+  else if ($cliCommand === '--workflow' && !$cliListenerAuthorized && strpos((string)$cliTarget, '--discard-staged') === 0) $CommandStatus = refuseCommandForUser($cliCommand.' '.$typedTarget, $cliWhoami, 'A workflow command that discards a staged workflow was refused for an unauthorized user.');
   else if (in_array($cliCommand, $workflowCommands, TRUE)) $CommandStatus = runEngineWorkflowCommand($cliArguments, $cliCommand, $cliTarget, $cliConfirmed);
   else $CommandWasHandled = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerAuthorized, $cliPinsMatch, $cliWhoami, $listenerCommands, $setupCommands, $rootCommands, $cleanCommands, $buildCommands, $managerCommands, $workflowCommands, $cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed);
+  purgeSensitiveMemory($EnableMemoryProtection, $cliListenerAuthorized, $cliPinsMatch, $cliWhoami, $typedTarget, $listenerCommands, $setupCommands, $rootCommands, $cleanCommands, $buildCommands, $managerCommands, $workflowCommands, $cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed);
   return array($CommandWasHandled, $CommandStatus); }
 // / -----------------------------------------------------------------------------------
 ?>

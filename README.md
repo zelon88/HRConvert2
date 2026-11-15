@@ -84,7 +84,7 @@ A **workflow** is a list of steps, each one something you could already do with 
   <img src="Documentation/Screenshots/v4-workflows.png" alt="The Workflows panel: a tab for each operation, two step boxes reading Convert to pdf and Archive to zip, and a preview naming the files each step would take, with the photo left out of the first" width="600"/>
 </p>
 
-- **📚 Start from the library.** Seven ship with HRConvert2, from *Scan every file* to *Documents to PDF, in one zip*. Administrators add their own for every user from the terminal.
+- **📚 Start from the library.** Seven ship with HRConvert2, from *Scan every file* to *Documents to PDF, in one zip*. An administrator stages their own for every user from the page, with a description in each language, and root installs it with one command.
 - **🗂️ Build your own, no code.** Add a step for any operation, from Convert to Delete. Each step takes the files you ticked or what an earlier step made, filtered by kind, name, extension or size.
 - **👀 Preview before it runs.** See which files each step would take. A workflow that deletes files names them and asks first.
 - **🏃 Let it run.** Each workflow gets a background process of its own, so no web request's time limit cuts it short. A status panel shows the step, the file and the progress. Stop ends the run before its next step, and reloading the page picks it up again.
@@ -244,20 +244,22 @@ Arabic, Hebrew, Persian, Urdu and both Syriac script languages get proper right-
 Everything is manageable from the terminal, as root:
 
 ```bash
-php convertCore.php -v                            # Check every component, dependency & feature
-php convertCore.php --status                      # System state & the listener
-php convertCore.php --config                      # Interactive configuration
-php convertCore.php --config --repair             # Add any setting the configuration is missing
-php convertCore.php --setup --check-depends       # Audit every dependency
-php convertCore.php --pipeline --verify           # Confirm every pipeline loaded
-php convertCore.php --workflow --list             # List workflows, & why any is not offered
-php convertCore.php --workflow --install=FILE     # Check a workflow & offer it to every user
-php convertCore.php --workflow --export=ID        # Print a workflow as a file a page can import
-php convertCore.php --account --list              # List accounts, roles & last sign-ins
-php convertCore.php --account --add NAME EMAIL    # Make an account & show its password once
-php convertCore.php --account --password NAME     # Give an account a new password & show it once
-php convertCore.php -u=latest                     # Update to the newest release
-php convertCore.php -c                            # Clean every expired session now
+php convertCore.php -v                              # Check every component, dependency & feature
+php convertCore.php --status                        # System state & the listener
+php convertCore.php --config                        # Interactive configuration
+php convertCore.php --config --repair               # Add any setting the configuration is missing
+php convertCore.php --setup --check-depends         # Audit every dependency
+php convertCore.php --pipeline --verify             # Confirm every pipeline loaded
+php convertCore.php --workflow --list               # List workflows, & why any is not offered
+php convertCore.php --workflow --install=FILE       # Check a workflow & offer it to every user
+php convertCore.php --workflow --install-staged=ID  # Install a workflow an admin staged from the page
+php convertCore.php --workflow --discard-staged=ID  # Turn a staged workflow down & install nothing
+php convertCore.php --workflow --export=ID          # Print a workflow as a file a page can import
+php convertCore.php --account --list                # List accounts, roles & last sign-ins
+php convertCore.php --account --add NAME EMAIL      # Make an account & show its password once
+php convertCore.php --account --password NAME       # Give an account a new password & show it once
+php convertCore.php -u=latest                       # Update to the newest release
+php convertCore.php -c                              # Clean every expired session now
 ```
 
 Every command exits with a status a script can act on. See the [full command reference](Documentation/ABOUT_COMMAND_LINE_ARGUMENTS.txt).

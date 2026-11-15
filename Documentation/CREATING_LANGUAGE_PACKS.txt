@@ -220,6 +220,10 @@ Do not repeat a closing HTML tag that footer.php already supplies. $GuiFooterTex
 From v4.2.0 a pack carries $GuiAuthText1 through $GuiAuthText43, the words of the account's buttons & the sign in pages,
 under Set GUI - Sign In Related Variables. $GuiAuthText30 is followed by a number on the page, so it ends where
 a number reads correctly after it, as a colon does in English. Sign in is a verb on a button, & reads as one.
+From v4.2.2 a pack carries $Gui2Text230 through $Gui2Text237, the staging box an administrator's page is offered.
+$Gui2Text234 is followed by the line root runs, so it ends where that line reads correctly after it. $Gui2Text235
+carries {name}, the name of the workflow an install takes the place of. root is the name of an account, & is never
+translated.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

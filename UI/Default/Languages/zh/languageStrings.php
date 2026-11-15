@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -609,6 +609,22 @@ $Gui2Text227 = '该步骤运行时列表中的所有文件';
 $Gui2Text228 = '此工作流会删除以下文件。删除的文件无法恢复。';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = '某个步骤出现错误，因此工作流在删除文件的步骤之前停止。';
+// / 'Install for all users'
+$Gui2Text230 = '为所有用户安装';
+// / 'Description, shown to every user'
+$Gui2Text231 = '说明，向每位用户显示';
+// / 'Descriptions in other languages'
+$Gui2Text232 = '其他语言的说明';
+// / 'Stage for root to install'
+$Gui2Text233 = '准备好由 root 安装';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = '已准备。要为所有用户安装，请在服务器上以 root 身份运行：';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = '它将为所有用户替换 {name}。';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = '无法准备此工作流。';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = '某条说明超过 500 个字符，或包含无法显示的字符。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

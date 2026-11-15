@@ -38,7 +38,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.0';
+$LanguageVersion = 'v4.2.2';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -621,6 +621,22 @@ $Gui2Text227 = 'mọi tệp trong danh sách khi bước đó chạy';
 $Gui2Text228 = 'Quy trình này xóa các tệp sau. Tệp đã xóa không thể khôi phục.';
 // / 'A step had errors, so the workflow stopped before the step that deletes files.'
 $Gui2Text229 = 'Một bước gặp lỗi, nên quy trình đã dừng trước bước xóa tệp.';
+// / 'Install for all users'
+$Gui2Text230 = 'Cài đặt cho tất cả người dùng';
+// / 'Description, shown to every user'
+$Gui2Text231 = 'Mô tả, hiển thị cho mọi người dùng';
+// / 'Descriptions in other languages'
+$Gui2Text232 = 'Mô tả bằng các ngôn ngữ khác';
+// / 'Stage for root to install'
+$Gui2Text233 = 'Chuẩn bị để root cài đặt';
+// / 'Staged. Run this on the server as root to install it for every user:'
+$Gui2Text234 = 'Đã chuẩn bị. Hãy chạy lệnh này trên máy chủ với quyền root để cài đặt cho mọi người dùng:';
+// / 'It takes the place of {name} for every user.'
+$Gui2Text235 = 'Nó thay thế {name} cho mọi người dùng.';
+// / 'The workflow could not be staged.'
+$Gui2Text236 = 'Không thể chuẩn bị quy trình.';
+// / 'A description is longer than 500 characters, or holds a character that cannot be shown.'
+$Gui2Text237 = 'Một mô tả dài hơn 500 ký tự, hoặc chứa ký tự không thể hiển thị.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

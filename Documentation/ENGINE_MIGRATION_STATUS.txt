@@ -18,7 +18,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -59,6 +59,9 @@ The six steps are ABOUT_ENGINE_ABSORPTION.txt, ORDER OF WORK. Status as at v3.9.
      PROVEN BY   grep -c '^\$[A-Za-z]' Resources/config.php
                  grep -c '^\$[A-Za-z]' Resources/Contract/config-template.php
                  All three agree. The model is applicationConfigModel() in convertCore.php.
+     From v4.2.4 the template & the model each have two halves, the Engine's & the
+     application's, & check thirteen holds each half's template to its model. Step seventeen
+     says why.
 
      SOLVED DIFFERENTLY THAN THE CONTRACT PROPOSED, & THE DIFFERENCE IS WORTH RECORDING.
      The contract called for 1161 lines of config.php prose to move into the model as data.
@@ -95,9 +98,12 @@ The six steps are ABOUT_ENGINE_ABSORPTION.txt, ORDER OF WORK. Status as at v3.9.
      belonged in the Engine, as a check of a file against a model. It fails question three.
      It runs while the configuration loads, before the Engine is verified, & it decides
      whether this application starts at all. The Engine cannot provide what is needed to
-     decide whether to load the Engine. It stays in the application.
-     PROVEN BY   grep -n "verifyConfigVersion(.Required\|verifyCoreComponent('Engine'" convertCore.php
-                 The configuration check is called hundreds of lines before the Engine is.
+     decide whether to load the Engine.
+     ANSWERED AT v4.2.4 BY THE KERNEL, which is reachable before the Engine. The check is
+     verifyConfigurationSettings(), it reads its names from the two halves of the template, &
+     the Engine's settings are the Engine's half. See step thirteen.
+     PROVEN BY   grep -n "verifyInstallationState(\|verifyCoreComponent('Engine'" convertCore.php
+                 The configuration check runs inside the first, hundreds of lines before the Engine is.
 
   6. SPLIT THE COMMAND LINE HANDLER                                   DONE, AS STEP SEVEN
      Pass a was attempted & REVERTED within the same release. The argument parser went into
@@ -304,10 +310,13 @@ the code moves, not by the code moving.
                  Engine no longer knows whose configuration it is. That is the control.
                  Delete Resources/config.php & run --config --repair. It writes 131 settings
                  from Resources/Contract/config-template.php.
+                 From v4.2.4 it writes 160, from both halves of the template, & with the
+                 contract aside --config --view still shows the Engine's own 86.
      SOLVED DIFFERENTLY THAN PLANNED. The plan said paths the application supplies. That
      cannot work for app-engine-config.php, because it is the file an application would
      supply them IN. The location is a kernel convention instead, contractPath(), the same in
-     every application & written once. $EngineConfigTemplate still works as before.
+     every application & written once. $EngineConfigTemplate still worked as before, until
+     step seventeen retired it.
      NOT YET THE SAME BYTES IN EVERY APPLICATION, WHEN WRITTEN.     RESOLVED BY STEP NINE
      Two strings in Engine code said HRCONVERT2, the variable the listener's startup key
      travels in & the marker the Engine writes into policy files. Both are built from the
@@ -407,7 +416,9 @@ the code moves, not by the code moving.
      application serves -v, -h & anything beginning --app itself, offers every other command
      to the dispatcher, & handles what comes back unhandled, which is -u or a mistake. The
      dispatcher returns whether it handled the command & the exit status it earned, &
-     parseCommandLine passes the status on. parseCommandLine went from 667 lines to 134.
+     parseCommandLine passes the status on. parseCommandLine went from 667 lines to 134. From
+     v4.2.4 the kernel's runCommandLine() serves -v, -h & --app, & the Engine's
+     runEngineCommandLine() the rest, -u included, which is step eighteen.
      Each group of commands is a function of its own, & every branch body was lifted out of
      the old chain by a script that asserted each anchor, not retyped. The only edits made to a
      lifted body name the application through the contract rather than by hand, send -fp
@@ -550,7 +561,7 @@ the code moves, not by the code moving.
      site loads Setup Core first, as -fp & --setup already did, & -u now does too.
      fixManagedPermissions stays the application's repair for now. It calls the Apache, policy
      & sandbox functions, which are still the application's, so it can follow only once they
-     have moved, or check eight fails.
+     have moved, or check eight fails. It moved in step seventeen.
      PROVEN BY   Nine invocations recorded before & after the move, normalized for times,
                  sessions, process numbers & random names. -fp installing & handing over, -fp
                  again, -v, -h, -u to the installed version, to a broken release & to a good
@@ -583,7 +594,7 @@ the code moves, not by the code moving.
      location, where it read the DATA line alone.
      The start up check of the sandbox profile runs once the Engine has loaded, because the
      sandbox moves into the Engine next. fixManagedPermissions stays the application's until
-     then, since it still calls the sandbox & policy functions.
+     then, since it still calls the sandbox & policy functions. It moved in step seventeen.
      PROVEN BY   Every path the move touches, recorded before & after & normalized for times,
                  sequence numbers & random names. -fp installing & handing over & again, the
                  Apache configuration & protection file it writes, -v as root & as www-data
@@ -657,6 +668,7 @@ the code moves, not by the code moving.
      distribution's bubblewrap profile.
      fixManagedPermissions stays the application's. It still calls the two tool policy checks,
      which are the application's, so it follows once those are reached through the provider.
+     It moved in step seventeen, & the Engine reaches them through $EnginePolicyChecks.
      PROVEN BY   Every path the move touches, recorded before & after from the same host state &
                  normalized as for step eleven. The records differ where intended & nowhere
                  else. The baseline wrote a three line sysctl drop in & its ImageMagick policy
@@ -873,10 +885,10 @@ the code moves, not by the code moving.
 
   16. SIGNING IN IS THE ENGINE'S, & THE APPLICATION HOLDS NONE OF IT.        DONE AT v4.2.0
      The Authentication Core, the Email Core & the Authentication Manager were the Engine's from
-     their first line. convertCore.php calls answerEngineRequest() before verifyGlobals() &
-     engineSessionFolder() where it names a request's folder, draws the page the Engine names, &
-     runs no operation where the Engine answered. It keeps its pins & its settings, & nothing else
-     about an account. The listener is told the owner of a write through storageQuotaOwner(), & a
+     their first line. convertCore.php called answerEngineRequest() before verifyGlobals() &
+     engineSessionFolder() where it named a request's folder, until the Engine's startEngine()
+     took both at v4.2.4. It draws the page the Engine names & runs no operation where the Engine
+     answered. It keeps its pins & its settings, & nothing else about an account. The listener is told the owner of a write through storageQuotaOwner(), & a
      workflow's worker its user through engineWorkerContext(), so neither the Resource Manager nor
      the Workflow Core names an account.
      It passes question three. Nothing about an account is reached before the Engine is verified,
@@ -892,6 +904,74 @@ the code moves, not by the code moving.
                  right to left, twenty one over a live v4.1.9 updated by drop in, & fifteen over a
                  chain of drop ins from v4.1.2. Seventy two mutations, each undoing one rule of
                  accounts, of --account or of the pages that draw them, are caught.
+
+  17. THE BOOT, THE SETTINGS, THE REPAIR & -v LEAVE THE APPLICATION.          DONE AT v4.2.4
+     Everything the application did before its Engine loaded is the kernel's
+     verifyInstallationState(). It finds who runs the process, reads versionInfo.php &
+     config.php, derives the data locations & every account's home & reads the install
+     secret. The application hands it its pins, & declares $DefaultApplicationName before it
+     loads the kernel, so the kernel names no application.
+     config.php has two halves, the Engine's & the application's, & each has a template & a
+     model. The kernel reads the names in both templates, makes each a global as it reads
+     config.php & refuses a config.php that lacks one, so there is no list of settings & no
+     global declaration to keep in step. Two settings that declaration left out when they were
+     added, the format detection type & the capability mismatch warning, reach the Pipeline
+     Core now. An application gives one of the Engine's settings a default of its own in
+     $EngineSettingDefaults.
+     -fp is the Engine's repairInstallation(), & the application names the policies it keeps
+     in $EnginePolicyChecks. -v is the Engine's showVersionReport(), the application adds its
+     own rows through $EngineReportProvider, & the kernel prints a short report where the
+     Engine cannot load. The operator is asked on the terminal by the Engine, & the four
+     timing constants every manager reads are the Engine's, in engineConfig.php.
+     It passes question three, because what is reached before the Engine is verified is the
+     kernel's, & question four for the settings, which are in the Engine's half.
+     PROVEN BY   grep -c -E 'function (verifyConfigVersion|verifyContainerEnvironment|
+                 verifyCodeIsTrustedByRoot|fixManagedPermissions|showVersionInfo|askOperator|
+                 applicationEnvironmentFindings)\(' convertCore.php   written as one line,
+                 answers 0.
+                 Check thirteen passes, so each half of the template agrees with its model & no
+                 setting is in both. Check eight passes, so the Engine calls the application only
+                 through what the contract names.
+     What was still the application's & was not application logic, the rest of the boot, the
+     command line & the Engine's own dependencies, left it in step eighteen.
+
+  18. THE ENGINE STARTS ITSELF & OWNS ITS COMMAND LINE & ITS DEPENDENCIES.    DONE AT v4.2.4
+     The kernel's loadEngine() verifies the Engine & calls its startEngine(), which does what the
+     application's main logic did after the load. It finds the host's architecture, takes the
+     sandbox profiles from the function the contract names in $EngineSandboxProvider, gates
+     resource awareness, adopts the session a workflow's worker is handed, answers the request &
+     calls establishEngineSession(). That derives a session's folders, the pooled session areas &
+     the served address, & each folder a session needs beyond the Engine's is named in
+     $EngineSessionFolders. The Pipeline & Workflow Cores load last. verifyGlobals() sets the
+     application's own globals & nothing else, & the kernel sets $DirSep, $Lol, $Lolol, $Append &
+     the socket folder, once.
+     The kernel's runCommandLine() reads the vector, answers -v, -h & --app & refuses what needs a
+     missing Engine. Everything else is the Engine's runEngineCommandLine(), -u & an argument
+     nothing recognizes included. -h is the Engine's showHelpInfo(), & the application describes
+     itself through $EngineHelpProvider. A web request is admitted by the kernel's
+     admitWebRequest(), prepared by the Engine's prepareWebRequest() & finished by its
+     finishWebRequest().
+     The dependency manifest has two halves, as config.php does. Resources/Engine/depends.php
+     names PHP, the three extensions the Engine uses, Apache, Curl, Git, Bubblewrap & AppArmor
+     Utils, & the Engine pins it itself. Resources/Contract/depends.php names what the
+     application's pipelines run. The allowed extensions are read through $EngineSettingNames,
+     & --File Operation Retry Count--, which the Pipeline Core counts its attempts by, is in the
+     Engine's half of config.php, so the only globals the Engine reads that the application alone
+     sets are its pins.
+     It passes question three, because what runs before the Engine is verified is the kernel's,
+     & question four, because what the Engine reads is the kernel's, config.php's, the
+     contract's or its own.
+     PROVEN BY   grep -c -E 'function (parseCommandLine|reportUnrecognizedArgument|
+                 adoptWorkflowSession|verifyRequiredDirs|verifySandboxPolicyAtStart|
+                 showHelpInfo)\(' convertCore.php   written as one line, answers 0.
+                 Check three passes, so the line that loads the Engine loads every file it is
+                 made of. Check eight passes, so the Engine calls the application only through
+                 what the contract names. All three checkers read the entry point & the model
+                 from the contract, & pass a copy with both renamed.
+                 Seventy five unit checks, with the real functions lifted out, & ninety one
+                 through Apache with mod_php beside the tree before this step, as root & as the
+                 web server account. Every command line, every report & every page says what it
+                 said, but for what this step changed on purpose.
 
 WHAT DROPS OUT.
   The step six sort written earlier in this release, which assumed the work was moving

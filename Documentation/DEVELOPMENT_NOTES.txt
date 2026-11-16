@@ -732,7 +732,7 @@ It was a bare die until v3.9.9, which exits with status zero, so every fatal err
 systemd never restarted a listener that died there, & the Dockerfile carried a fallback for a
 failure that could not happen.
 
-parseCommandLine() LOWERCASES EVERY ARGUMENT, & NO TARGET IS A PATH.
+parseArgumentVector() LOWERCASES EVERY ARGUMENT, & NO TARGET IS A PATH.
 An earlier version lowercased a target after an equal sign & left one that arrived separately alone,
 so --update=NOW & --update NOW differed. Another lowercased the command & compared the confirmation
 flag exactly, so --clean now -Y asked a question already answered. The list of targets that are
@@ -761,6 +761,23 @@ Rotating the secret stops & starts the listener, which is the Engine's, so --rot
 the Engine's command at the same time.
 The lines the secret writes to the server's error log before a logfile exists named HRConvert2,
 which in the kernel would have named it for every application. applicationLabel() names them.
+
+THE KERNEL BOOTS THE INSTALLATION, FROM v4.2.4.
+Until v4.2.4 everything that ran before the Engine was verified was the application's, the root
+trust gate, the container check, the running account, config.php & the data locations among it, &
+a second application would have written each again. Each passes question three, so each is the
+kernel's, & verifyInstallationState runs them in order. The application hands it its pins.
+
+A SETTING IS A GLOBAL BECAUSE A TEMPLATE NAMES IT. v4.2.4.
+Until v4.2.4 a setting was read because verifyInstallation declared it global & was required
+because verifyConfigVersion listed it, & each new setting was added to both by hand. Two were in
+neither, the format detection type & the capability mismatch warning, so the Pipeline Core never
+saw the administrator's value & ran with detection off. The kernel reads the names in the two
+templates & makes each a global as it reads config.php, so there is no list to keep in step.
+Seven settings the list left out are required now, as every other is. They are the additional
+data locations, unprivileged namespaces, the four per conversion limit settings & the storage
+cleanup interval. Every template since v3.9.6 holds them, & --config --repair adds one a config.php
+written by hand lacks.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -939,6 +956,48 @@ A USER FETCH WITH NO CEILING IS FETCHED WHOLE. v4.1.7.
 config.php says 0 is no ceiling for --URL Download Maximum Bytes--, & the fetch read 0 as the
 inspection ceiling, 8191 bytes. A negative ceiling now lifts the limit, & the core hands one over
 for 0.
+
+THE ENGINE OWNS ITS SETTINGS, ITS REPAIR & ITS REPORT, FROM v4.2.4.
+Eighty seven of config.php's settings are read by the kernel or the Engine, & until v4.2.4 their
+template & model were the application's, so a second application would have copied every one.
+Each half of config.php has its own template & model, & an application gives one of the Engine's
+settings a default of its own in $EngineSettingDefaults. -fp & -v were the application's
+fixManagedPermissions & showVersionInfo, which no application would write differently, & are the
+Engine's repairInstallation & showVersionReport. An application names the policies it keeps in
+$EnginePolicyChecks & adds what only it knows to -v through $EngineReportProvider.
+
+FOUND BY TESTING. -v DIED WITHOUT AN ENGINE. v4.2.4.
+The command an operator runs to find out why the Engine will not load reached Dependency Core, which
+calls the Engine, & ended in a fatal. The kernel's showKernelVersionReport answers instead & says
+what to restore.
+
+A STATIC KEEPS WHAT IT HOLDS, SO IT IS NEVER PURGED. v4.2.4.
+verifySystemdRun purged its three statics, so a probe its comments said ran once per request ran
+before every conversion. Check twenty five finds the pattern. Every policy check keeps its answer
+through policyAnswerMemory, so when a kept answer still applies is decided in one place.
+
+THE ENGINE STARTS ITSELF & ANSWERS ITS OWN COMMAND LINE, FROM v4.2.4.
+What the main logic did once the Engine loaded, the host, the sandbox profiles, the resource
+awareness gate, a workflow's session, a session's folders & the served address, would have been
+the same in any application, & a second one would have copied it line by line. It is the Engine's
+startEngine & establishEngineSession, & the application names what is its own, its sandbox
+profiles & its session folders, in the contract. parseCommandLine was HRConvert2's & held two
+things of HRConvert2's, the lines -h prints & --app, so the kernel reads the command line, the
+Engine answers it & the application hands over its lines through $EngineHelpProvider. The
+Engine's own dependencies were entries in HRConvert2's manifest, so the manifest has an Engine
+half, as config.php does. The Pipeline Core counted its attempts by the application's
+$StopCounter, so --File Operation Retry Count-- is the Engine's setting.
+
+$DirSep & $Lol ARE SET BEFORE ANYTHING READS THEM, FROM v4.2.4.
+verifyGlobals set both, & code that ran before it was wrong twice, an account sweep at v4.2.0 &
+a workflow folder at v4.2.3. The kernel sets both, with $Lolol & $Append, as
+verifyInstallationState begins, so nothing the application or the Engine runs is early for them.
+
+FOUND BY TESTING. A SHARE LINK BEGAN http ON A SERVER REACHED OVER https. v4.2.4.
+verifyGlobals worked out the served address before the connection was verified, which is what
+says whether it is encrypted, so every share link began http. establishEngineSession verifies the
+connection first. A comparison of the two trees' sessions over https found it, & a comparison
+over http would not have.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

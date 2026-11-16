@@ -178,10 +178,10 @@ NOT AT BOOT. ON DEMAND, BY WHATEVER NEEDS IT.
 A web request never installs, configures or manages dependencies, so it never pays to read a
 component it will not call. Only the Engine & Pipeline Core are resolved on every request.
 
-  engine.php             Resolved in the main logic, before verifyGlobals().
-  pipelineCore.php       Resolved in the main logic, directly after verifyGlobals().
+  engine.php             Resolved by the kernel's loadEngine(), before verifyGlobals().
+  pipelineCore.php       Resolved by the Engine's startEngine(), once the session is established.
   workflowCore.php       Resolved after Pipeline Core, when workflows are on or --workflow is asked for.
-  authenticationCore.php Resolved with the Engine's answer to a request, before verifyGlobals(), when
+  authenticationCore.php Resolved with the Engine's answer to a request, in startEngine(), when
                          accounts are on, & by --account whether or not they are.
   emailCore.php          Resolved with the Authentication Core.
   setupCore.php          Loaded by --config, & by -fp for resource limits & the service unit.
@@ -192,9 +192,10 @@ component it will not call. Only the Engine & Pipeline Core are resolved on ever
 
 PIPELINE CORE IS THE EXCEPTION TO ON DEMAND & THE REASON IS ORDERING.
 It is resolved on every request that could convert something, because a conversion cannot
-wait for it. It is resolved AFTER verifyGlobals() rather than during verifyInstallation,
-because enumerating pipelines warns about every one it refuses & those warnings are
-worthless before there is a logfile to write them to.
+wait for it. It is resolved as the Engine starts, after verifyLogs() rather than during
+verifyInstallation, because enumerating pipelines warns about every one it refuses & those
+warnings are worthless before there is a logfile to write them to. It was resolved after
+verifyGlobals() until v4.2.4, & reads nothing verifyGlobals() sets.
 
 EACH COMMAND LOADS ONLY WHAT IT NEEDS.
 --config needs Setup Core. --setup needs Dependency Core. Only --install-complete &
@@ -218,14 +219,15 @@ FOURTEEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
   $RequiredWorkflowCoreVersion     workflowCore.php              EXACT.
   $RequiredAuthenticationCoreVersion authenticationCore.php      EXACT.
   $RequiredEmailCoreVersion        emailCore.php                 EXACT.
-  $RequiredDependsVersion          depends.php                   EXACT.
+  $RequiredDependsVersion          Contract/depends.php          EXACT. The application's half.
   $RequiredSecretVersion           the install secret file       EXACT.
   $RequiredGuiVersion              every UI folder               EXACT.
   $RequiredLanguageVersion         every language pack           EXACT.
   $RequiredConfigScript            the bootstrap script          EXACT.
 
 The Engine pins its own manager roles in getAcceptedManagers, so a manager is judged by the
-Engine that runs it rather than by the core.
+Engine that runs it rather than by the core. It pins its half of the dependency manifest,
+Resources/Engine/depends.php, in getAcceptedEngineManifest from v4.2.4, for the same reason.
 
 Pipeline Core checks a pin for every pipeline & every shared module the application accepts.
 The pins are the application's & are set in Resources/Contract/app-engine-config.php, as
@@ -252,20 +254,30 @@ RAISE $RequiredPipelineCoreVersion WHEN THE PIPELINE CORE ITSELF CHANGES, & FOR 
 A pipeline added, removed or raised is a line in the contract. Until v3.9.9 the pin list was
 inside the Pipeline Core, so a pipeline moving meant a new Pipeline Core & a new pin here.
 
-A SETTING ADDED TO config.php IS ADDED IN FOUR PLACES.
-config.php, Resources/Contract/config-template.php, applicationConfigModel() in convertCore.php,
-& the list verifyConfigVersion() in convertCore.php checks for. The template holds every default.
+A SETTING ADDED TO config.php IS ADDED IN TWO PLACES, FROM v4.2.4, ITS TEMPLATE & ITS MODEL.
+config.php has two halves, & a setting belongs to the half whose code reads it.
+  A setting the kernel or the Engine reads  Resources/Engine/config-template.php & engineConfigModel()
+                                            in Resources/Engine/engine.php.
+  A setting only HRConvert2 reads           Resources/Contract/config-template.php & applicationConfigModel()
+                                            in convertCore.php.
+The template holds every default & its documentation. The kernel reads the names in both templates,
+makes each a global as it reads config.php & refuses a config.php missing any, so there is no list
+of required settings & no global declaration to keep in step, as there was until v4.2.4, when a
+setting was added in four places & two settings had been missing from the global declaration since
+they were added. Resources/config.php is what --config --repair writes from both halves.
 The model holds what a configuration cannot say about itself, a type, a dependency between
 settings & a section an operator owns. A dependency is named only where the code does not read
 the setting while the one it depends on is off, & a Conflict names what follows where it is read
-& contradicts it instead, as --Require Resource Awareness-- does. --config prints both. The Engine finds both through $EngineConfigModelProvider
-& $EngineConfigTemplate in Resources/Contract/app-engine-config.php.
+& contradicts it instead, as --Require Resource Awareness-- does. --config prints both. The Engine
+joins its model to the one named in $EngineConfigModelProvider in Resources/Contract/app-engine-config.php,
+& finds both templates through configurationTemplatePaths() in the kernel.
+Check thirteen of hrconvert2-check.py fails when a template & its model disagree or a name is in both halves.
 A setting whose model carries NamedWhenChanged, from v4.2.0, is named as having no effect only once it differs from its
 default, so a feature with many settings that most installations leave off, as accounts are, names only what was changed.
 The settings of automatic updates carry it from v4.2.3, when updates became off by default.
 Forgetting the model does not break anything immediately, which is the point. A setting the
 model does not know is reported as unaccounted, can still be edited by hand, & simply cannot
-be reset. Forgetting the list stops the check covering that setting.
+be reset or repaired, which is why check thirteen reports it.
 An installation updated by a drop in runs  --config --repair  before -fp, which adds each new
 setting at its default. Until then every other command refuses with error 28000.
 Until v4.1.2 this said to raise $RequiredSetupCoreVersion whenever $RequiredConfigVersion was
@@ -353,6 +365,7 @@ Five things, in this order.
 Nothing else. No registry, no manifest & no change to any existing component. Step five is
 one line, which is the entire point of collapsing the three loaders into one.
 
-Then add it to showVersionInfo, so -v reports it beside the others. A component nobody can
-see the version of is a component nobody can diagnose.
+Then add it to the components showVersionReport() lists in Resources/Engine/engine.php, so -v
+reports it beside the others. A component nobody can see the version of is a component nobody
+can diagnose.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

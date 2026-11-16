@@ -188,8 +188,10 @@ $EngineEnvironmentProvider names the function that reports on an application's e
 & the Environment Manager reads the same findings validateOperatingEnvironment() returns.
 There is one definition of what a healthy installation looks like & three things read it.
 
-For HRConvert2 that is applicationEnvironmentFindings() in convertCore.php, covering the
-ImageMagick policy each pipeline carries & what confines OpenSCAD.
+The policies an application keeps on the host are named in $EnginePolicyChecks & reported by the
+Engine itself, from v4.2.4. For HRConvert2 those are the ImageMagick policy each pipeline carries &
+what confines OpenSCAD, which applicationEnvironmentFindings() in convertCore.php reported until
+then, & HRConvert2 names no environment provider.
 
 The Engine adds checks of its own, because each is something it provides. Bubblewrap must be
 able to build a namespace, & the bootstrap script must match the core or be disabled. A script

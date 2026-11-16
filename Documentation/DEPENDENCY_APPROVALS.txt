@@ -10,7 +10,7 @@ APPLICATION INFORMATION ...
 This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
 
 FILE INFORMATION ...
-v3.9.7.
+v4.2.4.
 This plain text file is the dependency approval record for the application itself.
 It is written by Documentation/Build/hrconvert2-approvals.py. Every factual field is read from the dependency manifest & is rewritten by that tool. Every audit answer & every note is written by a person & is kept across a refresh.
 The procedure these questions come from is in Documentation/ABOUT_DEPENDENCIES.txt.
@@ -20,7 +20,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audit outcome                                 NOT YET AUDITED
     Notes or Conditions                           NOT YET AUDITED
 
-  Manifest facts, read from Resources/Contract/depends.php
+  Manifest facts, read from Resources/Engine/depends.php
     Binary                                        apache2
     Install type                                  apt
     Package                                       apache2 libapache2-mod-php
@@ -89,7 +89,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audit outcome                                 NOT YET AUDITED
     Notes or Conditions                           NOT YET AUDITED
 
-  Manifest facts, read from Resources/Contract/depends.php
+  Manifest facts, read from Resources/Engine/depends.php
     Binary                                        apparmor_parser
     Install type                                  apt
     Package                                       apparmor-utils
@@ -134,7 +134,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audit outcome                                 NOT YET AUDITED
     Notes or Conditions                           NOT YET AUDITED
 
-  Manifest facts, read from Resources/Contract/depends.php
+  Manifest facts, read from Resources/Engine/depends.php
     Binary                                        bwrap
     Install type                                  apt
     Package                                       bubblewrap
@@ -179,7 +179,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audit outcome                                 NOT YET AUDITED
     Notes or Conditions                           NOT YET AUDITED
 
-  Manifest facts, read from Resources/Contract/depends.php
+  Manifest facts, read from Resources/Engine/depends.php
     Binary                                        curl
     Install type                                  apt
     Package                                       curl
@@ -224,7 +224,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audit outcome                                 NOT YET AUDITED
     Notes or Conditions                           NOT YET AUDITED
 
-  Manifest facts, read from Resources/Contract/depends.php
+  Manifest facts, read from Resources/Engine/depends.php
     Binary                                        git
     Install type                                  apt
     Package                                       git
@@ -269,10 +269,10 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audit outcome                                 NOT YET AUDITED
     Notes or Conditions                           NOT YET AUDITED
 
-  Manifest facts, read from Resources/Contract/depends.php
+  Manifest facts, read from Resources/Engine/depends.php
     Binary                                        php
     Install type                                  apt
-    Package                                       php-cli php-zip php-mbstring
+    Package                                       php-cli php-mbstring
     Minimum version                               8.0
     Required                                      YES
     Subsystem                                     Core
@@ -314,7 +314,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audit outcome                                 NOT YET AUDITED
     Notes or Conditions                           NOT YET AUDITED
 
-  Manifest facts, read from Resources/Contract/depends.php
+  Manifest facts, read from Resources/Engine/depends.php
     Binary                                        -
     Install type                                  php-extension
     Package                                       openssl
@@ -359,7 +359,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audit outcome                                 NOT YET AUDITED
     Notes or Conditions                           NOT YET AUDITED
 
-  Manifest facts, read from Resources/Contract/depends.php
+  Manifest facts, read from Resources/Engine/depends.php
     Binary                                        -
     Install type                                  php-extension
     Package                                       pcntl
@@ -404,7 +404,7 @@ it removes a capability every pipeline relies on, such as the sandbox.
     Audit outcome                                 NOT YET AUDITED
     Notes or Conditions                           NOT YET AUDITED
 
-  Manifest facts, read from Resources/Contract/depends.php
+  Manifest facts, read from Resources/Engine/depends.php
     Binary                                        -
     Install type                                  php-extension
     Package                                       posix

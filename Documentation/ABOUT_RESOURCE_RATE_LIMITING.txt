@@ -110,7 +110,7 @@ supported by the current transport, though shared storage between servers is.
 Every core to core startup call is cryptographically keyed against the install secret.
 
 The key is a launch number drawn at random & an HMAC over the purpose being authorized, a
-time bucket of ten seconds, set by $StartupKeyWindow in verifyGlobals(), & that number. The
+time bucket of ten seconds, set by $StartupKeyWindow in engineConfig.php, & that number. The
 current & the previous bucket are both accepted, because launching a process is not instant.
 A key is therefore useless a few seconds after it is created, & every launch has its own.
 

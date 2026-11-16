@@ -11,7 +11,7 @@
 # on a server for users of any web browser without authentication.
 #
 # FILE INFORMATION ...
-# v4.1.7.
+# v4.2.4.
 # This file contains the Docker build file for the project.
 #
 # Build this from the repository root, not from this directory.
@@ -40,8 +40,9 @@
 # decides both, so a restricting host is corrected on the host.
 #
 # DEPENDENCY REQUIREMENTS ...
-# Nothing is listed here on purpose. Resources/Contract/depends.php is the manifest & this file
-# installs from it, so a dependency added there arrives here without editing this file.
+# Nothing is listed here on purpose. The manifest is Resources/Engine/depends.php for the Engine &
+# Resources/Contract/depends.php for the application, & this file installs from both, so a
+# dependency added to either arrives here without editing this file.
 #
 # <3 Open-Source
 # -----------------------------------------------------------------------------------
@@ -72,8 +73,8 @@ WORKDIR /var/www/html/HRProprietary/HRConvert2
 # / Copying the whole tree first would invalidate that layer whenever any source file
 # / changed, so a one line comment edit would rebuild LibreOffice, Calibre & the rest.
 # / The core & the manifest are enough to run a dependency install, so they are copied on
-# / their own & the install is cached against them. It re-runs when depends.php changes,
-# / which is exactly when it should.
+# / their own & the install is cached against them. It re-runs when either half of the manifest
+# / changes, which is exactly when it should. The Engine's half arrives with the Engine directory, from v4.2.4.
 # / THE ENGINE MOVED AT v3.9.3 & these paths moved with it.
 # / depends.php was Resources/Engine/Contract/depends.php. Setup Core & Dependency Core are
 # / Resources/Engine/Cores. The Engine directory is copied whole rather than file by file,

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.2.3.
+// / v4.2.4.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -23,7 +23,7 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / Dependency requirements ...
-// / The authoritative list of dependencies is Resources/Contract/depends.php & nothing else.
+// / The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else.
 // / Run  php convertCore.php -v  to see what this installation has.
 // /
 // / <3 Open-Source
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.2.3';
+$SetupCoreVersion = 'v4.2.4';
 // / -----------------------------------------------------------------------------------
 
 
@@ -1343,49 +1343,157 @@ function correctManagedLocations($webAccount) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to write a complete configuration file from the model.
+// / A function to read one half of the configuration template into what comes before its sections, its sections & what comes after them.
+// / Accepts the template. Returns whether it was read & what it holds, as Preamble, Sections & Trailing, in that order.
+// / Only what follows the template's COPY FROM HERE marker is read, because what precedes it explains the template & is never copied.
+// / A section opens with a separator & a header of three dashes either side of its name, & closes at the next separator.
+// / Each section keeps the line after its header apart from its settings as Lead, so the two halves of one section join under one header.
+// / The blank lines between sections are not kept, because the file written puts one between every two.
+function readConfigTemplate($templatePath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $TemplateWasRead = FALSE;
+  $TemplateParts = array('Preamble' => array(), 'Sections' => array(), 'Trailing' => array());
+  $templateText = $sectionName = '';
+  $templateLines = $headerMatch = array();
+  $markerPosition = FALSE;
+  $lineIndex = $lineCount = $closingIndex = 0;
+  $sectionSeparator = '// / ------------------------------';
+  $templateText = (string)@file_get_contents((string)$templatePath);
+  if ($templateText !== '') {
+    $TemplateWasRead = TRUE;
+    $markerPosition = strpos($templateText, '// / Copy from here down.');
+    if ($markerPosition !== FALSE) $templateText = substr($templateText, $markerPosition + strlen('// / Copy from here down.') + 1);
+    $templateLines = explode("\n", str_replace("\r\n", "\n", $templateText));
+    $lineCount = count($templateLines);
+    while ($lineIndex < $lineCount) {
+      // / A header is preceded by the separator that opens its section, which is the section's & not the preamble's.
+      if (preg_match('/^\/\/ \/ ---([A-Za-z][A-Za-z0-9 &]*)---\s*$/', $templateLines[$lineIndex], $headerMatch) && $lineIndex > 0 && $templateLines[$lineIndex - 1] === $sectionSeparator) {
+        if (empty($TemplateParts['Sections'])) array_pop($TemplateParts['Preamble']);
+        $sectionName = trim($headerMatch[1]);
+        $closingIndex = $lineIndex + 2;
+        while ($closingIndex < $lineCount && $templateLines[$closingIndex] !== $sectionSeparator) $closingIndex++;
+        $TemplateParts['Sections'][$sectionName] = array('Lead' => (string)($templateLines[$lineIndex + 1] ?? '// /'), 'Body' => array_slice($templateLines, $lineIndex + 2, $closingIndex - $lineIndex - 2));
+        // / Whatever follows the last section is the trailing part, & is found once no header follows.
+        $TemplateParts['Trailing'] = array();
+        $lineIndex = $closingIndex + 1;
+        continue; }
+      if (empty($TemplateParts['Sections'])) $TemplateParts['Preamble'][] = $templateLines[$lineIndex];
+      else $TemplateParts['Trailing'][] = $templateLines[$lineIndex];
+      $lineIndex++; }
+    // / A trailing part that only separates two sections is not trailing, & the lines between them are not kept.
+    while (!empty($TemplateParts['Trailing']) && trim((string)end($TemplateParts['Trailing'])) === '') array_pop($TemplateParts['Trailing']);
+    while (!empty($TemplateParts['Trailing']) && trim((string)reset($TemplateParts['Trailing'])) === '') array_shift($TemplateParts['Trailing']); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $templateText, $sectionName, $templateLines, $headerMatch, $markerPosition, $lineIndex, $lineCount, $closingIndex, $sectionSeparator, $templatePath);
+  return array($TemplateWasRead, $TemplateParts); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to give the Engine's settings the defaults an application gives them.
+// / Accepts the lines of one section of the Engine's half of the template & the defaults, keyed by setting, in that order.
+// / Returns the lines, with each setting the defaults name assigned its default instead.
+// / An assignment may run across several lines, as an array does, & the whole of it is replaced by one line.
+// / It ends at the first line ending in a semicolon, which is how every template writes one.
+// / A default is a value written as config.php writes it, so a string carries its quotes.
+function applySettingDefaults($sectionLines, $settingDefaults) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $DefaultedLines = array();
+  $orderedLines = $assignmentMatch = array();
+  $lineIndex = $lineCount = $closingIndex = 0;
+  $orderedLines = array_values((array)$sectionLines);
+  $lineCount = count($orderedLines);
+  while ($lineIndex < $lineCount) {
+    if (is_array($settingDefaults) && preg_match('/^\$([A-Za-z_][A-Za-z0-9_]*)(\s*=\s*)/', (string)$orderedLines[$lineIndex], $assignmentMatch) && isset($settingDefaults[$assignmentMatch[1]])) {
+      $closingIndex = $lineIndex;
+      while ($closingIndex < $lineCount - 1 && preg_match('/;\s*$/', (string)$orderedLines[$closingIndex]) !== 1) $closingIndex++;
+      $DefaultedLines[] = '$'.$assignmentMatch[1].$assignmentMatch[2].trim((string)$settingDefaults[$assignmentMatch[1]]).';';
+      $lineIndex = $closingIndex + 1;
+      continue; }
+    $DefaultedLines[] = (string)$orderedLines[$lineIndex];
+    $lineIndex++; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $orderedLines, $assignmentMatch, $lineIndex, $lineCount, $closingIndex, $sectionLines, $settingDefaults);
+  return $DefaultedLines; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write the text of config.php from the two halves of the configuration template.
+// / Accepts what readConfigTemplate() read of the Engine's half & of the application's, & the defaults the application gives the Engine's settings, in that order.
+// / Returns the text.
+// / The application's half supplies what comes before the first section, the header & the guard a config.php opens with, & $ConfigVersion.
+// / Each section the two share is written once, under one header, with the Engine's settings first, because a setting of the
+// / application's may be an expression of one of the Engine's, as a folder is of the data location.
+// / The Engine's sections come in the Engine's order, & a section only the application has follows them in its own.
+// / A default the application gives one of the Engine's settings replaces the Engine's value as it is written, & applySettingDefaults() says how.
+// / A default named for a setting of the application's is not applied, here or in a reset, & check thirteen reports it.
+function composeConfigFile($engineParts, $applicationParts, $settingDefaults) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $ConfigText = '';
+  $configLines = $sectionNames = $engineBody = $applicationBody = array();
+  $sectionName = $sectionLead = '';
+  $sectionSeparator = '// / ------------------------------';
+  $configLines = array_merge(array('<?php'), (array)$applicationParts['Preamble']);
+  while (!empty($configLines) && trim((string)end($configLines)) === '') array_pop($configLines);
+  $sectionNames = array_unique(array_merge(array_keys((array)$engineParts['Sections']), array_keys((array)$applicationParts['Sections'])));
+  foreach ($sectionNames as $sectionName) {
+    $engineBody = isset($engineParts['Sections'][$sectionName]) ? (array)$engineParts['Sections'][$sectionName]['Body'] : array();
+    $applicationBody = isset($applicationParts['Sections'][$sectionName]) ? (array)$applicationParts['Sections'][$sectionName]['Body'] : array();
+    $sectionLead = isset($engineParts['Sections'][$sectionName]) ? (string)$engineParts['Sections'][$sectionName]['Lead'] : (string)$applicationParts['Sections'][$sectionName]['Lead'];
+    while (!empty($engineBody) && trim((string)end($engineBody)) === '') array_pop($engineBody);
+    while (!empty($applicationBody) && trim((string)end($applicationBody)) === '') array_pop($applicationBody);
+    $engineBody = applySettingDefaults($engineBody, $settingDefaults);
+    $configLines[] = '';
+    $configLines[] = $sectionSeparator;
+    $configLines[] = '// / ---'.$sectionName.'---';
+    $configLines[] = $sectionLead;
+    $configLines = array_merge($configLines, $engineBody, $applicationBody);
+    $configLines[] = $sectionSeparator; }
+  $configLines = array_merge($configLines, (array)$applicationParts['Trailing']);
+  $ConfigText = implode(PHP_EOL, $configLines).PHP_EOL;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $configLines, $sectionNames, $engineBody, $applicationBody, $sectionName, $sectionLead, $sectionSeparator, $engineParts, $applicationParts, $settingDefaults);
+  return $ConfigText; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write a complete configuration file from the two halves of the configuration template.
 // / Accepts the path to write. Returns whether it was written & how many settings it holds.
 // /
 // / An installation that has lost its config.php, or never had one, gets a working default here rather than a download.
 // / It is PHP rather than a build script in another language, so deleting config.php & running --config --repair is enough.
 // / It writes defaults & knows nothing of any existing file, because merging what an administrator set is what repair does for a file that exists.
-// / The template keeps every expression as source, so $LogDir stays $ConvertLoc with a suffix & the two still move together.
+// / The templates keep every expression as source, so $LogDir stays $ConvertLoc with a suffix & the two still move together.
+// / The templates are copied, not rebuilt from a description of themselves.
+// / Each is already a real config.php at defaults, & rebuilding one from a model would be a translation where the two can disagree.
+// / Their paths are the kernel's to give, in configurationTemplatePaths(), because the kernel reads the same two for the names config.php must hold.
+// / The application gives the Engine's settings any default of its own in its contract, as $EngineSettingDefaults.
 function generateConfigFile($configPath) {
   // / Set variables.
-  global $EngineConfigTemplate, $InstLoc, $DirSep, $EnableMemoryProtection;
+  global $InstLoc, $EngineSettingDefaults, $EnableMemoryProtection;
   $FileWasWritten = FALSE;
   $SettingsWritten = 0;
-  $templatePath = $templateText = '';
-  $markerPosition = FALSE;
-  $matchedSettings = array();
-  // / The template is copied, not rebuilt from a description of itself.
-  // / It is already a real config.php at defaults, & rebuilding it from a model would be a translation where the two can disagree.
-  // / The application names the file in $EngineConfigTemplate, & one that names none cannot have a configuration written for it, which is reported.
-  $templatePath = (isset($EngineConfigTemplate) && trim((string)$EngineConfigTemplate) !== '') ? trim((string)$EngineConfigTemplate) : '';
-  if ($templatePath === '') {
-    errorEntry('This application names no configuration template, so none can be written!', 28003, FALSE);
-    $templateText = ''; }
+  $engineTemplate = $applicationTemplate = $configText = '';
+  $engineWasRead = $applicationWasRead = FALSE;
+  $engineParts = $applicationParts = $matchedSettings = array();
+  list ($engineTemplate, $applicationTemplate) = configurationTemplatePaths($InstLoc);
+  list ($engineWasRead, $engineParts) = readConfigTemplate($engineTemplate);
+  list ($applicationWasRead, $applicationParts) = readConfigTemplate($applicationTemplate);
+  if (!$engineWasRead) errorEntry('The configuration template at '.$engineTemplate.' is missing or unreadable!', 28004, FALSE);
+  else if (!$applicationWasRead) errorEntry('The configuration template at '.$applicationTemplate.' is missing or unreadable!', 28004, FALSE);
   else {
-    if (strpos($templatePath, $DirSep) !== 0) $templatePath = $InstLoc.$DirSep.'Resources'.$DirSep.$templatePath;
-    $templateText = (string)@file_get_contents($templatePath);
-    if ($templateText === '') errorEntry('The configuration template at '.$templatePath.' is missing or unreadable!', 28004, FALSE);
-    else {
-      // / The template explains ITSELF at the top & a generated configuration is not a
-      // / template, so that explanation is not copied. Everything from the marker down is.
-      // / A template with no marker is copied whole, which is what an application that has
-      // / not adopted the marker gets & is a reasonable answer.
-      $markerPosition = strpos($templateText, '// / Copy from here down.');
-      if ($markerPosition !== FALSE) $templateText = '<?php'.PHP_EOL.substr($templateText, $markerPosition + strlen('// / Copy from here down.') + 1); } }
-  if ($templateText !== '') {
-    preg_match_all('/^\\$([A-Za-z_][A-Za-z0-9_]*)\\s*=/m', $templateText, $matchedSettings);
+    $configText = composeConfigFile($engineParts, $applicationParts, (isset($EngineSettingDefaults) && is_array($EngineSettingDefaults)) ? $EngineSettingDefaults : array());
+    preg_match_all('/^\$([A-Za-z_][A-Za-z0-9_]*)\s*=/m', $configText, $matchedSettings);
     $SettingsWritten = isset($matchedSettings[1]) ? count($matchedSettings[1]) : 0;
-    // / The same staged write every configuration change uses, so a template that would not
+    // / The same staged write every configuration change uses, so a file that would not
     // / parse never reaches the path an installation loads.
-    $FileWasWritten = writeConfigFile($configPath, $templateText);
-    if ($FileWasWritten) logEntry('A configuration holding '.$SettingsWritten.' setting(s) was written from '.$templatePath.'.');
+    $FileWasWritten = writeConfigFile($configPath, $configText);
+    if ($FileWasWritten) logEntry('A configuration holding '.$SettingsWritten.' setting(s) was written from '.$engineTemplate.' & '.$applicationTemplate.'.');
     else errorEntry('A configuration file could not be written to '.$configPath.'!', 28002, FALSE); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $markerPosition, $templatePath, $templateText, $matchedSettings, $configPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $engineTemplate, $applicationTemplate, $configText, $engineWasRead, $applicationWasRead, $engineParts, $applicationParts, $matchedSettings, $configPath);
   return array($FileWasWritten, $SettingsWritten); }
 // / -----------------------------------------------------------------------------------
 
@@ -2259,7 +2367,7 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
         $StagesCompleted++;
         // / Stage three. Ownership, permissions & the policy files those packages need.
         print($Lol.'Stage 3 of '.$stageTotal.'. Permissions & policies.'.$Lol);
-        list ($permissionsWereFixed, $pathsCorrected) = runApplicationRepair();
+        list ($permissionsWereFixed, $pathsCorrected) = repairInstallation();
         if (!$permissionsWereFixed) print($Lol.'Permissions could not be corrected. Stopping here.'.$Lol.$Lol);
         else {
           $StagesCompleted++;
@@ -2291,7 +2399,7 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           // / so anything those stages left is put right by the same rules -fp uses. It is
           // / idempotent, so running it twice costs a walk of the installation & nothing else.
           print($Lol.'Stage 6 of '.$stageTotal.'. Permissions, second pass.'.$Lol);
-          list ($permissionsWereFixed, $pathsCorrected) = runApplicationRepair();
+          list ($permissionsWereFixed, $pathsCorrected) = repairInstallation();
           if ($permissionsWereFixed) $StagesCompleted++;
           else warningEntry('The second permissions pass did not complete. Files written by the configuration & service stages may be owned by root.');
           // / Stage seven. Report what actually works. An installation that says it finished

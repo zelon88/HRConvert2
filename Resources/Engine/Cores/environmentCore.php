@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.2.4.
 // / The environment the Engine provides to every application built on it.
 // /
 // / The Engine owns these, & an application uses them without defining them.
@@ -267,7 +267,7 @@ function validateInstallation($installPath) {
 // / describePolicyStatus turns a policy state into words.
 // / toolMinimum reads a tool's minimum version from the manifest, its only owner.
 // / None of them knows what this application is for, & none calls back into it.
-// / reportUnrecognizedArgument stays in the application, because it calls showHelpInfo(), which prints the application's own help.
+// / reportUnrecognizedArgument & showHelpInfo are the Engine's, in engine.php, from v4.2.4, & the help asks the application only through its contract.
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -422,25 +422,21 @@ function describePolicyStatus($policyName, $policyStatus) {
 // / Accepts the manifest name. Returns the minimum, or an empty string when there is none.
 // / -v shows each tool's minimum. That number is read from the manifest, the only owner of it,
 // / rather than from a setting that could disagree with what the pipelines actually enforce.
-// / It reads the manifest directly rather than through the Pipeline Core, so -v can still show
-// / minimums on an installation whose Pipeline Core failed to load.
+// / It reads the manifest through the Engine's loadDependsManifest() rather than through the Pipeline Core, so -v can still
+// / show minimums on an installation whose Pipeline Core failed to load. Both halves are read, from v4.2.4.
 function toolMinimum($manifestName) {
   // / Set variables.
-  global $DependsManifest, $CoreLoaded, $InstLoc, $DirSep, $EnableMemoryProtection;
+  global $DependsManifest, $EnableMemoryProtection;
   $ToolMinimum = '';
-  $manifestPath = '';
+  $manifestIsLoaded = FALSE;
   $manifestEntry = array();
-  // / $CoreLoaded is in scope because the manifest is required inside this function, & every
-  // / component checks it at file scope.
-  if (!isset($DependsManifest) or !is_array($DependsManifest)) {
-    $manifestPath = contractPath('depends.php');
-    if (file_exists($manifestPath)) require_once ($manifestPath); }
-  if (isset($DependsManifest) && is_array($DependsManifest)) foreach ($DependsManifest as $manifestEntry) {
+  if (function_exists('loadDependsManifest')) $manifestIsLoaded = loadDependsManifest();
+  if ($manifestIsLoaded && isset($DependsManifest) && is_array($DependsManifest)) foreach ($DependsManifest as $manifestEntry) {
     if (!isset($manifestEntry['Name']) or (string)$manifestEntry['Name'] !== (string)$manifestName) continue;
     $ToolMinimum = isset($manifestEntry['MinimumVersion']) ? (string)$manifestEntry['MinimumVersion'] : '';
     break; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $manifestEntry, $manifestName);
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestIsLoaded, $manifestEntry, $manifestName);
   return $ToolMinimum; }
 // / -----------------------------------------------------------------------------------
 
@@ -2026,6 +2022,48 @@ function retirePolicyFile($policyName, $policyPath, $mayRepair, $mayRemove) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to keep a policy check's answer for the rest of the process, & to say whether a kept answer still applies.
+// / Accepts the policy's name, whether this call may repair, the condition the answer depends on, the statuses a
+// / repair looks at again, & the answer to keep, in that order.
+// / The answer to keep is the validity boolean & the status word the check returns, or NULL to ask for a kept answer.
+// / Returns whether a kept answer applies, the validity boolean & the status word, in that order.
+// / Keeping an answer returns TRUE & the answer kept.
+// /
+// / A policy check reads the host & may load a profile, so its answer is kept for the life of the process.
+// / A web request, a command, a worker & an Environment Manager pass are each one process.
+// / A kept answer answers every later call but one.
+// / A failure found without permission to repair is checked again when a repair is permitted, because an Environment
+// / Manager pass checks before it repairs, & the kept answer would answer the repair with the failure it was asked to fix.
+// / So is a valid answer whose status the caller names, because some valid answers leave the repair work to do.
+// / An answer made under another condition never applies, because whatever the condition describes has changed since.
+// / Every policy check the Engine runs, & every one an application declares, keeps its answer here, so the rule is written once.
+// / The kept answers are a static, which is never purged, because purging a static empties it.
+// / They hold booleans & status words, & nothing secret.
+function policyAnswerMemory($policyName, $mayRepair, $answerCondition, $recheckedStatuses, $answerToKeep = NULL) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  static $keptAnswers = array();
+  $AnswerApplies = $PolicyIsValid = FALSE;
+  $PolicyStatus = 'unchecked';
+  $policyKey = (string)$policyName;
+  $keptAnswer = array();
+  if (is_array($answerToKeep)) {
+    $PolicyIsValid = (bool)($answerToKeep[0] ?? FALSE);
+    $PolicyStatus = (string)($answerToKeep[1] ?? 'unchecked');
+    $keptAnswers[$policyKey] = array('Valid' => $PolicyIsValid, 'Status' => $PolicyStatus, 'MayRepair' => (bool)$mayRepair, 'Condition' => (string)$answerCondition);
+    $AnswerApplies = TRUE; }
+  else if (isset($keptAnswers[$policyKey])) {
+    $keptAnswer = $keptAnswers[$policyKey];
+    if ($keptAnswer['Condition'] === (string)$answerCondition && ($keptAnswer['MayRepair'] or !$mayRepair or ($keptAnswer['Valid'] && !in_array($keptAnswer['Status'], (array)$recheckedStatuses, TRUE)))) {
+      $AnswerApplies = TRUE;
+      $PolicyIsValid = $keptAnswer['Valid'];
+      $PolicyStatus = $keptAnswer['Status']; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $policyKey, $keptAnswer, $policyName, $mayRepair, $answerCondition, $recheckedStatuses, $answerToKeep);
+  return array($AnswerApplies, $PolicyIsValid, $PolicyStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to validate or repair the AppArmor profile every sandbox this application builds
 // / runs under, which is attached to its own copy of bubblewrap.
 // / Accepts a boolean permitting a write.
@@ -2045,27 +2083,20 @@ function retirePolicyFile($policyName, $policyPath, $mayRepair, $mayRemove) {
 function verifySandboxPolicy($mayRepair) {
   // / Set variables.
   global $RunningAsRoot, $RunningInContainer, $EnableMemoryProtection;
-  static $cachedValid = NULL;
-  static $cachedStatus = 'unchecked';
-  static $cachedMayRepair = FALSE;
-  static $cachedPathIsHeld = TRUE;
   $PolicyIsValid = FALSE;
   $PolicyStatus = 'unchecked';
-  $restrictionValue = $profileName = $profilePath = $profileContents = $profileLoadStatus = $retireStatus = $holdNotice = '';
-  $profileIsLoaded = $includeIsRetired = $profileWasLoaded = $profileWasRemoved = FALSE;
+  $restrictionValue = $profileName = $profilePath = $profileContents = $profileLoadStatus = $retireStatus = $holdNotice = $answerCondition = '';
+  $profileIsLoaded = $includeIsRetired = $profileWasLoaded = $profileWasRemoved = $answerIsKept = FALSE;
   $pathIsHeld = TRUE;
   $restrictionValue = namespaceRestriction();
   if ($restrictionValue !== '' && !$RunningInContainer) list ($pathIsHeld, $holdNotice) = sandboxPathIsHeld();
-  // / A cached result answers every later call but one. A failure found without permission to
-  // / repair is checked again when a repair is permitted, because an Environment Manager pass
-  // / checks before it repairs, & the cached check would answer the repair with the failure it
-  // / was asked to fix. So is an unrestricted answer, because the profile written ahead of a
+  // / A kept answer is used as policyAnswerMemory() says.
+  // / An unrestricted answer is checked again when a repair is permitted, because the profile written ahead of a
   // / restriction is the repair's to write & the check made at start never writes it.
   // / It answers only while the copy's path is held as it was when the answer was made, because an install in the same run can change that.
-  if ($cachedValid !== NULL && $cachedPathIsHeld === $pathIsHeld && ($cachedMayRepair or !$mayRepair or ($cachedValid && $cachedStatus !== 'unrestricted'))) {
-    $PolicyIsValid = $cachedValid;
-    $PolicyStatus = $cachedStatus; }
-  else {
+  $answerCondition = ($pathIsHeld ? 'held' : 'not held');
+  list ($answerIsKept, $PolicyIsValid, $PolicyStatus) = policyAnswerMemory('Sandbox AppArmor', $mayRepair, $answerCondition, array('unrestricted'));
+  if (!$answerIsKept) {
     $profileName = sandboxApparmorProfileName();
     $profilePath = '/etc/apparmor.d/'.$profileName;
     $profileContents = sandboxApparmorContents();
@@ -2113,12 +2144,9 @@ function verifySandboxPolicy($mayRepair) {
     if ($PolicyIsValid && ($retireStatus === 'outdated' or $retireStatus === 'refused')) {
       $PolicyIsValid = FALSE;
       $PolicyStatus = $retireStatus; }
-    $cachedValid = $PolicyIsValid;
-    $cachedStatus = $PolicyStatus;
-    $cachedMayRepair = (bool)$mayRepair;
-    $cachedPathIsHeld = $pathIsHeld; }
+    list ($answerIsKept) = policyAnswerMemory('Sandbox AppArmor', $mayRepair, $answerCondition, array('unrestricted'), array($PolicyIsValid, $PolicyStatus)); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $restrictionValue, $profileName, $profilePath, $profileContents, $profileLoadStatus, $retireStatus, $holdNotice, $profileIsLoaded, $includeIsRetired, $profileWasLoaded, $profileWasRemoved, $pathIsHeld, $mayRepair);
+  purgeSensitiveMemory($EnableMemoryProtection, $restrictionValue, $profileName, $profilePath, $profileContents, $profileLoadStatus, $retireStatus, $holdNotice, $answerCondition, $profileIsLoaded, $includeIsRetired, $profileWasLoaded, $profileWasRemoved, $answerIsKept, $pathIsHeld, $mayRepair);
   return array($PolicyIsValid, $PolicyStatus); }
 // / -----------------------------------------------------------------------------------
 

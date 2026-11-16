@@ -12,12 +12,12 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.3.
+// / v4.2.4.
 // / The Pipeline Core, one of the Engine's cores.
 // / It verifies, describes & dispatches the pipelines under Resources/Pipelines, each at the exact version the application pins.
 // / Which pipelines are accepted is the application's decision, read from its contract, so this file names none of them.
-// / The application pins it exactly via $RequiredPipelineCoreVersion & loads it on its own, not through engine.php.
-// / A missing or mismatched engine.php therefore does not take the pipeline list down with it.
+// / The application pins it exactly via $RequiredPipelineCoreVersion, & the Engine's startEngine() loads it as the Engine starts, from v4.2.4.
+// / Without an Engine nothing converts, so nothing needs the pipeline list without one either.
 // / Error block 34000 through 34019 is reserved, & 34001 through 34008 are used here.
 // / 34000 is the direct load guard of every pipeline file, which stay outside the Engine.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for the contracts this file enforces.
@@ -37,7 +37,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v4.2.3';
+$PipelineCoreVersion = 'v4.2.4';
 // / -----------------------------------------------------------------------------------
 
 
@@ -404,7 +404,7 @@ function pipelineClaimsConversion($pipelineRecord, $inputExtension, $outputExten
   // / has not got this setting at all, or who typed something this manager does not know,
   // / gets the behaviour the application has always had rather than a refused conversion.
   $detectionType = 'hardcoded-only';
-  // / Both settings are the application's, read by the names the Pipeline Core knows them by.
+  // / Both settings are the Engine's, in its half of config.php, & are read through the map by the names the Pipeline Core knows them by.
   $configuredDetection = (string)applicationSetting('FormatDetectionType', '');
   $warnOnMismatch = (bool)applicationSetting('WarnOnCapabilityMismatch', FALSE);
   if (in_array($configuredDetection, array('hardcoded-only', 'detected-advisory', 'detected-restrictive', 'detected-additive'), TRUE)) $detectionType = $configuredDetection;
@@ -486,9 +486,9 @@ function describePipelineCapabilities($inputExtension) {
 // / -----------------------------------------------------------------------------------
 // / A function to build the union of every format every verified pipeline can handle.
 // / Accepts no arguments. Returns a completion boolean, the input union & the output union.
-// / verifyGlobals() builds $Allowed from $allArrays & verifyFile() rejects any extension
-// / missing from it, so a pipeline declared format that never reaches $allArrays cannot be
-// / uploaded & can therefore never be converted. This is what feeds that.
+// / The application builds its list of allowed extensions from what it enables, & rejects an upload
+// / of any extension missing from it, so a pipeline declared format that never reaches that list
+// / cannot be uploaded & can therefore never be converted. This is what feeds that.
 function buildPipelineFormatArrays() {
   // / Set variables.
   global $Pipelines, $EnableMemoryProtection;
@@ -635,22 +635,17 @@ function loadPipelineCore($pipelineFolderName) {
 // / Accepts nothing. Returns whether the manifest is loaded & whether the Dependency Core is, in that order.
 // / The manifest is loaded by the Dependency Core & the Dependency Core only loads for --setup, so on a request both are loaded here.
 // / verifyCoreComponent requires once, so asking on every call costs nothing, & it honours the version pin, which a bare require would not.
-// / $CoreLoaded & $InstLoc are declared because the manifest is required INSIDE this function, & it reads both at file scope.
-// / Without $CoreLoaded the require sees an undefined variable & the manifest refuses to load, which reads as a missing manifest rather than a scope mistake.
-// / Without $InstLoc every bundled dependency's path is built from nothing, & PHP warns about it once for each of them.
+// / The Engine's loadDependsManifest() reads both halves of the manifest through the Dependency Core, from v4.2.4, & keeps what it read.
 function loadDependencyKnowledge() {
   // / Set variables.
-  global $CoreLoaded, $InstLoc, $DependsManifest, $DirSep, $RequiredDependencyCoreVersion, $EnableMemoryProtection;
+  global $DirSep, $RequiredDependencyCoreVersion, $EnableMemoryProtection;
   $ManifestIsLoaded = $DependencyCoreIsLoaded = $dependencyCoreLoaded = FALSE;
-  $manifestPath = $dependencyCoreVersion = '';
-  if (!isset($DependsManifest) or !is_array($DependsManifest)) {
-    $manifestPath = contractPath('depends.php');
-    if (file_exists($manifestPath)) require_once($manifestPath); }
+  $dependencyCoreVersion = '';
+  if (function_exists('loadDependsManifest')) $ManifestIsLoaded = loadDependsManifest();
   if (!function_exists('resolveDependencyState') && function_exists('verifyCoreComponent')) list ($dependencyCoreLoaded, $dependencyCoreVersion) = verifyCoreComponent('Dependency Core', 'Engine'.$DirSep.'Cores'.$DirSep.'dependencyCore.php', 'DependencyCoreVersion', (string)$RequiredDependencyCoreVersion);
-  $ManifestIsLoaded = (isset($DependsManifest) && is_array($DependsManifest));
   $DependencyCoreIsLoaded = function_exists('resolveDependencyChoice');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dependencyCoreLoaded, $manifestPath, $dependencyCoreVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $dependencyCoreLoaded, $dependencyCoreVersion);
   return array($ManifestIsLoaded, $DependencyCoreIsLoaded); }
 // / -----------------------------------------------------------------------------------
 
@@ -816,11 +811,12 @@ function verifiedToolVerdict($manifestName) {
 // / Returns TRUE while nothing is at that path & an attempt remains.
 // / --File Operation Retry Count-- is how many attempts are made, & one always is.
 // / Every pipeline that retries asks this, so they all count alike.
+// / The setting is the Engine's, in its half of config.php, from v4.2.4. It was the application's $StopCounter until then. Where it is unset one attempt is made.
 function pipelineAttemptIsDue($outputPath, $attemptsMade) {
   // / Set variables.
-  global $StopCounter, $EnableMemoryProtection;
+  global $RetryCount, $EnableMemoryProtection;
   $AttemptIsDue = FALSE;
-  $attemptLimit = max(1, (int)$StopCounter);
+  $attemptLimit = max(1, (int)(isset($RetryCount) ? $RetryCount : 1));
   clearstatcache(TRUE, (string)$outputPath);
   $AttemptIsDue = ((int)$attemptsMade < $attemptLimit && !file_exists((string)$outputPath) && !is_link((string)$outputPath));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.

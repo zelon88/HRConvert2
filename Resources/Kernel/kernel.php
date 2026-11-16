@@ -14,7 +14,7 @@
 // / install secret & derives a visitor's session from it.
 // /
 // / File Information ...
-// / v4.2.0.
+// / v4.2.4.
 // / The kernel. An application's entry point requires it first & pins it exactly via $RequiredKernelVersion.
 // / Error 35000 is the direct load guard every component shares.
 // / It is a file of its own, so every application runs identical kernel code & compares it by version.
@@ -23,14 +23,28 @@
 // /   The kernel calls nothing an application defines, so it is identical in every one.
 // /   The kernel calls nothing the Engine defines without a function_exists guard, because it runs first.
 // /   Nothing here is guarded against redefinition, because a replaced kernel function is no longer the kernel.
-// / What an application provides.
-// /   $EnableMemoryProtection  Whether variables are shredded at every return.
-// /   $Verbose                 Whether ordinary activity is logged.
-// /   $InstLoc                 The application root. Components are found beneath it.
-// /   $ApplicationName         The name an operator sees in warning & error lines.
+// / What an application provides before it boots.
+// /   $DefaultApplicationName  The name it goes by until config.php names it, set before this file is required.
+// /   $RequiredKernelVersion   The kernel it requires. Its entry point reads this file's version & refuses another.
+// /   $CoreLoaded              Set TRUE by the application before it loads any component.
+// /   $RequiredSecretVersion   The version of secret file the application accepts. An exact match.
+// /   Its own version & the oldest config.php it accepts, which it hands to verifyInstallationState.
+// / What verifyInstallationState sets as the installation boots, so no application sets them, from v4.2.4.
 // /   $RunningFromCLI          Whether there is a terminal rather than a web client.
 // /   $RunningAsRoot           Whether this process is root. Only root prepares a root folder.
-// /   $CoreLoaded              Set TRUE by the application before it loads any component.
+// /   $CurrentUser             The account this process runs as.
+// /   $ApacheUser              The web server account. It reads the install secret & changes none of it.
+// /   Every setting config.php holds, each named by one of the two configuration templates.
+// /                            $EnableMemoryProtection, whether variables are shredded at every return,
+// /                            $Verbose, whether ordinary activity is logged, & $ApplicationName, the name
+// /                            an operator sees in warning & error lines, are among them.
+// /   $InstLoc                 The application root. Components are found beneath it.
+// /   $HostedLoc               The folder the web server serves.
+// /   $DataRootLoc             The data location. The install secret is kept below it.
+// /   $SecretLoc               Secrets, the folder in the data location the install secret is kept in.
+// /   $SecretFile              The file the secret this process holds was read from.
+// /   $SecretKey               The secret this process holds.
+// / What logging reads besides.
 // /   $LogFile                 The logfile. Until it exists, lines are buffered rather than lost.
 // /                            An application has verifyLogs decide & open it, sets it itself, or
 // /                            decides the folder & the name & has openLogFileForRoot or
@@ -41,17 +55,8 @@
 // /   $SesHash3                Optional. A session label for every log line. Absent reads as
 // /                            No Session, which is correct for an application without sessions.
 // / What the install secret reads besides, from v4.1.9. establishInstallSecret says how each is used.
-// /   $CurrentUser             The account this process runs as.
-// /   $ApacheUser              The web server account. It reads the install secret & changes none of it.
-// /   $DataRootLoc             The data location. The install secret is kept below it.
-// /   $SecretLoc               Secrets, the folder in the data location the install secret is kept in.
-// /   $HostedLoc               The folder the web server serves.
-// /   $ProprietaryLoc          The HRProprietary folder, when the hosted location is inside it.
-// /   $AdditionalConvertLocs   The additional data locations.
-// /   $RequiredSecretVersion   The version of secret file the application accepts. An exact match.
-// /   $SecretFile              The file the secret this process holds was read from.
-// /                            The application sets it from what establishInstallSecret returns.
-// /   $SecretKey               The secret this process holds, set the same way.
+// /   $ProprietaryLoc          The HRProprietary folder, when the hosted location is inside it. A setting.
+// /   $AdditionalConvertLocs   The additional data locations. A setting.
 // / What a session reads besides.
 // /   $Date                    The date verifyTime sets. A session belongs to one day.
 // /   $UniqueDailyLogHash      Whether the logfile suffix changes every day.
@@ -82,7 +87,7 @@ if (count(get_included_files()) < 2) die('ERROR!!! Kernel-35000, The kernel cann
 // / The version of this kernel.
 // / The application reads it with a pattern BEFORE requiring this file, so a mismatched
 // / kernel is never executed. It cannot use readComponentVersion for that, which is below.
-$KernelVersion = 'v4.2.0';
+$KernelVersion = 'v4.2.4';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -769,15 +774,28 @@ function refreshLogFile() {
 
 // / -----------------------------------------------------------------------------------
 // / A function to give the name every warning & error line is labelled with.
-// / Accepts nothing. Returns the application's name, or HRConvert2 before a configuration names one.
+// / Accepts nothing. Returns the application's name, or the name its entry point declares before a configuration names one.
 // / The name is the branding an operator may rename, & it is what a person reads.
-// / A line raised before any configuration is read is labelled HRConvert2, the name the kernel was written for.
+// / A line raised before any configuration is read is labelled with the name defaultApplicationName() gives.
 // / Like the functions that log, it does NOT call purgeSensitiveMemory, because purgeSensitiveMemory reaches it.
 function applicationLabel() {
   // / Set variables.
   global $ApplicationName;
-  $ApplicationLabel = (isset($ApplicationName) && is_string($ApplicationName) && $ApplicationName !== '') ? $ApplicationName : 'HRConvert2';
+  $ApplicationLabel = (isset($ApplicationName) && is_string($ApplicationName) && $ApplicationName !== '') ? $ApplicationName : defaultApplicationName();
   return $ApplicationLabel; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the application before its configuration names it.
+// / Accepts nothing. Returns the name the entry point declares in $DefaultApplicationName, or Application when it declares none.
+// / The entry point declares it before it loads the kernel, so a refusal raised before config.php is read still carries the application's name.
+// / A kernel that wrote one application's name here would not be the kernel of any other.
+// / Like applicationLabel(), it does NOT call purgeSensitiveMemory, because purgeSensitiveMemory reaches it.
+function defaultApplicationName() {
+  // / Set variables.
+  global $DefaultApplicationName;
+  $ApplicationDefault = (isset($DefaultApplicationName) && is_string($DefaultApplicationName) && trim($DefaultApplicationName) !== '') ? trim($DefaultApplicationName) : 'Application';
+  return $ApplicationDefault; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1180,6 +1198,743 @@ function treeIsTrustedByRoot($treePath, $excludedPaths) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $resolvedTree, $currentFolder, $folderEntry, $entryPath, $pendingFolders, $folderEntries, $entryStatus, $treePath, $excludedPaths);
   return array($TreeIsTrusted, $TrustNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to stop root running code another account could have changed.
+// / Accepts the tree & the file the application is started through, in that order. Returns whether root may trust the tree.
+// / Halts with error 28008 when root may not, unless the command is a repair.
+// /
+// / Root runs nothing the web server account can change.
+// / -fp gives the installation to root, & this holds it to that afterwards.
+// / A command run as root reads the whole tree with treeIsTrustedByRoot before anything in it but the kernel has run.
+// / A tree that fails stops the command, names the first thing that failed & says how to give it back to root.
+// / Every user but root is unaffected, because nothing they run is root's to protect.
+// /
+// / The repair still runs on a tree that fails, & says so first.
+// / -fp & --setup are what give a tree to root, & a fresh clone or an older installation is not root's until one of them has run.
+// / Refusing them would leave nothing to run, & would protect nothing, because an account that could change the tree could change this file.
+// / --config --repair is the third, because neither of the others can run without a configuration to read.
+// /
+// / It is the kernel's, because an entry point calls it the moment the kernel has loaded, before anything else in the tree has run.
+// / The entry point names itself, so the refusal names the command that gives the tree back to root.
+// / A kernel another account can change inside a tree root otherwise owns is the one case seen after it has run, & it is still refused before anything else loads.
+function verifyCodeIsTrustedByRoot($treePath, $entryPoint) {
+  // / Set variables.
+  global $EnableMemoryProtection, $RunningFromCLI;
+  $CodeIsTrusted = TRUE;
+  $trustNotice = $cliCommand = $cliTarget = $cliSecondTarget = '';
+  $cliArguments = array();
+  $cliArgumentCount = 0;
+  $repairRequested = $cliConfirmed = $cliVectorParsed = FALSE;
+  // / quickDie writes for a terminal only once it knows it has one, & verifyRunningContext, which
+  // / decides that, has not run yet. It decides the same way again when it does.
+  if (!isset($RunningFromCLI)) $RunningFromCLI = (PHP_SAPI === 'cli');
+  if (function_exists('posix_geteuid') && posix_geteuid() === 0) {
+    list ($CodeIsTrusted, $trustNotice) = treeIsTrustedByRoot($treePath, array(rtrim((string)$treePath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'DATA'));
+    if (!$CodeIsTrusted) {
+      list ($cliArguments, $cliArgumentCount, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed, $cliVectorParsed) = parseArgumentVector(isset($_SERVER['argv']) ? $_SERVER['argv'] : array());
+      $repairRequested = (in_array($cliCommand, array('-fp', '--fix-permissions', '--setup'), TRUE) or ($cliCommand === '--config' && $cliTarget === '--repair'));
+      if (!$repairRequested) quickDie('Root refused to run the installation at '.$treePath.', because an account other than root could have changed it. '.$trustNotice.' Run  sudo php '.basename((string)$entryPoint).' -fp  to give it back to root. Where -fp says root still may not run it, remove or put right what it names. Any other account may still run -v in the meantime.', 28008);
+      warningEntry('Root is running code an account other than root could have changed, because '.$cliCommand.' is what gives the installation at '.$treePath.' back to root. '.$trustNotice);
+      print(PHP_EOL.'WARNING. Root is running code another account could have changed.'.PHP_EOL.'  '.$trustNotice.PHP_EOL.'  '.$cliCommand.' gives the installation back to root.'.PHP_EOL); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $trustNotice, $cliCommand, $cliTarget, $cliSecondTarget, $cliArguments, $cliArgumentCount, $repairRequested, $cliConfirmed, $cliVectorParsed, $treePath, $entryPoint);
+  return $CodeIsTrusted; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to detect whether this installation is running inside a container.
+// / Accepts nothing. Returns TRUE when a signal only a container runtime leaves is found.
+// / A false positive would silently relax the sandbox requirement on a bare metal server, so only a signal that is never true elsewhere is read.
+// / A false negative is preferable. It refuses conversions in a container, which is
+// / visible & correctable, rather than running unprotected on hardware, which is neither.
+// / It is the kernel's, because verifyRunningContext asks it before the Engine is loaded.
+// / It was moved into the Engine once & took -v down with it, because an application that reaches it before the Engine needs it in the kernel.
+function verifyContainerEnvironment() {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $RunningInContainer = FALSE;
+  $dockerEnvExists = $cgroupIndicatesContainer = FALSE;
+  $cgroupContents = '';
+  // / Docker creates this file in every container it starts. Podman creates its own.
+  // / Neither file exists anywhere else, so either one on its own is conclusive.
+  if (file_exists('/.dockerenv') or file_exists('/run/.containerenv')) $dockerEnvExists = TRUE;
+  // / Several runtimes announce themselves in the environment.
+  if (getenv('container') !== FALSE && trim((string)getenv('container')) !== '') $dockerEnvExists = TRUE;
+  // / The init process of a container reports a container runtime in its cgroup path.
+  // / Under cgroup version two this often reads 0::/ & names nothing, so it cannot be required.
+  $cgroupContents = @file_get_contents('/proc/1/cgroup');
+  if (is_string($cgroupContents)) {
+    if (strpos($cgroupContents, 'docker') !== FALSE or strpos($cgroupContents, 'containerd') !== FALSE or strpos($cgroupContents, 'kubepods') !== FALSE or strpos($cgroupContents, 'lxc') !== FALSE) $cgroupIndicatesContainer = TRUE; }
+  // / Any one of these is conclusive, because none is true on a host that is not a container.
+  if ($dockerEnvExists or $cgroupIndicatesContainer) $RunningInContainer = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $dockerEnvExists, $cgroupIndicatesContainer, $cgroupContents);
+  return $RunningInContainer; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to find out who runs this process, how it was started & whether it runs in a container.
+// / Accepts nothing. Returns whether the account running this process was identified.
+// / Sets $RunningFromCLI, $CurrentUser, $RunningAsRoot, $ApacheUser, $PermissionLevels & $RunningInContainer.
+// / Every context is identified, a command line as well as a web request. A command line that skipped this
+// / left the user unknown, which made root unrecognizable & sent every command line user down the per user
+// / secret path, root included. Some systems do not have posix extensions, so whoami is asked instead.
+// / Root keeps its own home.
+// / Every tool a command runs reads its configuration from HOME, curl its .curlrc & pip its pip.conf among them.
+// / The configured home is the cache folder, which the web server account owns, so root never takes it.
+// / Root uses its own home from the password database, set here before config.php is read, because it needs no configuration to find it.
+// / Every other account's HOME is set by establishDataLocations, because the cache folder is derived from the configured data location.
+// / Every folder the web server account creates is its own & nobody else's. Apache, PHP, the sandbox & every converter
+// / run as the web server account, which owns the folder, so nothing it serves or converts needs the group or the world to read it.
+function verifyRunningContext() {
+  // / Set variables.
+  global $RunningFromCLI, $CurrentUser, $RunningAsRoot, $ApacheUser, $PermissionLevels, $RunningInContainer, $EnableMemoryProtection;
+  $AccountIsKnown = FALSE;
+  $rootRecord = array();
+  if (function_exists('posix_geteuid') && posix_geteuid() === 0) {
+    if (function_exists('posix_getpwuid')) $rootRecord = @posix_getpwuid(0);
+    putenv('HOME='.((is_array($rootRecord) && isset($rootRecord['dir']) && (string)$rootRecord['dir'] !== '') ? (string)$rootRecord['dir'] : '/root')); }
+  $RunningFromCLI = $RunningAsRoot = $RunningInContainer = FALSE;
+  // / Detect if the application is being run from the command line.
+  if (php_sapi_name() === 'cli') $RunningFromCLI = TRUE;
+  // / Detect the account running the application. The application inherits its execution context.
+  $CurrentUser = trim((string)shell_exec('whoami'));
+  if ($CurrentUser === 'root') $RunningAsRoot = TRUE;
+  $AccountIsKnown = ($CurrentUser !== '');
+  $ApacheUser = 'www-data';
+  $PermissionLevels = 0700;
+  // / Detect if the application is being run inside a container.
+  $RunningInContainer = verifyContainerEnvironment();
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $rootRecord);
+  return $AccountIsKnown; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the two templates config.php is written from.
+// / Accepts the application root. Returns the Engine's template & the application's template, in that order, as absolute paths.
+// /
+// / This is where the kernel & the Engine get the names of their settings, & it is the only place they do.
+// / config.php is one file with two halves, & each half has a template that is a real config.php fragment at default values.
+// /   The Engine's half       Resources/Engine/config-template.php. Every setting the kernel or the Engine reads.
+// /   The application's half  Resources/Contract/config-template.php. Every setting only the application reads, & $ConfigVersion.
+// / A setting's name, its default & its documentation are written once, in the half whose code reads it.
+// / The kernel reads the names in both halves to know which settings config.php must hold & which of them become globals,
+// / so no list of setting names is kept anywhere else. Setup Core writes a missing config.php from both halves, & a repair adds
+// / whatever either holds that a configuration lacks.
+// / An application changes the default of one of the Engine's settings for itself in its contract, in $EngineSettingDefaults.
+// / The names are fixed rather than read from the contract, because the kernel reads them before the contract is loaded.
+function configurationTemplatePaths($applicationRoot) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $EngineTemplate = $ApplicationTemplate = '';
+  $resourcesPath = '';
+  $resourcesPath = rtrim((string)$applicationRoot, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR;
+  $EngineTemplate = $resourcesPath.'Engine'.DIRECTORY_SEPARATOR.'config-template.php';
+  $ApplicationTemplate = $resourcesPath.'Contract'.DIRECTORY_SEPARATOR.'config-template.php';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $resourcesPath, $applicationRoot);
+  return array($EngineTemplate, $ApplicationTemplate); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the names of the settings a file assigns, without running it.
+// / Accepts the file. Returns a readability boolean & every name assigned at the start of a line, in the order they appear, each once.
+// / Only a name beginning with a capital is read, because a setting is a global by convention three & a lower case name is not one.
+// / A configuration template, the Engine's configuration & the contract are all files of assignments, so a pattern reads them.
+// / A file that cannot be read returns FALSE & no names, & the caller decides what that costs.
+function assignedSettingNames($filePath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FileWasRead = FALSE;
+  $SettingNames = array();
+  $fileText = '';
+  $nameMatches = array();
+  $fileText = @file_get_contents((string)$filePath);
+  if (is_string($fileText) && $fileText !== '') {
+    $FileWasRead = TRUE;
+    preg_match_all('/^\$([A-Z][A-Za-z0-9_]*)\s*=/m', $fileText, $nameMatches);
+    $SettingNames = array_values(array_unique($nameMatches[1])); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $fileText, $nameMatches, $filePath);
+  return array($FileWasRead, $SettingNames); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to run a file of assignments so that the names it assigns are globals.
+// / Accepts the file & the names it assigns, in that order. Returns TRUE once the file has run.
+// / A file required inside a function assigns that function's variables, which vanish when it returns.
+// / config.php was read that way until v4.2.4, inside a function that declared every setting global by hand, & the
+// / two settings that list forgot never reached the Pipeline Core that reads them.
+// / Each name is declared global here before the file runs, so the file assigns the globals themselves.
+// / The caller reads the names from the file's own templates, so nothing keeps a list of them.
+// / $CoreLoaded is declared as well, because every such file refuses to run without it.
+// / A name that is not a setting's, beginning with a capital & holding only letters, digits & underscores, is never declared.
+function requireWithGlobals($filePath, $globalNames) {
+  // / Set variables.
+  global $CoreLoaded, $EnableMemoryProtection;
+  $FileWasRun = FALSE;
+  $globalName = '';
+  foreach ((array)$globalNames as $globalName) {
+    if (preg_match('/^[A-Z][A-Za-z0-9_]*$/', (string)$globalName) === 1) global $$globalName; }
+  require_once ((string)$filePath);
+  $FileWasRun = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $globalName, $globalNames, $filePath);
+  return $FileWasRun; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to confirm config.php holds every setting the two configuration templates name.
+// / Accepts the oldest configuration version the application accepts & the names the templates hold, in that order.
+// / Returns a validity boolean, the settings that are missing & the version config.php reports, in that order.
+// / A config file from an older release will be missing settings the code now depends on.
+// / An undefined setting evaluates as NULL, which silently reads as FALSE or zero.
+// / A missing timeout would become zero & a missing whitelist would become empty, without warning.
+// / Detecting the absence outright is the only way an administrator learns what actually happened.
+// / $ConfigVersion is advisory & explains WHY settings are missing.
+// / The names are authoritative & report WHICH settings are missing. They are the templates', so a setting added to either
+// / half is required from the moment it is added, & there is no list to forget it in.
+// / A config file predating the version stamp will report no version rather than a wrong one.
+// / Version stamps carry a leading v which must be stripped before any numeric comparison.
+// / Casting 'v3' to an integer yields 0, which would silently reduce this to a minor & patch check.
+function verifyConfigurationSettings($requiredConfigVersion, $settingNames) {
+  // / Set variables.
+  global $ConfigVersion, $EnableMemoryProtection;
+  $ConfigIsValid = TRUE;
+  $MissingConfigVars = array();
+  $DetectedConfigVersion = '';
+  $configVersionParts = $requiredVersionParts = array();
+  $settingName = $cleanConfigVersion = $cleanRequiredVersion = '';
+  $configVersionIsCurrent = FALSE;
+  // / Check that every setting the templates name actually exists in the global scope.
+  foreach ((array)$settingNames as $settingName) {
+    // / isset RATHER THAN array_key_exists, & the difference is the whole check.
+    // / A global declaration anywhere creates the key in $GLOBALS with a NULL value, before config.php
+    // / has assigned anything. array_key_exists then answers yes for a setting the configuration never
+    // / mentioned, so the check passed for every required setting that some function had merely declared global.
+    // / Two settings were absent from config.php & from the template for an entire release & this reported a valid configuration.
+    // / isset is FALSE for NULL & TRUE for FALSE, 0 & the empty string, which is exactly
+    // / the distinction wanted. A setting legitimately set to FALSE still passes.
+    if (!isset($GLOBALS[$settingName])) array_push($MissingConfigVars, $settingName); }
+  // / No name at all means no template was read, & a configuration nothing can check is not a valid one.
+  if (empty($settingNames) or !empty($MissingConfigVars)) $ConfigIsValid = FALSE;
+  // / Compare the config version stamp against the version the application was written for.
+  // / This is advisory. It explains why settings are missing but never passes a config that is incomplete.
+  // / isset for the reason given above, because the global declaration at the top of this function creates the key.
+  $DetectedConfigVersion = isset($GLOBALS['ConfigVersion']) ? (string)$ConfigVersion : '';
+  if ($DetectedConfigVersion !== '') {
+    $cleanConfigVersion = ltrim($DetectedConfigVersion, 'vV');
+    $cleanRequiredVersion = ltrim((string)$requiredConfigVersion, 'vV');
+    $configVersionParts = explode('.', $cleanConfigVersion);
+    $requiredVersionParts = explode('.', $cleanRequiredVersion);
+    // / Compare numerically, never as strings.
+    // / A string comparison would rank version 3.10 below version 3.9.
+    if ((int)($configVersionParts[0] ?? 0) > (int)($requiredVersionParts[0] ?? 0)) $configVersionIsCurrent = TRUE;
+    elseif ((int)($configVersionParts[0] ?? 0) === (int)($requiredVersionParts[0] ?? 0)) {
+      if ((int)($configVersionParts[1] ?? 0) > (int)($requiredVersionParts[1] ?? 0)) $configVersionIsCurrent = TRUE;
+      elseif ((int)($configVersionParts[1] ?? 0) === (int)($requiredVersionParts[1] ?? 0) && (int)($configVersionParts[2] ?? 0) >= (int)($requiredVersionParts[2] ?? 0)) $configVersionIsCurrent = TRUE; } }
+  // / A config file with no version stamp at all predates this check entirely.
+  else $DetectedConfigVersion = 'NONE';
+  // / Sanity check that the config.php file is valid.
+  // / $ConfigIsValid should already be false by now, but just in case.
+  if (!$configVersionIsCurrent && !$ConfigIsValid) $ConfigIsValid = FALSE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $settingName, $configVersionParts, $requiredVersionParts, $configVersionIsCurrent, $cleanConfigVersion, $cleanRequiredVersion, $requiredConfigVersion, $settingNames);
+  return array($ConfigIsValid, $MissingConfigVars, $DetectedConfigVersion); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write config.php from the two configuration templates when it is missing.
+// / Accepts the application root & the path to write, in that order. Returns whether it was written & how many settings it holds.
+// / Only --config --repair reaches this, because every other command needs settings & cannot invent them.
+// / A repair that needed a configuration to run would be a loop with no way in, & an installation that had lost config.php
+// / could only be fixed by copying a file from somewhere else.
+// / Everything the Engine reads on this path is set here, because config.php is the file that would set it & it is missing.
+// / $InstLoc normally comes FROM config.php. Without it a relative template path resolves from the filesystem root
+// / & the template is reported missing when it is sitting right there. $DirSep & $Lol are set again, though verifyInstallationState()
+// / has set both, so this still works for a caller that has not.
+// / The Engine configuration is read, & the application's contract with it, because the contract names the configuration model
+// / & the defaults the application gives the Engine's settings. Every name either file assigns is made global first, as
+// / requireWithGlobals says, because the Engine reads them as globals. A name assigned to a local looks right, & the generator
+// / then finds no model & writes a file with no settings in it.
+// / The Engine & its Setup Core are loaded, because the generator is Setup Core's & Setup Core reaches the model through the Engine.
+// / A bootstrap that loads half the components it calls into fails on the line where the missing half is first needed rather
+// / than on the line that forgot to load it.
+function writeMissingConfiguration($applicationRoot, $configPath) {
+  // / Set variables.
+  // / $CoreLoaded is declared, because the Engine & Setup Core are required here & each refuses to load without it.
+  global $InstLoc, $DirSep, $ApplicationName, $Lol, $EnableMemoryProtection, $Verbose, $CoreLoaded;
+  $ConfigWasWritten = FALSE;
+  $SettingsWritten = 0;
+  $bootstrapSetup = $bootstrapEngine = $engineConfigFile = '';
+  $engineNames = $contractNames = array();
+  $engineConfigWasRead = $contractWasRead = $engineConfigWasRun = FALSE;
+  $InstLoc = rtrim((string)$applicationRoot, DIRECTORY_SEPARATOR);
+  $DirSep = DIRECTORY_SEPARATOR;
+  $ApplicationName = defaultApplicationName();
+  $Lol = PHP_EOL;
+  $EnableMemoryProtection = FALSE;
+  $Verbose = TRUE;
+  $bootstrapSetup = (string)realpath($InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Engine'.DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'setupCore.php');
+  if ($bootstrapSetup === '') quickDie('No configuration file & no Setup Core to write one!', 0);
+  $bootstrapEngine = (string)realpath($InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Engine'.DIRECTORY_SEPARATOR.'engine.php');
+  if ($bootstrapEngine === '') quickDie('No configuration file & no Engine to write one!', 0);
+  $engineConfigFile = $InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Engine'.DIRECTORY_SEPARATOR.'engineConfig.php';
+  list ($engineConfigWasRead, $engineNames) = assignedSettingNames($engineConfigFile);
+  list ($contractWasRead, $contractNames) = assignedSettingNames(contractPath('app-engine-config.php'));
+  if ($engineConfigWasRead) $engineConfigWasRun = requireWithGlobals($engineConfigFile, array_merge($engineNames, $contractNames));
+  require_once ($bootstrapEngine);
+  require_once ($bootstrapSetup);
+  if (function_exists('generateConfigFile')) list ($ConfigWasWritten, $SettingsWritten) = generateConfigFile($configPath);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $bootstrapSetup, $bootstrapEngine, $engineConfigFile, $engineNames, $contractNames, $engineConfigWasRead, $contractWasRead, $engineConfigWasRun, $applicationRoot, $configPath);
+  return array($ConfigWasWritten, $SettingsWritten); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to derive every data location from the configured one, & every account's home but root's.
+// / Accepts nothing. Returns whether a data location is configured.
+// / The data location is owned by root, & each kind of file lives in a folder of its own below it.
+// / Sessions & the web server account's cache are that account's, & root's log folder is root's.
+// / Each path is derived once, here, from the configured data location, so a web request, a command line run & the listener all build the same path.
+// / The data location itself is $ConvertLoc.
+// / The install secret is kept in Secrets below it, a folder that is root's & that only the web server account's group may enter.
+// / The Engine's establishEngineSession() narrows $ConvertLoc to a pooled session area later, so these are taken now, before it does.
+// / Staged holds what an administrator stages from a page for root to install, from v4.2.2.
+// / The socket folder is pinned to the configured data location & never moves with a session, or a worker & a manager would look for
+// / each other in different places. It hangs off the root, not off Sessions, & is never inside the web root.
+// / See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
+// / Every account but root runs its tools with its home in the cache folder, set now that config.php has been read.
+// / A $HomeLoc that still names the data location, as an older config.php does, is the data location root now owns, so the
+// / cache folder is used instead & a warning says so. A $HomeLoc an operator pointed somewhere of their own is kept.
+function establishDataLocations() {
+  // / Set variables.
+  global $ConvertLoc, $HomeLoc, $DataRootLoc, $SessionLoc, $CacheLoc, $EngineDir, $SecretLoc, $WorkflowLoc, $AccountLoc, $UserLoc, $WorkflowStageLoc, $ManagerSocketDir, $EnableMemoryProtection;
+  $LocationsAreDerived = FALSE;
+  $homeTarget = '';
+  $DataRootLoc = rtrim((string)$ConvertLoc, DIRECTORY_SEPARATOR);
+  $ManagerSocketDir = $DataRootLoc.DIRECTORY_SEPARATOR.'Sockets';
+  $SessionLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Sessions';
+  $CacheLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Cache';
+  $EngineDir = $DataRootLoc.DIRECTORY_SEPARATOR.'Engine';
+  $SecretLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Secrets';
+  $WorkflowLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Workflows';
+  $AccountLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Accounts';
+  $UserLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Users';
+  $WorkflowStageLoc = $DataRootLoc.DIRECTORY_SEPARATOR.'Staged';
+  if (!(function_exists('posix_geteuid') && posix_geteuid() === 0)) {
+    $homeTarget = (isset($HomeLoc) && is_string($HomeLoc) && trim($HomeLoc) !== '') ? rtrim((string)$HomeLoc, DIRECTORY_SEPARATOR) : '';
+    if ($homeTarget === '' or $homeTarget === rtrim((string)$ConvertLoc, DIRECTORY_SEPARATOR)) {
+      if ($homeTarget !== '') warningEntry('The configured home directory is the data location, which root owns & the web server account cannot write. The cache folder '.$CacheLoc.' is used instead.');
+      $homeTarget = $CacheLoc; }
+    putenv('HOME='.$homeTarget); }
+  $LocationsAreDerived = ($DataRootLoc !== '');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $homeTarget);
+  return $LocationsAreDerived; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to verify that the installation an entry point belongs to is complete, current & usable.
+// / Accepts the entry point's own file, the version the application declares & the oldest configuration version it accepts, in that order.
+// / Returns a verification boolean & the path of config.php, in that order.
+// / Every failure other than the secret halts here, because nothing downstream can run without a configuration or against a mismatched installation.
+// / The kernel's establishInstallSecret decides which secret this process may hold, by account & context, & reads it.
+// / A process that may hold none fails verification.
+// /
+// / Every application built on the Engine boots through here, so the steps are written once. It is the kernel's, because it runs before the Engine is loaded.
+// / The application supplies its pins & nothing else.
+// /   verifyRunningContext finds who runs this process & where.
+// /   The version file is read, & config.php is read with every setting the two configuration templates name made global.
+// /   A missing config.php is written from the templates & the process stops, for --config --repair alone.
+// /   The configured installation directory is checked against reality, & the hosted & installed locations follow from it.
+// /   The version file must match the entry point, & config.php must hold every setting the templates name.
+// /   establishDataLocations derives the data locations & every account's home, & the install secret is read.
+// / The four convenience globals every layer uses are set first, $DirSep, $Lol, $Lolol & $Append, because everything after this reads them.
+// / They were the application's verifyGlobals() until v4.2.4. Every path below still uses DIRECTORY_SEPARATOR, as every kernel function does,
+// / because a kernel function may be called before this one has run.
+function verifyInstallationState($entryPointFile, $applicationVersion, $requiredConfigVersion) {
+  // / Set variables.
+  global $InstLoc, $HostedLoc, $ApplicationLoc, $ConvertLoc, $ConfigVersion, $Version, $VersionInfoFile, $CodeIsTrusted, $SecretKey, $SecretFile, $ApplicationName, $RequireResourceAwareness, $ResourceAwarenessActive, $DirSep, $Lol, $Lolol, $Append, $EnableMemoryProtection;
+  $DirSep = DIRECTORY_SEPARATOR;
+  $Lol = PHP_EOL;
+  $Lolol = PHP_EOL.PHP_EOL;
+  $Append = FILE_APPEND;
+  $InstallationIsVerified = FALSE;
+  $ConfigFile = '';
+  $applicationRoot = $entryScript = $applicationSlug = $detectedConfigVersion = $engineTemplate = $applicationTemplate = $templatePath = '';
+  $settingNames = $missingConfigVars = $templateNames = array();
+  $contextIsKnown = $versionWasRun = $configRepairRequested = $configWasWritten = $configWasRun = $runningIsInstalled = $configIsValid = $locationsAreDerived = $secretIsReady = $templateWasRead = FALSE;
+  $settingsWritten = 0;
+  $applicationRoot = dirname((string)$entryPointFile);
+  $contextIsKnown = verifyRunningContext();
+  $ConfigFile = (string)realpath($applicationRoot.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
+  $VersionInfoFile = realpath($applicationRoot.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'versionInfo.php');
+  // / Check for required files & stop execution if they are missing.
+  if (!file_exists((string)$VersionInfoFile)) quickDie('Could not process the '.applicationLabel().' Version Information file (versionInfo.php)!', 24000);
+  else $versionWasRun = requireWithGlobals($VersionInfoFile, array('Version'));
+  // / Both halves of the configuration name the settings config.php must hold, so a half that cannot be read leaves every one of its settings unread.
+  // / That is refused rather than run, because each would read as NULL everywhere it is used.
+  list ($engineTemplate, $applicationTemplate) = configurationTemplatePaths($applicationRoot);
+  foreach (array($engineTemplate, $applicationTemplate) as $templatePath) {
+    list ($templateWasRead, $templateNames) = assignedSettingNames($templatePath);
+    if (!$templateWasRead) quickDie('The configuration template at '.$templatePath.' is missing or unreadable, so the settings config.php must hold are unknown! Restore it from the release this installation came from.', 28009);
+    $settingNames = array_merge($settingNames, $templateNames); }
+  // / A missing configuration is fatal EXCEPT to the one command that repairs it.
+  // / Every other path needs settings & cannot invent them, so dying here is right.
+  // / The check is on the RAW arguments because nothing has been parsed yet. Both words
+  // / are required, so a bare --config still dies rather than running against nothing.
+  if (PHP_SAPI === 'cli' && isset($_SERVER['argv']) && is_array($_SERVER['argv'])) $configRepairRequested = in_array('--config', $_SERVER['argv'], TRUE) && in_array('--repair', $_SERVER['argv'], TRUE);
+  if ($ConfigFile === '' && !$configRepairRequested) quickDie('Could not process the '.applicationLabel().' Configuration file (config.php)!', 0);
+  // / Generate & STOP. The boot sequence below this point reads settings at every step,
+  // / so there is nothing to be gained by continuing without them & a great deal to go
+  // / wrong. An operator runs the command again once the file exists.
+  else if ($ConfigFile === '') {
+    print(PHP_EOL.'No config.php was found. Writing the defaults from the template.'.PHP_EOL);
+    list ($configWasWritten, $settingsWritten) = writeMissingConfiguration($applicationRoot, $applicationRoot.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'config.php');
+    if ($configWasWritten) print('Wrote '.$settingsWritten.' setting(s), all defaults. Change them with --config.'.PHP_EOL.PHP_EOL);
+    else print('A configuration file could not be written. Check that Resources is writable by root.'.PHP_EOL.PHP_EOL);
+    exit($configWasWritten ? 0 : 1); }
+  else $configWasRun = requireWithGlobals($ConfigFile, $settingNames);
+  // / The configured installation directory is checked against reality before anything is derived from it.
+  // / config.php ships an absolute path on purpose, so an operator who copies this tree onto a LAMP stack & reads no instructions gets a running application.
+  // / That only holds if a wrong path cannot be believed, because every location is built from this one value.
+  // / The directory the entry point is actually in is the one fact that cannot be wrong, so that is the fallback.
+  // / The warning names the setting, so an operator deploying properly is told once where to fix it.
+  // / The configured installation directory is the hosted location, & the code is what is running.
+  // / The application is installed in Application in the data location, outside the web root.
+  // / The folder the web server serves holds a loader named after the entry point, the static files a browser fetches & DATA.
+  // / $HostedLoc is that folder, & $InstLoc is the tree the entry point is in, which is where every component is loaded from.
+  // / Before the first -fp that installs it they are the same folder.
+  // / The installed copy keeps the configured folder even while its loader is missing, because -fp writes the loader again.
+  $ApplicationLoc = rtrim((string)$ConvertLoc, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'Application';
+  $runningIsInstalled = (trim((string)$ConvertLoc) !== '' && (string)@realpath($applicationRoot) === (string)@realpath($ApplicationLoc));
+  if (!is_string($InstLoc) or trim($InstLoc) === '' or (!$runningIsInstalled && !is_file(rtrim(trim($InstLoc), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.basename((string)$entryPointFile)))) {
+    warningEntry('The configured installation directory does not contain '.basename((string)$entryPointFile).', so '.$applicationRoot.' is being used instead. Set --Installation Directory-- in Resources/config.php to the real path.');
+    $HostedLoc = $applicationRoot; }
+  else $HostedLoc = rtrim(trim($InstLoc), DIRECTORY_SEPARATOR);
+  $InstLoc = $applicationRoot;
+  // / A loader ran first when the entry point was required rather than run, & root ran that as well.
+  // / Its tree is read now, before anything in this one is, & the result is consumed the same way as the first, for the same reason.
+  $entryScript = (string)@realpath(isset($_SERVER['SCRIPT_FILENAME']) ? (string)$_SERVER['SCRIPT_FILENAME'] : '');
+  if ($entryScript !== '' && $entryScript !== (string)@realpath((string)$entryPointFile) && !verifyCodeIsTrustedByRoot(dirname($entryScript), basename($entryScript))) $CodeIsTrusted = FALSE;
+  // / A web request works in the folder the application is in, as it did while that folder was the
+  // / one the web server served. Every interface & language file is named relative to it, & the
+  // / browser fetches the same names from the hosted location, where -fp keeps copies of them.
+  // / A command line keeps the folder it was started in, because an operator names files from it.
+  if (PHP_SAPI !== 'cli') @chdir($InstLoc);
+  // / A configuration with no version stamp is left without one, so the check below reports
+  // / the setting missing rather than reading an empty string as a version.
+  if (isset($ConfigVersion)) $ConfigVersion = ltrim((string)$ConfigVersion, 'vV');
+  // / Perform a version integrity check.
+  // / An entry point that does not match versionInfo.php indicates a partial or interrupted update.
+  if ((string)$applicationVersion !== (string)$Version) quickDie('The core file reports version v'.$applicationVersion.' but the version information file reports version v'.$Version.'. This installation is incomplete or was updated incorrectly.', 28001);
+  // / Confirm the config file carries every setting the templates name.
+  // / An undefined setting reads as NULL, which silently becomes FALSE or zero at every point of use.
+  list ($configIsValid, $missingConfigVars, $detectedConfigVersion) = verifyConfigurationSettings($requiredConfigVersion, $settingNames);
+  // / A configuration missing a setting still lets --config --repair run, because repair is the tool that adds a missing setting.
+  // / Refusing to start would leave fixing it by hand as the only way, which is the loop this mechanism exists to remove.
+  // / The same exception covers a configuration that is missing entirely.
+  // / Every other command still refuses, because a setting read as NULL is a silently changed behaviour rather than an error.
+  if (!$configIsValid && !$configRepairRequested) quickDie('The config.php file is missing '.count($missingConfigVars).' required setting(s). Config version detected: v'.$detectedConfigVersion.'. Config version required: v'.$requiredConfigVersion.'. Missing Variables: '.implode(', ', $missingConfigVars), 28000);
+  else if (!$configIsValid) warningEntry('The configuration is missing '.count($missingConfigVars).' required setting(s). Only --config --repair can run.');
+  $locationsAreDerived = establishDataLocations();
+  // / Derive a filesystem safe token from the application name.
+  // / The name comes from config.php, so it is sanitized before it is used to build a path.
+  // / A name that sanitizes to nothing falls back to the name the entry point declares rather than to an
+  // / empty string, which would produce a hidden file named -secret.php.
+  $applicationSlug = sanitizeString($ApplicationName, TRUE);
+  if ($applicationSlug === '') $applicationSlug = sanitizeString(defaultApplicationName(), TRUE);
+  // / Establish the secret this process may hold. establishInstallSecret decides which, by account & context, & reads it.
+  // / The install wide secret lives in Secrets in the data location, outside the web root.
+  // / $SecretKey is the documented exception to convention three, & it & $SecretFile are globals the application reads later.
+  list ($secretIsReady, $SecretKey, $SecretFile) = establishInstallSecret($applicationSlug);
+  // / The AppArmor profile every sandboxed conversion depends on is validated as soon as the Engine has loaded, by its startEngine(), which says why.
+  // / Resource awareness is decided by startEngine() too, because the Engine is verified after this runs.
+  // / A failure to verify it is worth a warning that has somewhere to be written.
+  // / The socket directory is named by establishDataLocations(), with the other data locations.
+  $ResourceAwarenessActive = FALSE;
+  if (!$secretIsReady && $RequireResourceAwareness) errorEntry('Resource awareness is required by config.php but there is no install secret!', 31013, TRUE);
+  // / The version check & the config check both halt on failure, so reaching this line means
+  // / both passed & only the secret remains in question.
+  // / A secret is ready when it was CREATED or when it was LOADED. Requiring both, as an
+  // / earlier version did, could never be satisfied. A first run only ever creates & every
+  // / run after that only ever loads, so the two conditions are mutually exclusive.
+  if ($secretIsReady) $InstallationIsVerified = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $applicationRoot, $entryScript, $applicationSlug, $detectedConfigVersion, $engineTemplate, $applicationTemplate, $templatePath, $settingNames, $missingConfigVars, $templateNames, $contextIsKnown, $versionWasRun, $configRepairRequested, $configWasWritten, $configWasRun, $runningIsInstalled, $configIsValid, $locationsAreDerived, $secretIsReady, $templateWasRead, $settingsWritten, $entryPointFile, $applicationVersion, $requiredConfigVersion);
+  return array($InstallationIsVerified, $ConfigFile); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to print the short report -v gives when the Engine could not be loaded.
+// / Accepts nothing. Returns TRUE once the report has been printed.
+// / -v is what an operator runs to find out what is wrong, so it answers when the Engine cannot load.
+// / The Engine prints the whole report with showVersionReport, & everything in it but these lines needs the Engine.
+// / So this names the kernel, the Engine the application requires & the one that was found, & the configuration, & says what to do.
+// / The updater accepts an installation whose -v prints the words Core version, so that line ends this report as it ends the Engine's.
+function showKernelVersionReport() {
+  // / Set variables.
+  global $ApplicationName, $EngineApplicationVersion, $KernelVersion, $RequiredKernelVersion, $RequiredEngineVersion, $ConfigVersion, $RequiredConfigVersion, $Lol, $EnableMemoryProtection;
+  $ReportWasPrinted = FALSE;
+  $applicationVersion = $engineFound = $lineBreak = '';
+  $lineBreak = (isset($Lol) && is_string($Lol) && $Lol !== '') ? $Lol : PHP_EOL;
+  $applicationVersion = ltrim((string)$EngineApplicationVersion, 'vV');
+  $engineFound = ltrim((string)readComponentVersion('Engine'.DIRECTORY_SEPARATOR.'engine.php', 'EngineVersion'), 'vV');
+  print($lineBreak.applicationLabel().' '.$applicationVersion.$lineBreak);
+  print('  Kernel     '.ltrim((string)$KernelVersion, 'vV').', requires '.ltrim((string)$RequiredKernelVersion, 'vV').$lineBreak);
+  print('  Engine     '.$engineFound.', requires '.ltrim((string)$RequiredEngineVersion, 'vV').$lineBreak);
+  print('  Config     '.$ConfigVersion.', requires '.$RequiredConfigVersion.' or later'.$lineBreak);
+  print($lineBreak.'The Engine could not be loaded, so nothing else can be reported.'.$lineBreak);
+  print('Restore Resources/Engine from the release this application came from & run -v again.'.$lineBreak);
+  print($lineBreak.'1 check(s) failed. See Documentation/ERROR_DESCRIPTIONS.txt.'.$lineBreak);
+  // / The updater in every release from v3.9.9 to v4.0.0 accepts a new installation only when its -v prints the words Core version.
+  print($lineBreak.'Core version '.$applicationVersion.' reported the above.'.$lineBreak);
+  print($lineBreak);
+  $ReportWasPrinted = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $applicationVersion, $engineFound, $lineBreak);
+  return $ReportWasPrinted; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to print the short help -h gives when the Engine could not be loaded.
+// / Accepts the name of the entry point. Returns TRUE once the help has been printed.
+// / Every command but -v, -h & --app is the Engine's & is refused without one, so the Engine's are not listed, & -v says what failed.
+// / The Engine prints the whole help with its showHelpInfo, with what the application's help provider adds.
+function showKernelHelpInfo($entryPointName) {
+  // / Set variables.
+  global $EngineApplicationVersion, $Lol, $EnableMemoryProtection;
+  $HelpWasPrinted = FALSE;
+  $lineBreak = '';
+  $lineBreak = (isset($Lol) && is_string($Lol) && $Lol !== '') ? $Lol : PHP_EOL;
+  print($lineBreak.applicationLabel().' '.ltrim((string)$EngineApplicationVersion, 'vV').$lineBreak);
+  print($lineBreak.'Usage'.$lineBreak);
+  print('  php '.$entryPointName.' [argument]'.$lineBreak);
+  print($lineBreak.'Arguments'.$lineBreak);
+  print('  -v, --version               Display version & dependency information.'.$lineBreak);
+  print('  -h, --help                  Display this message.'.$lineBreak);
+  print($lineBreak.'The Engine could not be loaded, so none of its commands are listed.'.$lineBreak);
+  print('Run  php '.$entryPointName.' -v  to see which component failed.'.$lineBreak.$lineBreak);
+  $HelpWasPrinted = TRUE;
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $lineBreak, $entryPointName);
+  return $HelpWasPrinted; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to refuse to run where config.php requires resource awareness & it is not active.
+// / Accepts nothing. Returns TRUE when nothing was refused, & does not return otherwise.
+// / An administrator may refuse to run rather than accept work they cannot account for.
+// / The two causes are two numbers. 31013 is a configuration that contradicts itself & 31010 is an Engine that did not load.
+// / The configuration utility does no work & is what shows & repairs the contradiction, so it is let through.
+// / The Engine's startEngine() calls this as soon as it has decided whether resource awareness is active, & loadEngine() calls it where there is no Engine.
+function enforceResourceAwareness() {
+  // / Set variables.
+  global $RequireResourceAwareness, $ResourceAwarenessActive, $EnableResourceAwareness, $RunningFromCLI;
+  $ResourceAwarenessIsSettled = TRUE;
+  if ($RequireResourceAwareness && !$ResourceAwarenessActive && !($RunningFromCLI && isset($_SERVER['argv'][1]) && $_SERVER['argv'][1] === '--config')) {
+    $ResourceAwarenessIsSettled = FALSE;
+    if (!$EnableResourceAwareness) errorEntry('Resource awareness is required by config.php but --Enable Resource Awareness-- is FALSE!', 31013, TRUE);
+    else errorEntry('Resource awareness is required by config.php & the Engine is unavailable!', 31010, TRUE); }
+  return $ResourceAwarenessIsSettled; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to verify & load the Engine, & have it start.
+// / Accepts nothing. Returns whether the Engine is active & the version it reports, in that order.
+// / It is the kernel's, because a missing or mismatched Engine has to be said by something that is not the Engine.
+// / The Engine is verified & loaded by verifyCoreComponent(), & it starts itself with startEngine(), which builds everything a request
+// / hangs off it before the application builds its own globals. Until v4.2.4 every step of that was the application's main logic.
+// / An Engine that is missing or mismatched is a warning, & what is lost is named while everything that does not depend on it carries on.
+// / The warning has somewhere to go, because verifyLogs() has run, & the log buffer holds anything raised before it did.
+// / Without an Engine there is no resource awareness, whatever an Engine that did not start had decided, so it is turned off & the gate
+// / on it is applied here. startEngine() applies the gate otherwise.
+// / $EngineActive & $EngineVersion are globals set here as well as returned, because startEngine() runs before this returns & reads them.
+function loadEngine() {
+  // / Set variables.
+  global $EngineActive, $EngineVersion, $RequiredEngineVersion, $ResourceAwarenessActive, $EnableMemoryProtection;
+  $EngineActive = $engineIsStarted = $resourceAwarenessIsSettled = FALSE;
+  $EngineVersion = '';
+  list ($EngineActive, $EngineVersion) = verifyCoreComponent('Engine', 'Engine'.DIRECTORY_SEPARATOR.'engine.php', 'EngineVersion', $RequiredEngineVersion);
+  if ($EngineActive && function_exists('startEngine')) $engineIsStarted = startEngine();
+  // / An Engine that loaded & did not start is no Engine, & is said to be unavailable rather than half used.
+  if ($EngineActive && !$engineIsStarted) $EngineActive = FALSE;
+  if (!$EngineActive) {
+    warningEntry('The Engine is unavailable. Dependency location, startup keys, environment validation & per operation resource limits are unavailable until it is repaired.');
+    $ResourceAwarenessActive = FALSE;
+    $resourceAwarenessIsSettled = enforceResourceAwareness(); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $engineIsStarted, $resourceAwarenessIsSettled);
+  return array($EngineActive, $EngineVersion); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to print the help, the Engine's where it is loaded & the kernel's short one where it is not.
+// / Accepts the name of the entry point. Returns TRUE once the help has been printed.
+function showCommandLineHelp($entryPointName) {
+  // / Set variables.
+  global $EngineActive, $EnableMemoryProtection;
+  $HelpWasShown = FALSE;
+  if ($EngineActive && function_exists('showHelpInfo')) $HelpWasShown = showHelpInfo();
+  else $HelpWasShown = showKernelHelpInfo($entryPointName);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $entryPointName);
+  return $HelpWasShown; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to hand an argument beginning --app to the handler the application's contract names.
+// / Accepts the argument list & the command, in that order. Returns the exit status, 0 where a handler took it & 2 where none is declared.
+// / Everything beginning --app belongs to the application, so the Engine never has to know what the application accepts & no argument of either can collide.
+// / It is checked ahead of every command of the Engine's, so that no command the Engine adds later can claim it, & with or without an Engine,
+// / because whether it needs the Engine is the application's business.
+// / It is a prefix rather than a registry of names, because a registry means asking the application what it accepts before an unknown argument can be reported.
+// / The handler is named by $EngineApplicationArgumentHandler, which the Engine configuration & the contract both set.
+// / Its values are handed over as typed, because parseArgumentVector lowercases every target, & an application's own may be paths.
+// / They are read again from the raw vector, & the command stays lowercased, because it is a name matched the way every command is.
+function runApplicationArgument($cliArguments, $cliCommand) {
+  // / Set variables.
+  global $Lol, $EngineApplicationArgumentHandler, $EnableMemoryProtection;
+  $CommandStatus = 0;
+  $applicationHandler = $appTarget = $appSecondTarget = '';
+  $appArgumentParts = array();
+  $applicationHandler = (isset($EngineApplicationArgumentHandler) && is_string($EngineApplicationArgumentHandler)) ? trim($EngineApplicationArgumentHandler) : '';
+  if ($applicationHandler !== '' && function_exists($applicationHandler)) {
+    logEntry('The application argument '.$cliCommand.' was handed to '.$applicationHandler.'.');
+    $appArgumentParts = explode('=', trim((string)$cliArguments[0]), 2);
+    $appTarget = isset($appArgumentParts[1]) ? trim($appArgumentParts[1]) : (isset($cliArguments[1]) ? trim((string)$cliArguments[1]) : '');
+    $appSecondTarget = isset($cliArguments[2]) ? trim((string)$cliArguments[2]) : '';
+    $applicationHandler($cliCommand, $appTarget, $appSecondTarget); }
+  else {
+    warningEntry('The application argument '.$cliCommand.' was supplied & this application declares no handler.');
+    $CommandStatus = 2;
+    print($Lol.'This application accepts no '.$cliCommand.' command.'.$Lol);
+    print('Arguments beginning --app belong to the application & this one declares none.'.$Lol.$Lol); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $applicationHandler, $appTarget, $appSecondTarget, $appArgumentParts, $cliArguments, $cliCommand);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to refuse a command that needs the Engine when there is none.
+// / Accepts the command & the name of the entry point, in that order. Returns the exit status, which is 1.
+// / Every command but -v, -h & --app reaches into the Engine for managers, dependencies, configuration or cleaning. Calling into a
+// / component that is not loaded is an undefined function, which tells an operator nothing & leaves no log line behind.
+// / Refusing here produces a sentence they can act on instead, & the refusal is logged.
+// / A drop-in unpacked beside the loader holds no Engine where its release left the Engine as it was.
+// / A drop-in carries only the files that changed, & once the application is installed the folder the web server serves holds the loader & little else.
+// / The remedy is to unpack it where the installation is, & a new Engine would only lead to -fp saying so.
+// / Otherwise the remedy is named, because there is no command that applies it. Every repair path reaches into the Engine as well, so an
+// / operator who goes looking for one is hunting something that does not exist. Measured rather than assumed: with a mismatched Engine,
+// / --config --repair, --setup --install-complete & --update all fail on an Engine call of their own. Telling them to run -v & stopping
+// / there sent them in a circle.
+function refuseCommandWithoutEngine($cliCommand, $entryPointName) {
+  // / Set variables.
+  global $Lol, $InstLoc, $ApplicationLoc, $EnableMemoryProtection;
+  $CommandStatus = 1;
+  $engineIsMissing = $installationIsElsewhere = FALSE;
+  warningEntry('The command '.$cliCommand.' was refused because the Engine is unavailable.');
+  print($Lol.'This command needs the Engine, which could not be loaded.'.$Lol);
+  $engineIsMissing = !is_file($InstLoc.DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Engine'.DIRECTORY_SEPARATOR.'engine.php');
+  $installationIsElsewhere = ((string)@realpath($InstLoc) !== (string)@realpath((string)$ApplicationLoc) && is_file((string)$ApplicationLoc.DIRECTORY_SEPARATOR.$entryPointName));
+  if ($engineIsMissing && $installationIsElsewhere) {
+    print('This folder holds no Engine. The installation is '.$ApplicationLoc.'.'.$Lol);
+    print('Unpack a drop-in into '.$ApplicationLoc.' & run -fp there.'.$Lol.$Lol); }
+  else {
+    print('Run  php '.$entryPointName.' -v  to see which component failed.'.$Lol);
+    print('A mismatched Engine is a partial update. Replace Resources/Engine/engine.php'.$Lol);
+    print('with the copy from this core\'s release. Every repair command needs the Engine.'.$Lol.$Lol); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $engineIsMissing, $installationIsElsewhere, $cliCommand, $entryPointName);
+  return $CommandStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the command line & dispatch whatever it asks for.
+// / Accepts the name of the entry point, for the instructions it prints. Returns whether the command line was handled, the user type & the
+// / exit status the command earned, in that order.
+// / The status follows the common command line convention, so a script, cron or systemd can act on it.
+// / 0 is success, 1 is a command that failed or was refused, & 2 is a command used wrongly, such as an argument nothing recognizes.
+// / A report such as -v exits 0 when the report was produced, because validateInstallation runs -v & requires 0, & an optional missing dependency must not fail an update.
+// / Success means the requested state holds afterwards, rather than that work was done.
+// / Stopping a listener that was not running is success, as it is for systemctl stop.
+// / It is the kernel's, because -v & -h are how an operator finds out what is wrong & must work when the Engine does not. It was the
+// / application's parseCommandLine() until v4.2.4.
+// / -v & -h are answered by the Engine where it is loaded & by the kernel where it is not. An argument beginning --app is the application's,
+// / & runApplicationArgument() hands it over. Every other command is the Engine's, & runEngineCommandLine() runs it or reports it unrecognized.
+// / Without an Engine every other command is refused, with a sentence an operator can act on.
+// / A handled command line ends the request, & an unhandled one is a web request, as a request with no arguments is.
+// / The Engine is told how it was reached once that is known, & a pipeline declaring a surface it does not permit is refused.
+function runCommandLine($entryPointName) {
+  // / Set variables.
+  global $EngineActive, $RunningFromCLI, $EngineActiveSurface, $WorkflowSessionAdopted, $EnableMemoryProtection;
+  $CommandLineHandled = $cliConfirmed = $cliVectorParsed = $helpWasShown = $reportWasShown = FALSE;
+  $CommandLineStatus = $cliArgumentCount = 0;
+  $UserType = 'web';
+  $cliArguments = array();
+  $cliCommand = $cliTarget = $cliSecondTarget = '';
+  // / A web request has no command line, & this is the only path that leaves it unhandled.
+  if ($RunningFromCLI) {
+    // / The vector is read into its parts by parseArgumentVector, & a vector that could not be read at all is not a command line, so
+    // / the help is what an operator sees instead.
+    list ($cliArguments, $cliArgumentCount, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed, $cliVectorParsed) = parseArgumentVector(isset($_SERVER['argv']) ? $_SERVER['argv'] : array());
+    if (!$cliVectorParsed) warningEntry('The command line argument vector could not be read & no command was dispatched.');
+    $CommandLineHandled = TRUE;
+    $UserType = 'cli';
+    // / A command line invocation with no argument is a request for help.
+    if ($cliArgumentCount < 1) {
+      logEntry('Command line invocation with no argument. Displaying help.');
+      $helpWasShown = showCommandLineHelp($entryPointName); }
+    else if (strpos($cliCommand, '--app') === 0) $CommandLineStatus = runApplicationArgument($cliArguments, $cliCommand);
+    else if ($cliCommand === '-v' or $cliCommand === '--version') {
+      logEntry('Command line invocation. Displaying version information.');
+      // / The report is the Engine's, with what the application's report provider adds, & the kernel prints a short one when the Engine could not be loaded.
+      if ($EngineActive && function_exists('showVersionReport')) $reportWasShown = showVersionReport();
+      else $reportWasShown = showKernelVersionReport(); }
+    else if ($cliCommand === '-h' or $cliCommand === '--help') {
+      logEntry('Command line invocation. Displaying help.');
+      $helpWasShown = showCommandLineHelp($entryPointName); }
+    else if (!$EngineActive or !function_exists('runEngineCommandLine')) $CommandLineStatus = refuseCommandWithoutEngine($cliCommand, $entryPointName);
+    else $CommandLineStatus = runEngineCommandLine($cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $cliConfirmed);
+    // / A root command that installs, run from a tree that is not installed, installs it as it ends & hands over to the installed copy.
+    // / handOverToApplication says why it waits until now. It is Setup Core's, & every command it acts on has loaded Setup Core by now.
+    if (function_exists('handOverToApplication')) $CommandLineStatus = handOverToApplication($CommandLineStatus); }
+  // / A command line invocation & an HTTP request reach the same file, so the Engine cannot work out which this is & is told.
+  $EngineActiveSurface = $UserType;
+  // / Error 27 should not be possible & should never be able to fire. If it does something is seriously wrong.
+  if ($CommandLineHandled && $UserType === 'web') errorEntry('Could not verify user type!', 27, TRUE);
+  // / A command line works on no visitor's files, & says so. A workflow's worker is the one command line that does, so it is not warned about.
+  if ($CommandLineHandled && $UserType === 'cli' && $WorkflowSessionAdopted !== TRUE) warningEntry('CLI user detected. File operations are disabled.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cliConfirmed, $cliVectorParsed, $helpWasShown, $reportWasShown, $cliArgumentCount, $cliArguments, $cliCommand, $cliTarget, $cliSecondTarget, $entryPointName);
+  return array($CommandLineHandled, $UserType, $CommandLineStatus); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to admit a web request, once the command line has been read & is not one.
+// / Accepts the name of the entry point, for the instruction a halt prints. Returns whether the request may be served.
+// / Nothing runs as root, or as any account but the web server's, beyond this point.
+// / A web request cannot be served without an Engine, & this is where that is decided. Every operation reaches into it with no guard, so an
+// / absent Engine would be an undefined function on the first of them & a blank page for the visitor. A visitor who gets a blank page cannot
+// / report anything useful & an administrator reading the log finds a fatal rather than a reason. A documented halt gives both a sentence.
+// / The command line is exempt & is handled by runCommandLine(), because -v & -h are how an operator finds out what is wrong.
+// / What the Engine makes ready before a request is served is its own prepareWebRequest(). These were the application's main logic until v4.2.4.
+function admitWebRequest($entryPointName) {
+  // / Set variables.
+  global $Verbose, $RunningAsRoot, $RunningFromCLI, $CurrentUser, $ApacheUser, $EngineActive, $EnableMemoryProtection;
+  $RequestIsAdmitted = FALSE;
+  if ($Verbose) logEntry('Web user detected. File operations are enabled.');
+  if ($RunningAsRoot or $CurrentUser !== $ApacheUser) errorEntry('The application is being run in an unsupported security context!', 28, TRUE);
+  else logEntry('Verified security context. Currently running as the '.$CurrentUser.' user.');
+  if (!$EngineActive and !$RunningFromCLI) quickDie('The Engine is unavailable, so this request cannot be served. Run  php '.$entryPointName.' -v  on the server to see which component failed.', 28005);
+  if (function_exists('prepareWebRequest')) $RequestIsAdmitted = prepareWebRequest();
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $entryPointName);
+  return $RequestIsAdmitted; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

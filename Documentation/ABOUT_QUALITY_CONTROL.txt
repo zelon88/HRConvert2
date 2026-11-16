@@ -36,6 +36,13 @@ The first two check the code & the third checks the documentation.
 All three are run from the installation root, beside convertCore.php. Running one from
 anywhere else exits two & says so, rather than reporting that a tree it cannot see is clean.
 
+EACH READS THE ENTRY POINT & THE MODEL FROM THE CONTRACT, FROM v4.2.4.
+$EngineEntryPoint & $EngineConfigModelProvider in Resources/Contract/app-engine-config.php name
+the file the checks start from & the function that models the application's settings, which are
+convertCore.php & applicationConfigModel() here. Another application on the Engine runs all three
+unchanged. Until v4.2.4 both names were written into the checkers, & an application had to find
+& change each.
+
   --list           Name every check & say in one line what it looks for.
   --only <name>    Run one check. This is what to use while fixing something.
   --quiet          Print nothing & report the answer in the exit code.
@@ -87,7 +94,7 @@ one, believe the Python until proven otherwise.
   caps        No comment line is entirely capitals.
   purge       Every cleanup at a return carries the comment that belongs with it.
   exit        Every function has one exit.
-  config      Every required configuration setting is declared global where config.php loads.
+  config      Every setting a configuration template holds is modelled, & is held once.
   locals      Every lowercase local is destroyed before the function returns. PYTHON ONLY.
   sentence    Every comment block ends a sentence. PYTHON ONLY.
   name        No function parameter has a generic name. PYTHON ONLY.
@@ -99,6 +106,7 @@ one, believe the Python until proven otherwise.
   globals     No function destroys a global it declares. PYTHON ONLY.
   configs     No setting is set by the administrator & by the Engine. PYTHON ONLY.
   owner       An owner is changed only through changeOwnerWithoutFollowing().
+  static      No function destroys a static it keeps. PYTHON ONLY.
   stray       Nothing ships that is not part of the application.
 
 This heading carried a count until v3.9.9 & the count was wrong by three. A number in a
@@ -109,8 +117,8 @@ says what it CANNOT see as well as what it can. Read those before chasing a find
 
 EVERY CHECK BUT ONE WAS WRITTEN AFTER A FAULT REACHED A RUNNING INSTALLATION.
 None of them are hypothetical. Until v4.0.0 none of them were caught by reading the code.
-The last two were, by a manual pass that read every line, & they exist so that the next
-fault of either kind does not wait for another one.
+Two were, frame & globals, by a manual pass that read every line, & static was found by
+another at v4.2.4. Each exists so that the next fault of its kind does not wait for a pass.
 
   order       A fatal on the first web request after the data location functions moved into
               the Engine. verifyGlobals called requestConvertLoc which called
@@ -144,6 +152,10 @@ fault of either kind does not wait for another one.
               the required list & to the file, & not to the global declaration where the file
               is loaded. The settings were tested by name through a list at runtime, so
               nothing read them anywhere & every other check saw nothing wrong.
+              At v4.2.4 the list & the declaration went, because the kernel reads the names
+              from the two templates. Two settings had been in neither since they were added,
+              so the Pipeline Core never saw the administrator's value. The check holds each
+              template to its model instead.
   locals      Six locals found & purged by hand across three functions in one round, then
               one hundred & twenty more the moment the check existed. Convention five had
               been enforced by attention alone.
@@ -166,6 +178,8 @@ fault of either kind does not wait for another one.
               with chown -R, & root then ran that code. Root also gave the capability cache to
               that account by name in a folder it could change, so a link planted there handed
               any file on the host over, & that was proven before it was fixed.
+  static      verifySystemdRun purged the three statics holding its probe, so a probe its
+              comments said ran once per request ran before every conversion.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / FILE INFORMATION ...
-// / v4.2.3.
+// / v4.2.4.
 // / This file contains the current HRConvert2 version for update verification purposes.
 // /
 // / HARDWARE REQUIREMENTS ...
@@ -20,7 +20,7 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / DEPENDENCY REQUIREMENTS ...
-// / The authoritative list of dependencies is Resources/Contract/depends.php & nothing else.
+// / The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else.
 // / Run  php convertCore.php -v  to see what this installation has.
 // /
 // / <3 Open-Source
@@ -36,6 +36,6 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The version of this HRConvert2 installation.
-$Version = 'v4.2.3';
+$Version = 'v4.2.4';
 $Version = ltrim($Version, 'vV');
 // / -----------------------------------------------------------------------------------

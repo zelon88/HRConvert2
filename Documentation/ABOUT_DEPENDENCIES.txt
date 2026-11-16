@@ -18,7 +18,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -45,11 +45,23 @@ Everything in this file follows from two decisions.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --The Manifest--
 
-Resources/Contract/depends.php holds one entry per dependency. It is in Contract
-because it belongs to the APPLICATION & is handed to the Engine, which has no dependencies of
-its own beyond the sandbox. An application built on this Engine writes its own manifest.
-It sits outside Resources/Engine so the Engine can be replaced whole without taking the
-manifest with it. It was Resources/Engine/Contract/depends.php from v3.9.3 until v3.9.9.
+The manifest holds one entry per dependency, in two halves from v4.2.4, as config.php has.
+
+  Resources/Engine/depends.php     The Engine's half. PHP & its OpenSSL, Pcntl & Posix
+                                   extensions, Apache, Curl, Git, Bubblewrap & AppArmor Utils,
+                                   which the Engine runs whatever the application is. It is
+                                   replaced with the Engine, which pins it itself.
+  Resources/Contract/depends.php   The application's half. What its own pipelines run. It is in
+                                   Contract because it belongs to the APPLICATION & is handed to
+                                   the Engine, & it sits outside Resources/Engine so the Engine can
+                                   be replaced whole without taking it. It was
+                                   Resources/Engine/Contract/depends.php from v3.9.3 until v3.9.9.
+
+Dependency Core reads the Engine's half first & the application's after it. A name the
+application's half repeats is left out with a warning, so an application cannot change what the
+Engine needs. An entry in the application's half may name one of the Engine's in Requires, as
+PHP Zip names PHP. Until v4.2.4 the Engine's entries were in HRConvert2's manifest, & an
+application built on the Engine would have repeated them. It writes its own half & nothing else.
 
 Each entry carries these fields.
 
@@ -293,7 +305,8 @@ covers, then holds a section for every dependency.
 
   An approval block        Status, approved on, expires on, audited by, the outcome, & any
                            notes or conditions the approval was given under.
-  The manifest facts       Copied from depends.php. License, source, minimum version & the rest.
+  The manifest facts       Copied from the half of the manifest that holds the dependency, which
+                           the record names. License, source, minimum version & the rest.
   The audit answers        One line per question the audit procedure below asks.
 
 A NOTE OR CONDITION MAY RUN OVER SEVERAL LINES. Write the first line beside the label & indent
@@ -361,7 +374,8 @@ does not disable a conversion type. It stops the application.
     3d. If a binary or code is bundled, inspect & cross-reference it as far as you are able.
     3e. If we build it ourselves, sanity check the machine we build it on first.
     3f. If installers build it themselves, provide a working build script.
-  4. Add or update the entry in Resources/Contract/depends.php.
+  4. Add or update the entry in Resources/Contract/depends.php, or in Resources/Engine/depends.php
+     for a dependency the Engine itself runs.
   5. Run the approvals tool so the record carries the new facts.
     5a. python3 Documentation/Build/hrconvert2-approvals.py --refresh
     5b. Fill in Status, Approved on, Expires on & Audited by, & any Notes or Conditions.
@@ -402,7 +416,7 @@ Write NOT APPLICABLE, OWNED in the Expires on field so --check does not chase it
   3. Test everything related to it. Confirm the application still works without it.
   4. Do NOT remove it from the current SUPPLY_CHAIN_AUDIT_<YEAR>.xlsx. Mark the removal date
      & the reason under Description instead. A removed dependency is still history.
-  5. Remove its entry from Resources/Contract/depends.php.
+  5. Remove its entry from the half of the manifest that holds it.
   6. Search the codebase for every reference & remove each one, including any verifiedToolPath
      call & any $PipelineDependencies declaration.
   7. Run the approvals tool with --refresh so it drops out of every record that listed it.

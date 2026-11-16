@@ -12,13 +12,14 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v4.0.6.
+# / v4.2.4.
 # / This file is a SECOND OPINION on the source & is not the authoritative one.
 # / hrconvert2-check.py is authoritative. This exists so two implementations written in
 # / two languages can be asked the same question, & so a disagreement between them is a
 # / signal that one of them is wrong.
 # /
-# / Run it from the installation root, beside convertCore.php.
+# / Run it from the installation root, beside the application's entry point, convertCore.php for HRConvert2.
+# / The entry point & the application's configuration model are read from its contract, as the Python reads them.
 # /   bash Documentation/Build/hrconvert2-check.sh
 # /   bash Documentation/Build/hrconvert2-check.sh --list
 # /   bash Documentation/Build/hrconvert2-check.sh --only pins
@@ -218,7 +219,7 @@ check_duplicate() {
 # / Python does. ScanCore is a program of its own & declares its own $ConfigVersion, so it is not
 # / read. Until v4.0.6 whichever file the filesystem listed first answered alone.
 check_pins() {
-  grep -oE '\$Required[A-Za-z]+Version[[:space:]]*=[[:space:]]*.v?[0-9.]+.' convertCore.php 2>/dev/null \
+  grep -oE '\$Required[A-Za-z]+Version[[:space:]]*=[[:space:]]*.v?[0-9.]+.' "$ENTRY" 2>/dev/null \
   | sed -E "s/\\\$Required([A-Za-z]+)Version[[:space:]]*=[[:space:]]*.v?([0-9.]+)./\1 \2/" \
   | while read -r component pinned; do
       grep -rlE "\\\$${component}Version[[:space:]]*=[[:space:]]*.v?[0-9.]+." --include='*.php' --exclude-dir=ScanCore Resources/ 2>/dev/null | LC_ALL=C sort \
@@ -230,16 +231,17 @@ check_pins() {
           fi
         done
     done
-  # / A manager is pinned by the Engine rather than by the application.
+  # / A manager is pinned by the Engine rather than by the application, & so is the Engine's half of the dependency
+  # / manifest, from v4.2.4, which declares $EngineDependsVersion in Resources/Engine/depends.php.
   if [ -f Resources/Engine/engine.php ]; then
     grep -oE "'[A-Za-z]+\.php'[[:space:]]*=>[[:space:]]*'v?[0-9.]+'" Resources/Engine/engine.php 2>/dev/null \
     | sed -E "s/'([A-Za-z]+\.php)'[[:space:]]*=>[[:space:]]*'v?([0-9.]+)'/\1 \2/" \
     | while read -r manager pinned; do
-        path="Resources/Engine/Managers/$manager"
+        if [ "$manager" = 'depends.php' ]; then path='Resources/Engine/depends.php'; declaration='EngineDependsVersion'; else path="Resources/Engine/Managers/$manager"; declaration='ManagerVersion'; fi
         if [ ! -f "$path" ]; then
-          report 'PIN' "the Engine pins $manager & no such manager is installed"
+          report 'PIN' "the Engine pins $manager & $path is not installed"
         else
-          declared=$(grep -oE "\\\$ManagerVersion[[:space:]]*=[[:space:]]*'v?[0-9.]+'" "$path" | sed -E "s/.*'v?([0-9.]+)'/\1/")
+          declared=$(grep -oE "\\\$${declaration}[[:space:]]*=[[:space:]]*'v?[0-9.]+'" "$path" | sed -E "s/.*'v?([0-9.]+)'/\1/")
           if [ -z "$declared" ]; then
             report 'PIN' "$manager reports no version & an unknown build cannot be cleared"
           elif [ "$declared" != "$pinned" ]; then
@@ -251,13 +253,13 @@ check_pins() {
   # / The bootstrap script is pinned by $RequiredConfigScript & declares SCRIPT_VERSION.
   # / Its name does not follow the pattern above, so it needs a check of its own.
   script=$(ls Documentation/Build/*-setup.sh 2>/dev/null | head -1)
-  pinned=$(grep -oE "\\\$RequiredConfigScript[[:space:]]*=[[:space:]]*'v?[0-9.]+'" convertCore.php 2>/dev/null | sed -E "s/.*'v?([0-9.]+)'/\1/")
+  pinned=$(grep -oE "\\\$RequiredConfigScript[[:space:]]*=[[:space:]]*'v?[0-9.]+'" "$ENTRY" 2>/dev/null | sed -E "s/.*'v?([0-9.]+)'/\1/")
   if [ -n "$script" ] && [ -n "$pinned" ]; then
     declared=$(grep -oE '^SCRIPT_VERSION="v?[0-9.]+"' "$script" | sed -E 's/.*"v?([0-9.]+)"/\1/')
     if [ -z "$declared" ]; then
       report 'PIN' "$(basename "$script") declares no SCRIPT_VERSION & an unknown build cannot be cleared"
     elif [ "$declared" != "$pinned" ]; then
-      report 'PIN' "the bootstrap script is pinned at $pinned & $(basename "$script") declares $declared. Set \$RequiredConfigScript in convertCore.php to match."
+      report 'PIN' "the bootstrap script is pinned at $pinned & $(basename "$script") declares $declared. Set \$RequiredConfigScript in $ENTRY to match."
     fi
   fi
 }
@@ -453,10 +455,10 @@ check_kernel() {
 # / The Engine may call the kernel, because the kernel is identical in every application.
 # / It may not call anything only this application has.
 check_contract() {
-  if [ ! -d Resources/Engine ] || [ ! -f convertCore.php ]; then
+  if [ ! -d Resources/Engine ] || [ ! -f "$ENTRY" ]; then
     return
   fi
-  grep -oE '^function [A-Za-z_][A-Za-z0-9_]*' convertCore.php | sed 's/^function //' | sort -u > "$WORKDIR/appfns"
+  grep -oE '^function [A-Za-z_][A-Za-z0-9_]*' "$ENTRY" | sed 's/^function //' | sort -u > "$WORKDIR/appfns"
   find ./Resources/Engine -name '*.php' -exec grep -hoE '^function [A-Za-z_][A-Za-z0-9_]*' {} \; \
     | sed 's/^function //' | sort -u > "$WORKDIR/enginefns"
   # / The kernel is whatever Resources/Kernel/kernel.php defines, read from that file rather
@@ -498,16 +500,24 @@ check_contract() {
 # / reached through two intervening functions is not.
 # / The Python is the one to trust here & this exists to agree with it rather than to
 # / replace it.
+# / The kernel's loadEngine() loads the Engine & has it start, from v4.2.4, so every file of the Engine's is taken to
+# / load where the main logic calls it, as the Python takes it.
 check_order() {
-  if [ ! -f convertCore.php ] || [ ! -d Resources ]; then
+  if [ ! -f "$ENTRY" ] || [ ! -d Resources ]; then
     return
   fi
   find ./Resources -name '*.php' -exec grep -HoE '^function [A-Za-z_][A-Za-z0-9_]*' {} \; \
     | sed -E 's#^\./Resources/.*/([^/]+\.php):function #\1 #; s#^\./Resources/([^/]+\.php):function #\1 #' \
     | sort -u > "$WORKDIR/componentfns"
-  grep -nE "^list \(.*verifyCoreComponent\(" convertCore.php \
+  grep -nE "^list \(.*verifyCoreComponent\(" "$ENTRY" \
     | grep -oE "^[0-9]+:.*'[A-Za-z]+\.php'" | sed -E "s/^([0-9]+):.*'([A-Za-z]+\.php)'/\2 \1/" > "$WORKDIR/loadlines"
-  blanked=$(blanked_of ./convertCore.php)
+  engineline=$(grep -nE '^list \(.*\bloadEngine[[:space:]]*\(' "$ENTRY" | head -1 | cut -d: -f1)
+  if [ -n "$engineline" ]; then
+    find ./Resources/Engine -name '*.php' -printf '%f\n' | while IFS= read -r name; do
+      grep -q "^$name " "$WORKDIR/loadlines" || printf '%s %s\n' "$name" "$engineline"
+    done >> "$WORKDIR/loadlines"
+  fi
+  blanked=$(blanked_of "./$ENTRY")
   awk -v fns="$WORKDIR/componentfns" -v loads="$WORKDIR/loadlines" '
     BEGIN {
       while ((getline line < fns) > 0) { split(line, a, " "); owner[a[2]] = a[1] }
@@ -522,17 +532,10 @@ check_order() {
           if (file in loadline && loadline[file] + 0 > NR) {
             printf "ORDER|line %d: %s() is defined in %s, which loads at line %d\n", NR, call, file, loadline[file] }
         }
-        copy = substr(copy, RSTART + RLENGTH) } }' convertCore.php \
+        copy = substr(copy, RSTART + RLENGTH) } }' "$ENTRY" \
   | sort -u | while IFS='|' read -r kind message; do report "$kind" "$message"; done
 }
 
-# / -----------------------------------------------------------------------------------
-# / CHECK. Every required configuration setting is declared global where config.php loads.
-# / config.php is required inside a function, so a setting that function has not declared
-# / global lands in local scope & reads as missing afterwards. An administrator is then told
-# / their configuration lacks a setting which is plainly present in it.
-# / No other check sees this. The settings are tested by name through a list at runtime, so
-# / nothing reads them anywhere & a search for a read finds nothing.
 # / -----------------------------------------------------------------------------------
 # / A tree that ships is unpacked over somebody's installation, so anything in it that is
 # / not part of the application lands on their disk.
@@ -549,32 +552,53 @@ check_stray() {
 }
 
 
+# / -----------------------------------------------------------------------------------
+# / CHECK. Every setting the two configuration templates hold is modelled, & is held once.
+# / config.php has two halves, & each has a template & a model. The kernel reads the names in the
+# / templates, & the configuration utility repairs only what a model holds. The python tool says why
+# / each disagreement matters. A model is read as one entry per line beginning with its name in quotes.
+# / A default the contract gives must name one of the Engine's settings, because no other is given one.
+# / The defaults are read as one entry per line indented by two spaces, as the contract writes them.
 check_config() {
-  if [ ! -f convertCore.php ]; then
-    return
+  for half in 'Resources/Engine/config-template.php|Resources/Engine/engine.php|engineConfigModel' "Resources/Contract/config-template.php|$ENTRY|$MODEL"; do
+    template=${half%%|*}; rest=${half#*|}; source=${rest%%|*}; model=${rest#*|}
+    if [ ! -f "$template" ] || [ ! -f "$source" ]; then
+      report 'CONFIG' "$template or $source is missing, so that half of config.php cannot be judged. Restore it from the release"
+      continue
+    fi
+    if [ -z "$model" ]; then
+      report 'CONFIG' "the contract names no \$EngineConfigModelProvider, so the settings in $template are modelled nowhere"
+      grep -o '^\$[A-Z][A-Za-z0-9_]*[[:space:]]*=' "$template" | sed 's/^\$//; s/[[:space:]]*=$//' | sort -u >> "$WORKDIR/held.names"
+      continue
+    fi
+    grep -o '^\$[A-Z][A-Za-z0-9_]*[[:space:]]*=' "$template" | sed 's/^\$//; s/[[:space:]]*=$//' | sort -u > "$WORKDIR/template.names"
+    awk -v want="$model" '
+      $0 ~ "^function " want "\\(" { inside = 1 }
+      inside == 1 && /^  return / { inside = 0 }
+      inside == 1 && match($0, /^[[:space:]]*\047[A-Za-z_][A-Za-z0-9_]*\047 => array\(\047Type\047/) {
+        line = substr($0, RSTART, RLENGTH); sub(/^[[:space:]]*\047/, "", line); sub(/\047.*/, "", line); print line }' "$source" | sort -u > "$WORKDIR/model.names"
+    comm -23 "$WORKDIR/template.names" "$WORKDIR/model.names" | while IFS= read -r name; do
+      report 'CONFIG' "\$$name is in $template & not in $model(), so config.php must hold it & no repair can add it"
+    done
+    comm -13 "$WORKDIR/template.names" "$WORKDIR/model.names" | while IFS= read -r name; do
+      report 'CONFIG' "\$$name is in $model() & not in $template, so a repair has no default to write for it"
+    done
+    cat "$WORKDIR/template.names" >> "$WORKDIR/held.names"
+    [ "$model" = 'engineConfigModel' ] && cp "$WORKDIR/template.names" "$WORKDIR/engine.names"
+  done
+  sort "$WORKDIR/held.names" 2>/dev/null | uniq -d | while IFS= read -r name; do
+    report 'CONFIG' "\$$name is in both halves of the configuration template, so a generated config.php assigns it twice. Give it one home"
+  done
+  if [ -f Resources/Contract/app-engine-config.php ]; then
+    awk '/^\$EngineSettingDefaults[[:space:]]*=[[:space:]]*array\(/ { inside = 1 }
+      inside == 1 && match($0, /^  \047[A-Za-z_][A-Za-z0-9_]*\047[[:space:]]*=>/) { line = substr($0, RSTART, RLENGTH); sub(/^  \047/, "", line); sub(/\047.*/, "", line); print line }
+      inside == 1 && /\);[[:space:]]*$/ { inside = 0 }' Resources/Contract/app-engine-config.php | sort -u > "$WORKDIR/default.names"
+    touch "$WORKDIR/engine.names"
+    comm -23 "$WORKDIR/default.names" "$WORKDIR/engine.names" | while IFS= read -r name; do
+      report 'CONFIG' "\$EngineSettingDefaults gives \$$name a default & it is not one of the Engine's settings, so the default is never written. Give it in that setting's own template"
+    done
   fi
-  # / The ORIGINAL is read rather than the blanked copy. The required settings are quoted
-  # / strings & the blanked copy has emptied every one of them, so reading that copy compares
-  # / an empty set against the declarations & reports nothing missing whatever is removed.
-  # / A check that cannot fail is worse than no check, because it is counted as having passed.
-  awk '
-    /\$requiredConfigVars = array\(/ { inlist = 1 }
-    inlist == 1 { line = $0
-      while (match(line, /\047[A-Za-z_][A-Za-z0-9_]*\047/)) {
-        print "REQ " substr(line, RSTART + 1, RLENGTH - 2)
-        line = substr(line, RSTART + RLENGTH) }
-      if (index($0, ");") > 0) inlist = 0 }
-    /^function verifyInstallation\(/ { infn = 1 }
-    infn == 1 && /global / { ingl = 1 }
-    ingl == 1 { line = $0
-      while (match(line, /\$[A-Za-z_][A-Za-z0-9_]*/)) {
-        print "DEC " substr(line, RSTART + 1, RLENGTH - 1)
-        line = substr(line, RSTART + RLENGTH) }
-      if (index($0, ";") > 0) { ingl = 0; infn = 0 } }' convertCore.php \
-  | awk '{ if ($1 == "DEC") declared[$2] = 1; else required[$2] = 1 }
-      END { for (name in required) if (!(name in declared))
-              printf "CONFIG|%s is required & is not declared global where config.php is loaded, so it will read as missing\n", name }' \
-  | sort | while IFS='"'"'|'"'"' read -r kind message; do report "$kind" "$message"; done
+  rm -f "$WORKDIR/template.names" "$WORKDIR/model.names" "$WORKDIR/held.names" "$WORKDIR/engine.names" "$WORKDIR/default.names"
 }
 
 # / -----------------------------------------------------------------------------------
@@ -625,7 +649,7 @@ describe() {
     guard)     printf 'every component refuses to load directly' ;;
     contract)  printf 'the Engine never calls application code' ;;
     kernel)    printf 'the kernel calls only itself, PHP & a guarded Engine' ;;
-    config)    printf 'every required setting is declared where config.php loads' ;;
+    config)    printf 'every setting a configuration template holds is modelled, & held once' ;;
     caps)      printf 'no comment line is entirely capitals' ;;
     stray)     printf 'nothing ships that is not part of the application' ;;
     purge)     printf 'every cleanup at a return carries its comment' ;;
@@ -654,8 +678,14 @@ if [ "$LIST" -eq 1 ]; then
   exit 0
 fi
 
-if [ ! -f convertCore.php ]; then
-  printf 'Run this from the installation root, beside convertCore.php.\n'
+# / The application's entry point & the function that models its half of config.php, as its contract names them.
+# / A contract that names neither leaves the Engine's defaults, app.php & no model, as the Python does.
+contract_name() { sed -nE "s/^\\\$$1[[:space:]]*=[[:space:]]*'([^']*)'[[:space:]]*;.*/\1/p" Resources/Contract/app-engine-config.php 2>/dev/null | head -1; }
+ENTRY=$(contract_name EngineEntryPoint); ENTRY=${ENTRY##*/}; [ -n "$ENTRY" ] || ENTRY=app.php
+MODEL=$(contract_name EngineConfigModelProvider)
+
+if [ ! -f "$ENTRY" ]; then
+  printf 'Run this from the installation root, beside %s, the entry point Resources/Contract/app-engine-config.php names.\n' "$ENTRY"
   exit 2
 fi
 

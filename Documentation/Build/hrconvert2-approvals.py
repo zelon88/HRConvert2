@@ -8,7 +8,7 @@
 # / https://www.gnu.org/licenses/gpl-3.0.html
 # /
 # / FILE INFORMATION ...
-# / v4.2.1.
+# / v4.2.4.
 # / This file writes the two documents that ship beside every pipeline. The dependency
 # / approval record, & the README that introduces the pipeline & lists what it depends on.
 # /
@@ -18,8 +18,10 @@
 # / belong to the application rather than to any one pipeline get the record in Documentation.
 # /
 # / THE MANIFEST IS THE ONLY SOURCE OF FACTS.
-# / Every factual field in a record is read from Resources/Contract/depends.php, so a
-# / record cannot drift from the manifest. Re-run this after changing the manifest.
+# / Every factual field in a record is read from the dependency manifest, so a record cannot
+# / drift from it. Re-run this after changing the manifest. It has two halves from v4.2.4, the
+# / Engine's, Resources/Engine/depends.php, & the application's, Resources/Contract/depends.php,
+# / & both are read, the Engine's first, as the Engine reads them. Each record names its half.
 # /
 # / THIS TOOL NEVER ANSWERS AN AUDIT QUESTION.
 # / It writes the questions & leaves them unanswered. An answer is a judgement a person makes
@@ -46,7 +48,7 @@ import re
 import sys
 import datetime
 
-TOOL_VERSION = 'v3.9.7'
+TOOL_VERSION = 'v4.2.4'
 # / The rule every document in Documentation is drawn with.
 RULE = '-' * 160
 UNANSWERED = 'NOT YET ANSWERED'
@@ -122,14 +124,34 @@ SANDBOX_DEPENDENCY = 'Bubblewrap'
 
 
 # / -----------------------------------------------------------------------------------
-# / A function to read every dependency record out of the manifest.
+# / A function to read every dependency record out of the manifest, both halves of it.
 # / Accepts the tree root. Returns a dictionary keyed by dependency name.
 # / The manifest is PHP, & it is read as text rather than executed, for the same reason the
 # / core reads a component version as text. A manifest broken enough to need reading is a
 # / manifest nobody should execute to find out.
+# / The Engine's half is read first, & a name the application's half repeats is the Engine's,
+# / as verifyDependsManifest() decides. Each record keeps the half it came from as File.
+# / A half that is not there is read as one declaring nothing.
 # / -----------------------------------------------------------------------------------
 def read_manifest(root):
-    path = os.path.join(root, 'Resources', 'Contract', 'depends.php')
+    entries = {}
+    for half in (os.path.join('Resources', 'Engine', 'depends.php'), os.path.join('Resources', 'Contract', 'depends.php')):
+        path = os.path.join(root, half)
+        if not os.path.exists(path):
+            continue
+        for name, record in read_manifest_half(path).items():
+            if name in entries:
+                continue
+            record['File'] = half.replace(os.sep, '/')
+            entries[name] = record
+    return entries
+
+
+# / -----------------------------------------------------------------------------------
+# / A function to read every dependency record out of one half of the manifest.
+# / Accepts the path of the half. Returns a dictionary keyed by dependency name, in the order written.
+# / -----------------------------------------------------------------------------------
+def read_manifest_half(path):
     text = open(path, encoding='utf-8', errors='replace').read()
     starts = [match.start() for match in re.finditer(r"array\('Name'\s*=>", text)]
     entries = {}
@@ -371,7 +393,7 @@ def render_dependency(record, answers):
     for label, default in RECORD_FIELDS:
         lines.extend(render_field(label, answers.get(label, default)))
     lines.append('')
-    lines.append('  Manifest facts, read from Resources/Contract/depends.php')
+    lines.append('  Manifest facts, read from ' + record.get('File', 'Resources/Contract/depends.php'))
     for label, key in (('Binary', 'Binary'), ('Install type', 'Type'), ('Package', 'Package'),
                        ('Minimum version', 'MinimumVersion'), ('Required', 'Required'),
                        ('Subsystem', 'Subsystem'), ('License', 'License'),
@@ -412,7 +434,7 @@ def render_header(subject):
             'This application will run on just about any x86 or x64 computer.',
             '',
             'DEPENDENCY REQUIREMENTS ...',
-            'The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.',
+            'The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine\'s half & the application\'s, & nothing else. Run  php convertCore.php -v  to see what this installation has.',
             '',
             '<3 Open-Source',
             RULE]

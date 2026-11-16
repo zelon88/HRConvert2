@@ -83,6 +83,16 @@ function purgeSensitiveMemory($FailureIsFatal, &...$variables) {
   return $MemoryIsPurged; }
 ```
 
+### Statics
+
+A `static` is a local that keeps its value from one call to the next, for the life of the process. A web request, a command, a worker & an Environment Manager pass are each one process, so whatever a static keeps is gone when that process ends.
+
+A static is never handed to `purgeSensitiveMemory()`. Purging it empties it, so the next call finds nothing kept & does the work again. Until v4.2.4 `verifySystemdRun()` purged the three statics holding its probe, so a probe its comments said ran once per request ran before every conversion. Linter check twenty five reports a function that purges a static it keeps.
+
+So a static holds only what is worth keeping & is not secret, such as a status word, a path, a program's name or an answer about the host. A secret, a key or anything a user supplied is never kept in one, because nothing ever shreds it. Each static says beside it what it keeps & for how long.
+
+The answers of the policy checks are kept in one place, the Engine's `policyAnswerMemory()`, which also decides when a kept answer is used. An application's own policy check keeps no static of its own.
+
 ---
 
 ## Threat Model & Risk Analysis

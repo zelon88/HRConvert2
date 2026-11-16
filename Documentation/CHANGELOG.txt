@@ -19,11 +19,59 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ... 
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
 
+
+--------------------
+COMMIT 11/16/2026
+v4.2.4 - The kernel boots the installation & the Engine owns its settings, its boot, its command line, its dependencies, -fp & -v, so an application supplies its pins, its contract & its logic.
+
+-v4.2.4.
+-The kernel boots the installation in verifyInstallationState(). The core's verifyInstallation() hands it the core's pins & nothing else.
+-verifyRunningContext(), establishDataLocations(), verifyCodeIsTrustedByRoot() & verifyContainerEnvironment() are the kernel's. verifyConfigVersion() is retired.
+-config.php has two halves. The Engine's 87 settings are in Resources/Engine/config-template.php & engineConfigModel(), & HRConvert2's 73 in Resources/Contract/config-template.php & applicationConfigModel().
+-The kernel reads the setting names in both templates & makes each a global as it reads config.php. No list of settings is kept.
+-config.php must hold every setting the templates name, so seven that were optional are required. --config --repair adds any that is missing.
+-$SupportedFormatDetectionType & $WarnOnCapabilityMismatch take effect. Neither was a global, so the Pipeline Core ran as hardcoded-only. At their defaults detection runs & a disagreement is logged, & no conversion changes.
+-New $EngineSettingDefaults gives one of the Engine's settings a default of the application's, in a generated config.php & in a reset, a setting written across several lines included. $EngineConfigTemplate is retired.
+-Resources/config.php is written from both templates, the Engine's settings first in each section, with every value unchanged.
+--fp is the Engine's repairInstallation(), which was fixManagedPermissions(). New $EnginePolicyChecks names the policies -fp & the Environment Manager check.
+--v is the Engine's showVersionReport(), which was showVersionInfo(), & toolPath() & toolRequirement() are the Engine's. New $EngineReportProvider names applicationVersionReport(), which adds HRConvert2's rows.
+--v without an Engine prints the kernel's showKernelVersionReport() rather than a fatal. The Engine's report asks sandboxIsRequired() alone, so the Engine keeps one sandbox rule.
+-The Engine asks the operator on the terminal by default. askOperator() & applicationEnvironmentFindings() are retired, & HRConvert2 names no environment or repair provider.
+-The four manager timing constants are set in engineConfig.php rather than by the core.
+-$DefaultApplicationName names the application until config.php is read, so the kernel names none.
+-The Workflow Core finds the entry point through engineApplicationEntryPoint().
+-verifySystemdRun() no longer purges the statics holding its probe, so the probe runs once per process.
+-New policyAnswerMemory() keeps every policy check's answer for the life of the process.
+-New error 28009. Error 28003 is retired.
+-Check thirteen holds each configuration template to its model, & each default the contract gives to one of the Engine's settings, in both checkers. New check twenty five, static, finds a function purging a static it keeps.
+-Check twenty two no longer reads global $$name as a global declared by that name.
+-The Archive pipeline's comments name -v rather than showVersionInfo().
+-The kernel's loadEngine() loads the Engine & has it start. New startEngine() finds the host, reads the sandbox profiles, gates resource awareness, adopts a workflow's session, answers the request & loads the Pipeline & Workflow Cores.
+-New establishEngineSession() derives a session's folders, the pooled session areas & the served address. verifyGlobals() sets HRConvert2's own globals & nothing else.
+-The kernel sets $DirSep, $Lol, $Lolol, $Append & $ManagerSocketDir, once.
+-New $EngineSandboxProvider names getSandboxProfiles() & new $EngineSessionFolders names ScadTemp. verifySandboxPolicyAtStart() is retired.
+-The Engine reads the allowed extensions through $EngineSettingNames, as AllowedExtensions.
+-$RetryCount is in the Engine's half of config.php, & the Pipeline Core counts attempts by it rather than by $StopCounter. No setting is added or removed, so $ConfigVersion stays.
+-A share link on a page served over https begins https. The address was worked out before the connection was verified.
+-The kernel's runCommandLine() reads the command line, answers -v, -h & --app & refuses what needs a missing Engine. parseCommandLine() is retired.
+-New runEngineCommandLine() answers every other command, -u & an unrecognized argument included. reportUnrecognizedArgument() is the Engine's.
+--h is the Engine's showHelpInfo(). New $EngineHelpProvider names applicationHelpInfo(), which adds HRConvert2's lines. Without an Engine the kernel's showKernelHelpInfo() lists -v & -h & says why.
+-The kernel's admitWebRequest() admits a web request, the Engine's prepareWebRequest() prepares it & its finishWebRequest() closes it. verifyRequiredDirs() & adoptWorkflowSession() are the Engine's.
+-A command line logs that file operations are disabled, rather than conversion operations.
+-The dependency manifest has two halves. New Resources/Engine/depends.php holds PHP, its OpenSSL, Pcntl & Posix extensions, Apache, Curl, Git, Bubblewrap & AppArmor Utils, & the Engine pins it itself. Resources/Contract/depends.php holds the rest.
+-PHP installs php-cli & php-mbstring, & PHP Zip installs php-zip itself.
+--v reports the Engine's manifest. New loadDependsManifest() loads both halves once for every reader.
+-hrconvert2-approvals.py reads both halves & each record names its half. Every record is refreshed.
+-The three checkers read the entry point & the model from the contract. Check three knows loadEngine() & check ten the Engine's manifest pin.
+-The header of every file v4.2.4 changes names both halves of the manifest.
+-ERROR_DESCRIPTIONS documents error 28009, retires error 28003, names the kernel or the Engine as the file raising each error that moved into it & lists every Engine file that refuses a direct request.
+-ABOUT_ENGINE_CONTRACT, ABOUT_COMPONENTS, ABOUT_ENGINE_ABSORPTION, ABOUT_ENVIRONMENT_MANAGER, ABOUT_PIPELINE_COMPONENTS, ABOUT_QUALITY_CONTROL, ABOUT_DEFENSIVE_MEMORY_MANAGEMENT, ABOUT_COMMAND_LINE_ARGUMENTS, ABOUT_DEPENDENCIES, ABOUT_WORKFLOWS, ABOUT_MANAGERS, ABOUT_RESOURCE_RATE_LIMITING, CODING_CONVENTIONS, CREATING_CONVERSION_PIPELINES, DOCKER_BUILD_INSTRUCTIONS, INSTALLATION_INSTRUCTIONS, ENGINE_MIGRATION_STATUS, DEVELOPMENT_NOTES, the Dockerfile & README.md describe the kernel & the Engine as they are now.
+-The kernel, the core, the Engine & its configuration, the Workflow, Setup, Dependency & Pipeline Cores, the Environment Manager, both halves of the dependency manifest & the Archive pipeline are v4.2.4, & every pin to them requires v4.2.4.
 
 --------------------
 COMMIT 11/15/2026

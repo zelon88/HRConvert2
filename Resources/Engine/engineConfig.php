@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.0.
+// / v4.2.4.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -50,7 +50,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 // / The version of this configuration. Matched as a MINIMUM by the Engine, the same way
 // / an application matches its own configuration. A newer file carrying every required
 // / setting is fine, because a setting this Engine does not know is simply not read.
-$EngineConfigVersion = 'v4.0.8';
+$EngineConfigVersion = 'v4.2.4';
 // / -----------------------------------------------------------------------------------
 
 
@@ -278,12 +278,12 @@ $EnginePerWorkerLogFiles = FALSE;
 $EngineEnvironmentProvider = '';
 
 // /  --Engine Operator Prompt--
-// /   The name of a function that asks a human a question & returns their answer.
-// /   The Engine has work that must not proceed unasked, & it has no idea how this
-// /   application talks to anybody. A command line reads a line. A web request has no
-// /   operator at all & must refuse rather than block waiting for one.
-// /   An application that names nothing gets a REFUSAL for every such question, which is
-// /   the safe answer. Nothing destructive happens because nobody could be asked.
+// /   The name of a function that asks a human a question & returns their answer, for an
+// /   application that reaches its operator some other way than a terminal.
+// /   The Engine has work that must not proceed unasked. An application that names nothing
+// /   is asked on the terminal by the Engine itself, & a web request, which has no operator,
+// /   gets a REFUSAL for every such question rather than blocking. A refusal is the safe
+// /   answer. Nothing destructive happens because nobody could be asked.
 $EngineOperatorPrompt = '';
 
 // /  --Engine Data Policy Provider-- is retired.
@@ -318,16 +318,20 @@ $EngineOperationProvider = '';
 // /   An application that names none ships no workflows, & an administrator may still install some.
 $EngineShippedWorkflows = '';
 
-// /  --Engine Config Template--
-// /   The file this application uses to say what its configuration looks like.
-// /   It is a real config.php at DEFAULT VALUES rather than a description of one, so the
-// /   Engine reads it with the same parser it reads a live configuration with.
-// /   A path with no leading separator is taken as relative to Resources.
-// /   A missing config.php is written from it. A repair adds whatever it holds that a
-// /   live configuration lacks. An operator value is never replaced by a default in it.
-// /   An application naming none cannot have a configuration written for it, & is told so
-// /   rather than being given somebody else's defaults.
-$EngineConfigTemplate = '';
+// /  --Engine Setting Defaults--
+// /   The defaults an application gives the Engine's own settings, where the Engine's would
+// /   not do, keyed by setting & written as config.php writes a value, so a string carries
+// /   its quotes. The settings, their documentation & their defaults are the Engine's, in
+// /   Resources/Engine/config-template.php, the Engine's half of the configuration template.
+// /   The application's half is always Resources/Contract/config-template.php, & the kernel
+// /   reads both by those names before this file is loaded, so neither is named here.
+// /   A default given here replaces only the value, in a config.php written from the
+// /   templates & in what a reset writes. A setting written across several lines, as an
+// /   array is, is replaced whole. Only the Engine's settings are given one, & check thirteen
+// /   of hrconvert2-check.py reports a default named for any other.
+// /   An application names itself & its folders here.
+// /   Leave it empty & every setting of the Engine's has the Engine's default.
+$EngineSettingDefaults = array();
 
 // /  --Application Argument Handler--
 // /   The name of a function that handles this application's own command line
@@ -390,17 +394,63 @@ $EngineProtectHostedLocations = TRUE;
 // /   A pipeline declares which surfaces it may be reached from & this is what that is
 // /   compared against. A pipeline that permits only web is refused from a terminal, & one
 // /   that permits only cli is refused from a browser.
-// /   An empty value enforces nothing, which is what an application that has not wired
-// /   this up gets. It is set by the application at boot once it knows how it was reached,
-// /   because the Engine cannot know that. A CLI invocation & an HTTP request reach the
-// /   same file.
+// /   An empty value enforces nothing, which is what a process that has not read its command
+// /   line yet gets. It is set by the kernel's runCommandLine() once it knows how the application
+// /   was reached, because the Engine cannot know that. A CLI invocation & an HTTP request reach
+// /   the same file.
 $EngineActiveSurface = '';
 
 // /  --Engine Repair Provider--
-// /   The name of a function that repairs whatever this application manages.
-// /   Already read by the Environment Manager. Setup Core uses the same seam, so there is
-// /   one place an application declares how it fixes itself rather than two.
+// /   Optional. The name of a function that repairs whatever else this application keeps,
+// /   beyond what the Engine's own repair covers. The Engine's repairInstallation runs it as
+// /   root, before it verifies the environment, for -fp, --setup & the Environment Manager
+// /   alike, so there is one place an application declares how it fixes itself.
+// /   The named function accepts nothing & returns a success boolean & a count of what it corrected.
+// /   Leave it empty & the Engine's repair is the whole of the repair.
 $EngineRepairProvider = '';
+
+// /  --Engine Report Provider--
+// /   The name of a function that gives the report -v prints what only this application
+// /   knows. The Engine prints the report itself, & places what the function returns among
+// /   its own sections. The function accepts nothing & returns rows & titled sections keyed by
+// /   where each goes: Dependencies, DependencyNotes, SectionsAfterDependencies, SwitchedOff,
+// /   SectionsAfterSwitchedOff & SectionsAfterResources. A row is a Label, a Text & whether it
+// /   Failed. A switched off feature is a pair, the feature & the setting that switches it on.
+// /   Leave it empty & the report carries the Engine's sections alone.
+$EngineReportProvider = '';
+
+// /  --Engine Help Provider--
+// /   The name of a function that gives the help -h prints what only this application knows.
+// /   The Engine prints the help itself, with every command of its own. The function accepts nothing &
+// /   returns Description, the line printed under the application's name, Arguments, lines for the
+// /   application's own arguments printed after the Engine's, Sections, titled lines printed after the
+// /   Engine's, & Address, the line printed last. Each is optional.
+// /   Leave it empty & the help lists the Engine's commands alone.
+$EngineHelpProvider = '';
+
+// /  --Engine Sandbox Provider--
+// /   The name of a function that returns the sandbox profiles this application's tools run under,
+// /   keyed by profile name. The Engine asks for them as it starts & assembles a sandbox from each,
+// /   & knows nothing about any tool a profile names, because a profile is data.
+// /   A name that is declared & not defined is a warning.
+// /   Leave it empty & the application declares no profile of its own.
+$EngineSandboxProvider = '';
+
+// /  --Engine Session Folders--
+// /   The folders every session holds for the application's own tools, beside the Engine's StreamTemp.
+// /   The Engine makes each with the session, never sweeps one at the root of a data location, & gives
+// /   each a global of the same name holding its path, so each must be a name a global can carry.
+// /   Leave it empty & a session holds the Engine's folders alone.
+$EngineSessionFolders = array();
+
+// /  --Engine Policy Checks--
+// /   The policies an application keeps on the host, beside the Engine's own sandbox
+// /   profile, by name. Each names the function that checks it as 'Check', & the label its
+// /   line carries in an environment report as 'Finding'. A check accepts whether it may
+// /   repair & returns a validity boolean & a status word, as verifySandboxPolicy() does.
+// /   The Engine reports each with its own findings & repairs each with its own policies.
+// /   Leave it empty & the sandbox profile is the only policy checked.
+$EnginePolicyChecks = array();
 
 // /  --Engine Log Provider--
 // /   The name of a function that moves a process on to the logfile it should be writing now.
@@ -432,6 +482,33 @@ $EngineAcceptedSharedModules = array();
 // /   does not map reads the default the shared layer chose for it.
 // /   FormatDetectionType, WarnOnCapabilityMismatch, DefaultScanner & RequireResourceAwareness are read.
 $EngineSettingNames = array();
+
+
+// / -----------------------------------------------------------------------------------
+// / --Engine Manager Timing--
+// /
+// / Four names here do not begin with Engine, because every manager & the Engine read them by the
+// / names they had while the application set them, which it did until v4.2.4. Nothing an
+// / administrator sets has any of them, so none shadows a setting in config.php.
+// /
+// /  --Manager Socket Timeout--
+// /   How many seconds a manager or a worker waits on a manager's socket before it gives up.
+// /   A request waits three times this long for the Request Manager's answer.
+$ManagerSocketTimeout = 2;
+
+// /  --Manager Message Batch Size--
+// /   How many messages a manager takes from its socket in one pass of its loop.
+$ManagerMessageBatchSize = 32;
+
+// /  --Manager Message Skew--
+// /   How many seconds a message's clock may differ from the manager's before it is refused as stale.
+$ManagerMessageSkew = 30;
+
+// /  --Startup Key Window--
+// /   How many seconds one startup key lasts. A key is accepted for the window it was made in
+// /   & the one before, & a key file older than three windows is removed.
+$StartupKeyWindow = 10;
+// / -----------------------------------------------------------------------------------
 
 
 // / -----------------------------------------------------------------------------------

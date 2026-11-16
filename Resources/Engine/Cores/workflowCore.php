@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.3.
+// / v4.2.4.
 // / The Workflow Core, one of the Engine's cores.
 // / A workflow is a list of steps, & each step runs one of the application's operations on files a user selected or an earlier step made.
 // / This file reads, checks & runs workflows, & keeps the status a page reads while one runs.
@@ -43,7 +43,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by the application without executing this file.
-$WorkflowCoreVersion = 'v4.2.3';
+$WorkflowCoreVersion = 'v4.2.4';
 // / -----------------------------------------------------------------------------------
 
 
@@ -1863,7 +1863,7 @@ function stagedWorkflowIdentifier($workflowName, $workflowLibrary) {
 // / Nothing is described that the page does not need, so no path is ever sent.
 function stageWorkflowForEveryone($workflowText, $descriptionsText) {
   // / Set variables.
-  global $SignedInAccount, $EngineEntryPoint, $EnableMemoryProtection;
+  global $SignedInAccount, $EnableMemoryProtection;
   $StageReply = array('Available' => FALSE, 'Allowed' => FALSE);
   $workflowSettings = $normalizedWorkflow = $workflowProblems = $operations = $fileTypes = $cleanDescriptions = $descriptionProblems = $workflowLibrary = $libraryOperations = $libraryTypes = array();
   $descriptionEntries = NULL;
@@ -1889,7 +1889,7 @@ function stageWorkflowForEveryone($workflowText, $descriptionsText) {
           errorEntry('The workflow '.$workflowId.' could not be staged for every user. '.$writeNotice, 38007, FALSE);
           $StageReply = array_merge($StageReply, array('Staged' => FALSE, 'Reason' => 'server', 'Problems' => array())); }
         else {
-          $entryPoint = (isset($EngineEntryPoint) && is_string($EngineEntryPoint) && $EngineEntryPoint !== '') ? $EngineEntryPoint : 'convertCore.php';
+          $entryPoint = engineApplicationEntryPoint();
           logEntry('The administrator '.(string)($SignedInAccount['Username'] ?? '').' staged the workflow '.$workflowId.' for every user, with '.count($cleanDescriptions).' description(s). Root installs it with --workflow --install-staged='.$workflowId.'.');
           $StageReply = array_merge($StageReply, array('Staged' => TRUE, 'Id' => $workflowId, 'Command' => 'sudo php '.$entryPoint.' --workflow --install-staged='.$workflowId,
             'Replaces' => isset($workflowLibrary[$workflowId]) ? (string)($workflowLibrary[$workflowId]['Workflow']['Name'] ?? $workflowId) : '')); } } } }
@@ -2356,7 +2356,7 @@ function printWorkflowLibrary($workflowSettings, $workflowLibrary) {
 // / The web server account can write the staging folder, so a name & a problem are printed through printableWorkflowText().
 function printStagedWorkflows($workflowSettings) {
   // / Set variables.
-  global $Lol, $EngineEntryPoint, $EnableMemoryProtection;
+  global $Lol, $EnableMemoryProtection;
   $StagedCount = 0;
   $stagedWorkflows = $operations = $fileTypes = $workflowRecord = array();
   $registryIsUsable = $folderWasRead = FALSE;
@@ -2364,7 +2364,7 @@ function printStagedWorkflows($workflowSettings) {
   if ($workflowSettings['StagingFolder'] !== '') {
     list ($registryIsUsable, $operations, $fileTypes) = readOperationRegistry();
     if ($registryIsUsable) list ($folderWasRead, $stagedWorkflows) = readWorkflowFolder($workflowSettings['StagingFolder'], 'staged', $operations, $fileTypes, $workflowSettings);
-    $entryPoint = (isset($EngineEntryPoint) && is_string($EngineEntryPoint) && $EngineEntryPoint !== '') ? $EngineEntryPoint : 'convertCore.php';
+    $entryPoint = engineApplicationEntryPoint();
     if (count($stagedWorkflows) > 0) print('  Staged for root to install'.$Lol.$Lol);
     foreach ($stagedWorkflows as $workflowId => $workflowRecord) {
       redeclare($usabilityWord, $workflowRecord['Usable'] ? 'usable' : ($workflowRecord['Valid'] ? 'disabled' : 'INVALID'));

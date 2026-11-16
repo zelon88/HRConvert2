@@ -12,15 +12,19 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File information ...
-// / v4.2.3.
-// / HRConvert2 Dependency Manifest.
+// / v4.2.4.
+// / HRConvert2 Dependency Manifest, the application's half.
 // / This file is data. It defines nothing & does nothing.
-// / dependencyCore.php reads it. Nothing else may.
+// / The Engine's verifyDependsManifest() reads it. Nothing else may.
+// / The manifest has two halves, as config.php does. What the Engine needs whatever application bundles it, PHP, its
+// / extensions, the web server, Curl, Git, Bubblewrap & AppArmor's tools, is the Engine's half, Resources/Engine/depends.php,
+// / & this half is what HRConvert2 needs. The two are read as one list, the Engine's first, so a name here may be
+// / Required of one there, as PHP Zip requires PHP. A name is in one half only, from v4.2.4.
 // /
 // / $InstLoc is in scope while this file is read, because verifyDependsManifest declares it
 // / global before the require. A bundled dependency uses it rather than a hardcoded path.
 // /
-// / The array order is the install order, read top to bottom.
+// / The array order is the install order, read top to bottom, after the Engine's half.
 // / A dependency also declares what it Requires, which is checked before it is installed.
 // / The order is what runs, & the chain is what catches an order somebody has broken.
 // /
@@ -98,7 +102,7 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / Dependency requirements ...
-// / This file is the authoritative list of dependencies & nothing else is.
+// / This file & Resources/Engine/depends.php are the authoritative list of dependencies, & nothing else is.
 // / Run  php convertCore.php -v  to see what this installation has.
 // /
 // / <3 Open-Source
@@ -114,67 +118,25 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v4.2.3';
+$DependsVersion = 'v4.2.4';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
 $DependsManifest = array(
 
-  // / ---- Core. Nothing else can be installed or run without these. ----
-  array('Name' => 'PHP', 'Binary' => 'php', 'Type' => 'apt', 'Package' => 'php-cli php-zip php-mbstring',
-    'MinimumVersion' => '8.0', 'VersionCommand' => 'php -v', 'VersionPattern' => '/^PHP (\d+\.\d+)/',
-    'Required' => TRUE, 'Subsystem' => 'Core', 'Requires' => array(),
-    'License' => 'PHP-3.01', 'Source' => 'https://www.php.net', 'Purpose' => 'Runs the application.'),
-  // / A PHP extension is not proved by the PHP binary being present.
+  // / ---- Core. What the Engine needs, PHP, its extensions, the web server, Curl, Git & the sandbox, is the Engine's half,
+  // / Resources/Engine/depends.php, read before this one, so it is installed first. ----
+  // / A PHP extension is not proved by the PHP binary being present. It is asked for by name, from PHP itself, & is
+  // / its own entry for that reason. php-zip is this application's, & the Engine's PHP entry does not install it.
   // / php-zip is Required because it backs a security filter rather than a feature.
   // / sanitizeDocumentLinks() opens an OOXML document with ZipArchive to strip external
   // / references before LibreOffice is allowed to see it. Without the extension that
   // / function warns & passes the document through unfiltered, leaving the sandbox as the
   // / only thing standing between a crafted document & the machine.
-  // / php-zip is named in the PHP package list above, but a check that only asks the binary
-  // / for its version reports PHP ok while an extension it needs is missing. An extension
-  // / is asked for by name, from PHP itself, & is its own entry for that reason.
-  array('Name' => 'PHP OpenSSL', 'Binary' => '', 'Type' => 'php-extension', 'Package' => 'openssl',
-    'MinimumVersion' => '', 'VersionCommand' => 'php -r "exit(extension_loaded(\'openssl\') ? 0 : 1);"', 'VersionPattern' => '',
-    'Required' => FALSE, 'Subsystem' => 'Resource Awareness', 'Requires' => array('PHP'),
-    'License' => 'PHP-3.01', 'Source' => 'https://www.php.net/manual/en/book.openssl.php', 'Purpose' => 'Encrypts every message on a manager socket. Resource awareness cannot work without it & fails quietly rather than loudly.'),
   array('Name' => 'PHP Zip', 'Binary' => '', 'Type' => 'php-extension', 'Package' => 'zip',
     'MinimumVersion' => '', 'VersionCommand' => 'php -r "exit(extension_loaded(\'zip\') ? 0 : 1);"', 'VersionPattern' => '',
     'Required' => TRUE, 'Subsystem' => 'Documents', 'Requires' => array('PHP'),
     'License' => 'PHP-3.01', 'Source' => 'https://www.php.net/manual/en/book.zip.php', 'Purpose' => 'Opens OOXML documents so external references can be stripped before LibreOffice sees them. Without it the sandbox is the only protection.'),
-  // / Root hands a command to the web server account by forking & dropping to it, which takes pcntl & posix.
-  // / Without either, such a command is refused rather than run as root, so -fp & the listener commands root hands over fail.
-  // / The command line PHP of a distribution carries both. The official PHP container image carries posix & not pcntl.
-  array('Name' => 'PHP Pcntl', 'Binary' => '', 'Type' => 'php-extension', 'Package' => 'pcntl',
-    'MinimumVersion' => '', 'VersionCommand' => 'php -r "exit(extension_loaded(\'pcntl\') ? 0 : 1);"', 'VersionPattern' => '',
-    'Required' => FALSE, 'Subsystem' => 'Core', 'Requires' => array('PHP'),
-    'License' => 'PHP-3.01', 'Source' => 'https://www.php.net/manual/en/book.pcntl.php', 'Purpose' => 'Lets root run a command as the web server account. Without it that command is refused.'),
-  array('Name' => 'PHP Posix', 'Binary' => '', 'Type' => 'php-extension', 'Package' => 'posix',
-    'MinimumVersion' => '', 'VersionCommand' => 'php -r "exit(extension_loaded(\'posix\') ? 0 : 1);"', 'VersionPattern' => '',
-    'Required' => FALSE, 'Subsystem' => 'Core', 'Requires' => array('PHP'),
-    'License' => 'PHP-3.01', 'Source' => 'https://www.php.net/manual/en/book.posix.php', 'Purpose' => 'Names accounts & lets root run a command as the web server account. Without it that command is refused.'),
-  array('Name' => 'Apache', 'Binary' => 'apache2', 'Type' => 'apt', 'Package' => 'apache2 libapache2-mod-php',
-    'MinimumVersion' => '2.4', 'VersionCommand' => 'apache2 -v', 'VersionPattern' => '/Apache\/(\d+\.\d+)/',
-    'Required' => TRUE, 'Subsystem' => 'Core', 'Requires' => array('PHP'),
-    'License' => 'Apache-2.0', 'Source' => 'https://httpd.apache.org', 'Purpose' => 'Serves the web interface.'),
-  array('Name' => 'Curl', 'Binary' => 'curl', 'Type' => 'apt', 'Package' => 'curl',
-    'MinimumVersion' => '7.0', 'VersionCommand' => 'curl --version', 'VersionPattern' => '/^curl (\d+\.\d+)/',
-    'Required' => TRUE, 'Subsystem' => 'Core', 'Requires' => array(),
-    'License' => 'curl', 'Source' => 'https://curl.se', 'Purpose' => 'Fetches update packages & remote streams.'),
-  array('Name' => 'Git', 'Binary' => 'git', 'Type' => 'apt', 'Package' => 'git',
-    'MinimumVersion' => '2.0', 'VersionCommand' => 'git --version', 'VersionPattern' => '/git version (\d+\.\d+)/',
-    'Required' => FALSE, 'Subsystem' => 'Updates', 'Requires' => array(),
-    'License' => 'GPL-2.0', 'Source' => 'https://git-scm.com', 'Purpose' => 'Retrieves releases during an update.'),
-
-  // / ---- Isolation. Installed before any converter, because converters run inside it. ----
-  array('Name' => 'Bubblewrap', 'Binary' => 'bwrap', 'Type' => 'apt', 'Package' => 'bubblewrap',
-    'MinimumVersion' => '0.4', 'VersionCommand' => 'bwrap --version', 'VersionPattern' => '/bubblewrap (\d+\.\d+)/',
-    'Required' => TRUE, 'Subsystem' => 'Sandbox', 'Requires' => array(),
-    'License' => 'LGPL-2.0', 'Source' => 'https://github.com/containers/bubblewrap', 'Purpose' => 'Isolates every conversion from the host & the network.'),
-  array('Name' => 'AppArmor Utils', 'Binary' => 'apparmor_parser', 'Type' => 'apt', 'Package' => 'apparmor-utils',
-    'MinimumVersion' => '', 'VersionCommand' => '', 'VersionPattern' => '',
-    'Required' => FALSE, 'Subsystem' => 'Sandbox', 'Requires' => array('Bubblewrap'),
-    'License' => 'GPL-2.0', 'Source' => 'https://gitlab.com/apparmor/apparmor', 'Purpose' => 'Loads the profile bubblewrap needs on a restricted kernel.'),
 
   // / ---- Archives. Needed early because other dependencies arrive compressed. ----
   array('Name' => '7-Zip', 'Binary' => '7z', 'Type' => 'apt', 'Package' => 'p7zip-full p7zip-rar',

@@ -18,7 +18,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -199,8 +199,10 @@ Before v3.9.9 every command but one exited 0, whatever happened.
 
 Configures this installation without opening config.php in a text editor.
 
-Requires the Setup Core component. The model of every setting is applicationConfigModel() in
-convertCore.php, & every default is what Resources/Contract/config-template.php holds.
+Requires the Setup Core component. config.php has two halves, & so does the model of its settings.
+The Engine's is engineConfigModel() & HRConvert2's is applicationConfigModel() in convertCore.php,
+& every default is what Resources/Engine/config-template.php or Resources/Contract/config-template.php
+holds, or what the contract gives one of the Engine's settings in $EngineSettingDefaults.
 Requires root, except for a backup, which any account that can write the destination may take.
 
   --config                                 Walk every section & queue changes. Nothing is written until the end.
@@ -434,10 +436,12 @@ once & is never written anywhere but as its hash. The command exits 0 when it di
 
 Arguments beginning --app belong to the application rather than to the Engine.
 
-The Engine answers every other argument documented here except -v, -h & -u, which are the
-application's. Setup, configuration, the managers, the listener, the pipelines, repair &
-cleanup are true of any application of this shape. An argument that begins --app is handed to
-the application untouched & the Engine takes no view on it.
+The Engine answers every other argument documented here. Setup, configuration, the managers,
+the listener, the pipelines, repair, cleanup & updates are true of any application of this
+shape. The kernel reads the command line & answers -v & -h, printing the Engine's report & help
+where there is an Engine, & hands an argument that begins --app to the application untouched.
+The Engine takes no view on it. Until v4.2.4 the application read the command line & answered
+-v, -h & -u itself.
 The command is matched without regard to case like every other. Its values reach the
 application exactly as typed, because an application's values may be paths.
 
@@ -493,6 +497,11 @@ An invocation with no argument at all also displays help, because running the we
 a terminal would emit HTML to a shell & create a session for a user who does not exist.
 
 An unrecognized argument displays help as well, & writes a warning to the log.
+
+The help is the Engine's, from v4.2.4, & the application adds its own lines to it. Where the
+Engine cannot be loaded, -h lists only -v & -h & says that the Engine's commands are not listed
+because the Engine could not be loaded, & -v names the component that failed. Until v4.2.4 -h
+listed every command whether or not the Engine could run it.
 
 This argument works when run as any user.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

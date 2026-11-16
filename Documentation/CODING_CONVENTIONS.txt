@@ -20,7 +20,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
@@ -208,14 +208,19 @@ defined.
 THE CORE BOOTS IN A FIXED ORDER & MOST OF IT IS NOT AVAILABLE AT THE START.
 
   verifyTime()          Sets $Time & $Date.
-  verifyInstallation()  Reads config.php & versionInfo.php. The kernel's establishInstallSecret() resolves the install secret.
+  verifyInstallation()  Holds the pins & calls the kernel's verifyInstallationState(), which sets $DirSep, $Lol, $Lolol &
+                        $Append, reads versionInfo.php & config.php, derives every data location & resolves the install
+                        secret with establishInstallSecret().
   verifySession()       Establishes the session, in the kernel.
   verifySesHash()       Derives the session identifiers, in the kernel.
   verifyLogs()          Opens the logfile through the kernel. NOTHING BEFORE THIS POINT HAS A LOG TO WRITE TO.
-  verifyGlobals()       Derives every path & every convenience variable.
+  loadEngine()          Verifies & starts the Engine, in the kernel. The Engine derives a session's folders & the served
+                        address in establishEngineSession().
+  verifyGlobals()       Sets the core's own globals.
 
-NOTHING CALLED BEFORE verifyGlobals() MAY USE A VARIABLE verifyGlobals() SETS.
-$Lol & $DirSep are the two that catch people. Use PHP_EOL & DIRECTORY_SEPARATOR instead.
+NOTHING CALLED BEFORE verifyInstallationState() MAY USE $Lol OR $DirSep, & NOTHING CALLED BEFORE THE
+ENGINE STARTS MAY USE A SESSION'S FOLDERS. Use PHP_EOL & DIRECTORY_SEPARATOR before then. verifyGlobals()
+set $Lol & $DirSep until v4.2.4, & they were the two that caught people.
 Writing a file with $Lol before it exists concatenates an empty string, which once produced
 a secret file with no whitespace after its opening tag. PHP treated the entire file as
 inline HTML & printed the real secret into the page source.

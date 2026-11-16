@@ -21,7 +21,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 ADDITIONAL INFORMATION ...
 HRConvert2 logs information about its operational activity to the Logs subdirectory of the data location by default.
@@ -180,7 +180,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-0, <SESSION_IDENTIFIER>: No configuration file & no Engine to write one!
 
 FILE
-  convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   YES
@@ -395,7 +395,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-10, <SESSION_IDENTIFIER>: Could not verify connection!
 
 FILE
-  convertCore.php
+  Resources/Engine/engine.php
 
 FATAL
   YES
@@ -406,7 +406,7 @@ LOGGED
 ERROR DESCRIPTION
   The PHP configuration is setup using an invalid timezone option.
   The PHP installation on the server is damaged or corrupt.
-  The convertCore.php file has become corrupt.
+  The Engine has become corrupt.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -416,6 +416,7 @@ ERROR MESSAGE
 
 FILE
   convertCore.php
+  Resources/Engine/engine.php
 
 FATAL
   YES
@@ -428,6 +429,7 @@ ERROR DESCRIPTION
   The PHP installation on the server is damaged or corrupt.
   The application has become corrupt.
   The version information contained in the versionInfo.php file does not match the version information contained in the convertCore.php file.
+  From v4.2.4 the Engine raises it too, when the session it establishes for a request cannot be verified.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -436,7 +438,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-12, <SESSION_IDENTIFIER>: Could not verify required directories!
 
 FILE
-  convertCore.php
+  Resources/Engine/engine.php
 
 FATAL
   YES
@@ -800,7 +802,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-26, <SESSION_IDENTIFIER>: Could not clean the build environment!
 
 FILE
-  /convertCore.php
+  Resources/Engine/engine.php
 
 FATAL
   NO
@@ -826,7 +828,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27, <SESSION_IDENTIFIER>: Could not verify user type!
 
 FILE
-  /convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   YES
@@ -849,7 +851,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28, <SESSION_IDENTIFIER>: The application is being run in an unsupported security context!
 
 FILE
-  /convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   YES
@@ -1299,7 +1301,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1000, <SESSION_IDENTIFIER>: The specified Data Storage Directory does not exist at <FILE_PATH>!
 
 FILE
-  convertCore.php
+  Resources/Engine/engine.php
 
 FATAL
   YES
@@ -1321,7 +1323,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-1001, <SESSION_IDENTIFIER>: Could not create a directory at <FILE_PATH>!
 
 FILE
-  /convertCore.php
+  Resources/Engine/engine.php
 
 FATAL
   YES
@@ -4430,7 +4432,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-24000, <SESSION_IDENTIFIER>: Could not process the HRConvert2 Version Information file (versionInfo.php)!
 
 FILE
-  convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   YES
@@ -4835,7 +4837,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28000, <SESSION_IDENTIFIER>: The config.php file is missing <ADDITIONAL_DATA> required setting(s). Config version detected: <ADDITIONAL_DATA>. Config version required: <ADDITIONAL_DATA>. Missing Variables: <ADDITIONAL_DATA>
 
 FILE
-  convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   YES
@@ -4862,9 +4864,12 @@ ERROR DESCRIPTION
   The list of missing variables in this message is complete & names every setting that was absent.
   A config file that predates the version stamp entirely reports a detected version of NONE.
   A config file that carries every required setting is accepted regardless of what its stamp says.
-  This error can also appear when a setting was added to config.php & to the required list, but not to
-  the global declaration at the top of verifyInstallation(). A setting absent from that declaration
-  never reaches global scope & is therefore reported as missing even though config.php defines it.
+  The settings config.php must hold are the ones the two halves of the configuration template hold,
+  Resources/Engine/config-template.php & Resources/Contract/config-template.php. The kernel reads their
+  names & makes each a global as config.php is read, so a setting is required from the release that
+  adds it to either half, & there is no separate list of them to fall out of step.
+  Until v4.2.4 this could also appear when a setting was in config.php & the required list but not in the
+  global declaration where config.php was read, & that declaration no longer exists.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -4873,7 +4878,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28001, <SESSION_IDENTIFIER>: The core file reports version <ADDITIONAL_DATA> but the version information file reports version <ADDITIONAL_DATA>. This installation is incomplete or was updated incorrectly.
 
 FILE
-  convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   YES
@@ -4931,11 +4936,9 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  --Engine Config Template-- in engineConfig.php names the file this application uses to
-  say what its configuration looks like. Nothing named it.
-  An engine cannot invent a configuration. It does not know what settings this application
-  has, what they should default to, or what any of them mean.
-  Set it to a template & run the command again. NOTHING WAS WRITTEN.
+  RETIRED AT v4.2.4. This number is no longer raised. A configuration is written from the two halves of the
+  configuration template, Resources/Engine/config-template.php & Resources/Contract/config-template.php,
+  which the kernel names, so there is no setting left that could name none. A half that is missing is 28004.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -4953,9 +4956,10 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  A template was named & is not there, or the account running the command cannot read it.
-  A path with no leading separator is taken as relative to Resources.
-  Check the path & that the file is readable by root.
+  One half of the configuration template is not there, or the account running the command cannot read it.
+  The Engine's half is Resources/Engine/config-template.php & the application's is Resources/Contract/config-template.php,
+  & a configuration is written from both.
+  Restore the one named from the release this installation came from, & check that root can read it.
   NOTHING WAS WRITTEN. The installation still has no configuration.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -4966,7 +4970,7 @@ ERROR MESSAGE
   request cannot be served. Run  php convertCore.php -v  on the server to see which component failed.
 
 FILE
-  convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   YES
@@ -4982,7 +4986,7 @@ ERROR DESCRIPTION
   This halt exists so the failure is a sentence rather than a blank page. Before it was added, the first
   unguarded Engine call produced an undefined function & the visitor saw nothing at all.
   The command line is deliberately NOT halted here. Run  php convertCore.php -v  to see which component
-  failed & what version it reports, & -h still lists every command.
+  failed & what version it reports. Without an Engine, -h lists only -v & -h & says why.
   An Engine refused on version grounds is the common cause & the fix is to install the matching Engine
   rather than to edit either version stamp.
   A request that arrives the moment an update is unpacked can meet it too. PHP's opcode cache looks at a
@@ -5054,7 +5058,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28008, <SESSION_IDENTIFIER>: Root refused to run the installation at <PATH>, because an account other than root could have changed it. <ADDITIONAL_DATA> Run  sudo php convertCore.php -fp  to give it back to root. Where -fp says root still may not run it, remove or put right what it names. Any other account may still run -v in the meantime.
 
 FILE
-  convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   YES
@@ -5094,6 +5098,30 @@ ERROR DESCRIPTION
   Every account but root is unaffected. The message is not logged, because it is raised before a
   logfile exists, & it is printed instead.
   See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28009, <SESSION_IDENTIFIER>: The configuration template at <PATH> is missing or unreadable, so the settings config.php must hold are unknown! Restore it from the release this installation came from.
+
+FILE
+  Resources/Kernel/kernel.php
+
+FATAL
+  YES
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  config.php has two halves, & each has a template. The Engine's is Resources/Engine/config-template.php &
+  the application's is Resources/Contract/config-template.php.
+  The kernel reads the names of the settings in both as every request & command starts, to know which settings
+  config.php must hold & which of them become globals. A half it cannot read leaves every one of its settings
+  unread, so each would read as NULL wherever it is used, which is a silently changed behaviour rather than an error.
+  So nothing runs, not even --config --repair, which writes a configuration from the same two files.
+  Restore the file named from the release this installation came from. A drop-in from v4.2.4 onward carries both.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -5894,7 +5922,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31008, <SESSION_IDENTIFIER>: Permissions can only be corrected while running as root!
 
 FILE
-  /convertCore.php
+  Resources/Engine/engine.php
 
 FATAL
   NO
@@ -5939,7 +5967,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31010, <SESSION_IDENTIFIER>: Resource awareness is required by config.php & the Engine is unavailable!
 
 FILE
-  /convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   YES
@@ -6016,7 +6044,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31013, <SESSION_IDENTIFIER>: Resource awareness is required by config.php but there is no install secret!
 
 FILE
-  /convertCore.php
+  Resources/Kernel/kernel.php
 
 FATAL
   YES
@@ -6927,8 +6955,8 @@ DESCRIPTION
   tool they already installed sends them the wrong way entirely.
   A Binary containing a path separator is treated as a file the operator chose & is
   verified where they put it. A Binary with no separator is a name & is looked up.
-  FIX. Correct the path in Resources/Contract/depends.php, or make the file
-  executable if it is there & is not.
+  FIX. Correct the path in the half of the manifest that holds the entry, Resources/Engine/depends.php
+  or Resources/Contract/depends.php, or make the file executable if it is there & is not.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6947,8 +6975,9 @@ DESCRIPTION
   on the compatible list. GPL-2.0 only is deliberately absent from that list, because it is
   not compatible with GPLv3.
   --Engine Allow Incomplete Deps-- refuses an entry missing License, Source or Purpose.
-  FIX. Complete the entry in Resources/Contract/depends.php, or turn the setting off
-  in engineConfig.php if the policy is not one this installation wants.
+  FIX. Complete the entry in the half of the manifest that holds it, Resources/Engine/depends.php or
+  Resources/Contract/depends.php, or turn the setting off in engineConfig.php if the policy is not
+  one this installation wants.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -7456,10 +7485,9 @@ ERROR MESSAGE
 FILE
   /Resources/Engine/engine.php
   /Resources/Engine/engineConfig.php
-  /Resources/Engine/Cores/environmentCore.php
-  /Resources/Engine/Cores/setupCore.php
-  /Resources/Engine/Cores/dependencyCore.php
-  /Resources/Engine/Cores/pipelineCore.php
+  /Resources/Engine/config-template.php
+  /Resources/Engine/depends.php
+  /Resources/Engine/Cores/*.php
   /Resources/Engine/Managers/*.php
 
 FATAL

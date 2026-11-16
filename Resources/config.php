@@ -1,6 +1,6 @@
 <?php
-// / This file is generated from Resources/Contract/config-template.php. Edit the values below, never the structure.
-// / A repair adds whatever the template holds & keeps every value set here. A structural edit is lost when the file is generated again.
+// / This file is generated from Resources/Contract/config-template.php & Resources/Engine/config-template.php. Edit the values below, never the structure.
+// / A repair adds whatever either template holds & keeps every value set here. A structural edit is lost when the file is generated again.
 // / -----------------------------------------------------------------------------------
 // / Copyright information ...
 // / HRConvert2, Copyright on 9/22/2026 by Justin Grimes, www.github.com/zelon88
@@ -25,7 +25,7 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / Dependency requirements ...
-// / The authoritative list of dependencies is Resources/Contract/depends.php & nothing else.
+// / The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else.
 // / Run  php convertCore.php -v  to see what this installation has.
 // /
 // / <3 Open-Source
@@ -68,65 +68,6 @@ $URL = 'localhost';
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $EnableMemoryProtection = TRUE;
-// /  --Virus Scanning--
-// /   Scan for viruses before performing file operations.
-// /   Requires ClamAV to be installed on the server.
-// /   Set to TRUE to enable virus scanning with ClamAV during file operations.
-// /   Set to FALSE to disable virus scanning during file operations.
-// /   The --User Virus Scanning-- config entry has a major impact on how regular virus scans are performed.
-// /   If set to TRUE & --User Virus Scanning-- is set to TRUE infected files detected during virus scans will not be removed automatically.
-// /   If set to TRUE & --User Virus Scanning-- is set to FALSE any infected file will immediately be deleted upon detection.
-// /   If set to TRUE & --User Virus Scanning-- is set to TRUE incoming file uploads will not be scanned for viruses.
-// /   If set to TRUE & --User Virus Scanning-- is set to FALSE incoming file uploads will be scanned for viruses.
-// /   Valid options are TRUE or FALSE.
-// /   Defalt is FALSE.
-$VirusScan = FALSE;
-// /  --User Virus Scanning--
-// /   Provide users with options to scan their uploaded files for viruses.
-// /   Requires ClamAV to be installed on the server.
-// /   Set to TRUE to allow users to upload potentially infected files.
-// /   Set to FALSE to disallow users uploading potentially infected files.
-// /   This config entry has a major impact on how regular virus scans are performed.
-// /   If set to TRUE & --Virus Scanning-- is set to TRUE infected files detected during virus scans will not be removed automatically.
-// /   If set to FALSE & --Virus Scanning-- is set to TRUE any infected file will immediately be deleted upon detection.
-// /   If set to TRUE & --Virus Scanning-- is set to TRUE incoming file uploads will not be scanned for viruses.
-// /   If set to FALSE & --Virus Scanning-- is set to TRUE incoming file uploads will be scanned for viruses.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$AllowUserVirusScan = TRUE;
-// /  --User Virus Scanning ScanCore Memory Limit--
-// /   The number of bytes of memory ScanCore is allowed to allocate to large files during User Virus Scans.
-// /   Files larger than this limit will be broken into chunks controlled by the --User Virus Scanning ScanCore Chunk Size-- config entry.
-// /   Default is 268435456.
-$ScanCoreMemoryLimit = 268435456;
-// /  --User Virus Scanning ScanCore Chunk Size--
-// /   In order to scan files that are larger than the memory limit, large files will be broken into chunks.
-// /   The number of bytes to break large files into in order to fit them into memory.
-// /   Keep this at a quarter of the memory limit or less. ScanCore holds about three chunks
-// /   in memory at once, so a larger chunk exhausts the memory limit on any file bigger than
-// /   one chunk. A larger value is reduced to a quarter at scan time & a warning is logged.
-// /   Default is 67108864.
-$ScanCoreChunkSize = 67108864;
-// /  --User Virus Scanning ScanCore Debug Mode--
-// /   Enable an absolutely insane amount of verbosity from ScanCore during file scan operations.
-// /   If set to TRUE these events will be included in the report that is submitted to the user.
-// /   If set to FALSE a normal amount of logging will be submitted to the user. Enough to get the job done.
-// /   If you scanned an entire 500GB hard drive with this set to TRUE ScanCore would generate 10's of GB worth of logs.
-// /   This setting will have an impact on ScanCore scanning performance.
-// /   Seriously, it's a lot of logs.
-// /   Valid options are TRUE or FALSE.
-// /   Default is FALSE.
-$ScanCoreDebug = FALSE;
-// /  --User Virus Scanning ScanCore Enhanced Verbosity--
-// /   Enable an absolutely insane amount of console output from ScanCore during file scan operations.
-// /   If set to TRUE these events will be included in the log file that is stored on the server.
-// /   If set to FALSE a normal amount of logging will be stored on the server. Enough to get the job done.
-// /   If you scanned an entire 500GB hard drive with this set to TRUE ScanCore would generate 10's of GB worth of logs.
-// /   This setting will have an impact on ScanCore scanning performance.
-// /   Seriously, it's a lot of logs.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$ScanCoreVerbose = TRUE;
 // /  --Delete Build Environment--
 // /   Automatically remove the build environment when it is no longer needed.
 // /   Production servers should not keep the 'Build' folder in the installation as a security precaution.
@@ -156,7 +97,7 @@ $DeleteBuildEnvironment = FALSE;
 // /   Default is FALSE.
 $DeleteDevelopmentDocumentation = FALSE;
 // /  --Maintain HTAccess--
-// /   Whether HRConvert2 writes & maintains the .htaccess that protects its DATA directory.
+// /   Whether the application writes & maintains the .htaccess that protects its DATA directory.
 // /   The DATA directory sits inside the web root & holds the files users upload & convert,
 // /   because a browser has to be able to fetch them by URL. That makes the web server hand
 // /   out user supplied content from this application's own origin, & for any format a
@@ -185,7 +126,7 @@ $MaintainHTAccess = TRUE;
 // /   depends on one. That is every type except documents.
 // /   If set to FALSE, those conversions run unprotected & every one writes a warning.
 // /   In a container this setting is not read. --Require Sandbox On Docker-- decides there.
-// /   Run  php convertCore.php -v  to see whether this server has a working sandbox.
+// /   Run -v to see whether this server has a working sandbox.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $RequireSandbox = TRUE;
@@ -209,7 +150,7 @@ $RequireSandbox = TRUE;
 // /     --security-opt apparmor=unconfined
 // /   Some hardened hosts block unprivileged user namespaces at the kernel level, & no
 // /   container option overrides that. Those hosts need a host side change instead.
-// /   Run  php convertCore.php -v  inside the container to see whether a sandbox works.
+// /   Run -v inside the container to see whether a sandbox works.
 // /   The container is detected automatically & only when two independent signals agree,
 // /   because a false positive would relax this control on a bare metal server.
 // /   Valid options are TRUE or FALSE.
@@ -222,7 +163,7 @@ $RequireSandboxOnDocker = FALSE;
 // /   If set to TRUE, every such conversion writes a warning. A busy server on which the
 // /   sandbox is permanently unavailable will produce one per conversion.
 // /   If set to FALSE, those warnings are suppressed. The state is still reported by
-// /   php convertCore.php -v & is still recorded once at startup.
+// /   -v & is still recorded once at startup.
 // /   This does NOT suppress the refusal that occurs when --Require Sandbox-- is TRUE.
 // /   A refusal is a failure & is always reported.
 // /   Valid options are TRUE or FALSE.
@@ -232,7 +173,7 @@ $ThrowSandboxWarning = TRUE;
 // /   Set the maximum amount of time in minutes that FFMPEG will stream a file from a streaming provider for a user.
 // /   This setting must be lower than the PHP execution timer set in php.ini.
 // /   This setting must be lower than the --File Deletion Age Threshold-- located in the ---General Information--- section of this config.php file.
-// /   This setting is costly because it requires FFMPEG & HRConvert2 to both maintain dedicated threads for the duration of the users stream.
+// /   This setting is costly because it requires FFMPEG & the application to both maintain dedicated threads for the duration of the users stream.
 // /   On popular public facing servers, setting this too high can result in the server becoming overwhelmed by on-going streams.
 // /   Valid options are integers greater than 1, but not more than the PHP execution time or the --File Deletion Age Threshold--.
 // /   This option MUST be set higher than 0.
@@ -245,110 +186,25 @@ $StreamWatchTimeout = 15;
 // /   Default is 10.
 $StreamConnectionTimeout = 10;
 // /  --Allow Streams Over HTTP--
-// /   During stream conversions, HRConvert2 will attempt to connect to the stream provider specified in the stream file provided by the user.
-// /   If set to TRUE, HRConvert2 will attempt to connect to non-encrypted, plain-text providers over HTTP when specified by the stream file.
-// /   If set to FALSE, HRConvert2 will not utilize HTTP.
+// /   During stream conversions, the application will attempt to connect to the stream provider specified in the stream file provided by the user.
+// /   If set to TRUE, the application will attempt to connect to non-encrypted, plain-text providers over HTTP when specified by the stream file.
+// /   If set to FALSE, the application will not utilize HTTP.
 // /   Requires FFMPEG v6.1 or later. Note that FFMPEG v2.0 through v6.0 carry a severe vulnerability related to downloading stream files.
 // /   If you have FFMPEG v6.0 or earlier installed, disable Stream Conversions & remove m3u8 from the list of supported file formats.
 // /   Check FFMPEG version by opening a terminal on the server and running 'ffmpeg -v'
 // /   Valid options are TRUE or FALSE.
 // /   Default is FALSE.
 $AllowStreamOverHTTP = FALSE;
-// /  --Stream Inspection Layers--
-// /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
-// /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
-// /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
-// /   The first inspection is performed on the file that was uploaded by the user. This inspection cannot be disabled. 
-// /   Subsequent inspections are performed on the stream that FFMPEG would be asked to download, if the operation were allowed to proceed.
-// /   The maximum possible cost for inspecting each stream conversion is one remote onnection * ($StreamInspectionLayers * $StreamInspectionFilesPerLayer).
-// /   This setting tells HRConvert2 how many nested layers of stream files it is allowed to inspect before making a decision based on cost.
-// /   This setting determines how much effort HRConvert2 is willing to spend before an inspection is considered complete.
-// /   Set to 0 to not perform any inspection on remote stream files. Local stream files uploaded by the user will still be inspected.
-// /   Valid options are integers 0 and larger.
-// /   Default is 3.
-// /   Maximum reccomended value is 10.
-$StreamInspectionLayers = 3;
-// /  --Stream Inspection Files Per Layer--
-// /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
-// /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
-// /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
-// /   The first inspection is performed on the file that was uploaded by the user. This inspection cannot be disabled. 
-// /   Subsequent inspections are performed on the stream that FFMPEG would be asked to download, if the operation were allowed to proceed.
-// /   The maximum possible cost for inspecting each stream conversion is one remote onnection * ($StreamInspectionLayers * $StreamInspectionFilesPerLayer).
-// /   This setting tells HRConvert2 how many files per layer of stream files it is allowed to inspect before making a decision based on cost.
-// /   This setting determines how much effort HRConvert2 is willing to spend before an inspection is considered complete.
-// /   Set to 0 to not perform any inspection on remote stream files. Local stream files uploaded by the user will still be inspected.
-// /   Valid options are integers 0 and larger.
-// /   Default is 7.
-// /   Maximum reccomended value is 15.
-$StreamInspectionFilesPerLayer = 7;
-// /  --Default Stream Inspection Forfeit Action--
-// /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
-// /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
-// /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
-// /   The first inspection is performed on the file that was uploaded by the user. This inspection cannot be disabled. 
-// /   Subsequent inspections are performed on the stream that FFMPEG would be asked to download, if the operation were allowed to proceed.
-// /   The maximum possible cost for inspecting each stream conversion is one remote onnection * ($StreamInspectionLayers * $StreamInspectionFilesPerLayer).
-// /   This setting tells HRConvert2 what to do in the event that it has reached the end of it's inspection budget with no adverse findings.
-// /   If set to 'ALLOW', HRConvert2 will allow FFMPEG to process the file only when the inspection has exhausted the budget with no findings.
-// /   If set to 'DENY', HRConvert2 will not allow FFMPEG to process the file unless it can afford to inspect & approve every required stream file.
-// /   Valid options are 'DENY' or 'ALLOW'.
-// /   Default is 'DENY'.
-$DefaultStreamInspectionForfeitAction = 'DENY';
 // /  --Maximum Stream Inspection Size--
 // /   The Stream Inspector will download up to this many bytes of a manifest file for validation during operation.
 // /   The max file potential download amount observed at the server per stream request is...
 // /   --Stream Inspection Layers--  X  --StreamInspectionFilesPerLayer--  X  --MaxStreamInspectionFileSize--
 // /   Valid options are integers greater than 940.
 $MaxStreamInspectionFileSize = 8191;
-// /  --Allow SCAD Include Resolution--
-// /   OpenSCAD sources reference other sources with include <file> & use <file>.
-// /   A multi file assembly cannot render at all unless those references resolve to something.
-// /   If set to FALSE, every reference is removed & multi file assemblies will not render.
-// /   If set to TRUE, an include or use may resolve to another source the SAME user uploaded.
-// /   Resolution matches on filename alone & ignores whatever directory the reference carried.
-// /   A reference that matches no uploaded file is removed regardless of this setting.
-// /   This setting does NOT control whether OpenSCAD may read arbitrary files.
-// /   HRConvert2 removes every file reading primitive from every uploaded source unconditionally.
-// /   import(), surface(), the deprecated import_stl() family & every dxf file= form are always removed.
-// /   Those removals happen whether this setting is TRUE or FALSE & cannot be turned off.
-// /   A removal overwrites the call with whitespace of the same length & never with a comment.
-// /   Writing a comment marker was the subject of GHSA-mqvr-h4q5-chg9. Do not reintroduce one.
-// /   Every uploaded source is sanitized into a temporary location before OpenSCAD runs.
-// /   A resolved reference points at a sanitized copy, never at the file the user uploaded.
-// /   Nothing outside the users own session directory can be reached at any point.
-// /   Enabling this therefore lets one uploaded file read another file the same user uploaded.
-// /   Both files came from the same person, in the same session, in the same directory.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$AllowSCADIncludeResolution = TRUE;
-// /  --SCAD Conversion Timeout--
-// /   Set the maximum number of seconds an OpenSCAD render is permitted to run.
-// /   OpenSCAD has no execution limit of its own & renders until it finishes or is killed.
-// /   A crafted model can pin a CPU core indefinitely through recursion or an extreme $fn value.
-// /   This value bounds an attackers cost, not just a users patience.
-// /   A stranger can upload a three line file that consumes a PHP worker for this entire duration.
-// /   Raising it multiplies the cost of the cheapest denial of service available against this server.
-// /   Renders are niced to the lowest priority so a runaway model yields to everything else.
-// /   A large real world assembly of roughly thirty sources renders well within the default.
-// /   This setting must be lower than the PHP execution timer set in php.ini.
-// /   Valid options are integers greater than 0.
-// /   Default is 180.
-$SCADConversionTimeout = 180;
-// /  --Use PyMeshLab Python Bindings--
-// /   MeshLab replaced its legacy server application with a Python library package.
-// /   Enabling this toggle forces the core to pass geometry repairs to a local Python script.
-// /   This bypasses the need for an active X11 virtual frame display buffer on your host.
-// /   When enabled, it completely bypasses the legacy binary year-month version validation check.
-// /   When disabled, standard Meshlab is used instead.
-// /   Requires 'python3' and the 'pymeshlab' package to be manually installed via pip on the server.
-// /   True runs the modern Python script route, False defaults to the standard meshlabserver binary.
-// /   Default is TRUE.
-$UsePyMeshLab = TRUE;
 // /  --Allow Unprivileged Namespaces--
-// /   Permits HRConvert2 to switch off kernel.apparmor_restrict_unprivileged_userns, as a last resort.
+// /   Permits the application to switch off kernel.apparmor_restrict_unprivileged_userns, as a last resort.
 // /   Ubuntu 23.10 & later turn that restriction on, & every sandbox is built in an unprivileged namespace.
-// /   Where the restriction is on, HRConvert2 builds each sandbox through its own copy of bubblewrap, which only root & the web server's group may run.
+// /   Where the restriction is on, the application builds each sandbox through its own copy of bubblewrap, which only root & the web server's group may run.
 // /   Where it is off, the system's bubblewrap builds them, because it needs no profile & stays up to date with the host.
 // /   Its own AppArmor profile is attached to that copy, as Ubuntu attaches its own to Steam, Flatpak & Chrome.
 // /   --setup --install-depends, --update-depends & --install-complete install the copy, & so does an update.
@@ -356,7 +212,7 @@ $UsePyMeshLab = TRUE;
 // /   Where the copy works, a restriction in force stays in force & this setting changes nothing.
 // /   The restriction is never switched off to cover a copy that is missing or that the web server's account cannot run.
 // /   One an earlier release switched off stays off until it is switched back on, & -fp then lets it go.
-// /   Other programs on the host may rely on it by then, so HRConvert2 never switches it back on itself.
+// /   Other programs on the host may rely on it by then, so the application never switches it back on itself.
 // /   Once the copy is in place, -fp & -v say so & name the command that switches it back on.
 // /   Where bubblewrap refuses a sandbox twice, the -fp argument switches the restriction off, & nothing else ever does.
 // /   An attempt a time limit or a signal cut short is never taken for a refusal.
@@ -364,10 +220,10 @@ $UsePyMeshLab = TRUE;
 // /   On a dedicated appliance it disables the sandbox that isolates every hostile file the machine exists to process.
 // /   That file is the threat which actually arrives on an appliance like this one.
 // /   Set this to FALSE on a shared host carrying untrusted local users.
-// /   The restriction is then never switched off, & one HRConvert2 switched off is switched back on by the next -fp.
+// /   The restriction is then never switched off, & one the application switched off is switched back on by the next -fp.
 // /   Where kernel.apparmor_restrict_unprivileged_unconfined is 0, any local account can enter a profile that permits a
 // /   namespace by name, this one & the distribution's own among them. Setting it to 1 closes that for every profile, &
-// /   costs HRConvert2 nothing, because its profile is attached by path rather than entered by name. Do so on a shared host.
+// /   costs the application nothing, because its profile is attached by path rather than entered by name. Do so on a shared host.
 // /   Conversions will refuse where the copy does not work, unless --Require Sandbox-- is also FALSE.
 // /   Setting both to FALSE runs every conversion unprotected & is worse again.
 // /   Valid options are TRUE or FALSE.
@@ -421,14 +277,6 @@ $PermittedPrivateRanges = array();
 // /   Anything else is replaced with the default & a warning is written.
 // /   Default is 2147483648, which is two gigabytes.
 $URLDownloadMaximumBytes = 2147483648;
-// /  --URL Downloads Per Session--
-// /   How many files one visitor may fetch before this server stops accepting more.
-// /   Without this, one visitor can queue as many fetches as they can type, & each one
-// /   costs bandwidth & disk whether or not anything is ever converted.
-// /   The count is per session, so it resets when a session does.
-// /   0 means no limit. Do not use 0 on anything a stranger can reach.
-// /   Default is 10.
-$URLDownloadsPerSession = 10;
 // /  --Scan URL Downloads--
 // /   Whether a fetched file is scanned before it is placed in the session.
 // /   An upload is scanned. A fetch was not, which meant the easiest way to get an
@@ -438,52 +286,13 @@ $URLDownloadsPerSession = 10;
 // /   removed, so nothing infected reaches a place a user can convert or download it from.
 // /   Default is TRUE.
 $ScanURLDownloads = TRUE;
-// /  --Allow User URL Download--
-// /   Whether a user may type a URL & have this server fetch it into their session.
-// /   THIS SERVER HAS NO AUTHENTICATION. Anyone who can reach the page can use this, & a
-// /   server that fetches any address a stranger names is an open proxy. It can be used to
-// /   scan, to launder traffic, or to make this host's address appear in somebody else's
-// /   logs. That is why it is FALSE by default & why an appliance on a public network
-// /   should probably leave it that way.
-// /   What it is NOT is an SSRF hole. Every fetch goes through the same address filter a URL
-// /   inside a playlist receives, so a private, reserved or loopback address is refused, the
-// /   address is pinned with curl --resolve, no redirect is followed, & the fetch runs in a
-// /   namespace with a network & no resolver.
-// /   Turn it on for a trusted network where users need to convert something they can only
-// /   reach by link. Leave it off everywhere else.
-// /   Default is FALSE.
-$AllowUserURLDownload = FALSE;
-// /  --Maximum Extracted Size--
-// /   The most one archive may hold once it is extracted, in megabytes.
-// /   An archive is small & what it holds may not be. A few kilobytes can hold gigabytes of zeros,
-// /   so an archive extracted without a ceiling can fill the disk this server writes to.
-// /   An archive is listed before it is extracted, & refused when it says it holds more than this.
-// /   It is held to this while it is extracted too, & stopped once it passes it, because an archive
-// /   may say anything about itself. A gzip names its size in four bytes & a bzip2 not at all.
-// /   It applies to every extraction, by a file's Extract button, by a workflow's Extract step &
-// /   by an archive converted into another. An extraction still running after an hour is stopped.
-// /   It holds a PDF split into its pages too, & a split whose pages hold more keeps none of them.
-// /   0 means no ceiling. Do not use 0 on anything a stranger can reach.
-// /   Valid options are integers 0 and larger.
-// /   Default is 1024, which is one gigabyte.
-$MaxExtractedSize = 1024;
-// /  --Maximum Extracted Files--
-// /   The most files & folders one archive may hold once it is extracted, counted together.
-// /   A folder counts whether or not the archive lists it, because extracting a file makes every
-// /   folder it sits in.
-// /   An archive holding more is refused before it is extracted, & stopped if it makes more while
-// /   it is extracted. It applies wherever --Maximum Extracted Size-- does.
-// /   A PDF with more pages than this is not split.
-// /   0 means no limit. Do not use 0 on anything a stranger can reach.
-// /   Valid options are integers 0 and larger.
-// /   Default is 1000.
-$MaxExtractedFiles = 1000;
 // /  --Default Virus Scanner--
-// /   Which scanner runs when this application scans a file on its own.
-// /   The name matches a scanner pipeline's family, case insensitively. Two ship with this
-// /   application & an installation may add more.
-// /     scancore   Ships inside HRConvert2, so it is present wherever this is. The default.
+// /   Which scanner runs when the application scans a file on its own.
+// /   The name matches a scanner pipeline's family, case insensitively, so the scanners on
+// /   offer are the scanner pipelines the application ships & any an installation adds.
+// /     scancore   Ships inside the application, so it is present wherever it is. The default.
 // /     clamav     Installed on the host. Better signatures, & it has to be there.
+// /   It is read only where the application's contract maps the scanner a shared layer asks for.
 // /   A user may choose the other one if the interface offers it. This decides what runs
 // /   when nobody chose.
 // /   A name no pipeline provides is an error rather than a silent fall back to whatever
@@ -509,9 +318,9 @@ $EnvironmentManagerMayRepair = FALSE;
 // /   Whether a permitted repair may rewrite the host configuration this application owns.
 // /   Only ever applies when --Environment Manager May Repair-- is TRUE. --fix-permissions
 // /   typed by an administrator rewrites them whatever this says.
-// /   Those are HRConvert2's OWN drop ins, settings & policies. 99-hrconvert2.ini in the php
-// /   conf.d, hrconvert2.conf in the Apache conf-available, the sandbox kernel settings, the
-// /   ImageMagick policy & the AppArmor profiles this application ships. With this FALSE each
+// /   Those are the application's OWN drop ins, settings & policies. The php drop in in the php
+// /   conf.d & the Apache configuration in conf-available, each named after the application,
+// /   the sandbox kernel settings & the policies & AppArmor profiles this application ships. With this FALSE each
 // /   one is checked, reported & left exactly as it is. This defaults to TRUE while repair
 // /   itself defaults to FALSE, because every one of them is something this application writes.
 // /   Set it FALSE if you have tuned one of those files by hand. A rewrite reverts it to
@@ -649,24 +458,215 @@ $EmailRecoverySubject = '';
 // /   Requires --Enable Authentication--.
 // /   Default is empty.
 $EmailRecoveryBody = '';
-
+// /  --Virus Scanning--
+// /   Scan for viruses before performing file operations.
+// /   Requires ClamAV to be installed on the server.
+// /   Set to TRUE to enable virus scanning with ClamAV during file operations.
+// /   Set to FALSE to disable virus scanning during file operations.
+// /   The --User Virus Scanning-- config entry has a major impact on how regular virus scans are performed.
+// /   If set to TRUE & --User Virus Scanning-- is set to TRUE infected files detected during virus scans will not be removed automatically.
+// /   If set to TRUE & --User Virus Scanning-- is set to FALSE any infected file will immediately be deleted upon detection.
+// /   If set to TRUE & --User Virus Scanning-- is set to TRUE incoming file uploads will not be scanned for viruses.
+// /   If set to TRUE & --User Virus Scanning-- is set to FALSE incoming file uploads will be scanned for viruses.
+// /   Valid options are TRUE or FALSE.
+// /   Defalt is FALSE.
+$VirusScan = FALSE;
+// /  --User Virus Scanning--
+// /   Provide users with options to scan their uploaded files for viruses.
+// /   Requires ClamAV to be installed on the server.
+// /   Set to TRUE to allow users to upload potentially infected files.
+// /   Set to FALSE to disallow users uploading potentially infected files.
+// /   This config entry has a major impact on how regular virus scans are performed.
+// /   If set to TRUE & --Virus Scanning-- is set to TRUE infected files detected during virus scans will not be removed automatically.
+// /   If set to FALSE & --Virus Scanning-- is set to TRUE any infected file will immediately be deleted upon detection.
+// /   If set to TRUE & --Virus Scanning-- is set to TRUE incoming file uploads will not be scanned for viruses.
+// /   If set to FALSE & --Virus Scanning-- is set to TRUE incoming file uploads will be scanned for viruses.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowUserVirusScan = TRUE;
+// /  --User Virus Scanning ScanCore Memory Limit--
+// /   The number of bytes of memory ScanCore is allowed to allocate to large files during User Virus Scans.
+// /   Files larger than this limit will be broken into chunks controlled by the --User Virus Scanning ScanCore Chunk Size-- config entry.
+// /   Default is 268435456.
+$ScanCoreMemoryLimit = 268435456;
+// /  --User Virus Scanning ScanCore Chunk Size--
+// /   In order to scan files that are larger than the memory limit, large files will be broken into chunks.
+// /   The number of bytes to break large files into in order to fit them into memory.
+// /   Keep this at a quarter of the memory limit or less. ScanCore holds about three chunks
+// /   in memory at once, so a larger chunk exhausts the memory limit on any file bigger than
+// /   one chunk. A larger value is reduced to a quarter at scan time & a warning is logged.
+// /   Default is 67108864.
+$ScanCoreChunkSize = 67108864;
+// /  --User Virus Scanning ScanCore Debug Mode--
+// /   Enable an absolutely insane amount of verbosity from ScanCore during file scan operations.
+// /   If set to TRUE these events will be included in the report that is submitted to the user.
+// /   If set to FALSE a normal amount of logging will be submitted to the user. Enough to get the job done.
+// /   If you scanned an entire 500GB hard drive with this set to TRUE ScanCore would generate 10's of GB worth of logs.
+// /   This setting will have an impact on ScanCore scanning performance.
+// /   Seriously, it's a lot of logs.
+// /   Valid options are TRUE or FALSE.
+// /   Default is FALSE.
+$ScanCoreDebug = FALSE;
+// /  --User Virus Scanning ScanCore Enhanced Verbosity--
+// /   Enable an absolutely insane amount of console output from ScanCore during file scan operations.
+// /   If set to TRUE these events will be included in the log file that is stored on the server.
+// /   If set to FALSE a normal amount of logging will be stored on the server. Enough to get the job done.
+// /   If you scanned an entire 500GB hard drive with this set to TRUE ScanCore would generate 10's of GB worth of logs.
+// /   This setting will have an impact on ScanCore scanning performance.
+// /   Seriously, it's a lot of logs.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$ScanCoreVerbose = TRUE;
+// /  --Stream Inspection Layers--
+// /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
+// /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
+// /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
+// /   The first inspection is performed on the file that was uploaded by the user. This inspection cannot be disabled. 
+// /   Subsequent inspections are performed on the stream that FFMPEG would be asked to download, if the operation were allowed to proceed.
+// /   The maximum possible cost for inspecting each stream conversion is one remote onnection * ($StreamInspectionLayers * $StreamInspectionFilesPerLayer).
+// /   This setting tells HRConvert2 how many nested layers of stream files it is allowed to inspect before making a decision based on cost.
+// /   This setting determines how much effort HRConvert2 is willing to spend before an inspection is considered complete.
+// /   Set to 0 to not perform any inspection on remote stream files. Local stream files uploaded by the user will still be inspected.
+// /   Valid options are integers 0 and larger.
+// /   Default is 3.
+// /   Maximum reccomended value is 10.
+$StreamInspectionLayers = 3;
+// /  --Stream Inspection Files Per Layer--
+// /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
+// /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
+// /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
+// /   The first inspection is performed on the file that was uploaded by the user. This inspection cannot be disabled. 
+// /   Subsequent inspections are performed on the stream that FFMPEG would be asked to download, if the operation were allowed to proceed.
+// /   The maximum possible cost for inspecting each stream conversion is one remote onnection * ($StreamInspectionLayers * $StreamInspectionFilesPerLayer).
+// /   This setting tells HRConvert2 how many files per layer of stream files it is allowed to inspect before making a decision based on cost.
+// /   This setting determines how much effort HRConvert2 is willing to spend before an inspection is considered complete.
+// /   Set to 0 to not perform any inspection on remote stream files. Local stream files uploaded by the user will still be inspected.
+// /   Valid options are integers 0 and larger.
+// /   Default is 7.
+// /   Maximum reccomended value is 15.
+$StreamInspectionFilesPerLayer = 7;
+// /  --Default Stream Inspection Forfeit Action--
+// /   Stream operations are especially sensitive as they require allowing dependencies to connect to remote hosts from user-supplied URLs.
+// /   HRConvert2 inspects stream files uploaded by the user to prevent malicious abuse of the FFMPEG dependency.
+// /   During inspection, HRConvert2 may discover that a stream file will request FFMPEG to download additional stream files from remote hosts.
+// /   The first inspection is performed on the file that was uploaded by the user. This inspection cannot be disabled. 
+// /   Subsequent inspections are performed on the stream that FFMPEG would be asked to download, if the operation were allowed to proceed.
+// /   The maximum possible cost for inspecting each stream conversion is one remote onnection * ($StreamInspectionLayers * $StreamInspectionFilesPerLayer).
+// /   This setting tells HRConvert2 what to do in the event that it has reached the end of it's inspection budget with no adverse findings.
+// /   If set to 'ALLOW', HRConvert2 will allow FFMPEG to process the file only when the inspection has exhausted the budget with no findings.
+// /   If set to 'DENY', HRConvert2 will not allow FFMPEG to process the file unless it can afford to inspect & approve every required stream file.
+// /   Valid options are 'DENY' or 'ALLOW'.
+// /   Default is 'DENY'.
+$DefaultStreamInspectionForfeitAction = 'DENY';
+// /  --Allow SCAD Include Resolution--
+// /   OpenSCAD sources reference other sources with include <file> & use <file>.
+// /   A multi file assembly cannot render at all unless those references resolve to something.
+// /   If set to FALSE, every reference is removed & multi file assemblies will not render.
+// /   If set to TRUE, an include or use may resolve to another source the SAME user uploaded.
+// /   Resolution matches on filename alone & ignores whatever directory the reference carried.
+// /   A reference that matches no uploaded file is removed regardless of this setting.
+// /   This setting does NOT control whether OpenSCAD may read arbitrary files.
+// /   HRConvert2 removes every file reading primitive from every uploaded source unconditionally.
+// /   import(), surface(), the deprecated import_stl() family & every dxf file= form are always removed.
+// /   Those removals happen whether this setting is TRUE or FALSE & cannot be turned off.
+// /   A removal overwrites the call with whitespace of the same length & never with a comment.
+// /   Writing a comment marker was the subject of GHSA-mqvr-h4q5-chg9. Do not reintroduce one.
+// /   Every uploaded source is sanitized into a temporary location before OpenSCAD runs.
+// /   A resolved reference points at a sanitized copy, never at the file the user uploaded.
+// /   Nothing outside the users own session directory can be reached at any point.
+// /   Enabling this therefore lets one uploaded file read another file the same user uploaded.
+// /   Both files came from the same person, in the same session, in the same directory.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$AllowSCADIncludeResolution = TRUE;
+// /  --SCAD Conversion Timeout--
+// /   Set the maximum number of seconds an OpenSCAD render is permitted to run.
+// /   OpenSCAD has no execution limit of its own & renders until it finishes or is killed.
+// /   A crafted model can pin a CPU core indefinitely through recursion or an extreme $fn value.
+// /   This value bounds an attackers cost, not just a users patience.
+// /   A stranger can upload a three line file that consumes a PHP worker for this entire duration.
+// /   Raising it multiplies the cost of the cheapest denial of service available against this server.
+// /   Renders are niced to the lowest priority so a runaway model yields to everything else.
+// /   A large real world assembly of roughly thirty sources renders well within the default.
+// /   This setting must be lower than the PHP execution timer set in php.ini.
+// /   Valid options are integers greater than 0.
+// /   Default is 180.
+$SCADConversionTimeout = 180;
+// /  --Use PyMeshLab Python Bindings--
+// /   MeshLab replaced its legacy server application with a Python library package.
+// /   Enabling this toggle forces the core to pass geometry repairs to a local Python script.
+// /   This bypasses the need for an active X11 virtual frame display buffer on your host.
+// /   When enabled, it completely bypasses the legacy binary year-month version validation check.
+// /   When disabled, standard Meshlab is used instead.
+// /   Requires 'python3' and the 'pymeshlab' package to be manually installed via pip on the server.
+// /   True runs the modern Python script route, False defaults to the standard meshlabserver binary.
+// /   Default is TRUE.
+$UsePyMeshLab = TRUE;
+// /  --URL Downloads Per Session--
+// /   How many files one visitor may fetch before this server stops accepting more.
+// /   Without this, one visitor can queue as many fetches as they can type, & each one
+// /   costs bandwidth & disk whether or not anything is ever converted.
+// /   The count is per session, so it resets when a session does.
+// /   0 means no limit. Do not use 0 on anything a stranger can reach.
+// /   Default is 10.
+$URLDownloadsPerSession = 10;
+// /  --Allow User URL Download--
+// /   Whether a user may type a URL & have this server fetch it into their session.
+// /   THIS SERVER HAS NO AUTHENTICATION. Anyone who can reach the page can use this, & a
+// /   server that fetches any address a stranger names is an open proxy. It can be used to
+// /   scan, to launder traffic, or to make this host's address appear in somebody else's
+// /   logs. That is why it is FALSE by default & why an appliance on a public network
+// /   should probably leave it that way.
+// /   What it is NOT is an SSRF hole. Every fetch goes through the same address filter a URL
+// /   inside a playlist receives, so a private, reserved or loopback address is refused, the
+// /   address is pinned with curl --resolve, no redirect is followed, & the fetch runs in a
+// /   namespace with a network & no resolver.
+// /   Turn it on for a trusted network where users need to convert something they can only
+// /   reach by link. Leave it off everywhere else.
+// /   Default is FALSE.
+$AllowUserURLDownload = FALSE;
+// /  --Maximum Extracted Size--
+// /   The most one archive may hold once it is extracted, in megabytes.
+// /   An archive is small & what it holds may not be. A few kilobytes can hold gigabytes of zeros,
+// /   so an archive extracted without a ceiling can fill the disk this server writes to.
+// /   An archive is listed before it is extracted, & refused when it says it holds more than this.
+// /   It is held to this while it is extracted too, & stopped once it passes it, because an archive
+// /   may say anything about itself. A gzip names its size in four bytes & a bzip2 not at all.
+// /   It applies to every extraction, by a file's Extract button, by a workflow's Extract step &
+// /   by an archive converted into another. An extraction still running after an hour is stopped.
+// /   It holds a PDF split into its pages too, & a split whose pages hold more keeps none of them.
+// /   0 means no ceiling. Do not use 0 on anything a stranger can reach.
+// /   Valid options are integers 0 and larger.
+// /   Default is 1024, which is one gigabyte.
+$MaxExtractedSize = 1024;
+// /  --Maximum Extracted Files--
+// /   The most files & folders one archive may hold once it is extracted, counted together.
+// /   A folder counts whether or not the archive lists it, because extracting a file makes every
+// /   folder it sits in.
+// /   An archive holding more is refused before it is extracted, & stopped if it makes more while
+// /   it is extracted. It applies wherever --Maximum Extracted Size-- does.
+// /   A PDF with more pages than this is not split.
+// /   0 means no limit. Do not use 0 on anything a stranger can reach.
+// /   Valid options are integers 0 and larger.
+// /   Default is 1000.
+$MaxExtractedFiles = 1000;
 // / ------------------------------
 
 // / ------------------------------
 // / ---Directory Information---
 // / 
 // /  --Installation Directory--
-// /   The directory the web server serves HRConvert2 from.
-// /   HRConvert2 itself is installed in Application inside the --Data Storage Directory--,
+// /   The directory the web server serves the application from.
+// /   The application itself is installed in Application inside the --Data Storage Directory--,
 // /   outside the web root, & this directory holds only its loader, the static files a browser
 // /   fetches & DATA, which -fp writes. See Documentation/ABOUT_MANAGED_LOCATIONS.txt.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
-// /   Default is '/var/www/html/HRProprietary/HRConvert2'.
+// /   Default is the folder named after the application in the --Proprietary Directory--.
 $InstLoc = '/var/www/html/HRProprietary/HRConvert2';
 // /  --Proprietary Directory--
-// /   Install the HRConvert2 folder to the following directory.
+// /   Install the application's folder to the following directory.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
 // /   Changing this value is not recommended.
@@ -687,7 +687,7 @@ $ServerRootDir = '/var/www/html';
 // /   folder; the web server user owns only Sessions, Cache, Logs & Sockets below it.
 // /   Do not include a trailing slash.
 // /   Do not use a path with whitespace.
-// /   Default is '/DATA/HRConvert2'.
+// /   Default is the folder named after the application in /DATA.
 $ConvertLoc = '/DATA/HRConvert2';
 // /  --Log Storage Directory--
 // /   This is where permanent Log files are stored.
@@ -723,7 +723,7 @@ $BackupLoc = $ConvertLoc.'/Last-Installed-Version';
 // /   The identifier is derived from the install secret with a keyed hash, so it differs between
 // /   installations & cannot be worked out by anybody who does not hold that secret.
 // /   It protects log files from requests that guess their names.
-// /   If set to TRUE, HRConvert2 will add the identifier to the end of every log file name.
+// /   If set to TRUE, the application will add the identifier to the end of every log file name.
 // /   If set to FALSE, a log file is named by the application, its role, its number & the date alone.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
@@ -742,8 +742,8 @@ $UniqueDailyLogHash = TRUE;
 // /   Each entry is an array of a path & a type, in that order.
 // /   Leave this as an empty array to keep a single data location.
 // /   This setting only has any effect if --Enable Resource Awareness-- is also set.
-// /   If --Enable Resource Awareness-- is not set, HRConvert2 will fall back to the --Data Storage Directory--.
-// /   If a resource listener is not running, HRConvert2 will fall back to the --Data Storage Directory--.
+// /   If --Enable Resource Awareness-- is not set, the application will fall back to the --Data Storage Directory--.
+// /   If a resource listener is not running, the application will fall back to the --Data Storage Directory--.
 // /   The listener decides. Every front end sharing the install secret gets the same answer.
 // /   Each location is a data root of its own, as the --Data Storage Directory-- is.
 // /   -fp gives it to root & gives the Sessions folder it makes inside it to the web server user.
@@ -757,9 +757,9 @@ $UniqueDailyLogHash = TRUE;
 // /     redundant    A standby. Takes a session only when every other location is unusable.
 // /   Example.
 // /     $AdditionalConvertLocs = array(
-// /       array('/DATA2/HRConvert2', 'roundrobin'),
-// /       array('/DATA3/HRConvert2', 'leastactive'),
-// /       array('/DATA4/HRConvert2', 'redundant'));
+// /       array('/DATA2/Application', 'roundrobin'),
+// /       array('/DATA3/Application', 'leastactive'),
+// /       array('/DATA4/Application', 'redundant'));
 // /   The second element of the array must be a string containing the storage type.
 // /   The first element of the array must be a string containing a valid directory path.
 // /   Default is an empty array.
@@ -783,17 +783,17 @@ $StorageCleanupInterval = 300;
 // /  --Application Name String--
 // /   The default name to display for this application.
 // /   You can change this to make it fit with other services your organization provides.
-// /   Default is HRConvert2.
+// /   Default is the application's own name.
 $ApplicationName = 'HRConvert2';
 // /  --Application Title String--
 // /   The default title to display in taskbars & window managers.
 // /   You can change this to make it fit with other services your organization provides.
-// /   Default is Convert Anything!
+// /   Default is the title the application gives itself.
 $ApplicationTitle = 'Convert Anything!';
 // /  --Enable Automatic Updates--
-// /   Allow HRConvert2 to replace its own application code from the command line.
+// /   Allow the application to replace its own code from the command line.
 // /   It is not possible to perform an update via the web interface.
-// /   If set to TRUE, an administrator may run  php convertCore.php -u  to update.
+// /   If set to TRUE, an administrator may run -u to update.
 // /   If set to FALSE, that command refuses & the application may only be updated by hand.
 // /   Valid options are TRUE or FALSE.
 // /   Default is FALSE.
@@ -810,7 +810,7 @@ $AutoUpdateTargetVersion = 'latest';
 // /  --Update Source Repository--
 // /   The GitHub repository an update is fetched from, as owner/name.
 // /   Change this only if you maintain your own fork & want updates to come from it.
-// /   Default is 'zelon88/HRConvert2'.
+// /   Default is the repository the application is published from.
 $UpdateSourceRepository = 'zelon88/HRConvert2';
 // /  --Maximum Update Package Size--
 // /   The largest update package that will be accepted, in bytes.
@@ -822,6 +822,115 @@ $MaxUpdatePackageSize = 524288000;
 // /   This bounds the whole transfer, not just the time taken to connect.
 // /   Default is 1000.
 $UpdateConnectionTimeout = 1000;
+// /  --Enable Workflows--
+// /   Provide users with workflows, each a list of steps that runs one operation after another on the files a user selects.
+// /   A workflow converts, archives, reads text from, identifies & scans files, as the buttons do, & passes what each step made to the next.
+// /   It runs in the background, so a user may watch it, stop it or leave it, & each operation takes a resource budget as a button does.
+// /   The workflows offered are the ones this release ships & the ones an administrator installs with --workflow --install.
+// /   A workflow that uses an operation switched off here is not offered.
+// /   If set to TRUE the user will be provided with a Workflows panel, & a page may ask for the library, run one & watch it.
+// /   If set to FALSE no workflow is offered or run.
+// /   See Documentation/ABOUT_WORKFLOWS.txt.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$EnableWorkflows = TRUE;
+// /  --Enable Workflow Builder--
+// /   Provide users with a builder in the Workflows panel, where a workflow is put together from the operations this server offers & run.
+// /   A workflow a page builds is checked exactly as a library's is, & is held to every limit a library's workflow is held to.
+// /   It may use Select, which reads the files in a user's session again at that step, so a step after it can take what earlier steps made.
+// /   If set to TRUE the Workflows panel offers the builder, & a page may run a workflow it built.
+// /   If set to FALSE only the workflows in the libraries are offered.
+// /   Requires --Enable Workflows--.
+// /   See Documentation/ABOUT_WORKFLOWS.txt.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$EnableWorkflowBuilder = TRUE;
+// /  --Enable Workflow Import & Export--
+// /   Let users save a workflow as a file, & open a workflow file in the builder.
+// /   A file holds the workflow alone, as generic JSON naming no file of a user's & no path, so it can be shared, & --workflow --install installs it as it is.
+// /   Opening a file needs --Enable Workflow Builder-- too, because a workflow is opened in the builder. Saving one from the libraries does not.
+// /   If set to TRUE the Workflows panel offers Export, & Import when the builder is on.
+// /   If set to FALSE neither is offered.
+// /   Requires --Enable Workflows--.
+// /   See Documentation/ABOUT_WORKFLOWS.txt.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$EnableWorkflowImportExport = TRUE;
+// /  --File Deletion Age Threshold--
+// /   Age in minutes of files to be deleted.
+// /   Set to 0 to keep files forever.
+// /   Valid options are integers 0 or larger.
+// /   Default is 60.
+$DeleteThreshold = 60;
+// /  --Enhanced Logging Verbosity--
+// /   Enable verbose logging.
+// /   If set to TRUE all core events will be logged.
+// /   If set to FALSE only errors & certain core events will be logged.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$Verbose = TRUE;
+// /  --Maximum Log File Size--
+// /   Set the number of bytes to store in each logfile before splitting to a new one.
+// /  Default is 1048576.
+$MaxLogSize = 1048576;
+// /  --Supported Format Detection Type--
+// /   Decides what decides which conversions this installation offers.
+// /   Three things have an opinion & this setting says how they are combined.
+// /   The arrays below are yours & say what is permitted on this machine.
+// /   Every conversion pipeline declares the formats it is willing to claim at all.
+// /   Dependency Core asks each installed tool what it can actually read & write.
+// /   Nothing here ever widens the accepted format surface past what a pipeline declares.
+// /   ImageMagick reports that it reads MSL, which is a scripting language it executes,
+// /   & http, https & file, which fetch a URL without passing any guard this application
+// /   owns. A tool's own opinion of itself is a filter & is never a source of formats.
+// /
+// /   Set this to hardcoded-only to let the arrays below decide everything.
+// /   Detection never runs & a pipeline declaration is never enforced.
+// /
+// /   Set this to detected-advisory to run detection & change nothing.
+// /   Every disagreement is logged & every conversion carries on exactly as before.
+// /   This is the setting to run first & to leave running for a while.
+// /   A tool names its formats after its own internals rather than after the extension a
+// /   user types. FFMPEG has no mkv & no wmv, it has matroska & asf. Assimp has no dae, it
+// /   has collada. Seven of Assimp's twenty two export names are not the extension.
+// /   Those are corrected by a table in depends.php, & a gap in that table looks exactly
+// /   like a tool that cannot do something it does perfectly well.
+// /   Advisory finds the gaps on your machine & names them in the log, without any of them
+// /   costing you a conversion while you are finding out.
+// /
+// /   Set this to detected-restrictive once the log is quiet.
+// /   A format no installed tool can produce is dropped, so the interface stops offering
+// /   conversions that were always going to fail. This can never widen anything.
+// /
+// /   Set this to detected-additive to also offer a format a pipeline declares & the
+// /   arrays below omit, where the tool confirms it. Still bounded by the declaration.
+// /   Use it only where you trust every installed pipeline.
+// /
+// /   A pipeline can always refuse a pair its own exclusion list names, in every mode.
+// /   Refusing is safe anywhere, because it only ever removes a broken pairing.
+// /   Valid options are 'hardcoded-only', 'detected-advisory', 'detected-restrictive'
+// /   or 'detected-additive'.
+// /   Default is 'detected-advisory'.
+$SupportedFormatDetectionType = 'detected-advisory';
+// /  --Warn On Capability Mismatch--
+// /   Logs a warning when a pipeline declaration disagrees with the arrays below.
+// /   The warning names the format, the conversion family & which side it came from.
+// /   This has no effect while --Supported Format Detection Type-- is hardcoded-only.
+// /   Detection never runs in that mode, so there is nothing to report.
+// /   Under detected-advisory this warning is the entire point of the setting.
+// /   Leaving this enabled is recommended wherever detection is active.
+// /   A format quietly appearing or disappearing is worth knowing about.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$WarnOnCapabilityMismatch = TRUE;
+// /  --File Operation Retry Count--
+// /   Set this to the number of attempts to make during file operations.
+// /   The application will attempt significant file operations this many times, with a pause in between.
+// /   If a significant file operation fails, the application will retry the operation this many times.
+// /   A pipeline runs its converter up to this many times, until the converter produces something.
+// /   Valid options are integers smaller than 10.
+// /   Default is 5.
+$RetryCount = 5;
 // /  --Supported GUIs--
 // /   The list of GUIs that are supported by this application.
 // /   Before adding a supported GUI be sure to add the matching folder full of GUI files to /UI.
@@ -909,40 +1018,6 @@ $AllowUserShare = TRUE;
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AllowUserIdentify = TRUE;
-// /  --Enable Workflows--
-// /   Provide users with workflows, each a list of steps that runs one operation after another on the files a user selects.
-// /   A workflow converts, archives, reads text from, identifies & scans files, as the buttons do, & passes what each step made to the next.
-// /   It runs in the background, so a user may watch it, stop it or leave it, & each operation takes a resource budget as a button does.
-// /   The workflows offered are the ones this release ships & the ones an administrator installs with --workflow --install.
-// /   A workflow that uses an operation switched off here is not offered.
-// /   If set to TRUE the user will be provided with a Workflows panel, & a page may ask for the library, run one & watch it.
-// /   If set to FALSE no workflow is offered or run.
-// /   See Documentation/ABOUT_WORKFLOWS.txt.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$EnableWorkflows = TRUE;
-// /  --Enable Workflow Builder--
-// /   Provide users with a builder in the Workflows panel, where a workflow is put together from the operations this server offers & run.
-// /   A workflow a page builds is checked exactly as a library's is, & is held to every limit a library's workflow is held to.
-// /   It may use Select, which reads the files in a user's session again at that step, so a step after it can take what earlier steps made.
-// /   If set to TRUE the Workflows panel offers the builder, & a page may run a workflow it built.
-// /   If set to FALSE only the workflows in the libraries are offered.
-// /   Requires --Enable Workflows--.
-// /   See Documentation/ABOUT_WORKFLOWS.txt.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$EnableWorkflowBuilder = TRUE;
-// /  --Enable Workflow Import & Export--
-// /   Let users save a workflow as a file, & open a workflow file in the builder.
-// /   A file holds the workflow alone, as generic JSON naming no file of a user's & no path, so it can be shared, & --workflow --install installs it as it is.
-// /   Opening a file needs --Enable Workflow Builder-- too, because a workflow is opened in the builder. Saving one from the libraries does not.
-// /   If set to TRUE the Workflows panel offers Export, & Import when the builder is on.
-// /   If set to FALSE neither is offered.
-// /   Requires --Enable Workflows--.
-// /   See Documentation/ABOUT_WORKFLOWS.txt.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$EnableWorkflowImportExport = TRUE;
 // /  --Allowed Conversion Types--
 // /   The list of supported conversion types.
 // /   Only conversion types contained in this list will be processed.
@@ -960,23 +1035,6 @@ $SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AllowBootableIsoImage = TRUE;
-// /  --File Deletion Age Threshold--
-// /   Age in minutes of files to be deleted.
-// /   Set to 0 to keep files forever.
-// /   Valid options are integers 0 or larger.
-// /   Default is 60.
-$DeleteThreshold = 60;
-// /  --Enhanced Logging Verbosity--
-// /   Enable verbose logging.
-// /   If set to TRUE all core events will be logged.
-// /   If set to FALSE only errors & certain core events will be logged.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$Verbose = TRUE;
-// /  --Maximum Log File Size--
-// /   Set the number of bytes to store in each logfile before splitting to a new one.
-// /  Default is 1048576.
-$MaxLogSize = 1048576;
 // /  --UI Element Font--
 // /   Set the default font to use throughout HRConvert2 GUI elements.
 // /   The selected font must be installed on the client's machine.
@@ -1056,13 +1114,6 @@ $LogoURL = 'preserve-session';
 // /   Valid options are 'rar'.
 // /   Default is rar.
 $RARArchiveMethod = 'rar';
-// /  --File Operation Retry Count--
-// /   Set this to the number of attempts to make during file operations.
-// /   The core will attempt significant file operations this many times, with a pause in between.
-// /   If a significant file operation fails, the core will retry the operation this many times.
-// /   Valid options are integers smaller than 10.
-// /   Default is 5.
-$RetryCount = 5;
 // /  --GUI Maximum Width--
 // /   The widest the interface is allowed to become, in pixels, on a large display.
 // /   This is a CEILING & not a fixed width. The interface is fluid below it & takes the
@@ -1075,56 +1126,6 @@ $RetryCount = 5;
 // /   outside that range is a typo rather than a preference.
 // /   Default is 1400.
 $GuiMaxWidth = 1400;
-// /  --Supported Format Detection Type--
-// /   Decides what decides which conversions this installation offers.
-// /   Three things have an opinion & this setting says how they are combined.
-// /   The arrays below are yours & say what is permitted on this machine.
-// /   Every conversion pipeline declares the formats it is willing to claim at all.
-// /   Dependency Core asks each installed tool what it can actually read & write.
-// /   Nothing here ever widens the accepted format surface past what a pipeline declares.
-// /   ImageMagick reports that it reads MSL, which is a scripting language it executes,
-// /   & http, https & file, which fetch a URL without passing any guard this application
-// /   owns. A tool's own opinion of itself is a filter & is never a source of formats.
-// /
-// /   Set this to hardcoded-only to let the arrays below decide everything.
-// /   Detection never runs & a pipeline declaration is never enforced.
-// /
-// /   Set this to detected-advisory to run detection & change nothing.
-// /   Every disagreement is logged & every conversion carries on exactly as before.
-// /   This is the setting to run first & to leave running for a while.
-// /   A tool names its formats after its own internals rather than after the extension a
-// /   user types. FFMPEG has no mkv & no wmv, it has matroska & asf. Assimp has no dae, it
-// /   has collada. Seven of Assimp's twenty two export names are not the extension.
-// /   Those are corrected by a table in depends.php, & a gap in that table looks exactly
-// /   like a tool that cannot do something it does perfectly well.
-// /   Advisory finds the gaps on your machine & names them in the log, without any of them
-// /   costing you a conversion while you are finding out.
-// /
-// /   Set this to detected-restrictive once the log is quiet.
-// /   A format no installed tool can produce is dropped, so the interface stops offering
-// /   conversions that were always going to fail. This can never widen anything.
-// /
-// /   Set this to detected-additive to also offer a format a pipeline declares & the
-// /   arrays below omit, where the tool confirms it. Still bounded by the declaration.
-// /   Use it only where you trust every installed pipeline.
-// /
-// /   A pipeline can always refuse a pair its own exclusion list names, in every mode.
-// /   Refusing is safe anywhere, because it only ever removes a broken pairing.
-// /   Valid options are 'hardcoded-only', 'detected-advisory', 'detected-restrictive'
-// /   or 'detected-additive'.
-// /   Default is 'detected-advisory'.
-$SupportedFormatDetectionType = 'detected-advisory';
-// /  --Warn On Capability Mismatch--
-// /   Logs a warning when a pipeline declaration disagrees with the arrays below.
-// /   The warning names the format, the conversion family & which side it came from.
-// /   This has no effect while --Supported Format Detection Type-- is hardcoded-only.
-// /   Detection never runs in that mode, so there is nothing to report.
-// /   Under detected-advisory this warning is the entire point of the setting.
-// /   Leaving this enabled is recommended wherever detection is active.
-// /   A format quietly appearing or disappearing is worth knowing about.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$WarnOnCapabilityMismatch = TRUE;
 // / ------------------------------
 
 // / ------------------------------
@@ -1134,7 +1135,7 @@ $WarnOnCapabilityMismatch = TRUE;
 // /   Runs every conversion inside a transient systemd scope carrying a processor & memory
 // /   ceiling, so one conversion cannot starve the host.
 // / This requires permission the web server user does not have by default.
-// /   Creating a transient scope on the system bus is a privileged operation. HRConvert2
+// /   Creating a transient scope on the system bus is a privileged operation. The application
 // /   proves it can create one before it relies on it, & falls back to running unlimited
 // /   with a warning when it cannot. To grant the permission, install a polkit rule
 // /   allowing the web server user to manage transient units, then restart the web server.
@@ -1192,9 +1193,9 @@ $DefaultPerConversionResources = '50,512';
 // /   Default is '10,128'.
 $MinimumPerConversionResources = '10,128';
 // /  --Enable Resource Awareness--
-// /   Allows HRConvert2 to check a resource budget before starting a conversion.
+// /   Allows the application to check a resource budget before starting a conversion.
 // /   Requires the coreManager.php component & a running listener.
-// /   When disabled, HRConvert2 behaves exactly as it did before this component existed.
+// /   When disabled, the application behaves exactly as it did before this component existed.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $EnableResourceAwareness = TRUE;

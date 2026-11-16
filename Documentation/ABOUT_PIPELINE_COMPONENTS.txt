@@ -22,7 +22,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -325,11 +325,11 @@ would otherwise be parsed & called before the functions it depends on exist.
 A DEPENDENCY VERIFIER DOES NOT BELONG IN A SHARED MODULE OR IN A PIPELINE.
 Nor in convertCore.php. A tool's minimum version belongs to the manifest & nowhere else, &
 everything that needs to know asks it through verifiedToolPath(): every pipeline, the shared
-modules, showVersionInfo(), archiving & scanning. There were once twelve verify functions in
+modules, the -v report, archiving & scanning. There were once twelve verify functions in
 the core, one per tool, each carrying its own copy of a minimum. They were retired when the
 manifest became the only owner. verifyDocumentConversionEngine() lives in the shared module
 because it is not a version check. It starts & inspects an engine rather than reporting a
-version, & showVersionInfo() never calls it.
+version, & the -v report never calls it.
 
 archiveExtraction.php is the second module, from v4.1.7. The Archive pipeline & the Extractor
 both extract an archive a stranger wrote, & neither could own the rules for doing it safely.
@@ -431,9 +431,11 @@ rectifySCAD() had no other caller & went with Scad. verifyArchiveVersions() had 
 outside its pipeline, so it stayed, until every tool's version moved to the manifest & it
 was retired along with the other eleven.
 
-showVersionInfo() runs whether or not a pipeline is installed. Anything it calls is
+showVersionInfo() ran whether or not a pipeline was installed. Anything it called was
 therefore core owned by definition, which is why every verify*Version() function stayed
 behind even though its only conversion caller left, until the manifest replaced all twelve.
+The report is the Engine's showVersionReport() from v4.2.4, & HRConvert2's own part of it is
+applicationVersionReport().
 
 --The deliberate exception, & why it is not a mistake--
 
@@ -478,8 +480,8 @@ that says stream is a name nobody writing a document fetcher will ever search fo
   STAYED in the core, because the operating environment is not a converter
     verifyOpenScadPolicy       checks what confines OpenSCAD on this host
 
-fixManagedPermissions() & validateOperatingEnvironment() reach it whether or not the Scad
-pipeline is installed at all. Until v4.0.5 it also wrote a local override into a profile that
+The Engine's repairInstallation() & validateOperatingEnvironment() reach it whether or not the Scad
+pipeline is installed at all, because the contract names it in $EnginePolicyChecks. Until v4.0.5 it also wrote a local override into a profile that
 confines OpenSCAD, from openScadApparmorContents, granting the session area by its path on the
 host. A render runs in its sandbox, where that area is /work, so the grant never reached one.
 From v4.0.5 it writes nothing, takes back an override an earlier release wrote, & reports a
@@ -576,7 +578,8 @@ nobody is watching.
   the whole batch so that a stream started on the third of five files is still pending when
   the loop reaches the fifth.
 
-  FOUR. THE MAIN LOGIC REAPS IT.
+  FOUR. THE ENGINE REAPS IT.
+  The Engine's finishWebRequest() does it from v4.2.4, as the main logic did until then.
   After closeClientConnection(), with the user already served & the connection already shut,
   waitForStream() supervises the process for up to $StreamWatchTimeout minutes & terminates
   it if it outlives that. waitForStream() KNOWS A PROCESS ID & AN OUTPUT PATH & NOTHING
@@ -669,8 +672,8 @@ A silent demotion to a slower or lower quality converter is exactly what an admi
 needs to see in the log. It is warned once per request, not once per file.
 
 FALLBACK COSTS TIME & THE BUDGET MUST KNOW.
-Worst case runtime is candidates multiplied by $StopCounter. The budget request covers the
-whole attempt, not one conversion.
+Worst case runtime is candidates multiplied by $RetryCount, --File Operation Retry Count--, the
+Engine's setting from v4.2.4. The budget request covers the whole attempt, not one conversion.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.2.4.
 // / This file is the Environment Manager. It watches the host & repairs it only when told.
 // /
 // / It is not a manager in the sense the other four are.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.8';
+$ManagerVersion = 'v4.2.4';
 // / -----------------------------------------------------------------------------------
 
 
@@ -97,13 +97,12 @@ function runEnvironmentManager() {
       $repairIsDueToday = ($lastRepairDay !== $todayStamp);
       if ($problemCount > 0 && $repairIsPermitted && $repairIsDueToday) {
         warningEntry('Environment Manager is repairing '.$problemCount.' finding(s). This is the one repair permitted today.');
-        // / Repair is the application's own, reached through the provider it declares exactly as
-        // / -fp reaches it, & never a second implementation of it.
-        // / IT IS UNATTENDED. $EngineRepairIsUnattended tells the application's repair that nobody
-        // / is watching, so it starts & enables no service & rewrites the host's configuration
-        // / only when the application's own setting allows. It is set for the repair alone.
+        // / Repair is the Engine's repairInstallation, exactly as -fp reaches it, & never a second implementation of it.
+        // / IT IS UNATTENDED. $EngineRepairIsUnattended tells the repair that nobody is watching, so it
+        // / starts & enables no service & rewrites the host's configuration only when the configuration
+        // / allows. It is set for the repair alone.
         $EngineRepairIsUnattended = TRUE;
-        list ($repairSucceeded, $repairCount) = runApplicationRepair();
+        list ($repairSucceeded, $repairCount) = repairInstallation();
         $EngineRepairIsUnattended = FALSE;
         if (!$repairSucceeded) warningEntry('Environment Manager attempted a repair & it reported failure.');
         warningEntry('Environment Manager repaired once. It corrected '.$repairCount.' managed location(s). Nothing further will be repaired until tomorrow.');

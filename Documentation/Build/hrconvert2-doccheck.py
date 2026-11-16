@@ -12,10 +12,11 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v4.0.0.
+# / v4.2.4.
 # / This file checks the documentation the way hrconvert2-check.py checks the code.
 # /
-# / Run it from the installation root, beside convertCore.php.
+# / Run it from the installation root, beside the application's entry point, convertCore.php for HRConvert2.
+# / The entry point is read from the contract, Resources/Contract/app-engine-config.php, as the code checkers read it.
 # /   python3 Documentation/Build/hrconvert2-doccheck.py
 # /   python3 Documentation/Build/hrconvert2-doccheck.py --list
 # /   python3 Documentation/Build/hrconvert2-doccheck.py --only entries
@@ -72,7 +73,13 @@ HISTORICAL_NAMES = {
     'runPipeline': 'a fixed entry point name, cited to explain why entry points are unique',
     'verifyArchiveVersions': 'a version check the manifest retired, cited as history',
     'setupConfigModel': 'the name the absorption contract proposed, cited beside what it became',
-    'encodeURIComponent': 'a JavaScript builtin rather than a function of this project'}
+    'encodeURIComponent': 'a JavaScript builtin rather than a function of this project',
+    'fixManagedPermissions': 'HRConvert2\'s repair until v4.2.4, cited beside repairInstallation, which it became',
+    'showVersionInfo': 'HRConvert2\'s -v until v4.2.4, cited beside showVersionReport, which it became',
+    'verifyConfigVersion': 'the list of required settings until v4.2.4, cited beside the templates that replaced it',
+    'applicationEnvironmentFindings': 'HRConvert2\'s environment provider until v4.2.4, cited beside $EnginePolicyChecks',
+    'askOperator': 'HRConvert2\'s terminal prompt until v4.2.4, cited beside promptOperator, which took it over',
+    'runApplicationRepair': 'the Engine\'s call to an application\'s repair until v4.2.4, cited beside repairInstallation'}
 # / Labels a document writes on purpose that no configuration file declares.
 EXAMPLE_LABELS = {
     'About The Subject': 'the example section title in ABOUT_DOCUMENTATION.txt',
@@ -462,7 +469,7 @@ def check_entries(root, report):
 # / A function is a camel case name written with () after it. It must be defined in some PHP
 # / file or Build tool, or be listed in HISTORICAL_NAMES with the reason it is cited.
 # / A setting is a title case label between two pairs of dashes inside a sentence. It must
-# / be a label in config-template.php, engineConfig.php or the contract, or a section
+# / be a label in either half of the configuration template, engineConfig.php or the contract, or a section
 # / title of some document, which the documents also write that way.
 # / A configuration label that carries a typo is matched as the configuration spells it,
 # / because a reader searching config.php types what the document says.
@@ -478,7 +485,7 @@ def check_names(root, paths, markdown, report):
         defined |= set(re.findall(r'^def\s+([A-Za-z_]\w*)', open(source, encoding='utf-8').read(), re.M))
     defined_lower = set(function.lower() for function in defined)
     labels = set()
-    for source in ('Resources/Contract/config-template.php', 'Resources/Engine/engineConfig.php', 'Resources/Contract/app-engine-config.php'):
+    for source in ('Resources/Contract/config-template.php', 'Resources/Engine/config-template.php', 'Resources/Engine/engineConfig.php', 'Resources/Contract/app-engine-config.php'):
         full = os.path.join(root, source)
         if os.path.exists(full):
             for found in re.finditer(r'^// /\s+--(.*?[^-])-{2,}\.?\s*$', open(full, encoding='utf-8').read(), re.M):
@@ -574,8 +581,12 @@ def repair(paths, markdown):
 def main():
     quiet = '--quiet' in sys.argv
     root = os.getcwd()
-    if not os.path.exists(os.path.join(root, 'convertCore.php')):
-        print('Run this from the installation root, beside convertCore.php.')
+    # / The entry point the contract names, read as text as the code checkers read it, & app.php where it names none.
+    contract = os.path.join(root, 'Resources', 'Contract', 'app-engine-config.php')
+    declared = re.search(r"^\$EngineEntryPoint\s*=\s*'([^']+)'\s*;", open(contract, encoding='utf-8', errors='replace').read() if os.path.exists(contract) else '', re.M)
+    entry_point = os.path.basename(declared.group(1).strip()) if declared else 'app.php'
+    if not os.path.exists(os.path.join(root, entry_point)):
+        print('Run this from the installation root, beside ' + entry_point + ', the entry point Resources/Contract/app-engine-config.php names.')
         return 2
     paths, markdown = documents(root)
     findings = []

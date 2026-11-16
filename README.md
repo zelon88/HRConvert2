@@ -277,7 +277,7 @@ Every command exits with a status a script can act on. See the [full command ref
 | **Sandbox** | Bubblewrap |
 | **Email** | Optional. A local mail system, for confirming email addresses and recovering passwords. HRConvert2 installs none. |
 
-The installer handles every dependency. The authoritative list is [depends.php](Resources/Contract/depends.php).
+The installer handles every dependency. The authoritative list is the manifest, in two halves: [the Engine's](Resources/Engine/depends.php) and [HRConvert2's](Resources/Contract/depends.php).
 
 ---
 

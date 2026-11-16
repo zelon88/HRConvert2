@@ -18,7 +18,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -219,24 +219,31 @@ Read these before writing code. They are preconditions, not steps.
       by `--config` & is reported as unaccounted. Give it a Depends only where the code does not
       read it while that setting is off, or `--config` tells an administrator something untrue.
 
-5. In `convertCore.php` register the config so a missing setting is detected.
-  5a. `verifyConfigVersion()` - add each setting name to `$requiredConfigVars`.
-  5b. That array is the only place the config check knows to look.
-  5c. A setting missing from it is a setting the check silently stops covering.
-  5d. `verifyInstallation()` - add every new setting to the globals line.
-  5e. Config settings need no cleanup entry. They stay alive for the whole request.
-  5f. `verifyGlobals()` - add the new format arrays to the globals line.
-  5g. `verifyGlobals()` - build lowercased working arrays from the `$User*` ones.
-  5h. `verifyGlobals()` - add those working arrays to `$allArrays`.
-  5i. Adding to `$allArrays` is not optional. It is what builds `$Allowed`.
-  5j. `verifyFile()` rejects any extension missing from `$Allowed`.
-  5k. A format missing from `$allArrays` cannot be uploaded or converted.
-  5l. `verifyInputs()` is not involved unless you add a new POST or GET field.
-  5m. That function sanitizes request input. It knows nothing about dependencies.
+5. In `convertCore.php` register the format arrays for the session.
+  5a. Nothing registers a new setting for the config check. The kernel reads every name the two
+      templates hold, makes each a global as it reads `config.php` & refuses a `config.php` that
+      lacks one, from v4.2.4. A template & its model that disagree fail check thirteen of
+      `hrconvert2-check.py`.
+  5b. There is no list of required settings & no global declaration to add a setting to. Until
+      v4.2.4 there were both, & a setting missing from either was silently not checked or not read.
+  5c. A setting the kernel or the Engine reads is the Engine's, in `Resources/Engine/config-template.php`
+      & `engineConfigModel()`, & not the application's. A format array is the application's.
+  5d. Config settings need no cleanup entry. They stay alive for the whole request.
+  5e. `verifyGlobals()` - add the new format arrays to the globals line.
+  5f. `verifyGlobals()` - build lowercased working arrays from the `$User*` ones.
+  5g. `verifyGlobals()` - add those working arrays to `$allArrays`.
+  5h. Adding to `$allArrays` is not optional. It is what builds `$Allowed`.
+  5i. `verifyFile()` rejects any extension missing from `$Allowed`.
+  5j. A format missing from `$allArrays` cannot be uploaded or converted.
+  5k. `verifyInputs()` is not involved unless you add a new POST or GET field.
+  5l. That function sanitizes request input. It knows nothing about dependencies.
 
 6. Add the dependency to the manifest & ask for it by name. Do not write a version check.
   6a. The manifest is `Resources/Contract/depends.php`. It is the only owner of a
       tool's minimum version. Nothing else holds one, so nothing can disagree with it.
+      From v4.2.4 it is the application's half. `Resources/Engine/depends.php` is the
+      Engine's, & names PHP & what the Engine itself runs. A pipeline's tool goes in the
+      application's half, & may name PHP or another of the Engine's entries in `Requires`.
   6b. Give the entry a `MinimumVersion`, a `VersionCommand` & a `VersionPattern`. That is
       everything a version check needs, & it is what `--setup --check-depends` already reads.
   6c. Anchor the `VersionPattern` on the product name.
@@ -305,7 +312,7 @@ Read these before writing code. They are preconditions, not steps.
   8i. Sandbox the command, then test the permission boolean.
   8j. Refuse with your reserved sandbox number when that boolean is FALSE.
   8k. Retry while `pipelineAttemptIsDue($newPathname, $stopper)` says so. It allows
-      `$StopCounter` attempts, & always one, & stops as soon as the output exists. Sleep
+      `$RetryCount` attempts, & always one, & stops as soon as the output exists. Sleep
       before every attempt but the first. Raise your error once, after the loop, when the
       output still does not exist, & name the number of attempts made.
   8l. Log dependency output under `$Verbose`, but only when it is not blank.
@@ -332,7 +339,7 @@ Read these before writing code. They are preconditions, not steps.
   9i. The loop skips a family when the input matches but the output does not.
   9j. That behavior lets overlapping families coexist without special cases.
 
-10. Update `showVersionInfo()`, which runs when the `-v` or `--version` argument is set.
+10. Update `applicationVersionReport()`, which gives the `-v` report HRConvert2's own rows. The Engine prints the report, from v4.2.4.
   10a. Ask for the binary at the top with `$yourBinary = toolPath('Name');`, then add a row to
        its tool table: `'Tool, purpose' => array($yourBinary !== FALSE, toolRequirement('Name'), TRUE)`.
   10b. The last value is TRUE for a required tool & FALSE for an optional one.

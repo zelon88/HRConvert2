@@ -12,10 +12,12 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v4.0.6.
+# / v4.2.4.
 # / This file checks the source for faults a human reading it will not reliably see.
 # /
-# / Run it from the installation root, beside convertCore.php.
+# / Run it from the installation root, beside the application's entry point, convertCore.php for HRConvert2.
+# / The entry point & the application's configuration model are read from its contract, Resources/Contract/app-engine-config.php,
+# / as $EngineEntryPoint & $EngineConfigModelProvider, so another application's tree is checked unchanged.
 # /   python3 Documentation/Build/hrconvert2-check.py
 # /
 # / It exits zero when every check passes, one when any of them does not & two when it was
@@ -88,6 +90,24 @@ SCANCORE_FOLDER = os.path.join('Resources', 'ScanCore') + os.sep
 INCLUDE_SCANCORE = True
 # / A finding whose message names a file in the bundled ScanCore program.
 SCANCORE_MESSAGE = re.compile(r'Resources[/\\]ScanCore[/\\]|\bScanCore(?:_Config)?\.php\b')
+# / The application's entry point & the function that models its half of config.php, read from its contract by main.
+# / They begin as the Engine's defaults for an application that declares neither, app.php & no model.
+ENTRY_POINT = 'app.php'
+CONFIG_MODEL = ''
+
+
+# / -----------------------------------------------------------------------------------
+# / A function to read the application's entry point & configuration model from its contract.
+# / Accepts the installation root. Returns the entry point's file name & the model's function name, in that order.
+# / The contract is read as text & never executed, as every component is. Until v4.2.4 every check that read the
+# / application named convertCore.php & applicationConfigModel(), so another application had to edit this file first.
+# / A contract that names neither leaves the Engine's defaults, which is what the Engine assumes of such an application.
+def contract_names(root):
+    contract = os.path.join(root, 'Resources', 'Contract', 'app-engine-config.php')
+    text = open(contract, encoding='utf-8', errors='replace').read() if os.path.exists(contract) else ''
+    entry = re.search(r"^\$EngineEntryPoint\s*=\s*'([^']+)'\s*;", text, re.M)
+    model = re.search(r"^\$EngineConfigModelProvider\s*=\s*'([^']*)'\s*;", text, re.M)
+    return (os.path.basename(entry.group(1).strip()) if entry else 'app.php', model.group(1).strip() if model else '')
 
 
 # / -----------------------------------------------------------------------------------
@@ -287,9 +307,9 @@ def check_balance(files, report):
 # / Reading the call sites showed nothing, because requestConvertLoc is DEFINED early in
 # / the file. It RUNS late. That difference produced a fatal on the first request.
 def check_call_order(root, report):
-    core_path = os.path.join(root, 'convertCore.php')
+    core_path = os.path.join(root, ENTRY_POINT)
     if not os.path.exists(core_path):
-        report('SKIP', 'convertCore.php was not found, so the call order check did not run.')
+        report('SKIP', ENTRY_POINT + ' was not found, so the call order check did not run.')
         return 0
     original, lines = read_source(core_path)
     functions = read_functions(original, lines)
@@ -307,12 +327,20 @@ def check_call_order(root, report):
 
     # / Where the main logic loads each component. Only a top level load counts, because a
     # / load inside a function happens whenever that function is called.
+    # / The kernel's loadEngine() loads the Engine & has it start, from v4.2.4, so every file of the Engine's is
+    # / taken to load where the main logic calls it, & nothing of the Engine's may be reached before that line.
     loaded_at = {}
+    engine_files = []
+    for base, dirs, files in os.walk(os.path.join(root, 'Resources', 'Engine')):
+        engine_files.extend(name for name in files if name.endswith('.php'))
     for index, line in enumerate(lines):
         if line.startswith('list (') and 'verifyCoreComponent(' in line:
             match = re.search(r"'([A-Za-z]+\.php)'", line)
             if match:
                 loaded_at[match.group(1)] = index
+        if line.startswith('list (') and re.search(r'\bloadEngine\s*\(', line):
+            for name in engine_files:
+                loaded_at.setdefault(name, index)
 
     def calls_made(name):
         if name not in functions:
@@ -679,7 +707,7 @@ def check_single_exit(files, report):
 # / A finding here is a job that is not finished rather than a mistake. The named function
 # / either moves too or the value it produces becomes a parameter.
 def check_engine_independence(root, report):
-    core_path = os.path.join(root, 'convertCore.php')
+    core_path = os.path.join(root, ENTRY_POINT)
     engine_dir = os.path.join(root, 'Resources', 'Engine')
     if not os.path.exists(core_path) or not os.path.isdir(engine_dir):
         report('SKIP', 'no Engine directory was found, so the independence check did not run.')
@@ -828,9 +856,9 @@ def check_duplicate_functions(files, report):
 # / A component genuinely absent from the tree is therefore silent here. The call order
 # / check & the application itself both report that at load time instead.
 def check_version_pins(root, report):
-    core_path = os.path.join(root, 'convertCore.php')
+    core_path = os.path.join(root, ENTRY_POINT)
     if not os.path.exists(core_path):
-        report('SKIP', 'convertCore.php was not found, so the version pin check did not run.')
+        report('SKIP', ENTRY_POINT + ' was not found, so the version pin check did not run.')
         return 0
     core = open(core_path, encoding='utf-8').read()
     faults = 0
@@ -860,16 +888,20 @@ def check_version_pins(root, report):
                     report('PIN', component + ' is pinned at ' + pinned + ' & ' + name
                            + ' declares ' + found.group(1))
                     faults += 1
-    # / A manager is pinned by the Engine rather than by the application.
+    # / A manager is pinned by the Engine rather than by the application, & so is the Engine's half of the dependency
+    # / manifest, from v4.2.4, which declares $EngineDependsVersion in Resources/Engine/depends.php.
     engine_path = os.path.join(root, 'Resources', 'Engine', 'engine.php')
     if os.path.exists(engine_path):
         for match in re.finditer(r"'(\w+\.php)'\s*=>\s*'v?([0-9.]+)'", open(engine_path, encoding='utf-8').read()):
-            manager_path = os.path.join(root, 'Resources', 'Engine', 'Managers', match.group(1))
+            if match.group(1) == 'depends.php':
+                manager_path, declaration = os.path.join(root, 'Resources', 'Engine', 'depends.php'), 'EngineDependsVersion'
+            else:
+                manager_path, declaration = os.path.join(root, 'Resources', 'Engine', 'Managers', match.group(1)), 'ManagerVersion'
             if not os.path.exists(manager_path):
-                report('PIN', 'the Engine pins ' + match.group(1) + ' & no such manager is installed')
+                report('PIN', 'the Engine pins ' + match.group(1) + ' & ' + os.path.relpath(manager_path, root) + ' is not installed')
                 faults += 1
                 continue
-            found = re.search(r"\$ManagerVersion\s*=\s*'v?([0-9.]+)'", open(manager_path, encoding='utf-8').read())
+            found = re.search(r"\$" + declaration + r"\s*=\s*'v?([0-9.]+)'", open(manager_path, encoding='utf-8').read())
             if not found:
                 report('PIN', match.group(1) + ' reports no version & an unknown build cannot be cleared')
                 faults += 1
@@ -891,7 +923,7 @@ def check_version_pins(root, report):
         elif found.group(1) != script_pin.group(1):
             report('PIN', 'the bootstrap script is pinned at ' + script_pin.group(1) + ' & '
                    + os.path.basename(scripts[0]) + ' declares ' + found.group(1)
-                   + '. Set $RequiredConfigScript in convertCore.php to match.')
+                   + '. Set $RequiredConfigScript in ' + ENTRY_POINT + ' to match.')
             faults += 1
     return faults
 
@@ -1016,50 +1048,62 @@ def check_component_guard(root, report):
 
 
 # / -----------------------------------------------------------------------------------
-# / CHECK THIRTEEN. Every required configuration setting is declared global where the
-# / configuration is loaded.
-# /
-# / config.php is brought in with require_once INSIDE a function, so every setting it
-# / defines lands in that function's local scope rather than in $GLOBALS. A setting the
-# / function has not declared global therefore exists in the file, is read correctly by
-# / PHP, & is invisible to everything afterwards.
-# /
-# / The completeness check then reports it missing. An administrator reads that their
-# / config.php is missing a setting which is plainly present in their config.php, which is
-# / the least helpful true statement this application can make.
-# /
-# / No other check can see this. The settings are tested by name through a list at runtime,
-# / so nothing reads $UserModelInputArray anywhere & a search for a read finds nothing.
-# / Three places have to agree & this is the third: the file, the required list, & the
-# / global declaration where the file is loaded.
+# / CHECK THIRTEEN. Every setting the two configuration templates hold is modelled, & is held once.
+# / config.php has two halves, the Engine's & the application's, & each has a template & a model.
+# /   The Engine's       Resources/Engine/config-template.php & engineConfigModel() in Resources/Engine/engine.php.
+# /   The application's  Resources/Contract/config-template.php & the model its contract names in $EngineConfigModelProvider,
+# /                      in its entry point. For HRConvert2 that is applicationConfigModel() in convertCore.php.
+# / The kernel reads the names in the two templates to know which settings config.php must hold &
+# / which become globals, & the configuration utility repairs & resets only what a model holds.
+# / So a setting in a template & in no model is required & can never be repaired, & an installation
+# / missing it is refused until it is added by hand. A modelled setting in no template is one a
+# / repair cannot add, because the default it would write is in no template.
+# / A name in both templates is assigned twice in a generated config.php, & PHP takes the second.
+# / Until v4.2.4 this check compared the list verifyConfigVersion() kept against the global
+# / declaration where verifyInstallation() loaded config.php. Neither exists any more, because the
+# / kernel reads the names from the templates, so the places that have to agree are each template & its model.
+# / A default the contract gives in $EngineSettingDefaults is applied to the Engine's settings alone, in a generated
+# / config.php & in a reset, so a default named for any other setting is never written & is reported.
+# / A model is read by pattern, as one entry per line beginning with its name in quotes. The defaults are read the same way,
+# / as one entry per line indented by two spaces, which is how the contract writes them.
 def check_config_globals(root, report):
-    core_path = os.path.join(root, 'convertCore.php')
-    if not os.path.exists(core_path):
-        report('SKIP', 'convertCore.php was not found, so the config global check did not run.')
-        return 0
-    original, blanked = read_source(core_path)
-    text = '\n'.join(blanked)
-    # / The required list is read from the ORIGINAL & the declaration from the blanked copy.
-    # / The settings are quoted strings, so the blanked copy has emptied every one of them.
-    # / An earlier version read both from the blanked copy, compared an empty set against the
-    # / declarations & reported nothing missing whatever was removed. A check that cannot
-    # / fail is worse than no check, because it is counted as having passed.
-    raw = '\n'.join(original)
-    if 'function verifyInstallation(' not in text or '$requiredConfigVars = array(' not in raw:
-        report('SKIP', 'the configuration loader was not found, so the config global check did not run.')
-        return 0
-    start = raw.index('$requiredConfigVars = array(')
-    end = raw.index(');', start)
-    required = set(re.findall(r"'(\w+)'", raw[start:end]))
-    # / Every name the loading function has declared global.
-    start = text.index('function verifyInstallation(')
-    start = text.index('  global ', start)
-    end = text.index(';', start)
-    declared = set(re.findall(r'\$(\w+)', text[start:end]))
+    halves = (
+        ('the Engine\'s', os.path.join(root, 'Resources', 'Engine', 'config-template.php'), os.path.join(root, 'Resources', 'Engine', 'engine.php'), 'engineConfigModel'),
+        ('the application\'s', os.path.join(root, 'Resources', 'Contract', 'config-template.php'), os.path.join(root, ENTRY_POINT), CONFIG_MODEL))
     faults = 0
-    for name in sorted(required - declared):
-        report('CONFIG', name + ' is required & is not declared global where config.php is loaded, so it will read as missing')
-        faults += 1
+    held = {}
+    for half, template, source, function in halves:
+        if not os.path.exists(template) or not os.path.exists(source):
+            report('CONFIG', template + ' or ' + source + ' is missing, so ' + half + ' half of config.php cannot be judged. Restore it from the release')
+            faults += 1
+            continue
+        template_names = set(re.findall(r'^\$([A-Z]\w*)\s*=', open(template, encoding='utf-8').read(), re.M))
+        original, blanked = read_source(source)
+        record = read_functions(original, blanked).get(function)
+        if record is None:
+            report('CONFIG', (function + '() was not found in ' + source if function else 'the contract names no $EngineConfigModelProvider') + ', so ' + half + ' settings are modelled nowhere')
+            faults += 1
+            continue
+        model_names = set(re.findall(r"^\s*'([A-Za-z_]\w*)' => array\('Type'", '\n'.join(record['original']), re.M))
+        for name in sorted(template_names - model_names):
+            report('CONFIG', '$' + name + ' is in ' + os.path.relpath(template, root) + ' & not in ' + function + '(), so config.php must hold it & no repair can add it')
+            faults += 1
+        for name in sorted(model_names - template_names):
+            report('CONFIG', '$' + name + ' is in ' + function + '() & not in ' + os.path.relpath(template, root) + ', so a repair has no default to write for it')
+            faults += 1
+        for name in template_names:
+            held.setdefault(name, []).append(half)
+    for name in sorted(held):
+        if len(held[name]) > 1:
+            report('CONFIG', '$' + name + ' is in both halves of the configuration template, so a generated config.php assigns it twice. Give it one home')
+            faults += 1
+    contract = os.path.join(root, 'Resources', 'Contract', 'app-engine-config.php')
+    if os.path.exists(contract):
+        defaults = re.search(r'^\$EngineSettingDefaults\s*=\s*array\((.*?)\);\s*$', open(contract, encoding='utf-8').read(), re.M | re.S)
+        for name in (re.findall(r"^  '([A-Za-z_]\w*)'\s*=>", defaults.group(1), re.M) if defaults else []):
+            if 'the Engine\'s' not in held.get(name, []):
+                report('CONFIG', '$EngineSettingDefaults gives $' + name + ' a default & it is not one of the Engine\'s settings, so the default is never written. Give it in that setting\'s own template')
+                faults += 1
     return faults
 
 
@@ -1496,8 +1540,9 @@ def check_global_purge(files, report):
         for name, record in read_functions(original, blanked).items():
             body = '\n'.join(record['body'])
             declared = set()
+            # / A variable variable declares the global its value names, & not itself, so $$name is not read as $name.
             for statement in re.finditer(r'\bglobal\s+([^;]+);', body):
-                declared |= set(re.findall(r'\$(\w+)', statement.group(1)))
+                declared |= set(re.findall(r'(?<!\$)\$(\w+)', statement.group(1)))
             for call in re.finditer(r'purgeSensitiveMemory\s*\(([^;]*)\)\s*;', body):
                 for target in re.findall(r'\$(\w+)', call.group(1))[1:]:
                     if target in declared:
@@ -1508,19 +1553,15 @@ def check_global_purge(files, report):
     return faults
 
 # / -----------------------------------------------------------------------------------
-# / The main logic. Every check runs & the total decides the exit code.
-# / Nothing stops early, because an operator wants every fault in one pass rather than the
-# / first one seven times.
-# / -----------------------------------------------------------------------------------
 # / CHECK TWENTY THREE. No setting is set both by the administrator & by the Engine.
 # / config.php is read first, because it is how an installation finds itself, & the Engine
 # / configuration is read after it, with the application's Engine settings last of all.
-# / So a name set in config-template.php & in either Engine configuration file is decided
-# / by the Engine, silently, & an administrator who changes it sees nothing happen.
+# / So a name set in either half of the configuration template & in either Engine configuration
+# / file is decided by the Engine, silently, & an administrator who changes it sees nothing happen.
 # / Until v4.0.0 the documents said the Engine configuration was read first so that the
 # / administrator would win. No name was shared, so nothing was ever overridden, but the
 # / protection they described did not exist. This check is that protection.
-# / A name in config-template.php that begins with Engine is reported as well, because that
+# / A name in either template that begins with Engine is reported as well, because that
 # / prefix is how an Engine setting is told apart, & the next Engine to use the name wins.
 # / It reads top level assignments only. A setting assigned inside a branch is not seen.
 def check_config_overlap(root, report):
@@ -1530,14 +1571,15 @@ def check_config_overlap(root, report):
         if not os.path.exists(full):
             return set()
         return set(re.findall(r'^\$([A-Z]\w*)\s*=', open(full, encoding='utf-8', errors='replace').read(), re.M))
-    administrator = assigned(os.path.join('Resources', 'Contract', 'config-template.php'))
+    # / config.php has two halves, & what an administrator sets is whatever either template holds.
+    administrator = assigned(os.path.join('Resources', 'Contract', 'config-template.php')) | assigned(os.path.join('Resources', 'Engine', 'config-template.php'))
     engine = assigned(os.path.join('Resources', 'Engine', 'engineConfig.php')) | assigned(os.path.join('Resources', 'Contract', 'app-engine-config.php'))
     for name in sorted(administrator & engine):
-        report('CONFIGS', '$' + name + ' is set in config-template.php & in an Engine configuration file, which '
+        report('CONFIGS', '$' + name + ' is set in a configuration template & in an Engine configuration file, which '
                + 'is read later & wins. Give the setting one home')
         faults += 1
     for name in sorted(n for n in administrator - engine if n.startswith('Engine')):
-        report('CONFIGS', '$' + name + ' is set in config-template.php with the prefix the Engine owns. Rename it')
+        report('CONFIGS', '$' + name + ' is set in a configuration template with the prefix the Engine owns. Rename it')
         faults += 1
     return faults
 
@@ -1583,6 +1625,35 @@ def check_owner_changes(files, report):
                 faults += 1
     return faults
 
+# / -----------------------------------------------------------------------------------
+# / CHECK TWENTY FIVE. No function destroys a static it keeps.
+# / A static keeps its value from one call to the next for the life of the process. Handing one to
+# / purgeSensitiveMemory() empties it, so the next call finds nothing kept & does the work again.
+# / verifySystemdRun() purged the three statics holding its probe until v4.2.4, so a probe its
+# / comments said ran once per request ran before every conversion.
+# / A static holds what is worth keeping & nothing secret, which ABOUT_DEFENSIVE_MEMORY_MANAGEMENT.md asks of one.
+# / The first argument to purgeSensitiveMemory() decides whether a failure halts & is not a target.
+# / It cannot see a static purged through another function, as check twenty two cannot see a global.
+def check_static_purge(files, report):
+    faults = 0
+    for path in files:
+        original, blanked = read_source(path)
+        for name, record in read_functions(original, blanked).items():
+            body = '\n'.join(record['body'])
+            kept = set(re.findall(r'\bstatic\s+\$(\w+)', body))
+            for call in re.finditer(r'purgeSensitiveMemory\s*\(([^;]*)\)\s*;', body):
+                for target in re.findall(r'\$(\w+)', call.group(1))[1:]:
+                    if target in kept:
+                        report('STATIC', path + ':' + str(record['start'] + 1) + ' ' + name + '() keeps $'
+                               + target + ' as a static & then purges it, which empties what it keeps & '
+                               + 'repeats the work on every call. Remove it from the purgeSensitiveMemory() call')
+                        faults += 1
+    return faults
+
+# / -----------------------------------------------------------------------------------
+# / The main logic. Every check runs & the total decides the exit code.
+# / Nothing stops early, because an operator wants every fault in one pass rather than the
+# / first one seven times.
 def main():
     quiet = '--quiet' in sys.argv
     # / --fail-on names the kinds that decide the exit code. Every kind is still reported, but
@@ -1595,11 +1666,12 @@ def main():
         position = sys.argv.index('--fail-on')
         if position + 1 < len(sys.argv):
             fail_on = set(sys.argv[position + 1].upper().split(','))
-    global INCLUDE_SCANCORE
+    global INCLUDE_SCANCORE, ENTRY_POINT, CONFIG_MODEL
     INCLUDE_SCANCORE = '--no-scancore' not in sys.argv
     root = os.getcwd()
-    if not os.path.exists(os.path.join(root, 'convertCore.php')):
-        print('Run this from the installation root, beside convertCore.php.')
+    ENTRY_POINT, CONFIG_MODEL = contract_names(root)
+    if not os.path.exists(os.path.join(root, ENTRY_POINT)):
+        print('Run this from the installation root, beside ' + ENTRY_POINT + ', the entry point Resources/Contract/app-engine-config.php names.')
         return 2
     findings = []
 
@@ -1623,7 +1695,7 @@ def main():
         ('guard', 'every component refuses to load directly', lambda: check_component_guard(root, report)),
         ('contract', 'the Engine never calls application code', lambda: check_engine_independence(root, report)),
         ('kernel', 'the kernel calls only itself, PHP & a guarded Engine', lambda: check_kernel_independence(root, files, report)),
-        ('config', 'every required setting is declared where config.php loads', lambda: check_config_globals(root, report)),
+        ('config', 'every setting a configuration template holds is modelled, & held once', lambda: check_config_globals(root, report)),
         ('stray', 'nothing ships that is not part of the application', lambda: check_stray_files(root, report)),
         ('spacing', 'separators & blank lines follow the house shape', lambda: check_file_spacing(files, report)),
         ('caps', 'no comment line is entirely capitals', lambda: check_comment_case(files, report)),
@@ -1638,6 +1710,7 @@ def main():
         ('globals', 'no function destroys a global it declares', lambda: check_global_purge(files, report)),
         ('configs', 'no setting is set by the administrator & by the Engine', lambda: check_config_overlap(root, report)),
         ('owner', 'an owner is changed only through changeOwnerWithoutFollowing', lambda: check_owner_changes(files, report)),
+        ('static', 'no function destroys a static it keeps', lambda: check_static_purge(files, report)),
         ('exit', 'every function has one exit', lambda: check_single_exit(files, report)))
     if '--list' in sys.argv:
         print('Checks, in the order they run.')

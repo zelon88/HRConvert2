@@ -19,7 +19,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 -----------------------------------------------------------------------------------
@@ -55,9 +55,10 @@ Publishing the official image is automatic. Pushing a version tag is the entire 
 1. Make sure every version stamp in the source matches the version you are about to tag.
   1a. $HRConvertVersion in convertCore.php, & $Version in Resources/versionInfo.php.
   1b. $ConfigVersion in Resources/config.php & in Resources/Contract/config-template.php.
-      The template is what a new installation's config.php is written from.
+      That template & the Engine's, Resources/Engine/config-template.php, are what a new
+      installation's config.php is written from, & $ConfigVersion is in the application's half.
       Both match $RequiredConfigVersion in convertCore.php rather than the tag. All three
-      move together & only when a release adds a setting the core requires.
+      move together & only when a release adds or removes a setting in either half.
   1c. $GuiVersion in every UI/<GUI>/uiVersionInfo.php, if the interfaces changed.
   1d. $LanguageVersion in every language pack, if the strings changed.
   1e. Run  'php convertCore.php --build --pins --write'  to move every pin to the versions

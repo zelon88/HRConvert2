@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.4.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -28,7 +28,7 @@
 // / This application will run on just about any x86 or x64 computer.
 // /
 // / Dependency requirements ...
-// / The authoritative list of dependencies is Resources/Contract/depends.php & nothing else.
+// / The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else.
 // / Run  php convertCore.php -v  to see what this installation has.
 // /
 // / <3 Open-Source
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v4.2.1';
+$DependencyCoreVersion = 'v4.2.4';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -242,13 +242,74 @@ function probeOutputLine($commandOutput) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to verify & load the dependency manifest.
+// / A function to read the Engine's half of the dependency manifest.
+// / Accepts nothing. Returns whether it was read, its entries & the version it reports, in that order.
+// / The version is read from the file WITHOUT executing it, as every component's is, & must be the one the Engine's
+// / getAcceptedEngineManifest() pins. A half that is missing, unreadable or another release's is a warning, & the application's
+// / half is read without it, because what the application needs can still be checked & installed. What the Engine needs then
+// / cannot be, & the warning says so.
+function readEngineDependsManifest() {
+  // / Set variables.
+  // / $CoreLoaded is declared so the guard at the top of the file can see it, because the require below happens inside this function.
+  global $InstLoc, $CoreLoaded, $EnableMemoryProtection;
+  $EngineHalfIsRead = FALSE;
+  $EngineDependsManifest = NULL;
+  $DetectedEngineDependsVersion = '';
+  $manifestPath = $manifestContents = $requiredVersion = '';
+  $versionMatches = $acceptedManifest = array();
+  $manifestPath = rtrim((string)$InstLoc, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Engine'.DIRECTORY_SEPARATOR.'depends.php';
+  if (function_exists('getAcceptedEngineManifest')) $acceptedManifest = getAcceptedEngineManifest();
+  $requiredVersion = ltrim(trim((string)($acceptedManifest['depends.php'] ?? '')), 'vV');
+  $manifestContents = (string)@file_get_contents($manifestPath);
+  if (preg_match('/\$EngineDependsVersion\s*=\s*\'([^\']+)\'/', $manifestContents, $versionMatches)) $DetectedEngineDependsVersion = $versionMatches[1];
+  if ($manifestContents === '') warningEntry('The Engine\'s half of the dependency manifest at '.$manifestPath.' is missing or unreadable, so what the Engine needs is neither checked nor installed. Restore Resources/Engine from the release this application came from.');
+  else if ($requiredVersion === '' or ltrim(trim($DetectedEngineDependsVersion), 'vV') !== $requiredVersion) warningEntry('The Engine\'s half of the dependency manifest reports '.($DetectedEngineDependsVersion === '' ? 'no version' : 'v'.ltrim(trim($DetectedEngineDependsVersion), 'vV')).' & this Engine requires v'.$requiredVersion.', so what the Engine needs is neither checked nor installed. Restore Resources/Engine from the release this application came from.');
+  else {
+    require ($manifestPath);
+    if (isset($EngineDependsManifest) && is_array($EngineDependsManifest)) $EngineHalfIsRead = TRUE;
+    else warningEntry('The Engine\'s half of the dependency manifest declares nothing, so what the Engine needs is neither checked nor installed.'); }
+  // / A caller receives an array whatever happened, so a foreach over the result is safe.
+  if (!is_array($EngineDependsManifest)) $EngineDependsManifest = array();
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $manifestContents, $requiredVersion, $versionMatches, $acceptedManifest);
+  return array($EngineHalfIsRead, $EngineDependsManifest, $DetectedEngineDependsVersion); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to join the two halves of the dependency manifest, the Engine's first.
+// / Accepts the Engine's entries & the application's, in that order. Returns the joined list.
+// / The Engine's half comes first, so everything the Engine needs is installed before anything an application runs.
+// / A name is in one half only. An entry of the application's that the Engine's half names already is left out, & a warning
+// / says which, because two entries for one dependency would be installed & checked twice & could disagree about its minimum.
+function joinDependsManifests($engineEntries, $applicationEntries) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $JoinedManifest = $engineNames = $manifestEntry = array();
+  $entryName = '';
+  foreach ((array)$engineEntries as $manifestEntry) {
+    $JoinedManifest[] = $manifestEntry;
+    $engineNames[] = is_array($manifestEntry) ? (string)($manifestEntry['Name'] ?? '') : ''; }
+  foreach ((array)$applicationEntries as $manifestEntry) {
+    $entryName = is_array($manifestEntry) ? (string)($manifestEntry['Name'] ?? '') : '';
+    if ($entryName !== '' && in_array($entryName, $engineNames, TRUE)) warningEntry('The dependency '.$entryName.' is named in both halves of the dependency manifest, & the Engine\'s entry is used. Remove it from Resources/Contract/depends.php.');
+    else $JoinedManifest[] = $manifestEntry; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $engineNames, $manifestEntry, $entryName, $engineEntries, $applicationEntries);
+  return $JoinedManifest; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to verify & load the dependency manifest, both halves of it.
 // / Accepts the manifest version this core requires.
 // / Returns an availability boolean, the manifest array & the detected version, in order.
 // / The version is read from the file WITHOUT executing it, for the same reason every
 // / other component is. A manifest from another release may name packages that no longer
 // / exist, or omit one this release cannot run without.
 // / This is an EXACT match, the same rule applied to a GUI or a language pack.
+// / The application's half, Resources/Contract/depends.php, is the one pinned here & the version returned is its own.
+// / The Engine's half, Resources/Engine/depends.php, is pinned by the Engine, & readEngineDependsManifest() reads it.
+// / The two are joined, the Engine's first, from v4.2.4. An application's half may declare nothing, because the Engine's
+// / half declares what every application needs, & the joined list must declare something.
 function verifyDependsManifest($requiredDependsVersion) {
   // / Set variables.
   // / $CoreLoaded is declared so the guard at the top of depends.php can see it.
@@ -256,11 +317,11 @@ function verifyDependsManifest($requiredDependsVersion) {
   // / must be in this scope. It is not read here & looks unused, & removing it on that
   // / reading made every manifest refuse to load with error 2.
   global $InstLoc, $CoreLoaded, $EnableMemoryProtection;
-  $ManifestIsAvailable = FALSE;
+  $ManifestIsAvailable = $engineHalfIsRead = FALSE;
   $DependsManifest = NULL;
-  $DetectedDependsVersion = '';
+  $DetectedDependsVersion = $engineDependsVersion = '';
   $manifestPath = $manifestContents = $cleanDetected = $cleanRequired = '';
-  $versionMatches = array();
+  $versionMatches = $engineEntries = array();
   $manifestPath = contractPath('depends.php');
   if (!file_exists($manifestPath)) warningEntry('The dependency manifest is not installed. Dependency management is unavailable.');
   else {
@@ -282,12 +343,16 @@ function verifyDependsManifest($requiredDependsVersion) {
         // / file which fails to declare it is caught by the isset below instead of quietly
         // / inheriting an empty array that reads as a manifest declaring nothing.
         require ($manifestPath);
-        if (!isset($DependsManifest) or !is_array($DependsManifest) or count($DependsManifest) < 1) warningEntry('The dependency manifest loaded but declares nothing.');
-        else $ManifestIsAvailable = TRUE; } } }
+        if (!isset($DependsManifest) or !is_array($DependsManifest)) warningEntry('The dependency manifest loaded but declares nothing.');
+        else {
+          list ($engineHalfIsRead, $engineEntries, $engineDependsVersion) = readEngineDependsManifest();
+          $DependsManifest = joinDependsManifests($engineEntries, $DependsManifest);
+          if (count($DependsManifest) < 1) warningEntry('The dependency manifest loaded but declares nothing.');
+          else $ManifestIsAvailable = TRUE; } } } }
   // / A caller receives an array whatever happened, so a foreach over the result is safe.
   if (!is_array($DependsManifest)) $DependsManifest = array();
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $manifestPath, $manifestContents, $cleanDetected, $cleanRequired, $versionMatches, $requiredDependsVersion);
+  purgeSensitiveMemory($EnableMemoryProtection, $engineHalfIsRead, $engineDependsVersion, $engineEntries, $manifestPath, $manifestContents, $cleanDetected, $cleanRequired, $versionMatches, $requiredDependsVersion);
   return array($ManifestIsAvailable, $DependsManifest, $DetectedDependsVersion); }
 // / -----------------------------------------------------------------------------------
 
@@ -321,7 +386,8 @@ function validateDependencyAuthorization($authorizationToken) {
 // / A function to identify the package manager this host uses.
 // / Accepts no arguments.
 // / Returns the manager name, or an empty string when none is recognized.
-// / The answer is cached for the request, because every dependency would otherwise ask.
+// / The answer is kept for the life of the process, because every dependency would otherwise ask.
+// / It is never purged, because purging a static empties it. It names a program & nothing secret.
 function detectPackageManager() {
   // / Set variables.
   global $EnableMemoryProtection;

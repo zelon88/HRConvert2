@@ -196,8 +196,8 @@ A CONVERSION THAT OUTLIVES THE REQUEST IS SUPERVISED BY THE CORE AFTER THE USER 
 
 A pipeline that launches such a process returns its identifier as the sixth value of the
 pipeline contract. convert() records it, convertFiles() treats the file as present rather
-than judging it by an output that does not exist yet, & the main logic reaps it after the
-connection has closed.
+than judging it by an output that does not exist yet, & the Engine's finishWebRequest() reaps
+it after the connection has closed. The main logic reaped it until v4.2.4.
 
 Streaming is the reference implementation & is no longer the only permitted user.
 $StreamWatchTimeout bounds supervision for every such pipeline.

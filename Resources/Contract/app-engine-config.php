@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.3.
+// / v4.2.4.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -39,22 +39,33 @@ $EngineApplicationSlug = 'hrconvert2';
 
 // / -----------------------------------------------------------------------------------
 // / The providers. Every one names a function this application defines, & the Engine calls what it is given without knowing anything else about it.
-// / This is the whole of how the Engine learns about an application, through seven names.
+// / This is the whole of how the Engine learns about an application, through these names.
+// / The Engine asks the operator on the terminal & repairs the installation itself, so this application names no prompt & no repair of its own.
+// / Its environment is the Engine's to report, with the policies below, so it names no environment provider either.
 // /
 // / An Engine with none of them still runs & does less, which is the correct degradation
 // / rather than a failure. See ABOUT_ENGINE_CONTRACT.txt.
 
-// /   Reports on the parts of the environment that belong to this application.
-$EngineEnvironmentProvider = 'applicationEnvironmentFindings';
-
-// /   Asks a human a question & returns their answer. An empty answer is a refusal.
-$EngineOperatorPrompt = 'askOperator';
-
-// /   Returns the configuration model. What a config file cannot say about itself.
+// /   Returns the configuration model for this application's own half of config.php. What a config file cannot say about itself.
 $EngineConfigModelProvider = 'applicationConfigModel';
 
-// /   Repairs whatever this application manages.
-$EngineRepairProvider = 'fixManagedPermissions';
+// /   Returns what only this application knows for the report -v prints, its dependencies, subsystems, interfaces & conversion types.
+$EngineReportProvider = 'applicationVersionReport';
+
+// /   Returns what only this application knows for the help -h prints, its description, its sections & its address.
+$EngineHelpProvider = 'applicationHelpInfo';
+
+// /   Returns the sandbox profiles this application's tools run under. The Engine asks for them as it starts, assembles
+// /   a sandbox from each & knows nothing about any tool named in them.
+$EngineSandboxProvider = 'getSandboxProfiles';
+
+// /   The policies this application keeps on the host, beside the Engine's own sandbox profile, & the function that checks each.
+// /   A check accepts whether it may repair & returns a validity boolean & a status word, as verifySandboxPolicy() does.
+// /   -fp & the Environment Manager repair each, & -v, the listener & the Environment Manager report each on a line labelled Finding.
+// /   ImageMagick is the policy every conversion that runs ImageMagick carries, & OpenSCAD AppArmor is what confines OpenSCAD on this host.
+$EnginePolicyChecks = array(
+  'ImageMagick' => array('Check' => 'verifyImageMagickPolicy', 'Finding' => 'ImageMagick policy'),
+  'OpenSCAD AppArmor' => array('Check' => 'verifyOpenScadPolicy', 'Finding' => 'OpenSCAD AppArmor'));
 
 // /   Moves a manager that has run for a while on to the logfile it should be writing now.
 $EngineLogProvider = 'refreshLogFile';
@@ -63,8 +74,17 @@ $EngineLogProvider = 'refreshLogFile';
 // /   Each is the code a button runs, so a workflow does nothing a user could not do by hand.
 $EngineOperationProvider = 'applicationOperations';
 
-// /   A real config.php at defaults. What this application's configuration looks like.
-$EngineConfigTemplate = 'Contract/config-template.php';
+// /   The defaults this application gives the Engine's settings, where the Engine's own would not do.
+// /   A setting's name, documentation & default are the Engine's, in Resources/Engine/config-template.php, & a default here
+// /   replaces only the value, in a config.php written from the templates & in what a reset writes.
+// /   Each value is written as config.php writes it, so a string carries its quotes.
+// /   HRConvert2 names itself & its folders, & says where its updates come from.
+$EngineSettingDefaults = array(
+  'InstLoc' => "'/var/www/html/HRProprietary/HRConvert2'",
+  'ConvertLoc' => "'/DATA/HRConvert2'",
+  'ApplicationName' => "'HRConvert2'",
+  'ApplicationTitle' => "'Convert Anything!'",
+  'UpdateSourceRepository' => "'zelon88/HRConvert2'");
 
 // /   Handles arguments beginning --app. This application has none yet, & the first
 // /   will be conversion from the command line.
@@ -76,6 +96,11 @@ $EngineShippedWorkflows = 'Resources/Workflows';
 // /   This application offers the Engine's accounts. An installation has them only once its
 // /   administrator sets --Enable Authentication-- to TRUE in config.php.
 $EngineEnableAuthentication = TRUE;
+
+// /   The folders every session holds for this application's own tools, beside the Engine's StreamTemp.
+// /   The Engine makes each with the session, never sweeps one at the root of a data location, & gives each a global of the
+// /   same name holding its path. ScadTemp is where OpenSCAD writes as it renders a model.
+$EngineSessionFolders = array('ScadTemp');
 // / -----------------------------------------------------------------------------------
 
 
@@ -101,7 +126,7 @@ $EngineAcceptedPipelines = array(
   'Video' => 'v4.2.1',
   'Ebook' => 'v4.2.1',
   'Audio' => 'v4.2.1',
-  'Archive' => 'v4.2.1',
+  'Archive' => 'v4.2.4',
   // / The second operation pipeline. It reads every file & changes none.
   'Identify' => 'v4.1.2',
   // / The third & fourth, from v4.1.6. The Archiver puts a selection of files into archives, & Scan scans the files a user asks it to.
@@ -238,7 +263,10 @@ $EngineUnwantedApacheConfs = array('javascript-common');
 // / EnableAuthentication & every setting after it are the Authentication Core's & the Email Core's. An application that maps
 // / none has no accounts, & every visitor is anonymous. AccountLocation & UserLocation are where accounts & users' files are kept.
 // / ApplicationTitle & ServerName are what an email calls this server, & ServerName is --Server URL-- as an administrator typed it.
+// / AllowedExtensions is every extension an enabled subsystem reads or writes, which the Engine judges a fetched file by, as an upload is
+// / judged. An application that maps nothing has a fetched file judged by its scanner & its pipelines alone.
 $EngineSettingNames = array(
+  'AllowedExtensions' => 'Allowed',
   'FormatDetectionType' => 'SupportedFormatDetectionType',
   'WarnOnCapabilityMismatch' => 'WarnOnCapabilityMismatch',
   'DefaultScanner' => 'DefaultVirusScanner',

@@ -18,7 +18,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -38,9 +38,11 @@ of it. Step one was also solved differently than proposed below & that file says
 The model this contract calls setupConfigModel() is applicationConfigModel() in convertCore.php.
 
 The pattern is already established twice in this codebase & neither move invents anything.
-Sandbox profiles are DATA the application hands over in $EngineSandboxProfiles. Environment
-findings come from a function the application NAMES in $EngineEnvironmentProvider. The
-Engine holds no knowledge of either & reads what it is given. Both moves below are the same
+Sandbox profiles are DATA the application hands over, from v4.2.4 through the function it names
+in $EngineSandboxProvider, & the Engine keeps them in $EngineSandboxProfiles. Environment
+findings came from a function the application NAMES in $EngineEnvironmentProvider, & from
+v4.2.4 the policies it keeps are NAMED in $EnginePolicyChecks. The Engine holds no knowledge
+of any of them & reads what it is given. Both moves below are the same
 shape applied to two more components.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -202,6 +204,9 @@ WHERE THIS ENDS
   application starts at all. Anything reached before the Engine loads belongs to the kernel
   or the application, which is question three of ABOUT_ENGINE_CONTRACT.txt, & this one stays
   in the application. The configuration utility did move, with Setup Core.
+  MOVED TO THE KERNEL AT v4.2.4. The kernel is reachable before the Engine, so the check is the
+  kernel's verifyConfigurationSettings(), & it reads its names from the two halves of the
+  configuration template rather than from a list, the Engine's half holding the Engine's settings.
 
   The command line handler goes the same way & for the same reason. --version, --status,
   --setup, --config, the kill commands & the manager commands are Engine commands wearing

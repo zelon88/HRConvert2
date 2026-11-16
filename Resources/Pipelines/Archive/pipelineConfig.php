@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.4.
 // / This file declares what the Archive conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -34,7 +34,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.1';
+$PipelineVersion = 'v4.2.4';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -59,7 +59,7 @@ $PipelineEntryPoint = 'convertArchives';
 // / The depends.php subsystem this pipeline needs. Dependency Core owns installation.
 // / This string must match a Subsystem name in depends.php exactly.
 // / Naming the subsystem rather than the package keeps one source of truth for the version.
-// / Its tools come from verifiedToolPath(), as the Archiver pipeline's do & as the core's showVersionInfo() asks for them.
+// / Its tools come from verifiedToolPath(), as the Archiver pipeline's do & as -v asks for them.
 $PipelineSubsystem = 'Archives';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.

@@ -21,7 +21,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -747,9 +747,11 @@ list them. It is called with the folder & returns the names. Naming it gives the
 workflows the Select step, & HRConvert2 names getFiles(). An operation the application declares
 under the name Select is left out & named in a warning, because the name is the Workflow Core's.
 
-An application that starts workers must also adopt the session a worker is handed, before it
-reads any input. HRConvert2 does that in adoptWorkflowSession(), & the worker's startup key is
-checked against that session before anything is acted on.
+A worker is the application's own entry point, & it continues the session it is handed. From
+v4.2.4 the Engine adopts that session in adoptWorkflowSession() as it starts, before a session's
+folders are derived, so an application that starts workers does nothing for it. HRConvert2 did it
+itself until then. The worker's startup key is checked against that session before anything is
+acted on.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

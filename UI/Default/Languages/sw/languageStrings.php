@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -169,6 +169,12 @@ $Gui1Text36 = 'Anza Upya';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'Onyesha Upya';
+// / 'Data Formats'
+$Gui1Text38 = 'Miundo ya Data';
+// / 'Email Formats'
+$Gui1Text39 = 'Miundo ya Barua Pepe';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'Inaweza kufuatilia picha na kuzigeuza kuwa michoro ya vekta.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -635,6 +641,30 @@ $Gui2Text238 = 'Zimepitishwa bila kubadilishwa: ';
 $Gui2Text239 = 'Zinatiliwa shaka, lakini hazijathibitishwa kuambukizwa: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'Hazijachanganuliwa kikamilifu: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'Badilisha Faili Hii ya Data';
+// / 'Convert Data File'
+$Gui2Text242 = 'Badilisha Faili ya Data';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'Badilisha Nyaraka Hii ya LaTeX';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'Fuatilia Picha Hii Kuwa Mchoro wa Vekta';
+// / 'Trace Image'
+$Gui2Text245 = 'Fuatilia Picha';
+// / 'Convert This Email'
+$Gui2Text246 = 'Badilisha Barua Pepe Hii';
+// / 'Convert Email'
+$Gui2Text247 = 'Badilisha Barua Pepe';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'Badilisha Nyaraka Hii ya Markup';
+// / 'Data Files'
+$Gui2Text249 = 'Faili za Data';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'Nyaraka za LaTeX';
+// / 'Emails'
+$Gui2Text251 = 'Barua Pepe';
+// / 'Markup Documents'
+$Gui2Text252 = 'Nyaraka za Markup';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File information ...
-// / v4.2.4.
+// / v4.2.5.
 // / HRConvert2 Dependency Manifest, the application's half.
 // / This file is data. It defines nothing & does nothing.
 // / The Engine's verifyDependsManifest() reads it. Nothing else may.
@@ -118,7 +118,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v4.2.4';
+$DependsVersion = 'v4.2.5';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -265,10 +265,35 @@ $DependsManifest = array(
     'MinimumVersion' => '1.2', 'VersionCommand' => 'inkscape --version', 'VersionPattern' => '/Inkscape (\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => 'SVG', 'Requires' => array('Bubblewrap'),
     'License' => 'GPL-3.0', 'Source' => 'https://inkscape.org', 'Purpose' => 'Converts vector graphics.'),
+  // / Resvg renders SVG to PNG, & the SVG pipeline asks it before Inkscape, from v4.2.5. It is a Rust program written for that one job,
+  // / reads no script & fetches nothing, & starts in a fraction of the time Inkscape takes. Inkscape still renders everything Resvg
+  // / is not asked to, & renders in its place where it is missing or fails.
+  // / Debian 13 carries 0.45, Ubuntu 26.04 0.46 & Ubuntu 26.10 0.47, & each is used. Debian 12 & Ubuntu 24.04 carry none, & Debian 11 &
+  // / Ubuntu 22.04 carry 0.8, which predates the options the pipeline passes, so those hosts get this application's own copy.
+  // / The own copy is the release binary Resvg publishes, pinned by version & checksum, for x86-64 & ARM64. Resvg publishes no checksum,
+  // / so the checksum is the one this release took on 11/16/2026. 0.50.0 is not used, because its binary needs glibc 2.43, which no
+  // / supported distribution carries, & 0.49.0 needs 2.35. A 32 bit ARM host has no release binary, & renders SVG with Inkscape.
+  array('Name' => 'Resvg', 'Binary' => 'resvg', 'Type' => 'apt', 'Package' => 'resvg',
+    'MinimumVersion' => '0.45', 'VersionCommand' => 'resvg --version', 'VersionPattern' => '/^(\d+\.\d+\.\d+)\s*$/m',
+    'ArchitectureOverrides' => array(
+      'x86_64' => array('Fallback' => array('Method' => 'release', 'Version' => '0.49.0', 'Sha256' => '216637e75e909e53e3098b0875cd5f7da2fdc8b4359771b4a29b539afff9d3f5',
+        'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-release-fetch.sh').' resvg '.escapeshellarg('https://github.com/linebender/resvg/releases/download/v{version}/resvg-linux-x86_64.tar.gz').' '.escapeshellarg('resvg'),
+        'Source' => 'https://github.com/linebender/resvg', 'License' => 'Apache-2.0')),
+      'arm64' => array('Fallback' => array('Method' => 'release', 'Version' => '0.49.0', 'Sha256' => '00356cb6984836d7638fe10597a01ec4776b0c356e164538f165eca067f0d982',
+        'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-release-fetch.sh').' resvg '.escapeshellarg('https://github.com/linebender/resvg/releases/download/v{version}/resvg-linux-aarch64.tar.gz').' '.escapeshellarg('resvg'),
+        'Source' => 'https://github.com/linebender/resvg', 'License' => 'Apache-2.0'))),
+    'Required' => FALSE, 'Subsystem' => 'SVG', 'Requires' => array('Bubblewrap'),
+    'License' => 'Apache-2.0', 'Source' => 'https://github.com/linebender/resvg', 'Purpose' => 'Renders SVG to PNG before Inkscape is asked.'),
   array('Name' => 'Dia', 'Binary' => 'dia', 'Type' => 'apt', 'Package' => 'dia',
     'MinimumVersion' => '0.97', 'VersionCommand' => 'dia --version', 'VersionPattern' => '/Dia version (\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => 'Drawings', 'Requires' => array('Bubblewrap'),
     'License' => 'GPL-2.0', 'Source' => 'https://wiki.gnome.org/Apps/Dia', 'Purpose' => 'Converts diagrams.'),
+  // / Potrace traces a bitmap into vector outlines for the Trace pipeline, from v4.2.5. It reads BMP & the PNM formats itself, &
+  // / ImageMagick reduces any other image to a grey bitmap first. Debian 12 & Ubuntu 24.04 both carry 1.16.
+  array('Name' => 'Potrace', 'Binary' => 'potrace', 'Type' => 'apt', 'Package' => 'potrace',
+    'MinimumVersion' => '1.16', 'VersionCommand' => 'potrace --version', 'VersionPattern' => '/potrace (\d+\.\d+)/',
+    'Required' => FALSE, 'Subsystem' => 'Tracing', 'Requires' => array('Bubblewrap'),
+    'License' => 'GPL-2.0', 'Source' => 'https://potrace.sourceforge.net', 'Purpose' => 'Traces bitmaps into SVG, DXF, PDF, EPS & PostScript outlines.'),
 
   // / ---- Models. ----
   array('Name' => 'OpenSCAD', 'Binary' => 'openscad', 'Type' => 'apt', 'Package' => 'openscad',
@@ -476,6 +501,91 @@ $DependsManifest = array(
     'MinimumVersion' => '9.13', 'VersionCommand' => 'ebook-convert --version', 'VersionPattern' => '/calibre (\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => 'Ebooks', 'Requires' => array('Bubblewrap'),
     'License' => 'GPL-3.0', 'Source' => 'https://calibre-ebook.com', 'Purpose' => 'Converts between ebook formats.'),
+
+  // / ---- Structured data. ----
+  // / Dasel converts JSON, YAML, TOML, XML & CSV into one another for the Data pipeline, from v4.2.5, & yq writes XML, which Dasel cannot.
+  // / Dasel 3 is required. Dasel 2, which every Debian & Ubuntu LTS release carries, wrote Go object dumps into XML & CSV & invalid TOML
+  // / & reported success, so 3.11 is the floor & 4.0 the first version refused. No LTS release carries Dasel 3, so the package manager is
+  // / not asked, & the own copy is the only copy. Name the package here once the LTS releases this application supports carry Dasel 3.
+  // / The own copy is the release binary Dasel publishes, pinned by version & checksum. Dasel publishes no checksum, so the checksum is
+  // / the one this release took on 11/16/2026.
+  array('Name' => 'Dasel', 'Binary' => 'dasel', 'Type' => 'apt', 'Package' => '',
+    'MinimumVersion' => '3.11', 'MaximumVersion' => '4.0', 'VersionCommand' => 'dasel version', 'VersionPattern' => '/^(\d+\.\d+\.\d+)\s*$/m',
+    'Architectures' => array('x86_64', 'arm64', 'arm'),
+    'ArchitectureOverrides' => array(
+      'x86_64' => array('Fallback' => array('Method' => 'release', 'Version' => '3.11.2', 'Sha256' => '5006ee3a4239ab6a3edb1bf5c932874d814f7c276117ca677352697a4f547799',
+        'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-release-fetch.sh').' dasel '.escapeshellarg('https://github.com/TomWright/dasel/releases/download/v{version}/dasel_linux_amd64'),
+        'Source' => 'https://github.com/TomWright/dasel', 'License' => 'MIT')),
+      'arm64' => array('Fallback' => array('Method' => 'release', 'Version' => '3.11.2', 'Sha256' => 'df33920a792cd8ee5573cec3632a710cd2178d7bc4fc3892c6be78f35e7cbcc6',
+        'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-release-fetch.sh').' dasel '.escapeshellarg('https://github.com/TomWright/dasel/releases/download/v{version}/dasel_linux_arm64'),
+        'Source' => 'https://github.com/TomWright/dasel', 'License' => 'MIT')),
+      'arm' => array('Fallback' => array('Method' => 'release', 'Version' => '3.11.2', 'Sha256' => '6b1057cbaf17602352d9d2b5a6c0d47189f4e3ef4cda630001db9d02209c7df5',
+        'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-release-fetch.sh').' dasel '.escapeshellarg('https://github.com/TomWright/dasel/releases/download/v{version}/dasel_linux_arm32'),
+        'Source' => 'https://github.com/TomWright/dasel', 'License' => 'MIT'))),
+    'Required' => FALSE, 'Subsystem' => 'Structured Data', 'Requires' => array('Bubblewrap'),
+    'License' => 'MIT', 'Source' => 'https://github.com/TomWright/dasel', 'Purpose' => 'Converts JSON, YAML, TOML, XML & CSV into one another.'),
+  // / yq writes the XML the Data pipeline makes, from v4.2.5. Dasel 3 cannot write a number as XML, & writes a document holding more
+  // / than one root for most others, so the pipeline has Dasel write JSON & yq turn that JSON into XML under one root, then reads it
+  // / back to prove it is XML. yq reads nothing a user uploaded.
+  // / This is Mike Farah's yq, a Go program. The package Debian & Ubuntu call yq is another program of the same name, a Python wrapper
+  // / around jq, so the package manager is never asked, & the own copy is the only copy. The version pattern names Mike Farah's, so
+  // / the other is never mistaken for it.
+  // / The own copy is the release binary yq publishes, pinned by version & by the checksum yq publishes beside it.
+  array('Name' => 'yq', 'Binary' => 'yq', 'Type' => 'apt', 'Package' => '',
+    'MinimumVersion' => '4.50', 'MaximumVersion' => '5.0', 'VersionCommand' => 'yq --version', 'VersionPattern' => '/mikefarah\/yq\/\) version v(\d+\.\d+\.\d+)/',
+    'Architectures' => array('x86_64', 'arm64', 'arm'),
+    'ArchitectureOverrides' => array(
+      'x86_64' => array('Fallback' => array('Method' => 'release', 'Version' => '4.50.1', 'Sha256' => 'c7a1278e6bbc4924f41b56db838086c39d13ee25dcb22089e7fbf16ac901f0d4',
+        'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-release-fetch.sh').' yq '.escapeshellarg('https://github.com/mikefarah/yq/releases/download/v{version}/yq_linux_amd64'),
+        'Source' => 'https://github.com/mikefarah/yq', 'License' => 'MIT')),
+      'arm64' => array('Fallback' => array('Method' => 'release', 'Version' => '4.50.1', 'Sha256' => 'cf0a663d8e4e00bb61507c5237b95b45a6aaa1fbedac77f4dc8abdadd5e2b745',
+        'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-release-fetch.sh').' yq '.escapeshellarg('https://github.com/mikefarah/yq/releases/download/v{version}/yq_linux_arm64'),
+        'Source' => 'https://github.com/mikefarah/yq', 'License' => 'MIT')),
+      'arm' => array('Fallback' => array('Method' => 'release', 'Version' => '4.50.1', 'Sha256' => 'b701dbf07d631cdc219880e89981d185b11c0f50fbe94f08e1cadd854fbcd7fe',
+        'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-release-fetch.sh').' yq '.escapeshellarg('https://github.com/mikefarah/yq/releases/download/v{version}/yq_linux_arm'),
+        'Source' => 'https://github.com/mikefarah/yq', 'License' => 'MIT'))),
+    'Required' => FALSE, 'Subsystem' => 'Structured Data', 'Requires' => array('Bubblewrap'),
+    'License' => 'MIT', 'Source' => 'https://github.com/mikefarah/yq', 'Purpose' => 'Writes the XML the Data pipeline makes, which Dasel cannot.'),
+
+  // / ---- Typesetting & markup. ----
+  // / XeLaTeX typesets a LaTeX document into a PDF for the LaTeX pipeline, & typesets the PDFs Pandoc writes, from v4.2.5.
+  // / A document fails on the first package it loads that is not installed, so the packages are the common academic set, about
+  // / 0.7 GB with what they depend on. latex-extra, science & pictures add siunitx, physics, TikZ, pgfplots & the algorithm packages
+  // / for about 0.1 GB of it. lmodern is the font Pandoc's template loads.
+  // / The version asked is the TeX Live release, & 2022 is the floor, which Debian 12 carries. Ubuntu 24.04 carries 2023.
+  array('Name' => 'XeLaTeX', 'Binary' => 'xelatex', 'Type' => 'apt', 'Package' => 'texlive-xetex texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-science texlive-pictures lmodern',
+    'MinimumVersion' => '2022', 'VersionCommand' => 'xelatex --version', 'VersionPattern' => '/TeX Live (\d{4})/',
+    'Required' => FALSE, 'Subsystem' => 'LaTeX', 'Requires' => array('Bubblewrap'),
+    'License' => 'LPPL-1.3c', 'Source' => 'https://tug.org/texlive', 'Purpose' => 'Typesets LaTeX documents, & the PDFs Pandoc writes, into PDF.'),
+  // / Pandoc converts between markup & document formats for the Markup pipeline, from v4.2.5, & always runs with --sandbox, which
+  // / its manual asks of anyone giving it untrusted input. Without it an RST or Org include, a LaTeX input & an image a document
+  // / names read any file the sandbox shows into what a user downloads.
+  // / The Pandoc Debian & Ubuntu package keeps its data files outside the program, & --sandbox then cannot write DOCX, PPTX or EPUB,
+  // / so the package manager is never asked, & the own copy is the only copy. It is the release binary Pandoc publishes, which
+  // / carries its data files inside it, pinned by version & checksum, for x86-64 & ARM64. Pandoc publishes no checksum, so the
+  // / checksum is the one this release took on 11/16/2026. 3.10 is the floor, so a package manager's 3.1 is never used, & a 32 bit
+  // / ARM host, which has no release binary, has no Markup conversions.
+  array('Name' => 'Pandoc', 'Binary' => 'pandoc', 'Type' => 'apt', 'Package' => '',
+    'MinimumVersion' => '3.10', 'VersionCommand' => 'pandoc --version', 'VersionPattern' => '/^pandoc (\d+(?:\.\d+)+)/m',
+    'Architectures' => array('x86_64', 'arm64'),
+    'ArchitectureOverrides' => array(
+      'x86_64' => array('Fallback' => array('Method' => 'release', 'Version' => '3.10.1', 'Sha256' => '72948bf5784f560d5ad1876709daca27e0667f262da727bb33f77b58e52df2f5',
+        'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-release-fetch.sh').' pandoc '.escapeshellarg('https://github.com/jgm/pandoc/releases/download/{version}/pandoc-{version}-linux-amd64.tar.gz').' '.escapeshellarg('pandoc-{version}/bin/pandoc'),
+        'Source' => 'https://github.com/jgm/pandoc', 'License' => 'GPL-2.0')),
+      'arm64' => array('Fallback' => array('Method' => 'release', 'Version' => '3.10.1', 'Sha256' => 'cd3963da375793a4804c65ae538b4f7b9c23f87cac7f6c74a1cf5e2fff7e8d59',
+        'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'hrconvert2-release-fetch.sh').' pandoc '.escapeshellarg('https://github.com/jgm/pandoc/releases/download/{version}/pandoc-{version}-linux-arm64.tar.gz').' '.escapeshellarg('pandoc-{version}/bin/pandoc'),
+        'Source' => 'https://github.com/jgm/pandoc', 'License' => 'GPL-2.0'))),
+    'Required' => FALSE, 'Subsystem' => 'Markup', 'Requires' => array('Bubblewrap'),
+    'License' => 'GPL-2.0', 'Source' => 'https://pandoc.org', 'Purpose' => 'Converts between markup & document formats.'),
+
+  // / ---- Email. ----
+  // / msgconvert turns an Outlook message into a standard email for the Email pipeline, from v4.2.5. It is a Perl program, & it
+  // / reports no version of its own, so the version asked is the version of the Perl module it is part of. Both come in one package,
+  // / so the version asked is the version that runs. Debian 12 & Ubuntu 24.04 both carry 0.921.
+  array('Name' => 'msgconvert', 'Binary' => 'msgconvert', 'Type' => 'apt', 'Package' => 'libemail-outlook-message-perl',
+    'MinimumVersion' => '0.921', 'VersionCommand' => 'perl -MEmail::Outlook::Message -e '.escapeshellarg('print "Email::Outlook::Message $Email::Outlook::Message::VERSION\n";'), 'VersionPattern' => '/Email::Outlook::Message (\d+\.\d+)/',
+    'Required' => FALSE, 'Subsystem' => 'Email', 'Requires' => array('Bubblewrap'),
+    'License' => 'GPL-1.0-or-later', 'Source' => 'https://metacpan.org/pod/Email::Outlook::Message', 'Purpose' => 'Converts Outlook messages to EML & mbox.'),
 
   // / ---- Optional scanning. ----
   // / ScanCore is a standalone virus scanner this project writes & distributes.

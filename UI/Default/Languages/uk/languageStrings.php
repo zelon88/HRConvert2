@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -170,6 +170,12 @@ $Gui1Text36 = 'Почати спочатку';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'Оновити';
+// / 'Data Formats'
+$Gui1Text38 = 'Формати даних';
+// / 'Email Formats'
+$Gui1Text39 = 'Формати електронної пошти';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'Може трасувати зображення у векторні малюнки.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -636,6 +642,30 @@ $Gui2Text238 = 'Передано без змін: ';
 $Gui2Text239 = 'Підозрілі, але зараження не підтверджено: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'Перевірено не повністю: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'Конвертувати цей файл даних';
+// / 'Convert Data File'
+$Gui2Text242 = 'Конвертувати файл даних';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'Конвертувати цей документ LaTeX';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'Трасувати це зображення у векторний малюнок';
+// / 'Trace Image'
+$Gui2Text245 = 'Трасувати зображення';
+// / 'Convert This Email'
+$Gui2Text246 = 'Конвертувати цей лист';
+// / 'Convert Email'
+$Gui2Text247 = 'Конвертувати лист';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'Конвертувати цей документ розмітки';
+// / 'Data Files'
+$Gui2Text249 = 'Файли даних';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'Документи LaTeX';
+// / 'Emails'
+$Gui2Text251 = 'Електронні листи';
+// / 'Markup Documents'
+$Gui2Text252 = 'Документи розмітки';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

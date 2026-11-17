@@ -193,6 +193,11 @@ sudo php convertCore.php -fp    # Repair permissions & the web server setup
 | **Extract** | Every file an archive holds, placed beside it, within the size & count limits you set |
 | **3D Models** | obj, stl, ply, collada, and OpenSCAD sources |
 | **Drawings & Vectors** | dxf, dia, vdx, svg |
+| **Tracing** | Trace a logo, a signature or a scanned drawing into svg, dxf, pdf or eps outlines |
+| **Data Files** | json, yaml, toml, xml & csv, into one another |
+| **LaTeX** | Typeset a tex document into a pdf |
+| **Markup** | md, rst, adoc, jira, textile, org, mediawiki, typst, docx, epub, ipynb, and more, into one another |
+| **Email** | Outlook msg into eml or mbox |
 | **Bootable Disk Images** | x86, ARM, UEFI and MBR/GPT hybrid ISOs |
 | **OCR** | Extract text from images and PDFs |
 | **Identify** | Size, type, character set & hashes of any file, and whether its name matches what it holds |

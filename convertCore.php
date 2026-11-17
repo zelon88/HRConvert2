@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.4.
+// / v4.2.5.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -45,7 +45,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.2.4';
+  $HRConvertVersion = 'v4.2.5';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -53,19 +53,19 @@ function verifyInstallation() {
   // / This is only raised when a release adds or removes a config setting.
   // / A release that changes no settings leaves this alone, so existing config files keep working.
   // / Any config.php version that is greater (newer) than the version listed below is considered acceptable.
-  $RequiredConfigVersion = 'v4.2.0';
+  $RequiredConfigVersion = 'v4.2.5';
   $RequiredConfigVersion = ltrim($RequiredConfigVersion, 'vV');
   // / Define the GUI version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.2.3';
+  $RequiredGuiVersion = 'v4.2.5';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A Language Pack version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v4.2.3';
+  $RequiredLanguageVersion = 'v4.2.5';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / No Core Manager version is pinned here. Every manager role is a subcomponent of the
   // / Engine & getAcceptedManagers() inside the Engine pins each one exactly.
@@ -73,16 +73,16 @@ function verifyInstallation() {
   // / This is an exact match. A component built for another core may not be called safely.
   // / Raise this when the Setup Core itself changes.
   // / The configuration model is the Engine's engineConfigModel() & applicationConfigModel() in this file, & their defaults are the two templates, so a new setting raises nothing here.
-  $RequiredSetupCoreVersion = 'v4.2.4';
+  $RequiredSetupCoreVersion = 'v4.2.5';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v4.2.4';
+  $RequiredDependencyCoreVersion = 'v4.2.5';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v4.2.4';
+  $RequiredDependsVersion = 'v4.2.5';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
   // / The Pipeline Core component version this core requires.
   // / This is an exact match, because a component built for another core may declare an entry point whose arguments have moved, or capabilities this core cannot honour.
@@ -506,7 +506,9 @@ function verifyLanguage() {
 function verifyGlobals() {
   // / Set variables.
   global $InstLoc, $DirSep, $RetryCount, $StopCounter, $SleepTimer, $ConvertGuiCounter1, $File, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $GUIAlignment, $Alert, $Alert1, $Alert2, $Alert3, $DefaultApps, $DangerousFiles, $ResourcesDir, $BootloadersDir, $ConsolidatedLogFileName, $SupportedConversionTypes, $Allowed, $SupportedFormatCount, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $SVGInputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $StreamOutputArray, $SCADArray, $SCADInputArray, $SCADOutputArray, $EbookInputArray, $EbookOutputArray, $BootableIsoArray, $ImageInputArray, $ImageOutputArray, $DrawingInputArray, $DrawingOutputArray, $ModelInputArray, $ModelOutputArray,
-    $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserImageInputArray, $UserImageOutputArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserModelInputArray, $UserModelOutputArray, $UserSCADArray, $UserSCADInputArray, $UserSCADOutputArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $UserEbookInputArray, $UserEbookOutputArray, $UserBootableIsoArray, $AllowBootableIsoImage, $EnableMemoryProtection;
+    $DataInputArray, $DataOutputArray, $LaTeXInputArray, $LaTeXOutputArray, $TraceInputArray, $TraceOutputArray, $EmailInputArray, $EmailOutputArray, $MarkupInputArray, $MarkupOutputArray,
+    $UserArchiveArray, $UserDearchiveArray, $UserDocumentArray, $UserSpreadsheetArray, $UserXPSInputArray, $UserXPSOutputArray, $UserPresentationInputArray, $UserPresentationOutputArray, $UserImageArray, $UserImageInputArray, $UserImageOutputArray, $UserMediaInputArray, $UserMediaOutputArray, $UserVideoInputArray, $UserVideoOutputArray, $UserStreamArray, $UserDrawingArray, $UserDrawingInputArray, $UserDrawingOutputArray, $UserSVGInputArray, $UserSVGOutputArray, $UserModelArray, $UserModelInputArray, $UserModelOutputArray, $UserSCADArray, $UserSCADInputArray, $UserSCADOutputArray, $UserSubtitleInputArray, $UserSubtitleOutputArray, $UserPDFWorkArr, $UserEbookInputArray, $UserEbookOutputArray, $UserBootableIsoArray, $AllowBootableIsoImage,
+    $UserDataInputArray, $UserDataOutputArray, $UserLaTeXInputArray, $UserLaTeXOutputArray, $UserTraceInputArray, $UserTraceOutputArray, $UserEmailInputArray, $UserEmailOutputArray, $UserMarkupInputArray, $UserMarkupOutputArray, $EnableMemoryProtection;
   $GlobalsAreVerified = FALSE;
   // / Pipeline related variables. A pipeline that retries reads how many attempts remain, & how long to wait between them.
   $SleepTimer = 0;
@@ -535,6 +537,7 @@ function verifyGlobals() {
   $ImageInputArray = $ImageOutputArray = $SCADInputArray = $SCADOutputArray = array();
   $DrawingInputArray = $DrawingOutputArray = array();
   $ModelInputArray = $ModelOutputArray = array();
+  $DataInputArray = $DataOutputArray = $LaTeXInputArray = $LaTeXOutputArray = $TraceInputArray = $TraceOutputArray = $EmailInputArray = $EmailOutputArray = $MarkupInputArray = $MarkupOutputArray = array();
   $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationInputArray = $PresentationOutputArray = $XPSInputArray = $XPSOutputArray = $ImageArray = $MediaInputArray = $MediaOutputArray = $VideoInputArray = $VideoOutputArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleInputArray = $SubtitleOutputArray = $PDFWorkArr = $StreamOutputArray = $SCADArray = $SCADOutputArray = $SVGInputArray = $SVGOutputArray = $EbookInputArray = $EbookOutputArray = $BootableIsoArray = $allArrays = array();
   if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = array_map('strtolower', $UserArchiveArray);
   if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = array_map('strtolower', $UserDearchiveArray);
@@ -586,6 +589,22 @@ function verifyGlobals() {
   if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = array_map('strtolower', $UserPDFWorkArr);
   if (in_array('Ebook', $SupportedConversionTypes)) $EbookInputArray = array_map('strtolower', $UserEbookInputArray);
   if (in_array('Ebook', $SupportedConversionTypes)) $EbookOutputArray = array_map('strtolower', $UserEbookOutputArray);
+  // / The five families added in v4.2.5 each keep an input list & an output list, as every family since the Model lists does.
+  if (in_array('Data', $SupportedConversionTypes)) {
+    $DataInputArray = array_map('strtolower', $UserDataInputArray);
+    $DataOutputArray = array_map('strtolower', $UserDataOutputArray); }
+  if (in_array('LaTeX', $SupportedConversionTypes)) {
+    $LaTeXInputArray = array_map('strtolower', $UserLaTeXInputArray);
+    $LaTeXOutputArray = array_map('strtolower', $UserLaTeXOutputArray); }
+  if (in_array('Trace', $SupportedConversionTypes)) {
+    $TraceInputArray = array_map('strtolower', $UserTraceInputArray);
+    $TraceOutputArray = array_map('strtolower', $UserTraceOutputArray); }
+  if (in_array('Email', $SupportedConversionTypes)) {
+    $EmailInputArray = array_map('strtolower', $UserEmailInputArray);
+    $EmailOutputArray = array_map('strtolower', $UserEmailOutputArray); }
+  if (in_array('Markup', $SupportedConversionTypes)) {
+    $MarkupInputArray = array_map('strtolower', $UserMarkupInputArray);
+    $MarkupOutputArray = array_map('strtolower', $UserMarkupOutputArray); }
   $allArrays = array(
     $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray,
     $PresentationInputArray, $PresentationOutputArray, $ImageArray,
@@ -595,7 +614,8 @@ function verifyGlobals() {
     $ImageInputArray, $ImageOutputArray, $SCADInputArray, $SCADOutputArray,
     $DrawingInputArray, $DrawingOutputArray, $SubtitleInputArray, $SubtitleOutputArray,
     $PDFWorkArr, $XPSInputArray, $XPSOutputArray, $SCADArray, $BootableIsoArray,
-    $EbookInputArray, $EbookOutputArray);
+    $EbookInputArray, $EbookOutputArray, $DataInputArray, $DataOutputArray, $LaTeXInputArray, $LaTeXOutputArray,
+    $TraceInputArray, $TraceOutputArray, $EmailInputArray, $EmailOutputArray, $MarkupInputArray, $MarkupOutputArray);
   $Allowed = array_map('strtolower', array_unique(array_merge(...$allArrays)));
   $SupportedFormatCount = count($Allowed);
   $GlobalsAreVerified = TRUE;
@@ -701,9 +721,9 @@ function verifyImageMagickPolicy($mayRepair) {
     foreach ($policyPaths as $policyPath) {
       list ($hostCopyIsRetired, $copyStatus) = retirePolicyFile('ImageMagick', $policyPath, $mayRepair, FALSE);
       if (isset($statusRanks[$copyStatus]) && $statusRanks[$copyStatus] > $statusRanks[$retireStatus]) $retireStatus = $copyStatus; }
-    // / Every pipeline here that runs ImageMagick carries a policy, & is judged only if it is installed.
+    // / Every pipeline here that runs ImageMagick carries a policy, & is judged only if it is installed. Trace does, from v4.2.5.
     $policyIsCarried = TRUE;
-    foreach (array('Image', 'OCR', 'Identify') as $pipelineName) {
+    foreach (array('Image', 'OCR', 'Identify', 'Trace') as $pipelineName) {
       $pipelineFolder = $InstLoc.$DirSep.'Resources'.$DirSep.'Pipelines'.$DirSep.$pipelineName;
       if (is_file($pipelineFolder.$DirSep.'pipeline.php') && !is_file($pipelineFolder.$DirSep.'Policy'.$DirSep.'policy.xml')) $policyIsCarried = FALSE; }
     if (!$policyIsCarried) $PolicyStatus = 'not carried';
@@ -787,6 +807,7 @@ function applicationVersionReport() {
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
   $fileBinary = $probeBinary = $pdfInfoBinary = FALSE;
   $pdfUniteBinary = $pdfSeparateBinary = $mat2Binary = FALSE;
+  $daselBinary = $yqBinary = $latexBinary = $potraceBinary = $emailBinary = $pandocBinary = $resvgBinary = FALSE;
   $dependencyChecks = $dependencyState = $subsystemChecks = $sectionRows = $guiMatches = $langMatches = array();
   $dependencyName = $subsystemName = $installedGui = $installedLang = $installedEndonym = $checkDir = $checkFile = $foundVersion = $langLine = '';
   $langOk = $langTotal = 0;
@@ -821,6 +842,14 @@ function applicationVersionReport() {
   $pdfUniteBinary = toolPath('PDFUnite');
   $pdfSeparateBinary = toolPath('PDFSeparate');
   $mat2Binary = toolPath('MAT2');
+  // / The five families added in v4.2.5 each run one tool, & Data & SVG each have one that only some conversions need, from v4.2.5.
+  $daselBinary = toolPath('Dasel');
+  $yqBinary = toolPath('yq');
+  $latexBinary = toolPath('XeLaTeX');
+  $potraceBinary = toolPath('Potrace');
+  $emailBinary = toolPath('msgconvert');
+  $pandocBinary = toolPath('Pandoc');
+  $resvgBinary = toolPath('Resvg');
   // / Dependencies. An optional one says so, because losing it costs a feature rather than a subsystem.
   $dependencyChecks = array(
     'FFMPEG, media & streams' => array($ffmpegBinary !== FALSE, toolRequirement('FFMPEG'), TRUE),
@@ -845,7 +874,14 @@ function applicationVersionReport() {
     'PDFInfo, identification' => array($pdfInfoBinary !== FALSE, toolRequirement('PDFInfo'), FALSE),
     'PDFUnite, merging' => array($pdfUniteBinary !== FALSE, toolRequirement('PDFUnite'), FALSE),
     'PDFSeparate, splitting' => array($pdfSeparateBinary !== FALSE, toolRequirement('PDFSeparate'), FALSE),
-    'MAT2, metadata' => array($mat2Binary !== FALSE, toolRequirement('MAT2'), FALSE));
+    'MAT2, metadata' => array($mat2Binary !== FALSE, toolRequirement('MAT2'), FALSE),
+    'Dasel, data' => array($daselBinary !== FALSE, toolRequirement('Dasel'), TRUE),
+    'yq, XML data' => array($yqBinary !== FALSE, toolRequirement('yq'), FALSE),
+    'XeLaTeX, LaTeX' => array($latexBinary !== FALSE, toolRequirement('XeLaTeX'), TRUE),
+    'Potrace, tracing' => array($potraceBinary !== FALSE, toolRequirement('Potrace'), TRUE),
+    'msgconvert, email' => array($emailBinary !== FALSE, toolRequirement('msgconvert'), TRUE),
+    'Pandoc, markup' => array($pandocBinary !== FALSE, toolRequirement('Pandoc'), TRUE),
+    'Resvg, SVG to PNG' => array($resvgBinary !== FALSE, toolRequirement('Resvg'), FALSE));
   foreach ($dependencyChecks as $dependencyName => $dependencyState) {
     if ($dependencyState[0]) $ReportSections['Dependencies'][] = array('Label' => $dependencyName, 'Text' => 'OK'.($dependencyState[2] ? '' : ', optional'), 'Failed' => FALSE);
     else $ReportSections['Dependencies'][] = array('Label' => $dependencyName, 'Text' => 'FAILED, requires '.$dependencyState[1].' or later'.($dependencyState[2] ? '' : ', optional'), 'Failed' => TRUE); }
@@ -898,7 +934,7 @@ function applicationVersionReport() {
   // / What this installation converts ends the report.
   $ReportSections['SectionsAfterResources']['Enabled conversion types'] = array(array('Label' => '', 'Text' => implode(', ', $SupportedConversionTypes), 'Failed' => FALSE));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $subsystemIsReady, $ffmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $ebookBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $fileBinary, $probeBinary, $pdfInfoBinary, $pdfUniteBinary, $pdfSeparateBinary, $mat2Binary, $dependencyChecks, $dependencyState, $subsystemChecks, $sectionRows, $guiMatches, $langMatches, $dependencyName, $subsystemName, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $langOk, $langTotal);
+  purgeSensitiveMemory($EnableMemoryProtection, $modelsAreValid, $ocrToolsAreValid, $archiveToolsAreValid, $libreOfficeIsValid, $subsystemIsReady, $ffmpegBinary, $inkscapeBinary, $diaBinary, $scadBinary, $imageBinary, $ebookBinary, $assimpBinary, $meshlabBinary, $tesseractBinary, $pdftotextBinary, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary, $fileBinary, $probeBinary, $pdfInfoBinary, $pdfUniteBinary, $pdfSeparateBinary, $mat2Binary, $daselBinary, $yqBinary, $latexBinary, $potraceBinary, $emailBinary, $pandocBinary, $resvgBinary, $dependencyChecks, $dependencyState, $subsystemChecks, $sectionRows, $guiMatches, $langMatches, $dependencyName, $subsystemName, $installedGui, $installedLang, $installedEndonym, $checkDir, $checkFile, $foundVersion, $langLine, $langOk, $langTotal);
   return $ReportSections; }
 // / -----------------------------------------------------------------------------------
 
@@ -1106,6 +1142,9 @@ function encodeIdentifyReply($identifyComplete, $identifyErrors, $identifyResult
 // / A function to name the conversion families & the extensions each reads & writes.
 // / Accepts nothing. Returns each family, keyed by name, as the list it reads & the list it writes, in that order.
 // / The order is significant & Stream must remain last.
+// / The five families added in v4.2.5 sit after Ebook & before Stream, so each takes only a pair no older family claims, & a conversion
+// / an installation made before v4.2.5 is made by the same pipeline after it. LaTeX sits before Markup, so a tex to pdf conversion is
+// / typeset by the LaTeX pipeline, & Markup is asked for what LaTeX does not write.
 // / Every stream output format is also an ordinary audio or video format, so an mp3 to aac conversion belongs to Audio & to Stream both.
 // / The first family to match wins, so Stream sits last & only ever claims a file no earlier family recognized.
 // / A stream family needs both halves together, because a family matches only when the input & the output extension are both in it.
@@ -1113,7 +1152,8 @@ function encodeIdentifyReply($identifyComplete, $identifyErrors, $identifyResult
 // / convertFiles() resolves a conversion with it, & a workflow asks it which files a conversion reads, so the two cannot disagree.
 function applicationConversionFamilies() {
   // / Set variables.
-  global $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageInputArray, $ImageOutputArray, $ModelInputArray, $ModelOutputArray, $SCADInputArray, $SCADOutputArray, $SVGInputArray, $SVGOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $MediaInputArray, $MediaOutputArray, $ArchiveArray, $DrawingInputArray, $DrawingOutputArray, $EbookInputArray, $EbookOutputArray, $StreamArray, $StreamOutputArray;
+  global $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageInputArray, $ImageOutputArray, $ModelInputArray, $ModelOutputArray, $SCADInputArray, $SCADOutputArray, $SVGInputArray, $SVGOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $MediaInputArray, $MediaOutputArray, $ArchiveArray, $DrawingInputArray, $DrawingOutputArray, $EbookInputArray, $EbookOutputArray, $StreamArray, $StreamOutputArray,
+    $LaTeXInputArray, $LaTeXOutputArray, $DataInputArray, $DataOutputArray, $TraceInputArray, $TraceOutputArray, $EmailInputArray, $EmailOutputArray, $MarkupInputArray, $MarkupOutputArray;
   $ConversionFamilies = array(
     'Document' => array(array_merge($DocumentArray, $SpreadsheetArray, $PresentationInputArray, $XPSInputArray), array_merge($DocumentArray, $SpreadsheetArray, $PresentationOutputArray, $XPSOutputArray)),
     'Image' => array($ImageInputArray, $ImageOutputArray),
@@ -1126,6 +1166,11 @@ function applicationConversionFamilies() {
     'Archive' => array($ArchiveArray, $ArchiveArray),
     'Drawing' => array($DrawingInputArray, $DrawingOutputArray),
     'Ebook' => array($EbookInputArray, $EbookOutputArray),
+    'LaTeX' => array($LaTeXInputArray, $LaTeXOutputArray),
+    'Data' => array($DataInputArray, $DataOutputArray),
+    'Trace' => array($TraceInputArray, $TraceOutputArray),
+    'Email' => array($EmailInputArray, $EmailOutputArray),
+    'Markup' => array($MarkupInputArray, $MarkupOutputArray),
     'Stream' => array(array_merge($StreamArray, $StreamOutputArray), array_merge($StreamArray, $StreamOutputArray)));
   return $ConversionFamilies; }
 // / -----------------------------------------------------------------------------------
@@ -1135,15 +1180,18 @@ function applicationConversionFamilies() {
 // / Accepts nothing. Returns each kind's name & the extensions it reads.
 // / A workflow's filter names a kind, & an interface's select by type lists them.
 // / A kind whose list is empty is left out, because its family is switched off.
+// / The Trace family is no kind of its own, because what it reads is an image, & a select by type for images selects it already.
 function applicationFileTypes() {
   // / Set variables.
-  global $DocumentArray, $XPSInputArray, $SpreadsheetArray, $PresentationInputArray, $ImageInputArray, $MediaInputArray, $VideoInputArray, $DearchiveArray, $EbookInputArray, $ModelInputArray, $DrawingInputArray, $SVGInputArray, $SubtitleInputArray, $SCADInputArray, $StreamArray, $EnableMemoryProtection;
+  global $DocumentArray, $XPSInputArray, $SpreadsheetArray, $PresentationInputArray, $ImageInputArray, $MediaInputArray, $VideoInputArray, $DearchiveArray, $EbookInputArray, $ModelInputArray, $DrawingInputArray, $SVGInputArray, $SubtitleInputArray, $SCADInputArray, $StreamArray,
+    $DataInputArray, $LaTeXInputArray, $EmailInputArray, $MarkupInputArray, $EnableMemoryProtection;
   $FileTypes = array();
   $typeName = '';
   $typeExtensions = $typeLists = array();
   $typeLists = array('Document' => array_merge((array)$DocumentArray, (array)$XPSInputArray), 'Spreadsheet' => $SpreadsheetArray, 'Presentation' => $PresentationInputArray, 'Image' => $ImageInputArray,
     'Audio' => $MediaInputArray, 'Video' => $VideoInputArray, 'Archive' => $DearchiveArray, 'Ebook' => $EbookInputArray, 'Model' => $ModelInputArray, 'Drawing' => $DrawingInputArray,
-    'Vector' => $SVGInputArray, 'Subtitle' => $SubtitleInputArray, 'Scad' => $SCADInputArray, 'Stream' => $StreamArray);
+    'Vector' => $SVGInputArray, 'Subtitle' => $SubtitleInputArray, 'Scad' => $SCADInputArray, 'Stream' => $StreamArray,
+    'Data' => $DataInputArray, 'LaTeX' => $LaTeXInputArray, 'Email' => $EmailInputArray, 'Markup' => $MarkupInputArray);
   foreach ($typeLists as $typeName => $typeExtensions) if (is_array($typeExtensions) && count($typeExtensions) > 0) $FileTypes[$typeName] = array_values(array_unique(array_map('strtolower', $typeExtensions)));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $typeName, $typeExtensions, $typeLists);
@@ -1449,16 +1497,19 @@ function convertOperationKeeps($fileExtension, $operationOptions) {
 // / Accepts nothing. Returns each kind's name & the formats written as that kind, in the order applicationFileTypes() names the kinds.
 // / A page shows a long list of formats a group at a time, as tabs beneath Convert's own, & names each group as it names the kind.
 // / A format written as more than one kind is in each of their groups, so pdf is a Document, a Presentation & an Ebook alike.
+// / A traced image is a vector, so what the Trace family writes is in the Vector group, as the Trace family is no kind of its own.
 // / The groups are drawn from the lists the families are, so every format Convert writes is in at least one of them.
 function convertOperationGroups() {
   // / Set variables.
-  global $DocumentArray, $XPSOutputArray, $SpreadsheetArray, $PresentationOutputArray, $ImageOutputArray, $MediaOutputArray, $VideoOutputArray, $ArchiveArray, $EbookOutputArray, $ModelOutputArray, $DrawingOutputArray, $SVGOutputArray, $SubtitleOutputArray, $SCADOutputArray, $StreamArray, $EnableMemoryProtection;
+  global $DocumentArray, $XPSOutputArray, $SpreadsheetArray, $PresentationOutputArray, $ImageOutputArray, $MediaOutputArray, $VideoOutputArray, $ArchiveArray, $EbookOutputArray, $ModelOutputArray, $DrawingOutputArray, $SVGOutputArray, $SubtitleOutputArray, $SCADOutputArray, $StreamArray,
+    $TraceOutputArray, $DataOutputArray, $LaTeXOutputArray, $EmailOutputArray, $MarkupOutputArray, $EnableMemoryProtection;
   $ConvertGroups = array();
   $groupName = '';
   $groupFormats = $groupLists = array();
   $groupLists = array('Document' => array_merge((array)$DocumentArray, (array)$XPSOutputArray), 'Spreadsheet' => $SpreadsheetArray, 'Presentation' => $PresentationOutputArray, 'Image' => $ImageOutputArray,
     'Audio' => $MediaOutputArray, 'Video' => $VideoOutputArray, 'Archive' => $ArchiveArray, 'Ebook' => $EbookOutputArray, 'Model' => $ModelOutputArray, 'Drawing' => $DrawingOutputArray,
-    'Vector' => $SVGOutputArray, 'Subtitle' => $SubtitleOutputArray, 'Scad' => $SCADOutputArray, 'Stream' => $StreamArray);
+    'Vector' => array_merge((array)$SVGOutputArray, (array)$TraceOutputArray), 'Subtitle' => $SubtitleOutputArray, 'Scad' => $SCADOutputArray, 'Stream' => $StreamArray,
+    'Data' => $DataOutputArray, 'LaTeX' => $LaTeXOutputArray, 'Email' => $EmailOutputArray, 'Markup' => $MarkupOutputArray);
   foreach ($groupLists as $groupName => $groupFormats) if (is_array($groupFormats) && count($groupFormats) > 0) $ConvertGroups[$groupName] = array_values(array_unique(array_map('strtolower', array_map('strval', $groupFormats))));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $groupName, $groupFormats, $groupLists);
@@ -1804,6 +1855,23 @@ function getSandboxProfiles() {
       'ReadOnlyPaths' => array('/usr/share/calibre'),
       'Reason' => 'Conversion recipes are read from this directory.'),
 
+    // / TeX Live keeps its configuration in /etc/texmf, & its formats, font maps & file database in /var/lib/texmf, & XeLaTeX cannot start
+    // / without either. A document that names a system font has fontconfig find it, & with no cache fontconfig reads every font on the
+    // / server first, which more than doubles the time a short document takes, so the cache is shown as well.
+    // / TeX is a programming language, so a document is a program. The settings that keep it inside its folder & stop it running a command
+    // / are set by the LaTeX pipeline rather than here, because they must hold where no sandbox could be built too.
+    'xelatex' => array(
+      'OperationType' => 'LaTeX',
+      'ReadOnlyPaths' => array('/etc/texmf', '/var/lib/texmf', '/var/cache/fontconfig'),
+      'Reason' => 'TeX Live\'s configuration, formats & font maps are read from these directories, & the font cache spares a document a read of every font.'),
+
+    // / Pandoc writes a PDF by running XeLaTeX itself, in a folder of its own on the tmpfs, so it needs what the xelatex profile shows.
+    // / The Markup pipeline sets TeX's settings for the reason given above.
+    'pandoc' => array(
+      'OperationType' => 'Markup',
+      'ReadOnlyPaths' => array('/etc/texmf', '/var/lib/texmf', '/var/cache/fontconfig'),
+      'Reason' => 'Pandoc runs XeLaTeX to write a PDF, so it reads what the xelatex profile reads.'),
+
     // / This profile is the most complicated one here & every line of it was earned.
     // / meshlabserver links Qt & initializes GLEW whatever it has been asked to do, so a
     // / format conversion that renders nothing still requires an OpenGL context.
@@ -1856,9 +1924,16 @@ function getSandboxProfiles() {
 
     // / Everything below needs nothing beyond the base sandbox.
     // / A profile that declares only its operation type is not an oversight.
+    // / Resvg finds fonts by reading the font folders below /usr itself, & msgconvert is a Perl program reading only what is below /usr.
+    // / msgconvert asks for the server's full name while it writes a message, & finds none in here, which changes nothing it writes.
     'ffmpeg' => array('OperationType' => 'Video'),
     'archive' => array('OperationType' => 'Archive'),
     'poppler' => array('OperationType' => 'Document'),
+    'resvg' => array('OperationType' => 'SVG'),
+    'potrace' => array('OperationType' => 'Trace'),
+    'dasel' => array('OperationType' => 'Data'),
+    'yq' => array('OperationType' => 'Data'),
+    'msgconvert' => array('OperationType' => 'Email'),
     'generic' => array('OperationType' => 'Generic'));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $SandboxProfiles is not purged, because it is the return value.
@@ -1912,7 +1987,7 @@ function applicationConfigModel() {
       'AllowUserSelectableLanguage' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow User Selectable Language'),
       'AllowUserShare' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User Shareable File Links'),
       'AllowUserIdentify' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'User File Identification'),
-      'SupportedConversionTypes' => array('Type' => 'array', 'Default' => 'array(\'Document\', \'Image\', \'Model\', \'Scad\', \'Drawing\', \'SVG\', \'Video\', \'Subtitle\', \'Audio\', \'Archive\', \'Stream\', \'OCR\', \'Ebook\')', 'Depends' => '', 'Description' => 'Allowed Conversion Types'),
+      'SupportedConversionTypes' => array('Type' => 'array', 'Default' => 'array(\'Document\', \'Image\', \'Model\', \'Scad\', \'Drawing\', \'SVG\', \'Video\', \'Subtitle\', \'Audio\', \'Archive\', \'Stream\', \'OCR\', \'Ebook\', \'Data\', \'LaTeX\', \'Trace\', \'Email\', \'Markup\')', 'Depends' => '', 'Description' => 'Allowed Conversion Types'),
       'AllowBootableIsoImage' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow Creation Of Bootable ISO Images'),
       'Font' => array('Type' => 'string', 'Depends' => '', 'Description' => 'UI Element Font'),
       'AllowUserSelectableColor' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow User Selectable Colors'),
@@ -1939,6 +2014,8 @@ function applicationConfigModel() {
       'DefaultStreamInspectionForfeitAction' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default Stream Inspection Forfeit Action'),
       'AllowSCADIncludeResolution' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow SCAD Include Resolution'),
       'SCADConversionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'SCAD Conversion Timeout'),
+      'LaTeXConversionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'LaTeX Conversion Timeout'),
+      'MarkupConversionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Markup Conversion Timeout'),
       'UsePyMeshLab' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Use PyMeshLab Python Bindings'),
       'AllowUserURLDownload' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow User URL Download'),
       'URLDownloadsPerSession' => array('Type' => 'int', 'Depends' => 'AllowUserURLDownload', 'Description' => 'URL Downloads Per Session'),
@@ -1984,7 +2061,17 @@ function applicationConfigModel() {
       'UserSubtitleOutputArray' => array('Type' => 'array', 'Default' => 'array(\'vtt\', \'ssa\', \'ass\', \'srt\')', 'Depends' => '', 'Description' => 'Supported Subtitle Output Formats'),
       'UserPDFWorkArr' => array('Type' => 'array', 'Default' => 'array(\'pdf\', \'jpg\', \'jpeg\', \'png\', \'bmp\', \'webp\', \'gif\')', 'Depends' => '', 'Description' => 'Supported OCR Formats'),
       'UserEbookInputArray' => array('Type' => 'array', 'Default' => 'array(\'epub\', \'mobi\', \'azw\', \'azw3\', \'azw4\', \'fb2\', \'fbz\', \'lit\', \'lrf\', \'pdb\', \'pml\', \'rb\', \'snb\', \'tcr\', \'txt\', \'txtz\', \'rtf\', \'odt\', \'docx\', \'pdf\', \'chm\', \'cbz\', \'cbr\', \'cbc\', \'prc\', \'opf\', \'recipe\')', 'Depends' => '', 'Description' => 'Supported Ebook Input Formats'),
-      'UserEbookOutputArray' => array('Type' => 'array', 'Default' => 'array(\'epub\', \'mobi\', \'azw3\', \'fb2\', \'lit\', \'lrf\', \'pdb\', \'pmlz\', \'rb\', \'snb\', \'tcr\', \'txt\', \'txtz\', \'rtf\', \'docx\', \'pdf\')', 'Depends' => '', 'Description' => 'Supported Ebook Output Formats'))));
+      'UserEbookOutputArray' => array('Type' => 'array', 'Default' => 'array(\'epub\', \'mobi\', \'azw3\', \'fb2\', \'lit\', \'lrf\', \'pdb\', \'pmlz\', \'rb\', \'snb\', \'tcr\', \'txt\', \'txtz\', \'rtf\', \'docx\', \'pdf\')', 'Depends' => '', 'Description' => 'Supported Ebook Output Formats'),
+      'UserDataInputArray' => array('Type' => 'array', 'Default' => 'array(\'json\', \'yaml\', \'yml\', \'toml\', \'xml\', \'csv\')', 'Depends' => '', 'Description' => 'Supported Data Input Formats'),
+      'UserDataOutputArray' => array('Type' => 'array', 'Default' => 'array(\'json\', \'yaml\', \'yml\', \'toml\', \'xml\', \'csv\')', 'Depends' => '', 'Description' => 'Supported Data Output Formats'),
+      'UserLaTeXInputArray' => array('Type' => 'array', 'Default' => 'array(\'tex\', \'latex\')', 'Depends' => '', 'Description' => 'Supported LaTeX Input Formats'),
+      'UserLaTeXOutputArray' => array('Type' => 'array', 'Default' => 'array(\'pdf\')', 'Depends' => '', 'Description' => 'Supported LaTeX Output Formats'),
+      'UserTraceInputArray' => array('Type' => 'array', 'Default' => 'array(\'bmp\', \'png\', \'jpg\', \'jpeg\', \'gif\', \'tif\', \'tiff\', \'webp\', \'pbm\', \'pgm\', \'ppm\', \'pnm\')', 'Depends' => '', 'Description' => 'Supported Trace Input Formats'),
+      'UserTraceOutputArray' => array('Type' => 'array', 'Default' => 'array(\'svg\', \'dxf\', \'pdf\', \'eps\', \'ps\')', 'Depends' => '', 'Description' => 'Supported Trace Output Formats'),
+      'UserEmailInputArray' => array('Type' => 'array', 'Default' => 'array(\'msg\')', 'Depends' => '', 'Description' => 'Supported Email Input Formats'),
+      'UserEmailOutputArray' => array('Type' => 'array', 'Default' => 'array(\'eml\', \'mbox\')', 'Depends' => '', 'Description' => 'Supported Email Output Formats'),
+      'UserMarkupInputArray' => array('Type' => 'array', 'Default' => 'array(\'md\', \'markdown\', \'rst\', \'adoc\', \'asciidoc\', \'jira\', \'textile\', \'org\', \'mediawiki\', \'dokuwiki\', \'creole\', \'muse\', \'djot\', \'typ\', \'tex\', \'latex\', \'docx\', \'odt\', \'epub\', \'rtf\', \'ipynb\', \'opml\', \'fb2\', \'csv\', \'pptx\', \'xlsx\')', 'Depends' => '', 'Description' => 'Supported Markup Input Formats'),
+      'UserMarkupOutputArray' => array('Type' => 'array', 'Default' => 'array(\'md\', \'rst\', \'adoc\', \'jira\', \'textile\', \'org\', \'mediawiki\', \'dokuwiki\', \'muse\', \'djot\', \'typ\', \'tex\', \'docx\', \'odt\', \'epub\', \'rtf\', \'ipynb\', \'opml\', \'fb2\', \'txt\', \'pdf\', \'pptx\', \'texi\', \'icml\')', 'Depends' => '', 'Description' => 'Supported Markup Output Formats'))));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection);
   return $ConfigModel; }
@@ -2243,7 +2330,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $GuiEngineFile, $GuiTaskbarFile, $EngineAnswer, $EnginePageState;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $ImageArray, $ImageOutputArray, $ModelArray, $DrawingArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $DataInputArray, $DataOutputArray, $LaTeXInputArray, $LaTeXOutputArray, $TraceInputArray, $TraceOutputArray, $EmailInputArray, $EmailOutputArray, $MarkupInputArray, $MarkupOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $GuiEngineFile, $GuiTaskbarFile, $EngineAnswer, $EnginePageState;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
   $Files = $FileDetails = $ArchiveOperationArray = $ExtractOperationArray = $MetadataOperationArray = $OfferedOperations = $OfferedConversionTypes = $OfferedScanners = array();

@@ -36,7 +36,7 @@ $UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
-$gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = array();
+$gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = $gui1DataArr = $gui1EmailArr = $gui1DocList = array();
 $selectorBase = 'convertCore.php?';
 // / The bar at the top of the card is taskbar.php's, & it is told which page it is on.
 $taskbarPage = 'upload';
@@ -144,20 +144,21 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
               <li><?php echo $gui1StreamArr; ?></li>
               <?php } ?>
             </ol>
-            <?php } if (in_array('Document', $OfferedConversionTypes)) { ?>
+            <?php }
+            // / Every family that reads documents is listed under Documents, & a format two of them read is listed once, from v4.2.5.
+            // / The LaTeX & Markup families joined the e-book family here in v4.2.5.
+            $gui1DocList = array();
+            if (in_array('Document', $OfferedConversionTypes)) $gui1DocList = array_merge($gui1DocList, $DocumentArray);
+            if (in_array('XPS', $OfferedConversionTypes)) $gui1DocList = array_merge($gui1DocList, $XPSInputArray);
+            if (in_array('Ebook', $OfferedConversionTypes)) $gui1DocList = array_merge($gui1DocList, $EbookInputArray);
+            if (in_array('LaTeX', $OfferedConversionTypes)) $gui1DocList = array_merge($gui1DocList, $LaTeXInputArray);
+            if (in_array('Markup', $OfferedConversionTypes)) $gui1DocList = array_merge($gui1DocList, $MarkupInputArray);
+            if (count($gui1DocList) > 0) { ?>
             <strong><?php echo $Gui1Text14; ?></strong>
             <ol>
-              <?php foreach ($DocumentArray as $gui1DocArr) { ?>
+              <?php foreach (array_unique($gui1DocList) as $gui1DocArr) { ?>
               <li><?php echo $gui1DocArr; ?></li>
               <?php } ?>
-              <?php if (in_array('XPS', $OfferedConversionTypes)) {
-                foreach ($XPSInputArray as $gui1XpsArr) { ?>
-              <li><?php echo $gui1XpsArr; ?></li>
-              <?php } } ?>
-              <?php if (in_array('Ebook', $OfferedConversionTypes)) {
-                foreach ($EbookInputArray as $gui1EbookArr) { ?>
-              <li><?php echo $gui1EbookArr; ?></li>
-              <?php } } ?>
             </ol>
             <?php } if (in_array('Document', $OfferedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text15; ?></strong>
@@ -184,6 +185,9 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
             <?php } if (in_array('Image', $OfferedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text19; ?></strong>
             <p><i><?php echo $Gui1Text21; ?></i></p>
+            <?php if (in_array('Trace', $OfferedConversionTypes)) { ?>
+            <p><i><?php echo $Gui1Text40; ?></i></p>
+            <?php } ?>
             <ol>
               <?php foreach ($ImageArray as $gui1ImaArr) { ?>
               <li><?php echo $gui1ImaArr; ?></li>
@@ -218,6 +222,20 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
             <ol>
               <?php foreach ($DrawingArray as $gui1DraArr) { ?>
               <li><?php echo $gui1DraArr; ?></li>
+              <?php } ?>
+            </ol>
+            <?php } if (in_array('Data', $OfferedConversionTypes)) { ?>
+            <strong><?php echo $Gui1Text38; ?></strong>
+            <ol>
+              <?php foreach ($DataInputArray as $gui1DataArr) { ?>
+              <li><?php echo $gui1DataArr; ?></li>
+              <?php } ?>
+            </ol>
+            <?php } if (in_array('Email', $OfferedConversionTypes)) { ?>
+            <strong><?php echo $Gui1Text39; ?></strong>
+            <ol>
+              <?php foreach ($EmailInputArray as $gui1EmailArr) { ?>
+              <li><?php echo $gui1EmailArr; ?></li>
               <?php } ?>
             </ol>
             <?php } if (in_array('OCR', $OfferedConversionTypes)) { ?>
@@ -300,5 +318,5 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
     // / $gui1OcrArr & $gui1ScadArr are declared at the top of this file & were missing from
     // / the chain below, so they survived the page. $gui1ScadArr was named in the unset but
     // / never nulled, which drops the symbol without shredding what it held.
-    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = $sessionParams = $sortParams = $refreshURL = $selectorBase = $taskbarPage = NULL;
-    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui1SubArr, $gui1DraArr, $gui1OcrArr, $gui1XpsArr, $gui1ScadArr, $gui1SvgArr, $gui1EbkArr, $sessionParams, $sortParams, $refreshURL, $selectorBase, $taskbarPage);
+    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = $gui1DataArr = $gui1EmailArr = $gui1DocList = $sessionParams = $sortParams = $refreshURL = $selectorBase = $taskbarPage = NULL;
+    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui1SubArr, $gui1DraArr, $gui1OcrArr, $gui1XpsArr, $gui1ScadArr, $gui1SvgArr, $gui1EbkArr, $gui1DataArr, $gui1EmailArr, $gui1DocList, $sessionParams, $sortParams, $refreshURL, $selectorBase, $taskbarPage);

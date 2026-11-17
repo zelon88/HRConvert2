@@ -368,6 +368,21 @@ ScanCore_Config.php carries a command line guard upstream's does not, & its inde
 HRConvert2's page, so neither is subscribed. A ScanCore release that adds a configuration entry is
 refused by ScanCore until the entry is merged by hand, which is the signal to merge it. ScanCore
 1.8, the release bundled, is the manifest's minimum.
+
+A PROGRAM NO LTS RELEASE CARRIES CORRECTLY IS THE PROJECT'S OWN RELEASE BINARY. v4.2.5.
+Dasel 2, which Debian & Ubuntu carry, writes a Go object dump into XML & CSV & invalid TOML, & says
+it succeeded. The yq they carry is a Python wrapper around jq that shares the name. Their Pandoc
+keeps its data files outside the program, so --sandbox, which Pandoc's manual asks for on untrusted
+input, cannot write DOCX, PPTX or EPUB. Debian 12 & Ubuntu 24.04 carry no Resvg, & Ubuntu 22.04's is
+0.8. Each is fetched as the binary its project publishes, pinned by version & checksum, rather than
+built, because none needs a patch & a Go, Rust or Haskell toolchain is a large thing to install on a
+server for one program. Resvg 0.50.0 was not pinned, because its binary needs glibc 2.43, which no
+supported distribution carries, & 0.49.0 needs 2.35, which all of them but Debian 11 do. Dasel, Resvg
+& Pandoc publish no checksum, so the pin is the checksum this release took, & the manifest says so.
+
+THE DATA SUBSYSTEM IS NAMED STRUCTURED DATA. v4.2.5.
+--subsystem matches any subsystem whose name holds what was typed, so --subsystem=Data would have
+installed, & removed, Metadata's MAT2 as well.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -657,6 +672,76 @@ uninspected. A last segment shorter than five packets was refused, which refused
 address a permitted range allows was refused when a stream file named it as an address, & FFMPEG
 was not pinned to it. The pinned hosts file was removed as soon as the shell returned, which was
 before bwrap read it, so FFMPEG never started. A fetch kept an error page or a redirect as the file.
+
+FIVE FAMILIES WERE ADDED, AFTER EBOOK & BEFORE STREAM. v4.2.5.
+Data, LaTeX, Trace, Email & Markup each claim only a pair no older family claims, so nothing an
+installation converted before v4.2.5 changes pipeline. A docx is shown a Markup panel beside its
+Document & Ebook panels, & docx to pdf from the Markup panel is still LibreOffice's, as docx to pdf
+from the Ebook panel always was. Each new panel's button is named for its panel, because three
+buttons alike on one file say nothing. A panel's unchosen format is the first the file is not
+already, so submitting it untouched is never a conversion to the format the file has.
+
+DASEL WRITES EVERY DATA FORMAT BUT XML, & YQ WRITES XML. v4.2.5.
+Dasel 3 fails loudly where Dasel 2 wrote garbage, & cannot write a number as XML, & writes a
+document with more than one root for most others. yq writes XML from the JSON Dasel writes, under
+one root, & the XML is read back before it is offered, because yq writes an element name XML does
+not allow. TOML & CSV hold only some shapes, & Dasel 3 writes a list as TOML without complaint, so
+the shape is asked first & a document that cannot be held is refused with error 44003, which says
+what it holds. yq reads nothing a user uploaded.
+
+A LATEX DOCUMENT IS A PROGRAM, SO TEX IS SET PARANOID & HAS NO SHELL. v4.2.5.
+openin_any & openout_any are p, so TeX refuses a file named by an absolute path, a hidden file &
+a path above the document, for reading & writing, & shell_escape is f & -no-shell-escape is
+passed. They travel with the command rather than in the xelatex sandbox profile, because the
+Engine applies a profile's variables only inside a sandbox, & they must hold where --Require
+Sandbox-- lets a conversion run without one. Paranoid TeX refuses its own document named by its
+absolute path, so the document is copied into a work folder & named by its name, & runInWorkFolder()
+runs TeX there. The xelatex profile shows the fontconfig cache, because without it fontconfig read
+every font before a short document that names one, which took twice as long. Two passes settle a
+table of contents & cross references, & a document TeX stopped on is not typeset again, because it
+would stop at the same line. A PDF TeX had begun when it stopped is removed, because it is a part
+of the document reported as the whole.
+
+TRACE NAMES IMAGEMAGICK'S DECODER. v4.2.5.
+ImageMagick otherwise reads a file by what is in it, & a file named .png that holds PostScript or
+MVG reached Ghostscript or the MVG coder under the name of an image. The image is copied into a
+work folder as source & read as png:source, jpeg:source & so on, which is refused for anything else.
+Potrace reads BMP & PNM itself, so those need no ImageMagick. A transparent part is laid on white,
+& only the first frame of an animation is traced.
+
+RESVG RENDERS AN SVG TO A PNG FIRST, & INKSCAPE IS ITS FALLBACK. v4.2.5.
+Resvg starts in milliseconds where Inkscape takes most of a second, & reads no script & fetches
+nothing. It fits a drawing to one dimension keeping its proportions, as Inkscape does, so a drawing
+given both is left to Inkscape, which stretches it, & renders as it always has. Resvg makes none of
+fontconfig's substitutions, so a family the server does not have is drawn in DejaVu Sans, which is
+what fontconfig gives Inkscape for a family it knows nothing of, & a drawing whose text found no
+font at all is rendered by Inkscape instead, because Resvg leaves that text out.
+
+MARKITDOWN WAS LEFT OUT. v4.2.5.
+It is a Python program with a large tree of dependencies, & what it extracts from PDFs, images &
+Office files the Document, OCR & Markup pipelines already do inside a sandbox.
+
+PANDOC READS & WRITES HTML, & THE MARKUP PIPELINE DOES NEITHER. v4.2.5.
+The core refuses html as a dangerous file, so none is ever uploaded, & a format list offering it
+would hand a user a button whose request ends with fatal error 14003. htm is no dangerous file, but
+ABOUT_DATA_DIRECTORY_PROTECTION.txt keeps it out of every format list, because a browser runs what
+an HTML page carries. XML is the other way round. The Data pipeline exists to convert it, so it is a
+conversion format from v4.2.5, & is safe for the reason an SVG is, the download & sandbox headers
+the DATA directory is served with, which the end to end suite reads back for an XML file.
+
+A PROGRAM WITH NO VERSION WAS PRESENT TO --install-depends. v4.2.5.
+Ubuntu 24.04's dasel is Dasel 2, which has no version command, & its yq is a different program in
+Python, so both answer with no version this release can read. --install-depends took each as present
+& fetched nothing, though --check-depends said it would fetch the own copy, & every Data conversion
+then failed with error 44001. It now makes the own copy wherever the entry can have one. An entry
+that cannot is still taken as present, because reinstalling a program that works helps nobody.
+
+A REPAIR RAISED THE STAMP OVER SETTINGS IT SKIPPED. v4.2.5.
+The format lists are in a section the configuration utility only displays, so the walk & a reset
+never change what an administrator listed. A repair skipped that section too, & so did its count of
+what it leaves missing, so the repair after the v4.2.5 drop in added the two timeouts, raised the
+stamp to v4.2.5 & left out the ten format lists, & every command then refused with error 28000. A
+repair adds a missing setting to such a section now, because adding one changes no value there.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

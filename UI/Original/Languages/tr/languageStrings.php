@@ -39,7 +39,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -178,6 +178,12 @@ $Gui1Text36 = 'Baştan Başla';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'Yenile';
+// / 'Data Formats'
+$Gui1Text38 = 'Veri Biçimleri';
+// / 'Email Formats'
+$Gui1Text39 = 'E-posta Biçimleri';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'Görüntüleri izleyerek vektör çizimlere dönüştürebilir.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -647,6 +653,30 @@ $Gui2Text238 = 'Değiştirilmeden aktarılanlar: ';
 $Gui2Text239 = 'Şüpheli, ancak virüslü olduğu doğrulanmadı: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'Tamamen taranamayanlar: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'Bu Veri Dosyasını Dönüştür';
+// / 'Convert Data File'
+$Gui2Text242 = 'Veri Dosyasını Dönüştür';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'Bu LaTeX Belgesini Dönüştür';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'Bu Görüntüyü İzleyerek Vektör Çizime Dönüştür';
+// / 'Trace Image'
+$Gui2Text245 = 'Görüntüyü Vektörleştir';
+// / 'Convert This Email'
+$Gui2Text246 = 'Bu E-postayı Dönüştür';
+// / 'Convert Email'
+$Gui2Text247 = 'E-postayı Dönüştür';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'Bu İşaretleme Belgesini Dönüştür';
+// / 'Data Files'
+$Gui2Text249 = 'Veri Dosyaları';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'LaTeX Belgeleri';
+// / 'Emails'
+$Gui2Text251 = 'E-postalar';
+// / 'Markup Documents'
+$Gui2Text252 = 'İşaretleme Belgeleri';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

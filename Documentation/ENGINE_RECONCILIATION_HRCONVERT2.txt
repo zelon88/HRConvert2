@@ -1,0 +1,217 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRConvert2, Copyright on 11/16/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+
+FILE INFORMATION ...
+v4.2.5.
+This plain text file records every change HRConvert2 makes to its copy of the HRProprietary Engine, so the copies other applications carry can be reconciled with it.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--What This File Is For--
+
+EVERY APPLICATION CARRIES ITS OWN COPY OF THE ENGINE, & EACH COPY CAN CHANGE.
+
+HRConvert2 & HRProtect each bundle the Engine, & neither knows the other exists. Both started from
+the HRProprietary Engine v4.2.4 starter kit, & both may change their copy. HRProtect keeps the same
+record of its own changes in ENGINE_RECONCILIATION_HRPROTECT.txt.
+
+This file lists what HRConvert2 changed in its copy since that baseline, release by release, so the
+two copies can be compared & merged into one Engine by hand. It records what changed, why, & what
+an application on the other copy has to do to take the change.
+
+Nothing here is an instruction to change the other copy. Reconciling is a deliberate step taken by
+the Engine's maintainer, & this file is what that step reads.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Baseline--
+
+THE HRPROPRIETARY ENGINE v4.2.4 STARTER KIT, built from HRConvert2 v4.2.4.
+
+What counts as the Engine here is what the starter kit carried, because that is what the other copy
+holds.
+
+  Resources/Kernel/              The kernel.
+  Resources/Engine/              engine.php, engineConfig.php, config-template.php, depends.php,
+                                 every Core & every Manager.
+  Documentation/                 The Engine's documents the kit carried, ABOUT_ENGINE_CONTRACT.txt,
+                                 ENGINE_MIGRATION_STATUS.txt, ERROR_DESCRIPTIONS.txt,
+                                 CREATING_CONVERSION_PIPELINES.txt & the rest.
+  Documentation/Build/           hrconvert2-check.py, hrconvert2-check.sh & hrconvert2-doccheck.py.
+
+To see every difference between this copy & the baseline, unpack the starter kit beside this
+installation & compare the two folders.
+
+  diff -r HRProprietary-Engine-v4.2.4/Resources/Kernel Resources/Kernel
+  diff -r HRProprietary-Engine-v4.2.4/Resources/Engine Resources/Engine
+
+Each difference those print is explained in a section below, or it is a mistake.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--v4.2.5--
+
+TWO ENGINE FILES CHANGED, IN THREE WAYS, & BOTH ARE BACKWARD COMPATIBLE.
+
+  Resources/Engine/Cores/dependencyCore.php    v4.2.4 to v4.2.5
+  Resources/Engine/Cores/setupCore.php         v4.2.4 to v4.2.5
+
+--Release binaries--
+
+WHAT CHANGED. buildOwnCopy() reads a new, optional key of a manifest entry's Fallback, Method. Where
+Method is release, the line --install-depends & --update-depends print for an own copy, & the log
+entry beside it, say the own copy is being fetched, as a release binary checked against its
+checksum, rather than built from source, & no longer say a build takes an hour on an ARM board.
+checkDepends() reads the same key of the entry its architecture resolves to, & hands it to
+showDependencyFindings() as a new finding, FetchesRelease, so the line --check-depends prints
+beneath such an entry says --install-depends fetches the own copy, where it said builds.
+Nothing else differs. The command run, the folder it is handed, DEPENDENCY_PREFIX,
+DEPENDENCY_VERSION & DEPENDENCY_SHA256, the checks made of what it installed & the rename into
+service are exactly as they were. A Fallback with no Method, or any other, is said to build, as
+every Fallback was before. An own copy is still called an own build wherever it is named, because
+it lives where every own build does.
+
+WHY. HRConvert2 v4.2.5 takes Dasel, yq, Pandoc & Resvg as the binaries their projects publish,
+pinned by version & checksum, because no LTS release carries a version that works. Each is fetched
+in seconds, & the old line told an administrator to expect an hour.
+
+--A program that cannot say its version--
+
+WHAT CHANGED. installDepends() took an entry whose program answers with no version this release can
+read, unknown-version, as present, & went on to the next. It still does, unless the entry can have
+an own build on this host, which the new function ownBuildIsDeclaredHere() answers exactly as
+settleOwnBuild() decides it. Such an entry is now installed like any other, so settleOwnBuild()
+makes the own build, which it already did for unknown-version wherever it was reached. Where it
+makes one, the reason it prints says the program on the host answers with no version this release
+can read, where it said the package manager's was unknown-version.
+
+WHY. Before, --check-depends said --install-depends would build the own copy of such an entry, &
+--update-depends did build it, but --install-depends did nothing. A program that cannot say which it
+is may be another program of the same name. Ubuntu 24.04's dasel package is Dasel 2, which has no
+version command & cannot do what Dasel 3 does, & its yq package is a different program in Python.
+--install-depends --subsystem="Structured Data" called both present, & every Data conversion then
+failed. An entry that can have no own build is untouched, so nothing that works is reinstalled.
+
+TO TAKE BOTH. Copy the file, & raise the application's own pin, $RequiredDependencyCoreVersion in
+its entry point, to v4.2.5. A manifest that never names Method behaves exactly as it did. An entry
+with a Fallback whose program answers with no version is given its own build by --install-depends,
+as --check-depends already told the administrator it would be. Nothing else in an application
+changes. The pin is the only thing HRConvert2 moved for either change.
+
+--A repair & a section the configuration utility only displays--
+
+WHAT CHANGED. runConfigUtility() skipped every section a configuration model marks Writable FALSE in
+every mode. A repair now adds a missing setting to such a section as it does to any other, & the
+interactive walk & every reset still skip it. planConfigRepairOutcome() skipped those sections too
+when it decided what a repair leaves missing, so a setting missing from one was neither added nor
+named, & the stamp was raised over the file still lacking it, which every command then refused with
+error 28000. It now looks at every section, so such a setting is named & the stamp kept wherever a
+repair cannot add it.
+
+WHY. HRConvert2 v4.2.5 adds ten format lists to its section Supported File Format Information, which
+its model marks Writable FALSE, so its format lists are never reset or edited by the utility. The
+repair INSTALLATION_INSTRUCTIONS.txt prescribes after the drop in added the two timeouts, raised the
+stamp to v4.2.5 & left the ten out, & the installation then refused every command.
+ABOUT_COMMAND_LINE_ARGUMENTS.txt already said a repair adds each missing setting & names any it
+cannot.
+
+TO TAKE IT. Copy the file, & raise the application's own pin, $RequiredSetupCoreVersion in its entry
+point, to v4.2.5. A model with no section marked Writable FALSE behaves exactly as it did. One with
+such a section has a missing setting there added by a repair, at the default its model holds, &
+one without a default named. The pin is the only thing HRConvert2 moved for it.
+
+THE KERNEL, engine.php, engineConfig.php, config-template.php, the Engine's depends.php, every other
+Core, every Manager & the three checkers are unchanged, & are still the baseline's v4.2.4.
+
+--The Engine's documents--
+
+The documents the starter kit carried hold HRConvert2's material as well as the Engine's. Of those
+v4.2.5 changed, only ABOUT_DEPENDENCIES.txt & ABOUT_COMMAND_LINE_ARGUMENTS.txt describe the Engine,
+& each only in part.
+
+  ABOUT_DEPENDENCIES.txt        Engine. Documents Method & what the release fetch script does,
+                                what --install-depends does with a program that answers with no
+                                version, & Architectures & ArchitectureOverrides, which Dependency
+                                Core has read since before the baseline & no document named. Also
+                                documents an entry naming no package, below. The names Dasel, yq,
+                                Pandoc & Resvg in it are HRConvert2's.
+  ABOUT_COMMAND_LINE_ARGUMENTS.txt  Engine. What a repair does with a section the configuration
+                                utility only displays.
+  ABOUT_PIPELINE_COMPONENTS.txt HRConvert2. The workFolder.php shared module, the Trace pipeline's
+                                carried policy & where the five new families route.
+  ERROR_DESCRIPTIONS.txt        HRConvert2. The blocks 44000 through 48019, the errors raised in
+                                them & the warnings of the new pipelines.
+  DEVELOPMENT_NOTES.txt         HRConvert2. Why the new pipelines & the release binaries are as
+                                they are.
+
+--What HRConvert2 now relies on, unchanged--
+
+Nothing below is a change to the Engine. Each is something the Engine already did that HRConvert2
+v4.2.5 depends on for the first time, so a reconciled Engine has to keep doing it.
+
+AN APT ENTRY WITH AN EMPTY PACKAGE & A FALLBACK HAS ONLY ITS OWN COPY. installOneDependency() runs
+no package manager for it, & believePackageInstall() has settleOwnBuild() fetch or build the own
+copy, which is then the only copy. Dasel, yq & Pandoc are such entries.
+
+ARCHITECTUREOVERRIDES MAY CARRY A WHOLE FALLBACK. Resvg names its package everywhere, & has an own
+copy on x86_64 & arm64 alone, each with its own checksum, through an override per architecture.
+
+cleanFiles($path, $allowedRoots) TAKES AWAY A WORK FOLDER. HRConvert2's new shared module,
+workFolder.php, removes the folder a conversion worked in through it, held to the folder above.
+
+sandboxCommand() PUTS AN INPUT & AN OUTPUT IN ONE FOLDER AT /work, & RUNS THE COMMAND THERE. The
+LaTeX pipeline names TeX's document by its name alone, because paranoid TeX refuses one named by
+an absolute path, & relies on --chdir /work, & on proc_open's working folder where no sandbox is built.
+
+A SANDBOX PROFILE'S OPERATION TYPE NEED NOT BE IN THE LIMITS TABLE. The new profiles' types are
+LaTeX, Data, Trace, Email & Markup, which $MaximumPerConversionResources does not name, so each
+conversion of them is given --Default Per Conversion Resources--.
+
+HRCONVERT2'S ERROR NUMBERS NOW RUN TO 48019. The Data pipeline reserves 44000 through 44019, LaTeX
+45000 through 45019, Trace 46000 through 46019, Email 47000 through 47019 & Markup 48000 through
+48019. HRProtect's own blocks are best begun at 50000, so the two never share a number.
+
+--Seen, & left for the Engine's maintainer--
+
+Each of these is in the Engine, was noticed while v4.2.5 was built, & was not changed, because an
+Engine change is made deliberately & not on the way past.
+
+sandboxCommand() APPLIES A PROFILE'S Environment ONLY INSIDE A SANDBOX. Where --Require Sandbox--
+lets a command run without one, the variables a profile names are dropped. HRConvert2 passes TeX's
+paranoid settings with the command for that reason, from the LaTeX & Markup pipelines, so they
+hold either way. A profile's variables are what its tool needs, sandboxed or not.
+
+THE BASE SANDBOX DOES NOT SHOW /var/cache/fontconfig. Every tool that finds fonts through
+fontconfig, LibreOffice & Inkscape among them, reads every font on the host each time it starts.
+The xelatex & pandoc profiles show the cache themselves, which halved the time a short LaTeX
+document takes. Showing it read only in the base sandbox would do the same for every such tool.
+
+--subsystem MATCHES ANY SUBSYSTEM WHOSE NAME HOLDS WHAT IS TYPED. --subsystem=Data would have caught
+Metadata too, for --install-depends & --uninstall-depends alike, so HRConvert2 named its new
+subsystem Structured Data. A whole name match, or a match on whole words, would remove the trap.
+
+THE ENGINE'S config-template.php NAMES HRCONVERT2'S OPERATION TYPES as the valid keys of --Maximum
+Per Conversion Resources--, which is application knowledge in an Engine file, & does not name the
+five v4.2.5 adds. An administrator may still add a key for each.
+
+Documentation/Build/hrconvert2-release-fetch.sh IS GENERIC. It fetches, checks & installs any
+release binary for any manifest entry, as build-7zip.sh builds one, & knows nothing of HRConvert2
+but its name. It is a candidate for the kit, under a name of the Engine's.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

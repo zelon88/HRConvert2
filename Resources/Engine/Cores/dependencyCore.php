@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.4.
+// / v4.2.5.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v4.2.4';
+$DependencyCoreVersion = 'v4.2.5';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -722,6 +722,23 @@ function ownBuildIsDeclared($dependencyEntry) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to decide whether a dependency can have this application's own build on this host, from v4.2.5.
+// / Accepts one manifest entry. Returns TRUE where this host's architecture is supported & the entry it resolves to declares an own build.
+// / The entry is resolved for this architecture exactly as settleOwnBuild() resolves it, so the answer is the one it would act on.
+function ownBuildIsDeclaredHere($dependencyEntry) {
+  // / Set variables.
+  global $HostArchitecture, $EnableMemoryProtection;
+  $BuildIsDeclaredHere = $architectureIsSupported = FALSE;
+  $resolvedEntry = array();
+  $unsupportedReason = '';
+  list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
+  $BuildIsDeclaredHere = ($architectureIsSupported && ownBuildIsDeclared($resolvedEntry));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $architectureIsSupported, $unsupportedReason, $dependencyEntry);
+  return $BuildIsDeclaredHere; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to decide whether the program of this application's own build of a dependency may
 // / be run.
 // / Accepts the build's folder & the path of its program. Returns whether it may & why it may not,
@@ -1017,6 +1034,8 @@ function releaseOwnBuildLock($lockHandle) {
 // / build answering inside the entry's window is in service. The status is 'installed', 'updated'
 // / or 'FAILED'.
 // / It is built beside the one in service & only then put in its place.
+// / A Fallback whose Method is release fetches a program its project publishes ready to run, & is said to fetch it, from v4.2.5.
+// / Any other Method, or none, builds from source, & is said to build. Only what is printed & logged differs.
 // / The Fallback's command gets a new folder only root can open as DEPENDENCY_PREFIX.
 // / DEPENDENCY_VERSION & DEPENDENCY_SHA256 carry the Version & Sha256 the Fallback pins, empty where nothing is pinned.
 // / Both are always set, so a value left in root's environment never stands in for one.
@@ -1037,7 +1056,7 @@ function buildOwnCopy($dependencyEntry, $buildReason) {
   $BuildDetail = '';
   $finalFolder = $buildsFolder = $folderPath = $resolvedFolder = $resolvedParent = $trustNotice = $stagingFolder = $retiredFolder = $runAccount = '';
   $pinnedVersion = $pinnedChecksum = $environmentExports = $stagedBinary = $stagedNotice = $stagedVersion = $stagedStatus = $stagedOutput = '';
-  $folderIsTrusted = $parentIsTrusted = $commandStarted = $stagedIsTrusted = $stagedIsPresent = $copyExisted = $copyIsInService = $copyIsRunnable = $lockIsReleased = FALSE;
+  $folderIsTrusted = $parentIsTrusted = $commandStarted = $stagedIsTrusted = $stagedIsPresent = $copyExisted = $copyIsInService = $copyIsRunnable = $lockIsReleased = $fetchesRelease = FALSE;
   $lockHandle = FALSE;
   $commandOutput = array();
   $commandExitCode = 1;
@@ -1045,6 +1064,7 @@ function buildOwnCopy($dependencyEntry, $buildReason) {
   $buildsFolder = ownBuildsRoot();
   $pinnedVersion = isset($dependencyEntry['Fallback']['Version']) ? trim((string)$dependencyEntry['Fallback']['Version']) : '';
   $pinnedChecksum = isset($dependencyEntry['Fallback']['Sha256']) ? strtolower(trim((string)$dependencyEntry['Fallback']['Sha256'])) : '';
+  $fetchesRelease = (isset($dependencyEntry['Fallback']['Method']) && (string)$dependencyEntry['Fallback']['Method'] === 'release');
   if (!$RunningAsRoot) $BuildDetail = 'Only root builds one.';
   else if (!ownBuildIsDeclared($dependencyEntry)) $BuildDetail = 'Its manifest entry declares no Fallback that can be built.';
   else {
@@ -1066,8 +1086,13 @@ function buildOwnCopy($dependencyEntry, $buildReason) {
       if ($lockHandle === FALSE) $BuildDetail = $buildsFolder.' could not be locked, so nothing was built into it.';
       else if (!@mkdir($stagingFolder, 0700)) $BuildDetail = $stagingFolder.' could not be made.';
       else {
-        print('  '.str_pad((string)$dependencyEntry['Name'], 20).'building '.engineApplicationName().'\'s own'.($pinnedVersion !== '' ? ' '.$pinnedVersion : '').' from source. Reason: '.$buildReason.' '.((in_array((string)$HostArchitecture, array('arm64', 'arm'), TRUE)) ? 'An hour or more on this machine' : 'A few minutes').'. A status line follows every minute.'.$Lol);
-        logEntry('Building '.engineApplicationName().'\'s own '.(string)$dependencyEntry['Name'].', because '.$buildReason);
+        // / A release binary is downloaded & checked rather than compiled, so it takes a download's time on any machine.
+        if ($fetchesRelease) {
+          print('  '.str_pad((string)$dependencyEntry['Name'], 20).'fetching '.engineApplicationName().'\'s own'.($pinnedVersion !== '' ? ' '.$pinnedVersion : '').', a release binary checked against its checksum. Reason: '.$buildReason.' A slow connection makes this slow. A status line follows every minute.'.$Lol);
+          logEntry('Fetching '.engineApplicationName().'\'s own '.(string)$dependencyEntry['Name'].', because '.$buildReason); }
+        else {
+          print('  '.str_pad((string)$dependencyEntry['Name'], 20).'building '.engineApplicationName().'\'s own'.($pinnedVersion !== '' ? ' '.$pinnedVersion : '').' from source. Reason: '.$buildReason.' '.((in_array((string)$HostArchitecture, array('arm64', 'arm'), TRUE)) ? 'An hour or more on this machine' : 'A few minutes').'. A status line follows every minute.'.$Lol);
+          logEntry('Building '.engineApplicationName().'\'s own '.(string)$dependencyEntry['Name'].', because '.$buildReason); }
         $environmentExports = 'export DEPENDENCY_PREFIX='.escapeshellarg($stagingFolder).'; export DEPENDENCY_VERSION='.escapeshellarg($pinnedVersion).'; export DEPENDENCY_SHA256='.escapeshellarg($pinnedChecksum).'; ';
         list ($commandStarted, $commandOutput, $commandExitCode) = runInstallCommand(dependencyEnvironmentPrefix().$environmentExports.'('.(string)$dependencyEntry['Fallback']['BuildCommand'].')', (string)$dependencyEntry['Name']);
         $stagedBinary = $stagingFolder.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.(string)$dependencyEntry['Binary'];
@@ -1109,7 +1134,7 @@ function buildOwnCopy($dependencyEntry, $buildReason) {
       if (!$copyIsRunnable) $BuildDetail = $BuildDetail.' '.$runAccount.', which runs conversions, cannot run it. Every folder above it must let that account through, & its filesystem must run programs.'; } }
   if (!$BuildIsReady) warningEntry(engineApplicationName().'\'s own build of '.(string)$dependencyEntry['Name'].' '.($copyIsInService ? 'is in service & not ready' : 'FAILED').'. '.$BuildDetail);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $finalFolder, $buildsFolder, $folderPath, $resolvedFolder, $resolvedParent, $trustNotice, $stagingFolder, $retiredFolder, $runAccount, $pinnedVersion, $pinnedChecksum, $environmentExports, $stagedBinary, $stagedNotice, $stagedVersion, $stagedStatus, $stagedOutput, $folderIsTrusted, $parentIsTrusted, $commandStarted, $stagedIsTrusted, $stagedIsPresent, $copyExisted, $copyIsInService, $copyIsRunnable, $lockIsReleased, $lockHandle, $commandOutput, $commandExitCode, $dependencyEntry, $buildReason);
+  purgeSensitiveMemory($EnableMemoryProtection, $fetchesRelease, $finalFolder, $buildsFolder, $folderPath, $resolvedFolder, $resolvedParent, $trustNotice, $stagingFolder, $retiredFolder, $runAccount, $pinnedVersion, $pinnedChecksum, $environmentExports, $stagedBinary, $stagedNotice, $stagedVersion, $stagedStatus, $stagedOutput, $folderIsTrusted, $parentIsTrusted, $commandStarted, $stagedIsTrusted, $stagedIsPresent, $copyExisted, $copyIsInService, $copyIsRunnable, $lockIsReleased, $lockHandle, $commandOutput, $commandExitCode, $dependencyEntry, $buildReason);
   return array($BuildIsReady, $BuildStatus, $BuildDetail); }
 // / -----------------------------------------------------------------------------------
 
@@ -1255,6 +1280,8 @@ function settleOwnBuild($dependencyEntry) {
         $SettleDetail = $ownPath.', '.(string)$resolvedEntry['Name'].' '.$ownVersion.'.'; }
       else {
         if ($systemStatus === 'absent') $buildReason = 'the package manager installed none';
+        // / A program that answers with no version may not be this one at all, so it is not called the package manager's, from v4.2.5.
+        else if ($systemStatus === 'unknown-version') $buildReason = 'the '.(string)$resolvedEntry['Binary'].' on this host answers with no version this release can read';
         else $buildReason = 'the package manager\'s is '.($systemVersion !== '' ? $systemVersion : $systemStatus);
         $buildReason = $buildReason.', & this release needs '.dependencyWindowText($resolvedEntry).'.';
         list ($BuildIsSettled, $SettleStatus, $SettleDetail) = buildOwnCopy($resolvedEntry, $buildReason); } } }
@@ -1332,7 +1359,9 @@ function checkDepends($subsystemFilter) {
       $systemVersion = $systemStatus = '';
       if ($binaryOrigin === 'own' && $dependencyStatus === 'ok') list ($systemIsPresent, $systemVersion, $systemStatus, $systemOutput) = resolveDependencyState($dependencyEntry);
       $presenceMap[(string)$dependencyEntry['Name']] = ($dependencyStatus === 'ok' or $dependencyStatus === 'unknown-version');
-      $stateMap[(string)$dependencyEntry['Name']] = array($detectedVersion, $dependencyStatus, $rawOutput, $binaryPath, $binaryOrigin, ($architectureIsSupported && ownBuildIsDeclared($resolvedEntry)), ($systemStatus === 'ok' ? $systemVersion : '')); }
+      // / The last value says whether the own copy is a release binary, fetched rather than built, from v4.2.5, so the report says which.
+      $stateMap[(string)$dependencyEntry['Name']] = array($detectedVersion, $dependencyStatus, $rawOutput, $binaryPath, $binaryOrigin, ($architectureIsSupported && ownBuildIsDeclared($resolvedEntry)), ($systemStatus === 'ok' ? $systemVersion : ''),
+        (isset($resolvedEntry['Fallback']['Method']) && (string)$resolvedEntry['Fallback']['Method'] === 'release')); }
     foreach ($dependsManifest as $dependencyEntry) {
       if (trim((string)$subsystemFilter) !== '' && stripos((string)$dependencyEntry['Subsystem'], trim((string)$subsystemFilter)) === FALSE) continue;
       $detectedVersion = $stateMap[(string)$dependencyEntry['Name']][0];
@@ -1367,7 +1396,8 @@ function checkDepends($subsystemFilter) {
         'Path' => $stateMap[(string)$dependencyEntry['Name']][3],
         'Origin' => $stateMap[(string)$dependencyEntry['Name']][4],
         'Fallback' => $stateMap[(string)$dependencyEntry['Name']][5],
-        'SystemVersion' => $stateMap[(string)$dependencyEntry['Name']][6]); } }
+        'SystemVersion' => $stateMap[(string)$dependencyEntry['Name']][6],
+        'FetchesRelease' => $stateMap[(string)$dependencyEntry['Name']][7]); } }
   // / Count what is wrong but optional, so the summary can say so. A report that says
   // / every requirement is met, printed directly beneath two failures, invites an operator
   // / to believe the failures do not matter without ever saying that they do not.
@@ -1410,8 +1440,9 @@ function showDependencyFindings($dependencyFindings) {
     // / A program this application built for itself is named with where it is, so it is never taken for
     // / the package manager's, which the host keeps current. One the package manager has caught up with
     // / says what takes it away. An entry that can have one & is not ready says what makes one.
+    // / An own build that is a release binary is said to be fetched rather than built, from v4.2.5, so an operator never expects a compile.
     if (isset($finding['Origin']) && $finding['Origin'] === 'own') print(str_pad('', 20).engineApplicationName().'\'s own build, '.(string)$finding['Path'].(!empty($finding['SystemVersion']) ? '. The package manager\'s '.(string)$finding['SystemVersion'].' qualifies too. --setup --update-depends, run as root, removes the own build.' : '').$Lol);
-    else if (!empty($finding['Fallback']) && in_array($finding['Status'], array('absent', 'outdated', 'too-new', 'unknown-version', 'misconfigured'), TRUE)) print(str_pad('', 20).'--setup --install-depends, run as root, builds '.engineApplicationName().'\'s own'.$Lol);
+    else if (!empty($finding['Fallback']) && in_array($finding['Status'], array('absent', 'outdated', 'too-new', 'unknown-version', 'misconfigured'), TRUE)) print(str_pad('', 20).'--setup --install-depends, run as root, '.(!empty($finding['FetchesRelease']) ? 'fetches' : 'builds').' '.engineApplicationName().'\'s own'.$Lol);
     // / A problem is anything that is not ok & not deliberately unverifiable.
     if ($finding['Status'] !== 'ok' && $finding['Status'] !== 'unverifiable') {
       if ($finding['Required']) $requiredProblems++;
@@ -1771,7 +1802,7 @@ function refreshSandboxBinary($dependsManifest, $subsystemFilter) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to install every dependency that is absent or too old.
+// / A function to install every dependency that is absent or too old, & to make the own build of one that answers with no version.
 // / Accepts the authorization token, a subsystem filter & a confirmation boolean.
 // / Returns a success boolean & the number installed, in that order.
 // / The manifest order is the install order & is followed exactly.
@@ -1823,7 +1854,10 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
         foreach ($dependsManifest as $dependencyEntry) {
           if (trim((string)$subsystemFilter) !== '' && stripos((string)$dependencyEntry['Subsystem'], trim((string)$subsystemFilter)) === FALSE) continue;
           list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyChoice($dependencyEntry);
-          if ($dependencyStatus === 'ok' or $dependencyStatus === 'unknown-version') {
+          // / A program that answers with no version this release can read is present & left as it is, unless the entry can have
+          // / an own build, from v4.2.5. One is then made, as --check-depends says it will be & --update-depends already made it,
+          // / because a program that cannot say which it is may be another program of the same name, as Ubuntu's dasel 2 is to Dasel 3.
+          if ($dependencyStatus === 'ok' or ($dependencyStatus === 'unknown-version' && !ownBuildIsDeclaredHere($dependencyEntry))) {
             $installedNames[(string)$dependencyEntry['Name']] = TRUE;
             // / Present, not installed. Installed is reserved for work this run actually
             // / did, so a reader can tell what changed on this machine just now from what

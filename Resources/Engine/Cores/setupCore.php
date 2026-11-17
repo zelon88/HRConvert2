@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.2.4.
+// / v4.2.5.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.2.4';
+$SetupCoreVersion = 'v4.2.5';
 // / -----------------------------------------------------------------------------------
 
 
@@ -1502,6 +1502,7 @@ function generateConfigFile($configPath) {
 // / Accepts the configuration model, the detected sections, the settings the repair adds & the stamp the file carries, in that order.
 // / Returns the settings the repair cannot add, whether the stamp is raised & the change that raises it, in that order.
 // / A repair adds a setting only into a section the file has, & only one the model holds a default for.
+// / Every section is looked at, one this utility only displays included, from v4.2.5, so a setting missing from one is named & the stamp kept.
 // / The stamp names the release in which the file last gained or lost a setting.
 // / A repair that leaves every modelled setting in the file brings it to the version the core requires, so the stamp says so.
 // / A file the repair cannot complete keeps its stamp, because it still lacks what the core requires.
@@ -1515,7 +1516,6 @@ function planConfigRepairOutcome($configModel, $detectedSections, $addedSettings
   $sectionName = $variableName = $foundSection = $stampSection = $formattedValue = '';
   $sectionModel = $variableModel = $foundRecord = $stampRecord = array();
   foreach ($configModel as $sectionName => $sectionModel) {
-    if (!$sectionModel['Writable']) continue;
     foreach ($sectionModel['Variables'] as $variableName => $variableModel) {
       list ($foundSection, $foundRecord) = findConfigVariable($detectedSections, $variableName);
       if ($foundSection === '' && !isset($addedSettings[$variableName])) $SettingsLeftMissing[] = $variableName; } }
@@ -1621,7 +1621,9 @@ function runConfigUtility($suppliedPath, $utilityMode, $modeTarget, $operatorCon
             $UtilityCompleted = TRUE; }
           else if ($utilityMode === 'reset-all' or $utilityMode === 'reset-section' or $utilityMode === 'repair') {
             foreach ($configModel as $sectionName => $sectionModel) {
-              if (!$sectionModel['Writable'] or !isset($detectedSections[$sectionName])) continue;
+              // / A section this utility only displays is never reset, & a repair adds to it all the same, from v4.2.5, because adding
+              // / a missing setting changes no value already there. Each format list v4.2.5 added is in such a section.
+              if ((!$sectionModel['Writable'] && $utilityMode !== 'repair') or !isset($detectedSections[$sectionName])) continue;
               if ($utilityMode === 'reset-section' && strtolower($sectionName) !== strtolower((string)$modeTarget)) continue;
               foreach ($sectionModel['Variables'] as $variableName => $variableModel) {
                 if ((string)$variableModel['Default'] === '') continue;

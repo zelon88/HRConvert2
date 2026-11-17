@@ -67,6 +67,8 @@ The archiveExtraction.php shared module reserves 39000 through 39019 & the Extra
 The Archive pipeline raises 39000 through 39003 too, because it extracts an archive through that module.
 Renaming in convertCore.php reserves 23100 through 23119, the Metadata pipeline 41000 through 41019 & the PDF pipeline 42000 through 42019.
 The Authentication Core reserves 43000 through 43019 & the Email Core 43100 through 43119, from v4.2.0.
+The Data pipeline reserves 44000 through 44019, the LaTeX pipeline 45000 through 45019, the Trace pipeline 46000 through 46019,
+the Email pipeline 47000 through 47019 & the Markup pipeline 48000 through 48019, from v4.2.5.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -4463,6 +4465,7 @@ LOGGED
 
 ERROR DESCRIPTION
   Inkscape ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  From v4.2.5 Resvg renders an SVG to a PNG first, & this is raised only once Inkscape has had its turn too.
   Until v4.0.6 this read The SVG converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Inkscape printed, which usually names the cause.
   A drawing Inkscape cannot read & a format it does not write are the usual causes.
@@ -4485,6 +4488,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The Inkscape dependency required to convert SVG files could not be verified.
+  From v4.2.5 Resvg renders an SVG to a PNG before Inkscape is asked, & this is raised for a PNG only where Resvg did not render it.
   Inkscape may not be installed, or may not be reachable on the system path used by the web server user.
   The installed Inkscape may be older than the minimum Resources/Contract/depends.php gives it.
   The installed Inkscape may be a development or git build which does not report a parseable version number.
@@ -8804,4 +8808,721 @@ WARNINGS ABOUT ACCOUNTS
     WARNING!!! A write was charged to a signed in user & their quota could not be read, because accounts are off or the Authentication Manager is unavailable. It was allowed.
       The listener was asked to keep a user's quota & cannot. Run  php convertCore.php -v  & read the Authentication Manager
       line, or turn --Enable Authentication-- back on.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-44000, <SESSION_IDENTIFIER>: The data converter produced no file after <ADDITIONAL_DATA> attempt(s)!
+
+FILE
+  Resources/Pipelines/Data/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. Dasel ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  A file Dasel cannot read as the format its name says, such as broken JSON or a CSV file whose rows do not line up, is the usual cause.
+  With --Enhanced Logging Verbosity-- on, the entry above this one carries what Dasel said, which names the line it stopped at.
+  A converter its memory ceiling killed ends the same way. --Maximum Per Conversion Resources-- in config.php sets the most each type may be given,
+  & a type it does not name, such as Data, is given its default.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-44001, <SESSION_IDENTIFIER>: The installed Dasel version is missing, unidentifiable, or too old! It is <STATUS>: <DETAIL>
+
+FILE
+  Resources/Pipelines/Data/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. Dasel reads every data format, so nothing is converted without it.
+  <STATUS> & <DETAIL> are what  sudo php convertCore.php --setup --check-depends  says of Dasel, & are left out where there is nothing to say.
+  No Debian or Ubuntu LTS release carries Dasel 3, so the Structured Data subsystem installs this application's own copy, the release binary
+  Dasel publishes, pinned by version & checksum. Run  sudo php convertCore.php --setup --install-depends --subsystem="Structured Data" .
+  Dasel 2, which those releases carry, is refused, because it writes XML, CSV & TOML wrongly without saying so.
+  A 32 bit x86 host has no own copy, & converts no data files.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-44002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this data conversion cannot be isolated!
+
+FILE
+  Resources/Pipelines/Data/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. A data conversion was refused because the server could not build a sandbox for it.
+  Dasel & yq parse what a stranger uploaded, & a parser is a larger attack surface than it appears. Neither offers a native restriction
+  on what it may read, so the sandbox is the only boundary available, & the conversion is refused rather than run without one.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-44003, <SESSION_IDENTIFIER>: <FORMAT> needs <SHAPE> at the top of a document, & <FILE_NAME> holds <WHAT> there, so it cannot be written as <FORMAT>!
+
+FILE
+  Resources/Pipelines/Data/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. The document is valid, & its shape is one the format asked for cannot hold, so nothing was written rather than something wrong.
+  TOML needs a table at the top of a document, & CSV needs a list of records with the same plain fields. <WHAT> is a list, a table or a
+  single value. Dasel is asked what the document holds before it is converted, because Dasel 3 writes some of these with no error.
+  Convert the document to JSON or YAML, which hold any shape, or change its shape first.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-44004, <SESSION_IDENTIFIER>: The installed yq version is missing, unidentifiable, or too old, so nothing can be written as XML! It is <STATUS>: <DETAIL>
+
+FILE
+  Resources/Pipelines/Data/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. yq writes XML for the Data pipeline, because Dasel 3 cannot write a number as XML, & every other format is still written.
+  <STATUS> & <DETAIL> are what  sudo php convertCore.php --setup --check-depends  says of yq, & are left out where there is nothing to say.
+  The Structured Data subsystem installs this application's own copy, the release binary yq publishes, pinned by version & checksum.
+  Run  sudo php convertCore.php --setup --install-depends --subsystem="Structured Data" .
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-44005, <SESSION_IDENTIFIER>: yq wrote XML that does not read back as XML, so it was removed! A key in <FILE_NAME> is probably not a name XML allows.
+
+FILE
+  Resources/Pipelines/Data/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. Every XML file yq writes is read back before it is offered, & this one could not be.
+  A JSON or YAML key becomes an XML element name, & a key that begins with a digit or holds a space or most punctuation is not a name XML
+  allows. yq writes it anyway, so the read back is what catches it. Rename the key, or convert the document to another format.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-44006, <SESSION_IDENTIFIER>: Could not make a work folder for the data conversion of <FILE_NAME>!
+
+FILE
+  Resources/Pipelines/Data/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. Every data conversion works in a folder of its own beside the staged file, which workFolder.php makes, & it could not be made.
+  The web server account needs write access to the temporary folder of the session. A full disk refuses the folder too.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-44007, <SESSION_IDENTIFIER>: The Data pipeline cannot read <FILE_TYPE> or cannot write <FILE_TYPE>!
+
+FILE
+  Resources/Pipelines/Data/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. A conversion reached the pipeline naming a format it has no name for. --Supported Data Input Formats-- or
+  --Supported Data Output Formats-- in config.php names a format the pipeline does not declare. Take it out of the list.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  44000 through 44019 are reserved for the Data pipeline, & 44008 through 44019 are currently unused.
+  44000 through 44007 are raised by the Data pipeline, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-45000, <SESSION_IDENTIFIER>: The LaTeX typesetter produced no PDF after <ADDITIONAL_DATA> attempt(s)! <TEX_ERROR>
+
+FILE
+  Resources/Pipelines/LaTeX/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. XeLaTeX ran & left no PDF, & <TEX_ERROR> is the first line TeX marked as an error in its log, where there is one.
+  A document is typeset alone, so a file, an image or a bibliography it names is not found, & says so. A package this server does not have
+  says  LaTeX Error: File `<NAME>.sty' not found. , which the LaTeX subsystem, or the TeX Live package that holds it, puts right.
+  A document TeX stops on is not typeset again, because TeX would stop at the same line, & a PDF TeX had begun is removed.
+  A file opened by an absolute path, a hidden file or a path above the document is refused by design, & says the file was not found.
+  No pages of output.  means the document typeset to nothing.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-45001, <SESSION_IDENTIFIER>: The installed XeLaTeX version is missing, unidentifiable, or too old! It is <STATUS>: <DETAIL>
+
+FILE
+  Resources/Pipelines/LaTeX/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. XeLaTeX typesets every LaTeX document, so nothing is typeset without it.
+  <STATUS> & <DETAIL> are what  sudo php convertCore.php --setup --check-depends  says of XeLaTeX, & are left out where there is nothing to say.
+  Run  sudo php convertCore.php --setup --install-depends --subsystem=LaTeX , which installs TeX Live's XeLaTeX & the packages most
+  documents use. TeX Live 2022 or newer is needed, which Debian 12 & Ubuntu 24.04 both carry.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-45002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this LaTeX document cannot be typeset in isolation!
+
+FILE
+  Resources/Pipelines/LaTeX/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. A LaTeX document was refused because the server could not build a sandbox for it.
+  TeX is a programming language, so a document is a program. The pipeline sets TeX paranoid & refuses it a shell whether or not a sandbox
+  is built, & the sandbox is still the only thing that keeps what TeX can read to TeX's own files.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-45003, <SESSION_IDENTIFIER>: Could not move the typeset PDF to <FILE_NAME>!
+
+FILE
+  Resources/Pipelines/LaTeX/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. XeLaTeX typeset the document in a folder of its own, & the PDF could not be moved or copied out of it to where it belongs.
+  The web server account needs read & write access to the session folder. A full disk refuses the PDF too.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-45004, <SESSION_IDENTIFIER>: Could not stage <FILE_NAME> for typesetting!
+
+FILE
+  Resources/Pipelines/LaTeX/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. The document is copied into a folder of its own before it is typeset, & the folder could not be made or the copy failed.
+  The web server account needs write access to the temporary folder of the session. A full disk refuses it too.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-45005, <SESSION_IDENTIFIER>: The LaTeX typesetter was stopped after <SECONDS> seconds, as --LaTeX Conversion Timeout-- allows!
+
+FILE
+  Resources/Pipelines/LaTeX/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. A pass of XeLaTeX ran for as long as --LaTeX Conversion Timeout-- in config.php allows & was stopped.
+  A document can loop for ever, so the limit is what one upload can cost. A document that ran out of time is not typeset again.
+  A long real document needs a higher limit. Raise it in config.php, keeping it below the PHP execution timer set in php.ini.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  45000 through 45019 are reserved for the LaTeX pipeline, & 45006 through 45019 are currently unused.
+  45000 through 45005 are raised by the LaTeX pipeline, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-46000, <SESSION_IDENTIFIER>: The image tracer produced no file after <ADDITIONAL_DATA> attempt(s)!
+
+FILE
+  Resources/Pipelines/Trace/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. Potrace ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  With --Enhanced Logging Verbosity-- on, the entry above this one carries what Potrace said. A BMP Potrace cannot read, such as one of
+  a kind it does not know, is the usual cause, & converting it to PNG first lets ImageMagick reduce it instead.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-46001, <SESSION_IDENTIFIER>: The installed Potrace version is missing, unidentifiable, or too old!
+
+FILE
+  Resources/Pipelines/Trace/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. Potrace draws every traced outline, so nothing is traced without it.
+  Run  sudo php convertCore.php --setup --install-depends --subsystem=Tracing . Debian 12 & Ubuntu 24.04 both carry 1.16.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-46002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this image cannot be traced in isolation!
+
+FILE
+  Resources/Pipelines/Trace/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. A trace was refused because the server could not build a sandbox for ImageMagick or for Potrace.
+  Both read an image a stranger uploaded, & neither offers a native restriction on what it may read, so the sandbox is the only boundary
+  available, & the trace is refused rather than run without one.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-46003, <SESSION_IDENTIFIER>: The installed ImageMagick version is missing, unidentifiable, or too old, & Potrace reads only BMP & the PNM formats itself!
+
+FILE
+  Resources/Pipelines/Trace/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. An image other than BMP, PBM, PGM, PPM or PNM is reduced to a grey bitmap by ImageMagick before Potrace traces it,
+  & ImageMagick could not be verified. BMP & the PNM formats are still traced. Run  sudo php convertCore.php --setup --install-depends --subsystem=Images .
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-46004, <SESSION_IDENTIFIER>: ImageMagick could not reduce <FILE_NAME> to a bitmap after <ADDITIONAL_DATA> attempt(s)!
+
+FILE
+  Resources/Pipelines/Trace/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. ImageMagick reads an image by the decoder its extension names & nothing else, under the policy the Trace pipeline carries,
+  & it could not read this one. A file named as an image that is something else, such as PostScript or SVG named .png, is refused by
+  design. With --Enhanced Logging Verbosity-- on, the entry above this one carries what ImageMagick said.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-46005, <SESSION_IDENTIFIER>: Could not stage <FILE_NAME> for tracing!
+
+FILE
+  Resources/Pipelines/Trace/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. An image ImageMagick reduces is copied into a folder of its own first, & the folder could not be made or the copy failed.
+  The web server account needs write access to the temporary folder of the session. A full disk refuses it too.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-46006, <SESSION_IDENTIFIER>: The Trace pipeline cannot read <FILE_TYPE> or cannot write <FILE_TYPE>!
+
+FILE
+  Resources/Pipelines/Trace/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. A conversion reached the pipeline naming a format it has no name for. --Supported Trace Input Formats-- or
+  --Supported Trace Output Formats-- in config.php names a format the pipeline does not declare. Take it out of the list.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  46000 through 46019 are reserved for the Trace pipeline, & 46007 through 46019 are currently unused.
+  46000 through 46006 are raised by the Trace pipeline, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-47000, <SESSION_IDENTIFIER>: The email converter produced no file after <ADDITIONAL_DATA> attempt(s)!
+
+FILE
+  Resources/Pipelines/Email/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. msgconvert ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  A file that is not an Outlook message, or one too damaged to read, is the usual cause. A file msgconvert stopped part of the way through is
+  removed. With --Enhanced Logging Verbosity-- on, the entry above this one carries what msgconvert said.
+  msgconvert also says it could not find the server's full name, which the sandbox does not have, & that changes nothing it writes.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-47001, <SESSION_IDENTIFIER>: The installed msgconvert version is missing, unidentifiable, or too old!
+
+FILE
+  Resources/Pipelines/Email/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. msgconvert reads every Outlook message, so nothing is converted without it.
+  It is part of the Perl module Email::Outlook::Message, & its version is the module's.
+  Run  sudo php convertCore.php --setup --install-depends --subsystem=Email . Debian 12 & Ubuntu 24.04 both carry 0.921.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-47002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this email conversion cannot be isolated!
+
+FILE
+  Resources/Pipelines/Email/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. An email conversion was refused because the server could not build a sandbox for it.
+  An Outlook message is a compound file of tables that point at each other, & msgconvert offers no native restriction on what it may
+  read, so the sandbox is the only boundary available, & the conversion is refused rather than run without one.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-47003, <SESSION_IDENTIFIER>: The Email pipeline cannot write <FILE_TYPE>!
+
+FILE
+  Resources/Pipelines/Email/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. msgconvert writes an EML file & an mbox mailbox & nothing else, & --Supported Email Output Formats-- in config.php
+  names something else. Take it out of the list.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-47004, <SESSION_IDENTIFIER>: The email converter was stopped after 120 seconds!
+
+FILE
+  Resources/Pipelines/Email/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. A message whose tables point at each other in a loop can keep msgconvert reading for ever, so it is stopped after 120 seconds.
+  A real message takes well under a second. The message is not converted again, because it would run out of time again.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  47000 through 47019 are reserved for the Email pipeline, & 47005 through 47019 are currently unused.
+  47000 through 47004 are raised by the Email pipeline, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-48000, <SESSION_IDENTIFIER>: The markup converter produced no file after <ADDITIONAL_DATA> attempt(s)! <REASON>
+
+FILE
+  Resources/Pipelines/Markup/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. Pandoc ran as many times as --File Operation Retry Count-- allows, & no attempt left a file. <REASON> is the line that says why,
+  where Pandoc printed one, & the first line TeX marked as an error where a PDF failed. A file Pandoc stopped part of the way through is removed.
+  A PowerPoint or a notebook that needs an image Pandoc may not read names the image. A document is converted alone, so it never can.
+  A PDF that names a LaTeX package this server does not have fails as a LaTeX document does, & error 45000 describes it.
+  With --Enhanced Logging Verbosity-- on, the entry above this one carries everything Pandoc said.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-48001, <SESSION_IDENTIFIER>: The installed Pandoc version is missing, unidentifiable, or too old!
+
+FILE
+  Resources/Pipelines/Markup/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. Pandoc converts every markup document, so nothing is converted without it.
+  The Markup subsystem installs this application's own copy, the release binary Pandoc publishes, pinned by version & checksum, because
+  a distribution's Pandoc cannot write DOCX, PPTX or EPUB inside --sandbox. Run  sudo php convertCore.php --setup --install-depends --subsystem=Markup .
+  A 32 bit host has no own copy, & converts no markup documents.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-48002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this markup conversion cannot be isolated!
+
+FILE
+  Resources/Pipelines/Markup/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. A markup conversion was refused because the server could not build a sandbox for it.
+  Pandoc runs with --sandbox, which keeps it to the one document whether or not a sandbox is built, & a PDF is typeset by XeLaTeX, which
+  is a programming language. The sandbox is what keeps both from the rest of the server.
+  See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-48003, <SESSION_IDENTIFIER>: The Markup pipeline cannot read <FILE_TYPE> or cannot write <FILE_TYPE>!
+
+FILE
+  Resources/Pipelines/Markup/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. A conversion reached the pipeline naming a format it has no Pandoc reader or writer for. --Supported Markup Input Formats-- or
+  --Supported Markup Output Formats-- in config.php names a format the pipeline does not declare. Take it out of the list.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-48004, <SESSION_IDENTIFIER>: The installed XeLaTeX version is missing, unidentifiable, or too old, & Pandoc typesets a PDF with it!
+
+FILE
+  Resources/Pipelines/Markup/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. A PDF was asked for, & Pandoc writes one by typesetting it with XeLaTeX, which could not be verified. Every other format is still
+  converted. Run  sudo php convertCore.php --setup --install-depends --subsystem=LaTeX .
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-48005, <SESSION_IDENTIFIER>: The markup converter was stopped after <SECONDS> seconds, as --Markup Conversion Timeout-- allows!
+
+FILE
+  Resources/Pipelines/Markup/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.5. Pandoc ran for as long as --Markup Conversion Timeout-- in config.php allows & was stopped. The Pandoc manual says a reader can
+  take pathologically long over some documents, & a PDF is typeset within the same time. A document that ran out of time is not converted again.
+  A long real document needs a higher limit. Raise it in config.php, keeping it below the PHP execution timer set in php.ini.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  48000 through 48019 are reserved for the Markup pipeline, & 48006 through 48019 are currently unused.
+  48000 through 48005 are raised by the Markup pipeline, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE CONVERSIONS ADDED IN V4.2.5
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The work folder shared module raises these, from Resources/Pipelines/Shared/workFolder.php.
+    WARNING!!! A command could not be started in the work folder <FOLDER_NAME>. PHP may have proc_open disabled.
+      A LaTeX pass or an image reduction was not run, & the error of the pipeline that asked follows. PHP's disable_functions setting is the
+      usual cause. These pipelines need proc_open, as every pipeline needs shell_exec or exec.
+    WARNING!!! The work folder <FOLDER_NAME> could not be removed, & the sweep will take it away later.
+      A conversion's own folder, whose name begins with a dot, was left beside the staged file. The sweep removes it with the session.
+  The Data pipeline raises this, from Resources/Pipelines/Data/pipeline.php.
+    WARNING!!! A data conversion tool could not be started. PHP may have proc_open disabled.
+      Dasel or yq was not run, & error 44000 or a shape or XML error follows. PHP's disable_functions setting is the usual cause.
+  The LaTeX & Markup pipelines raise these, from Resources/Pipelines/LaTeX/pipeline.php & Resources/Pipelines/Markup/pipeline.php.
+    WARNING!!! --LaTeX Conversion Timeout-- is not a whole number of seconds greater than 0, so 120 is used.
+    WARNING!!! --Markup Conversion Timeout-- is not a whole number of seconds greater than 0, so 120 is used.
+      The setting in config.php is missing or holds something else. Each conversion is given the default, & says so, until it is corrected.
+  The Trace pipeline raises this, from Resources/Pipelines/Trace/pipeline.php.
+    WARNING!!! The ImageMagick policy the Trace pipeline carries is missing, so this image is reduced under the host's own. Restore the pipeline from the release this installation came from.
+      Policy/policy.xml beside the pipeline's converter is gone. The image is still read only by the decoder its extension names, & -v reports
+      the ImageMagick policy as not carried until the file is restored.
+  The SVG pipeline raises these, from Resources/Pipelines/SVG/pipeline.php.
+    WARNING!!! Resvg found no font for some text in <FILE_NAME>, so Inkscape renders it. Installing the DejaVu fonts lets Resvg draw the text.
+      From v4.2.5 Resvg renders an SVG to a PNG before Inkscape is asked, & draws a font the server does not have in DejaVu Sans. DejaVu is
+      not installed either, so Resvg would have left the text out, & Inkscape renders the drawing with the fonts fontconfig finds instead.
+    WARNING!!! Resvg could not render <FILE_NAME>, so Inkscape renders it.
+      Resvg refused the drawing, which an SVG Inkscape forgives & Resvg does not usually is. Inkscape renders it as it did before v4.2.5.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

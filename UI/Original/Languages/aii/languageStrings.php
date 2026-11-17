@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -169,6 +169,12 @@ $Gui1Text36 = 'ܫܲܪܹܐ ܡܸܢ ܪܹܫܵܐ';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'ܚܲܕܸܬ';
+// / 'Data Formats'
+$Gui1Text38 = 'ܫܘܼܚܠܵܦܹܐ ܕܕܵܬܵܐ';
+// / 'Email Formats'
+$Gui1Text39 = 'ܫܘܼܚܠܵܦܹܐ ܕܐܝܼܡܹܝܠ';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'ܟܹܐ ܡܵܨܹܐ ܠܡܫܲܚܠܘܼܦܹܐ ܨܘܼܪܝܵܬܹ̈ܐ ܠܪܸܫܡܹܐ ܕܒܸܩܛܘܿܪ.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -266,7 +272,7 @@ $Gui2Text52 = 'ܫܲܚܠܸܦ ܠܟܬܝܼܒ݂ܬܵܐ';
 // / 'Archive Files'
 $Gui2Text53 = 'ܓܙܝܼ ܦܸܬܩܹܐ';
 // / 'Convert Document'
-$Gui2Text54 = 'ܫܲܚܠܸܦ ܟܬܝܼܒ݂ܬܵα';
+$Gui2Text54 = 'ܫܲܚܠܸܦ ܟܬܝܼܒ݂ܬܵܐ';
 // / 'Convert Spreadsheet'
 $Gui2Text55 = 'ܫܲܚܠܸܦ ܦܵܬܘܿܪܵܐ ܕܚܘܼܫܒܵܢܵܐ';
 // / 'Convert Presentation'
@@ -635,6 +641,30 @@ $Gui2Text238 = 'ܫܕܝܼܪܹ̈ܐ ܕܠܵܐ ܫܘܼܚܠܵܦܵܐ: ';
 $Gui2Text239 = 'ܚܫܝܼܕܹ̈ܐ، ܐܸܠܵܐ ܠܵܐ ܫܪܝܼܪܵܐ ܝܠܵܗ̇ ܕܐܝܼܬ ܒܝܼܪܘܼܣ ܒܓܵܘܲܝܗܘܿܢ: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'ܠܵܐ ܒܚܝܼܢܹ̈ܐ ܓܡܝܼܪܵܐܝܼܬ݂: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܦܸܬܩܵܐ ܕܕܵܬܵܐ';
+// / 'Convert Data File'
+$Gui2Text242 = 'ܫܲܚܠܸܦ ܦܸܬܩܵܐ ܕܕܵܬܵܐ';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܟܬܝܼܒ݂ܬܵܐ ܕ-LaTeX';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܨܘܼܪܬܵܐ ܠܪܸܫܡܵܐ ܕܒܸܩܛܘܿܪ';
+// / 'Trace Image'
+$Gui2Text245 = 'ܫܲܚܠܸܦ ܨܘܼܪܬܵܐ ܠܒܸܩܛܘܿܪ';
+// / 'Convert This Email'
+$Gui2Text246 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܐܝܼܡܹܝܠ';
+// / 'Convert Email'
+$Gui2Text247 = 'ܫܲܚܠܸܦ ܐܝܼܡܹܝܠ';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܟܬܝܼܒ݂ܬܵܐ ܕ-Markup';
+// / 'Data Files'
+$Gui2Text249 = 'ܦܸܬܩܹܐ ܕܕܵܬܵܐ';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'ܟܬܝܼܒ݂ܵܬܹ̈ܐ ܕ-LaTeX';
+// / 'Emails'
+$Gui2Text251 = 'ܐܝܼܡܹܝܠܹ̈ܐ';
+// / 'Markup Documents'
+$Gui2Text252 = 'ܟܬܝܼܒ݂ܵܬܹ̈ܐ ܕ-Markup';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

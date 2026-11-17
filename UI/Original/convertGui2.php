@@ -34,7 +34,7 @@ $UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
-$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = $gui2SvgArr = $gui2ScadArr = $gui2EbookArr = array();
+$gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2XpsArr = $gui2ScadArr = $gui2SvgArr = $gui2ScadArr = $gui2EbookArr = $gui2LatexArr = $gui2DataArr = $gui2TraceArr = $gui2EmailArr = $gui2MarkupArr = array();
 $selectorBase = 'convertCore.php?';
 // / The bar at the top of the page is taskbar.php's, & it is told which page it is on.
 $taskbarPage = 'files';
@@ -247,7 +247,8 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
             'operations' => array('Convert' => $Gui2Text14, 'Archive' => $Gui2Text10, 'Extract' => $Gui2Text192, 'OCR' => $Gui2Text12, 'Identify' => $Gui2Text86, 'Scan' => $Gui2Text8, 'Select' => $Gui2Text109,
               'Delete' => $Gui2Text67, 'Rename' => $Gui2Text201, 'StripMetadata' => $Gui2Text206, 'Merge' => $Gui2Text210, 'Split' => $Gui2Text211),
             'kinds' => array('Document' => $Gui2Text114, 'Spreadsheet' => $Gui2Text115, 'Presentation' => $Gui2Text116, 'Image' => $Gui2Text117, 'Audio' => $Gui2Text118, 'Video' => $Gui2Text119, 'Archive' => $Gui2Text120,
-              'Ebook' => $Gui2Text121, 'Model' => $Gui2Text122, 'Drawing' => $Gui2Text123, 'Vector' => $Gui2Text124, 'Subtitle' => $Gui2Text125, 'Scad' => $Gui2Text126, 'Stream' => $Gui2Text127),
+              'Ebook' => $Gui2Text121, 'Model' => $Gui2Text122, 'Drawing' => $Gui2Text123, 'Vector' => $Gui2Text124, 'Subtitle' => $Gui2Text125, 'Scad' => $Gui2Text126, 'Stream' => $Gui2Text127,
+              'Data' => $Gui2Text249, 'LaTeX' => $Gui2Text250, 'Email' => $Gui2Text251, 'Markup' => $Gui2Text252),
             'optionLabels' => array('Extension' => $Gui2Text18, 'Filename' => $Gui2Text17, 'Width' => $Gui2Text180, 'Height' => $Gui2Text181, 'Rotate' => $Gui2Text65, 'Bitrate' => $Gui2Text66,
               'Method' => $Gui2Text39, 'Report' => $Gui2Text97, 'Scanner' => $Gui2Text8, 'Pattern' => $Gui2Text204),
             // / A pattern's tokens are named where a pointer rests on its field, as they are in a file's Rename panel.
@@ -354,7 +355,8 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
       // / Only the kinds the list holds are offered, in the order the core names them.
       // / HRC2.bindSelection(), called below the list, binds the bar & draws the selection into it.
       $selectKinds = array('Document' => $Gui2Text114, 'Spreadsheet' => $Gui2Text115, 'Presentation' => $Gui2Text116, 'Image' => $Gui2Text117, 'Audio' => $Gui2Text118, 'Video' => $Gui2Text119, 'Archive' => $Gui2Text120,
-        'Ebook' => $Gui2Text121, 'Model' => $Gui2Text122, 'Drawing' => $Gui2Text123, 'Vector' => $Gui2Text124, 'Subtitle' => $Gui2Text125, 'Scad' => $Gui2Text126, 'Stream' => $Gui2Text127);
+        'Ebook' => $Gui2Text121, 'Model' => $Gui2Text122, 'Drawing' => $Gui2Text123, 'Vector' => $Gui2Text124, 'Subtitle' => $Gui2Text125, 'Scad' => $Gui2Text126, 'Stream' => $Gui2Text127,
+        'Data' => $Gui2Text249, 'LaTeX' => $Gui2Text250, 'Email' => $Gui2Text251, 'Markup' => $Gui2Text252);
       $selectListed = array();
       $selectRows = 0;
       foreach ($Files as $selectFile) {
@@ -626,6 +628,53 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
            onclick='toggle_visibility("subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text14.' '.$File, ENT_QUOTES, 'UTF-8'); ?>'/>
           <img id='subtitleXButton<?php echo $ConvertGuiCounter1; ?>' name='subtitleXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
            onclick='toggle_visibility("subtitleOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("subtitleXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <?php } 
+
+          // / The five families added in v4.2.5, in the order the core routes them. Each button is named for its panel, because a file a family
+          // / shares with Document or Ebook would otherwise show three buttons alike.
+          if (in_array($extension, $LaTeXInputArray) && in_array('LaTeX', $OfferedConversionTypes)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+
+          <img id='latexButton<?php echo $ConvertGuiCounter1; ?>' name='latexButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("latexOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("latexButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("latexXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text243, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text243, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <img id='latexXButton<?php echo $ConvertGuiCounter1; ?>' name='latexXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+           onclick='toggle_visibility("latexOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("latexButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("latexXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <?php } 
+
+          if (in_array($extension, $DataInputArray) && in_array('Data', $OfferedConversionTypes)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+
+          <img id='dataButton<?php echo $ConvertGuiCounter1; ?>' name='dataButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("dataOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("dataButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("dataXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text241, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text241, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <img id='dataXButton<?php echo $ConvertGuiCounter1; ?>' name='dataXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+           onclick='toggle_visibility("dataOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("dataButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("dataXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <?php } 
+
+          if (in_array($extension, $TraceInputArray) && in_array('Trace', $OfferedConversionTypes)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+
+          <img id='traceButton<?php echo $ConvertGuiCounter1; ?>' name='traceButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("traceOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("traceButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("traceXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text244, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text244, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <img id='traceXButton<?php echo $ConvertGuiCounter1; ?>' name='traceXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+           onclick='toggle_visibility("traceOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("traceButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("traceXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <?php } 
+
+          if (in_array($extension, $EmailInputArray) && in_array('Email', $OfferedConversionTypes)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+
+          <img id='emailButton<?php echo $ConvertGuiCounter1; ?>' name='emailButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("emailOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("emailButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("emailXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text246, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text246, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <img id='emailXButton<?php echo $ConvertGuiCounter1; ?>' name='emailXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+           onclick='toggle_visibility("emailOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("emailButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("emailXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <?php } 
+
+          if (in_array($extension, $MarkupInputArray) && in_array('Markup', $OfferedConversionTypes)) { ?>
+          <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
+
+          <img id='markupButton<?php echo $ConvertGuiCounter1; ?>' name='markupButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
+           onclick='toggle_visibility("markupOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("markupButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("markupXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text248, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text248, ENT_QUOTES, 'UTF-8'); ?>'/>
+          <img id='markupXButton<?php echo $ConvertGuiCounter1; ?>' name='markupXButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>x.png' style='float:<?php echo $GUIAlignment; ?>; display:none;' 
+           onclick='toggle_visibility("markupOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("markupButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("markupXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } ?>
 
         </div>
@@ -1191,6 +1240,113 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
         </div>
         <?php } 
 
+        // / The five families added in v4.2.5. A choice a user has not made is the first format the file is not already, so it is never
+        // / a conversion to the format the file has.
+        if (in_array($extension, $LaTeXInputArray) && in_array('LaTeX', $OfferedConversionTypes)) {
+        ?>
+        <div id='latexOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='latexOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
+          <p><strong><?php echo $Gui2Text243; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userlatexfilename<?php echo $ConvertGuiCounter1; ?>' name='userlatexfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
+          <select id='latexextension<?php echo $ConvertGuiCounter1; ?>' name='latexextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value="<?php echo htmlspecialchars((string)current(array_diff($LaTeXOutputArray, array($extension))), ENT_QUOTES, 'UTF-8'); ?>"><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($LaTeXOutputArray as $gui2LatexArr) { ?>
+            <option value="<?php echo $gui2LatexArr; ?>"><?php echo $gui2LatexArr; ?></option>
+            <?php } ?>
+          </select></p>
+          <input type="submit" id="latexconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="latexconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text54, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <script type='text/javascript'>
+            HRC2.bindRun('latexconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'latexextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userlatexfilename'.$ConvertGuiCounter1)); ?>);
+          </script>
+        </div>
+        <?php }
+
+        if (in_array($extension, $DataInputArray) && in_array('Data', $OfferedConversionTypes)) {
+        ?>
+        <div id='dataOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='dataOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
+          <p><strong><?php echo $Gui2Text241; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='userdatafilename<?php echo $ConvertGuiCounter1; ?>' name='userdatafilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
+          <select id='dataextension<?php echo $ConvertGuiCounter1; ?>' name='dataextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value="<?php echo htmlspecialchars((string)current(array_diff($DataOutputArray, array($extension))), ENT_QUOTES, 'UTF-8'); ?>"><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($DataOutputArray as $gui2DataArr) { ?>
+            <option value="<?php echo $gui2DataArr; ?>"><?php echo $gui2DataArr; ?></option>
+            <?php } ?>
+          </select></p>
+          <input type="submit" id="dataconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="dataconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text242, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <script type='text/javascript'>
+            HRC2.bindRun('dataconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'dataextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userdatafilename'.$ConvertGuiCounter1)); ?>);
+          </script>
+        </div>
+        <?php }
+
+        if (in_array($extension, $TraceInputArray) && in_array('Trace', $OfferedConversionTypes)) {
+        ?>
+        <div id='traceOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='traceOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
+          <p><strong><?php echo $Gui2Text244; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='usertracefilename<?php echo $ConvertGuiCounter1; ?>' name='usertracefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
+          <select id='traceextension<?php echo $ConvertGuiCounter1; ?>' name='traceextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value="<?php echo htmlspecialchars((string)current(array_diff($TraceOutputArray, array($extension))), ENT_QUOTES, 'UTF-8'); ?>"><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($TraceOutputArray as $gui2TraceArr) { ?>
+            <option value="<?php echo $gui2TraceArr; ?>"><?php echo $gui2TraceArr; ?></option>
+            <?php } ?>
+          </select></p>
+          <input type="submit" id="traceconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="traceconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text245, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <script type='text/javascript'>
+            HRC2.bindRun('traceconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'traceextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'usertracefilename'.$ConvertGuiCounter1)); ?>);
+          </script>
+        </div>
+        <?php }
+
+        if (in_array($extension, $EmailInputArray) && in_array('Email', $OfferedConversionTypes)) {
+        ?>
+        <div id='emailOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='emailOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
+          <p><strong><?php echo $Gui2Text246; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='useremailfilename<?php echo $ConvertGuiCounter1; ?>' name='useremailfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
+          <select id='emailextension<?php echo $ConvertGuiCounter1; ?>' name='emailextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value="<?php echo htmlspecialchars((string)current(array_diff($EmailOutputArray, array($extension))), ENT_QUOTES, 'UTF-8'); ?>"><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($EmailOutputArray as $gui2EmailArr) { ?>
+            <option value="<?php echo $gui2EmailArr; ?>"><?php echo $gui2EmailArr; ?></option>
+            <?php } ?>
+          </select></p>
+          <input type="submit" id="emailconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="emailconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text247, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <script type='text/javascript'>
+            HRC2.bindRun('emailconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'emailextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'useremailfilename'.$ConvertGuiCounter1)); ?>);
+          </script>
+        </div>
+        <?php }
+
+        if (in_array($extension, $MarkupInputArray) && in_array('Markup', $OfferedConversionTypes)) {
+        ?>
+        <div id='markupOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='markupOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
+          <p style="max-width:<?php echo $GuiWidth; ?>;"></p>
+          <p><strong><?php echo $Gui2Text248; ?></strong></p>
+          <p><?php echo $Gui2Text17; ?><input type="text" id='usermarkupfilename<?php echo $ConvertGuiCounter1; ?>' name='usermarkupfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
+          <select id='markupextension<?php echo $ConvertGuiCounter1; ?>' name='markupextension<?php echo $ConvertGuiCounter1; ?>'>
+            <option value="<?php echo htmlspecialchars((string)current(array_diff($MarkupOutputArray, array($extension))), ENT_QUOTES, 'UTF-8'); ?>"><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($MarkupOutputArray as $gui2MarkupArr) { ?>
+            <option value="<?php echo $gui2MarkupArr; ?>"><?php echo $gui2MarkupArr; ?></option>
+            <?php } ?>
+          </select></p>
+          <input type="submit" id="markupconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="markupconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text54, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
+          <script type='text/javascript'>
+            HRC2.bindRun('markupconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
+              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('extension' => 'markupextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'usermarkupfilename'.$ConvertGuiCounter1)); ?>);
+          </script>
+        </div>
+        <?php }
+
         if (in_array($extension, $ImageArray) && in_array('Image', $OfferedConversionTypes)) {
         ?>
         <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
@@ -1235,5 +1391,5 @@ $refreshURL = 'convertCore.php?showFiles=1&'.$sessionParams.$sortParams;
       // / full page shows it through the frame above & would otherwise print it twice. ?>
     <?php
     // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $taskbarPage = $gui2SvgArr = $gui2EbookArr = $sessionParams = $sortParams = $sortCurrentKey = $sortCurrentWay = $sortChoices = $sortKey = $sortLabel = $sortIsCurrent = $sortNextWay = $sortURL = $backURL = $refreshURL = $extension = $FileNoExt = $selectKinds = $selectListed = $selectRows = $selectFile = $selectKind = $selectLabel = $gui2ScanCore = $gui2ScanClam = $gui2ScanBoth = $gui2ScanLog = $gui2ScanFile = NULL;
-    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $taskbarPage, $gui2EbookArr, $sessionParams, $sortParams, $sortCurrentKey, $sortCurrentWay, $sortChoices, $sortKey, $sortLabel, $sortIsCurrent, $sortNextWay, $sortURL, $backURL, $refreshURL, $extension, $FileNoExt, $gui2ScanCore, $gui2ScanClam, $gui2ScanBoth, $gui2ScanLog, $gui2ScanFile);
+    $gui2AudArr = $gui2VidArr = $gui2StreamArr = $gui2DocArr = $gui2SpreadArr = $gui2XpsArr = $gui2PresArr = $gui2ArchArr = $gui2ImaArr = $gui2ModArr = $gui2SubArr = $gui2DraArr = $gui2OcrArr = $gui2ScadArr = $selectorBase = $taskbarPage = $gui2SvgArr = $gui2EbookArr = $gui2LatexArr = $gui2DataArr = $gui2TraceArr = $gui2EmailArr = $gui2MarkupArr = $sessionParams = $sortParams = $sortCurrentKey = $sortCurrentWay = $sortChoices = $sortKey = $sortLabel = $sortIsCurrent = $sortNextWay = $sortURL = $backURL = $refreshURL = $extension = $FileNoExt = $selectKinds = $selectListed = $selectRows = $selectFile = $selectKind = $selectLabel = $gui2ScanCore = $gui2ScanClam = $gui2ScanBoth = $gui2ScanLog = $gui2ScanFile = NULL;
+    unset($gui2AudArr, $gui2VidArr, $gui2StreamArr, $gui2DocArr, $gui2SpreadArr, $gui2XpsArr, $gui2PresArr, $gui2ArchArr, $gui2ImaArr, $gui2ModArr, $gui2SubArr, $gui2DraArr, $gui2OcrArr, $gui2ScadArr, $gui2SvgArr, $selectorBase, $taskbarPage, $gui2EbookArr, $gui2LatexArr, $gui2DataArr, $gui2TraceArr, $gui2EmailArr, $gui2MarkupArr, $sessionParams, $sortParams, $sortCurrentKey, $sortCurrentWay, $sortChoices, $sortKey, $sortLabel, $sortIsCurrent, $sortNextWay, $sortURL, $backURL, $refreshURL, $extension, $FileNoExt, $gui2ScanCore, $gui2ScanClam, $gui2ScanBoth, $gui2ScanLog, $gui2ScanFile);

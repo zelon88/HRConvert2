@@ -35,7 +35,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -172,6 +172,12 @@ $Gui1Text36 = 'やり直す';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = '更新';
+// / 'Data Formats'
+$Gui1Text38 = 'データ形式';
+// / 'Email Formats'
+$Gui1Text39 = 'メール形式';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = '画像をトレースしてベクター図形に変換できます。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -640,6 +646,30 @@ $Gui2Text238 = '変更せずに引き継ぎ：';
 $Gui2Text239 = '疑わしいが感染は未確認：';
 // / 'Not scanned in full: '
 $Gui2Text240 = '完全にはスキャンできず：';
+// / 'Convert This Data File'
+$Gui2Text241 = 'このデータファイルを変換';
+// / 'Convert Data File'
+$Gui2Text242 = 'データファイルを変換';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'この LaTeX 文書を変換';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'この画像をトレースしてベクター図形にする';
+// / 'Trace Image'
+$Gui2Text245 = '画像をトレース';
+// / 'Convert This Email'
+$Gui2Text246 = 'このメールを変換';
+// / 'Convert Email'
+$Gui2Text247 = 'メールを変換';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'このマークアップ文書を変換';
+// / 'Data Files'
+$Gui2Text249 = 'データファイル';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'LaTeX 文書';
+// / 'Emails'
+$Gui2Text251 = 'メール';
+// / 'Markup Documents'
+$Gui2Text252 = 'マークアップ文書';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

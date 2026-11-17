@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. An update & --config --repair keep it current.
-$ConfigVersion = 'v4.2.0';
+$ConfigVersion = 'v4.2.5';
 // / ------------------------------
 
 // / ------------------------------
@@ -592,6 +592,23 @@ $AllowSCADIncludeResolution = TRUE;
 // /   Valid options are integers greater than 0.
 // /   Default is 180.
 $SCADConversionTimeout = 180;
+// /  --LaTeX Conversion Timeout--
+// /   Set the maximum number of seconds XeLaTeX is permitted to typeset a LaTeX document in one pass.
+// /   TeX is a programming language, & a document can loop for ever, so this value bounds what one upload can cost.
+// /   A document that needs a second pass for its contents or its cross references is given this long again for it.
+// /   A document is typeset with no shell & cannot open a file outside the folder it is typeset in, whatever this is set to.
+// /   This setting must be lower than the PHP execution timer set in php.ini.
+// /   Valid options are integers greater than 0.
+// /   Default is 120.
+$LaTeXConversionTimeout = 120;
+// /  --Markup Conversion Timeout--
+// /   Set the maximum number of seconds Pandoc is permitted to convert a markup document.
+// /   The Pandoc manual says a reader can take pathologically long over some documents, & advises a time limit for a document a stranger wrote.
+// /   A PDF is typeset by XeLaTeX within this same time.
+// /   This setting must be lower than the PHP execution timer set in php.ini.
+// /   Valid options are integers greater than 0.
+// /   Default is 120.
+$MarkupConversionTimeout = 120;
 // /  --Use PyMeshLab Python Bindings--
 // /   MeshLab replaced its legacy server application with a Python library package.
 // /   Enabling this toggle forces the core to pass geometry repairs to a local Python script.
@@ -1022,8 +1039,9 @@ $AllowUserIdentify = TRUE;
 // /   The list of supported conversion types.
 // /   Only conversion types contained in this list will be processed.
 // /   If a conversion type is disabled, options for processing that conversion will not be displayed by the UI.
-// /   Default is 'Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR'.
-$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR', 'Ebook');
+// /   Data, LaTeX, Trace, Email & Markup were added in v4.2.5. A config.php from an earlier release lacks them until they are added here by hand.
+// /   Default is 'Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR', 'Ebook', 'Data', 'LaTeX', 'Trace', 'Email', 'Markup'.
+$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR', 'Ebook', 'Data', 'LaTeX', 'Trace', 'Email', 'Markup');
 // /  --Allow Creation Of Bootable ISO Images--
 // /   Allow or disallow users to create bootable ISO images for multiple target systems.
 // /   The list of supported bootable image formats is contained in the --Supported Bootable ISO Output Formats-- config.php section.
@@ -1446,4 +1464,51 @@ $UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz'
 // /   Calibre writes PML only zipped, as pmlz, & writes OEB as a folder, which cannot be handed
 // /   to a browser, so neither pml nor oeb is offered.
 $UserEbookOutputArray = array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pmlz', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'docx', 'pdf');
+// /  --Supported Data Input Formats--
+// /   The structured data formats a user may convert FROM, from v4.2.5. Dasel reads every one.
+// /   csv is also a spreadsheet. The routing loop tries the document family first, so csv to xlsx stays with LibreOffice, & only csv
+// /   to another data format reaches the Data pipeline.
+$UserDataInputArray = array('json', 'yaml', 'yml', 'toml', 'xml', 'csv');
+// /  --Supported Data Output Formats--
+// /   The structured data formats a user may convert TO, from v4.2.5.
+// /   TOML is written only from a document that is a table at its top, & CSV only from a list of records with the same plain fields.
+// /   Anything else is refused with an error that says why, rather than written wrong.
+// /   XML is written by yq, under one root element. A server without yq refuses XML with an error that says so.
+$UserDataOutputArray = array('json', 'yaml', 'yml', 'toml', 'xml', 'csv');
+// /  --Supported LaTeX Input Formats--
+// /   The LaTeX documents a user may typeset, from v4.2.5.
+// /   A document is typeset alone, so one that needs another file, an image or a bibliography it was uploaded beside fails, & says so.
+$UserLaTeXInputArray = array('tex', 'latex');
+// /  --Supported LaTeX Output Formats--
+// /   XeLaTeX writes a PDF & nothing else.
+$UserLaTeXOutputArray = array('pdf');
+// /  --Supported Trace Input Formats--
+// /   The images a user may trace into vector outlines, from v4.2.5.
+// /   Every one of them is an image as well. The routing loop tries the image family first, so png to jpg stays with ImageMagick, & only
+// /   an image becoming a vector drawing reaches the Trace pipeline.
+// /   Potrace reads bmp & the pnm formats itself, & ImageMagick reduces the rest to a grey bitmap first.
+$UserTraceInputArray = array('bmp', 'png', 'jpg', 'jpeg', 'gif', 'tif', 'tiff', 'webp', 'pbm', 'pgm', 'ppm', 'pnm');
+// /  --Supported Trace Output Formats--
+// /   The vector formats a traced image may be written as, from v4.2.5.
+// /   Potrace draws the dark parts of an image as filled outlines. A logo, a signature or a scanned drawing traces well, & a photograph
+// /   comes out as black & white shapes.
+$UserTraceOutputArray = array('svg', 'dxf', 'pdf', 'eps', 'ps');
+// /  --Supported Email Input Formats--
+// /   The Outlook messages a user may convert, from v4.2.5.
+$UserEmailInputArray = array('msg');
+// /  --Supported Email Output Formats--
+// /   eml is a standard email every mail program opens, & mbox is a mailbox holding the one message, which every mail program imports.
+$UserEmailOutputArray = array('eml', 'mbox');
+// /  --Supported Markup Input Formats--
+// /   The documents a user may convert with Pandoc, from v4.2.5.
+// /   Several are documents, e-books or spreadsheets as well, on purpose. The routing loop tries those families first, so docx to pdf stays
+// /   with LibreOffice & docx to epub stays with Calibre, & only a pair no earlier family claims, such as docx to md, reaches this pipeline.
+// /   A tex document becoming a pdf is typeset by the LaTeX pipeline, & becoming anything else is converted by this one.
+// /   html & htm are not among them. html is a file this application refuses, & ABOUT_DATA_DIRECTORY_PROTECTION.txt says why htm is too.
+$UserMarkupInputArray = array('md', 'markdown', 'rst', 'adoc', 'asciidoc', 'jira', 'textile', 'org', 'mediawiki', 'dokuwiki', 'creole', 'muse', 'djot', 'typ', 'tex', 'latex', 'docx', 'odt', 'epub', 'rtf', 'ipynb', 'opml', 'fb2', 'csv', 'pptx', 'xlsx');
+// /  --Supported Markup Output Formats--
+// /   The documents Pandoc may write, from v4.2.5. md is written as GitHub Flavored Markdown.
+// /   A pdf is typeset by XeLaTeX, which the LaTeX subsystem installs. A server without it refuses a pdf with an error that says so.
+// /   A document is converted alone, so an image it names is left out, & a pptx or an ipynb that cannot be written without one fails & names it.
+$UserMarkupOutputArray = array('md', 'rst', 'adoc', 'jira', 'textile', 'org', 'mediawiki', 'dokuwiki', 'muse', 'djot', 'typ', 'tex', 'docx', 'odt', 'epub', 'rtf', 'ipynb', 'opml', 'fb2', 'txt', 'pdf', 'pptx', 'texi', 'icml');
 // / ------------------------------

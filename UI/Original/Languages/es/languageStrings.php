@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -168,6 +168,12 @@ $Gui1Text36 = 'Empezar de Nuevo';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'Actualizar';
+// / 'Data Formats'
+$Gui1Text38 = 'Formatos De Datos';
+// / 'Email Formats'
+$Gui1Text39 = 'Formatos De Correo Electrónico';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'Puede trazar imágenes y convertirlas en dibujos vectoriales.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -634,6 +640,30 @@ $Gui2Text238 = 'Pasados sin cambios: ';
 $Gui2Text239 = 'Sospechosos, pero sin infección confirmada: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'No analizados por completo: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'Convertir Este Archivo De Datos';
+// / 'Convert Data File'
+$Gui2Text242 = 'Convertir Archivo De Datos';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'Convertir Este Documento LaTeX';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'Trazar Esta Imagen Como Dibujo Vectorial';
+// / 'Trace Image'
+$Gui2Text245 = 'Trazar Imagen';
+// / 'Convert This Email'
+$Gui2Text246 = 'Convertir Este Correo Electrónico';
+// / 'Convert Email'
+$Gui2Text247 = 'Convertir Correo Electrónico';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'Convertir Este Documento De Marcado';
+// / 'Data Files'
+$Gui2Text249 = 'Archivos De Datos';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'Documentos LaTeX';
+// / 'Emails'
+$Gui2Text251 = 'Correos Electrónicos';
+// / 'Markup Documents'
+$Gui2Text252 = 'Documentos De Marcado';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

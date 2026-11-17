@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -169,6 +169,12 @@ $Gui1Text36 = 'ပြန်စပါ';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'ပြန်လည်ဆန်းသစ်ပါ';
+// / 'Data Formats'
+$Gui1Text38 = 'ဒေတာ ဖော်မတ်များ';
+// / 'Email Formats'
+$Gui1Text39 = 'အီးမေးလ် ဖော်မတ်များ';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'ရုပ်ပုံများကို ဗက်တာ ပုံဆွဲချက်များအဖြစ် ခြေရာကောက်နိုင်သည်။';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -635,6 +641,30 @@ $Gui2Text238 = 'မပြောင်းလဲဘဲ ဆက်ပေးပို
 $Gui2Text239 = 'သံသယဖြစ်ဖွယ်၊ သို့သော် ကူးစက်ကြောင်း အတည်မပြုရသေး: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'အပြည့်အစုံ မစစ်ဆေးနိုင်ခဲ့: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'ဤဒေတာဖိုင်ကို ပြောင်းလဲပါ';
+// / 'Convert Data File'
+$Gui2Text242 = 'ဒေတာဖိုင်ကို ပြောင်းလဲရန်';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'ဤ LaTeX စာရွက်စာတမ်းကို ပြောင်းလဲပါ';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'ဤရုပ်ပုံကို ဗက်တာ ပုံဆွဲချက်အဖြစ် ခြေရာကောက်ပါ';
+// / 'Trace Image'
+$Gui2Text245 = 'ရုပ်ပုံကို ခြေရာကောက်ရန်';
+// / 'Convert This Email'
+$Gui2Text246 = 'ဤအီးမေးလ်ကို ပြောင်းလဲပါ';
+// / 'Convert Email'
+$Gui2Text247 = 'အီးမေးလ်ကို ပြောင်းလဲရန်';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'ဤ Markup စာရွက်စာတမ်းကို ပြောင်းလဲပါ';
+// / 'Data Files'
+$Gui2Text249 = 'ဒေတာဖိုင်များ';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'LaTeX စာရွက်စာတမ်းများ';
+// / 'Emails'
+$Gui2Text251 = 'အီးမေးလ်များ';
+// / 'Markup Documents'
+$Gui2Text252 = 'Markup စာရွက်စာတမ်းများ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

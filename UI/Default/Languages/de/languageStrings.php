@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -167,6 +167,12 @@ $Gui1Text36 = 'Neu Anfangen';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'Aktualisieren';
+// / 'Data Formats'
+$Gui1Text38 = 'Datenformate';
+// / 'Email Formats'
+$Gui1Text39 = 'E-Mail-Formate';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'Kann Bilder als Vektorzeichnungen nachzeichnen.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -633,6 +639,30 @@ $Gui2Text238 = 'Unverändert weitergegeben: ';
 $Gui2Text239 = 'Verdächtig, aber nicht als infiziert bestätigt: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'Nicht vollständig geprüft: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'Diese Datendatei Konvertieren';
+// / 'Convert Data File'
+$Gui2Text242 = 'Datendatei Konvertieren';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'Dieses LaTeX-Dokument Konvertieren';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'Dieses Bild Als Vektorzeichnung Nachzeichnen';
+// / 'Trace Image'
+$Gui2Text245 = 'Bild Nachzeichnen';
+// / 'Convert This Email'
+$Gui2Text246 = 'Diese E-Mail Konvertieren';
+// / 'Convert Email'
+$Gui2Text247 = 'E-Mail Konvertieren';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'Dieses Markup-Dokument Konvertieren';
+// / 'Data Files'
+$Gui2Text249 = 'Datendateien';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'LaTeX-Dokumente';
+// / 'Emails'
+$Gui2Text251 = 'E-Mails';
+// / 'Markup Documents'
+$Gui2Text252 = 'Markup-Dokumente';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

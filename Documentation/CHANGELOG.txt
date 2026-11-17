@@ -27,6 +27,40 @@ The authoritative list of dependencies is Resources/Engine/depends.php & Resourc
 
 --------------------
 COMMIT 11/16/2026
+v4.2.5 - Five new conversion families convert data files, typeset LaTeX, trace images into vector drawings, convert Outlook messages & convert markup documents, & Resvg renders an SVG to a PNG before Inkscape is asked.
+
+-v4.2.5.
+-New Data pipeline converts JSON, YAML, TOML, XML & CSV into one another with Dasel 3, & writes XML with yq under one root & reads it back. Errors 44000 through 44007.
+-A document TOML or CSV cannot hold is refused with error 44003, which says what it holds, rather than written wrong.
+-New LaTeX pipeline typesets a tex or latex document into a PDF with XeLaTeX, twice where the contents or cross references need it. Errors 45000 through 45005.
+-TeX is set paranoid & has no shell, in the sandbox & out of it, so a document opens no file outside its folder & runs no command. New --LaTeX Conversion Timeout--.
+-New Trace pipeline traces an image into SVG, DXF, PDF, EPS or PS outlines with Potrace. ImageMagick reduces anything but BMP & PNM to a grey bitmap first, by the decoder its extension names, under a policy the pipeline carries. Errors 46000 through 46006.
+-New Email pipeline converts an Outlook message into an EML file or an mbox mailbox with msgconvert. Errors 47000 through 47004.
+-New Markup pipeline converts between Markdown, reStructuredText, AsciiDoc, Jira, Textile, Org, MediaWiki, DokuWiki, Typst, LaTeX, DOCX, ODT, EPUB, RTF, Jupyter, PPTX & more with Pandoc, always with --sandbox. A PDF is typeset by XeLaTeX. HTML is neither read nor written, because the core refuses html. Errors 48000 through 48005. New --Markup Conversion Timeout--.
+-Markitdown is not added.
+-The SVG pipeline renders an SVG or SVGZ to a PNG with Resvg first, & with Inkscape where Resvg is missing, fails, finds no font for some text, or is given both a width & a height.
+-New shared module workFolder.php gives a conversion a folder of its own, runs a command in it & takes it away. The Data, LaTeX & Trace pipelines use it.
+-New manifest entries Dasel, yq, XeLaTeX, Potrace, msgconvert, Pandoc & Resvg, in the subsystems Structured Data, LaTeX, Tracing, Email, Markup & SVG.
+-Dasel, yq & Pandoc are only ever this application's own copies, & Resvg is one where the distribution carries none. Each is the release binary its project publishes, pinned by version & checksum.
+-New Documentation/Build/hrconvert2-release-fetch.sh fetches, checks & installs a release binary.
+-Engine. Dependency Core says it is fetching rather than building an own copy whose Fallback's Method is release, & --check-depends says such a copy is fetched. Dependency Core is v4.2.5.
+-Engine. --install-depends makes the own copy of an entry that can have one where the program on the host answers with no version, as --check-depends said it would & --update-depends did, so Ubuntu's dasel 2 & Python yq are not taken for Dasel & yq.
+-Engine. --config --repair adds a missing setting to a section it only displays, as it does to any other, & names one it cannot add rather than raising the stamp over the file without it. The format lists are such a section. Setup Core is v4.2.5.
+-New sandbox profiles xelatex, pandoc, resvg, potrace, dasel, yq & msgconvert. Their operation types are LaTeX, Markup, SVG, Trace, Data & Email.
+-applicationConversionFamilies() routes LaTeX, Data, Trace, Email & Markup after Ebook & before Stream, so no older conversion changes pipeline.
+-config.php gains --LaTeX Conversion Timeout--, --Markup Conversion Timeout-- & an input & an output format list for each new family, 85 settings in HRConvert2's half. $ConfigVersion is v4.2.5. --config --repair adds them. The five types are added to --Allowed Conversion Types-- by hand, or by -u.
+--v names each new tool. The ImageMagick policy check counts the Trace pipeline's.
+-Both interfaces draw a button & a panel for each new family, list the new formats on the upload page & offer Data Files, LaTeX Documents, Emails & Markup Documents to select by type.
+-A new panel's unchosen format is the first the file is not already.
+-XML is a conversion format, which ABOUT_DATA_DIRECTORY_PROTECTION.txt excluded until now. The DATA directory hands it over as a download under a sandbox, as it does an SVG.
+-Fifteen strings in every language pack. Corrected Gui2Text54 in aii, Gui2Text43 in arc & Gui2Text50 in pt, each of which held a character or word from another language.
+-The upload page lists a format two document families read once.
+-ERROR_DESCRIPTIONS documents errors 44000 through 48005 & the new warnings. ABOUT_PIPELINE_COMPONENTS, ABOUT_DEPENDENCIES, ABOUT_COMMAND_LINE_ARGUMENTS, ABOUT_DATA_DIRECTORY_PROTECTION, ENGINE_MIGRATION_STATUS, INSTALLATION_INSTRUCTIONS & DEVELOPMENT_NOTES describe them.
+-New Documentation/ENGINE_RECONCILIATION_HRCONVERT2.txt records what v4.2.5 changed in the Engine.
+-The core, both interfaces & every language pack, the SVG pipeline, the contract & the manifest are v4.2.5, & every pin to them requires v4.2.5.
+
+--------------------
+COMMIT 11/16/2026
 v4.2.4 - The kernel boots the installation & the Engine owns its settings, its boot, its command line, its dependencies, -fp & -v, so an application supplies its pins, its contract & its logic.
 
 -v4.2.4.

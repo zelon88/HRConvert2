@@ -244,7 +244,10 @@ the release lists them. -u does this as part of an update. After a drop in, run 
 Once every setting is present it raises the file's stamp, $ConfigVersion, to the version the core
 requires. A stamp that is already that version or newer is left alone. With nothing missing & the
 stamp current it says so & succeeds, & asks nothing. A setting it cannot add, because the file has
-no section for it, is named, & the repair fails.
+no section for it, is named, & the repair fails. A section this utility only displays, such as
+the format lists, is no exception, from v4.2.5. It is never reset, & a repair adds a setting
+missing from it, because adding one changes no value already there. Until v4.2.5 such a setting
+was neither added nor named, & the stamp was raised over the file still lacking it.
 
 EVERY COMMAND BUT A BACKUP BEGINS WITH WHAT THE FILE SAYS ABOUT ITSELF.
 Sections gives each section's count of settings. Settings that contradict each other names a

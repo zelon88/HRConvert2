@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -169,6 +169,12 @@ $Gui1Text36 = 'আবার শুরু করুন';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'রিফ্রেশ';
+// / 'Data Formats'
+$Gui1Text38 = 'ডেটা বিন্যাস';
+// / 'Email Formats'
+$Gui1Text39 = 'ইমেল বিন্যাস';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'চিত্রগুলি ট্রেস করে ভেক্টর অঙ্কনে রূপান্তর করতে পারে।';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -635,6 +641,30 @@ $Gui2Text238 = 'অপরিবর্তিত অবস্থায় পা�
 $Gui2Text239 = 'সন্দেহজনক, তবে সংক্রমণ নিশ্চিত নয়: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'সম্পূর্ণ স্ক্যান করা যায়নি: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'এই ডেটা ফাইলটি রূপান্তর করুন';
+// / 'Convert Data File'
+$Gui2Text242 = 'ডেটা ফাইল রূপান্তর করুন';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'এই LaTeX নথিটি রূপান্তর করুন';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'এই চিত্রটি ট্রেস করে ভেক্টর অঙ্কনে পরিণত করুন';
+// / 'Trace Image'
+$Gui2Text245 = 'চিত্র ট্রেস করুন';
+// / 'Convert This Email'
+$Gui2Text246 = 'এই ইমেলটি রূপান্তর করুন';
+// / 'Convert Email'
+$Gui2Text247 = 'ইমেল রূপান্তর করুন';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'এই মার্কআপ নথিটি রূপান্তর করুন';
+// / 'Data Files'
+$Gui2Text249 = 'ডেটা ফাইল';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'LaTeX নথি';
+// / 'Emails'
+$Gui2Text251 = 'ইমেল';
+// / 'Markup Documents'
+$Gui2Text252 = 'মার্কআপ নথি';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

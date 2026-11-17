@@ -55,8 +55,16 @@ accept was being served back as a document rather than as a download.
 PDF is the same shape with a smaller blast radius. The built in viewer runs a restricted
 subset of JavaScript, so the rules below cover it for the same reason & at no extra cost.
 
-.html, .htm, .xhtml, .xml & .xsl are ALREADY excluded, either by $DangerousFiles or simply
-by not being conversion formats. Do not add them.
+.html, .htm, .xhtml & .xsl are ALREADY excluded, either by $DangerousFiles or simply by not
+being conversion formats. Do not add them. The Markup pipeline reads & writes neither html nor
+htm for this reason, from v4.2.5, though Pandoc does both.
+
+.xml IS A CONVERSION FORMAT FROM v4.2.5, which the Data pipeline reads & writes, because a data
+file in XML is what it converts on purpose, as an SVG is an image. A browser renders XML as a
+document & runs a script an XHTML element inside it carries, so an XML file here is safe for the
+reason an SVG is, the two controls below, & for no other. The Markup pipeline writes XML under
+other names as well, dbk, fb2, opml & icml, which the same two controls cover. Until v4.2.5 .xml
+was excluded with the four above.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

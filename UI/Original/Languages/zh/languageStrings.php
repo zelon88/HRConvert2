@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -165,6 +165,12 @@ $Gui1Text36 = '重新开始';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = '刷新';
+// / 'Data Formats'
+$Gui1Text38 = '数据格式';
+// / 'Email Formats'
+$Gui1Text39 = '电子邮件格式';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = '可以将图像描摹为矢量图。';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -631,6 +637,30 @@ $Gui2Text238 = '原样传递：';
 $Gui2Text239 = '可疑，但未确认感染：';
 // / 'Not scanned in full: '
 $Gui2Text240 = '未能完整扫描：';
+// / 'Convert This Data File'
+$Gui2Text241 = '转换此数据文件';
+// / 'Convert Data File'
+$Gui2Text242 = '转换数据文件';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = '转换此 LaTeX 文档';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = '将此图像描摹为矢量图';
+// / 'Trace Image'
+$Gui2Text245 = '描摹图像';
+// / 'Convert This Email'
+$Gui2Text246 = '转换此电子邮件';
+// / 'Convert Email'
+$Gui2Text247 = '转换电子邮件';
+// / 'Convert This Markup Document'
+$Gui2Text248 = '转换此标记文档';
+// / 'Data Files'
+$Gui2Text249 = '数据文件';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'LaTeX 文档';
+// / 'Emails'
+$Gui2Text251 = '电子邮件';
+// / 'Markup Documents'
+$Gui2Text252 = '标记文档';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

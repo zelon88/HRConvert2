@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -167,6 +167,12 @@ $Gui1Text36 = 'Начать заново';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'Обновить';
+// / 'Data Formats'
+$Gui1Text38 = 'Форматы данных';
+// / 'Email Formats'
+$Gui1Text39 = 'Форматы электронной почты';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'Может трассировать изображения в векторные рисунки.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -633,6 +639,30 @@ $Gui2Text238 = 'Переданы без изменений: ';
 $Gui2Text239 = 'Подозрительные, но заражение не подтверждено: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'Проверены не полностью: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'Конвертировать этот файл данных';
+// / 'Convert Data File'
+$Gui2Text242 = 'Конвертировать файл данных';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'Конвертировать этот документ LaTeX';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'Трассировать это изображение в векторный рисунок';
+// / 'Trace Image'
+$Gui2Text245 = 'Трассировать изображение';
+// / 'Convert This Email'
+$Gui2Text246 = 'Конвертировать это письмо';
+// / 'Convert Email'
+$Gui2Text247 = 'Конвертировать письмо';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'Конвертировать этот документ разметки';
+// / 'Data Files'
+$Gui2Text249 = 'Файлы данных';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'Документы LaTeX';
+// / 'Emails'
+$Gui2Text251 = 'Электронные письма';
+// / 'Markup Documents'
+$Gui2Text252 = 'Документы разметки';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

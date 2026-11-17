@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.1
+- **Version** v4.2.5
 - **Kind** conversion
 - **Family** SVG
 - **Entry point** convertSVG
@@ -26,6 +26,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 - **Bubblewrap** (required, 0.4 or newer, LGPL-2.0). Isolates every conversion from the host & the network.
 - **Inkscape** (optional, 1.2 or newer, GPL-3.0). Converts vector graphics.
+- **Resvg** (optional, 0.45 or newer, Apache-2.0). Renders SVG to PNG before Inkscape is asked.
 
 ## Approval
 

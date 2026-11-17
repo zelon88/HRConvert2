@@ -311,7 +311,8 @@ the code moves, not by the code moving.
                  Delete Resources/config.php & run --config --repair. It writes 131 settings
                  from Resources/Contract/config-template.php.
                  From v4.2.4 it writes 160, from both halves of the template, & with the
-                 contract aside --config --view still shows the Engine's own 86.
+                 contract aside --config --view still shows the Engine's own 86. From v4.2.5
+                 it writes 172, because v4.2.5 adds twelve settings to HRConvert2's half.
      SOLVED DIFFERENTLY THAN PLANNED. The plan said paths the application supplies. That
      cannot work for app-engine-config.php, because it is the file an application would
      supply them IN. The location is a kernel convention instead, contractPath(), the same in
@@ -783,7 +784,11 @@ the code moves, not by the code moving.
      made root's alone folder by folder before it is emptied, so nothing in it can point root's
      removal elsewhere. The contract says what to build & a script beside the application's other
      build scripts says how, so the Engine names no dependency. 7-Zip is the first entry to declare
-     one, because Ubuntu 24.04 carries 23.01 & the floor is 26.02.
+     one, because Ubuntu 24.04 carries 23.01 & the floor is 26.02. From v4.2.5 a Fallback may fetch
+     the release binary a project publishes rather than build from source, as Dasel, yq, Pandoc &
+     Resvg do, & says so where it is made & where --check-depends names it. A program that answers
+     with no version is given its own build by --install-depends where the entry can have one, as
+     ENGINE_RECONCILIATION_HRCONVERT2.txt records.
      PROVEN BY   Ninety four unit checks, with libexec moved under a scratch folder & a package
                  manager, a program & a build that do what files tell them: which entries may
                  have an own build & where it lives, which program answers for each own build &

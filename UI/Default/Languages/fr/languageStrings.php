@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -166,6 +166,12 @@ $Gui1Text36 = 'Recommencer';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'Actualiser';
+// / 'Data Formats'
+$Gui1Text38 = 'Formats De Données';
+// / 'Email Formats'
+$Gui1Text39 = 'Formats De Courriels';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'Peut tracer des images en dessins vectoriels.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -632,6 +638,30 @@ $Gui2Text238 = 'Transmis sans changement: ';
 $Gui2Text239 = 'Suspects, mais pas confirmés comme infectés: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'Pas entièrement analysés: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'Convertir Ce Fichier De Données';
+// / 'Convert Data File'
+$Gui2Text242 = 'Convertir Le Fichier De Données';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'Convertir Ce Document LaTeX';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'Tracer Cette Image En Dessin Vectoriel';
+// / 'Trace Image'
+$Gui2Text245 = 'Tracer L\'image';
+// / 'Convert This Email'
+$Gui2Text246 = 'Convertir Ce Courriel';
+// / 'Convert Email'
+$Gui2Text247 = 'Convertir Le Courriel';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'Convertir Ce Document De Balisage';
+// / 'Data Files'
+$Gui2Text249 = 'Fichiers De Données';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'Documents LaTeX';
+// / 'Emails'
+$Gui2Text251 = 'Courriels';
+// / 'Markup Documents'
+$Gui2Text252 = 'Documents De Balisage';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

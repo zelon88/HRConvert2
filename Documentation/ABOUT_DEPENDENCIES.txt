@@ -80,6 +80,11 @@ Each entry carries these fields.
   Purpose          Why this application needs it, in one sentence.
   Fallback         For an apt entry, how this application builds its own copy where the
                    package manager's falls short. See When The Package Manager Is Behind.
+  Architectures    The architectures the entry works on. On any other it is UNSUPPORTED, which
+                   is its own state rather than a failure.
+  ArchitectureOverrides
+                   The fields replaced on one architecture, such as a package name or a whole
+                   Fallback. Only the fields named change, & everything else is inherited.
   Interpreter      python3 for a program the distribution packaged as a Python program, from
                    v4.2.0. It is started by the distribution's own Python 3. See below.
 
@@ -221,6 +226,26 @@ as follows.
   BuildCommand  The command that fetches, checks, builds & installs it.
   Source        Where the own copy comes from, which the supply chain audit records.
   License       Its licence, which the gates judge & the audit records.
+  Method        release, from v4.2.5, where the command fetches a program its project publishes
+                ready to run rather than building one, & --install-depends then says it is
+                fetching rather than building, as --check-depends says it would. Left out for a
+                build.
+
+A RELEASE BINARY IS FETCHED, CHECKED & INSTALLED BY ONE SCRIPT, from v4.2.5.
+Documentation/Build/hrconvert2-release-fetch.sh is handed the program's name, the https address
+of its release with {version} where the version goes, & the program's path inside a tar.gz where
+it is packed in one. It refuses anything but https, checks the file against DEPENDENCY_SHA256
+before anything is unpacked, takes only the one program named, & installs it at bin/ beneath
+DEPENDENCY_PREFIX. Dasel, yq, Pandoc & Resvg are fetched this way. Where a project publishes no
+checksum, the checksum is the one this release took, & the manifest says so beside it.
+
+AN ENTRY THAT NAMES NO PACKAGE HAS ONLY ITS OWN COPY, from v4.2.5.
+Where no distribution this application supports carries a version inside the window, or one
+carries another program of the same name, Package is left empty. --install-depends asks no
+package manager for it, & fetches or builds the own copy, which is then the only copy. Dasel, yq
+& Pandoc are such entries. Resvg names its package, which recent distributions carry, & has an
+own copy on x86-64 & ARM64 alone, through ArchitectureOverrides, because those are the
+architectures its project publishes a binary for.
 
 THE OWN COPY IS THIS APPLICATION'S ALONE.
 It lives in /usr/local/libexec/hrconvert2/builds/, beside the application's own copy of
@@ -246,7 +271,10 @@ ONLY THE DEPENDENCY COMMANDS MAKE, KEEP OR TAKE AWAY AN OWN COPY.
   --install-depends    Asks the package manager's copy again after the package manager has
                        run, & builds the own copy where it is missing or outside the window,
                        whether or not the package manager succeeded, because falling back
-                       comes before failing.
+                       comes before failing. A program on the host that answers with no
+                       version this release can read is given the own copy too, from v4.2.5,
+                       because it may be another program of the same name. Where the entry
+                       can have no own copy, it is present & left as it is.
   --update-depends     Takes the own copy away where the package manager's now answers inside
                        the window, & builds it again where it is behind the Version pinned,
                        which is how an update of this application moves it.

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -169,6 +169,12 @@ $Gui1Text36 = 'نئے سرے سے شروع کریں';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'تازہ کریں';
+// / 'Data Formats'
+$Gui1Text38 = 'ڈیٹا فارمیٹس';
+// / 'Email Formats'
+$Gui1Text39 = 'ای میل فارمیٹس';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'تصاویر کو ٹریس کر کے ویکٹر ڈرائنگز میں تبدیل کر سکتا ہے۔';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -635,6 +641,30 @@ $Gui2Text238 = 'بغیر تبدیلی کے آگے بھیجی گئیں: ';
 $Gui2Text239 = 'مشکوک، لیکن انفیکشن کی تصدیق نہیں ہوئی: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'مکمل اسکین نہیں ہو سکیں: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'اس ڈیٹا فائل کو تبدیل کریں';
+// / 'Convert Data File'
+$Gui2Text242 = 'ڈیٹا فائل تبدیل کریں';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'اس LaTeX دستاویز کو تبدیل کریں';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'اس تصویر کو ٹریس کر کے ویکٹر ڈرائنگ بنائیں';
+// / 'Trace Image'
+$Gui2Text245 = 'تصویر ٹریس کریں';
+// / 'Convert This Email'
+$Gui2Text246 = 'اس ای میل کو تبدیل کریں';
+// / 'Convert Email'
+$Gui2Text247 = 'ای میل تبدیل کریں';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'اس مارک اپ دستاویز کو تبدیل کریں';
+// / 'Data Files'
+$Gui2Text249 = 'ڈیٹا فائلیں';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'LaTeX دستاویزات';
+// / 'Emails'
+$Gui2Text251 = 'ای میلز';
+// / 'Markup Documents'
+$Gui2Text252 = 'مارک اپ دستاویزات';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

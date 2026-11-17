@@ -341,6 +341,17 @@ ten times a second & stops it at either limit, or after an hour, so an archive t
 what it holds is stopped as it lies. A gzip, bzip2 or xz file is decompressed first by counting
 every byte, & a tar inside it is extracted in turn. A refusal is a warning, because the file is
 a stranger's. The module raises 39000 through 39003 for whichever pipeline called it.
+
+workFolder.php is the third module, from v4.2.5. The Data, LaTeX & Trace pipelines each have a
+tool write something on the way to the output, & none of it may reach a user's folder.
+makeWorkFolder() makes a folder only the web server account can open, beside the staged input,
+named with a dot & sixteen random hex digits, so two conversions never share one & a name
+already taken is never written into. runInWorkFolder() runs a command there, so a command that
+names its files by name alone finds them with or without a sandbox, which paranoid TeX needs,
+because it opens a document named by its name & nothing else. removeWorkFolder() takes the
+folder away through the Engine's cleanFiles(), held to the folder that holds it. The module
+raises no error. A pipeline that cannot have a folder raises its own, because it knows what the
+folder was for.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -489,8 +500,10 @@ profile that confines OpenSCAD, because that profile is what governs a render.
 
 --A pipeline carries its own policy, from v4.0.5--
 
-A policy a tool reads belongs to the pipeline that runs the tool, & travels with it. The Image
-& OCR pipelines each carry an ImageMagick policy in a Policy folder beside their converter.
+A policy a tool reads belongs to the pipeline that runs the tool, & travels with it. The Image,
+OCR, Identify & Trace pipelines each carry an ImageMagick policy in a Policy folder beside their
+converter. Trace's is from v4.2.5, & it also names the decoder ImageMagick reads an image with,
+so a file named as a PNG is read as a PNG or not at all.
 Nothing is written into the host. Until v4.0.5 -fp wrote one policy over the host's own
 policy.xml, a file the package owns, & every program on the host ran under it.
 
@@ -627,8 +640,8 @@ say stream.
 --Enumeration & Dispatch Are Different Operations--
 
 THE INTERFACE ENUMERATES. IT DOES NOT RESOLVE.
-An rtf file is claimed by Document & by Ebook. Both are shown, each with its own options
-div & its own format list. A file supported by ImageMagick & by 7z shows an image menu & an
+An rtf file is claimed by Document, by Ebook &, from v4.2.5, by Markup. All three are shown, each with its own
+options div & its own format list. A file supported by ImageMagick & by 7z shows an image menu & an
 archive menu. Matching more than one family is BY DESIGN & is how a user is offered every
 conversion the installation can actually perform.
 
@@ -645,6 +658,13 @@ by $PipelinePriority & then by folder name so the result is deterministic.
 A FAMILY MATCHING THE INPUT BUT NOT THE OUTPUT IS SKIPPED, NOT REFUSED.
 That behaviour is what lets overlapping families coexist without special cases & it is
 unchanged from the two map system it replaces.
+
+THE FIVE FAMILIES ADDED IN v4.2.5 SIT AFTER EBOOK & BEFORE STREAM.
+applicationConversionFamilies() lists LaTeX, Data, Trace, Email & Markup in that order, so each
+takes only a pair no older family claims. docx to pdf stays with Document, docx to epub with
+Ebook, png to jpg with Image & csv to xlsx with Document, as they were, & docx to md, png to svg
+& csv to json reach the new ones. LaTeX sits before Markup, so tex to pdf is typeset by the
+LaTeX pipeline & Markup is asked only for what LaTeX does not write.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -791,7 +811,8 @@ against ERROR_DESCRIPTIONS.txt before reserving it.
   PHASE 2  Move converter bodies into real pipeline.php files.                 DONE
            All thirteen have migrated. convertCore.php converts nothing on its own.
            Archive, Audio, Document, Drawing, Ebook, Image, Model, OCR, Scad,
-           Stream, Subtitle, SVG & Video.
+           Stream, Subtitle, SVG & Video. Data, LaTeX, Trace, Email & Markup were
+           written as pipelines from the start, in v4.2.5.
   PHASE 3  Wire interface enumeration to the live capability set.
   PHASE 4  Capability detection, the cache & a second implementation of one family.
   PHASE 5  Remaining pipelines, then chaining.

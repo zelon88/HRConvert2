@@ -73,6 +73,7 @@ Navigate the complete documentation library using the directory structure below.
 * [ABOUT_ENGINE_CONTRACT.txt](ABOUT_ENGINE_CONTRACT.txt) — What an application must supply for the Engine to run.
 * [ABOUT_ENGINE_ABSORPTION.txt](ABOUT_ENGINE_ABSORPTION.txt) — How core logic was moved into the Engine.
 * [ENGINE_MIGRATION_STATUS.txt](ENGINE_MIGRATION_STATUS.txt) — How far the migration has actually got, & the check that proves each line.
+* [ENGINE_RECONCILIATION_HRCONVERT2.txt](ENGINE_RECONCILIATION_HRCONVERT2.txt) — Every change HRConvert2 makes to its copy of the Engine, so another application's copy can be reconciled with it.
 * [ABOUT_COMPONENTS.txt](ABOUT_COMPONENTS.txt) — How a detachable component is versioned & loaded.
 * [ABOUT_PIPELINE_COMPONENTS.txt](ABOUT_PIPELINE_COMPONENTS.txt) — The contracts every conversion pipeline obeys.
 * [ABOUT_WORKFLOWS.txt](ABOUT_WORKFLOWS.txt) — Workflows. Their format, their libraries, how one runs & what a page is told.

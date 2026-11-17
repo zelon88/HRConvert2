@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility chec takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -167,6 +167,12 @@ $Gui1Text36 = 'Ricomincia';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'Aggiorna';
+// / 'Data Formats'
+$Gui1Text38 = 'Formati Dati';
+// / 'Email Formats'
+$Gui1Text39 = 'Formati Email';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'Può ricalcare le immagini come disegni vettoriali.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -633,6 +639,30 @@ $Gui2Text238 = 'Passati senza modifiche: ';
 $Gui2Text239 = 'Sospetti, ma non confermati come infetti: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'Non analizzati per intero: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'Converti Questo File Di Dati';
+// / 'Convert Data File'
+$Gui2Text242 = 'Converti File Di Dati';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'Converti Questo Documento LaTeX';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'Ricalca Questa Immagine Come Disegno Vettoriale';
+// / 'Trace Image'
+$Gui2Text245 = 'Ricalca Immagine';
+// / 'Convert This Email'
+$Gui2Text246 = 'Converti Questa Email';
+// / 'Convert Email'
+$Gui2Text247 = 'Converti Email';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'Converti Questo Documento Di Markup';
+// / 'Data Files'
+$Gui2Text249 = 'File Di Dati';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'Documenti LaTeX';
+// / 'Emails'
+$Gui2Text251 = 'Email';
+// / 'Markup Documents'
+$Gui2Text252 = 'Documenti Di Markup';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

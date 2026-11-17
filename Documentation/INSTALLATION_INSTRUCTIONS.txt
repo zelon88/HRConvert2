@@ -267,6 +267,26 @@ the Metadata pipeline NOT OFFERED. A mat2 older than 0.13 is offered, & fails wi
 -v says FAILED beside MAT2. Merge & Split need nothing new, because PDFUnite & PDFSeparate come in
 the same package as Poppler Utils, & -v names each.
 
+RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.2.5 DROP IN, &
+BEFORE -fp. v4.2.5 adds the Data, LaTeX, Trace, Email & Markup families, the format lists of each,
+& --LaTeX Conversion Timeout-- & --Markup Conversion Timeout--. --config --repair adds the settings
+& changes none already there, so add 'Data', 'LaTeX', 'Trace', 'Email' & 'Markup' to --Allowed
+Conversion Types-- by hand. -u does both by itself. Then install the tools the families need.
+
+  sudo php convertCore.php --setup --install-depends --subsystem="Structured Data"   Dasel & yq
+  sudo php convertCore.php --setup --install-depends --subsystem=LaTeX               XeLaTeX
+  sudo php convertCore.php --setup --install-depends --subsystem=Tracing             Potrace
+  sudo php convertCore.php --setup --install-depends --subsystem=Email               msgconvert
+  sudo php convertCore.php --setup --install-depends --subsystem=Markup              Pandoc
+  sudo php convertCore.php --setup --install-depends --subsystem=SVG                 Resvg
+
+Dasel, yq & Pandoc are always this application's own copies, the release binaries each project
+publishes, checked against the checksums the manifest pins, because no LTS release carries one
+that works. Resvg is one on Debian 12 & Ubuntu 24.04, which carry none. Each needs a route to
+GitHub. LaTeX is about 0.7 GB, & Markup needs it for a PDF. Trace needs ImageMagick for an image
+other than BMP or PNM, which the Images subsystem installs. SVG renders with Inkscape as before
+where Resvg is missing.
+
 FROM v4.2.1 A BUTTON IS DRAWN ONLY WHERE THE TOOL BEHIND IT IS INSTALLED. A conversion, Strip
 Metadata, OCR, Merge, Split or a scanner whose tool is missing is hidden from every page & every
 workflow, & -v names each pipeline that is NOT OFFERED & what it lacks. Install what it names, &

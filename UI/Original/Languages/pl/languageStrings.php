@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -206,6 +206,12 @@ $Gui1Text36 = 'Zacznij Od Nowa';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'Odśwież';
+// / 'Data Formats'
+$Gui1Text38 = 'Formaty Danych';
+// / 'Email Formats'
+$Gui1Text39 = 'Formaty Wiadomości E-mail';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'Może obrysowywać obrazy jako rysunki wektorowe.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -672,6 +678,30 @@ $Gui2Text238 = 'Przekazane bez zmian: ';
 $Gui2Text239 = 'Podejrzane, ale bez potwierdzonej infekcji: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'Nieprzeskanowane w całości: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'Konwertuj Ten Plik Danych';
+// / 'Convert Data File'
+$Gui2Text242 = 'Konwertuj Plik Danych';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'Konwertuj Ten Dokument LaTeX';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'Obrysuj Ten Obraz Jako Rysunek Wektorowy';
+// / 'Trace Image'
+$Gui2Text245 = 'Obrysuj Obraz';
+// / 'Convert This Email'
+$Gui2Text246 = 'Konwertuj Tę Wiadomość E-mail';
+// / 'Convert Email'
+$Gui2Text247 = 'Konwertuj Wiadomość E-mail';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'Konwertuj Ten Dokument Znacznikowy';
+// / 'Data Files'
+$Gui2Text249 = 'Pliki Danych';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'Dokumenty LaTeX';
+// / 'Emails'
+$Gui2Text251 = 'Wiadomości E-mail';
+// / 'Markup Documents'
+$Gui2Text252 = 'Dokumenty Znacznikowe';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

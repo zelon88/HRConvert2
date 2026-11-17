@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -169,6 +169,12 @@ $Gui1Text36 = 'Opnieuw Beginnen';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'Vernieuwen';
+// / 'Data Formats'
+$Gui1Text38 = 'Gegevensformaten';
+// / 'Email Formats'
+$Gui1Text39 = 'E-mailformaten';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'Kan afbeeldingen overtrekken tot vectortekeningen.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -635,6 +641,30 @@ $Gui2Text238 = 'Ongewijzigd doorgegeven: ';
 $Gui2Text239 = 'Verdacht, maar niet bevestigd als besmet: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'Niet volledig gescand: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'Converteer Dit Gegevensbestand';
+// / 'Convert Data File'
+$Gui2Text242 = 'Converteer Gegevensbestand';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'Converteer Dit LaTeX-document';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'Trek Deze Afbeelding Over Als Vectortekening';
+// / 'Trace Image'
+$Gui2Text245 = 'Afbeelding Overtrekken';
+// / 'Convert This Email'
+$Gui2Text246 = 'Converteer Deze E-mail';
+// / 'Convert Email'
+$Gui2Text247 = 'Converteer E-mail';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'Converteer Dit Markup-document';
+// / 'Data Files'
+$Gui2Text249 = 'Gegevensbestanden';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'LaTeX-documenten';
+// / 'Emails'
+$Gui2Text251 = 'E-mails';
+// / 'Markup Documents'
+$Gui2Text252 = 'Markup-documenten';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -168,6 +168,12 @@ $Gui1Text36 = 'Começar de Novo';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'Atualizar';
+// / 'Data Formats'
+$Gui1Text38 = 'Formatos de dados';
+// / 'Email Formats'
+$Gui1Text39 = 'Formatos de e-mail';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'Pode traçar imagens como desenhos vetoriais.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -257,7 +263,7 @@ $Gui2Text48 = 'Convert This Modelo 3D';
 // / 'Convert This Technical Drawing Or Vector File'
 $Gui2Text49 = 'Convert This Desenho Técnico ou Arquivo Vetorial';
 // / 'Convert This Image'
-$Gui2Text50 = 'Convert This Imagem';
+$Gui2Text50 = 'Converter Esta Imagem';
 // / 'Archive File'
 $Gui2Text51 = 'Arquivo';
 // / 'Convert Into Document'
@@ -634,6 +640,30 @@ $Gui2Text238 = 'Repassados sem alterações: ';
 $Gui2Text239 = 'Suspeitos, mas sem infecção confirmada: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'Não verificados por completo: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'Converter Este Arquivo De Dados';
+// / 'Convert Data File'
+$Gui2Text242 = 'Converter Arquivo De Dados';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'Converter Este Documento LaTeX';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'Traçar Esta Imagem Como Desenho Vetorial';
+// / 'Trace Image'
+$Gui2Text245 = 'Traçar Imagem';
+// / 'Convert This Email'
+$Gui2Text246 = 'Converter Este E-mail';
+// / 'Convert Email'
+$Gui2Text247 = 'Converter E-mail';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'Converter Este Documento De Marcação';
+// / 'Data Files'
+$Gui2Text249 = 'Arquivos De Dados';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'Documentos LaTeX';
+// / 'Emails'
+$Gui2Text251 = 'E-mails';
+// / 'Markup Documents'
+$Gui2Text252 = 'Documentos De Marcação';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

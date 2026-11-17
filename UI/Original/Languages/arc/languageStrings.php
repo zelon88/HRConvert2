@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -169,6 +169,12 @@ $Gui1Text36 = 'ܫܪܐ ܡܢ ܪܫܐ';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'ܚܕܬ';
+// / 'Data Formats'
+$Gui1Text38 = 'ܫܘܚܠܦ̈ܐ ܕܕܬܐ';
+// / 'Email Formats'
+$Gui1Text39 = 'ܫܘܚܠܦ̈ܐ ܕܐܝܡܝܠ';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'ܡܨܐ ܠܡܫܚܠܦܘ ܨܘܪ̈ܬܐ ܠܪ̈ܫܡܐ ܕܒܩܛܘܪ.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -244,7 +250,7 @@ $Gui2Text41 = 'ܡܛܘܪܬܐ';
 // / 'Convert This Archive'
 $Gui2Text42 = 'ܫܚܠܦ ܗܢܐ ܓܙܐ';
 // / 'Convert This Document'
-$Gui2Text43 = 'ܫܚܠف ܗܢܐ ܟܬܝܒܬܐ';
+$Gui2Text43 = 'ܫܚܠܦ ܗܢܐ ܟܬܝܒܬܐ';
 // / 'Convert This Spreadsheet'
 $Gui2Text44 = 'ܫܚܠܦ ܗܢܐ ܦܵܬܘܿܪܵܐ ܕܚܘܼܫܒܵܢܵܐ';
 // / 'Convert This Audio'
@@ -635,6 +641,30 @@ $Gui2Text238 = 'ܐܫܬܕܪܘ ܕܠܐ ܫܘܚܠܦܐ: ';
 $Gui2Text239 = 'ܚܫܝܕ̈ܐ، ܐܠܐ ܠܐ ܐܫܬܪܪ ܕܐܝܬ ܒܗܘܢ ܒܝܪܘܣ: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'ܠܐ ܐܬܒܚܢܘ ܓܡܝܪܐܝܬ: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'ܫܚܠܦ ܗܢܐ ܦܬܩܐ ܕܕܬܐ';
+// / 'Convert Data File'
+$Gui2Text242 = 'ܫܚܠܦ ܦܬܩܐ ܕܕܬܐ';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'ܫܚܠܦ ܗܢܐ ܟܬܝܒܬܐ ܕ-LaTeX';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'ܫܚܠܦ ܗܢܐ ܨܘܪܬܐ ܠܪܫܡܐ ܕܒܩܛܘܪ';
+// / 'Trace Image'
+$Gui2Text245 = 'ܫܚܠܦ ܨܘܪܬܐ ܠܒܩܛܘܪ';
+// / 'Convert This Email'
+$Gui2Text246 = 'ܫܚܠܦ ܗܢܐ ܐܝܡܝܠ';
+// / 'Convert Email'
+$Gui2Text247 = 'ܫܚܠܦ ܐܝܡܝܠ';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'ܫܚܠܦ ܗܢܐ ܟܬܝܒܬܐ ܕ-Markup';
+// / 'Data Files'
+$Gui2Text249 = 'ܦܬܩ̈ܐ ܕܕܬܐ';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'ܟܬܝܒܬ̈ܐ ܕ-LaTeX';
+// / 'Emails'
+$Gui2Text251 = 'ܐܝܡܝܠ̈ܐ';
+// / 'Markup Documents'
+$Gui2Text252 = 'ܟܬܝܒܬ̈ܐ ܕ-Markup';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

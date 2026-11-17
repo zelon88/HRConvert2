@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -172,6 +172,12 @@ $Gui1Text36 = 'ابدأ من جديد';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = 'تحديث';
+// / 'Data Formats'
+$Gui1Text38 = 'تنسيقات البيانات';
+// / 'Email Formats'
+$Gui1Text39 = 'تنسيقات البريد الإلكتروني';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = 'يمكن تتبع الصور وتحويلها إلى رسومات متجهة.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -638,6 +644,30 @@ $Gui2Text238 = 'مُمرَّرة دون تغيير: ';
 $Gui2Text239 = 'مشبوهة، لكن لم تُؤكَّد إصابتها: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = 'لم تُفحَص بالكامل: ';
+// / 'Convert This Data File'
+$Gui2Text241 = 'تحويل ملف البيانات هذا';
+// / 'Convert Data File'
+$Gui2Text242 = 'تحويل ملف البيانات';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = 'تحويل مستند LaTeX هذا';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = 'تتبع هذه الصورة وتحويلها إلى رسم متجه';
+// / 'Trace Image'
+$Gui2Text245 = 'تتبع الصورة';
+// / 'Convert This Email'
+$Gui2Text246 = 'تحويل هذا البريد الإلكتروني';
+// / 'Convert Email'
+$Gui2Text247 = 'تحويل البريد الإلكتروني';
+// / 'Convert This Markup Document'
+$Gui2Text248 = 'تحويل مستند الترميز هذا';
+// / 'Data Files'
+$Gui2Text249 = 'ملفات البيانات';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'مستندات LaTeX';
+// / 'Emails'
+$Gui2Text251 = 'رسائل البريد الإلكتروني';
+// / 'Markup Documents'
+$Gui2Text252 = 'مستندات الترميز';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

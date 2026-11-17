@@ -163,3 +163,48 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     3e Sanity check of the build system           Relies entirely on the distribution package builder's native target architecture integration checks.
     3f Build script provided                      No.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--Resvg--
+
+  Approval record
+    Status                                        NOT YET AUDITED
+    Approved on                                   NOT YET AUDITED
+    Expires on                                    NOT YET AUDITED
+    Audited by                                    NOT YET AUDITED
+    Audit outcome                                 NOT YET AUDITED
+    Notes or Conditions                           NOT YET AUDITED
+
+  Manifest facts, read from Resources/Contract/depends.php
+    Binary                                        resvg
+    Install type                                  apt
+    Package                                       resvg
+    Minimum version                               0.45
+    Required                                      NO
+    Subsystem                                     SVG
+    License                                       Apache-2.0
+    Depends on                                    Bubblewrap
+    Source                                        https://github.com/linebender/resvg
+    Purpose                                       Renders SVG to PNG before Inkscape is asked.
+
+  Audit answers. Every one is a judgement a person records here.
+    1a Security design is amenable to ours        NOT YET ANSWERED
+    1b Recent CVEs, issues or exploits            NOT YET ANSWERED
+    1c Development activity & breakage risk       NOT YET ANSWERED
+    1d What it needs to function                  NOT YET ANSWERED
+    1e Can it be sandboxed or isolated            NOT YET ANSWERED
+    1f Security options & hardened configuration  NOT YET ANSWERED
+    1g Could another dependency do this better    NOT YET ANSWERED
+    1h Origin & supply chain risk                 NOT YET ANSWERED
+    1i Dependency traps for existing installs     NOT YET ANSWERED
+    2a System package versus a source build       NOT YET ANSWERED
+    2b Build flags, libraries & features          NOT YET ANSWERED
+    2c Minimum version & version edge cases       NOT YET ANSWERED
+    2d Licensing implications of the build        NOT YET ANSWERED
+    3a Distribution method                        NOT YET ANSWERED
+    3b Download source used                       NOT YET ANSWERED
+    3c How an installer obtains this version      NOT YET ANSWERED
+    3d Inspection of any bundled binary or code   NOT YET ANSWERED
+    3e Sanity check of the build system           NOT YET ANSWERED
+    3f Build script provided                      NOT YET ANSWERED
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

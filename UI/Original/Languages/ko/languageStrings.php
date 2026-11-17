@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.3';
+$LanguageVersion = 'v4.2.5';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -164,6 +164,12 @@ $Gui1Text36 = '다시 시작';
 // / with no text of its own, so this is the only description a screen reader has & the
 // / only thing shown when a browser cannot render the glyph.
 $Gui1Text37 = '새로 고침';
+// / 'Data Formats'
+$Gui1Text38 = '데이터 형식';
+// / 'Email Formats'
+$Gui1Text39 = '이메일 형식';
+// / 'Can trace images into vector drawings.'
+$Gui1Text40 = '이미지를 벡터 그림으로 트레이스할 수 있습니다.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -630,6 +636,30 @@ $Gui2Text238 = '변경 없이 전달됨: ';
 $Gui2Text239 = '의심스럽지만 감염은 확인되지 않음: ';
 // / 'Not scanned in full: '
 $Gui2Text240 = '전체를 검사하지 못함: ';
+// / 'Convert This Data File'
+$Gui2Text241 = '이 데이터 파일 변환';
+// / 'Convert Data File'
+$Gui2Text242 = '데이터 파일 변환';
+// / 'Convert This LaTeX Document'
+$Gui2Text243 = '이 LaTeX 문서 변환';
+// / 'Trace This Image Into A Vector Drawing'
+$Gui2Text244 = '이 이미지를 벡터 그림으로 트레이스';
+// / 'Trace Image'
+$Gui2Text245 = '이미지 트레이스';
+// / 'Convert This Email'
+$Gui2Text246 = '이 이메일 변환';
+// / 'Convert Email'
+$Gui2Text247 = '이메일 변환';
+// / 'Convert This Markup Document'
+$Gui2Text248 = '이 마크업 문서 변환';
+// / 'Data Files'
+$Gui2Text249 = '데이터 파일';
+// / 'LaTeX Documents'
+$Gui2Text250 = 'LaTeX 문서';
+// / 'Emails'
+$Gui2Text251 = '이메일';
+// / 'Markup Documents'
+$Gui2Text252 = '마크업 문서';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

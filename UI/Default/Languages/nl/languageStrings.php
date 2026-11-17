@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -60,10 +60,10 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'Converteer Alles!';
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
 if (!is_numeric($FileCount)) $FileCount = 'een onbekend aantal';
-$FCPlural1 = 'en';
+$FCPlural1 = 'geldige bestanden';
 $FCPlural2 = 'en zijn';
 if ($FileCount == 1) {
-  $FCPlural1 = '';
+  $FCPlural1 = 'geldig bestand';
   $FCPlural2 = ' is'; }
 // / -----------------------------------------------------------------------------------
 
@@ -175,6 +175,8 @@ $Gui1Text38 = 'Gegevensformaten';
 $Gui1Text39 = 'E-mailformaten';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Kan afbeeldingen overtrekken tot vectortekeningen.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Graafformaten';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -224,7 +226,7 @@ $Gui2Text28 = 'Kopieerd';
 // / 'File Link: '
 $Gui2Text29 = 'Bestandslink: ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
-$Gui2Text30 = 'U heeft '.$FileCount.' geldig bestand'.$FCPlural1.' geüpload naar '.$ApplicationName.'.';
+$Gui2Text30 = 'U heeft '.$FileCount.' '.$FCPlural1.' geüpload naar '.$ApplicationName.'.';
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
 $Gui2Text31 = 'Uw bestand'.$FCPlural2.' nu klaar om te converteren met behulp van de onderstaande opties.';
 // / 'Generate Link & Copy to Clipboard'
@@ -665,6 +667,12 @@ $Gui2Text250 = 'LaTeX-documenten';
 $Gui2Text251 = 'E-mails';
 // / 'Markup Documents'
 $Gui2Text252 = 'Markup-documenten';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Converteer Deze Graaf';
+// / 'Convert Graph'
+$Gui2Text254 = 'Converteer Graaf';
+// / 'Graphs'
+$Gui2Text255 = 'Grafen';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

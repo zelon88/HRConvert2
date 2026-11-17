@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -61,9 +61,10 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = '¡Convierte Cualquier Cosa!'
 // / Set GUI Related Logic.
 if (!is_numeric($FileCount)) $FileCount = 'un número desconocido de';
 $FCPlural1 = 's';
-$FCPlural2 = 'n';
-if ($FileCount == 1) { $FCPlural1 = ''; 
-  $fcPlural2 = 'n'; }
+$FCPlural2 = 'Sus archivos ahora están listos para convertir usando las opciones a continuación.';
+if ($FileCount == 1) {
+  $FCPlural1 = '';
+  $FCPlural2 = 'Su archivo ahora está listo para convertir usando las opciones a continuación.'; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -174,6 +175,8 @@ $Gui1Text38 = 'Formatos De Datos';
 $Gui1Text39 = 'Formatos De Correo Electrónico';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Puede trazar imágenes y convertirlas en dibujos vectoriales.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Formatos De Grafos';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -223,9 +226,9 @@ $Gui2Text28 = 'Copiado';
 // / 'File Link: '
 $Gui2Text29 = 'Enlace De Archivo: ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
-$Gui2Text30 = 'Has subido '.$FileCount.' archivo válido'.$FCPlural1.' a '.$ApplicationName.'.';
+$Gui2Text30 = 'Has subido '.$FileCount.' archivo'.$FCPlural1.' válido'.$FCPlural1.' a '.$ApplicationName.'.';
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'Su archivo'.$FCPlural2.' ahora está listo para convertir usando las opciones a continuación.';
+$Gui2Text31 = $FCPlural2;
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'Generar Enlace Y Copiar Al Portapapeles';
 // / 'Generate Link'
@@ -664,6 +667,12 @@ $Gui2Text250 = 'Documentos LaTeX';
 $Gui2Text251 = 'Correos Electrónicos';
 // / 'Markup Documents'
 $Gui2Text252 = 'Documentos De Marcado';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Convertir Este Grafo';
+// / 'Convert Graph'
+$Gui2Text254 = 'Convertir Grafo';
+// / 'Graphs'
+$Gui2Text255 = 'Grafos';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

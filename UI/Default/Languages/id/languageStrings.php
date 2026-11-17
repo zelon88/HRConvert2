@@ -37,7 +37,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -180,6 +180,8 @@ $Gui1Text38 = 'Format Data';
 $Gui1Text39 = 'Format Email';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Dapat menjiplak gambar menjadi gambar vektor.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Format Graf';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -672,6 +674,12 @@ $Gui2Text250 = 'Dokumen LaTeX';
 $Gui2Text251 = 'Email';
 // / 'Markup Documents'
 $Gui2Text252 = 'Dokumen Markup';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Konversi Graf Ini';
+// / 'Convert Graph'
+$Gui2Text254 = 'Konversi Graf';
+// / 'Graphs'
+$Gui2Text255 = 'Graf';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

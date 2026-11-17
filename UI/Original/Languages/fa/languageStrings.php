@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -61,10 +61,10 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'هر چیزی را تبدی�
 // / Set GUI Related Logic.
 if (!is_numeric($FileCount)) $FileCount = 'تعداد نامشخصی';
 $FCPlural1 = ' عدد فایل معتبر';
-$FCPlural2 = '‌های شما اکنون آماده تبدیل هستند';
+$FCPlural2 = '‌های شما اکنون آماده تبدیل با استفاده از گزینه‌های زیر هستند';
 if ($FileCount == 1) {
   $FCPlural1 = ' عدد فایل معتبر';
-  $FCPlural2 = ' شما اکنون آماده تبدیل است'; }
+  $FCPlural2 = ' شما اکنون آماده تبدیل با استفاده از گزینه‌های زیر است'; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -175,6 +175,8 @@ $Gui1Text38 = 'فرمت‌های داده';
 $Gui1Text39 = 'فرمت‌های ایمیل';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'می‌تواند تصاویر را ردیابی کرده و به نقاشی‌های برداری تبدیل کند.';
+// / 'Graph Formats'
+$Gui1Text41 = 'فرمت‌های گراف';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -226,7 +228,7 @@ $Gui2Text29 = 'لینک فایل: ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
 $Gui2Text30 = 'شما تعداد '.$FileCount.$FCPlural1.' را در '.$ApplicationName.' بارگذاری کرده‌اید.';
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'فایل'.$FCPlural2.' با استفاده از گزینه‌های زیر است.';
+$Gui2Text31 = 'فایل'.$FCPlural2.'.';
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'ایجاد لینک و کپی در کلیپ‌بورد';
 // / 'Generate Link'
@@ -665,6 +667,12 @@ $Gui2Text250 = 'اسناد LaTeX';
 $Gui2Text251 = 'ایمیل‌ها';
 // / 'Markup Documents'
 $Gui2Text252 = 'اسناد نشانه‌گذاری';
+// / 'Convert This Graph'
+$Gui2Text253 = 'تبدیل این گراف';
+// / 'Convert Graph'
+$Gui2Text254 = 'تبدیل گراف';
+// / 'Graphs'
+$Gui2Text255 = 'گراف‌ها';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

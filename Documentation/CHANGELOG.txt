@@ -27,7 +27,31 @@ The authoritative list of dependencies is Resources/Engine/depends.php & Resourc
 
 --------------------
 COMMIT 11/16/2026
-v4.2.5 - Five new conversion families convert data files, typeset LaTeX, trace images into vector drawings, convert Outlook messages & convert markup documents, & Resvg renders an SVG to a PNG before Inkscape is asked.
+v4.2.6 - Language pack corrections, the upload count reads correctly in every language, the supply chain audit lists every dependency, & a new Graph pipeline draws Graphviz graphs.
+
+-v4.2.6.
+-arc's Gui1Text1, Gui1Text5 & Gui1Text31 & aii's Gui2Text48 each held a letter of another script, & arc's Gui1Text5 began with an English word.
+-zh's GuiFunctionsText1 was Hindi, & ur's three Spreadsheet strings held the English word.
+-zh's Gui1Text6 printed its two variables as text, & bn's said 79 formats whatever the server supports. Both count the formats.
+-The XPS button names XPS in ar, bn, hi, ko, pt, ru, uk & zh. ko's began with a stray C.
+-The sentences that count a user's uploaded files, & the sentence after them, read correctly for any count in ar, bn, de, es, fa, fr, he, hi, it, nl, pl, pt, ru, sw, tr, uk & ur. de's & hi's named the application with a stray -2.
+-hi's, ko's & ru's core error named convertCore.php as ConvertCore.php.
+-pl carried a second copy of its opening sections, whose older plural logic overrode the pack's own. It is removed.
+-$UserMediaInputArray listed argo_asf twice.
+-New Graph pipeline draws a graph written in Graphviz's DOT language as an svg, png, pdf, jpg, gif, webp, eps or ps. gv is its one input. Errors 49000 through 49004.
+-Graphviz is told it serves the web, so it reads no image or shape file a graph names, & the pipeline warns where one was named. New --Graph Conversion Timeout--.
+-New manifest entry Graphviz in the Graphs subsystem, & new sandbox profile graphviz.
+-applicationConversionFamilies() routes Graph after Markup & before Stream.
+-config.php gains --Graph Conversion Timeout-- & an input & an output format list for Graph. $ConfigVersion is v4.2.6. --config --repair adds them. Graph is added to --Allowed Conversion Types-- by hand, or by -u.
+-Both interfaces draw a button & a panel for the Graph family, list gv on the upload page & offer Graphs to select by type & in the builder.
+-Four strings in every language pack.
+-ERROR_DESCRIPTIONS documents errors 49000 through 49004 & the new warnings. ABOUT_PIPELINE_COMPONENTS, ABOUT_DATA_DIRECTORY_PROTECTION, INSTALLATION_INSTRUCTIONS & DEVELOPMENT_NOTES describe them.
+-2026_SUPPLY_CHAIN_AUDIT.xlsx lists every dependency in the manifest. The sixteen added await review.
+-The core, both interfaces, every language pack, the contract & the manifest are v4.2.6, & every pin to them requires v4.2.6.
+
+--------------------
+COMMIT 11/16/2026
+v4.2.5 -Five new conversion families convert data files, typeset LaTeX, trace images into vector drawings, convert Outlook messages & convert markup documents, & Resvg renders an SVG to a PNG before Inkscape is asked.
 
 -v4.2.5.
 -New Data pipeline converts JSON, YAML, TOML, XML & CSV into one another with Dasel 3, & writes XML with yq under one root & reads it back. Errors 44000 through 44007.

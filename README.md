@@ -198,6 +198,7 @@ sudo php convertCore.php -fp    # Repair permissions & the web server setup
 | **LaTeX** | Typeset a tex document into a pdf |
 | **Markup** | md, rst, adoc, jira, textile, org, mediawiki, typst, docx, epub, ipynb, and more, into one another |
 | **Email** | Outlook msg into eml or mbox |
+| **Graphs** | Draw a Graphviz gv graph as svg, png, pdf, jpg, gif, webp, eps or ps |
 | **Bootable Disk Images** | x86, ARM, UEFI and MBR/GPT hybrid ISOs |
 | **OCR** | Extract text from images and PDFs |
 | **Identify** | Size, type, character set & hashes of any file, and whether its name matches what it holds |

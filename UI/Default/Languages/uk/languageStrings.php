@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -59,13 +59,12 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'Перетворіть бу�
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
-if (!is_numeric($FileCount)) $FileCount = 'невідома кількість';
-if ($FileCount == 0) $FCPlural1 = 'Ви завантажили 0 дійсних файлів до '.$ApplicationName.'.';
-if ($FileCount == 1) $FCPlural1 = 'Ви завантажили 1 дійсний файл до '.$ApplicationName.'.'; 
-if ($FileCount == 2) $FCPlural1 = 'Ви завантажили 2 дійсні файли до '.$ApplicationName.'.';
-if ($FileCount == 3) $FCPlural1 = 'Ви завантажили 3 дійсні файли до '.$ApplicationName.'.';
-if ($FileCount == 4) $FCPlural1 = 'Ви завантажили 4 дійсні файли до '.$ApplicationName.'.';
-if ($FileCount >= 5) $FCPlural1 = 'Ви завантажили 5 дійсних файлів до '.$ApplicationName.'.';
+if (!is_numeric($FileCount)) $FileCount = 'невідому кількість';
+$FCPlural1 = 'Ви завантажили '.$FileCount.' дійсних файлів до '.$ApplicationName.'.';
+$FCPlural2 = 'Тепер ваші файли готові до конвертації за допомогою наведених нижче параметрів.';
+if (is_numeric($FileCount) && $FileCount % 10 >= 2 && $FileCount % 10 <= 4 && ($FileCount % 100 < 12 or $FileCount % 100 > 14)) $FCPlural1 = 'Ви завантажили '.$FileCount.' дійсні файли до '.$ApplicationName.'.';
+if (is_numeric($FileCount) && $FileCount % 10 === 1 && $FileCount % 100 !== 11) $FCPlural1 = 'Ви завантажили '.$FileCount.' дійсний файл до '.$ApplicationName.'.';
+if ($FileCount === 1) $FCPlural2 = 'Тепер ваш файл готовий до конвертації за допомогою наведених нижче параметрів.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -176,6 +175,8 @@ $Gui1Text38 = 'Формати даних';
 $Gui1Text39 = 'Формати електронної пошти';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Може трасувати зображення у векторні малюнки.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Формати графів';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -227,7 +228,7 @@ $Gui2Text29 = 'Посилання на файл: ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
 $Gui2Text30 = $FCPlural1;
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'Тепер ваші файли готові до конвертації за допомогою наведених нижче параметрів.';
+$Gui2Text31 = $FCPlural2;
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'Створити посилання та скопіювати в буфер обміну';
 // / 'Generate Link'
@@ -319,7 +320,7 @@ $Gui2Text76 = 'Перетворення субтитрів';
 // / 'Convert This Presentation'
 $Gui2Text77 = 'Перетворити цю презентацію';
 // / 'Convert This XPS File'
-$Gui2Text78 = 'Перетворити цей файл';
+$Gui2Text78 = 'Перетворити цей файл XPS';
 // / 'Render This OpenSCAD Model'
 $Gui2Text79 = 'Побудувати цю модель OpenSCAD';
 // / 'Render Model'
@@ -666,6 +667,12 @@ $Gui2Text250 = 'Документи LaTeX';
 $Gui2Text251 = 'Електронні листи';
 // / 'Markup Documents'
 $Gui2Text252 = 'Документи розмітки';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Конвертувати цей граф';
+// / 'Convert Graph'
+$Gui2Text254 = 'Конвертувати граф';
+// / 'Graphs'
+$Gui2Text255 = 'Графи';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

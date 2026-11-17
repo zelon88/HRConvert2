@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -44,7 +44,7 @@ $GUIAlignment = 'left';
 // / reads as a stray icon rather than as the thing that opens the list.
 $SelectArrowSide = ($GUIAlignment === 'right') ? '4%' : '96%';
 // / Define an error message to display for if the core has not been loaded.
-$CoreError = 'गलती!!! HRConvert2-2, यह फ़ाइल आपके अनुरोध पर कार्रवाई नहीं कर सकती! इसके बजाय कृपया अपनी फ़ाइल ConvertCore.php पर सबमिट करें!';
+$CoreError = 'गलती!!! HRConvert2-2, यह फ़ाइल आपके अनुरोध पर कार्रवाई नहीं कर सकती! इसके बजाय कृपया अपनी फ़ाइल convertCore.php पर सबमिट करें!';
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die($CoreError);
 // / -----------------------------------------------------------------------------------
@@ -59,11 +59,12 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'कुछ भी रूप�
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
-$FCPlural1 = '';
-if (!is_numeric($FileCount)) $FileCount = 'अज्ञात संख्या';
-if ($FileCount === 0) $FCPlural1 = 'आपने 0 मान्य फ़ाइलें '.$ApplicationName.'-2 पर अपलोड की हैं।';
-if ($FileCount === 1) $FCPlural1 = 'आपने '.$ApplicationName.'-2 पर 1 वैध फ़ाइल अपलोड की है।'; 
-if ($FileCount > 1) $FCPlural1 = 'आपने '.$FileCount.' मान्य फ़ाइलें '.$ApplicationName.'-2 पर अपलोड की हैं।';
+if (!is_numeric($FileCount)) $FileCount = 'अज्ञात संख्या में';
+$FCPlural1 = 'आपने '.$ApplicationName.' पर '.$FileCount.' मान्य फ़ाइलें अपलोड की हैं।';
+$FCPlural2 = 'आपकी फ़ाइलें अब नीचे दिए गए विकल्पों का उपयोग करके कनवर्ट करने के लिए तैयार हैं।';
+if ($FileCount === 1) {
+  $FCPlural1 = 'आपने '.$ApplicationName.' पर 1 मान्य फ़ाइल अपलोड की है।';
+  $FCPlural2 = 'आपकी फ़ाइल अब नीचे दिए गए विकल्पों का उपयोग करके कनवर्ट करने के लिए तैयार है।'; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -174,6 +175,8 @@ $Gui1Text38 = 'डेटा प्रारूप';
 $Gui1Text39 = 'ईमेल प्रारूप';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'छवियों को ट्रेस करके वेक्टर चित्रों में बदल सकते हैं.';
+// / 'Graph Formats'
+$Gui1Text41 = 'ग्राफ़ प्रारूप';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -223,9 +226,9 @@ $Gui2Text28 = 'कॉपी किया गया';
 // / 'File Link: '
 $Gui2Text29 = 'फ़ाइल लिंक:';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
-$Gui2Text30 = 'आपने अपलोड कर दिया है'.$FileCount.' मान्य फ़ाइल'.$FCPlural1.' से '.$ApplicationName.'.';
+$Gui2Text30 = $FCPlural1;
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'आपकी फ़ाइलें अब नीचे दिए गए विकल्पों का उपयोग कर कनवर्ट करने के लिए तैयार हैं.';
+$Gui2Text31 = $FCPlural2;
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'लिंक जेनरेट करें और क्लिपबोर्ड पर कॉपी करें';
 // / 'Generate Link'
@@ -317,7 +320,7 @@ $Gui2Text76 = 'उपशीर्षक बदलें';
 // / 'Convert This Presentation'
 $Gui2Text77 = 'इस प्रस्तुति को बदलें';
 // / 'Convert This XPS File'
-$Gui2Text78 = 'इस फ़ाइल को बदलें';
+$Gui2Text78 = 'इस XPS फ़ाइल को बदलें';
 // / 'Render This OpenSCAD Model'
 $Gui2Text79 = 'यह OpenSCAD मॉडल रेंडर करें';
 // / 'Render Model'
@@ -664,6 +667,12 @@ $Gui2Text250 = 'LaTeX दस्तावेज़';
 $Gui2Text251 = 'ईमेल';
 // / 'Markup Documents'
 $Gui2Text252 = 'मार्कअप दस्तावेज़';
+// / 'Convert This Graph'
+$Gui2Text253 = 'इस ग्राफ़ को रूपांतरित करें';
+// / 'Convert Graph'
+$Gui2Text254 = 'ग्राफ़ बदलें';
+// / 'Graphs'
+$Gui2Text255 = 'ग्राफ़';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

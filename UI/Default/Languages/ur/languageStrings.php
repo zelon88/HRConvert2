@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -60,11 +60,11 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'کچھ بھی تبدیل ک�
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
 if (!is_numeric($FileCount)) $FileCount = 'نامعلوم تعداد میں';
-$FCPlural1 = ' عدد فائلیں معتبر';
-$FCPlural2 = 'یں اب تبدیل ہونے کے لیے تیار ہیں';
+$FCPlural1 = 'آپ نے '.$ApplicationName.' پر '.$FileCount.' معتبر فائلیں اپ لوڈ کی ہیں۔';
+$FCPlural2 = 'آپ کی فائلیں اب نیچے دیے گئے اختیارات کا استعمال کرتے ہوئے تبدیل ہونے کے لیے تیار ہیں۔';
 if ($FileCount == 1) {
-  $FCPlural1 = ' عدد فائل معتبر';
-  $FCPlural2 = ' اب تبدیل ہونے کے لیے تیار ہے'; }
+  $FCPlural1 = 'آپ نے '.$ApplicationName.' پر 1 معتبر فائل اپ لوڈ کی ہے۔';
+  $FCPlural2 = 'آپ کی فائل اب نیچے دیے گئے اختیارات کا استعمال کرتے ہوئے تبدیل ہونے کے لیے تیار ہے۔'; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -117,7 +117,7 @@ $Gui1Text13 = 'اسٹریم فارمیٹس';
 // / 'Document Formats'
 $Gui1Text14 = 'دستاویزی فارمیٹس';
 // / 'Spreadsheet Formats'
-$Gui1Text15 = 'اسپرSpreadsheet فارمیٹس';
+$Gui1Text15 = 'اسپریڈشیٹ فارمیٹس';
 // / 'Presentation Formats'
 $Gui1Text16 = 'پریزنٹیشن فارمیٹس';
 // / 'Archive Formats'
@@ -175,6 +175,8 @@ $Gui1Text38 = 'ڈیٹا فارمیٹس';
 $Gui1Text39 = 'ای میل فارمیٹس';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'تصاویر کو ٹریس کر کے ویکٹر ڈرائنگز میں تبدیل کر سکتا ہے۔';
+// / 'Graph Formats'
+$Gui1Text41 = 'گراف فارمیٹس';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -224,9 +226,9 @@ $Gui2Text28 = 'کاپی ہو گیا';
 // / 'File Link: '
 $Gui2Text29 = 'فائل کا لنک: ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
-$Gui2Text30 = 'آپ نے '.$ApplicationName.' پر '.$FileCount.$FCPlural1.' اپ لوڈ کی ہیں۔';
+$Gui2Text30 = $FCPlural1;
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'آپ کی فائل' . $FCPlural2 . ' نیچے دیے گئے اختیارات کا استعمال کرتے ہوئے تبدیل ہونے کے لیے تیار ہے۔';
+$Gui2Text31 = $FCPlural2;
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'لینک تخلیق کریں اور کلپ بورڈ پر کاپی کریں';
 // / 'Generate Link'
@@ -252,7 +254,7 @@ $Gui2Text42 = 'اس آرکائیو کو تبدیل کریں';
 // / 'Convert This Document'
 $Gui2Text43 = 'اس دستاویز کو تبدیل کریں';
 // / 'Convert This Spreadsheet'
-$Gui2Text44 = 'اس اسپرSpreadsheet کو تبدیل کریں';
+$Gui2Text44 = 'اس اسپریڈشیٹ کو تبدیل کریں';
 // / 'Convert This Audio'
 $Gui2Text45 = 'اس آڈیو کو تبدیل کریں';
 // / 'Convert This Video'
@@ -274,7 +276,7 @@ $Gui2Text53 = 'فائلوں کو آرکائیو کریں';
 // / 'Convert Document'
 $Gui2Text54 = 'دستاویز تبدیل کریں';
 // / 'Convert Spreadsheet'
-$Gui2Text55 = 'اسپرSpreadsheet تبدیل کریں';
+$Gui2Text55 = 'اسپریڈشیٹ تبدیل کریں';
 // / 'Convert Presentation'
 $Gui2Text56 = 'پریزنٹیشن تبدیل کریں';
 // / 'Convert Audio'
@@ -665,6 +667,12 @@ $Gui2Text250 = 'LaTeX دستاویزات';
 $Gui2Text251 = 'ای میلز';
 // / 'Markup Documents'
 $Gui2Text252 = 'مارک اپ دستاویزات';
+// / 'Convert This Graph'
+$Gui2Text253 = 'اس گراف کو تبدیل کریں';
+// / 'Convert Graph'
+$Gui2Text254 = 'گراف تبدیل کریں';
+// / 'Graphs'
+$Gui2Text255 = 'گرافس';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

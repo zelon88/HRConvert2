@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -44,7 +44,7 @@ $GUIAlignment = 'left';
 // / reads as a stray icon rather than as the thing that opens the list.
 $SelectArrowSide = ($GUIAlignment === 'right') ? '4%' : '96%';
 // / Define an error message to display for if the core has not been loaded.
-$CoreError = 'ERROR!!! HRConvert2-2, Этот файл не может обработать ваш запрос! Вместо этого отправьте файл на ConvertCore.php!';
+$CoreError = 'ERROR!!! HRConvert2-2, Этот файл не может обработать ваш запрос! Вместо этого отправьте файл на convertCore.php!';
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die($CoreError);
 // / -----------------------------------------------------------------------------------
@@ -60,9 +60,11 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'Конвертируйте �
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
 if (!is_numeric($FileCount)) $FileCount = 'неизвестное количество';
-if ($FileCount === 0) $FCPlural1 = 'Вы загрузили 0 действительных файлов в '.$ApplicationName.'.';
-if ($FileCount === 1) $FCPlural1 = 'Вы загрузили 1 действительный файл в '.$ApplicationName.'.'; 
-if ($FileCount >= 2) $FCPlural1 = 'Вы загрузили '.$FileCount.' действительных файла в '.$ApplicationName.'.';
+$FCPlural1 = 'Вы загрузили '.$FileCount.' действительных файлов в '.$ApplicationName.'.';
+$FCPlural2 = 'Теперь ваши файлы готовы к конвертации с использованием приведенных ниже параметров.';
+if (is_numeric($FileCount) && $FileCount % 10 >= 2 && $FileCount % 10 <= 4 && ($FileCount % 100 < 12 or $FileCount % 100 > 14)) $FCPlural1 = 'Вы загрузили '.$FileCount.' действительных файла в '.$ApplicationName.'.';
+if (is_numeric($FileCount) && $FileCount % 10 === 1 && $FileCount % 100 !== 11) $FCPlural1 = 'Вы загрузили '.$FileCount.' действительный файл в '.$ApplicationName.'.';
+if ($FileCount === 1) $FCPlural2 = 'Теперь ваш файл готов к конвертации с использованием приведенных ниже параметров.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -173,6 +175,8 @@ $Gui1Text38 = 'Форматы данных';
 $Gui1Text39 = 'Форматы электронной почты';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Может трассировать изображения в векторные рисунки.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Форматы графов';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -224,7 +228,7 @@ $Gui2Text29 = 'Ссылка на файл: ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
 $Gui2Text30 = $FCPlural1;
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'Теперь ваши файлы готовы к конвертации с использованием приведенных ниже параметров.';
+$Gui2Text31 = $FCPlural2;
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'Создать ссылку и скопировать в буфер обмена';
 // / 'Generate Link'
@@ -316,7 +320,7 @@ $Gui2Text76 = 'Конвертировать субтитры';
 // / 'Convert This Presentation'
 $Gui2Text77 = 'Преобразовать эту презентацию';
 // / 'Convert This XPS File'
-$Gui2Text78 = 'Преобразовать этот файл';
+$Gui2Text78 = 'Преобразовать этот файл XPS';
 // / 'Render This OpenSCAD Model'
 $Gui2Text79 = 'Собрать эту модель OpenSCAD';
 // / 'Render Model'
@@ -663,6 +667,12 @@ $Gui2Text250 = 'Документы LaTeX';
 $Gui2Text251 = 'Электронные письма';
 // / 'Markup Documents'
 $Gui2Text252 = 'Документы разметки';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Конвертировать этот граф';
+// / 'Convert Graph'
+$Gui2Text254 = 'Конвертировать граф';
+// / 'Graphs'
+$Gui2Text255 = 'Графы';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

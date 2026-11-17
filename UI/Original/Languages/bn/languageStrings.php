@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -65,6 +65,8 @@ if ($FileCount === 0) $FCPlural1 = 'আপনি '.$ApplicationName.' এ 0ট�
 if ($FileCount === 1) $FCPlural1 = 'আপনি '.$ApplicationName.' এ 1টি বৈধ ফাইল আপলোড করেছেন৷'; 
 if ($FileCount === 2) $FCPlural1 = 'আপনি '.$ApplicationName.' এ 2টি বৈধ ফাইল আপলোড করেছেন৷';
 if ($FileCount >= 3) $FCPlural1 = 'আপনি '.$ApplicationName.' এ '.$FileCount.'টি বৈধ ফাইল আপলোড করেছেন।';
+$FCPlural2 = 'আপনার ফাইলগুলি এখন নীচের বিকল্পগুলি ব্যবহার করে রূপান্তর করার জন্য প্রস্তুত৷';
+if ($FileCount === 1) $FCPlural2 = 'আপনার ফাইলটি এখন নীচের বিকল্পগুলি ব্যবহার করে রূপান্তর করার জন্য প্রস্তুত৷';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -99,7 +101,7 @@ $Gui1Text4 = 'কম তথ্য ...';
 // / 'All user-supplied data is erased automatically, so you don\'t need to worry about forfeiting your personal information or property while using our services.'
 $Gui1Text5 = 'সমস্ত ব্যবহারকারীর সরবরাহকৃত ডেটা স্বয়ংক্রিয়ভাবে মুছে ফেলা হয়, তাই আমাদের পরিষেবাগুলি ব্যবহার করার সময় আপনার ব্যক্তিগত তথ্য বা সম্পত্তি বাজেয়াপ্ত করার বিষয়ে আপনাকে চিন্তা করতে হবে না।';
 // / 'Currently '.$ApplicationName.' supports '.$SupportedFormatCount.' different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.'
-$Gui1Text6 = 'বর্তমানে '.$ApplicationName.' নথি, স্প্রেডশীট, ছবি, মিডিয়া, ত্রিমাত্রিক মডেল, অঙ্কন ফাইল, ভেক্টর ফাইল, সংরক্ষণাগার, ডিস্ক চিত্র এবং আরও অনেক কিছু সহ 79টি ভিন্ন ফাইল ফর্ম্যাট সমর্থন করে।';
+$Gui1Text6 = 'বর্তমানে '.$ApplicationName.' নথি, স্প্রেডশীট, ছবি, মিডিয়া, ত্রিমাত্রিক মডেল, অঙ্কন ফাইল, ভেক্টর ফাইল, সংরক্ষণাগার, ডিস্ক চিত্র এবং আরও অনেক কিছু সহ '.$SupportedFormatCount.'টি ভিন্ন ফাইল ফর্ম্যাট সমর্থন করে।';
 // / 'View Supported Formats ...'
 $Gui1Text7 = 'সমর্থিত ফরম্যাট দেখুন ...';
 // / 'Hide Supported Formats ...'
@@ -175,6 +177,8 @@ $Gui1Text38 = 'ডেটা বিন্যাস';
 $Gui1Text39 = 'ইমেল বিন্যাস';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'চিত্রগুলি ট্রেস করে ভেক্টর অঙ্কনে রূপান্তর করতে পারে।';
+// / 'Graph Formats'
+$Gui1Text41 = 'গ্রাফ বিন্যাস';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -226,7 +230,7 @@ $Gui2Text29 = 'ফাইল লিঙ্ক:';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
 $Gui2Text30 = $FCPlural1;
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'আপনার ফাইলগুলি এখন নীচের বিকল্পগুলি ব্যবহার করে রূপান্তর করার জন্য প্রস্তুত৷';
+$Gui2Text31 = $FCPlural2;
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'লিঙ্ক তৈরি করুন এবং ক্লিপবোর্ডে অনুলিপি করুন';
 // / 'Generate Link'
@@ -318,7 +322,7 @@ $Gui2Text76 = 'সাবটাইটেল রূপান্তর করুন
 // / 'Convert This Presentation'
 $Gui2Text77 = 'এই উপস্থাপনাটি রূপান্তর করুন';
 // / 'Convert This XPS File'
-$Gui2Text78 = 'এই ফাইলটি রূপান্তর করুন';
+$Gui2Text78 = 'এই XPS ফাইলটি রূপান্তর করুন';
 // / 'Render This OpenSCAD Model'
 $Gui2Text79 = 'এই OpenSCAD মডেলটি রেন্ডার করুন';
 // / 'Render Model'
@@ -665,6 +669,12 @@ $Gui2Text250 = 'LaTeX নথি';
 $Gui2Text251 = 'ইমেল';
 // / 'Markup Documents'
 $Gui2Text252 = 'মার্কআপ নথি';
+// / 'Convert This Graph'
+$Gui2Text253 = 'এই গ্রাফটি রূপান্তর করুন';
+// / 'Convert Graph'
+$Gui2Text254 = 'গ্রাফ রূপান্তর করুন';
+// / 'Graphs'
+$Gui2Text255 = 'গ্রাফ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

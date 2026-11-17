@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -60,11 +60,11 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'המר הכל!';
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
 if (!is_numeric($FileCount)) $FileCount = 'מספר לא ידוע של';
-$FCPlural1 = 'ים תקינים';
-$FCPlural2 = 'ים שלך מוכנים כעת';
+$FCPlural1 = 'קבצים תקינים';
+$FCPlural2 = 'הקבצים שלך מוכנים כעת';
 if ($FileCount == 1) {
-  $FCPlural1 = ' תקין';
-  $FCPlural2 = ' שלך מוכן כעת'; }
+  $FCPlural1 = 'קובץ תקין';
+  $FCPlural2 = 'הקובץ שלך מוכן כעת'; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -175,6 +175,8 @@ $Gui1Text38 = 'פורמטי נתונים';
 $Gui1Text39 = 'פורמטי דואר אלקטרוני';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'יכול להמיר תמונות לשרטוטים וקטוריים באמצעות מעקב.';
+// / 'Graph Formats'
+$Gui1Text41 = 'פורמטי גרפים';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -224,9 +226,9 @@ $Gui2Text28 = 'הועתק';
 // / 'File Link: '
 $Gui2Text29 = 'קישור לקובץ: ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
-$Gui2Text30 = 'העלית '.$FileCount.' קובץ'.$FCPlural1.' אל '.$ApplicationName.'.';
+$Gui2Text30 = 'העלית '.$FileCount.' '.$FCPlural1.' אל '.$ApplicationName.'.';
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'הקובץ'.$FCPlural2.' להמרה באמצעות האפשרויות שלהלן.';
+$Gui2Text31 = $FCPlural2.' להמרה באמצעות האפשרויות שלהלן.';
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'צור קישור והעתק ללוח הגזירים';
 // / 'Generate Link'
@@ -665,6 +667,12 @@ $Gui2Text250 = 'מסמכי LaTeX';
 $Gui2Text251 = 'הודעות דואר אלקטרוני';
 // / 'Markup Documents'
 $Gui2Text252 = 'מסמכי סימון';
+// / 'Convert This Graph'
+$Gui2Text253 = 'המר גרף זה';
+// / 'Convert Graph'
+$Gui2Text254 = 'המר גרף';
+// / 'Graphs'
+$Gui2Text255 = 'גרפים';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

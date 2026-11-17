@@ -69,6 +69,7 @@ Renaming in convertCore.php reserves 23100 through 23119, the Metadata pipeline 
 The Authentication Core reserves 43000 through 43019 & the Email Core 43100 through 43119, from v4.2.0.
 The Data pipeline reserves 44000 through 44019, the LaTeX pipeline 45000 through 45019, the Trace pipeline 46000 through 46019,
 the Email pipeline 47000 through 47019 & the Markup pipeline 48000 through 48019, from v4.2.5.
+The Graph pipeline reserves 49000 through 49019, from v4.2.6.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -9525,4 +9526,123 @@ WARNINGS ABOUT THE CONVERSIONS ADDED IN V4.2.5
       not installed either, so Resvg would have left the text out, & Inkscape renders the drawing with the fonts fontconfig finds instead.
     WARNING!!! Resvg could not render <FILE_NAME>, so Inkscape renders it.
       Resvg refused the drawing, which an SVG Inkscape forgives & Resvg does not usually is. Inkscape renders it as it did before v4.2.5.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-49000, <SESSION_IDENTIFIER>: The graph converter produced no file after <ADDITIONAL_DATA> attempt(s)! <REASON>
+
+FILE
+  Resources/Pipelines/Graph/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.6. Graphviz ran as many times as --File Operation Retry Count-- allows, & no attempt left a file. <REASON> is the first line
+  Graphviz marked as an error, such as a syntax error & the line it is on, or the last line it printed. A file Graphviz stopped part of the
+  way through is removed. A graph that is not written in the DOT language fails here, as does a format this Graphviz was built without.
+  With --Enhanced Logging Verbosity-- on, the entry above this one carries everything Graphviz said.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-49001, <SESSION_IDENTIFIER>: The installed Graphviz version is missing, unidentifiable, or too old!
+
+FILE
+  Resources/Pipelines/Graph/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.6. Graphviz draws every graph, so nothing is converted without it. Debian 12 & Ubuntu 24.04 both carry a Graphviz that is new
+  enough. Run  sudo php convertCore.php --setup --install-depends --subsystem=Graphs .
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-49002, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so this graph cannot be isolated!
+
+FILE
+  Resources/Pipelines/Graph/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.6. A graph conversion was refused because the server could not build a sandbox for it.
+  Graphviz reads no image or shape file a graph names whether or not a sandbox is built, & the sandbox is what keeps it from the rest of the
+  server. See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
+  Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-49003, <SESSION_IDENTIFIER>: The Graph pipeline cannot read <FILE_TYPE> or cannot write <FILE_TYPE>!
+
+FILE
+  Resources/Pipelines/Graph/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.6. A conversion reached the pipeline naming a format it does not read or write. --Supported Graph Input Formats-- or
+  --Supported Graph Output Formats-- in config.php names a format the pipeline does not declare. Take it out of the list.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-49004, <SESSION_IDENTIFIER>: The graph converter was stopped after <SECONDS> seconds, as --Graph Conversion Timeout-- allows!
+
+FILE
+  Resources/Pipelines/Graph/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.6. Graphviz ran for as long as --Graph Conversion Timeout-- in config.php allows & was stopped. A layout engine can take a very
+  long time over a large graph. A graph that ran out of time is not converted again.
+  A large real graph needs a higher limit. Raise it in config.php, keeping it below the PHP execution timer set in php.ini.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR NUMBER RESERVATION
+  49000 through 49019 are reserved for the Graph pipeline, & 49005 through 49019 are currently unused.
+  49000 through 49004 are raised by the Graph pipeline, & are documented above.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE CONVERSIONS ADDED IN V4.2.6
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Graph pipeline raises these, from Resources/Pipelines/Graph/pipeline.php.
+    WARNING!!! --Graph Conversion Timeout-- is not a whole number of seconds greater than 0, so 120 is used.
+      The setting in config.php is missing or holds something else. Each conversion is given the default, & says so, until it is corrected.
+    WARNING!!! A graph named an image or a shape file, which was left out, because the Graph pipeline reads no file but the graph.
+      A node in the graph named a file to draw, which Graphviz would read from wherever the graph said. The pipeline tells Graphviz it serves
+      the web, so it reads no file but the graph, & the graph is drawn without it. A graph a stranger wrote can name any file on the server.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

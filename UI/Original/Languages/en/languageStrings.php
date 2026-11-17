@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -175,6 +175,8 @@ $Gui1Text38 = 'Data Formats';
 $Gui1Text39 = 'Email Formats';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Can trace images into vector drawings.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Graph Formats';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -665,6 +667,12 @@ $Gui2Text250 = 'LaTeX Documents';
 $Gui2Text251 = 'Emails';
 // / 'Markup Documents'
 $Gui2Text252 = 'Markup Documents';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Convert This Graph';
+// / 'Convert Graph'
+$Gui2Text254 = 'Convert Graph';
+// / 'Graphs'
+$Gui2Text255 = 'Graphs';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

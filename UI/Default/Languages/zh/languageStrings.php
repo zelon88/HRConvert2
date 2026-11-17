@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -95,7 +95,7 @@ $Gui1Text4 = '信息较少...';
 // / 'All user-supplied data is erased automatically, so you don\'t need to worry about forfeiting your personal information or property while using our services.'
 $Gui1Text5 = '所有用户提供的数据都会自动删除，因此您在使用我们的服务时无需担心丢失您的个人信息或财产。';
 // / 'Currently '.$ApplicationName.' supports '.$SupportedFormatCount.' different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.'
-$Gui1Text6 = '当前为“.$ApplicationName”。 支持“.$SupportedFormatCount”。 不同的文件格式，包括文档、电子表格、图像、媒体、3D 模型、CAD 绘图、矢量文件、档案、磁盘映像等。';
+$Gui1Text6 = '目前 '.$ApplicationName.' 支持 '.$SupportedFormatCount.' 种不同的文件格式，包括文档、电子表格、图像、媒体、3D 模型、CAD 绘图、矢量文件、档案、磁盘映像等。';
 // / 'View Supported Formats ...'
 $Gui1Text7 = '查看支持的格式...';
 // / 'Hide Supported Formats ...'
@@ -171,6 +171,8 @@ $Gui1Text38 = '数据格式';
 $Gui1Text39 = '电子邮件格式';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = '可以将图像描摹为矢量图。';
+// / 'Graph Formats'
+$Gui1Text41 = '关系图格式';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -220,7 +222,7 @@ $Gui2Text28 = '已复制';
 // / 'File Link: '
 $Gui2Text29 = '文件链接： ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
-$Gui2Text30 = '您已上传 '.$FileCount.' 个有效文件至 '.$ApplicationName;
+$Gui2Text30 = '您已上传 '.$FileCount.' 个有效文件至 '.$ApplicationName.'。';
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
 $Gui2Text31 = '您的文件现在可以使用以下选项进行转换。';
 // / 'Generate Link & Copy to Clipboard'
@@ -314,7 +316,7 @@ $Gui2Text76 = '转换字幕';
 // / 'Convert This Presentation'
 $Gui2Text77 = '转换此演示文稿';
 // / 'Convert This XPS File'
-$Gui2Text78 = '转换此文件';
+$Gui2Text78 = '转换此 XPS 文件';
 // / 'Render This OpenSCAD Model'
 $Gui2Text79 = '渲染此 OpenSCAD 模型';
 // / 'Render Model'
@@ -661,6 +663,12 @@ $Gui2Text250 = 'LaTeX 文档';
 $Gui2Text251 = '电子邮件';
 // / 'Markup Documents'
 $Gui2Text252 = '标记文档';
+// / 'Convert This Graph'
+$Gui2Text253 = '转换此关系图';
+// / 'Convert Graph'
+$Gui2Text254 = '转换关系图';
+// / 'Graphs'
+$Gui2Text255 = '关系图';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -669,7 +677,7 @@ $Gui2Text252 = '标记文档';
 // / That file is static javascript & cannot read a PHP variable, so every string it needs
 // / is passed to it as an argument by the PHP that calls it.
 // / 'Your browser does not support copying to the clipboard!'
-$GuiFunctionsText1 = 'आपका ब्राउज़र क्लिपबोर्ड पर कॉपी करने का समर्थन नहीं करता।';
+$GuiFunctionsText1 = '您的浏览器不支持复制到剪贴板！';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

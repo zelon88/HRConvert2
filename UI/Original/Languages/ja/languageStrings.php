@@ -35,7 +35,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -178,6 +178,8 @@ $Gui1Text38 = 'データ形式';
 $Gui1Text39 = 'メール形式';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = '画像をトレースしてベクター図形に変換できます。';
+// / 'Graph Formats'
+$Gui1Text41 = 'グラフ形式';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -670,6 +672,12 @@ $Gui2Text250 = 'LaTeX 文書';
 $Gui2Text251 = 'メール';
 // / 'Markup Documents'
 $Gui2Text252 = 'マークアップ文書';
+// / 'Convert This Graph'
+$Gui2Text253 = 'このグラフを変換';
+// / 'Convert Graph'
+$Gui2Text254 = 'グラフを変換';
+// / 'Graphs'
+$Gui2Text255 = 'グラフ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

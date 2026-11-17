@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility chec takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -60,9 +60,11 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'Converti Qualsiasi Cosa!';
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
 if (!is_numeric($FileCount)) $FileCount = 0;
-if ($FileCount === 0) $FCPlural1 = 'Hai caricato 0 file validi su '.$ApplicationName.'.';
-if ($FileCount === 1) $FCPlural1 = 'Hai caricato 1 file valido su '.$ApplicationName.'.'; 
-if ($FileCount >= 2) $FCPlural1 = 'Hai caricato '.$FileCount.' file validi su '.$ApplicationName.'.'; 
+$FCPlural1 = 'Hai caricato '.$FileCount.' file validi su '.$ApplicationName.'.';
+$FCPlural2 = 'I tuoi file sono ora pronti per la conversione con le opzioni seguenti.';
+if ($FileCount === 1) {
+  $FCPlural1 = 'Hai caricato 1 file valido su '.$ApplicationName.'.';
+  $FCPlural2 = 'Il tuo file è ora pronto per la conversione con le opzioni seguenti.'; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -173,6 +175,8 @@ $Gui1Text38 = 'Formati Dati';
 $Gui1Text39 = 'Formati Email';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Può ricalcare le immagini come disegni vettoriali.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Formati Dei Grafi';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -222,9 +226,9 @@ $Gui2Text28 = 'Copiato';
 // / 'File Link: '
 $Gui2Text29 = 'Collegamento File: ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
-$Gui2Text30 = 'Hai caricato '.$FileCount.' file valido'.$FCPlural1.' a '.$ApplicationName.'.';
+$Gui2Text30 = $FCPlural1;
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'Il tuo file'.$FCPlural2.' ora pronto per la conversione utilizzando le opzioni seguenti.';
+$Gui2Text31 = $FCPlural2;
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'Genera Collegamento E Copia Negli Appunti';
 // / 'Generate Link'
@@ -663,6 +667,12 @@ $Gui2Text250 = 'Documenti LaTeX';
 $Gui2Text251 = 'Email';
 // / 'Markup Documents'
 $Gui2Text252 = 'Documenti Di Markup';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Converti Questo Grafo';
+// / 'Convert Graph'
+$Gui2Text254 = 'Converti Grafo';
+// / 'Graphs'
+$Gui2Text255 = 'Grafi';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

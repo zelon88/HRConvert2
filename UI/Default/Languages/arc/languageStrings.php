@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -89,7 +89,7 @@ $GuiSelectorText4 = 'ܚܘܝ ܓܒܝܬܐ ܕܠܫܢܐ ܘܓܘܢܐ ܘܚܙܘܐ';
 // / -----------------------------------------------------------------------------------
 // / Set GUI - 1 Related Variables.
 // / 'Online File Converter, Extractor, Compressor'
-$Gui1Text1 = 'ܡܫ推ܠܦܢܐ، ܡܦܩܢܐ، ܘܡܥܝܨܢܐ ܕܦܬܩ̈ܐ ܒܢܘܠܐ';
+$Gui1Text1 = 'ܡܫܚܠܦܢܐ، ܡܦܩܢܐ، ܘܡܥܝܨܢܐ ܕܦܬܩ̈ܐ ܒܢܘܠܐ';
 // / $ApplicationName.' is based off the open-source web-app <a href=\'https://github.com\'>HRConvert2</a> by <a href=\'https://github.com\'>Zelon88</a> that converts files without tracking users across the net or infringing on your intellectual property.'
 $Gui1Text2 = $ApplicationName.' ܡܫܬܬܐܣ ܥܠ ܬܘܩܢܐ ܕܢܘܠܐ ܕܡܥܝܢܐ ܦܬܝܚܐ <a href=\'https://github.com\'>HRConvert2</a> ܕܥܒܝܕ ܡܢ <a href=\'https://github.com\'>Zelon88</a> ܕܡܫܚܠܦ ܦܬܩ̈ܐ ܕܠܐ ܥܩܒܐ ܕܡܦܠܚܢ̈ܐ ܒܐܣܪܐ ܐܘ ܚܒܠܘܬܐ ܕܩܢܝܢܐ ܪܕܝܢܝܐ ܕܝܠܟ.';
 // / 'More Info ...'
@@ -97,7 +97,7 @@ $Gui1Text3 = 'ܝܬܝܪ ܝܕܥܬܐ ...';
 // / 'Less Info ...'
 $Gui1Text4 = 'ܒܨܝܪ ܝܕܥܬܐ ...';
 // / 'All user-supplied data is erased automatically, so you don\'t need to worry about forfeiting your personal information or property while using our services.'
-$Gui1Text5 = 'Inter ܠܗܘܢ ܢتܒ̈ܐ ܕܡܘܫܛܝܢ ܡܢ ܡܦܠܚܢܐ ܡܬܛܠܩܝܢ ܝܬܝܪܐܝܬ، ܗܟܢܐ ܠܐ ܙܕܩ ܠܟ ܕܬܨܦܐ ܥܠ ܐܒܕܢܐ ܕܝܕܥܬܐ ܕܝܠܢܝܬܐ ܐܘ ܩܢܝܢܐ ܕܝܠܟ ܟܕ ܡܦܠܚ ܐܢܬ ܬܫܡܫܬ̈ܐ ܕܝܠܢ.';
+$Gui1Text5 = 'ܟܠܗܘܢ ܢܬܒ̈ܐ ܕܡܘܫܛܝܢ ܡܢ ܡܦܠܚܢܐ ܡܬܛܠܩܝܢ ܝܬܝܪܐܝܬ، ܗܟܢܐ ܠܐ ܙܕܩ ܠܟ ܕܬܨܦܐ ܥܠ ܐܒܕܢܐ ܕܝܕܥܬܐ ܕܝܠܢܝܬܐ ܐܘ ܩܢܝܢܐ ܕܝܠܟ ܟܕ ܡܦܠܚ ܐܢܬ ܬܫܡܫܬ̈ܐ ܕܝܠܢ.';
 // / 'Currently '.$ApplicationName.' supports '.$SupportedFormatCount.' different file formats, including documents, spreadsheets, images, media, 3D models, CAD drawings, vector files, archives, disk images, & more.'
 $Gui1Text6 = 'ܗܫܐ ܛܟܣܐ ܕ-'.$ApplicationName.' ܡܣܝܥ ܠ-'.$SupportedFormatCount.' ܫܘܚܠܦ̈ܐ ܡܫܚܠܦ̈ܐ ܕܦܬܩ̈ܐ، ܒܗܠܝܢ ܟܬܝܒܬ̈ܐ، ܦܬܘܪ̈ܐ ܕܚܘܫܒܢܐ، ܨܘܪܬ̈ܐ، ܡܕܝܐ، ܛܘܦܣ̈ܐ ܕܬܠܬܐ ܡܫܘܚܝܢ، ܪܫμ̈ܐ ܕ-CAD، ܦܬܩ̈ܐ ܘܩܛܘܪܝ̈ܐ، ܓܙ̈ܐ، ܨܘܪܬ̈ܐ ܕܕܝܣܩ̈ܐ، ܘܝܬܝܪ.';
 // / 'View Supported Formats ...'
@@ -149,7 +149,7 @@ $Gui1Text29 = 'ܦܘܫ ܩܕܝܡܐ ...';
 // / 'Can convert stream formats to video formats.'
 $Gui1Text30 = 'ܡܨܐ ܠܡܫܚܠܦܘ ܫܘܚܠܦ̈ܐ ܕܪܕܝܬܐ ܠܫܘܚܠܦ̈ܐ ܕܚܙܘܐ.';
 // / 'Subtitle Formats'
-$Gui1Text31 = 'ܫܘܚܠܦ̈ܐ ܕܟܬܝܒܬܐ ܕܠܬܚﺘ';
+$Gui1Text31 = 'ܫܘܚܠܦ̈ܐ ܕܟܬܝܒܬܐ ܕܠܬܚܬ';
 // / 'OpenSCAD Formats'
 $Gui1Text32 = 'ܫܘܚܠܦ̈ܐ ܕ-OpenSCAD';
 // / 'Renders OpenSCAD source into 3D model formats.'
@@ -175,6 +175,8 @@ $Gui1Text38 = 'ܫܘܚܠܦ̈ܐ ܕܕܬܐ';
 $Gui1Text39 = 'ܫܘܚܠܦ̈ܐ ܕܐܝܡܝܠ';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'ܡܨܐ ܠܡܫܚܠܦܘ ܨܘܪ̈ܬܐ ܠܪ̈ܫܡܐ ܕܒܩܛܘܪ.';
+// / 'Graph Formats'
+$Gui1Text41 = 'ܫܘܚܠܦ̈ܐ ܕܓܪܐܦ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -665,6 +667,12 @@ $Gui2Text250 = 'ܟܬܝܒܬ̈ܐ ܕ-LaTeX';
 $Gui2Text251 = 'ܐܝܡܝܠ̈ܐ';
 // / 'Markup Documents'
 $Gui2Text252 = 'ܟܬܝܒܬ̈ܐ ܕ-Markup';
+// / 'Convert This Graph'
+$Gui2Text253 = 'ܫܚܠܦ ܗܢܐ ܓܪܐܦ';
+// / 'Convert Graph'
+$Gui2Text254 = 'ܫܚܠܦ ܓܪܐܦ';
+// / 'Graphs'
+$Gui2Text255 = 'ܓܪܐܦ̈ܐ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

@@ -665,6 +665,10 @@ takes only a pair no older family claims. docx to pdf stays with Document, docx 
 Ebook, png to jpg with Image & csv to xlsx with Document, as they were, & docx to md, png to svg
 & csv to json reach the new ones. LaTeX sits before Markup, so tex to pdf is typeset by the
 LaTeX pipeline & Markup is asked only for what LaTeX does not write.
+
+GRAPH, ADDED IN v4.2.6, SITS AFTER MARKUP & BEFORE STREAM.
+It reads gv alone, which no other family reads, so it takes no pair from another. It does not
+read dot, because dot is a Word template to Document, which would claim it first.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -812,7 +816,7 @@ against ERROR_DESCRIPTIONS.txt before reserving it.
            All thirteen have migrated. convertCore.php converts nothing on its own.
            Archive, Audio, Document, Drawing, Ebook, Image, Model, OCR, Scad,
            Stream, Subtitle, SVG & Video. Data, LaTeX, Trace, Email & Markup were
-           written as pipelines from the start, in v4.2.5.
+           written as pipelines from the start, in v4.2.5, & Graph in v4.2.6.
   PHASE 3  Wire interface enumeration to the live capability set.
   PHASE 4  Capability detection, the cache & a second implementation of one family.
   PHASE 5  Remaining pipelines, then chaining.

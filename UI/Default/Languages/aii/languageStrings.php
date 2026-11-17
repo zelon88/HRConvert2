@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -175,6 +175,8 @@ $Gui1Text38 = 'ܫܘܼܚܠܵܦܹܐ ܕܕܵܬܵܐ';
 $Gui1Text39 = 'ܫܘܼܚܠܵܦܹܐ ܕܐܝܼܡܹܝܠ';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'ܟܹܐ ܡܵܨܹܐ ܠܡܫܲܚܠܘܼܦܹܐ ܨܘܼܪܝܵܬܹ̈ܐ ܠܪܸܫܡܹܐ ܕܒܸܩܛܘܿܪ.';
+// / 'Graph Formats'
+$Gui1Text41 = 'ܫܘܼܚܠܵܦܹܐ ܕܓܪܵܦ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -260,7 +262,7 @@ $Gui2Text46 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܚܸܙܘܵܐ';
 // / 'Convert This Stream'
 $Gui2Text47 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܪܕܵܝܬܵܐ';
 // / 'Convert This 3D Model'
-$Gui2Text48 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܛܘܼܦܸܣܵܐ ܕතܠܵܬܵܐ ܡܫܘܼܚܝܼܢ';
+$Gui2Text48 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܛܘܼܦܸܣܵܐ ܕܬܠܵܬܵܐ ܡܫܘܼܚܝܼܢ';
 // / 'Convert This Technical Drawing Or Vector File'
 $Gui2Text49 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܪܸܫܡܵܐ ܝܕܲܥܬܢܵܝܵܐ ܐܵܘ ܦܸܬܩܵܐ ܘܩܛܘܿܪܝܵܐ';
 // / 'Convert This Image'
@@ -665,6 +667,12 @@ $Gui2Text250 = 'ܟܬܝܼܒ݂ܵܬܹ̈ܐ ܕ-LaTeX';
 $Gui2Text251 = 'ܐܝܼܡܹܝܠܹ̈ܐ';
 // / 'Markup Documents'
 $Gui2Text252 = 'ܟܬܝܼܒ݂ܵܬܹ̈ܐ ܕ-Markup';
+// / 'Convert This Graph'
+$Gui2Text253 = 'ܫܲܚܠܸܦ ܗܵܢܵܐ ܓܪܵܦ';
+// / 'Convert Graph'
+$Gui2Text254 = 'ܫܲܚܠܸܦ ܓܪܵܦ';
+// / 'Graphs'
+$Gui2Text255 = 'ܓܪܵܦܹ̈ܐ';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

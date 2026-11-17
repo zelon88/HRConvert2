@@ -38,7 +38,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -181,6 +181,8 @@ $Gui1Text38 = 'Định Dạng Dữ Liệu';
 $Gui1Text39 = 'Định Dạng Email';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Có thể dò nét hình ảnh thành bản vẽ vector.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Định Dạng Đồ Thị';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -673,6 +675,12 @@ $Gui2Text250 = 'Tài Liệu LaTeX';
 $Gui2Text251 = 'Email';
 // / 'Markup Documents'
 $Gui2Text252 = 'Tài Liệu Đánh Dấu';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Chuyển Đổi Đồ Thị Này';
+// / 'Convert Graph'
+$Gui2Text254 = 'Chuyển Đổi Đồ Thị';
+// / 'Graphs'
+$Gui2Text255 = 'Đồ Thị';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

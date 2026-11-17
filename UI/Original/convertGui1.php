@@ -32,7 +32,7 @@ $UIDisplayed = TRUE;
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die('ERROR!!! HRConvert2-2, This file cannot process your request! Please submit your file to convertCore.php instead!');
 // / Assign temporary variables.
-$gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = $gui1DataArr = $gui1EmailArr = $gui1DocList = array();
+$gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = $gui1DataArr = $gui1EmailArr = $gui1GraphArr = $gui1DocList = array();
 $selectorBase = 'convertCore.php?';
 // / The bar at the top of the page is taskbar.php's, & it is told which page it is on.
 $taskbarPage = 'upload';
@@ -229,6 +229,13 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
               <li><?php echo $gui1EmailArr; ?></li>
               <?php } ?>
             </ol>
+            <?php } if (in_array('Graph', $OfferedConversionTypes)) { ?>
+            <strong><?php echo $Gui1Text41; ?></strong>
+            <ol>
+              <?php foreach ($GraphInputArray as $gui1GraphArr) { ?>
+              <li><?php echo $gui1GraphArr; ?></li>
+              <?php } ?>
+            </ol>
             <?php } if (in_array('OCR', $OfferedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text25; ?></strong>
             <p><i><?php echo $Gui1Text20; ?></i></p>
@@ -309,5 +316,5 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
     // / $gui1OcrArr & $gui1ScadArr are declared at the top of this file & were missing from
     // / the chain below, so they survived the page. $gui1ScadArr was named in the unset but
     // / never nulled, which drops the symbol without shredding what it held.
-    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = $gui1DataArr = $gui1EmailArr = $gui1DocList = $sessionParams = $sortParams = $refreshURL = $selectorBase = $taskbarPage = NULL;
-    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui1SubArr, $gui1DraArr, $gui1OcrArr, $gui1XpsArr, $gui1ScadArr, $gui1SvgArr, $gui1EbkArr, $gui1DataArr, $gui1EmailArr, $gui1DocList, $sessionParams, $sortParams, $refreshURL, $selectorBase, $taskbarPage);
+    $gui1AudArr = $gui1VidArr = $gui1StreamArr = $gui1DocArr = $gui1SpreadArr = $gui1PresArr = $gui1ArchArr = $gui1ImaArr = $gui1ModArr = $gui1SubArr = $gui1DraArr = $gui1OcrArr = $gui1XpsArr = $gui1ScadArr = $gui1SvgArr = $gui1EbkArr = $gui1DataArr = $gui1EmailArr = $gui1GraphArr = $gui1DocList = $sessionParams = $sortParams = $refreshURL = $selectorBase = $taskbarPage = NULL;
+    unset($gui1AudArr, $gui1VidArr, $gui1StreamArr, $gui1DocArr, $gui1SpreadArr, $gui1PresArr, $gui1ArchArr, $gui1ImaArr, $gui1ModArr, $gui1SubArr, $gui1DraArr, $gui1OcrArr, $gui1XpsArr, $gui1ScadArr, $gui1SvgArr, $gui1EbkArr, $gui1DataArr, $gui1EmailArr, $gui1GraphArr, $gui1DocList, $sessionParams, $sortParams, $refreshURL, $selectorBase, $taskbarPage);

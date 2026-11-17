@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. An update & --config --repair keep it current.
-$ConfigVersion = 'v4.2.5';
+$ConfigVersion = 'v4.2.6';
 // / ------------------------------
 
 // / ------------------------------
@@ -609,6 +609,14 @@ $LaTeXConversionTimeout = 120;
 // /   Valid options are integers greater than 0.
 // /   Default is 120.
 $MarkupConversionTimeout = 120;
+// /  --Graph Conversion Timeout--
+// /   Set the maximum number of seconds Graphviz is permitted to draw a graph.
+// /   A layout engine can take a very long time over a large graph, so this value bounds what one upload can cost.
+// /   A graph is drawn without reading any file but itself, whatever this is set to, so an image or a shape file it names is left out.
+// /   This setting must be lower than the PHP execution timer set in php.ini.
+// /   Valid options are integers greater than 0.
+// /   Default is 120.
+$GraphConversionTimeout = 120;
 // /  --Use PyMeshLab Python Bindings--
 // /   MeshLab replaced its legacy server application with a Python library package.
 // /   Enabling this toggle forces the core to pass geometry repairs to a local Python script.
@@ -1039,9 +1047,9 @@ $AllowUserIdentify = TRUE;
 // /   The list of supported conversion types.
 // /   Only conversion types contained in this list will be processed.
 // /   If a conversion type is disabled, options for processing that conversion will not be displayed by the UI.
-// /   Data, LaTeX, Trace, Email & Markup were added in v4.2.5. A config.php from an earlier release lacks them until they are added here by hand.
-// /   Default is 'Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR', 'Ebook', 'Data', 'LaTeX', 'Trace', 'Email', 'Markup'.
-$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR', 'Ebook', 'Data', 'LaTeX', 'Trace', 'Email', 'Markup');
+// /   Data, LaTeX, Trace, Email & Markup were added in v4.2.5, & Graph in v4.2.6. A config.php from an earlier release lacks them until they are added here by hand.
+// /   Default is 'Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR', 'Ebook', 'Data', 'LaTeX', 'Trace', 'Email', 'Markup', 'Graph'.
+$SupportedConversionTypes = array('Document', 'Image', 'Model', 'Scad', 'Drawing', 'SVG', 'Video', 'Subtitle', 'Audio', 'Archive', 'Stream', 'OCR', 'Ebook', 'Data', 'LaTeX', 'Trace', 'Email', 'Markup', 'Graph');
 // /  --Allow Creation Of Bootable ISO Images--
 // /   Allow or disallow users to create bootable ISO images for multiple target systems.
 // /   The list of supported bootable image formats is contained in the --Supported Bootable ISO Output Formats-- config.php section.
@@ -1373,7 +1381,7 @@ $UserImageInputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 
 // /   output.
 $UserImageOutputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'ico', 'tiff', 'tif', 'jp2');
 // /  --Supported Audio Input Formats--.
-$UserMediaInputArray = array('sox', 'spdif', 'spx', 'tta', 'u16be', 'u16le', 'u24be', 'u24le', 'u32be', 'u32le', 'u8', 'voc', 'wav', 'wv', 'wsaud', 'mulaw', 'mxf', 'mxf_d10', 'mxf_opatom', 'oga', 'ogg', 'opus', 'oss', 'psp', 'rawvideo', 's16be', 's16le', 's24be', 's24le', 's32be', 's32le', 's8', 'sbc', 'ilbc', 'ircam', 'latm', 'lrc', 'mp2', 'mp3', 'mlp', 'flac', 'g722', 'g723_1', 'g726', 'g726le', 'gsm', 'caf', 'daud', 'dts', 'eac3', 'f32be', 'f32le', 'f64be', 'f64le', 'ac3', 'ac4', 'adts', 'aiff', 'alaw', 'amr', 'aptx', 'aptx_hd', 'argo_asf', 'argo_cvg', 'ast', 'au', 'a64', 'aa', 'aac', 'aax', 'acm', 'act', 'adp', 'adx', 'aea', 'afc', 'aix', 'alp', 'amrnb', 'amrwb', 'apac', 'apc', 'ape', 'apm', 'argo_asf', 'binka', 'bit', 'boa', 'bonk', 'brstm', 'dfpwm', 'dsf', 'dss', 'epaf', 'fsb', 'fwse', 'g729', 'hca', 'idf', 'kux', 'kvag', 'laf', 'lavfi', 'loas', 'luodat', 'lvf', 'lxf', 'mca', 'mcc', 'megsts', 'mlv', 'mmf', 'mods', 'moflex', 'mpc8', 'msf', 'msnwctcp', 'mtaf', 'musx', 'nc', 'nistsphere', 'nsp', 'paf', 'pam_pipe', 'pbm_pipe', 'pfm_pipe', 'pp_bnk', 'psxstr', 'pva', 'pvf', 'qcp', 'rka', 'rl2', 'rpl', 'rso', 's337m', 'sap', 'sbg', 'scd', 'sdns', 'sdp', 'sds', 'sdx', 'siff', 'simbiosis_imx', 'sln', 'smk', 'smush', 'sol', 'svag', 'svs', 'tak', 'thp', 'tierexseq', 'tty', 'ty', 'usm', 'vag', 'vidc', 'vpk', 'vqf', 'w64', 'wady', 'wavarc', 'wsd', 'wsvqa', 'wve', 'xa', 'xbin', 'xbm_pipe', 'xmd', 'xpm_pipe', 'xwma', 'yop', 'wma', 'm4a');
+$UserMediaInputArray = array('sox', 'spdif', 'spx', 'tta', 'u16be', 'u16le', 'u24be', 'u24le', 'u32be', 'u32le', 'u8', 'voc', 'wav', 'wv', 'wsaud', 'mulaw', 'mxf', 'mxf_d10', 'mxf_opatom', 'oga', 'ogg', 'opus', 'oss', 'psp', 'rawvideo', 's16be', 's16le', 's24be', 's24le', 's32be', 's32le', 's8', 'sbc', 'ilbc', 'ircam', 'latm', 'lrc', 'mp2', 'mp3', 'mlp', 'flac', 'g722', 'g723_1', 'g726', 'g726le', 'gsm', 'caf', 'daud', 'dts', 'eac3', 'f32be', 'f32le', 'f64be', 'f64le', 'ac3', 'ac4', 'adts', 'aiff', 'alaw', 'amr', 'aptx', 'aptx_hd', 'argo_asf', 'argo_cvg', 'ast', 'au', 'a64', 'aa', 'aac', 'aax', 'acm', 'act', 'adp', 'adx', 'aea', 'afc', 'aix', 'alp', 'amrnb', 'amrwb', 'apac', 'apc', 'ape', 'apm', 'binka', 'bit', 'boa', 'bonk', 'brstm', 'dfpwm', 'dsf', 'dss', 'epaf', 'fsb', 'fwse', 'g729', 'hca', 'idf', 'kux', 'kvag', 'laf', 'lavfi', 'loas', 'luodat', 'lvf', 'lxf', 'mca', 'mcc', 'megsts', 'mlv', 'mmf', 'mods', 'moflex', 'mpc8', 'msf', 'msnwctcp', 'mtaf', 'musx', 'nc', 'nistsphere', 'nsp', 'paf', 'pam_pipe', 'pbm_pipe', 'pfm_pipe', 'pp_bnk', 'psxstr', 'pva', 'pvf', 'qcp', 'rka', 'rl2', 'rpl', 'rso', 's337m', 'sap', 'sbg', 'scd', 'sdns', 'sdp', 'sds', 'sdx', 'siff', 'simbiosis_imx', 'sln', 'smk', 'smush', 'sol', 'svag', 'svs', 'tak', 'thp', 'tierexseq', 'tty', 'ty', 'usm', 'vag', 'vidc', 'vpk', 'vqf', 'w64', 'wady', 'wavarc', 'wsd', 'wsvqa', 'wve', 'xa', 'xbin', 'xbm_pipe', 'xmd', 'xpm_pipe', 'xwma', 'yop', 'wma', 'm4a');
 // /  --Supported Audio Output Formats--.
 $UserMediaOutputArray = array('mp3', 'aac', 'ogg', 'wma', 'mp2', 'flac', 'm4a');
 // /  --Supported Video Input Formats--.
@@ -1511,4 +1519,12 @@ $UserMarkupInputArray = array('md', 'markdown', 'rst', 'adoc', 'asciidoc', 'jira
 // /   A pdf is typeset by XeLaTeX, which the LaTeX subsystem installs. A server without it refuses a pdf with an error that says so.
 // /   A document is converted alone, so an image it names is left out, & a pptx or an ipynb that cannot be written without one fails & names it.
 $UserMarkupOutputArray = array('md', 'rst', 'adoc', 'jira', 'textile', 'org', 'mediawiki', 'dokuwiki', 'muse', 'djot', 'typ', 'tex', 'docx', 'odt', 'epub', 'rtf', 'ipynb', 'opml', 'fb2', 'txt', 'pdf', 'pptx', 'texi', 'icml');
+// /  --Supported Graph Input Formats--
+// /   The graphs a user may draw, written in Graphviz's DOT language, from v4.2.6.
+// /   gv is the only one, as Graphviz recommends, because dot is a Word template to the document family. A graph saved as dot is renamed gv.
+$UserGraphInputArray = array('gv');
+// /  --Supported Graph Output Formats--
+// /   What a graph may be drawn as, from v4.2.6. svg & pdf stay sharp at any size, png, jpg, gif & webp are pictures, & eps & ps are
+// /   PostScript for print.
+$UserGraphOutputArray = array('svg', 'png', 'pdf', 'jpg', 'gif', 'webp', 'eps', 'ps');
 // / ------------------------------

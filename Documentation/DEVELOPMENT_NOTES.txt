@@ -742,6 +742,16 @@ never change what an administrator listed. A repair skipped that section too, & 
 what it leaves missing, so the repair after the v4.2.5 drop in added the two timeouts, raised the
 stamp to v4.2.5 & left out the ten format lists, & every command then refused with error 28000. A
 repair adds a missing setting to such a section now, because adding one changes no value there.
+
+A GRAPH IS DRAWN BY GRAPHVIZ, WHICH READS NO FILE BUT THE GRAPH. v4.2.6.
+A graph can name an image or a shape file for a node, & Graphviz reads it from wherever the graph
+says, an absolute path included. SERVER_NAME is set for it, so it behaves as Graphviz does behind a
+web server & reads no file a graph names, & the pipeline warns where one was named. It travels with
+the command, as TeX's settings do, so it holds where no sandbox could be built. A graph can also
+give a node a link, which Graphviz writes into an SVG as it was given, javascript: included, & the
+DATA directory's download & sandbox headers cover it as they cover every SVG. gv is the only input,
+because dot is a Word template to the Document family, & a layout engine can run a long time over a
+large graph, so --Graph Conversion Timeout-- bounds it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1736,6 +1746,17 @@ image conversion, & every press of one failed. Each pipeline names what it canno
 page draws by $OfferedConversionTypes, which leaves out a type whose tool is not installed. $Allowed &
 $SupportedConversionTypes are not narrowed, because a file a server cannot convert is still one it
 can upload, archive, scan, share & delete.
+
+EVERY LANGUAGE PACK WAS READ AS A PAGE SHOWS IT. v4.2.6.
+A pack is PHP, so one that runs shows nothing wrong, & a string can still be wrong on the page. Each
+string was checked three ways. Every letter was matched to the scripts its language is written in,
+which found Chinese, Arabic, Greek & Sinhala letters inside Syriac words, a Hindi sentence in the
+Chinese pack & an English word in three Urdu strings. Every variable & placeholder English builds a
+string from was looked for in each translation, which found a Bengali count written as a number &
+two Chinese variables written inside the quotes. The sentences that count uploaded files were
+printed for many counts, which found sixteen languages whose words did not agree with the count,
+a sentence printed twice in Hindi & Italian, a Persian sentence that ended on a second verb, & a
+second copy of the opening sections in Polish.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

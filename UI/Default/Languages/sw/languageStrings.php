@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -60,8 +60,8 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'Badili Kitu Chochote!';
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
 if (!is_numeric($FileCount)) $FileCount = 'idadi isiyojulikana ya';
-$FCPlural1 = ' yote';
-$FCPlural2 = ' yenu sasa yako';
+$FCPlural1 = '';
+$FCPlural2 = ' zako sasa ziko';
 if ($FileCount == 1) {
   $FCPlural1 = '';
   $FCPlural2 = ' lako sasa liko'; }
@@ -175,6 +175,8 @@ $Gui1Text38 = 'Miundo ya Data';
 $Gui1Text39 = 'Miundo ya Barua Pepe';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Inaweza kufuatilia picha na kuzigeuza kuwa michoro ya vekta.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Miundo ya Grafu';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -665,6 +667,12 @@ $Gui2Text250 = 'Nyaraka za LaTeX';
 $Gui2Text251 = 'Barua Pepe';
 // / 'Markup Documents'
 $Gui2Text252 = 'Nyaraka za Markup';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Badilisha Grafu Hii';
+// / 'Convert Graph'
+$Gui2Text254 = 'Badilisha Grafu';
+// / 'Graphs'
+$Gui2Text255 = 'Grafu';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

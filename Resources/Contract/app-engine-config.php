@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.5.
+// / v4.2.6.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -134,6 +134,8 @@ $EngineAcceptedPipelines = array(
   'Trace' => 'v4.2.5',
   'Email' => 'v4.2.5',
   'Markup' => 'v4.2.5',
+  // / A sixth from v4.2.6. Graph draws a graph written in Graphviz's DOT language as a picture.
+  'Graph' => 'v4.2.6',
   // / The second operation pipeline. It reads every file & changes none.
   'Identify' => 'v4.1.2',
   // / The third & fourth, from v4.1.6. The Archiver puts a selection of files into archives, & Scan scans the files a user asks it to.

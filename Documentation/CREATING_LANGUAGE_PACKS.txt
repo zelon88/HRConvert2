@@ -209,6 +209,9 @@ This works because a language pack contains only variable assignments.
 Simple logic is permitted where localization requires it.
 Plural selection is the common case. $FCPlural1 & $FCPlural2 exist for languages that inflect nouns for number.
 Languages that do not inflect leave both empty & write the sentence so it reads correctly for any count.
+A language with more forms than a suffix can give, or whose adjective agrees with its noun, may give each helper the
+whole sentence, as Polish, Russian & Ukrainian do for a count ending in two to four, & $Gui2Text30 & $Gui2Text31 are
+then the helpers alone. A sentence that counts files is read for 0, 1, 2, 5, 11, 21 & 22 files before a pack ships.
 A string the page fills in carries placeholders in braces, such as {fit} & {count}. A translation keeps
 every placeholder its English carries, in whatever order the language needs, because each is replaced by
 its name. $Gui2Text137, $Gui2Text138 & $Gui2Text139 carry them, from v4.1.4, & $Gui2Text170 &

@@ -287,6 +287,17 @@ GitHub. LaTeX is about 0.7 GB, & Markup needs it for a PDF. Trace needs ImageMag
 other than BMP or PNM, which the Images subsystem installs. SVG renders with Inkscape as before
 where Resvg is missing.
 
+RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.2.6 DROP IN, &
+BEFORE -fp. v4.2.6 adds the Graph family, its two format lists & --Graph Conversion Timeout--.
+--config --repair adds the settings & changes none already there, so add 'Graph' to --Allowed
+Conversion Types-- by hand. -u does both by itself. Then install Graphviz, which Debian 12 &
+Ubuntu 24.04 both carry.
+
+  sudo php convertCore.php --setup --install-depends --subsystem=Graphs              Graphviz
+
+A graph is uploaded as gv. A graph saved as dot is renamed gv first, because a dot file is a Word
+template to the Document family.
+
 FROM v4.2.1 A BUTTON IS DRAWN ONLY WHERE THE TOOL BEHIND IT IS INSTALLED. A conversion, Strip
 Metadata, OCR, Merge, Split or a scanner whose tool is missing is hidden from every page & every
 workflow, & -v names each pipeline that is NOT OFFERED & what it lacks. Install what it names, &

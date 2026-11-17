@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -44,7 +44,7 @@ $GUIAlignment = 'left';
 // / reads as a stray icon rather than as the thing that opens the list.
 $SelectArrowSide = ($GUIAlignment === 'right') ? '4%' : '96%';
 // / Define an error message to display for if the core has not been loaded.
-$CoreError = 'ERROR!!! HRConvert2-2, 이 파일은 귀하의 요청을 처리할 수 없습니다! 대신 ConvertCore.php에 파일을 제출하세요!';
+$CoreError = 'ERROR!!! HRConvert2-2, 이 파일은 귀하의 요청을 처리할 수 없습니다! 대신 convertCore.php에 파일을 제출하세요!';
 // / Check if the core is loaded.
 if (!isset($CoreLoaded)) die($CoreError);
 // / -----------------------------------------------------------------------------------
@@ -170,6 +170,8 @@ $Gui1Text38 = '데이터 형식';
 $Gui1Text39 = '이메일 형식';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = '이미지를 벡터 그림으로 트레이스할 수 있습니다.';
+// / 'Graph Formats'
+$Gui1Text41 = '그래프 형식';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -313,7 +315,7 @@ $Gui2Text76 = '자막 변환';
 // / 'Convert This Presentation'
 $Gui2Text77 = '이 프레젠테이션 변환하기';
 // / 'Convert This XPS File'
-$Gui2Text78 = 'C이 파일을 변환하세요';
+$Gui2Text78 = '이 XPS 파일을 변환하세요';
 // / 'Render This OpenSCAD Model'
 $Gui2Text79 = '이 OpenSCAD 모델 렌더링';
 // / 'Render Model'
@@ -660,6 +662,12 @@ $Gui2Text250 = 'LaTeX 문서';
 $Gui2Text251 = '이메일';
 // / 'Markup Documents'
 $Gui2Text252 = '마크업 문서';
+// / 'Convert This Graph'
+$Gui2Text253 = '이 그래프 변환';
+// / 'Convert Graph'
+$Gui2Text254 = '그래프 변환';
+// / 'Graphs'
+$Gui2Text255 = '그래프';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

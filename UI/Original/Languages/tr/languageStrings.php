@@ -39,7 +39,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -67,11 +67,13 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'Her Şeyi Dönüştür!';
 
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
-// / Turkish does not pluralize a noun that follows a numeral, so both plural helpers stay empty.
+// / Turkish does not pluralize a noun that follows a numeral, so the sentence that counts the files takes no helper.
 // / Bes dosya is correct & bes dosyalar is not, whatever the count happens to be.
 if (!is_numeric($FileCount)) $FileCount = 'belirsiz sayıda';
+// / The sentence that follows it has no numeral, so its noun is plural unless one file was uploaded.
 $FCPlural1 = '';
-$FCPlural2 = '';
+$FCPlural2 = 'Dosyalarınız';
+if ($FileCount === 1) $FCPlural2 = 'Dosyanız';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -184,6 +186,8 @@ $Gui1Text38 = 'Veri Biçimleri';
 $Gui1Text39 = 'E-posta Biçimleri';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Görüntüleri izleyerek vektör çizimlere dönüştürebilir.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Çizge Biçimleri';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -236,7 +240,7 @@ $Gui2Text29 = 'Dosya Bağlantısı: ';
 // / The application name is placed before the verb so that no suffix has to attach to it.
 $Gui2Text30 = $ApplicationName.' uygulamasına '.$FileCount.' geçerli dosya yüklediniz.'.$FCPlural1;
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'Dosyalarınız artık aşağıdaki seçenekler kullanılarak dönüştürülmeye hazır.'.$FCPlural2;
+$Gui2Text31 = $FCPlural2.' artık aşağıdaki seçenekler kullanılarak dönüştürülmeye hazır.';
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'Bağlantı Oluştur ve Panoya Kopyala';
 // / 'Generate Link'
@@ -677,6 +681,12 @@ $Gui2Text250 = 'LaTeX Belgeleri';
 $Gui2Text251 = 'E-postalar';
 // / 'Markup Documents'
 $Gui2Text252 = 'İşaretleme Belgeleri';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Bu Çizgeyi Dönüştür';
+// / 'Convert Graph'
+$Gui2Text254 = 'Çizgeyi Dönüştür';
+// / 'Graphs'
+$Gui2Text255 = 'Çizgeler';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

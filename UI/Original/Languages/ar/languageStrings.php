@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'rtl';
@@ -66,8 +66,11 @@ if ($FileCount === 1) $FCPlural1 = 'لقد قمت بتحميل ملف واحد �
 if ($FileCount === 2) $FCPlural1 = 'لقد قمت بتحميل ملفين صالحين إلى '.$ApplicationName.'.';
 if ($FileCount >= 3) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' ملفات صالحة إلى '.$ApplicationName.'.';
 if ($FileCount >= 11) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' ملفًا صالحًا إلى '.$ApplicationName.'.';
-if ($FileCount === 100) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.'  ملف صالح إلى '.$ApplicationName.'.';
+if ($FileCount === 100) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' ملف صالح إلى '.$ApplicationName.'.';
 if ($FileCount >= 101) $FCPlural1 = 'لقد قمت بتحميل '.$FileCount.' ملفًا صالحًا إلى '.$ApplicationName.'.';
+$FCPlural2 = 'ملفاتك جاهزة الآن للتحويل باستخدام الخيارات أدناه.';
+if ($FileCount === 1) $FCPlural2 = 'ملفك جاهز الآن للتحويل باستخدام الخيارات أدناه.';
+if ($FileCount === 2) $FCPlural2 = 'ملفاك جاهزان الآن للتحويل باستخدام الخيارات أدناه.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -178,6 +181,8 @@ $Gui1Text38 = 'تنسيقات البيانات';
 $Gui1Text39 = 'تنسيقات البريد الإلكتروني';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'يمكن تتبع الصور وتحويلها إلى رسومات متجهة.';
+// / 'Graph Formats'
+$Gui1Text41 = 'تنسيقات المخططات';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -229,7 +234,7 @@ $Gui2Text29 = 'رابط الملف: ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
 $Gui2Text30 = $FCPlural1;
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'ملفاتك جاهزة الآن للتحويل باستخدام الخيارات أدناه.';
+$Gui2Text31 = $FCPlural2;
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'إنشاء ارتباط والنسخ إلى الحافظة';
 // / 'Generate Link'
@@ -321,7 +326,7 @@ $Gui2Text76 = 'تحويل الترجمة';
 // / 'Convert This Presentation'
 $Gui2Text77 = 'تحويل هذا العرض التقديمي';
 // / 'Convert This XPS File'
-$Gui2Text78 = 'تحويل ملف هذا';
+$Gui2Text78 = 'تحويل ملف XPS هذا';
 // / 'Render This OpenSCAD Model'
 $Gui2Text79 = 'إنشاء نموذج OpenSCAD هذا';
 // / 'Render Model'
@@ -668,6 +673,12 @@ $Gui2Text250 = 'مستندات LaTeX';
 $Gui2Text251 = 'رسائل البريد الإلكتروني';
 // / 'Markup Documents'
 $Gui2Text252 = 'مستندات الترميز';
+// / 'Convert This Graph'
+$Gui2Text253 = 'تحويل هذا المخطط';
+// / 'Convert Graph'
+$Gui2Text254 = 'تحويل المخطط';
+// / 'Graphs'
+$Gui2Text255 = 'المخططات';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

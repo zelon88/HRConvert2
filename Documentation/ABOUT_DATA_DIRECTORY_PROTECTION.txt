@@ -65,6 +65,10 @@ document & runs a script an XHTML element inside it carries, so an XML file here
 reason an SVG is, the two controls below, & for no other. The Markup pipeline writes XML under
 other names as well, dbk, fb2, opml & icml, which the same two controls cover. Until v4.2.5 .xml
 was excluded with the four above.
+
+THE GRAPH PIPELINE WRITES AN SVG FROM A GRAPH A USER WROTE, FROM v4.2.6. A graph can give a node a
+link, & Graphviz writes it into the SVG as it was given, a javascript: address included. The two
+controls below cover it as they cover every SVG, & nothing is done to the link itself.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

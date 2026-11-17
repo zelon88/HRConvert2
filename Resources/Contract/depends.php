@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File information ...
-// / v4.2.5.
+// / v4.2.6.
 // / HRConvert2 Dependency Manifest, the application's half.
 // / This file is data. It defines nothing & does nothing.
 // / The Engine's verifyDependsManifest() reads it. Nothing else may.
@@ -118,7 +118,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v4.2.5';
+$DependsVersion = 'v4.2.6';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -586,6 +586,15 @@ $DependsManifest = array(
     'MinimumVersion' => '0.921', 'VersionCommand' => 'perl -MEmail::Outlook::Message -e '.escapeshellarg('print "Email::Outlook::Message $Email::Outlook::Message::VERSION\n";'), 'VersionPattern' => '/Email::Outlook::Message (\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => 'Email', 'Requires' => array('Bubblewrap'),
     'License' => 'GPL-1.0-or-later', 'Source' => 'https://metacpan.org/pod/Email::Outlook::Message', 'Purpose' => 'Converts Outlook messages to EML & mbox.'),
+
+  // / ---- Graphs. ----
+  // / Graphviz draws a graph written in the DOT language for the Graph pipeline, from v4.2.6. dot is the program asked, & it lays a
+  // / graph out with whichever of Graphviz's layout engines the graph names. It says its version on its error stream, which the
+  // / version command reads. Debian 12 & Ubuntu 24.04 both carry 2.42.2, & Ubuntu's reports itself as 2.43.
+  array('Name' => 'Graphviz', 'Binary' => 'dot', 'Type' => 'apt', 'Package' => 'graphviz',
+    'MinimumVersion' => '2.42', 'VersionCommand' => 'dot -V', 'VersionPattern' => '/graphviz version (\d+\.\d+)/',
+    'Required' => FALSE, 'Subsystem' => 'Graphs', 'Requires' => array('Bubblewrap'),
+    'License' => 'EPL-1.0', 'Source' => 'https://graphviz.org', 'Purpose' => 'Draws graphs written in the DOT language as pictures & documents.'),
 
   // / ---- Optional scanning. ----
   // / ScanCore is a standalone virus scanner this project writes & distributes.

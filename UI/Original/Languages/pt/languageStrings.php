@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -60,10 +60,11 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'Converta qualquer coisa!';
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
 if (!is_numeric($FileCount)) $FileCount = 'um número desconhecido de';
-if ($FileCount === 0) $FCPlural1 = 'Você carregou 0 arquivos válidos para o '.$ApplicationName.'.';
-if ($FileCount === 1) $FCPlural1 = 'Você carregou 1 arquivo válido para '.$ApplicationName.'.'; 
-if ($FileCount === 2) $FCPlural1 = 'Você carregou 2 arquivos válidos para '.$ApplicationName.'.';
-if ($FileCount >= 3) $FCPlural1 = 'Você carregou '.$FileCount.' arquivos válidos para o '.$ApplicationName.'.';
+$FCPlural1 = 'Você carregou '.$FileCount.' arquivos válidos para o '.$ApplicationName.'.';
+$FCPlural2 = 'Seus arquivos agora estão prontos para serem convertidos usando as opções abaixo.';
+if ($FileCount === 1) {
+  $FCPlural1 = 'Você carregou 1 arquivo válido para o '.$ApplicationName.'.';
+  $FCPlural2 = 'Seu arquivo agora está pronto para ser convertido usando as opções abaixo.'; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -174,6 +175,8 @@ $Gui1Text38 = 'Formatos de dados';
 $Gui1Text39 = 'Formatos de e-mail';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Pode traçar imagens como desenhos vetoriais.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Formatos de grafos';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -225,7 +228,7 @@ $Gui2Text29 = 'Link do Arquivo: ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
 $Gui2Text30 = $FCPlural1;
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'Seus arquivos agora estão prontos para serem convertidos usando as opções abaixo.';
+$Gui2Text31 = $FCPlural2;
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'Gerar Link e Copiar Para a Área de Transferência';
 // / 'Generate Link'
@@ -317,7 +320,7 @@ $Gui2Text76 = 'Converter Legendas';
 // / 'Convert This Presentation'
 $Gui2Text77 = 'Converter Esta Apresentação';
 // / 'Convert This XPS File'
-$Gui2Text78 = 'Converter Este Arquivo';
+$Gui2Text78 = 'Converter Este Arquivo XPS';
 // / 'Render This OpenSCAD Model'
 $Gui2Text79 = 'Renderizar Este Modelo OpenSCAD';
 // / 'Render Model'
@@ -664,6 +667,12 @@ $Gui2Text250 = 'Documentos LaTeX';
 $Gui2Text251 = 'E-mails';
 // / 'Markup Documents'
 $Gui2Text252 = 'Documentos De Marcação';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Converter Este Grafo';
+// / 'Convert Graph'
+$Gui2Text254 = 'Converter Grafo';
+// / 'Graphs'
+$Gui2Text255 = 'Grafos';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

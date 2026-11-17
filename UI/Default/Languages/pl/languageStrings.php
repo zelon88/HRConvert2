@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.5';
+$LanguageVersion = 'v4.2.6';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -60,11 +60,12 @@ if (!isset($ApplicationTitle)) $ApplicationTitle = 'Konwertuj Wszystko!';
 // / -----------------------------------------------------------------------------------
 // / Set GUI Related Logic.
 if (!is_numeric($FileCount)) $FileCount = 'nieznaną liczbę';
-$FCPlural1 = '';
-$FCPlural2 = '';
-if ($FileCount == 1) {
-  $FCPlural1 = '';
-  $FCPlural2 = ''; }
+$FCPlural1 = 'prawidłowych plików';
+$FCPlural2 = 'Twoje pliki są gotowe do konwersji przy użyciu poniższych opcji.';
+if (is_numeric($FileCount) && $FileCount % 10 >= 2 && $FileCount % 10 <= 4 && ($FileCount % 100 < 12 or $FileCount % 100 > 14)) $FCPlural1 = 'prawidłowe pliki';
+if ($FileCount === 1) {
+  $FCPlural1 = 'prawidłowy plik';
+  $FCPlural2 = 'Twój plik jest gotowy do konwersji przy użyciu poniższych opcji.'; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -84,43 +85,6 @@ $GuiSelectorText2 = 'Kolor';
 $GuiSelectorText3 = 'Interfejs';
 // / 'Display language, color and interface options'
 $GuiSelectorText4 = 'Pokaż opcje języka, koloru i interfejsu';
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / Set a flag to tell that the UI has been displayed.
-$LanguageStringsLoaded = TRUE;
-// / Set the reading direction for text on the page.
-$GUIDirection = 'ltr';
-// / Set the side of the page to float elements to.
-$GUIAlignment = 'left';
-// / Define an error message to display for if the core has not been loaded.
-$CoreError = 'BŁĄD!!! HRConvert2-2, Ten plik nie może przetworzyć Twojego żądania! Proszę przesłać swój plik do convertCore.php!';
-// / Check if the core is loaded.
-if (!isset($CoreLoaded)) die($CoreError);
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / Check for required core variables.
-if (!isset($Font)) $Font = 'Arial';
-if (!isset($ShowFinePrint)) $ShowFinePrint = TRUE;
-if (!isset($ApplicationName)) $ApplicationName = 'HRConvert2'; 
-if (!isset($ApplicationTitle)) $ApplicationTitle = 'Konwertuj Wszystko!';
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / Set GUI Related Logic.
-if (!is_numeric($FileCount)) $FileCount = 'nieznaną liczbę';
-$FCPlural1 = 'ów';
-$FCPlural2 = 'i są';
-if ($FileCount == 1) {
-  $FCPlural1 = '';
-  $FCPlural2 = ''; }
-// / -----------------------------------------------------------------------------------
-
-// / -----------------------------------------------------------------------------------
-// / Set GUI - Header Related Variables.
-// / 'Click, Tap, or Drop files here to upload.'
-$GuiHeaderText1 = 'Kliknij, Dotknij lub Upuść pliki tutaj, aby przesłać.';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -212,6 +176,8 @@ $Gui1Text38 = 'Formaty Danych';
 $Gui1Text39 = 'Formaty Wiadomości E-mail';
 // / 'Can trace images into vector drawings.'
 $Gui1Text40 = 'Może obrysowywać obrazy jako rysunki wektorowe.';
+// / 'Graph Formats'
+$Gui1Text41 = 'Formaty Grafów';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -261,9 +227,9 @@ $Gui2Text28 = 'Skopiowano';
 // / 'File Link: '
 $Gui2Text29 = 'Link do Pliku: ';
 // / 'You have uploaded '.$FileCount.' valid file'.$FCPlural1.' to '.$ApplicationName.'.'
-$Gui2Text30 = 'Przesłano '.$FileCount.' prawidłowy plik'.$FCPlural1.' do '.$ApplicationName.'.';
+$Gui2Text30 = 'Przesłano '.$FileCount.' '.$FCPlural1.' do '.$ApplicationName.'.';
 // / 'Your file'.$FCPlural2.' now ready to convert using the options below.'
-$Gui2Text31 = 'Twój plik'.$FCPlural2.' gotowy do konwersji przy użyciu poniższych opcji.';
+$Gui2Text31 = $FCPlural2;
 // / 'Generate Link & Copy to Clipboard'
 $Gui2Text32 = 'Wygeneruj Link i Skopiuj do Schowka';
 // / 'Generate Link'
@@ -702,6 +668,12 @@ $Gui2Text250 = 'Dokumenty LaTeX';
 $Gui2Text251 = 'Wiadomości E-mail';
 // / 'Markup Documents'
 $Gui2Text252 = 'Dokumenty Znacznikowe';
+// / 'Convert This Graph'
+$Gui2Text253 = 'Konwertuj Ten Graf';
+// / 'Convert Graph'
+$Gui2Text254 = 'Konwertuj Graf';
+// / 'Graphs'
+$Gui2Text255 = 'Grafy';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

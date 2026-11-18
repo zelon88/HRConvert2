@@ -166,7 +166,7 @@ Then open `http://your-server/HRProprietary/HRConvert2/convertCore.php` and star
 docker run -d -p 8080:80 --cap-add SYS_ADMIN -v hrconvert2-data:/DATA/HRConvert2 zelon88/hrconvert2
 ```
 
-`SYS_ADMIN` lets the container build the sandbox every converter runs in. Leave it off and the container cannot build one. No process that converts or serves a user's file holds `SYS_ADMIN`, or any other capability. Run `php convertCore.php -v` inside the container to confirm the sandbox works. The named volume keeps sessions, accounts and their files when you replace the container to update, and [DOCKER_BUILD_INSTRUCTIONS](Documentation/DOCKER_BUILD_INSTRUCTIONS.txt) lists what else to keep, such as your settings.
+`SYS_ADMIN` lets the container build the sandbox every converter runs in. Leave it off and the container cannot build one, so documents, e-books, SVG, drawings, 3D models, audio, video, subtitles and streams are refused, and everything else runs unprotected. No process that converts or serves a user's file holds `SYS_ADMIN`, or any other capability. Run `php convertCore.php -v` inside the container to confirm the sandbox works. The named volume keeps sessions, accounts and their files when you replace the container to update, and [DOCKER_BUILD_INSTRUCTIONS](Documentation/DOCKER_BUILD_INSTRUCTIONS.txt) lists what else to keep, such as your settings.
 
 ### 🩺 When Something Is Wrong
 ```bash

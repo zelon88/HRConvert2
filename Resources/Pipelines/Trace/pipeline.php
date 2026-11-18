@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.5.
+// / v4.2.7.
 // / The Trace pipeline's converter. pipelineCore.php loads it only to dispatch a Trace conversion.
 // / Error block 46000 through 46006 belongs to this pipeline.
 // / Potrace & ImageMagick come from verifiedToolPath().

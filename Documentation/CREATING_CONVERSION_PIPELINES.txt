@@ -164,7 +164,8 @@ Read these before writing code. They are preconditions, not steps.
     3a. It returns a permission boolean & a finished command string.
     3b. The boolean means the command MAY RUN.
     3c. The boolean does NOT mean a sandbox was actually built.
-    3d. A server not requiring sandboxing gets TRUE, no wrapper & a warning.
+    3d. A server not requiring sandboxing gets TRUE, no wrapper & a warning, unless the
+        profile sets RequireSandbox, which is refused wherever no sandbox can be built.
     3e. Both paths must appear exactly as `escapeshellarg()` rendered them.
     3f. That exact form is what gets matched & rewritten for the namespace.
     3g. A path built any other way is never matched by the rewrite.
@@ -176,6 +177,10 @@ Read these before writing code. They are preconditions, not steps.
     3m. Two commands means two separate `sandboxCommand()` calls.
     3n. A dependency needing a whole directory visible cannot use this function.
     3o. `convertSCAD()` is the only current example. It builds its own invocation.
+    3p. Hand the tool an upload naming a file outside its folder, by a relative path, an
+        absolute path & a file URL, & trace what it opens. A tool that reads one needs
+        something passed with its command that stops it, as Pandoc's --sandbox, paranoid TeX
+        & Graphviz's SERVER_NAME do, or a profile that sets RequireSandbox, from v4.2.7.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -230,7 +235,9 @@ Read these before writing code. They are preconditions, not steps.
       & `engineConfigModel()`, & not the application's. A format array is the application's.
   5d. Config settings need no cleanup entry. They stay alive for the whole request.
   5e. `verifyGlobals()` - add the new format arrays to the globals line.
-  5f. `verifyGlobals()` - build lowercased working arrays from the `$User*` ones.
+  5f. `verifyGlobals()` - build each working array from its `$User*` one through
+      `withoutRefusedFormats()`, which lowercases it, drops a format the core refuses & names
+      the setting in a warning, from v4.2.7.
   5g. `verifyGlobals()` - add those working arrays to `$allArrays`.
   5h. Adding to `$allArrays` is not optional. It is what builds `$Allowed`.
   5i. `verifyFile()` rejects any extension missing from `$Allowed`.
@@ -303,7 +310,8 @@ Read these before writing code. They are preconditions, not steps.
   8d. CONTRACT 6. A PIPELINE NEVER PRINTS. Not once. It returns & the core decides.
   8e. `sandboxCommand()` returns whether the command MAY RUN, not whether a sandbox exists.
       FALSE means the core refused it & it must not be executed. The case where sandboxing
-      is not required returns TRUE with the command unwrapped & warns from inside itself.
+      is not required returns TRUE with the command unwrapped & warns from inside itself,
+      unless the profile sets RequireSandbox, from v4.2.7.
   8f. ROUTE ON WHAT A TOOL CAN WRITE, NOT ON WHAT IT CAN READ. Assimp reads OFF & has no OFF
       exporter, & an input based route retried an impossible command until it timed out.
   8g. Gate on `verifiedToolPath()` first. Error out with your reserved number.

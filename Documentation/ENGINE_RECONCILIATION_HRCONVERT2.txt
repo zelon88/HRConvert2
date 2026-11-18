@@ -215,3 +215,56 @@ Documentation/Build/hrconvert2-release-fetch.sh IS GENERIC. It fetches, checks &
 release binary for any manifest entry, as build-7zip.sh builds one, & knows nothing of HRConvert2
 but its name. It is a candidate for the kit, under a name of the Engine's.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--v4.2.7--
+
+TWO ENGINE FILES CHANGED, IN ONE WAY, & BOTH ARE BACKWARD COMPATIBLE.
+
+  Resources/Engine/engine.php                 v4.2.4 to v4.2.7
+  Resources/Engine/config-template.php        v4.2.4 to v4.2.7, in its comments alone
+
+--A sandbox profile can require a sandbox--
+
+WHAT CHANGED. A sandbox profile may carry a new, optional field, RequireSandbox. The new function
+sandboxRequiredProfiles() names every profile whose RequireSandbox is TRUE, compared strictly, so a
+1 or a 'TRUE' is not a request, lowercase & in the order the application declared them.
+sandboxCommand() asks it, & where no sandbox can be built it refuses such a profile whatever
+sandboxIsRequired() says, writes a warning naming the profile, & returns FALSE as it does for every
+refusal, so no caller changes. Where a sandbox is not otherwise required, -v's Sandbox required line
+says NO, except for the profiles it names, & the operating environment check's FAILED line for the
+sandbox says their conversions will be refused. A sandbox that can be built is built exactly as
+before. A profile without the field, & every profile of an application that sets none, behaves
+exactly as it did, so HRProtect needs nothing to take the change.
+config-template.php's --Require Sandbox-- & --Require Sandbox On Docker-- say so. Neither setting
+changed, & neither did its default.
+
+WHY. --Require Sandbox-- set to FALSE accepts the risk of a tool's own bugs where no sandbox can be
+built. A tool that reads a file an upload names by its path, & writes it into what it makes, needs no
+bug, & HRConvert2 v4.2.7 traced seven that nothing passed with their commands stops: LibreOffice,
+Calibre, Inkscape, Resvg, Dia, Assimp under the meshlab profile, & FFMPEG with FFprobe. A tool with a
+setting that stops it, as Pandoc's --sandbox, paranoid TeX & Graphviz's SERVER_NAME do, carries the
+setting with its command instead, & its profile does not set the field.
+
+THE KERNEL, engineConfig.php, the Engine's depends.php, every Core, every Manager & the three
+checkers are unchanged by v4.2.7.
+
+--The Engine's documents--
+
+  ERROR_DESCRIPTIONS.txt        Engine. sandboxCommand()'s three warnings, which no document named,
+                                & the new one. HRConvert2. Every refusal the field now decides, &
+                                the core's & the Stream pipeline's warnings.
+  ABOUT_ENGINE_CONTRACT.txt     Engine. The field, beside the sandbox provider that supplies it.
+  CREATING_CONVERSION_PIPELINES.txt  Engine. When a pipeline's profile sets the field.
+  ABOUT_NETWORK_ISOLATION.txt   Engine. Whether a tool may run outside its namespace is traced.
+  ABOUT_PIPELINE_COMPONENTS.txt HRConvert2. What the Image, Trace & OCR policies refuse to read.
+  DEVELOPMENT_NOTES.txt         HRConvert2. Which tools follow a path, & what stops each.
+
+--Seen, & left for the Engine's maintainer--
+
+THE BASE SANDBOX SHOWS /etc/passwd & /opt. Inside its sandbox Calibre copied /etc/passwd into the book
+an EPUB's manifest named it in. The base sandbox shows it, with /etc/group, because LibreOffice aborts
+with no user to look up, & shows /opt for a program installed beneath it, where the guide clones the
+source. A profile could hide both from a tool that needs neither, or the base sandbox could show a
+passwd holding only the account a sandbox runs as.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

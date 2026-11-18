@@ -178,6 +178,12 @@ why the profiles are code rather than configuration & are never shown to one.
 
 The network is granted the same way. It is a permission like any other, off by default,
 switched on for the one tool that fetches & the one that inspects, & recorded here.
+
+WHETHER A TOOL MAY RUN WITHOUT ITS NAMESPACE IS NOT GUESSED EITHER, FROM v4.2.7.
+Each tool was handed an upload naming a file outside its folder & traced. One that read the file
+& wrote it into what it made, with nothing passed to it able to stop that, has a profile setting
+RequireSandbox, & the Engine never runs it without a sandbox, whatever --Require Sandbox-- says.
+That is the libreoffice, calibre, inkscape, resvg, dia, meshlab & ffmpeg profiles.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

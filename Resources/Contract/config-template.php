@@ -610,7 +610,7 @@ $UserPDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
 // /   PDF input is supported but is the weakest conversion Calibre performs. A PDF has no
 // /   reflowable structure to recover, so the result is frequently poor. It is offered
 // /   because it is occasionally the only option, not because it works well.
-$UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'odt', 'docx', 'pdf', 'chm', 'cbz', 'cbr', 'cbc', 'prc', 'opf', 'recipe');
+$UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'odt', 'docx', 'pdf', 'chm', 'cbz', 'cbr', 'cbc', 'prc');
 // /  --Supported Ebook Output Formats--
 // /   The e-book formats a user may convert TO.
 // /   Calibre writes PDF through Qt WebEngine, which needs more memory than any other output, so

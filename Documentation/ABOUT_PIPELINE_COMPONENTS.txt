@@ -504,6 +504,10 @@ A policy a tool reads belongs to the pipeline that runs the tool, & travels with
 OCR, Identify & Trace pipelines each carry an ImageMagick policy in a Policy folder beside their
 converter. Trace's is from v4.2.5, & it also names the decoder ImageMagick reads an image with,
 so a file named as a PNG is read as a PNG or not at all.
+ImageMagick reads what a file holds before what it is called, so a policy decides what an upload
+named as an image may reach. From v4.2.7 the Image, Trace & OCR policies refuse to read SVG, which
+draws any image it names, & PostScript, which is a program Ghostscript runs. Image still writes PS
+& EPS & reads & writes PDF, & OCR reads PDF. Identify's policy refused both already.
 Nothing is written into the host. Until v4.0.5 -fp wrote one policy over the host's own
 policy.xml, a file the package owns, & every program on the host ran under it.
 
@@ -518,8 +522,9 @@ reached through a link is not covered, & the policy is still read first.
 Outside a sandbox, where --Require Sandbox-- permits one, the same variable has ImageMagick
 read the pipeline's policy before the host's. Its resource ceilings hold. A rule in the host's
 own policy that names the same coder decides it, so a host that refuses PDF refuses it there
-although the pipeline grants it, & one that grants MVG back grants it there. The variable goes
-through env, so per conversion limits may still put nice or systemd-run in front of the command.
+although the pipeline grants it, & one that grants MVG, SVG or PostScript back grants it there.
+The variable goes through env, so per conversion limits may still put nice or systemd-run in
+front of the command.
 
 Two pipelines that need different policies for one tool each carry their own, & each one's
 conversions see only theirs. -fp & the Environment Manager report a pipeline that is installed

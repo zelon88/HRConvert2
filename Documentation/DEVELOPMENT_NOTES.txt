@@ -188,6 +188,37 @@ anywhere else, as sandboxCommand() always did. The environment check required bo
 container, so with --Require Sandbox-- FALSE & --Require Sandbox On Docker-- TRUE it said
 conversions would run unprotected while sandboxCommand() refused every one. config.php also said
 --Require Sandbox-- must be FALSE in a container, where it is not read at all.
+
+A TOOL THAT FOLLOWS A PATH AN UPLOAD NAMES IS STOPPED BY ITS OWN SETTING, OR NEVER RUNS UNCONFINED. v4.2.7.
+--Require Sandbox-- set to FALSE accepts the risk of a tool's own bugs where no sandbox can be
+built. A tool that reads a file an upload names by its path, & writes what it read into what it
+makes, needs no bug, so no setting can accept that. Every converter was handed an upload naming a
+file outside its folder by a relative path, an absolute path & a file URL, & was traced. Pandoc,
+TeX & Graphviz are stopped by what travels with their commands, --sandbox, paranoid TeX &
+SERVER_NAME, & ImageMagick by the policy its pipeline carries. LibreOffice drew an image a
+document, an HTML page saved as a doc & an RTF's INCLUDEPICTURE named. Calibre copied into its book
+a file an EPUB's manifest named. Inkscape & Resvg drew an image an SVG named, & Dia one a diagram
+named. Assimp wrote into its model a glTF's buffer from wherever the glTF named it. FFMPEG & FFprobe
+read a DASH manifest whatever the upload was called, & opened each file it named. Nothing passed to
+any of them stops that, so the libreoffice, calibre, inkscape, resvg, dia, meshlab & ffmpeg
+profiles set RequireSandbox, & sandboxCommand() refuses them wherever no sandbox can be built.
+Poppler, mat2, Potrace, Dasel, yq, msgconvert, 7-Zip, ClamAV & ScanCore read only the file they are
+handed, & OpenSCAD already refused to render without its own sandbox.
+
+LIBREOFFICE'S OWN LINK BLOCKING IS NOT ENOUGH. v4.2.7.
+BlockUntrustedRefererLinks stopped the image a document & an HTML page named, & not the picture an
+RTF's INCLUDEPICTURE named. sanitizeDocumentLinks() rewrites a URL a document links to, & catches
+none of the three a path names, so LibreOffice only ever runs in a sandbox.
+
+FFMPEG COULD BE STOPPED BY ITS OWN SETTING, & THAT IS LEFT FOR A LATER RELEASE. v4.2.7.
+-format_whitelist names the demuxers FFMPEG & FFprobe may use. A list leaving out every demuxer that
+opens a file another names would stop the read with the command, & the ffmpeg profile could then
+run media where no sandbox can be built. Which demuxers those are has to be traced as these were.
+
+INSIDE ITS SANDBOX A TOOL STILL SEES WHAT THE BASE SANDBOX SHOWS. v4.2.7.
+Calibre copied /etc/passwd into a book inside its sandbox, because the base sandbox shows it for
+LibreOffice's user lookup. It shows /opt as well, where the guide clones the source. Both are the
+Engine's, & ENGINE_RECONCILIATION_HRCONVERT2.txt leaves them for its maintainer.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -204,6 +235,16 @@ administrator restores the original from the package or the build that provided 
 
 OPENSCAD NEEDS NO APPARMOR OVERRIDE.
 Nothing on the host confines it. The bubblewrap sandbox isolates it.
+
+IMAGEMAGICK READS WHAT A FILE HOLDS BEFORE WHAT IT IS CALLED. v4.2.7.
+PostScript named .png or .pdf reached Ghostscript under the Image, Trace & OCR policies, which
+Image's granted for writing EPS, & drew a file below /tmp, which -dSAFER lets it read. An SVG named
+.png reached the SVG coder, which drew an image it named by an absolute path or a file URL. The
+three policies refuse to read SVG & PostScript, so Image still writes PS & EPS, & Image & OCR still
+read PDF. Identify's refused both already. Outside a sandbox a rule in the host's own policy that
+names the same coder decides it, so a host that grants SVG or PostScript back grants it there.
+Naming the decoder on the command line, as Trace does, holds whatever the host's policy says, & is
+left for a later release for Image & OCR.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -752,6 +793,21 @@ give a node a link, which Graphviz writes into an SVG as it was given, javascrip
 DATA directory's download & sandbox headers cover it as they cover every SVG. gv is the only input,
 because dot is a Word template to the Document family, & a layout engine can run a long time over a
 large graph, so --Graph Conversion Timeout-- bounds it.
+
+RECIPE & OPF ARE REFUSED, & AN EPUB CANNOT BE. v4.2.7.
+A calibre recipe is a Python program calibre runs, & an OPF names by path the files calibre packs
+into the book, so both are refused as html is, & the Ebook pipeline no longer declares recipe. An
+EPUB carries a manifest naming its files too, & is what most e-books are, so the calibre profile's
+RequireSandbox is what keeps one from reaching a file outside it.
+
+THE IMAGE PIPELINE NO LONGER READS SVG OR EPS. v4.2.7.
+Its policy refuses both, so declaring them would offer a conversion that always fails. The SVG
+pipeline converts an SVG, with Resvg or Inkscape in its sandbox.
+
+IDENTIFY SAYS WHETHER NO TOOL OR NOT EVERY TOOL READ THE FILES. v4.2.7.
+Once FFprobe's profile required a sandbox, file & ImageMagick could read a selection unprotected
+while FFprobe was refused, & 37004 still said no tool could read the files. It says not every tool
+could, there, & the note on each audio or video file says its details were not read.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1604,6 +1660,15 @@ round. An int that was 0 was called FALSE, & a bool that was FALSE was said to b
 --Require Resource Awareness-- is not ignored when resource awareness is off, it refuses everything,
 so its model carries a Conflict & --config lists it apart. It was raised as 31010, the number for
 an Engine that did not load, & ERROR_DESCRIPTIONS already gave the contradiction 31013.
+
+A FORMAT LIST NEVER OFFERS A FORMAT THE CORE REFUSES. v4.2.7.
+A list was offered as config.php wrote it, so one naming a refused extension drew a button whose
+request was refused. verifyGlobals() builds every list through withoutRefusedFormats(), which drops
+the format & names the setting in a warning. --config --repair never changes a value an
+administrator listed, so the warning is how a config.php written before v4.2.7 loses recipe & opf.
+The stream output list is built from the audio & video output lists once each has been through it,
+rather than read from config.php a second time, & the subtitle input list is lowercased like every
+other.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

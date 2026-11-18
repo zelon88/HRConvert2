@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.2.
+// / v4.2.7.
 // / The Identify pipeline. pipelineCore.php loads it only to dispatch an Identify operation.
 // / Error block 37000 through 37004 belongs to this pipeline.
 // / Identify is an operation pipeline. It takes a selection of files & changes none of them.
@@ -565,15 +565,17 @@ function identifyAddDetails($fileRecord, $filePath, $scratchFolder, $detailTools
 // / -----------------------------------------------------------------------------------
 // / A function to identify one file.
 // / Accepts the file's name, its path, the scratch folder & the tools, in that order.
-// / Returns whether it was read, whether the sandbox allowed every tool asked & the record, in that order.
+// / Returns whether it was read, whether the sandbox allowed every tool asked, the record & whether it refused only the tool reading the details, in that order.
 // / The first value is this function's sanity check, because a file that could not be read has no record worth showing.
+// / The last is TRUE where file was not refused & the tool reading the details was, from v4.2.7. A sandbox profile that is never run
+// / unconfined does that where no sandbox can be built & the rest run unprotected, & FFprobe's is one.
 // / The record holds the name, the size, the time it changed, the hashes, what file says it is, whether its name agrees,
 // / what it holds as text when it is text, the details its format's tool read, & notes in plain English.
 // / Text facts are kept only for text, because counting the lines of a binary file means nothing.
 function identifyOneFile($fileName, $filePath, $scratchFolder, $identifyTools) {
   // / Set variables.
   global $EnableMemoryProtection;
-  $FileWasRead = FALSE;
+  $FileWasRead = $DetailsAloneRefused = FALSE;
   $SandboxAllowed = TRUE;
   $FileRecord = array();
   $factsWereRead = $fileAnswered = $detailsAllowed = FALSE;
@@ -605,11 +607,12 @@ function identifyOneFile($fileName, $filePath, $scratchFolder, $identifyTools) {
     if ($SandboxAllowed) list ($detailsAllowed, $FileRecord) = identifyAddDetails($FileRecord, $filePath, $scratchFolder, $identifyTools);
     if ($SandboxAllowed && !$detailsAllowed) {
       $SandboxAllowed = FALSE;
+      $DetailsAloneRefused = TRUE;
       $FileRecord['Notes'][] = 'The sandbox is unavailable, so the details of this file were not read.'; }
     $FileRecord['Details'] = identifyDetailLines($FileRecord); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $factsWereRead, $fileAnswered, $detailsAllowed, $fileHashes, $textFacts, $expectedExtensions, $fileFacts, $description, $mimeType, $charset, $fileExtension, $extensionVerdict, $fileName, $filePath, $scratchFolder, $identifyTools);
-  return array($FileWasRead, $SandboxAllowed, $FileRecord); }
+  return array($FileWasRead, $SandboxAllowed, $FileRecord, $DetailsAloneRefused); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -696,7 +699,7 @@ function identifyFiles($FilesToIdentify, $UserFilename, $UserExtension, $WriteRe
   $OperationSuccessful = $OperationErrors = FALSE;
   $IdentifyResult = array('Records' => array(), 'Report' => '');
   $file = $pathname = $oldPathname = $oldExtension = $newPathname = $verifiedFilename = $scratchFolder = $reportName = '';
-  $fileIsVerified = $fileWasRead = $sandboxAllowed = $reportWasWritten = $reportIsWanted = $sandboxWasRefused = FALSE;
+  $fileIsVerified = $fileWasRead = $sandboxAllowed = $reportWasWritten = $reportIsWanted = $sandboxWasRefused = $detailsAloneRefused = $everyToolWasRefused = FALSE;
   $fileRecord = $identifyTools = array();
   $reportIsWanted = ($WriteReport === TRUE or $WriteReport === 1 or $WriteReport === '1');
   // / Locate & verify every tool before anything is read. Each one is optional.
@@ -717,8 +720,9 @@ function identifyFiles($FilesToIdentify, $UserFilename, $UserExtension, $WriteRe
         $OperationErrors = TRUE;
         warningEntry('A file asked to be identified could not be verified, so it was skipped.');
         continue; }
-      list ($fileWasRead, $sandboxAllowed, $fileRecord) = identifyOneFile(basename($oldPathname), $oldPathname, $scratchFolder, $identifyTools);
+      list ($fileWasRead, $sandboxAllowed, $fileRecord, $detailsAloneRefused) = identifyOneFile(basename($oldPathname), $oldPathname, $scratchFolder, $identifyTools);
       if (!$sandboxAllowed) $sandboxWasRefused = TRUE;
+      if (!$sandboxAllowed && !$detailsAloneRefused) $everyToolWasRefused = TRUE;
       if (!$fileWasRead) {
         $OperationErrors = TRUE;
         warningEntry('The file '.basename($oldPathname).' could not be read, so it was not identified.');
@@ -726,9 +730,10 @@ function identifyFiles($FilesToIdentify, $UserFilename, $UserExtension, $WriteRe
       if ($Verbose) logEntry('Identified '.basename($oldPathname).'.');
       $IdentifyResult['Records'][] = $fileRecord; }
     // / A refused sandbox is reported once for the whole selection rather than once for every tool.
+    // / Where only the tool reading the details was refused, file read every file, so the error says not every tool could, from v4.2.7.
     if ($sandboxWasRefused) {
       $OperationErrors = TRUE;
-      errorEntry('Bubblewrap is missing or non functional, so no tool could read the files being identified!', 37004, FALSE); }
+      errorEntry('Bubblewrap is missing or non functional, so '.($everyToolWasRefused ? 'no tool' : 'not every tool').' could read the files being identified!', 37004, FALSE); }
     if ($reportIsWanted && count($IdentifyResult['Records']) > 0) {
       list ($reportWasWritten, $reportName) = identifyWriteReport(identifyRenderReport($IdentifyResult['Records'], time()), $UserFilename);
       if ($reportWasWritten) $IdentifyResult['Report'] = $reportName;
@@ -738,7 +743,7 @@ function identifyFiles($FilesToIdentify, $UserFilename, $UserExtension, $WriteRe
     if (function_exists('cleanFiles')) cleanFiles($scratchFolder, array($scratchFolder));
     @rmdir($scratchFolder); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $oldExtension, $newPathname, $verifiedFilename, $scratchFolder, $reportName, $fileIsVerified, $fileWasRead, $sandboxAllowed, $reportWasWritten, $reportIsWanted, $sandboxWasRefused, $fileRecord, $identifyTools, $FilesToIdentify, $UserFilename, $UserExtension, $WriteReport);
+  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $oldExtension, $newPathname, $verifiedFilename, $scratchFolder, $reportName, $fileIsVerified, $fileWasRead, $sandboxAllowed, $reportWasWritten, $reportIsWanted, $sandboxWasRefused, $detailsAloneRefused, $everyToolWasRefused, $fileRecord, $identifyTools, $FilesToIdentify, $UserFilename, $UserExtension, $WriteReport);
   return array($OperationSuccessful, $OperationErrors, $IdentifyResult); }
 // / -----------------------------------------------------------------------------------
 ?>

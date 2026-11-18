@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.7.
 // / The Image pipeline's converter. pipelineCore.php loads it only to dispatch an Image conversion.
 // / Error block 8000 through 8002 belongs to this pipeline.
 // / The OCR pipeline raises 8001 for the same ImageMagick.

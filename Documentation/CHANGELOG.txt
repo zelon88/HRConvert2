@@ -26,6 +26,25 @@ The authoritative list of dependencies is Resources/Engine/depends.php & Resourc
 
 
 --------------------
+COMMIT 11/18/2026
+v4.2.7 - Every tool that reads a file an upload names is stopped by a setting of its own or never runs without a sandbox, & recipe & opf are refused.
+
+-v4.2.7.
+-recipe & opf are refused like html. A calibre recipe is a Python program calibre runs, & an OPF names by path the files calibre packs.
+-The Ebook pipeline no longer reads recipe, & --Supported Ebook Input Formats-- no longer lists recipe or opf by default.
+-A format list in config.php that names a refused format no longer offers it, & a warning names the setting.
+-New sandbox profile field RequireSandbox. A profile that sets it is refused wherever no sandbox can be built, whatever --Require Sandbox-- & --Require Sandbox On Docker-- say.
+-The libreoffice, calibre, inkscape, resvg, dia, meshlab & ffmpeg profiles set it. Each tool reads a file an upload names by its path, & nothing passed to it stops that. Documents, e-books, SVG, drawings, models, audio, video, subtitles & streams are refused where no sandbox can be built.
+-Engine. sandboxCommand() refuses a profile that sets RequireSandbox where no sandbox can be built, & warns naming it. New sandboxRequiredProfiles(). -v's Sandbox required line & the environment check name the profiles. config.php's two sandbox settings say so. Engine is v4.2.7.
+-ImageMagick reads what a file holds before what it is called. The Image, Trace & OCR policies refuse to read SVG & PostScript. Image still writes PS & EPS, & Image & OCR still read PDF.
+-The Image pipeline no longer reads svg or eps.
+-Identify's 37004 says not every tool could read the files where only FFprobe was refused.
+-$StreamOutputArray is made from the audio & video output lists once each is checked, & the subtitle input list is lowercased like every other.
+-ERROR_DESCRIPTIONS documents the new warnings, & sandboxCommand()'s & the stream converter's, which were not documented. 2004, 8002, 9003, 10001, 11002, 12002, 21000, 22001, 25002, 30002 & 37004 say what decides them now. 2004 no longer says XPS raises it.
+-DEVELOPMENT_NOTES, ABOUT_PIPELINE_COMPONENTS, ABOUT_NETWORK_ISOLATION, ABOUT_ENGINE_CONTRACT, CREATING_CONVERSION_PIPELINES, INSTALLATION_INSTRUCTIONS, DOCKER_BUILD_INSTRUCTIONS, the README & the Dockerfile describe them. ENGINE_RECONCILIATION_HRCONVERT2 records the Engine's change.
+-The core, the Engine, app-engine-config.php & the Ebook, Image, Trace, OCR & Identify pipelines are v4.2.7, & the core requires Engine v4.2.7. config.php, the interfaces, the language packs & the manifest stay v4.2.6.
+
+--------------------
 COMMIT 11/16/2026
 v4.2.6 - Language pack corrections, the upload count reads correctly in every language, the supply chain audit lists every dependency, & a new Graph pipeline draws Graphviz graphs.
 

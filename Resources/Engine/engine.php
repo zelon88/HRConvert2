@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.2.4.
+// / v4.2.7.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.2.4';
+$EngineVersion = 'v4.2.7';
 // / -----------------------------------------------------------------------------------
 
 
@@ -465,6 +465,7 @@ function showVersionReport() {
   $servicePath = $choiceVersion = $choiceStatus = $choiceOutput = $choicePath = $choiceOrigin = '';
   $choiceIsPresent = FALSE;
   $pipelineKindCount = 0;
+  $requiredProfiles = array();
   // / The application is asked first, so it runs its dependency checks before anything is printed.
   // / A provider that is named & missing is a warning, & the report is printed without what it would have added.
   $reportSections = array('Dependencies' => array(), 'DependencyNotes' => array(), 'SectionsAfterDependencies' => array(), 'SwitchedOff' => array(), 'SectionsAfterSwitchedOff' => array(), 'SectionsAfterResources' => array());
@@ -641,7 +642,9 @@ function showVersionReport() {
   print('  '.str_pad('Current user', 28).$CurrentUser.($RunningAsRoot ? ', running as root' : '').$Lol);
   print('  '.str_pad('Container detected', 28).($RunningInContainer ? 'YES' : 'NO').$Lol);
   // / The Engine's rule is the one sandboxCommand() follows, so the line says what a conversion meets.
-  print('  '.str_pad('Sandbox required', 28).(sandboxIsRequired() ? 'YES' : 'NO').$Lol);
+  // / A profile its application never runs without a sandbox is named where the settings would let others run, because they do not decide it.
+  $requiredProfiles = sandboxRequiredProfiles();
+  print('  '.str_pad('Sandbox required', 28).(sandboxIsRequired() ? 'YES' : (count($requiredProfiles) > 0 ? 'NO, except for '.implode(', ', $requiredProfiles) : 'NO')).$Lol);
 
   // / The data directory. The exposure line is the only one here that is evidence.
   // / A protection file being present proves nothing, because a .htaccess is read only where
@@ -705,7 +708,7 @@ function showVersionReport() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $engineManifestVersion, $acceptedEngineManifest, $reportFunction, $applicationVersion, $apacheConfigName, $reportSections, $listenerIsAsked, $secretRows, $secretRow, $secretGroupWasFound, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $pipelineIsOffered, $pipelineName, $unmetRequirements, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $bwrapBinary, $listenerStatus, $listenerIsRunning, $socketMode, $componentChecks, $componentPair, $componentName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail);
+  purgeSensitiveMemory($EnableMemoryProtection, $engineManifestVersion, $acceptedEngineManifest, $reportFunction, $applicationVersion, $apacheConfigName, $reportSections, $listenerIsAsked, $secretRows, $secretRow, $secretGroupWasFound, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $pipelineIsOffered, $pipelineName, $unmetRequirements, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $bwrapBinary, $listenerStatus, $listenerIsRunning, $socketMode, $componentChecks, $componentPair, $componentName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail, $requiredProfiles);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 // / A function to check that this host can actually do the work, without changing it.
@@ -726,7 +729,7 @@ function validateOperatingEnvironment() {
   $hostedWritten = $hostedRemoved = 0;
   $kernelIsReady = $policyIsValid = $bwrapBinary = FALSE;
   $policyStatus = $sandboxLauncher = $policyName = $policyFunction = $policyLabel = '';
-  $policyRecord = array();
+  $policyRecord = $requiredProfiles = array();
   // / The sandbox is the one thing a conversion cannot proceed without when it is required.
   // / sandboxIsRequired() is the rule sandboxCommand() follows, so this finding says what a conversion meets.
   $sandboxIsRequired = sandboxIsRequired();
@@ -739,7 +742,8 @@ function validateOperatingEnvironment() {
   // / own copy of bubblewrap, so a sandbox it cannot build says nothing of the one conversions get.
   if ($bwrapBinary === FALSE && !sandboxCopyIsJudgedHere() && namespaceRestriction() === '1' && sandboxBinaryIsNeeded()) $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'n/a', 'Detail' => 'Only root & group '.$ApacheUser.' may run '.engineApplicationName().'\'s own bubblewrap. Run -v as root.');
   else if ($bwrapBinary === FALSE) {
-    $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'FAILED', 'Detail' => 'Bubblewrap cannot build a namespace.'.($sandboxIsRequired ? ' Every conversion will be refused.' : ' Conversions will run unprotected.'));
+    $requiredProfiles = sandboxRequiredProfiles();
+    $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'FAILED', 'Detail' => 'Bubblewrap cannot build a namespace.'.($sandboxIsRequired ? ' Every conversion will be refused.' : ' Conversions will run unprotected'.(count($requiredProfiles) > 0 ? ', except those of the '.implode(', ', $requiredProfiles).' sandbox profiles, which will be refused.' : '.')));
     if ($sandboxIsRequired) $EnvironmentIsReady = FALSE; }
   else $EnvironmentFindings[] = array('Check' => 'Sandbox', 'Status' => 'ok', 'Detail' => 'Bubblewrap can build a namespace'.($bwrapBinary === privateBwrapPath() ? ', through '.privateBwrapPath().' & AppArmor profile '.sandboxApparmorProfileName().'.' : '.').(strpos((string)$sandboxLauncher, '--disable-userns') !== FALSE ? ' A sandbox cannot make a user namespace.' : ' A sandbox can make user namespaces. Bubblewrap 0.8 or later stops that.'));
   // / The bootstrap script is another. The Engine pins it exactly, & one left by another
@@ -816,7 +820,7 @@ function validateOperatingEnvironment() {
         $hostedDetail = 'The Setup Core is unavailable.'; }
       $EnvironmentFindings[] = array('Check' => 'Hosted location', 'Status' => $hostedStatus, 'Detail' => $hostedDetail); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $kernelFindings, $kernelFinding, $kernelIsReady, $policyIsValid, $policyStatus, $policyName, $policyFunction, $policyLabel, $policyRecord, $bwrapBinary, $sandboxLauncher, $sandboxIsRequired, $environmentProvider, $providerIsReady, $providerFindings, $providerFinding, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $locationIsProtected, $setupIsAvailable, $servedPath, $exposureStatus, $exposureDetail, $hostedStatus, $hostedDetail, $setupVersion, $misplacedRoots, $hostedWritten, $hostedRemoved, $hostedLocation, $documentRoot);
+  purgeSensitiveMemory($EnableMemoryProtection, $kernelFindings, $kernelFinding, $kernelIsReady, $policyIsValid, $policyStatus, $policyName, $policyFunction, $policyLabel, $policyRecord, $requiredProfiles, $bwrapBinary, $sandboxLauncher, $sandboxIsRequired, $environmentProvider, $providerIsReady, $providerFindings, $providerFinding, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $locationIsProtected, $setupIsAvailable, $servedPath, $exposureStatus, $exposureDetail, $hostedStatus, $hostedDetail, $setupVersion, $misplacedRoots, $hostedWritten, $hostedRemoved, $hostedLocation, $documentRoot);
   return array($EnvironmentIsReady, $EnvironmentFindings); }
 // / -----------------------------------------------------------------------------------
 
@@ -5474,6 +5478,27 @@ function sandboxIsRequired() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to name the sandbox profiles whose tool is never run without a sandbox.
+// / Accepts nothing. Returns the names, lowercase, in the order the application declared them.
+// / A profile says so with RequireSandbox set to TRUE, & nothing else does. A value that is not TRUE is not a request.
+// / Its tool reads a file an upload names, or runs code one carries, & nothing passed with its command stops that.
+// / --Require Sandbox-- & --Require Sandbox On Docker-- accept the risk of a tool's own bugs, & this is no bug, so they do not decide it.
+// / sandboxCommand(), the operating environment check & -v all ask this one function, as they ask sandboxIsRequired().
+function sandboxRequiredProfiles() {
+  // / Set variables.
+  global $EngineSandboxProfiles, $EnableMemoryProtection;
+  $RequiredProfiles = array();
+  $sandboxProfiles = (isset($EngineSandboxProfiles) && is_array($EngineSandboxProfiles)) ? $EngineSandboxProfiles : array();
+  $profileName = '';
+  $profileRecord = array();
+  foreach ($sandboxProfiles as $profileName => $profileRecord) if (is_array($profileRecord) && isset($profileRecord['RequireSandbox']) && $profileRecord['RequireSandbox'] === TRUE) $RequiredProfiles[] = strtolower(trim((string)$profileName));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $RequiredProfiles is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $sandboxProfiles, $profileName, $profileRecord);
+  return $RequiredProfiles; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to wrap a dependency invocation in a bubblewrap sandbox.
 // / Accepts a finished command, the real path of the input, the real path of the output,
 // / & a boolean granting network access.
@@ -5488,6 +5513,8 @@ function sandboxIsRequired() {
 // / caller refuses without any caller needing to know why.
 // / A sandbox that could not be built returns TRUE with the unwrapped command when
 // / sandboxing is not required, & writes a warning naming the conversion as unprotected.
+// / A profile setting RequireSandbox is refused whenever no sandbox could be built, whatever the settings say,
+// / because its tool reads a file an upload names, & a warning names the profile.
 // / A container blocks the namespaces bubblewrap needs unless it was started with
 // / --security-opt seccomp=unconfined, so a separate setting governs that case.
 // / The directory holding the input is mounted read only at /in.
@@ -5520,6 +5547,8 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   // / This initializes TRUE rather than FALSE, because for this variable TRUE is the safe
   // / state. It is overwritten unconditionally below & the initial value is never read.
   $sandboxIsRequired = TRUE;
+  // / The same is true of this one, for the same reason.
+  $profileRequiresSandbox = TRUE;
   $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = $profileFlags = $resourceFlags = $overlayFlags = $sandboxLauncher = '';
   $environmentFlags = $environmentPrefix = $environmentName = $environmentValue = '';
   $rewriteSearch = $rewriteReplace = array();
@@ -5534,6 +5563,8 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   // / A container that CAN build a sandbox still gets one. This only decides what happens
   // / when it cannot.
   $sandboxIsRequired = sandboxIsRequired();
+  // / A profile whose tool reads a file an upload names is never run without a sandbox, whatever the settings say.
+  $profileRequiresSandbox = in_array(strtolower(trim((string)$sandboxProfile)), sandboxRequiredProfiles(), TRUE);
   // / Resolve each path to the directory holding it.
   // / The output file does not exist yet, so its directory is used rather than the file.
   $inputDir = dirname($inputPath);
@@ -5577,7 +5608,8 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
     // / env runs unsandboxed, as the command it carries does here, & takes nothing but the
     // / variables the caller named, each escaped.
     $SandboxedCommand = ($environmentPrefix === '' ? '' : 'env '.$environmentPrefix).$command;
-    if ($sandboxIsRequired) warningEntry('Bubblewrap is unavailable & sandboxing is required, so a conversion was refused. Install bubblewrap, or set '.($RunningInContainer ? '$RequireSandboxOnDocker' : '$RequireSandbox').' to FALSE in config.php to run conversions unprotected.');
+    if ($profileRequiresSandbox) warningEntry('Bubblewrap is unavailable & the '.strtolower(trim((string)$sandboxProfile)).' sandbox profile is never run without it, so a conversion was refused. Its tool reads files an upload names, & only a sandbox stops that.');
+    else if ($sandboxIsRequired) warningEntry('Bubblewrap is unavailable & sandboxing is required, so a conversion was refused. Install bubblewrap, or set '.($RunningInContainer ? '$RequireSandboxOnDocker' : '$RequireSandbox').' to FALSE in config.php to run conversions unprotected.');
     else {
       $CommandMayRun = TRUE;
       if ($ThrowSandboxWarning) warningEntry('Bubblewrap is unavailable & sandboxing is not required, so a conversion will run unprotected.'); } }
@@ -5659,7 +5691,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   // / when the administrator has turned the sandbox off.
   if ($CommandMayRun) $SandboxedCommand = limitCommand($SandboxedCommand, $sandboxProfile);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHostsFile, $environmentFlags, $environmentPrefix, $environmentName, $environmentValue, $environmentVariables, $resourceFlags, $rewriteSearch, $rewriteReplace, $readOnlyResourcePath, $bwrapBinary, $sandboxLauncher, $overlayFlags, $sandboxIsRequired, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
+  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHostsFile, $environmentFlags, $environmentPrefix, $environmentName, $environmentValue, $environmentVariables, $resourceFlags, $rewriteSearch, $rewriteReplace, $readOnlyResourcePath, $bwrapBinary, $sandboxLauncher, $overlayFlags, $sandboxIsRequired, $profileRequiresSandbox, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
   return array($CommandMayRun, $SandboxedCommand); }
 // / -----------------------------------------------------------------------------------
 

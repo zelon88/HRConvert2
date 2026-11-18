@@ -1454,17 +1454,20 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Bubblewrap is missing or non functional & sandboxing is required by config.php.
-  Outside a container this error only occurs if --Require Sandbox-- is set to TRUE in config.php.
-  In a container it only occurs if --Require Sandbox On Docker-- is set to TRUE, & --Require Sandbox-- is not read.
+  Bubblewrap is missing or non functional, & a document is never converted without it.
   A document is the single most dangerous input this application accepts.
   LibreOffice will resolve a linked image, an INCLUDEPICTURE field & an external relationship
   target by fetching the URL, which turns a document upload into a request made by this server.
-  The sandbox removes the network namespace, which is what stops that fetch.
-  Install bubblewrap, or set the relevant setting to FALSE to run conversions unprotected.
-  Running document conversions unprotected is not recommended on a public server.
+  It also draws an image a document names by a relative or an absolute path on this server, &
+  nothing passed to it stops that. The sandbox removes the network namespace & shows LibreOffice
+  none of this server's files but the document, which is what stops both.
+  From v4.2.7 the libreoffice sandbox profile sets RequireSandbox, so --Require Sandbox-- &
+  --Require Sandbox On Docker-- do not decide this. Until then it occurred only where the one that
+  applies was TRUE, & setting it to FALSE ran documents unprotected.
+  A WARNING!!! above it, from the sandbox, names the profile. Install bubblewrap, or repair it.
+  Run  php convertCore.php -v  as root & read the Sandbox line.
   This error is not fatal but the file that causes it will be skipped.
-  The same error number is raised when an XPS conversion cannot be sandboxed.
+  An XPS conversion that cannot be sandboxed raises 2005 instead.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2249,6 +2252,9 @@ ERROR DESCRIPTION
   or to cover a copy that is missing or cannot be run.
   A container blocks the required syscalls unless it was started with the correct options.
   See --Require Sandbox-- & --Require Sandbox On Docker-- in config.php.
+  From v4.2.7 a sandbox profile that sets RequireSandbox is refused whatever those settings say.
+  The libreoffice, calibre, inkscape, resvg, dia, meshlab & ffmpeg profiles set it, because each
+  tool reads a file an upload names by its path, & -v names them beside Sandbox required.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox, & how.
   Documentation/Build/diagnose-bwrap.sh probes it the way HRConvert2 does, & changes nothing.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2350,6 +2356,9 @@ ERROR DESCRIPTION
   Assimp & MeshLab both parse complex binary scene formats & both carry CVE histories.
   Neither offers a native restriction on what it may read, so the sandbox is the only
   boundary available & the conversion is refused rather than run without one.
+  Assimp reads a glTF's buffer from wherever the glTF names it & writes it into the model it
+  makes. From v4.2.7 the meshlab sandbox profile, which Assimp runs under too, sets
+  RequireSandbox, so --Require Sandbox-- & --Require Sandbox On Docker-- do not decide this.
   See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2420,6 +2429,9 @@ LOGGED
 ERROR DESCRIPTION
   A technical drawing conversion was refused because a sandbox could not be built for it.
   Dia parses diagram formats & offers no native restriction on what it may read.
+  It draws an image a diagram names by a relative or an absolute path. From v4.2.7 the dia
+  sandbox profile sets RequireSandbox, so --Require Sandbox-- & --Require Sandbox On Docker-- do
+  not decide this.
   See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
   NOTE. Dia is a GTK application. If a drawing conversion fails INSIDE a working sandbox
   rather than being refused by this error, the cause is usually a display requirement.
@@ -2529,6 +2541,9 @@ ERROR DESCRIPTION
   FFMPEG parses untrusted container & codec data, which is among the largest attack
   surfaces in the application, & its decoders have a long CVE history.
   A video conversion needs no network access, so the sandbox unshares it entirely.
+  FFMPEG reads a DASH manifest whatever the upload is called, & opens each file it names.
+  From v4.2.7 the ffmpeg sandbox profile sets RequireSandbox, so --Require Sandbox-- &
+  --Require Sandbox On Docker-- do not decide this.
   See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2599,6 +2614,9 @@ ERROR DESCRIPTION
   An audio conversion was refused because the server could not build a sandbox for it.
   FFMPEG parses untrusted container & codec data & its decoders have a long CVE history.
   An audio conversion needs no network access, so the sandbox unshares it entirely.
+  FFMPEG reads a DASH manifest whatever the upload is called, & opens each file it names.
+  From v4.2.7 the ffmpeg sandbox profile sets RequireSandbox, so --Require Sandbox-- &
+  --Require Sandbox On Docker-- do not decide this.
   See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -4076,6 +4094,9 @@ ERROR DESCRIPTION
   The web server user may not have permission to spawn background processes on this system.
   The shell used by PHP may not support the background operator or the process identifier echo.
   This error occurs only after the stream file has already passed full inspection.
+  It also follows the WARNING!!! that the stream converter was not launched, because no sandbox
+  could be built. From v4.2.7 the ffmpeg sandbox profile sets RequireSandbox, so that happens
+  wherever no sandbox can be built, whatever --Require Sandbox-- & --Require Sandbox On Docker-- say.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -4178,6 +4199,9 @@ ERROR DESCRIPTION
   A subtitle conversion was refused because the server could not build a sandbox for it.
   FFMPEG performs subtitle conversions & parses untrusted text & binary subtitle formats.
   A subtitle conversion needs no network access, so the sandbox unshares it entirely.
+  FFMPEG reads a DASH manifest whatever the upload is called, & opens each file it names.
+  From v4.2.7 the ffmpeg sandbox profile sets RequireSandbox, so --Require Sandbox-- &
+  --Require Sandbox On Docker-- do not decide this.
   See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -4519,6 +4543,10 @@ ERROR DESCRIPTION
   embedded scripts. An SVG parser is a considerably larger attack surface than it appears.
   Inkscape offers no native restriction on what it may read, so the sandbox is the only
   boundary available & the conversion is refused rather than run without one.
+  Inkscape & Resvg each draw an image an SVG names by a relative or an absolute path, & Inkscape
+  a shape from another SVG it names. From v4.2.7 the inkscape & resvg sandbox profiles set
+  RequireSandbox, so --Require Sandbox-- & --Require Sandbox On Docker-- do not decide this.
+  Resvg is asked first where it is installed, & is refused with a WARNING!!! from the sandbox.
   See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -5709,12 +5737,15 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The sandbox could not be prepared & config.php requires one.
+  The sandbox could not be prepared, & an e-book is never converted without one.
   An e-book is an archive of documents & scripts written by somebody else, so a converter
   reading one is exactly the case a sandbox exists for. The conversion is refused rather than
   run unprotected.
+  Calibre copies into the book it writes any file an EPUB's manifest names, wherever it is on
+  this server, & nothing passed to it stops that. From v4.2.7 the calibre sandbox profile sets
+  RequireSandbox, so --Require Sandbox-- & --Require Sandbox On Docker-- do not decide this.
+  Until then setting the one that applies to FALSE allowed this conversion, & was not advised.
   Run -v & read the Bubblewrap line. Run --setup --install-depends as root to install it.
-  Setting --Require Sandbox-- to FALSE, or --Require Sandbox On Docker-- in a container, would allow this conversion & is not advised.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -7627,6 +7658,7 @@ ERROR DESCRIPTION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-37004, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so no tool could read the files being identified!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-37004, <SESSION_IDENTIFIER>: Bubblewrap is missing or non functional, so not every tool could read the files being identified!
 
 FILE
   Resources/Pipelines/Identify/pipeline.php
@@ -7638,14 +7670,18 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Every tool Identify runs on a file runs inside the sandbox. The sandbox could not be built, & config.php requires one, so no tool was run.
+  Every tool Identify runs on a file runs inside the sandbox, & the sandbox could not be built.
+  The first form says config.php requires a sandbox, so no tool was run.
   The setting is --Require Sandbox--, or --Require Sandbox On Docker-- in a container.
   Each file was still read by PHP, so its size, its date & its hashes are reported, & a note on each says no tool read it.
   The type, the character set & every detail a tool reads are missing from what is reported.
+  The second form is from v4.2.7. config.php does not require a sandbox, so the tools ran unprotected, except FFprobe, which runs
+  under the ffmpeg sandbox profile. That profile sets RequireSandbox & is never run without one, so the details of an audio or a
+  video file were not read, & a note on each such file says so. Neither setting changes that.
   This is logged once for the whole selection rather than once for every tool & every file.
   A WARNING!!! above it, from the sandbox, says why the sandbox could not be built.
   Run  php convertCore.php -v  as root & read the Sandbox line. Bubblewrap is a required dependency.
-  Turning either setting off would let every tool read the files unprotected. Repair the sandbox instead.
+  Turning either setting off would let every other tool read the files unprotected. Repair the sandbox instead.
   This error is not fatal. Every file that was hashed is still in the reply.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -9645,4 +9681,33 @@ WARNINGS ABOUT THE CONVERSIONS ADDED IN V4.2.6
     WARNING!!! A graph named an image or a shape file, which was left out, because the Graph pipeline reads no file but the graph.
       A node in the graph named a file to draw, which Graphviz would read from wherever the graph said. The pipeline tells Graphviz it serves
       the web, so it reads no file but the graph, & the graph is drawn without it. A graph a stranger wrote can name any file on the server.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE SANDBOX & REFUSED FORMATS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from sandboxCommand() in Resources/Engine/engine.php. Until v4.2.7 none of them was documented here.
+    WARNING!!! Bubblewrap is unavailable & the <PROFILE> sandbox profile is never run without it, so a conversion was refused. Its tool reads files an upload names, & only a sandbox stops that.
+      From v4.2.7. The profile sets RequireSandbox, because its tool follows a path an upload names & nothing passed with its command
+      stops it, so --Require Sandbox-- & --Require Sandbox On Docker-- do not decide it. The libreoffice, calibre, inkscape, resvg, dia,
+      meshlab & ffmpeg profiles set it, & -v names them beside Sandbox required. The error of the pipeline that asked follows.
+    WARNING!!! Bubblewrap is unavailable & sandboxing is required, so a conversion was refused. Install bubblewrap, or set <SETTING> to FALSE in config.php to run conversions unprotected.
+      No sandbox could be built & config.php requires one, so the conversion was not run. <SETTING> is $RequireSandbox, or
+      $RequireSandboxOnDocker in a container. Setting it to FALSE runs every conversion unprotected but those whose profile sets
+      RequireSandbox, & is not advised. The error of the pipeline that asked follows.
+    WARNING!!! Bubblewrap is unavailable & sandboxing is not required, so a conversion will run unprotected.
+      No sandbox could be built, & the conversion ran without one, as config.php allows. --Throw Sandbox Warning-- set to FALSE
+      silences this. Run -v as root & read the Sandbox line.
+  The Stream pipeline raises this, from Resources/Pipelines/Stream/pipeline.php.
+    WARNING!!! The stream converter was not launched, because no sandbox could be built.
+      The sandbox refused the stream, & 21000 follows. From v4.2.7 the ffmpeg sandbox profile sets RequireSandbox, so a stream is
+      refused wherever no sandbox can be built.
+  The core raises these, from withoutRefusedFormats() in convertCore.php.
+    WARNING!!! --<SETTING>-- in config.php lists <FORMAT>, which this application refuses to handle, so it is not offered. Take it out of the setting.
+    WARNING!!! --<SETTING>-- in config.php lists <FORMATS>, which this application refuses to handle, so they are not offered. Take them out of the setting.
+      From v4.2.7. A format list names an extension the core refuses, as it refuses php & html, so no button offers it & an upload of
+      it is refused. recipe & opf were e-book inputs until v4.2.7, so a config.php written before then lists both in
+      --Supported Ebook Input Formats--. Every page writes this until the setting is corrected. --config --repair never changes a
+      value there.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

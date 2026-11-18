@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.5
+- **Version** v4.2.7
 - **Kind** conversion
 - **Family** Trace
 - **Entry point** traceImages

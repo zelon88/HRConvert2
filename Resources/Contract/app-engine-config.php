@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.6.
+// / v4.2.7.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -116,28 +116,28 @@ $EngineSessionFolders = array('ScadTemp');
 $EngineAcceptedPipelines = array(
   'Stream' => 'v4.2.1',
   'Scad' => 'v4.2.1',
-  'OCR' => 'v4.2.1',
+  'OCR' => 'v4.2.7',
   'Document' => 'v4.2.1',
   'Subtitle' => 'v4.2.1',
   'SVG' => 'v4.2.5',
   'Drawing' => 'v4.2.1',
-  'Image' => 'v4.2.1',
+  'Image' => 'v4.2.7',
   'Model' => 'v4.2.1',
   'Video' => 'v4.2.1',
-  'Ebook' => 'v4.2.1',
+  'Ebook' => 'v4.2.7',
   'Audio' => 'v4.2.1',
   'Archive' => 'v4.2.4',
   // / Five conversion families, from v4.2.5. Data converts between structured data formats, LaTeX typesets a LaTeX document,
   // / Trace traces an image into vector outlines, Email converts an Outlook message & Markup converts between markup & document formats.
   'Data' => 'v4.2.5',
   'LaTeX' => 'v4.2.5',
-  'Trace' => 'v4.2.5',
+  'Trace' => 'v4.2.7',
   'Email' => 'v4.2.5',
   'Markup' => 'v4.2.5',
   // / A sixth from v4.2.6. Graph draws a graph written in Graphviz's DOT language as a picture.
   'Graph' => 'v4.2.6',
   // / The second operation pipeline. It reads every file & changes none.
-  'Identify' => 'v4.1.2',
+  'Identify' => 'v4.2.7',
   // / The third & fourth, from v4.1.6. The Archiver puts a selection of files into archives, & Scan scans the files a user asks it to.
   // / Each was code in convertCore.php until then.
   'Archiver' => 'v4.2.1',

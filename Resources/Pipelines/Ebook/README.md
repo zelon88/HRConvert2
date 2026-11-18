@@ -1,6 +1,6 @@
 # The E-Book pipeline
 
-The E-Book pipeline converts files. It accepts 19 input format(s) & produces 17 output format(s).
+The E-Book pipeline converts files. It accepts 18 input format(s) & produces 17 output format(s).
 
 This file is written by `Documentation/Build/hrconvert2-approvals.py --readme`.
 It is rewritten from the pipeline's own declarations & from the dependency manifest,
@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.1
+- **Version** v4.2.7
 - **Kind** conversion
 - **Family** Ebook
 - **Entry point** convertEbooks
@@ -18,7 +18,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## Formats
 
-**Accepts** epub, mobi, azw, azw3, fb2, lit, lrf, pdb, pml, rb, snb, tcr, txtz, htmlz, cbz, cbr, cbc, chm, recipe
+**Accepts** epub, mobi, azw, azw3, fb2, lit, lrf, pdb, pml, rb, snb, tcr, txtz, htmlz, cbz, cbr, cbc, chm
 
 **Produces** epub, mobi, azw3, fb2, lit, lrf, pdb, pmlz, rb, snb, tcr, txtz, htmlz, txt, rtf, docx, pdf
 

@@ -122,9 +122,10 @@ There are three ways to obtain HRConvert2.
     a. Visit  'https://hub.docker.com/r/zelon88/hrconvert2'
     b. Run  'docker run -d -p 8080:80 --cap-add SYS_ADMIN zelon88/hrconvert2'
     c. SYS_ADMIN lets a container create the namespace every conversion is sandboxed in.
-       Without it conversions run unprotected with a warning, or are refused where
-       --Require Sandbox On Docker-- is TRUE. No process that converts or serves a user's
-       file holds SYS_ADMIN, or any other capability.
+       Without it documents, e-books, SVG, drawings, models, audio, video, subtitles &
+       streams are refused, & every other conversion runs unprotected with a warning, or is
+       refused too where --Require Sandbox On Docker-- is TRUE. No process that converts or
+       serves a user's file holds SYS_ADMIN, or any other capability.
     d. This guide does not otherwise apply to that option.
 
   Option 2. Clone the repository. This is the supported route & the rest of this guide.
@@ -297,6 +298,14 @@ Ubuntu 24.04 both carry.
 
 A graph is uploaded as gv. A graph saved as dot is renamed gv first, because a dot file is a Word
 template to the Document family.
+
+THE v4.2.7 DROP IN NEEDS NO REPAIR. It adds no setting & changes none. Take recipe & opf out of
+--Supported Ebook Input Formats-- in config.php by hand, because v4.2.7 refuses both, & until then
+every page writes a warning naming the setting. Where -v says FAILED beside Sandbox &
+--Require Sandbox-- is FALSE, documents, e-books, SVG, drawings, models, audio, video, subtitles &
+streams are refused anyway now, because each of their tools reads a file an upload names, & -v
+names their sandbox profiles beside Sandbox required. Repair the sandbox, as Conversions refuse &
+the log names bubblewrap says below.
 
 FROM v4.2.1 A BUTTON IS DRAWN ONLY WHERE THE TOOL BEHIND IT IS INSTALLED. A conversion, Strip
 Metadata, OCR, Merge, Split or a scanner whose tool is missing is hidden from every page & every

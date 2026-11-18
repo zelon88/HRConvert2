@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.7.
 // / This file declares what the Ebook conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.1';
+$PipelineVersion = 'v4.2.7';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -84,8 +84,9 @@ $PipelineRequestFields = array('Extension');
 // / They are treated as a CROSS PRODUCT. Every input is assumed convertible to every
 // / output unless the pair appears in $PipelineExclude below.
 // / Calibre reads pml & writes it only zipped, as pmlz, so pml is an input alone.
+// / A recipe is not read, from v4.2.7, because it is a Python program calibre runs, & the core refuses one before it arrives.
 $Capabilities = array(
-  'Input' => array('epub', 'mobi', 'azw', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txtz', 'htmlz', 'cbz', 'cbr', 'cbc', 'chm', 'recipe'),
+  'Input' => array('epub', 'mobi', 'azw', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txtz', 'htmlz', 'cbz', 'cbr', 'cbc', 'chm'),
   'Output' => array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pmlz', 'rb', 'snb', 'tcr', 'txtz', 'htmlz', 'txt', 'rtf', 'docx', 'pdf'));
 
 // / Pairs removed from the cross product above, written as 'input>output'.

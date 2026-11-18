@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.6.
+// / v4.2.7.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -45,7 +45,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.2.6';
+  $HRConvertVersion = 'v4.2.7';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -110,7 +110,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.2.4';
+  $RequiredEngineVersion = 'v4.2.7';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -503,6 +503,8 @@ function verifyLanguage() {
 // / $Allowed is every extension any enabled subsystem reads or writes. An upload is judged against it, the Engine reads it as AllowedExtensions
 // / through the contract's map to judge a fetched file the same way, & a language pack reads $SupportedFormatCount.
 // / Every list is read from a setting the kernel confirmed config.php holds, so there is nothing here that can fail, & the check is reaching the end.
+// / A format the core refuses is taken out of the list that names it, with a warning naming the setting, from v4.2.7.
+// / The stream output list is the audio & video output lists, so it is made from them once each has been through that.
 function verifyGlobals() {
   // / Set variables.
   global $InstLoc, $DirSep, $RetryCount, $StopCounter, $SleepTimer, $ConvertGuiCounter1, $File, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $GreenButtonCode, $BlueButtonCode, $RedButtonCode, $PurpleButtonCode, $OrangeButtonCode, $DarkButtonCode, $DefaultButtonCode, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GUIDirection, $GUIAlignment, $Alert, $Alert1, $Alert2, $Alert3, $DefaultApps, $DangerousFiles, $ResourcesDir, $BootloadersDir, $ConsolidatedLogFileName, $SupportedConversionTypes, $Allowed, $SupportedFormatCount, $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageArray, $MediaInputArray, $MediaOutputArray, $VideoInputArray, $VideoOutputArray, $StreamArray, $DrawingArray, $SVGInputArray, $SVGOutputArray, $ModelArray, $SubtitleInputArray, $SubtitleOutputArray, $PDFWorkArr, $StreamOutputArray, $SCADArray, $SCADInputArray, $SCADOutputArray, $EbookInputArray, $EbookOutputArray, $BootableIsoArray, $ImageInputArray, $ImageOutputArray, $DrawingInputArray, $DrawingOutputArray, $ModelInputArray, $ModelOutputArray,
@@ -525,7 +527,8 @@ function verifyGlobals() {
   $Alert3 = 'Operation Failed!';
   // / Security related variables.
   $DefaultApps = array('.', '..');
-  $DangerousFiles = array(NULL, '.js', '.php', '.html', '.css', '.phar', '..', 'index.php', 'index.html', '--');
+  // / A calibre recipe is a program calibre runs, & an OPF names by path the files it packs, so neither is handled, from v4.2.7.
+  $DangerousFiles = array(NULL, '.js', '.php', '.html', '.css', '.phar', '.recipe', '.opf', '..', 'index.php', 'index.html', '--');
   // / Directory related variables.
   $ResourcesDir = $InstLoc.$DirSep.'Resources';
   $BootloadersDir = $ResourcesDir.$DirSep.'Bootloaders';
@@ -539,75 +542,75 @@ function verifyGlobals() {
   $ModelInputArray = $ModelOutputArray = array();
   $DataInputArray = $DataOutputArray = $LaTeXInputArray = $LaTeXOutputArray = $TraceInputArray = $TraceOutputArray = $EmailInputArray = $EmailOutputArray = $MarkupInputArray = $MarkupOutputArray = $GraphInputArray = $GraphOutputArray = array();
   $ArchiveArray = $DearchiveArray = $DocumentArray = $SpreadsheetArray = $PresentationInputArray = $PresentationOutputArray = $XPSInputArray = $XPSOutputArray = $ImageArray = $MediaInputArray = $MediaOutputArray = $VideoInputArray = $VideoOutputArray = $StreamArray = $DrawingArray = $ModelArray = $SubtitleInputArray = $SubtitleOutputArray = $PDFWorkArr = $StreamOutputArray = $SCADArray = $SCADOutputArray = $SVGInputArray = $SVGOutputArray = $EbookInputArray = $EbookOutputArray = $BootableIsoArray = $allArrays = array();
-  if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = array_map('strtolower', $UserArchiveArray);
-  if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = array_map('strtolower', $UserDearchiveArray);
+  if (in_array('Archive', $SupportedConversionTypes)) $ArchiveArray = withoutRefusedFormats($UserArchiveArray, 'Supported Archive Formats');
+  if (in_array('Archive', $SupportedConversionTypes)) $DearchiveArray = withoutRefusedFormats($UserDearchiveArray, 'Supported Dearchive Formats');
   if (in_array('Archive', $SupportedConversionTypes) && $AllowBootableIsoImage) {
-    $BootableIsoArray = array_map('strtolower', $UserBootableIsoArray);
+    $BootableIsoArray = withoutRefusedFormats($UserBootableIsoArray, 'Supported Bootable ISO Output Formats');
     $ArchiveArray = array_map('strtolower', array_merge($ArchiveArray, $BootableIsoArray)); }
-  if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = array_map('strtolower', $UserDocumentArray);
-  if (in_array('Document', $SupportedConversionTypes)) $SpreadsheetArray = array_map('strtolower', $UserSpreadsheetArray);
-  if (in_array('Document', $SupportedConversionTypes)) $XPSInputArray = array_map('strtolower', $UserXPSInputArray);
-  if (in_array('Document', $SupportedConversionTypes)) $XPSOutputArray = array_map('strtolower', $UserXPSOutputArray);
-  if (in_array('Document', $SupportedConversionTypes)) $PresentationInputArray = array_map('strtolower', $UserPresentationInputArray);
-  if (in_array('Document', $SupportedConversionTypes)) $PresentationOutputArray = array_map('strtolower', $UserPresentationOutputArray);
+  if (in_array('Document', $SupportedConversionTypes)) $DocumentArray = withoutRefusedFormats($UserDocumentArray, 'Supported Document Formats');
+  if (in_array('Document', $SupportedConversionTypes)) $SpreadsheetArray = withoutRefusedFormats($UserSpreadsheetArray, 'Supported Spreadsheet Formats');
+  if (in_array('Document', $SupportedConversionTypes)) $XPSInputArray = withoutRefusedFormats($UserXPSInputArray, 'Supported XPS Input Formats');
+  if (in_array('Document', $SupportedConversionTypes)) $XPSOutputArray = withoutRefusedFormats($UserXPSOutputArray, 'Supported XPS Output Formats');
+  if (in_array('Document', $SupportedConversionTypes)) $PresentationInputArray = withoutRefusedFormats($UserPresentationInputArray, 'Supported Presentation Input Formats');
+  if (in_array('Document', $SupportedConversionTypes)) $PresentationOutputArray = withoutRefusedFormats($UserPresentationOutputArray, 'Supported Presentation Output Formats');
   if (in_array('Image', $SupportedConversionTypes)) {
-    $ImageArray = array_map('strtolower', $UserImageArray);
-    $ImageInputArray = array_map('strtolower', $UserImageInputArray);
-    $ImageOutputArray = array_map('strtolower', $UserImageOutputArray); }
-  if (in_array('Audio', $SupportedConversionTypes)) $MediaInputArray = array_map('strtolower', $UserMediaInputArray);
-  if (in_array('Audio', $SupportedConversionTypes)) $MediaOutputArray = array_map('strtolower', $UserMediaOutputArray);
-  if (in_array('Video', $SupportedConversionTypes)) $VideoInputArray = array_map('strtolower', $UserVideoInputArray);
-  if (in_array('Video', $SupportedConversionTypes)) $VideoOutputArray = array_map('strtolower', $UserVideoOutputArray);
+    $ImageArray = withoutRefusedFormats($UserImageArray, 'Supported Image Formats');
+    $ImageInputArray = withoutRefusedFormats($UserImageInputArray, 'Supported Image Input Formats');
+    $ImageOutputArray = withoutRefusedFormats($UserImageOutputArray, 'Supported Image Output Formats'); }
+  if (in_array('Audio', $SupportedConversionTypes)) $MediaInputArray = withoutRefusedFormats($UserMediaInputArray, 'Supported Audio Input Formats');
+  if (in_array('Audio', $SupportedConversionTypes)) $MediaOutputArray = withoutRefusedFormats($UserMediaOutputArray, 'Supported Audio Output Formats');
+  if (in_array('Video', $SupportedConversionTypes)) $VideoInputArray = withoutRefusedFormats($UserVideoInputArray, 'Supported Video Input Formats');
+  if (in_array('Video', $SupportedConversionTypes)) $VideoOutputArray = withoutRefusedFormats($UserVideoOutputArray, 'Supported Video Output Formats');
   // / Stream is already split & is not given an input & output pair like the others.
   // / $StreamArray is what may be fetched & $StreamOutputArray is derived from the audio
   // / and video lists, because a stream is written as a media file rather than as another
   // / stream. A configured output list here would be a third place to keep in step with
   // / those two & would be wrong the first time either changed.
-  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && in_array('Video', $SupportedConversionTypes)) $StreamArray = array_map('strtolower', $UserStreamArray);
-  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && in_array('Video', $SupportedConversionTypes)) $StreamOutputArray = array_map('strtolower', array_merge($UserMediaOutputArray, $UserVideoOutputArray));
+  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && in_array('Video', $SupportedConversionTypes)) $StreamArray = withoutRefusedFormats($UserStreamArray, 'Supported Stream Formats');
+  if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && in_array('Video', $SupportedConversionTypes)) $StreamOutputArray = array_merge($MediaOutputArray, $VideoOutputArray);
   if (in_array('Drawing', $SupportedConversionTypes)) {
-    $DrawingArray = array_map('strtolower', $UserDrawingArray);
-    $DrawingInputArray = array_map('strtolower', $UserDrawingInputArray);
-    $DrawingOutputArray = array_map('strtolower', $UserDrawingOutputArray); }
-  if (in_array('SVG', $SupportedConversionTypes)) $SVGInputArray = array_map('strtolower', $UserSVGInputArray);
-  if (in_array('SVG', $SupportedConversionTypes)) $SVGOutputArray = array_map('strtolower', $UserSVGOutputArray);
+    $DrawingArray = withoutRefusedFormats($UserDrawingArray, 'Supported Drawing Formats');
+    $DrawingInputArray = withoutRefusedFormats($UserDrawingInputArray, 'Supported Drawing Input Formats');
+    $DrawingOutputArray = withoutRefusedFormats($UserDrawingOutputArray, 'Supported Drawing Output Formats'); }
+  if (in_array('SVG', $SupportedConversionTypes)) $SVGInputArray = withoutRefusedFormats($UserSVGInputArray, 'Supported SVG Input Formats');
+  if (in_array('SVG', $SupportedConversionTypes)) $SVGOutputArray = withoutRefusedFormats($UserSVGOutputArray, 'Supported SVG Output Formats');
   // / The Model lists are read directly, because both are in the required configuration list & a configuration missing either one never reaches this line.
   // / The required list is what the startup check reads, so a setting absent from it is never verified & a fallback for it would become permanent.
   // / It is also how the core decides a configuration is valid at all.
   // / $UserModelArray remains required & still feeds $ModelArray, which other code reads.
   if (in_array('Model', $SupportedConversionTypes)) {
-    $ModelArray = array_map('strtolower', $UserModelArray);
-    $ModelInputArray = array_map('strtolower', $UserModelInputArray);
-    $ModelOutputArray = array_map('strtolower', $UserModelOutputArray); }
+    $ModelArray = withoutRefusedFormats($UserModelArray, 'Supported Model Formats');
+    $ModelInputArray = withoutRefusedFormats($UserModelInputArray, 'Supported Model Input Formats');
+    $ModelOutputArray = withoutRefusedFormats($UserModelOutputArray, 'Supported Model Output Formats'); }
   if (in_array('Scad', $SupportedConversionTypes)) {
-    $SCADArray = array_map('strtolower', $UserSCADArray);
-    $SCADInputArray = array_map('strtolower', $UserSCADInputArray);
-    $SCADOutputArray = array_map('strtolower', $UserSCADOutputArray); }
+    $SCADArray = withoutRefusedFormats($UserSCADArray, 'Supported OpenSCAD Formats');
+    $SCADInputArray = withoutRefusedFormats($UserSCADInputArray, 'Supported SCAD Input Formats');
+    $SCADOutputArray = withoutRefusedFormats($UserSCADOutputArray, 'Supported SCAD Output Formats'); }
   // / The SCAD output list is read rather than derived, so the upload list & the output list are each declared.
-  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleInputArray = $UserSubtitleInputArray;
-  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleOutputArray = array_map('strtolower', $UserSubtitleOutputArray);
-  if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = array_map('strtolower', $UserPDFWorkArr);
-  if (in_array('Ebook', $SupportedConversionTypes)) $EbookInputArray = array_map('strtolower', $UserEbookInputArray);
-  if (in_array('Ebook', $SupportedConversionTypes)) $EbookOutputArray = array_map('strtolower', $UserEbookOutputArray);
+  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleInputArray = withoutRefusedFormats($UserSubtitleInputArray, 'Supported Subtitle Input Formats');
+  if (in_array('Subtitle', $SupportedConversionTypes)) $SubtitleOutputArray = withoutRefusedFormats($UserSubtitleOutputArray, 'Supported Subtitle Output Formats');
+  if (in_array('OCR', $SupportedConversionTypes) && in_array('Document', $SupportedConversionTypes)) $PDFWorkArr = withoutRefusedFormats($UserPDFWorkArr, 'Supported OCR Formats');
+  if (in_array('Ebook', $SupportedConversionTypes)) $EbookInputArray = withoutRefusedFormats($UserEbookInputArray, 'Supported Ebook Input Formats');
+  if (in_array('Ebook', $SupportedConversionTypes)) $EbookOutputArray = withoutRefusedFormats($UserEbookOutputArray, 'Supported Ebook Output Formats');
   // / The five families added in v4.2.5 each keep an input list & an output list, as every family since the Model lists does.
   if (in_array('Data', $SupportedConversionTypes)) {
-    $DataInputArray = array_map('strtolower', $UserDataInputArray);
-    $DataOutputArray = array_map('strtolower', $UserDataOutputArray); }
+    $DataInputArray = withoutRefusedFormats($UserDataInputArray, 'Supported Data Input Formats');
+    $DataOutputArray = withoutRefusedFormats($UserDataOutputArray, 'Supported Data Output Formats'); }
   if (in_array('LaTeX', $SupportedConversionTypes)) {
-    $LaTeXInputArray = array_map('strtolower', $UserLaTeXInputArray);
-    $LaTeXOutputArray = array_map('strtolower', $UserLaTeXOutputArray); }
+    $LaTeXInputArray = withoutRefusedFormats($UserLaTeXInputArray, 'Supported LaTeX Input Formats');
+    $LaTeXOutputArray = withoutRefusedFormats($UserLaTeXOutputArray, 'Supported LaTeX Output Formats'); }
   if (in_array('Trace', $SupportedConversionTypes)) {
-    $TraceInputArray = array_map('strtolower', $UserTraceInputArray);
-    $TraceOutputArray = array_map('strtolower', $UserTraceOutputArray); }
+    $TraceInputArray = withoutRefusedFormats($UserTraceInputArray, 'Supported Trace Input Formats');
+    $TraceOutputArray = withoutRefusedFormats($UserTraceOutputArray, 'Supported Trace Output Formats'); }
   if (in_array('Email', $SupportedConversionTypes)) {
-    $EmailInputArray = array_map('strtolower', $UserEmailInputArray);
-    $EmailOutputArray = array_map('strtolower', $UserEmailOutputArray); }
+    $EmailInputArray = withoutRefusedFormats($UserEmailInputArray, 'Supported Email Input Formats');
+    $EmailOutputArray = withoutRefusedFormats($UserEmailOutputArray, 'Supported Email Output Formats'); }
   if (in_array('Markup', $SupportedConversionTypes)) {
-    $MarkupInputArray = array_map('strtolower', $UserMarkupInputArray);
-    $MarkupOutputArray = array_map('strtolower', $UserMarkupOutputArray); }
+    $MarkupInputArray = withoutRefusedFormats($UserMarkupInputArray, 'Supported Markup Input Formats');
+    $MarkupOutputArray = withoutRefusedFormats($UserMarkupOutputArray, 'Supported Markup Output Formats'); }
   if (in_array('Graph', $SupportedConversionTypes)) {
-    $GraphInputArray = array_map('strtolower', $UserGraphInputArray);
-    $GraphOutputArray = array_map('strtolower', $UserGraphOutputArray); }
+    $GraphInputArray = withoutRefusedFormats($UserGraphInputArray, 'Supported Graph Input Formats');
+    $GraphOutputArray = withoutRefusedFormats($UserGraphOutputArray, 'Supported Graph Output Formats'); }
   $allArrays = array(
     $ArchiveArray, $DearchiveArray, $DocumentArray, $SpreadsheetArray,
     $PresentationInputArray, $PresentationOutputArray, $ImageArray,
@@ -1001,6 +1004,28 @@ function extensionIsDangerous($extension) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $extension, $lowercaseExtension);
   return $ExtensionIsDangerous; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to take every format this application refuses to handle out of a format list config.php holds.
+// / Accepts the list & the name of the setting it came from, in that order. Returns the list in lowercase, without them.
+// / A list offering a refused format would hand a user a button whose request is refused, so it is never offered.
+// / The setting is named in a warning, so the administrator can take the format out of config.php.
+// / Until v4.2.7 recipe & opf were e-book inputs, & a config.php written before then still lists both.
+function withoutRefusedFormats($formatList, $settingName) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OfferedFormats = $refusedFormats = array();
+  $formatName = $cleanFormat = '';
+  foreach ((array)$formatList as $formatName) {
+    $cleanFormat = strtolower((string)$formatName);
+    if (extensionIsDangerous($cleanFormat)) $refusedFormats[] = $cleanFormat;
+    else $OfferedFormats[] = $cleanFormat; }
+  if (count($refusedFormats) > 0) warningEntry('--'.$settingName.'-- in config.php lists '.implode(', ', $refusedFormats).', which this application refuses to handle, so '.(count($refusedFormats) === 1 ? 'it is' : 'they are').' not offered. Take '.(count($refusedFormats) === 1 ? 'it' : 'them').' out of the setting.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $OfferedFormats is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $refusedFormats, $formatName, $cleanFormat, $formatList, $settingName);
+  return $OfferedFormats; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -1788,7 +1813,7 @@ function invokeSplitOperation($selectedFiles, $operationOptions) {
 // / unchanged. That is the whole reason this is an array rather than a run of branches.
 // /
 // / Every field is optional except OperationType. A profile that needs nothing declares
-// / nothing, which is why ffmpeg, archive & poppler are one line each.
+// / nothing, which is why archive & poppler are one line each.
 // /
 // /   OperationType   What the per operation resource limit is looked up under.
 // /   ReadOnlyPaths   Bound read only if present. A missing path is skipped rather than
@@ -1802,6 +1827,11 @@ function invokeSplitOperation($selectedFiles, $operationOptions) {
 // /                   keyed by the host path & naming the file within the read only resource
 // /                   the call carries. The host file is never touched. A host path that is
 // /                   not a plain file here, or that is reached through a link, is skipped.
+// /   RequireSandbox  TRUE where the tool reads a file an upload names, or runs code one carries, &
+// /                   nothing passed with its command stops it. The Engine never runs such a tool
+// /                   without a sandbox, whatever --Require Sandbox-- & --Require Sandbox On Docker--
+// /                   say, from v4.2.7. Pandoc, TeX, Graphviz & ImageMagick are stopped with their
+// /                   commands instead, by --sandbox, paranoid TeX, SERVER_NAME & each pipeline's policy.
 // /   Reason          Why this profile is not empty. Read this before changing anything.
 // /
 // / Adding a profile.
@@ -1815,8 +1845,11 @@ function getSandboxProfiles() {
 
     // / LibreOffice starts a display server & probes OpenCL unless it is told not to.
     // / Both fail inside a namespace & both are slow before they fail.
+    // / It draws an image a document links to by a relative or an absolute path, an image an HTML page saved as a doc names, & the
+    // / picture an RTF's INCLUDEPICTURE names. sanitizeDocumentLinks() catches none of the three, so it is never run without a sandbox.
     'libreoffice' => array(
       'OperationType' => 'Document',
+      'RequireSandbox' => TRUE,
       'ReadOnlyPaths' => array('/etc/libreoffice', '/etc/java'),
       'Environment' => array('SAL_USE_VCLPLUGIN' => 'svp', 'SAL_DISABLE_OPENCL' => '1'),
       'Reason' => 'Headless rendering with no display server & no OpenCL probing.'),
@@ -1847,18 +1880,25 @@ function getSandboxProfiles() {
         '/usr/local/etc/ImageMagick-6/policy.xml' => 'policy.xml'),
       'Reason' => 'Recognition fails with no language data & the failure names no cause. The page split\'s policy covers the host\'s.'),
 
+    // / Inkscape draws an image an SVG names by a relative path, an absolute path or a file URL, & a shape from another SVG it names.
     'inkscape' => array(
       'OperationType' => 'SVG',
+      'RequireSandbox' => TRUE,
       'ReadOnlyPaths' => array('/usr/share/inkscape', '/etc/inkscape'),
       'Reason' => 'Templates & the default preferences are read from these directories.'),
 
+    // / Dia draws an image a diagram names by a relative or an absolute path.
     'dia' => array(
       'OperationType' => 'Drawing',
+      'RequireSandbox' => TRUE,
       'ReadOnlyPaths' => array('/usr/share/dia'),
       'Reason' => 'Shape libraries are read from this directory.'),
 
+    // / calibre runs the Python a recipe carries, & copies into the book it writes any file an OPF or an EPUB's own manifest names.
+    // / A recipe & an OPF are refused before they reach it, & an EPUB cannot be.
     'calibre' => array(
       'OperationType' => 'Ebook',
+      'RequireSandbox' => TRUE,
       'ReadOnlyPaths' => array('/usr/share/calibre'),
       'Reason' => 'Conversion recipes are read from this directory.'),
 
@@ -1894,8 +1934,10 @@ function getSandboxProfiles() {
     // / which is what MapToRoot & the Tmpfs below are for.
     // / The vendor file keeps glvnd away from a GPU driver that crashes while enumerating
     // / devices this namespace deliberately does not expose.
+    // / Assimp, which runs under this profile too, reads a glTF's buffer from a path the glTF names & writes it into the model it makes.
     'meshlab' => array(
       'OperationType' => 'Model',
+      'RequireSandbox' => TRUE,
       'ReadOnlyPaths' => array('/usr/share/meshlab', '/usr/share/pymeshlab'),
       'Tmpfs' => array('/tmp/.X11-unix'),
       'MapToRoot' => TRUE,
@@ -1940,10 +1982,12 @@ function getSandboxProfiles() {
     // / A profile that declares only its operation type is not an oversight.
     // / Resvg finds fonts by reading the font folders below /usr itself, & msgconvert is a Perl program reading only what is below /usr.
     // / msgconvert asks for the server's full name while it writes a message, & finds none in here, which changes nothing it writes.
-    'ffmpeg' => array('OperationType' => 'Video'),
+    // / FFmpeg reads a DASH manifest whatever an upload is called, & fetches each segment it names, & FFprobe, which Identify asks, does too.
+    // / Resvg draws an image an SVG names by a relative or an absolute path. Neither is run without a sandbox.
+    'ffmpeg' => array('OperationType' => 'Video', 'RequireSandbox' => TRUE),
     'archive' => array('OperationType' => 'Archive'),
     'poppler' => array('OperationType' => 'Document'),
-    'resvg' => array('OperationType' => 'SVG'),
+    'resvg' => array('OperationType' => 'SVG', 'RequireSandbox' => TRUE),
     'potrace' => array('OperationType' => 'Trace'),
     'dasel' => array('OperationType' => 'Data'),
     'yq' => array('OperationType' => 'Data'),
@@ -2075,7 +2119,7 @@ function applicationConfigModel() {
       'UserSubtitleInputArray' => array('Type' => 'array', 'Default' => 'array(\'sub\', \'sbv\', \'srt\', \'stream_segment\', \'ssegment\', \'streamhash\', \'sup\', \'subtitles\', \'ttml\', \'uncodedframecrc\', \'webvtt\', \'wtv\', \'oma\', \'rso\', \'rtp\', \'rtsp\', \'scc\', \'sdl\', \'sdl2\', \'segment\', \'sap\', \'jacosub\', \'kvag\', \'microdvd\', \'ffmetadata\', \'fifo\', \'fifo_test\', \'fits\', \'framecrc\', \'framehash\', \'framemd5\', \'dash\', \'crc\', \'dvbsub\', \'dvbtxt\', \'gsm\', \'ass\', \'vobsub\', \'mpl2\', \'mpsub\', \'pjs\', \'realtext\', \'sami\', \'stl\', \'subviewer\', \'subviewer1\', \'tedcaptions\', \'txd\', \'vtt\', \'ssa\', \'dvb\', \'vplayer\')', 'Depends' => '', 'Description' => 'Supported Subtitle Input Formats'),
       'UserSubtitleOutputArray' => array('Type' => 'array', 'Default' => 'array(\'vtt\', \'ssa\', \'ass\', \'srt\')', 'Depends' => '', 'Description' => 'Supported Subtitle Output Formats'),
       'UserPDFWorkArr' => array('Type' => 'array', 'Default' => 'array(\'pdf\', \'jpg\', \'jpeg\', \'png\', \'bmp\', \'webp\', \'gif\')', 'Depends' => '', 'Description' => 'Supported OCR Formats'),
-      'UserEbookInputArray' => array('Type' => 'array', 'Default' => 'array(\'epub\', \'mobi\', \'azw\', \'azw3\', \'azw4\', \'fb2\', \'fbz\', \'lit\', \'lrf\', \'pdb\', \'pml\', \'rb\', \'snb\', \'tcr\', \'txt\', \'txtz\', \'rtf\', \'odt\', \'docx\', \'pdf\', \'chm\', \'cbz\', \'cbr\', \'cbc\', \'prc\', \'opf\', \'recipe\')', 'Depends' => '', 'Description' => 'Supported Ebook Input Formats'),
+      'UserEbookInputArray' => array('Type' => 'array', 'Default' => 'array(\'epub\', \'mobi\', \'azw\', \'azw3\', \'azw4\', \'fb2\', \'fbz\', \'lit\', \'lrf\', \'pdb\', \'pml\', \'rb\', \'snb\', \'tcr\', \'txt\', \'txtz\', \'rtf\', \'odt\', \'docx\', \'pdf\', \'chm\', \'cbz\', \'cbr\', \'cbc\', \'prc\')', 'Depends' => '', 'Description' => 'Supported Ebook Input Formats'),
       'UserEbookOutputArray' => array('Type' => 'array', 'Default' => 'array(\'epub\', \'mobi\', \'azw3\', \'fb2\', \'lit\', \'lrf\', \'pdb\', \'pmlz\', \'rb\', \'snb\', \'tcr\', \'txt\', \'txtz\', \'rtf\', \'docx\', \'pdf\')', 'Depends' => '', 'Description' => 'Supported Ebook Output Formats'),
       'UserDataInputArray' => array('Type' => 'array', 'Default' => 'array(\'json\', \'yaml\', \'yml\', \'toml\', \'xml\', \'csv\')', 'Depends' => '', 'Description' => 'Supported Data Input Formats'),
       'UserDataOutputArray' => array('Type' => 'array', 'Default' => 'array(\'json\', \'yaml\', \'yml\', \'toml\', \'xml\', \'csv\')', 'Depends' => '', 'Description' => 'Supported Data Output Formats'),

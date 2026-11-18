@@ -11,7 +11,7 @@
 # on a server for users of any web browser without authentication.
 #
 # FILE INFORMATION ...
-# v4.2.4.
+# v4.2.7.
 # This file contains the Docker build file for the project.
 #
 # Build this from the repository root, not from this directory.
@@ -31,9 +31,11 @@
 #
 # SYS_ADMIN IS REQUIRED FOR THE SANDBOX.
 # Every conversion runs inside a bubblewrap namespace with no network. A container cannot
-# create that namespace without the capability. Without it the sandbox is unavailable, &
-# conversions run unprotected with a warning, which is not recommended for anything public
-# facing. --Require Sandbox On Docker-- set to TRUE in config.php refuses them instead.
+# create that namespace without the capability. Without it the sandbox is unavailable, so
+# documents, e-books, SVG, drawings, models, audio, video, subtitles & streams are refused, &
+# every other conversion runs unprotected with a warning, which is not recommended for
+# anything public facing. --Require Sandbox On Docker-- set to TRUE in config.php refuses
+# those too.
 # No process that converts or serves a user's file holds SYS_ADMIN, or any other capability.
 # An alternative to the capability is  --security-opt seccomp=unconfined  on some hosts.
 # A container makes no copy of bubblewrap & writes no AppArmor profile. The host's kernel

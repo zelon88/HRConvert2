@@ -41,14 +41,14 @@
   <!-- Delegates are disabled. Ghostscript is reached through the coders below. -->
   <policy domain="delegate" rights="none" pattern="HTTPS"/>
   <policy domain="delegate" rights="none" pattern="HTTP"/>
-  <!-- Document coders. HRConvert2 converts these & the stock policy blocks them. -->
-  <policy domain="module" rights="read|write" pattern="{PDF,PS,PS2,PS3,EPS,XPS,EPI,EPT}"/>
+  <!-- Coders that read a file an image names. ImageMagick reads what a file holds before what it is called, so a file named -->
+  <!-- as a picture reaches them whatever the pipeline asked for. An SVG draws any image it names, & Ghostscript reads any -->
+  <!-- file below its temporary folder, -dSAFER or not. Neither is ever read here. -->
+  <policy domain="coder" rights="none" pattern="{SVG,MSVG,RSVG}"/>
+  <!-- Document coders. A PDF is read to split its pages. PostScript is a program, so it is neither read nor written. -->
+  <policy domain="module" rights="read|write" pattern="{PDF}"/>
   <policy domain="coder" rights="read|write" pattern="PDF"/>
-  <policy domain="coder" rights="read|write" pattern="PS"/>
-  <policy domain="coder" rights="read|write" pattern="PS2"/>
-  <policy domain="coder" rights="read|write" pattern="PS3"/>
-  <policy domain="coder" rights="read|write" pattern="EPS"/>
-  <policy domain="coder" rights="read|write" pattern="XPS"/>
+  <policy domain="coder" rights="none" pattern="{PS,PS2,PS3,EPS,EPSF,EPSI,EPI,EPT,XPS}"/>
   <!-- Cache & system policies are fixed once written. -->
   <policy domain="cache" name="shared-secret" value="passphrase" stealth="true"/>
   <policy domain="system" name="shred" value="1"/>

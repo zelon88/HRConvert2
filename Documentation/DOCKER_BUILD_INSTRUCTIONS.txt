@@ -167,10 +167,11 @@ NOTE ON DIAGNOSING A FAILED SMOKE TEST.
 
 NOTE ON THE SYS_ADMIN CAPABILITY.
   Every conversion runs inside a bubblewrap sandbox, & a container cannot create the
-  namespace that needs without  '--cap-add SYS_ADMIN'. A container started without it runs
-  conversions unprotected & logs a warning, or refuses them where --Require Sandbox On Docker--
-  is TRUE in config.php. No process that converts or serves a user's file holds the
-  capability, or any other.
+  namespace that needs without  '--cap-add SYS_ADMIN'. A container started without it refuses
+  documents, e-books, SVG, drawings, models, audio, video, subtitles & streams, from v4.2.7,
+  because each of their tools reads a file an upload names. It runs every other conversion
+  unprotected & logs a warning, or refuses it too where --Require Sandbox On Docker-- is TRUE in
+  config.php. No process that converts or serves a user's file holds the capability, or any other.
   '--security-opt seccomp=unconfined'  works instead on some hosts, as the Dockerfile says.
   The workflow tests with the capability, & the README & INSTALLATION_INSTRUCTIONS.txt ask for it.
   Until v4.0.0 this step used the seccomp option & said only OpenSCAD needed it, which was

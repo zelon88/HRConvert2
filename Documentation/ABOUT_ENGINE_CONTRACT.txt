@@ -482,6 +482,15 @@ establishEngineSession() & loads the Pipeline & Workflow Cores. A session holds 
 folder the application names in $EngineSessionFolders, & each is a global of the same name holding
 its path. A name must begin with a capital letter, & one that does not, or is StreamTemp, is
 refused with a warning. HRConvert2 names getSandboxProfiles() & ScadTemp.
+
+A SANDBOX PROFILE CAN REQUIRE A SANDBOX, FROM v4.2.7.
+A profile the application supplies may set RequireSandbox, & nothing but TRUE counts. The Engine's
+sandboxCommand() refuses such a profile wherever no sandbox can be built, whatever
+--Require Sandbox-- & --Require Sandbox On Docker-- say, & warns naming it.
+sandboxRequiredProfiles() names every such profile for -v & the operating environment check. It is
+for a tool that reads a file an upload names by its path, which no setting accepts as it accepts the
+risk of a tool's own bugs.
+HRConvert2 sets it on its libreoffice, calibre, inkscape, resvg, dia, meshlab & ffmpeg profiles.
 The application sets its own globals once the Engine has started. A web request is then admitted by
 the kernel's admitWebRequest(), which refuses root & every account but the web server's, halts with
 28005 where there is no Engine & has the Engine's prepareWebRequest() make the folders a session

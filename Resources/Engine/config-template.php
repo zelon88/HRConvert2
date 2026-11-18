@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.4.
+// / v4.2.7.
 // / THIS IS THE ENGINE'S HALF OF THE CONFIGURATION TEMPLATE, & everything below the marker is a
 // / real config.php fragment at the Engine's default values. Not a description of one.
 // / Every setting the kernel or the Engine reads is here, with its documentation, & nowhere else.
@@ -118,8 +118,10 @@ $MaintainHTAccess = TRUE;
 // /   A conversion dependency parses an untrusted file & most of them have a history of
 // /   memory corruption bugs. Bubblewrap bounds what a successful exploit can reach.
 // /   If set to TRUE, a server without a working sandbox refuses every conversion that
-// /   depends on one. That is every type except documents.
-// /   If set to FALSE, those conversions run unprotected & every one writes a warning.
+// /   depends on one.
+// /   If set to FALSE, those conversions run unprotected & every one writes a warning,
+// /   except those whose sandbox profile sets RequireSandbox, which are refused either way.
+// /   Such a tool reads a file an upload names, which is no bug this setting can accept.
 // /   In a container this setting is not read. --Require Sandbox On Docker-- decides there.
 // /   Run -v to see whether this server has a working sandbox.
 // /   Valid options are TRUE or FALSE.
@@ -133,8 +135,9 @@ $RequireSandbox = TRUE;
 // /   Bubblewrap builds its sandbox from unprivileged user namespaces, & the default
 // /   container seccomp & AppArmor profiles both block the syscalls that requires.
 // /   A container started normally therefore has NO working sandbox, & requiring one would
-// /   mean refusing every conversion except documents.
-// /   If set to FALSE, a container without a working sandbox runs conversions unprotected.
+// /   mean refusing every conversion that depends on one.
+// /   If set to FALSE, a container without a working sandbox runs conversions unprotected,
+// /   except those whose sandbox profile sets RequireSandbox, for the reason given above.
 // /   Every one of them writes a warning unless --Throw Sandbox Warning-- is disabled.
 // /   If set to TRUE, a container without a working sandbox refuses those conversions,
 // /   which matches the behaviour of a bare metal installation.

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.7.
 // / This file declares what the Image conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.1';
+$PipelineVersion = 'v4.2.7';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -79,10 +79,12 @@ $PipelineRequestFields = array('Extension', 'Height', 'Width', 'Rotate');
 // / conversion. They become authoritative in the detected modes.
 // / ImageMagick reads far more than this. These are the formats a general purpose
 // / converter can hand back to a browser & expect to be usable.
+// / SVG & EPS are not read, from v4.2.7. The policy this pipeline carries refuses both, because an SVG draws any image it names &
+// / a PostScript file is a program. An SVG is the SVG pipeline's, & EPS is still written.
 $Capabilities = array(
   'Input' => array(
     'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tif', 'tiff', 'webp', 'ico', 'tga', 'pcx', 'ppm', 'pgm',
-    'pbm', 'pnm', 'xpm', 'xbm', 'dds', 'psd', 'svg', 'eps', 'pdf', 'heic', 'avif', 'jp2', 'dpx',
+    'pbm', 'pnm', 'xpm', 'xbm', 'dds', 'psd', 'pdf', 'heic', 'avif', 'jp2', 'dpx',
     'exr', 'hdr', 'cr2', 'nef', 'arw', 'dng'),
   'Output' => array(
     'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tif', 'tiff', 'webp', 'ico', 'tga', 'pcx', 'ppm', 'pgm',

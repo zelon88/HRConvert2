@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.8.
 // / The Audio pipeline's converter. pipelineCore.php loads it only to dispatch an Audio conversion.
 // / Error block 12000 through 12002 belongs to this pipeline.
 // / Audio, Video, Subtitle & Stream share the FFMPEG subsystem.

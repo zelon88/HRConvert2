@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.5.
+// / v4.2.8.
 // / This file declares what the SVG conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.5';
+$PipelineVersion = 'v4.2.8';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -80,9 +80,11 @@ $PipelineRequestFields = array('Extension', 'Height', 'Width');
 // / conversion. They become authoritative in the detected modes.
 // / Inkscape reads far more vector formats than it writes, which is why the two lists here
 // / differ far more than they do for Dia.
+// / Inkscape 1.2 cannot import a DXF without a display & reads no CGM, so neither is read, from v4.2.8. A DXF is the Drawing family's.
+// / Inkscape 1.2 stops with an internal error writing a POV-Ray file of a drawing that holds a rectangle or a circle, so pov is not written.
 $Capabilities = array(
-  'Input' => array('svg', 'svgz', 'ai', 'cdr', 'eps', 'ps', 'pdf', 'dxf', 'wmf', 'emf', 'cgm', 'vsd'),
-  'Output' => array('svg', 'svgz', 'png', 'pdf', 'eps', 'ps', 'dxf', 'wmf', 'emf', 'tex', 'pov', 'hpgl'));
+  'Input' => array('svg', 'svgz', 'ai', 'cdr', 'eps', 'ps', 'pdf', 'wmf', 'emf', 'vsd'),
+  'Output' => array('svg', 'svgz', 'png', 'pdf', 'eps', 'ps', 'dxf', 'wmf', 'emf', 'tex', 'hpgl'));
 
 // / Pairs removed from the cross product above, written as 'input>output'.
 // / A conversion that produces the format it was handed is not a conversion. Inkscape will
@@ -91,7 +93,7 @@ $Capabilities = array(
 // / svg to svgz & svgz to svg are NOT excluded. Those are a real compression change & are
 // / a conversion a user can legitimately want.
 $PipelineExclude = array(
-  'svg>svg', 'svgz>svgz', 'eps>eps', 'ps>ps', 'pdf>pdf', 'dxf>dxf', 'wmf>wmf', 'emf>emf');
+  'svg>svg', 'svgz>svgz', 'eps>eps', 'ps>ps', 'pdf>pdf', 'wmf>wmf', 'emf>emf');
 
 // / What this pipeline shells out to. Names must match the manifest exactly.
 // / Resvg renders an SVG to a PNG before Inkscape is asked, from v4.2.5, & Inkscape renders it wherever Resvg is missing or did not.

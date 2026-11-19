@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.8.
 // / This file declares what the Audio conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.1';
+$PipelineVersion = 'v4.2.8';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -76,19 +76,22 @@ $PipelineRequestFields = array('Extension', 'Bitrate');
 // / config.php is authoritative in that mode, so an omission here cannot delete a
 // / conversion. They become authoritative in the detected modes.
 // / FFMPEG reads more than this. These are the formats worth offering.
+// / A video is read for its sound, from v4.2.8, so a film can become an mp3. -vn leaves its picture out. A ts is the Stream family's & is not read.
+// / mp2 is written, as config.php has always offered it.
 $Capabilities = array(
   'Input' => array(
     'mp3', 'wav', 'flac', 'ogg', 'oga', 'opus', 'aac', 'm4a', 'wma', 'aiff', 'aif', 'au', 'ac3',
-    'amr', 'ape', 'mka', 'ra', 'voc', 'caf'),
+    'amr', 'ape', 'mka', 'ra', 'voc', 'caf', 'mp4', 'm4v', 'mkv', 'webm', 'avi', 'mov', 'wmv', 'asf',
+    'flv', 'mpg', 'mpeg', 'ogv', '3gp', 'vob', 'rm'),
   'Output' => array(
-    'mp3', 'wav', 'flac', 'ogg', 'oga', 'opus', 'aac', 'm4a', 'wma', 'aiff', 'au', 'ac3', 'mka'));
+    'mp3', 'mp2', 'wav', 'flac', 'ogg', 'oga', 'opus', 'aac', 'm4a', 'wma', 'aiff', 'au', 'ac3', 'mka'));
 
 // / Pairs removed from the cross product above, written as 'input>output'.
 // / A conversion that produces the format it was handed is not a conversion. It re-encodes
 // / a lossy format a second time & hands back something audibly worse than the original.
 // / ogg to oga & oga to ogg are NOT excluded. Those are the same container under two names.
 $PipelineExclude = array(
-    'mp3>mp3', 'wav>wav', 'flac>flac', 'ogg>ogg', 'oga>oga', 'opus>opus', 'aac>aac', 'm4a>m4a',
+    'mp3>mp3', 'mp2>mp2', 'wav>wav', 'flac>flac', 'ogg>ogg', 'oga>oga', 'opus>opus', 'aac>aac', 'm4a>m4a',
     'wma>wma', 'aiff>aiff', 'au>au', 'ac3>ac3', 'mka>mka');
 
 // / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.8.
 // / The Document pipeline's converter. pipelineCore.php loads it only to dispatch a Document conversion.
 // / Error block 2005, 7000 through 7001 belongs to this pipeline.
 // / It declares the LibreOffice shared module, which Pipeline Core loads before it.
@@ -38,7 +38,9 @@ function convertDocuments($pathname, $newPathname, $extension) {
   // / The last two keep their defaults, & $WorkerPID stays 0 unless a detached process is supervised.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
-  $ConversionSuccess = $ConversionErrors = $documentEngineStarted = $conversionCompleted = $commandMayRun = FALSE;
+  $ConversionSuccess = $ConversionErrors = $documentEngineStarted = $conversionCompleted = $commandMayRun = $converterWasRefused = FALSE;
+  // / This initializes TRUE, because a converter is taken to have run until it is refused.
+  $converterRan = TRUE;
   $returnData = $xpsCommand = $sandboxedCommand = '';
   $stopper = $documentEnginePID = 0;
   $sleepTime = $SleepTimer;
@@ -55,7 +57,9 @@ function convertDocuments($pathname, $newPathname, $extension) {
     if ($Verbose) logEntry('Converting document.');
     // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
     // / first attempt that leaves a file.
-    while (pipelineAttemptIsDue($newPathname, $stopper)) {
+    // / A converter that was refused is not asked again, from v4.2.8, because it would be refused again. A conversion no sandbox could
+    // / be built for was refused & warned of once for every attempt, & then reported as producing no file after every one of them.
+    while (!$converterWasRefused && pipelineAttemptIsDue($newPathname, $stopper)) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / An XPS file is handled by xpstopdf, which is also sandboxed & also has no network.
@@ -63,10 +67,13 @@ function convertDocuments($pathname, $newPathname, $extension) {
       if (in_array(strtolower($oldExtension), $arrayxpsi)) {
         $xpsCommand = 'xpstopdf '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
         list ($commandMayRun, $sandboxedCommand) = sandboxCommand($xpsCommand, $pathname, $newPathname, FALSE, 'poppler');
+        redeclare($converterRan, $commandMayRun);
         if (!$commandMayRun) errorEntry('An XPS conversion was refused because no sandbox could be built!', 2005, FALSE);
         else $returnData = (string)shell_exec($sandboxedCommand.' 2>&1'); }
       // / Everything else goes to LibreOffice, one sandboxed process per conversion.
-      else list ($conversionCompleted, $returnData) = convertWithLibreOffice($pathname, $newPathname, $extension);
+      // / The shared module says why it did not run, so nothing more is said of it here.
+      else list ($conversionCompleted, $returnData, $converterRan) = convertWithLibreOffice($pathname, $newPathname, $extension);
+      if (!$converterRan) $converterWasRefused = TRUE;
       // / Count the number of conversions to avoid infinite loops.
       $stopper++; }
     // / Log the output of the operation to the logfile, if it is not blank.
@@ -74,12 +81,13 @@ function convertDocuments($pathname, $newPathname, $extension) {
     // / Every attempt was made & none left a file.
     // / What the converter printed is logged above, with --Enhanced Logging Verbosity-- on.
     // / A LibreOffice its ceiling killed is named in a warning above, by the shared module.
+    // / A converter that was refused has said why already, so the conversion fails without a second error.
     if (!file_exists($newPathname)) {
       $ConversionErrors = TRUE;
-      errorEntry('The document converter produced no file after '.$stopper.' attempt(s)!', 7001, FALSE); } }
+      if (!$converterWasRefused) errorEntry('The document converter produced no file after '.$stopper.' attempt(s)!', 7001, FALSE); } }
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $stopper, $pathname, $returnData, $documentEngineStarted, $documentEnginePID, $conversionCompleted, $commandMayRun, $xpsCommand, $sandboxedCommand, $sleepTime, $oldExtension, $arrayxpsi);
+  purgeSensitiveMemory($EnableMemoryProtection, $stopper, $pathname, $returnData, $documentEngineStarted, $documentEnginePID, $conversionCompleted, $commandMayRun, $converterRan, $converterWasRefused, $xpsCommand, $sandboxedCommand, $sleepTime, $oldExtension, $arrayxpsi);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

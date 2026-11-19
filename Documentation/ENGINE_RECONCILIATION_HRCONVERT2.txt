@@ -268,3 +268,31 @@ with no user to look up, & shows /opt for a program installed beneath it, where 
 source. A profile could hide both from a tool that needs neither, or the base sandbox could show a
 passwd holding only the account a sandbox runs as.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--v4.2.8--
+
+NO ENGINE FILE CHANGED. The Engine stays v4.2.7, & HRConvert2 v4.2.8 requires v4.2.7.
+Every change is HRConvert2's: a request names its conversion family, its format lists, its interfaces,
+the shared LibreOffice module & nine of its pipelines. HRProtect needs nothing.
+
+--What HRConvert2 now relies on, unchanged--
+
+Nothing below is a change to the Engine. Each is something the Engine already did that HRConvert2
+v4.2.8 depends on for the first time, so a reconciled Engine has to keep doing it.
+
+A REPAIR LEAVES A SETTING THE MODEL NO LONGER NAMES WHERE IT IS. v4.2.8 retires five format lists,
+& a config.php written before it keeps them. --config --repair adds the four lists that replace two
+of them, from the model's defaults, & changes nothing already there, & neither the configuration
+check nor -v says anything of a setting the model does not name. An Engine that refused such a
+setting would refuse every installation that took v4.2.8 as a drop in, & one that removed it would
+remove an administrator's list before the administrator had copied it.
+
+--Seen, & left for the Engine's maintainer--
+
+THE PIPELINE CORE ANSWERS WHETHER ONE FAMILY SERVES A PAIR, & NOT WHICH FAMILIES DO. HRConvert2
+v4.2.8's conversionFamilyFor() asks familyHasPipeline() once for every family whose lists hold a pair,
+to find the first that serves it. describePipelineCapabilities() answers for an input alone. A
+function naming every family that serves an input & output pair, in the application's order, would
+answer it in one call, & would serve any application whose families overlap.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

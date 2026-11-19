@@ -1467,6 +1467,8 @@ ERROR DESCRIPTION
   A WARNING!!! above it, from the sandbox, names the profile. Install bubblewrap, or repair it.
   Run  php convertCore.php -v  as root & read the Sandbox line.
   This error is not fatal but the file that causes it will be skipped.
+  From v4.2.8 the Document pipeline does not try a refused conversion again, so this is written once & 7001 does not follow it.
+  Until then it was written once for each attempt --File Operation Retry Count-- allows, & 7001 followed.
   An XPS conversion that cannot be sandboxed raises 2005 instead.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1494,6 +1496,7 @@ ERROR DESCRIPTION
   ERROR 2004 is the same condition raised for every other document conversion.
   Install bubblewrap, or set the relevant setting to FALSE to run conversions unprotected.
   This error is not fatal but the file that causes it will be skipped.
+  From v4.2.8 the Document pipeline does not try a refused conversion again, so this is written once & 7001 does not follow it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2007,7 +2010,10 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The file submitted by the user has an extension that is not supported by HRConvert.
+  No conversion family's lists in config.php hold both the file's extension & the extension asked for.
+  A menu sends the family it offers, from v4.2.8, & a request naming a family that does not convert the pair is warned of first.
+  Until v4.2.8 the Image, Drawing & archive menus & the upload page were drawn from lists the converter did not read, so a file
+  such as an xcf or a gz was offered a conversion that ended here.
   Other errors preceding this error will help narrow down the cause of this error.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2163,6 +2169,8 @@ ERROR DESCRIPTION
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what LibreOffice printed, which usually names the cause.
   LibreOffice converts every document but an XPS file, which xpstopdf converts.
   A document LibreOffice cannot open & a format it does not write are the usual causes.
+  From v4.2.8 a conversion LibreOffice was never run for, because it was refused, is not tried again & does not raise this. The
+  refusal's own error, such as 2004, says why.
   From v4.0.6 a LibreOffice its ceiling killed is named in a warning above this, by the shared module.
   A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2186,6 +2194,8 @@ ERROR DESCRIPTION
   Until v4.0.6 this read The image converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what ImageMagick printed, which usually names the cause.
   A file ImageMagick cannot read, a format this build does not write & a coder the policy the pipeline carries refuses are the usual causes.
+  From v4.2.8 ImageMagick is told the format it writes, so a format it has no encoder for ends here. avif & heif are written only where
+  libheif has an encoder for them, & until v4.2.8 a server without one wrote a png under the name asked for.
   A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -7376,6 +7386,8 @@ LOGGED
 ERROR DESCRIPTION
   A conversion asked for the format the file already has, & no installed pipeline converts a format to itself.
   Until v4.0.6 this was reported as 34005, a family with no installed pipeline, which sent an operator looking for a fault that was not there.
+  From v4.2.8 such a request is never given to a family other than the one that claims it. The Ebook pipeline excludes txt, rtf,
+  docx & pdf, the Archive pipeline rar & tgz, & the Stream pipeline ts & m3u8, each to itself, as every other pipeline excludes its own.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -9710,4 +9722,17 @@ WARNINGS ABOUT THE SANDBOX & REFUSED FORMATS
       it is refused. recipe & opf were e-book inputs until v4.2.7, so a config.php written before then lists both in
       --Supported Ebook Input Formats--. Every page writes this until the setting is corrected. --config --repair never changes a
       value there.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT CHOOSING A CONVERSION FAMILY
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The core raises these, from conversionFamilyFor() in convertCore.php.
+    WARNING!!! A conversion of <FILE_TYPE> to <FILE_TYPE> named the <FAMILY> family, which does not convert it, so the <FAMILY> family was asked instead.
+    WARNING!!! A conversion of <FILE_TYPE> to <FILE_TYPE> named the <FAMILY> family, which does not convert it, & no family does.
+      From v4.2.8. Each menu sends the family it offers as conversionFamily, & a file is converted by that family. A request naming a
+      family whose lists in config.php do not hold the pair is converted as a request naming none is, by the first family that does.
+      A page sends only the family whose menu offered the output, so this is a request made some other way, such as a script calling
+      the REST API with the wrong family. Where no family holds the pair, 5006 follows.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

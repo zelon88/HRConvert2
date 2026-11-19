@@ -304,6 +304,8 @@ check whether what it received was usable.
 
 A SHARED MODULE EXISTS BECAUSE TWO PIPELINES NEEDED THE SAME CODE & NEITHER COULD OWN IT.
 convertWithLibreOffice() has callers in the Document pipeline & in the OCR pipeline.
+From v4.2.8 it returns whether LibreOffice ran as a third value, & the Document pipeline does not
+try again a conversion that was refused before LibreOffice ran. OCR reads the first two values.
 Leaving it in convertCore.php would have kept document conversion logic in the file this
 work exists to get it out of. Putting it in the Document pipeline would have made OCR
 depend on another pipeline being installed, verified & loaded first, which is a coupling no
@@ -656,7 +658,16 @@ it never breaks out of the loop.
 
 DISPATCH RESOLVES. IT PICKS EXACTLY ONE IMPLEMENTATION.
 By the time a conversion request arrives, the user has chosen an output format from one
-specific menu, so the input & output pair together almost always name one family.
+specific menu, & from v4.2.8 the request names that menu's family as conversionFamily.
+conversionFamilyFor() in convertCore.php chooses the family. The family named converts the
+file where its lists hold the pair & a pipeline of its own serves it. Otherwise the first
+family whose pipeline serves the pair converts it, & failing that the family named or the
+first whose lists hold it, which convert() then reports as unserved. A request naming no
+family, as a workflow's does, takes the same path without the first step.
+Until v4.2.8 the first family whose lists held the pair was the only one asked. docx to pptx
+is the Document family's & the Markup family's, & LibreOffice, which makes no presentation of
+a text document, was asked from the Markup menu as well. An exclusion now moves a pair to
+the next family that serves it, as the Document pipeline's pdf to txt moves to Ebook.
 resolvePipelineCandidates() returns the implementations that can serve that pair, ordered
 by $PipelinePriority & then by folder name so the result is deterministic.
 

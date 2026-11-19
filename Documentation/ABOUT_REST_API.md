@@ -128,6 +128,11 @@ Where the administrator has turned accounts on, a caller may sign in and present
   * Used during standard File Conversions (excluding OCR & bulk archiving workflows).
   * *Value*: The custom filename string to use for the output file.
   * A name already in the session is given the next free one, such as `name_1`, & the reply names the file that was written.
+* `conversionFamily` *(String, optional, from v4.2.8)*
+  * Used during standard File Conversions (excluding OCR & bulk archiving workflows).
+  * *Value*: The conversion family to convert with, such as `Document`, `Markup`, `Ebook`, `Image`, `SVG`, `Audio` or `Video`, as each menu of the interface sends its own.
+  * Several families convert some pairs, & not equally well. docx to pptx is the Document family's & the Markup family's, & only Pandoc makes it.
+  * A request that names none, or names a family that does not convert the pair, is converted by the first family whose pipeline does, & the second is warned of in the log.
 
 ### 🖼️ D. Image Conversions
 * `height` *(Integer)*

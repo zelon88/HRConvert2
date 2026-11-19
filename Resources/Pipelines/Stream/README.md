@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.1
+- **Version** v4.2.8
 - **Kind** conversion
 - **Family** Stream
 - **Entry point** convertStreams

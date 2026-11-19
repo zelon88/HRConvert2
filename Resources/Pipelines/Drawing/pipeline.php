@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.8.
 // / The Drawing pipeline's converter. pipelineCore.php loads it only to dispatch a Drawing conversion.
 // / Error block 10000 through 10002 belongs to this pipeline.
 // / Dia comes from verifiedToolPath().

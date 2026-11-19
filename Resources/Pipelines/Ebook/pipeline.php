@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.7.
+// / v4.2.8.
 // / The Ebook pipeline's converter. pipelineCore.php loads it only to dispatch an Ebook conversion.
 // / Error block 30000 through 30002 belongs to this pipeline.
 // / Calibre comes from verifiedToolPath().

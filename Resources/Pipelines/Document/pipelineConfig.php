@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.2.8.
 // / This file declares what the Document conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.1';
+$PipelineVersion = 'v4.2.8';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -78,23 +78,26 @@ $PipelineRequestFields = array('Extension');
 
 // / What this pipeline can read & what it can write.
 // / These lists are informational while $SupportedFormatDetectionType is hardcoded-only.
-// / config.php is authoritative in that mode & $UserDocumentArray decides what is offered,
+// / config.php is authoritative in that mode & its document, spreadsheet, presentation & XPS input & output lists decide what is offered,
 // / so an omission here cannot delete a conversion. They become authoritative in the
 // / detected modes.
 // / xps & oxps are inputs only. They are handled by the xpstopdf branch in the converter
 // / rather than by LibreOffice, & nothing here writes them back out.
+// / pdf, potx, potm, pot & ppa are read, & potx, potm & pot written, from v4.2.8, as config.php has long offered. ppa is not written.
 $Capabilities = array(
-  'Input' => array('doc', 'docx', 'docm', 'dot', 'dotx', 'odt', 'ott', 'fodt', 'rtf', 'txt', 'html', 'htm', 'xml', 'wpd', 'abw', 'pages', 'xls', 'xlsx', 'xlsm', 'ods', 'ots', 'fods', 'csv', 'ppt', 'pptx', 'odp', 'otp', 'fodp', 'xps', 'oxps'),
-  'Output' => array('pdf', 'doc', 'docx', 'odt', 'ott', 'fodt', 'rtf', 'txt', 'html', 'xml', 'epub', 'xls', 'xlsx', 'ods', 'csv', 'ppt', 'pptx', 'odp'));
+  'Input' => array('doc', 'docx', 'docm', 'dot', 'dotx', 'odt', 'ott', 'fodt', 'rtf', 'txt', 'pdf', 'html', 'htm', 'xml', 'wpd', 'abw', 'pages', 'xls', 'xlsx', 'xlsm', 'ods', 'ots', 'fods', 'csv', 'ppt', 'pptx', 'pot', 'potx', 'potm', 'ppa', 'odp', 'otp', 'fodp', 'xps', 'oxps'),
+  'Output' => array('pdf', 'doc', 'docx', 'odt', 'ott', 'fodt', 'rtf', 'txt', 'html', 'xml', 'epub', 'xls', 'xlsx', 'ods', 'csv', 'ppt', 'pptx', 'pot', 'potx', 'potm', 'odp'));
 
 // / Pairs removed from the cross product above, written as 'input>output'.
 // / A conversion that produces the format it was handed is not a conversion. LibreOffice
 // / will open it & write it back out, & the result is a reflowed copy of what the user
 // / already had rather than the file they uploaded.
+// / pdf to txt is excluded, from v4.2.8. LibreOffice opens a PDF as a drawing, & a drawing has no plain text to write, so it wrote nothing.
+// / The E-Book family converts it, & a request the Document menu sends for it is converted there.
 $PipelineExclude = array(
-  'doc>doc', 'docx>docx', 'odt>odt', 'ott>ott', 'fodt>fodt', 'rtf>rtf', 'txt>txt',
+  'doc>doc', 'docx>docx', 'odt>odt', 'ott>ott', 'fodt>fodt', 'rtf>rtf', 'txt>txt', 'pdf>pdf', 'pdf>txt',
   'html>html', 'xml>xml', 'xls>xls', 'xlsx>xlsx', 'ods>ods', 'csv>csv',
-  'ppt>ppt', 'pptx>pptx', 'odp>odp');
+  'ppt>ppt', 'pptx>pptx', 'pot>pot', 'potx>potx', 'potm>potm', 'odp>odp');
 
 // / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
 // / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.

@@ -307,6 +307,22 @@ streams are refused anyway now, because each of their tools reads a file an uplo
 names their sandbox profiles beside Sandbox required. Repair the sandbox, as Conversions refuse &
 the log names bubblewrap says below.
 
+RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.2.8 DROP IN, &
+BEFORE -fp. v4.2.8 splits the document & spreadsheet lists, $UserDocumentArray &
+$UserSpreadsheetArray, into an input list & an output list each,
+--Supported Document Input Formats--, --Supported Document Output Formats--,
+--Supported Spreadsheet Input Formats-- & --Supported Spreadsheet Output Formats--, &
+--config --repair adds the four with what v4.2.8 ships. Copy any format you had added to or taken
+out of the two old lists into the new ones by hand. Nothing reads the old two any more, nor
+$UserImageArray, $UserDrawingArray or $UserSCADArray, & each may be deleted from config.php.
+The formats v4.2.8 adds to the other lists reach an existing installation only when config.php's
+own lists name them, because --config --repair never changes a value already there. Copy the
+lists from Resources/Contract/config-template.php, or add the formats you want by hand.
+A heic or heif photo is read only where libheif has its HEVC decoder. On Ubuntu 24.04 that is the
+libheif-plugin-libde265 package, which libheif only suggests, so building ImageMagick does not
+install it. An avif is written only where libheif-plugin-aomenc is installed, which it recommends.
+  sudo apt-get install libheif-plugin-libde265 libheif-plugin-aomenc
+
 FROM v4.2.1 A BUTTON IS DRAWN ONLY WHERE THE TOOL BEHIND IT IS INSTALLED. A conversion, Strip
 Metadata, OCR, Merge, Split or a scanner whose tool is missing is hidden from every page & every
 workflow, & -v names each pipeline that is NOT OFFERED & what it lacks. Install what it names, &

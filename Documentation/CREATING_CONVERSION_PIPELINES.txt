@@ -335,7 +335,10 @@ Read these before writing code. They are preconditions, not steps.
   9c. `$arrayArray` filters the input extension.
   9d. `$arrayArrayOut` filters the output extension.
   9e. A pipeline missing from either map will never be reached by the routing loop.
-  9f. Order is significant. The first family to match both extensions wins.
+  9f. Order is significant for a request that names no family. The first family whose pipeline
+      serves both extensions wins, & failing that the first whose lists hold them. A request a
+      menu sends names its family as conversionFamily, from v4.2.8, & that family is asked first.
+      Give your family's menu that name in its staticPayload, as CREATING_GUIS describes.
   9g. ORDER BETWEEN FAMILIES IS STILL THE POSITION OF AN ENTRY IN THESE MAPS.
       `$PipelinePriority` orders the implementations WITHIN one family. Lower runs first, &
       ties break on folder name. `resolvePipelineCandidates()` filters on the family before it

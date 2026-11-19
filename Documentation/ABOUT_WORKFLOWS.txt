@@ -153,6 +153,8 @@ every budget, as it does once a disk is within --Storage Reserve--.
              Reads a file when a family reads its extension & writes the format asked for, so
              a conversion to jpg reads images & not spreadsheets. A file already in that format
              is passed on unchanged, from v4.2.3, & left out where the step resizes, rotates or re-encodes.
+             A step names no family, so a file is converted by the first family whose pipeline
+             converts the pair, from v4.2.8, & a pdf to txt reaches Calibre, which LibreOffice refuses.
              Options: Extension, required, any format a family writes, of which this server
              offers those an installed tool writes. Filename, the name
              without its extension, empty for each file's own. Height & Width, 0 to 65535.

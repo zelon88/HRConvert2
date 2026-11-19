@@ -808,6 +808,37 @@ IDENTIFY SAYS WHETHER NO TOOL OR NOT EVERY TOOL READ THE FILES. v4.2.7.
 Once FFprobe's profile required a sandbox, file & ImageMagick could read a selection unprotected
 while FFprobe was refused, & 37004 still said no tool could read the files. It says not every tool
 could, there, & the note on each audio or video file says its details were not read.
+
+A FORMAT IS OFFERED ONLY AFTER A SAMPLE OF IT CONVERTS THROUGH ITS PIPELINE. v4.2.8.
+Every format v4.2.8 offers was converted in its pipeline's own sandbox by the tools the application
+installs, & what came out was opened & checked for what went in. The samples LibreOffice, patool &
+Apache Tika test with stood in for the formats nothing on a test host writes, such as WordPerfect,
+Apple Pages, CorelDRAW, Visio, ARJ, CAB & LZH. A declaration the conversions showed untrue was
+corrected rather than offered. Inkscape 1.2 imports no DXF without a display & no CGM, & stops with
+an internal error writing a POV-Ray file of any drawing holding a rectangle or a circle. FFMPEG reads
+MicroDVD, JACOsub & MPL2 & has no encoder for any of them. Dia 0.98 has no jpg, bmp, tif or wmf filter,
+writes an empty CGM, & opens neither a CGM nor a shape. LibreOffice never wrote a PowerPoint add-in,
+so ppa left the presentation outputs. The one DMG found was a damaged HFS image 7-Zip rightly refuses,
+so dmg is still not offered.
+
+NO MACRO RUNS WHEN A DOCM OR AN XLSM IS CONVERTED. v4.2.8.
+A Word document & an Excel workbook whose VBA macro writes a marker into the file when it opens were
+converted to pdf, odt & ods in the sandbox, & no marker was written. The same files opened by
+LibreOffice with macros allowed write it, so the macros were real. LibreOffice's --convert-to never
+ran a document's macro in any test, even with its macro security set to low.
+
+A FILE HOLDING SEVERAL IMAGES IS READ AS ITS FIRST INTO A FORMAT HOLDING ONE. v4.2.8.
+ImageMagick reads a layered PSD as its layers & a GIF as its frames, & writes a numbered file for each
+into a format that holds one image, & never the file asked for, so the conversion failed with 8000.
+The pipeline reads [0] there, which for a PSD is the image its layers flatten to, & reads every image
+into gif, tiff, pdf, webp & ico, which hold several. The frame is escaped apart from the path, so the
+sandbox finds the path it rewrites. ImageMagick 7 with Ghostscript 10 renders only a PDF's first page.
+
+IMAGEMAGICK IS TOLD THE FORMAT IT WRITES. v4.2.8.
+Asked for a format it has no encoder for, ImageMagick warns & writes the format it read under the name
+it was given, so a server whose libheif had no AV1 encoder handed out a png named avif & called it a
+success. The output is named FORMAT:path, & such a request now fails with 8000. On Ubuntu 24.04 libheif
+recommends its AV1 encoder & only suggests its HEVC decoder, so building ImageMagick there reads no heic.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1669,6 +1700,24 @@ administrator listed, so the warning is how a config.php written before v4.2.7 l
 The stream output list is built from the audio & video output lists once each has been through it,
 rather than read from config.php a second time, & the subtitle input list is lowercased like every
 other.
+
+A MENU NAMES ITS FAMILY. v4.2.8.
+convertFiles() asked the families in order & converted with the first whose lists held the pair. An
+interface draws a menu for every family that reads a file, & two can offer one output, so docx to pptx
+asked of the Markup menu went to the Document family, & LibreOffice makes no presentation of a text
+document. Each menu sends conversionFamily, & conversionFamilyFor() converts with that family where its
+pipeline serves the pair, & otherwise with the first family whose pipeline does. A pipeline's exclusion
+therefore moves a pair to the next family, which is how pdf to txt from the Document menu reaches
+Calibre. A workflow names no family & takes the same path without the first step.
+
+EVERY FAMILY HAS AN INPUT LIST & AN OUTPUT LIST. v4.2.8.
+The Document & Spreadsheet lists were each both, so a format LibreOffice reads & cannot write, such as
+WordPerfect, could not be offered. Each became two settings, as Presentation's had. The Archive family
+read --Supported Archive Formats-- for both directions while the archive menu was drawn from
+--Supported Dearchive Formats--, so a gz drew a menu that failed with 5006, & the Dearchive list is now
+its input list. The image, drawing & OpenSCAD lists, $UserImageArray, $UserDrawingArray &
+$UserSCADArray, were read by nothing but the interfaces once they read the input lists, & were retired.
+Model keeps its combined list until its importers are audited.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

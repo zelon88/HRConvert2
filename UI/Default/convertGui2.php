@@ -514,7 +514,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
            onclick="toggle_visibility('archiveOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); <?php if ($AllowUserURLDownload) { ?>toggle_visibility('urlfileOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); <?php } ?> toggle_visibility('archiveButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('archiveXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
-          if (in_array($extension, $DocumentArray) && in_array('Document', $OfferedConversionTypes)) { ?>
+          if (in_array($extension, $DocumentInputArray) && in_array('Document', $OfferedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='documentButton<?php echo $ConvertGuiCounter1; ?>' name='documentButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>document.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
@@ -535,7 +535,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
            onclick="toggle_visibility('ebookOptionsDiv<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('ebookButton<?php echo $ConvertGuiCounter1; ?>'); toggle_visibility('ebookXButton<?php echo $ConvertGuiCounter1; ?>');" title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
-          if (in_array($extension, $SpreadsheetArray) && in_array('Document', $OfferedConversionTypes)) { ?>
+          if (in_array($extension, $SpreadsheetInputArray) && in_array('Document', $OfferedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='spreadsheetButton<?php echo $ConvertGuiCounter1; ?>' name='spreadsheetButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>spreadsheet.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
@@ -562,7 +562,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
            onclick='toggle_visibility("presentationOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("presentationXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php }
 
-          if (in_array($extension, $ImageArray) && in_array('Image', $OfferedConversionTypes)) { ?>
+          if (in_array($extension, $ImageInputArray) && in_array('Image', $OfferedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='imageButton<?php echo $ConvertGuiCounter1; ?>' name='imageButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>photo.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
@@ -598,7 +598,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
            onclick='toggle_visibility("streamOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("streamXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
-          if (in_array($extension, $DrawingArray) && in_array('Drawing', $OfferedConversionTypes)) { ?>
+          if (in_array($extension, $DrawingInputArray) && in_array('Drawing', $OfferedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='drawingButton<?php echo $ConvertGuiCounter1; ?>' name='drawingButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
@@ -625,7 +625,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
            onclick='toggle_visibility("modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("modelXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
-          if ($extension === 'scad' && in_array('Scad', $OfferedConversionTypes)) { ?>
+          if (in_array($extension, $SCADInputArray) && in_array('Scad', $OfferedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='scadButton<?php echo $ConvertGuiCounter1; ?>' name='scadButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;'
@@ -901,7 +901,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           </select>
           <select id='pdfextension<?php echo $ConvertGuiCounter1; ?>' name='pdfextension<?php echo $ConvertGuiCounter1; ?>'>   
             <option value="pdf"><?php echo $Gui2Text18; ?></option>
-            <?php foreach ($DocumentArray as $gui2OcrArr) { ?>
+            <?php foreach ($DocumentOutputArray as $gui2OcrArr) { ?>
             <option value="<?php echo $gui2OcrArr; ?>"><?php echo $gui2OcrArr; ?></option>   
             <?php } ?>
           </select></p>
@@ -936,7 +936,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text53, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('archiveconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Archive')); ?>,
               <?php echo json_encode(array('extension' => 'archiveextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userarchivefilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
@@ -965,7 +965,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         <?php } ?>
         <?php } 
 
-        if (in_array($extension, $DocumentArray) && in_array('Document', $OfferedConversionTypes)) {
+        if (in_array($extension, $DocumentInputArray) && in_array('Document', $OfferedConversionTypes)) {
         ?>
         <div id='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='docOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:500px;"></p>
@@ -973,14 +973,14 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userdocfilename<?php echo $ConvertGuiCounter1; ?>' name='userdocfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='docextension<?php echo $ConvertGuiCounter1; ?>' name='docextension<?php echo $ConvertGuiCounter1; ?>'> 
             <option value="txt"><?php echo $Gui2Text18; ?></option>
-            <?php foreach ($DocumentArray as $gui2DocArr) { ?>
+            <?php foreach ($DocumentOutputArray as $gui2DocArr) { ?>
             <option value="<?php echo $gui2DocArr; ?>"><?php echo $gui2DocArr; ?></option>
             <?php } ?>
           </select></p>
           <input type="submit" id="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="docconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text54, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('docconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Document')); ?>,
               <?php echo json_encode(array('extension' => 'docextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userdocfilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
@@ -1001,13 +1001,13 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text82, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('ebookconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Ebook')); ?>,
               <?php echo json_encode(array('extension' => 'ebookextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userebookfilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
         <?php }
 
-        if (in_array($extension, $SpreadsheetArray) && in_array('Document', $OfferedConversionTypes)) {
+        if (in_array($extension, $SpreadsheetInputArray) && in_array('Document', $OfferedConversionTypes)) {
         ?>
         <div id='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='spreadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:500px;"></p>
@@ -1015,14 +1015,14 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' name='userspreadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='spreadextension<?php echo $ConvertGuiCounter1; ?>' name='spreadextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="ods"><?php echo $Gui2Text18; ?></option> 
-            <?php foreach ($SpreadsheetArray as $gui2SpreadArr) { ?>
+            <?php foreach ($SpreadsheetOutputArray as $gui2SpreadArr) { ?>
             <option value="<?php echo $gui2SpreadArr; ?>"><?php echo $gui2SpreadArr; ?></option>
             <?php } ?>
           </select></p>
           <input type="submit" id="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text55, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">        
           <script type='text/javascript'>
             HRC2.bindRun('spreadconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Document')); ?>,
               <?php echo json_encode(array('extension' => 'spreadextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userspreadfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
@@ -1044,7 +1044,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text56, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('xpsconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Document')); ?>,
               <?php echo json_encode(array('extension' => 'xpsextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userxpsfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
@@ -1065,7 +1065,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text56, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('presentationconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Document')); ?>,
               <?php echo json_encode(array('extension' => 'presentationextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userpresentationfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
@@ -1088,7 +1088,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text57, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('audioconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Audio')); ?>,
               <?php echo json_encode(array('bitrate' => 'bitrate'.$ConvertGuiCounter1, 'extension' => 'audioextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'useraudiofilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
@@ -1110,7 +1110,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text58, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('videoconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Video')); ?>,
               <?php echo json_encode(array('extension' => 'videoextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'uservideofilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
@@ -1142,7 +1142,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text59, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('streamconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Stream')); ?>,
               <?php // / The base address is posted as streamBaseURL, which is the name the core reads. ?>
               <?php echo json_encode(array('extension' => 'streamextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userstreamfilename'.$ConvertGuiCounter1, 'streamBaseURL' => 'streamBaseURL'.$ConvertGuiCounter1)); ?>);
           </script>
@@ -1165,21 +1165,21 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text60, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('modelconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Model')); ?>,
               <?php echo json_encode(array('extension' => 'modelextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'usermodelfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
         <?php } 
 
-        if ($extension === 'scad' && in_array('Scad', $OfferedConversionTypes)) {
+        if (in_array($extension, $SCADInputArray) && in_array('Scad', $OfferedConversionTypes)) {
         ?>
         <div id='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='scadOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:500px;"></p>
           <p><strong><?php echo $Gui2Text79; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userscadfilename<?php echo $ConvertGuiCounter1; ?>' name='userscadfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='scadextension<?php echo $ConvertGuiCounter1; ?>' name='scadextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value=""><?php echo $Gui2Text18; ?></option>
+            <option value="<?php echo htmlspecialchars((string)current(array_diff($SCADOutputArray, array($extension))), ENT_QUOTES, 'UTF-8'); ?>"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($SCADOutputArray as $gui2ScadArr) { ?>
             <option value="<?php echo $gui2ScadArr; ?>"><?php echo $gui2ScadArr; ?></option>
             <?php } ?>
@@ -1187,7 +1187,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text80, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('scadconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Scad')); ?>,
               <?php echo json_encode(array('extension' => 'scadextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userscadfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
@@ -1201,7 +1201,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p><strong><?php echo $Gui2Text75; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' name='usersubtitlefilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='subtitleextension<?php echo $ConvertGuiCounter1; ?>' name='subtitleextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value=""><?php echo $Gui2Text18; ?></option>
+            <option value="<?php echo htmlspecialchars((string)current(array_diff($SubtitleOutputArray, array($extension))), ENT_QUOTES, 'UTF-8'); ?>"><?php echo $Gui2Text18; ?></option>
             <?php foreach ($SubtitleOutputArray as $gui2SubArr) { ?>
             <option value="<?php echo $gui2SubArr; ?>"><?php echo $gui2SubArr; ?></option>
             <?php } ?>
@@ -1209,29 +1209,29 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text76, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('subtitleconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Subtitle')); ?>,
               <?php echo json_encode(array('extension' => 'subtitleextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'usersubtitlefilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
         </div>
         <?php } 
 
-        if (in_array($extension, $DrawingArray) && in_array('Drawing', $OfferedConversionTypes)) {
+        if (in_array($extension, $DrawingInputArray) && in_array('Drawing', $OfferedConversionTypes)) {
         ?>
         <div id='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='drawingOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:500px;"></p>
           <p><strong><?php echo $Gui2Text49; ?></strong></p>
           <p><?php echo $Gui2Text17; ?><input type="text" id='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' name='userdrawingfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='drawingextension<?php echo $ConvertGuiCounter1; ?>' name='drawingextension<?php echo $ConvertGuiCounter1; ?>'>
-            <option value="jpg"><?php echo $Gui2Text18; ?></option>
-            <?php foreach ($DrawingArray as $gui2DraArr) { ?>
+            <option value="<?php echo htmlspecialchars((string)current(array_diff($DrawingOutputArray, array($extension))), ENT_QUOTES, 'UTF-8'); ?>"><?php echo $Gui2Text18; ?></option>
+            <?php foreach ($DrawingOutputArray as $gui2DraArr) { ?>
             <option value="<?php echo $gui2DraArr; ?>"><?php echo $gui2DraArr; ?></option>
             <?php } ?>
           </select></p>
           <input type="submit" id="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text61, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
           <script type='text/javascript'>
             HRC2.bindRun('drawingconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Drawing')); ?>,
               <?php echo json_encode(array('extension' => 'drawingextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userdrawingfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
@@ -1255,7 +1255,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text61, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">     
           <script type='text/javascript'>
             HRC2.bindRun('svgconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'SVG')); ?>,
               <?php echo json_encode(array('width' => 'width'.$ConvertGuiCounter1, 'height' => 'height'.$ConvertGuiCounter1, 'extension' => 'svgextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'svgfilename'.$ConvertGuiCounter1)); ?>);
           </script>
 
@@ -1279,7 +1279,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="latexconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="latexconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text54, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('latexconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'LaTeX')); ?>,
               <?php echo json_encode(array('extension' => 'latexextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userlatexfilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
@@ -1300,7 +1300,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="dataconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="dataconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text242, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('dataconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Data')); ?>,
               <?php echo json_encode(array('extension' => 'dataextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userdatafilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
@@ -1321,7 +1321,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="traceconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="traceconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text245, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('traceconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Trace')); ?>,
               <?php echo json_encode(array('extension' => 'traceextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'usertracefilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
@@ -1342,7 +1342,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="emailconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="emailconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text247, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('emailconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Email')); ?>,
               <?php echo json_encode(array('extension' => 'emailextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'useremailfilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
@@ -1363,7 +1363,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="markupconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="markupconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text54, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('markupconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Markup')); ?>,
               <?php echo json_encode(array('extension' => 'markupextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'usermarkupfilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
@@ -1384,13 +1384,13 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id="graphconvertSubmit<?php echo $ConvertGuiCounter1; ?>" name="graphconvertSubmit<?php echo $ConvertGuiCounter1; ?>" value='<?php echo htmlspecialchars($Gui2Text254, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('graphconvertSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Graph')); ?>,
               <?php echo json_encode(array('extension' => 'graphextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'usergraphfilename'.$ConvertGuiCounter1)); ?>);
           </script>
         </div>
         <?php }
 
-        if (in_array($extension, $ImageArray) && in_array('Image', $OfferedConversionTypes)) {
+        if (in_array($extension, $ImageInputArray) && in_array('Image', $OfferedConversionTypes)) {
         ?>
         <div id='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='imageOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:450px; display:none;">
           
@@ -1410,7 +1410,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <input type="submit" id='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' name='convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars($Gui2Text62, ENT_QUOTES, 'UTF-8'); ?>' onclick="toggle_visibility('loadingCommandDiv<?php echo $ConvertGuiCounter1; ?>');">
           <script type='text/javascript'>
             HRC2.bindRun('convertPhotoSubmit<?php echo $ConvertGuiCounter1; ?>', '<?php echo $ConvertGuiCounter1; ?>',
-              <?php echo json_encode(array('convertSelected' => $File)); ?>,
+              <?php echo json_encode(array('convertSelected' => $File, 'conversionFamily' => 'Image')); ?>,
               <?php echo json_encode(array('rotate' => 'rotate'.$ConvertGuiCounter1, 'width' => 'width'.$ConvertGuiCounter1, 'height' => 'height'.$ConvertGuiCounter1, 'extension' => 'photoextension'.$ConvertGuiCounter1, 'userconvertfilename' => 'userphotofilename'.$ConvertGuiCounter1)); ?>);
           </script>
 

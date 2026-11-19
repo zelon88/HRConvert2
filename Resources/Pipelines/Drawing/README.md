@@ -1,6 +1,6 @@
 # The Drawing pipeline
 
-The Drawing pipeline converts files. It accepts 7 input format(s) & produces 18 output format(s).
+The Drawing pipeline converts files. It accepts 5 input format(s) & produces 13 output format(s).
 
 This file is written by `Documentation/Build/hrconvert2-approvals.py --readme`.
 It is rewritten from the pipeline's own declarations & from the dependency manifest,
@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.1
+- **Version** v4.2.8
 - **Kind** conversion
 - **Family** Drawing
 - **Entry point** convertDrawings
@@ -18,9 +18,9 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## Formats
 
-**Accepts** dia, dxf, fig, vdx, wpg, shape, cgm
+**Accepts** dia, dxf, fig, vdx, wpg
 
-**Produces** dia, dxf, fig, vdx, wpg, shape, cgm, png, jpg, bmp, tif, eps, pdf, svg, wmf, emf, plt, tex
+**Produces** dia, dxf, fig, vdx, wpg, shape, png, eps, pdf, svg, emf, plt, tex
 
 ## Dependencies
 

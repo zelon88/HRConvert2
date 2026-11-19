@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.7.
+// / v4.2.8.
 // / This file declares what the Ebook conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.7';
+$PipelineVersion = 'v4.2.8';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -85,17 +85,21 @@ $PipelineRequestFields = array('Extension');
 // / output unless the pair appears in $PipelineExclude below.
 // / Calibre reads pml & writes it only zipped, as pmlz, so pml is an input alone.
 // / A recipe is not read, from v4.2.7, because it is a Python program calibre runs, & the core refuses one before it arrives.
+// / azw4, fbz, prc, txt, rtf, odt, docx & pdf are read, from v4.2.8, as config.php has long offered.
 $Capabilities = array(
-  'Input' => array('epub', 'mobi', 'azw', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txtz', 'htmlz', 'cbz', 'cbr', 'cbc', 'chm'),
+  'Input' => array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz', 'lit', 'lrf', 'pdb', 'pml', 'prc', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'odt', 'docx', 'pdf', 'htmlz', 'cbz', 'cbr', 'cbc', 'chm'),
   'Output' => array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pmlz', 'rb', 'snb', 'tcr', 'txtz', 'htmlz', 'txt', 'rtf', 'docx', 'pdf'));
 
 // / Pairs removed from the cross product above, written as 'input>output'.
 // / A conversion that produces the format it was handed is not a conversion. Calibre will
 // / happily be asked to do it & will produce something, & that something is not what the
 // / user asked for. Refusing the pair here means the menu never offers it.
+// / txt, rtf, docx & pdf are excluded from v4.2.8. The Document family claims each first & refuses it, & until v4.2.8 the first family
+// / that claimed a pair was the only one asked. The family that serves a pair is now asked before one that only claims it.
 $PipelineExclude = array(
   'epub>epub', 'mobi>mobi', 'azw3>azw3', 'fb2>fb2', 'lit>lit', 'lrf>lrf',
-  'pdb>pdb', 'pml>pml', 'rb>rb', 'snb>snb', 'tcr>tcr', 'txtz>txtz', 'htmlz>htmlz');
+  'pdb>pdb', 'pml>pml', 'rb>rb', 'snb>snb', 'tcr>tcr', 'txtz>txtz', 'htmlz>htmlz',
+  'txt>txt', 'rtf>rtf', 'docx>docx', 'pdf>pdf');
 
 // / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
 // / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.

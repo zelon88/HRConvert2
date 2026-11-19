@@ -1,6 +1,6 @@
 # The Audio pipeline
 
-The Audio pipeline converts files. It accepts 19 input format(s) & produces 13 output format(s).
+The Audio pipeline converts files. It accepts 34 input format(s) & produces 14 output format(s).
 
 This file is written by `Documentation/Build/hrconvert2-approvals.py --readme`.
 It is rewritten from the pipeline's own declarations & from the dependency manifest,
@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.1
+- **Version** v4.2.8
 - **Kind** conversion
 - **Family** Audio
 - **Entry point** convertAudio
@@ -18,9 +18,9 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## Formats
 
-**Accepts** mp3, wav, flac, ogg, oga, opus, aac, m4a, wma, aiff, aif, au, ac3, amr, ape, mka, ra, voc, caf
+**Accepts** mp3, wav, flac, ogg, oga, opus, aac, m4a, wma, aiff, aif, au, ac3, amr, ape, mka, ra, voc, caf, mp4, m4v, mkv, webm, avi, mov, wmv, asf, flv, mpg, mpeg, ogv, 3gp, vob, rm
 
-**Produces** mp3, wav, flac, ogg, oga, opus, aac, m4a, wma, aiff, au, ac3, mka
+**Produces** mp3, mp2, wav, flac, ogg, oga, opus, aac, m4a, wma, aiff, au, ac3, mka
 
 ## Dependencies
 

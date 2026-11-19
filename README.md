@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <strong>490+ formats</strong> · <strong>26 languages</strong> · <strong>runs on a Raspberry Pi</strong><br>
+  <strong>560+ formats</strong> · <strong>26 languages</strong> · <strong>runs on a Raspberry Pi</strong><br>
   <strong><a href="#-workflows-that-save-the-clicking">multi-step workflows</a></strong> · <strong><a href="#-optional-accounts-still-no-cookies">optional accounts</a></strong> · <strong>no cookies, database or tracking</strong>
 </p>
 
@@ -177,22 +177,22 @@ sudo php convertCore.php -fp    # Repair permissions & the web server setup
 
 ---
 
-## 📦 490+ Formats
+## 📦 560+ Formats
 
 | Category | Examples |
 | :--- | :--- |
-| **Documents** | doc, docx, odt, rtf, txt, pdf |
-| **Spreadsheets** | xls, xlsx, ods, csv |
+| **Documents** | doc, docx, odt, rtf, txt, pdf, WordPerfect wpd, Apple pages |
+| **Spreadsheets** | xls, xlsx, xlsm, ods, csv |
 | **Presentations** | ppt, pptx, odp |
-| **Images** | jpg, png, gif, webp, heic, avif, svg, ico, tiff |
+| **Images** | jpg, png, gif, webp, heic, avif, jxl, psd, tga, ico, tiff |
 | **Video** | mp4, mkv, avi, mov, webm, flv, and 50+ more |
-| **Audio** | mp3, flac, aac, wav, opus, wma, and 30+ more |
+| **Audio** | mp3, flac, aac, wav, opus, wma, the sound of a video, and 30+ more |
 | **Subtitles** | srt, vtt, ass, sub, sbv, ttml, and more |
-| **E-Books** | epub, mobi, azw, azw3, azw4 |
-| **Archives** | zip, rar, 7z, tar, gz, bz2 |
+| **E-Books** | epub, mobi, azw, azw3, azw4, htmlz |
+| **Archives** | zip, rar, 7z, tar, gz, bz2, xz, cab, arj, deb, rpm |
 | **Extract** | Every file an archive holds, placed beside it, within the size & count limits you set |
 | **3D Models** | obj, stl, ply, collada, and OpenSCAD sources |
-| **Drawings & Vectors** | dxf, dia, vdx, svg |
+| **Drawings & Vectors** | dxf, dia, vdx, svg, ai, emf, CorelDRAW cdr, Visio vsd |
 | **Tracing** | Trace a logo, a signature or a scanned drawing into svg, dxf, pdf or eps outlines |
 | **Data Files** | json, yaml, toml, xml & csv, into one another |
 | **LaTeX** | Typeset a tex document into a pdf |

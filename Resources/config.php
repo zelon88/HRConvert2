@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 // /   The version of HRConvert2 in which this config file last gained or lost a setting.
 // /   The core refuses to run against a config file that is missing settings it requires.
 // /   Do not change this value by hand. An update & --config --repair keep it current.
-$ConfigVersion = 'v4.2.6';
+$ConfigVersion = 'v4.2.8';
 // / ------------------------------
 
 // / ------------------------------
@@ -1353,53 +1353,70 @@ $MaxConcurrentWorkflows = 4;
 // / ------------------------------
 // / ---Supported File Format Information---
 // /
-// /  --Supported Archive Formats--.
-$UserArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso');
+// /  --Supported Archive Formats--
+// /   What an archive may be written as, & what a selection of files may be archived in. It is the Archive family's output list, from v4.2.8.
+// /   gz, bz2 & xz are written as a tar compressed that way, because an archive holds folders, & tgz is a gz by its other name.
+// /   rar is written by the RAR utility, which is installed apart from 7-Zip, & a server without it refuses rar with error 13013.
+$UserArchiveArray = array('zip', 'rar', 'tar', '7z', 'iso', 'gz', 'tgz', 'bz2', 'xz', 'wim');
 // /  --Supported Bootable ISO Output Formats--.
 $UserBootableIsoArray = array('iso_mbr-boot', 'iso_gpt-boot', 'iso_gpt-boot-x86', 'iso_gpt-boot-x86-64', 'iso_gpt-boot-arm32', 'iso_gpt-boot-arm64');
-// /  --Supported Dearchive Formats--.
-$UserDearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz', 'cbr', 'cbz');
-// /  --Supported Document Formats--.
-$UserDocumentArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf');
-// /  --Supported Spreadsheet Formats--.
-$UserSpreadsheetArray = array('csv', 'xls', 'xlsx', 'ods');
+// /  --Supported Dearchive Formats--
+// /   What an archive may be read from. It is the Archive family's input list, from v4.2.8, the list Extract reads from, & the list a file's
+// /   archive menu is drawn for. Until v4.2.8 the Archive family read --Supported Archive Formats--, so a gz drew a menu that then failed.
+// /   A tar.gz & a tar.bz2 are matched by their last extension, as every file is, so gz & bz2 are what read them.
+$UserDearchiveArray = array('zip', 'rar', 'tar', 'bz', 'gz', 'bz2', '7z', 'iso', 'vhd', 'vdi', 'tar.bz2', 'tar.gz', 'cbr', 'cbz', 'tgz', 'tbz', 'txz', 'xz', 'lzma', 'z', 'cpio', 'deb', 'rpm', 'wim', 'arj', 'cab', 'lzh');
+// /  --Supported Document Input Formats--
+// /   The documents a user may convert FROM, from v4.2.8. Until then one list was both, so a format LibreOffice reads & does not write could
+// /   not be offered. docm & dotx are read & never written, & no macro a document carries is run, because LibreOffice converts without them.
+// /   wpd, abw & pages are WordPerfect, AbiWord & Apple Pages documents, which LibreOffice reads & cannot write.
+$UserDocumentInputArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf', 'docm', 'dot', 'dotx', 'ott', 'fodt', 'wpd', 'abw', 'pages');
+// /  --Supported Document Output Formats--
+// /   The documents a user may convert TO, from v4.2.8. ott is an OpenDocument template & fodt an OpenDocument text saved as one XML file.
+// /   A pdf becomes txt by the E-Book family, because LibreOffice opens a PDF as a drawing, which has no text to write.
+$UserDocumentOutputArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf', 'ott', 'fodt');
+// /  --Supported Spreadsheet Input Formats--
+// /   The spreadsheets a user may convert FROM, from v4.2.8. xlsm is read & never written, & no macro it carries is run.
+// /   ots is an OpenDocument template & fods an OpenDocument spreadsheet saved as one XML file.
+$UserSpreadsheetInputArray = array('csv', 'xls', 'xlsx', 'ods', 'xlsm', 'ots', 'fods');
+// /  --Supported Spreadsheet Output Formats--
+// /   The spreadsheets a user may convert TO, from v4.2.8.
+$UserSpreadsheetOutputArray = array('csv', 'xls', 'xlsx', 'ods');
 // /  --Supported XPS Input Formats--.
 $UserXPSInputArray = array('xps', 'oxps');
 // /  --Supported XPS Output Formats--.
 $UserXPSOutputArray = array('pdf');
 // /  --Supported Presentation Input Formats--.
-$UserPresentationInputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'ppa', 'odp');
+// /   otp is an OpenDocument template & fodp an OpenDocument presentation saved as one XML file, from v4.2.8.
+$UserPresentationInputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'ppa', 'odp', 'otp', 'fodp');
 // /  --Supported Presentation Output Formats--.
-$UserPresentationOutputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'ppa', 'odp', 'pdf');
-// /  --Supported Image Formats--.
-$UserImageArray = array('jpeg', 'jpg', 'jpe', 'png', 'bmp', 'gif', 'webp', 'cin', 'dds', 'dib', 'flif', 'avif', 'gplt', 'sct', 'xcf', 'heic', 'ico', 'tiff', 'tif', 'heif', 'jp2', 'j2k', 'jxl');
-// /   Ten formats were offered as uploads the pipeline never claimed & eleven as outputs it
-// /   cannot write. Each one was accepted by the interface & refused by the converter.
+// /   ppa is not written, from v4.2.8. LibreOffice has never written a PowerPoint add-in, & every request for one failed.
+$UserPresentationOutputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'odp', 'pdf');
 // /  --Supported Image Input Formats--
 // /   What a user may upload. Every entry is a format the Image pipeline declares
 // /   as an input, so nothing here is offered & then refused.
-$UserImageInputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'heic', 'ico', 'tiff', 'tif', 'jp2');
+// /   A layered psd is read as the image its layers flatten to, & a pdf, gif or tiff of several images is read as its first when the
+// /   output holds one, from v4.2.8. Until then such a file was written as a file for each image, & the conversion failed.
+$UserImageInputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'heic', 'ico', 'tiff', 'tif', 'jp2', 'jpe', 'dib', 'j2k', 'jxl', 'heif', 'tga', 'pcx', 'pnm', 'pbm', 'pgm', 'ppm', 'xpm', 'xbm', 'hdr', 'dpx', 'cin', 'psd', 'pdf');
 // /  --Supported Image Output Formats--
 // /   What a user may ask for. Every entry is a format the pipeline declares as an
 // /   output.
-$UserImageOutputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'ico', 'tiff', 'tif', 'jp2');
+// /   avif is written only where libheif has an AV1 encoder. ImageMagick is told the format it writes, from v4.2.8, so a server without
+// /   one refuses avif. Until then it wrote a png under the name asked for.
+$UserImageOutputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'ico', 'tiff', 'tif', 'jp2', 'jpe', 'dib', 'j2k', 'jxl', 'tga', 'pcx', 'pnm', 'pbm', 'pgm', 'ppm', 'xpm', 'hdr', 'cin', 'pdf', 'eps');
 // /  --Supported Audio Input Formats--.
-$UserMediaInputArray = array('sox', 'spdif', 'spx', 'tta', 'u16be', 'u16le', 'u24be', 'u24le', 'u32be', 'u32le', 'u8', 'voc', 'wav', 'wv', 'wsaud', 'mulaw', 'mxf', 'mxf_d10', 'mxf_opatom', 'oga', 'ogg', 'opus', 'oss', 'psp', 'rawvideo', 's16be', 's16le', 's24be', 's24le', 's32be', 's32le', 's8', 'sbc', 'ilbc', 'ircam', 'latm', 'lrc', 'mp2', 'mp3', 'mlp', 'flac', 'g722', 'g723_1', 'g726', 'g726le', 'gsm', 'caf', 'daud', 'dts', 'eac3', 'f32be', 'f32le', 'f64be', 'f64le', 'ac3', 'ac4', 'adts', 'aiff', 'alaw', 'amr', 'aptx', 'aptx_hd', 'argo_asf', 'argo_cvg', 'ast', 'au', 'a64', 'aa', 'aac', 'aax', 'acm', 'act', 'adp', 'adx', 'aea', 'afc', 'aix', 'alp', 'amrnb', 'amrwb', 'apac', 'apc', 'ape', 'apm', 'binka', 'bit', 'boa', 'bonk', 'brstm', 'dfpwm', 'dsf', 'dss', 'epaf', 'fsb', 'fwse', 'g729', 'hca', 'idf', 'kux', 'kvag', 'laf', 'lavfi', 'loas', 'luodat', 'lvf', 'lxf', 'mca', 'mcc', 'megsts', 'mlv', 'mmf', 'mods', 'moflex', 'mpc8', 'msf', 'msnwctcp', 'mtaf', 'musx', 'nc', 'nistsphere', 'nsp', 'paf', 'pam_pipe', 'pbm_pipe', 'pfm_pipe', 'pp_bnk', 'psxstr', 'pva', 'pvf', 'qcp', 'rka', 'rl2', 'rpl', 'rso', 's337m', 'sap', 'sbg', 'scd', 'sdns', 'sdp', 'sds', 'sdx', 'siff', 'simbiosis_imx', 'sln', 'smk', 'smush', 'sol', 'svag', 'svs', 'tak', 'thp', 'tierexseq', 'tty', 'ty', 'usm', 'vag', 'vidc', 'vpk', 'vqf', 'w64', 'wady', 'wavarc', 'wsd', 'wsvqa', 'wve', 'xa', 'xbin', 'xbm_pipe', 'xmd', 'xpm_pipe', 'xwma', 'yop', 'wma', 'm4a');
+// /   A video is read for its sound, from v4.2.8, so mp4, mkv, avi, mov, webm & the other video containers here become audio from the Audio menu.
+$UserMediaInputArray = array('sox', 'spdif', 'spx', 'tta', 'u16be', 'u16le', 'u24be', 'u24le', 'u32be', 'u32le', 'u8', 'voc', 'wav', 'wv', 'wsaud', 'mulaw', 'mxf', 'mxf_d10', 'mxf_opatom', 'oga', 'ogg', 'opus', 'oss', 'psp', 'rawvideo', 's16be', 's16le', 's24be', 's24le', 's32be', 's32le', 's8', 'sbc', 'ilbc', 'ircam', 'latm', 'lrc', 'mp2', 'mp3', 'mlp', 'flac', 'g722', 'g723_1', 'g726', 'g726le', 'gsm', 'caf', 'daud', 'dts', 'eac3', 'f32be', 'f32le', 'f64be', 'f64le', 'ac3', 'ac4', 'adts', 'aiff', 'alaw', 'amr', 'aptx', 'aptx_hd', 'argo_asf', 'argo_cvg', 'ast', 'au', 'a64', 'aa', 'aac', 'aax', 'acm', 'act', 'adp', 'adx', 'aea', 'afc', 'aix', 'alp', 'amrnb', 'amrwb', 'apac', 'apc', 'ape', 'apm', 'binka', 'bit', 'boa', 'bonk', 'brstm', 'dfpwm', 'dsf', 'dss', 'epaf', 'fsb', 'fwse', 'g729', 'hca', 'idf', 'kux', 'kvag', 'laf', 'lavfi', 'loas', 'luodat', 'lvf', 'lxf', 'mca', 'mcc', 'megsts', 'mlv', 'mmf', 'mods', 'moflex', 'mpc8', 'msf', 'msnwctcp', 'mtaf', 'musx', 'nc', 'nistsphere', 'nsp', 'paf', 'pam_pipe', 'pbm_pipe', 'pfm_pipe', 'pp_bnk', 'psxstr', 'pva', 'pvf', 'qcp', 'rka', 'rl2', 'rpl', 'rso', 's337m', 'sap', 'sbg', 'scd', 'sdns', 'sdp', 'sds', 'sdx', 'siff', 'simbiosis_imx', 'sln', 'smk', 'smush', 'sol', 'svag', 'svs', 'tak', 'thp', 'tierexseq', 'tty', 'ty', 'usm', 'vag', 'vidc', 'vpk', 'vqf', 'w64', 'wady', 'wavarc', 'wsd', 'wsvqa', 'wve', 'xa', 'xbin', 'xbm_pipe', 'xmd', 'xpm_pipe', 'xwma', 'yop', 'wma', 'm4a', 'mp4', 'm4v', 'mkv', 'webm', 'avi', 'mov', 'wmv', 'asf', 'flv', 'mpg', 'mpeg', 'ogv', '3gp', 'vob', 'rm', 'aif', 'mka', 'ra');
 // /  --Supported Audio Output Formats--.
-$UserMediaOutputArray = array('mp3', 'aac', 'ogg', 'wma', 'mp2', 'flac', 'm4a');
+$UserMediaOutputArray = array('mp3', 'aac', 'ogg', 'wma', 'mp2', 'flac', 'm4a', 'wav', 'oga', 'opus', 'aiff', 'au', 'ac3', 'mka');
 // /  --Supported Video Input Formats--.
-$UserVideoInputArray = array('smoothstreaming', 'svcd', 'swf', 'truehd', 'vc1', 'vc1test', 'vcd', 'vob', 'vvc', 'webm', 'yuv4mpegpipe', 'mpjpeg', 'mxf', 'mxf_d10', 'mxf_opatom', 'nut', 'obu', 'ogv', 'psp', 'rawvideo', 'rm', 'roq', 'rtp_mpegts', 'smjpeg', 'hevc', 'hls', 'image2', 'image2pipe', 'ipod', 'ismv', 'm4v', 'matroska', 'mjpeg', 'mkvtimestamp_v2', 'mov', 'mp4', 'mpeg', 'mpeg1video', 'mpeg2video', 'mpegts', 'mpegtsraw', 'mpegvideo', 'fbdev', 'film_cpk', 'filmstrip', 'gxf', 'h261', 'h263', 'h264', 'hds', 'avs2', 'avs3', 'cavsvideo', 'cavs', 'dirac', 'dnxhd', 'dv', 'dvd', 'evc', '3g2', '3gp', 'apng', 'argo_asf', 'argo_cvg', 'asf', 'asf_stream', 'avi', 'avif', 'avm2', '3dostr', '4xm', 'adf', 'ads', 'alias_pix', 'anm', 'argo_brp', 'asf_o', 'av1', 'avs', 'bethsoftvid', 'bfi', 'bink', 'bmv', 'brender_pix', 'brender', 'cdg', 'cdxl', 'cine', 'concat', 'cri', 'dcstr', 'derf', 'dfa', 'dhav', 'dsicin', 'dtshd', 'dxa', 'ea', 'exr', 'fits', 'flic', 'frm', 'gdv', 'genh', 'gif', 'idcin', 'iff', 'ifv', 'ingenient', 'ipmovie', 'iss', 'iv8', 'ivf', 'ivr', 'j2k', 'jp2', 'jv', 'live_flv', 'lmlm4', 'mtv', 'mv', 'mvi', 'mxg', 'nsv', 'nuv', 'osq', 'pcx_pipe', 'pdv', 'pgm_pipe', 'pgmuv_pipe', 'pgx_pipe', 'phm_pipe', 'protocol_pipe', 'pictor_pipe', 'png_pipe', 'ppm_pipe', 'psd_pipe', 'qdraw_pipe', 'qoi_pipe', 'r3d', 'redspark', 'rroq', 'rsd', 'rtsp', 'sdr2', 'ser', 'sga', 'sgi_pipe', 'shn', 'sunrast_pipe', 'svg_pipe', 'tiff_pipe', 'tmv', 'v210', 'v210x', 'vbn_pipe', 'video4linux2', 'v4l2', 'vividas', 'vivo', 'vmd', 'wc3movie', 'webm_dash_manifest', 'webp_pipe', 'wtv', 'xmv', 'xvag', 'xwd_pipe', 'mkv', 'wmv');
+$UserVideoInputArray = array('smoothstreaming', 'svcd', 'swf', 'truehd', 'vc1', 'vc1test', 'vcd', 'vob', 'vvc', 'webm', 'yuv4mpegpipe', 'mpjpeg', 'mxf', 'mxf_d10', 'mxf_opatom', 'nut', 'obu', 'ogv', 'psp', 'rawvideo', 'rm', 'roq', 'rtp_mpegts', 'smjpeg', 'hevc', 'hls', 'image2', 'image2pipe', 'ipod', 'ismv', 'm4v', 'matroska', 'mjpeg', 'mkvtimestamp_v2', 'mov', 'mp4', 'mpeg', 'mpeg1video', 'mpeg2video', 'mpegts', 'mpegtsraw', 'mpegvideo', 'fbdev', 'film_cpk', 'filmstrip', 'gxf', 'h261', 'h263', 'h264', 'hds', 'avs2', 'avs3', 'cavsvideo', 'cavs', 'dirac', 'dnxhd', 'dv', 'dvd', 'evc', '3g2', '3gp', 'apng', 'argo_asf', 'argo_cvg', 'asf', 'asf_stream', 'avi', 'avif', 'avm2', '3dostr', '4xm', 'adf', 'ads', 'alias_pix', 'anm', 'argo_brp', 'asf_o', 'av1', 'avs', 'bethsoftvid', 'bfi', 'bink', 'bmv', 'brender_pix', 'brender', 'cdg', 'cdxl', 'cine', 'concat', 'cri', 'dcstr', 'derf', 'dfa', 'dhav', 'dsicin', 'dtshd', 'dxa', 'ea', 'exr', 'fits', 'flic', 'frm', 'gdv', 'genh', 'gif', 'idcin', 'iff', 'ifv', 'ingenient', 'ipmovie', 'iss', 'iv8', 'ivf', 'ivr', 'j2k', 'jp2', 'jv', 'live_flv', 'lmlm4', 'mtv', 'mv', 'mvi', 'mxg', 'nsv', 'nuv', 'osq', 'pcx_pipe', 'pdv', 'pgm_pipe', 'pgmuv_pipe', 'pgx_pipe', 'phm_pipe', 'protocol_pipe', 'pictor_pipe', 'png_pipe', 'ppm_pipe', 'psd_pipe', 'qdraw_pipe', 'qoi_pipe', 'r3d', 'redspark', 'rroq', 'rsd', 'rtsp', 'sdr2', 'ser', 'sga', 'sgi_pipe', 'shn', 'sunrast_pipe', 'svg_pipe', 'tiff_pipe', 'tmv', 'v210', 'v210x', 'vbn_pipe', 'video4linux2', 'v4l2', 'vividas', 'vivo', 'vmd', 'wc3movie', 'webm_dash_manifest', 'webp_pipe', 'wtv', 'xmv', 'xvag', 'xwd_pipe', 'mkv', 'wmv', 'flv', 'mpg');
 // /  --Supported Video Output Formats--.
-$UserVideoOutputArray = array('3gp', 'mkv', 'avi', 'mp4', 'mpeg', 'wmv', 'mov', 'm4v');
+// /   ogv is written as Theora & Vorbis, & every other format here as H.264.
+$UserVideoOutputArray = array('3gp', 'mkv', 'avi', 'mp4', 'mpeg', 'wmv', 'mov', 'm4v', 'ogv', 'flv', 'ts', 'mpg');
 // /  --Supported Stream Formats--.
 $UserStreamArray = array('m3u8', 'ts');
 // /   The old array offered ts as an upload & m3u8 as an output, which is each direction
 // /   backwards. A stream is fetched as a playlist & written as a media file.
-// /  --Supported Drawing Formats--.
-$UserDrawingArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
-// /   Every format offered is both read & written, so the two lists are identical today.
-// /   They are separate because the pipeline writes eighteen formats & only five are
-// /   offered, & adding an output no longer means offering it as an upload.
 // /  --Supported Drawing Input Formats--
 // /   What a user may upload. Every entry is a format the Drawing pipeline declares
 // /   as an input, so nothing here is offered & then refused.
@@ -1407,11 +1424,15 @@ $UserDrawingInputArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
 // /  --Supported Drawing Output Formats--
 // /   What a user may ask for. Every entry is a format the pipeline declares as an
 // /   output.
-$UserDrawingOutputArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg');
+// /   Dia writes a diagram as a picture, a page or a drawing for another program as well, from v4.2.8. plt is for a pen plotter, & tex is
+// /   a LaTeX picture drawn with PGF.
+$UserDrawingOutputArray = array('dxf', 'vdx', 'fig', 'dia', 'wpg', 'shape', 'png', 'svg', 'pdf', 'eps', 'emf', 'plt', 'tex');
 // /  --Supported SVG Input Formats--.
-$UserSVGInputArray = array('svg', 'plain-svg');
+// /   Inkscape imports ai, cdr, vsd, emf & wmf drawings, & a pdf's first page, from v4.2.8. eps & ps are not read, because a PostScript file is a program.
+$UserSVGInputArray = array('svg', 'plain-svg', 'svgz', 'ai', 'pdf', 'emf', 'wmf', 'cdr', 'vsd');
 // /  --Supported SVG Output Formats--.
-$UserSVGOutputArray = array('png', 'pdf', 'ps', 'eps', 'emf', 'wmf');
+// /   hpgl is for a pen plotter, & tex is a LaTeX picture drawn with PSTricks.
+$UserSVGOutputArray = array('png', 'pdf', 'ps', 'eps', 'emf', 'wmf', 'svg', 'svgz', 'dxf', 'hpgl', 'tex');
 // /  --Supported Model Formats--
 // /   This array was offered as both the input list & the output list, which the audio,
 // /   video & vector converters each split in two. The two below carry those directions.
@@ -1432,53 +1453,44 @@ $UserModelInputArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', '
 // /   bundle does not carry, & a format that works most of the time is worse than one that
 // /   was never offered.
 $UserModelOutputArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf', 'x', 'ctm', 'wrl', 'assbin', 'json');
-// /  --Supported OpenSCAD Formats--
-// /   The first entry must be scad, which is the only input format this converter accepts.
-// /   Every remaining entry is an export format OpenSCAD can produce from 3D geometry.
-// /   DXF & SVG are deliberately absent from this list.
-// /   OpenSCAD can only export those from 2D geometry such as square(), circle() or projection().
-// /   A model built from cube() cannot produce them & HRConvert2 cannot know which a source is.
-// /   Offering them would produce confusing failures for the overwhelming majority of uploads.
-// /   PNG is deliberately absent because a useful render would require camera & image size arguments.
-$UserSCADArray = array('scad', 'stl', 'off', 'amf', '3mf', 'csg');
-// /   The old array carried scad first & relied on that position to mean input. Everything
-// /   after it was an output. A positional convention is not a declaration & nothing
-// /   enforced it.
 // /  --Supported SCAD Input Formats--
 // /   What a user may upload. Every entry is a format the Scad pipeline declares
 // /   as an input, so nothing here is offered & then refused.
 $UserSCADInputArray = array('scad');
 // /  --Supported SCAD Output Formats--
-// /   What a user may ask for. Every entry is a format the pipeline declares as an
-// /   output.
+// /   What a user may ask for. Every entry is an export format OpenSCAD produces from 3D geometry.
+// /   DXF & SVG are deliberately absent. OpenSCAD exports those only from 2D geometry such as square(), circle() or projection(),
+// /   a model built from cube() cannot produce them, & HRConvert2 cannot know which a source is.
+// /   PNG is deliberately absent because a useful render would require camera & image size arguments.
 $UserSCADOutputArray = array('stl', 'off', 'amf', '3mf', 'csg');
 // /  --Supported Subtitle Input Formats--.
-$UserSubtitleInputArray = array('sub', 'sbv', 'srt', 'stream_segment', 'ssegment', 'streamhash', 'sup', 'subtitles', 'ttml', 'uncodedframecrc', 'webvtt', 'wtv', 'oma', 'rso', 'rtp', 'rtsp', 'scc', 'sdl', 'sdl2', 'segment', 'sap', 'jacosub', 'kvag', 'microdvd', 'ffmetadata', 'fifo', 'fifo_test', 'fits', 'framecrc', 'framehash', 'framemd5', 'dash', 'crc', 'dvbsub', 'dvbtxt', 'gsm', 'ass', 'vobsub', 'mpl2', 'mpsub', 'pjs', 'realtext', 'sami', 'stl', 'subviewer', 'subviewer1', 'tedcaptions', 'txd', 'vtt', 'ssa', 'dvb', 'vplayer');
+$UserSubtitleInputArray = array('sub', 'sbv', 'srt', 'stream_segment', 'ssegment', 'streamhash', 'sup', 'subtitles', 'ttml', 'uncodedframecrc', 'webvtt', 'wtv', 'oma', 'rso', 'rtp', 'rtsp', 'scc', 'sdl', 'sdl2', 'segment', 'sap', 'jacosub', 'kvag', 'microdvd', 'ffmetadata', 'fifo', 'fifo_test', 'fits', 'framecrc', 'framehash', 'framemd5', 'dash', 'crc', 'dvbsub', 'dvbtxt', 'gsm', 'ass', 'vobsub', 'mpl2', 'mpsub', 'pjs', 'realtext', 'sami', 'stl', 'subviewer', 'subviewer1', 'tedcaptions', 'txd', 'vtt', 'ssa', 'dvb', 'vplayer', 'smi');
 // /  --Supported Subtitle Output Formats--.
-$UserSubtitleOutputArray = array('vtt', 'ssa', 'ass', 'srt');
+// /   ttml is written, from v4.2.8. FFMPEG reads MicroDVD, JACOsub & MPL2 & writes none of them.
+$UserSubtitleOutputArray = array('vtt', 'ssa', 'ass', 'srt', 'ttml');
 // /  --Supported OCR Formats--.
 $UserPDFWorkArr = array('pdf', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif');
 // /  --Supported Ebook Input Formats--
 // /   The e-book formats a user may convert FROM.
-// /   Several of these overlap with the document & archive formats on purpose. The routing
-// /   loop tries the document & archive families FIRST, so an ordinary docx to pdf stays
-// /   with LibreOffice & a cbz to cbr stays with 7-Zip. Only a pair that no earlier family
-// /   can satisfy, such as docx to epub, reaches this pipeline.
+// /   Several of these overlap with the document & archive formats on purpose. Each menu names its family, from v4.2.8, so a docx to pdf
+// /   asked of the E-Book menu is converted by Calibre. A request that names no family, as a workflow's, is converted by the first family
+// /   that converts the pair, so an ordinary docx to pdf stays with LibreOffice & a cbz to cbr stays with 7-Zip.
+// /   htmlz, a zip holding a book as HTML, is read & written, from v4.2.8.
 // /   PDF input is supported but is the weakest conversion Calibre performs. A PDF has no
 // /   reflowable structure to recover, so the result is frequently poor. It is offered
 // /   because it is occasionally the only option, not because it works well.
-$UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'odt', 'docx', 'pdf', 'chm', 'cbz', 'cbr', 'cbc', 'prc');
+$UserEbookInputArray = array('epub', 'mobi', 'azw', 'azw3', 'azw4', 'fb2', 'fbz', 'lit', 'lrf', 'pdb', 'pml', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'odt', 'docx', 'pdf', 'chm', 'cbz', 'cbr', 'cbc', 'prc', 'htmlz');
 // /  --Supported Ebook Output Formats--
 // /   The e-book formats a user may convert TO.
 // /   Calibre writes PDF through Qt WebEngine, which needs more memory than any other output, so
 // /   PDF is the first to fail inside a small --Maximum Per Conversion Resources-- ceiling.
 // /   Calibre writes PML only zipped, as pmlz, & writes OEB as a folder, which cannot be handed
 // /   to a browser, so neither pml nor oeb is offered.
-$UserEbookOutputArray = array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pmlz', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'docx', 'pdf');
+$UserEbookOutputArray = array('epub', 'mobi', 'azw3', 'fb2', 'lit', 'lrf', 'pdb', 'pmlz', 'rb', 'snb', 'tcr', 'txt', 'txtz', 'rtf', 'docx', 'pdf', 'htmlz');
 // /  --Supported Data Input Formats--
 // /   The structured data formats a user may convert FROM, from v4.2.5. Dasel reads every one.
-// /   csv is also a spreadsheet. The routing loop tries the document family first, so csv to xlsx stays with LibreOffice, & only csv
-// /   to another data format reaches the Data pipeline.
+// /   csv is also a spreadsheet. A request that names no family is converted by the first family that converts the pair, so csv to xlsx
+// /   stays with LibreOffice, & only csv to another data format reaches the Data pipeline.
 $UserDataInputArray = array('json', 'yaml', 'yml', 'toml', 'xml', 'csv');
 // /  --Supported Data Output Formats--
 // /   The structured data formats a user may convert TO, from v4.2.5.
@@ -1495,8 +1507,8 @@ $UserLaTeXInputArray = array('tex', 'latex');
 $UserLaTeXOutputArray = array('pdf');
 // /  --Supported Trace Input Formats--
 // /   The images a user may trace into vector outlines, from v4.2.5.
-// /   Every one of them is an image as well. The routing loop tries the image family first, so png to jpg stays with ImageMagick, & only
-// /   an image becoming a vector drawing reaches the Trace pipeline.
+// /   Every one of them is an image as well. A request that names no family is converted by the first family that converts the pair, so
+// /   png to jpg stays with ImageMagick, & only an image becoming a vector drawing reaches the Trace pipeline.
 // /   Potrace reads bmp & the pnm formats itself, & ImageMagick reduces the rest to a grey bitmap first.
 $UserTraceInputArray = array('bmp', 'png', 'jpg', 'jpeg', 'gif', 'tif', 'tiff', 'webp', 'pbm', 'pgm', 'ppm', 'pnm');
 // /  --Supported Trace Output Formats--
@@ -1512,16 +1524,19 @@ $UserEmailInputArray = array('msg');
 $UserEmailOutputArray = array('eml', 'mbox');
 // /  --Supported Markup Input Formats--
 // /   The documents a user may convert with Pandoc, from v4.2.5.
-// /   Several are documents, e-books or spreadsheets as well, on purpose. The routing loop tries those families first, so docx to pdf stays
-// /   with LibreOffice & docx to epub stays with Calibre, & only a pair no earlier family claims, such as docx to md, reaches this pipeline.
+// /   Several are documents, e-books or spreadsheets as well, on purpose. Each menu names its family, from v4.2.8, so a docx to pptx asked
+// /   of the Markup menu is converted by Pandoc, which can, & not by LibreOffice, which cannot. A request that names no family is converted
+// /   by the first family that converts the pair, so docx to pdf stays with LibreOffice & docx to epub stays with Calibre.
+// /   dbk is DocBook, pod Perl's documentation, t2t txt2tags & tsv a table of values separated by tabs, from v4.2.8.
 // /   A tex document becoming a pdf is typeset by the LaTeX pipeline, & becoming anything else is converted by this one.
 // /   html & htm are not among them. html is a file this application refuses, & ABOUT_DATA_DIRECTORY_PROTECTION.txt says why htm is too.
-$UserMarkupInputArray = array('md', 'markdown', 'rst', 'adoc', 'asciidoc', 'jira', 'textile', 'org', 'mediawiki', 'dokuwiki', 'creole', 'muse', 'djot', 'typ', 'tex', 'latex', 'docx', 'odt', 'epub', 'rtf', 'ipynb', 'opml', 'fb2', 'csv', 'pptx', 'xlsx');
+$UserMarkupInputArray = array('md', 'markdown', 'rst', 'adoc', 'asciidoc', 'jira', 'textile', 'org', 'mediawiki', 'dokuwiki', 'creole', 'muse', 'djot', 'typ', 'tex', 'latex', 'docx', 'odt', 'epub', 'rtf', 'ipynb', 'opml', 'fb2', 'csv', 'pptx', 'xlsx', 'dbk', 'pod', 't2t', 'tsv');
 // /  --Supported Markup Output Formats--
 // /   The documents Pandoc may write, from v4.2.5. md is written as GitHub Flavored Markdown.
 // /   A pdf is typeset by XeLaTeX, which the LaTeX subsystem installs. A server without it refuses a pdf with an error that says so.
 // /   A document is converted alone, so an image it names is left out, & a pptx or an ipynb that cannot be written without one fails & names it.
-$UserMarkupOutputArray = array('md', 'rst', 'adoc', 'jira', 'textile', 'org', 'mediawiki', 'dokuwiki', 'muse', 'djot', 'typ', 'tex', 'docx', 'odt', 'epub', 'rtf', 'ipynb', 'opml', 'fb2', 'txt', 'pdf', 'pptx', 'texi', 'icml');
+// /   dbk is written as DocBook 5, & t2t as txt2tags, from v4.2.8.
+$UserMarkupOutputArray = array('md', 'rst', 'adoc', 'jira', 'textile', 'org', 'mediawiki', 'dokuwiki', 'muse', 'djot', 'typ', 'tex', 'docx', 'odt', 'epub', 'rtf', 'ipynb', 'opml', 'fb2', 'txt', 'pdf', 'pptx', 'texi', 'icml', 'dbk', 't2t');
 // /  --Supported Graph Input Formats--
 // /   The graphs a user may draw, written in Graphviz's DOT language, from v4.2.6.
 // /   gv is the only one, as Graphviz recommends, because dot is a Word template to the document family. A graph saved as dot is renamed gv.

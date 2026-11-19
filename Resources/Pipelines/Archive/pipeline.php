@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.4.
+// / v4.2.8.
 // / The Archive pipeline's converter. pipelineCore.php loads it only to dispatch an Archive conversion.
 // / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13108 belongs to this pipeline.
 // / The Archiver pipeline raises 13012, & shares 13006, 13008, 13009 & 13010 with this one.

@@ -1,6 +1,6 @@
 # The Vector Graphic pipeline
 
-The Vector Graphic pipeline converts files. It accepts 12 input format(s) & produces 12 output format(s).
+The Vector Graphic pipeline converts files. It accepts 10 input format(s) & produces 11 output format(s).
 
 This file is written by `Documentation/Build/hrconvert2-approvals.py --readme`.
 It is rewritten from the pipeline's own declarations & from the dependency manifest,
@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.5
+- **Version** v4.2.8
 - **Kind** conversion
 - **Family** SVG
 - **Entry point** convertSVG
@@ -18,9 +18,9 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## Formats
 
-**Accepts** svg, svgz, ai, cdr, eps, ps, pdf, dxf, wmf, emf, cgm, vsd
+**Accepts** svg, svgz, ai, cdr, eps, ps, pdf, wmf, emf, vsd
 
-**Produces** svg, svgz, png, pdf, eps, ps, dxf, wmf, emf, tex, pov, hpgl
+**Produces** svg, svgz, png, pdf, eps, ps, dxf, wmf, emf, tex, hpgl
 
 ## Dependencies
 

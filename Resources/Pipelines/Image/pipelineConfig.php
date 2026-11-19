@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.7.
+// / v4.2.8.
 // / This file declares what the Image conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.7';
+$PipelineVersion = 'v4.2.8';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -81,26 +81,29 @@ $PipelineRequestFields = array('Extension', 'Height', 'Width', 'Rotate');
 // / converter can hand back to a browser & expect to be usable.
 // / SVG & EPS are not read, from v4.2.7. The policy this pipeline carries refuses both, because an SVG draws any image it names &
 // / a PostScript file is a program. An SVG is the SVG pipeline's, & EPS is still written.
+// / JPEG XL, jpe, Cineon, DIB & the JPEG 2000 codestream are read & written, & HEIF is read, from v4.2.8.
+// / HEIF & AVIF are written only where libheif has an encoder for them, & ImageMagick is told the format it writes, so one without fails.
 $Capabilities = array(
   'Input' => array(
-    'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tif', 'tiff', 'webp', 'ico', 'tga', 'pcx', 'ppm', 'pgm',
-    'pbm', 'pnm', 'xpm', 'xbm', 'dds', 'psd', 'pdf', 'heic', 'avif', 'jp2', 'dpx',
+    'jpg', 'jpeg', 'jpe', 'png', 'gif', 'bmp', 'dib', 'tif', 'tiff', 'webp', 'ico', 'tga', 'pcx', 'ppm', 'pgm',
+    'pbm', 'pnm', 'xpm', 'xbm', 'dds', 'psd', 'pdf', 'heic', 'heif', 'avif', 'jp2', 'j2k', 'jxl', 'dpx', 'cin',
     'exr', 'hdr', 'cr2', 'nef', 'arw', 'dng'),
   'Output' => array(
-    'jpg', 'jpeg', 'png', 'gif', 'bmp', 'tif', 'tiff', 'webp', 'ico', 'tga', 'pcx', 'ppm', 'pgm',
-    'pbm', 'pnm', 'xpm', 'dds', 'pdf', 'eps', 'avif', 'jp2', 'hdr'));
+    'jpg', 'jpeg', 'jpe', 'png', 'gif', 'bmp', 'dib', 'tif', 'tiff', 'webp', 'ico', 'tga', 'pcx', 'ppm', 'pgm',
+    'pbm', 'pnm', 'xpm', 'dds', 'pdf', 'eps', 'avif', 'jp2', 'j2k', 'jxl', 'cin', 'hdr'));
+
+// / What this pipeline shells out to. Names must match the manifest exactly.
+$PipelineDependencies = array('ImageMagick', 'Bubblewrap');
 
 // / Pairs removed from the cross product above, written as 'input>output'.
 // / A conversion that produces the format it was handed is not a conversion. It re-encodes
 // / a lossy format a second time & hands back something visibly worse than the original.
 // / jpg to jpeg & jpeg to jpg are NOT excluded. Those are the same format under two names &
-// / What this pipeline shells out to. Names must match the manifest exactly.
-$PipelineDependencies = array('ImageMagick', 'Bubblewrap');
-
 // / a user renaming one to the other is doing something reasonable.
 $PipelineExclude = array(
-    'jpg>jpg', 'jpeg>jpeg', 'png>png', 'gif>gif', 'bmp>bmp', 'tif>tif', 'tiff>tiff', 'webp>webp',
-    'ico>ico', 'tga>tga', 'pcx>pcx', 'dds>dds', 'eps>eps', 'avif>avif', 'jp2>jp2');
+    'jpg>jpg', 'jpeg>jpeg', 'jpe>jpe', 'png>png', 'gif>gif', 'bmp>bmp', 'dib>dib', 'tif>tif', 'tiff>tiff', 'webp>webp',
+    'ico>ico', 'tga>tga', 'pcx>pcx', 'ppm>ppm', 'pgm>pgm', 'pbm>pbm', 'pnm>pnm', 'xpm>xpm', 'dds>dds', 'pdf>pdf', 'eps>eps',
+    'avif>avif', 'jp2>jp2', 'j2k>j2k', 'jxl>jxl', 'cin>cin', 'hdr>hdr');
 
 // / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
 // / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.

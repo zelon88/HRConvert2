@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.4.
+// / v4.2.8.
 // / This file declares what the Archive conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -34,7 +34,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.4';
+$PipelineVersion = 'v4.2.8';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -78,20 +78,24 @@ $PipelineRequestFields = array('Extension');
 // / An extraction hands the user something named differently from what they asked for,
 // / which is exactly what the fifth value of the six value contract exists for. Every
 // / other pipeline returns the filename it was handed.
+// / rar is written by the RAR utility where it is installed, as config.php has long offered, from v4.2.8.
+// / The family reads what --Supported Dearchive Formats-- lists, from v4.2.8, so bz, the vhd & vdi disk images & the cbz & cbr comic
+// / archives it has long listed are read too.
 $Capabilities = array(
   'Input' => array(
-    'zip', '7z', 'tar', 'gz', 'tgz', 'bz2', 'tbz', 'xz', 'txz', 'rar', 'iso', 'cab', 'arj',
+    'zip', '7z', 'tar', 'gz', 'tgz', 'bz', 'bz2', 'tbz', 'xz', 'txz', 'rar', 'iso', 'vhd', 'vdi', 'cbz', 'cbr', 'cab', 'arj',
     'lzh', 'lzma', 'z', 'cpio', 'deb', 'rpm', 'wim', 'dmg'),
   'Output' => array(
-    'zip', '7z', 'tar', 'gz', 'tgz', 'bz2', 'xz', 'iso', 'wim'));
+    'zip', '7z', 'tar', 'gz', 'tgz', 'bz2', 'xz', 'rar', 'iso', 'wim'));
 
 // / Pairs removed from the cross product above, written as 'input>output'.
 // / A conversion that produces the format it was handed is not a conversion. It unpacks an
 // / archive & repacks it into the same container, which costs time & gains the user nothing.
 // / tar to gz & gz to tar are NOT excluded. Compressing or decompressing a tarball is a real
 // / change & is one of the more common things anybody asks this family to do.
+// / rar & tgz are excluded from v4.2.8, because the family that serves a pair is asked before one that only claims it.
 $PipelineExclude = array(
-    'zip>zip', '7z>7z', 'tar>tar', 'gz>gz', 'bz2>bz2', 'xz>xz', 'iso>iso', 'wim>wim');
+    'zip>zip', '7z>7z', 'tar>tar', 'gz>gz', 'tgz>tgz', 'bz2>bz2', 'xz>xz', 'rar>rar', 'iso>iso', 'wim>wim');
 
 // / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
 // / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.

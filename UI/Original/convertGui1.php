@@ -139,7 +139,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
             // / Every family that reads documents is listed under Documents, & a format two of them read is listed once, from v4.2.5.
             // / The LaTeX & Markup families joined the e-book family here in v4.2.5.
             $gui1DocList = array();
-            if (in_array('Document', $OfferedConversionTypes)) $gui1DocList = array_merge($gui1DocList, $DocumentArray);
+            if (in_array('Document', $OfferedConversionTypes)) $gui1DocList = array_merge($gui1DocList, $DocumentInputArray);
             if (in_array('XPS', $OfferedConversionTypes)) $gui1DocList = array_merge($gui1DocList, $XPSInputArray);
             if (in_array('Ebook', $OfferedConversionTypes)) $gui1DocList = array_merge($gui1DocList, $EbookInputArray);
             if (in_array('LaTeX', $OfferedConversionTypes)) $gui1DocList = array_merge($gui1DocList, $LaTeXInputArray);
@@ -154,7 +154,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
             <?php } if (in_array('Document', $OfferedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text15; ?></strong>
             <ol>
-              <?php foreach ($SpreadsheetArray as $gui1SpreadArr) { ?>
+              <?php foreach ($SpreadsheetInputArray as $gui1SpreadArr) { ?>
               <li><?php echo $gui1SpreadArr; ?></li>
               <?php } ?>
             </ol>
@@ -180,7 +180,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
             <p><i><?php echo $Gui1Text40; ?></i></p>
             <?php } ?>
             <ol>
-              <?php foreach ($ImageArray as $gui1ImaArr) { ?>
+              <?php foreach ($ImageInputArray as $gui1ImaArr) { ?>
               <li><?php echo $gui1ImaArr; ?></li>
               <?php } ?>
             </ol>
@@ -211,7 +211,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
             <strong><?php echo $Gui1Text23; ?></strong>
             <p><i><?php echo $Gui1Text24; ?></i></p>
             <ol>
-              <?php foreach ($DrawingArray as $gui1DraArr) { ?>
+              <?php foreach ($DrawingInputArray as $gui1DraArr) { ?>
               <li><?php echo $gui1DraArr; ?></li>
               <?php } ?>
             </ol>

@@ -1,6 +1,6 @@
 # The Archive pipeline
 
-The Archive pipeline converts files. It accepts 21 input format(s) & produces 9 output format(s).
+The Archive pipeline converts files. It accepts 26 input format(s) & produces 10 output format(s).
 
 This file is written by `Documentation/Build/hrconvert2-approvals.py --readme`.
 It is rewritten from the pipeline's own declarations & from the dependency manifest,
@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.4
+- **Version** v4.2.8
 - **Kind** conversion
 - **Family** Archive
 - **Entry point** convertArchives
@@ -18,9 +18,9 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## Formats
 
-**Accepts** zip, 7z, tar, gz, tgz, bz2, tbz, xz, txz, rar, iso, cab, arj, lzh, lzma, z, cpio, deb, rpm, wim, dmg
+**Accepts** zip, 7z, tar, gz, tgz, bz, bz2, tbz, xz, txz, rar, iso, vhd, vdi, cbz, cbr, cab, arj, lzh, lzma, z, cpio, deb, rpm, wim, dmg
 
-**Produces** zip, 7z, tar, gz, tgz, bz2, xz, iso, wim
+**Produces** zip, 7z, tar, gz, tgz, bz2, xz, rar, iso, wim
 
 ## Dependencies
 

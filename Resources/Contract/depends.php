@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File information ...
-// / v4.2.6.
+// / v4.2.8.
 // / HRConvert2 Dependency Manifest, the application's half.
 // / This file is data. It defines nothing & does nothing.
 // / The Engine's verifyDependsManifest() reads it. Nothing else may.
@@ -118,7 +118,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v4.2.6';
+$DependsVersion = 'v4.2.8';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -258,7 +258,8 @@ $DependsManifest = array(
     'CapabilityPattern' => '/^\s*(?<name>[A-Za-z0-9][A-Za-z0-9-]*)\*?\s+(?<read>[r-])(?<write>[w-])[+-]\s/m',
     // / ImageMagick has no TIF. It reports TIFF & TIFF64. An installation permitting tif
     // / would lose it to a narrowing pass without this line.
-    'CapabilityAliases' => array('tiff' => 'tif', 'jpeg' => 'jpg', 'jpe' => 'jpg'),
+    // / Nor does it report DIB, which its BMP coder writes, from v4.2.8.
+    'CapabilityAliases' => array('tiff' => 'tif', 'jpeg' => 'jpg', 'jpe' => 'jpg', 'bmp' => 'dib'),
     'Required' => FALSE, 'Subsystem' => 'Images', 'Requires' => array('Bubblewrap'),
     'License' => 'ImageMagick', 'Source' => 'https://imagemagick.org', 'Purpose' => 'Converts raster images & splits pages for OCR.'),
   array('Name' => 'Inkscape', 'Binary' => 'inkscape', 'Type' => 'apt', 'Package' => 'inkscape',

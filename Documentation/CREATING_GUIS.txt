@@ -455,9 +455,10 @@ Never accept a line of a reply by its position. The core opens every reply with 
 This GUI only has access to certain variables. Variables that are available to the GUI include:
   $GuiFiles, $LanguageFiles, $LanguageStringsFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir,
   $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray,
-  $DocumentArray, $SpreadsheetArray, $ImageArray, $ModelArray, $DrawingArray, $StreamArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray,
+  $DocumentInputArray, $DocumentOutputArray, $SpreadsheetInputArray, $SpreadsheetOutputArray, $ImageInputArray, $ModelArray, $DrawingInputArray,
+  $DrawingOutputArray, $StreamArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray,
   $SubtitleOutputArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $GuiCSSDir,
-  $StreamOutputArray, $SCADArray, $SCADOutputArray, $SVGInputArray, $SVGOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui,
+  $StreamOutputArray, $SCADOutputArray, $SVGInputArray, $SVGOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui,
   $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $LanguageFlagFile,
   $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural,
   $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir,
@@ -470,6 +471,10 @@ This GUI only has access to certain variables. Variables that are available to t
   $ExtractOperationArray, $MetadataOperationArray, $GuiEngineFile, $EngineAnswer, $EnginePageState,
   $GuiTaskbarFile, $OfferedConversionTypes, $OfferedScanners
 This list is the whole contract & it is the list buildGUI() declares.
+A family's input list decides which of a file's menus are drawn, & its output list what each menu offers, from v4.2.8.
+Until then the Image & Drawing menus & the upload page read lists the converter did not, so an xcf drew an Image menu
+that failed, & the Document & Spreadsheet lists were one list each, read & written. Model keeps $ModelArray for both
+until its importers are audited. $DearchiveArray is what an archive may be read from, & the Archive family reads it.
 $ArchiveOperationArray is the formats a file or a selection may be archived in, which the Archiver
 pipeline writes & config.php allows. Offer it for archiving a file, & keep $ArchiveArray for converting
 an archive, because $ArchiveArray holds the bootable disk images only an archive can be made into.
@@ -683,6 +688,12 @@ static values name convertSelected, pdfworkSelected, filesToArchive, filesToStri
 its file is selected among others. A file is eligible when its own row has the same control, by the same id with its own row
 number, so give every control & every name box an id ending in its row. Each eligible file is sent
 in a request of its own, named by its own row's name box, & an archive is sent once holding them all.
+A conversion menu's staticPayload names conversionFamily as well as convertSelected, from v4.2.8, as the family whose lists
+the menu is drawn from, such as Document for the document, spreadsheet, presentation & XPS menus. Every selected file's request
+carries it, & the core converts each file with that family. Two families convert some pairs, & only one of them well.
+A menu's first choice, the one sent where no format is chosen, must be a format its family writes. The menus added from
+v4.2.5, & the Drawing, OpenSCAD & Subtitle menus from v4.2.8, offer the first format the family's output list holds other
+than the file's own. A format the family does not write is warned of, & is converted only where another family writes it.
 
 The Workflows panel is HRC2-Workflows.js, & HRC2.startWorkflows(settings) starts it, handing it
 the tokens & the file list. settings carries the words, as text, & the operations' names, as

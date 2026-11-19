@@ -26,6 +26,30 @@ The authoritative list of dependencies is Resources/Engine/depends.php & Resourc
 
 
 --------------------
+COMMIT 11/19/2026
+v4.2.8 - Each menu converts with its own family, & the formats each pipeline converts are offered, each proven through its pipeline first.
+
+-v4.2.8.
+-Each conversion menu sends its family as conversionFamily, & conversionFamilyFor() converts with it. docx to pptx from the Markup menu went to LibreOffice, which cannot make it.
+-A request naming no family, as a workflow's, is converted by the first family whose pipeline serves the pair, then by the first whose lists hold it. A family named that does not hold the pair is warned of. A file asked for in its own format stays with the family that claims it, & is refused with 34009 as before.
+-The Document pipeline excludes pdf to txt, which LibreOffice never wrote. Calibre converts it, from the Document menu too.
+-A document conversion refused before LibreOffice ran is not tried again, & 7001 does not follow 2004. convertWithLibreOffice() returns whether LibreOffice ran.
+-New settings --Supported Document Input Formats--, --Supported Document Output Formats--, --Supported Spreadsheet Input Formats-- & --Supported Spreadsheet Output Formats-- replace --Supported Document Formats-- & --Supported Spreadsheet Formats--. --Supported Image Formats--, --Supported Drawing Formats-- & --Supported OpenSCAD Formats-- are retired. $ConfigVersion is v4.2.8. --config --repair adds the new four.
+-The Archive family reads --Supported Dearchive Formats-- & writes --Supported Archive Formats--. A gz, bz, vhd, vdi, cbr or cbz drew an archive menu that failed with 5006.
+-Both interfaces draw a file's menus from each family's input list & offer its output list. The Image menu & the upload page offered xcf, flif, gplt, sct & six more that failed with 5006. The six are inputs now, & the four are refused at upload, as a format no list holds is. Model is unchanged until its importers are audited.
+-The Drawing, OpenSCAD & Subtitle menus' first choice is the first format the family writes, as the newer menus' is. It was jpg for a drawing, which Dia never writes, & nothing for the other two, & each failed with 5006.
+-The Ebook pipeline excludes txt, rtf, docx & pdf to themselves, the Archive pipeline rar & tgz, & the Stream pipeline ts & m3u8, so a menu asked for a file's own format refuses it with 34009, as every other does. Calibre, RAR & FFmpeg would each have made a copy.
+-New inputs. Document docm, dot, dotx, ott, fodt, wpd, abw & pages, Spreadsheet xlsm, ots & fods, Presentation otp & fodp. Image tga, pcx, pnm, pbm, pgm, ppm, xpm, xbm, hdr, dpx, cin, jpe, dib, j2k, jxl, heif, psd & pdf. Audio aif, mka, ra & the sound of fifteen video containers. Video flv & mpg. SVG svgz, ai, pdf, emf, wmf, cdr & vsd. Subtitle smi. Ebook htmlz. Markup dbk, pod, t2t & tsv. Archive tgz, tbz, txz, xz, lzma, z, cpio, deb, rpm, wim, arj, cab & lzh.
+-New outputs. Document ott & fodt. Image tga, pcx, pnm, pbm, pgm, ppm, xpm, hdr, cin, jpe, dib, j2k, jxl, pdf & eps. Audio wav, oga, opus, aiff, au, ac3 & mka. Video ogv, flv, ts & mpg. SVG svg, svgz, dxf, hpgl & tex. Drawing shape, png, svg, pdf, eps, emf, plt & tex. Subtitle ttml. Ebook htmlz. Markup dbk & t2t. Archive gz, tgz, bz2, xz & wim.
+-ppa is no longer a presentation output. LibreOffice never wrote one.
+-The Image pipeline reads the first image of a file holding several into a format holding one, & a PSD as its flattened image. Such a file failed with 8000.
+-The Image pipeline names the format it writes. A server with no AV1 encoder wrote a png named avif. It fails with 8000.
+-Declarations match what converts. Audio reads video & writes mp2. Image adds jpe, dib, j2k, jxl, cin & heif. Document reads pdf, pot, potx, potm & ppa & writes pot, potx & potm. Ebook reads azw4, fbz, prc, txt, rtf, odt, docx & pdf. Archive reads bz, vhd, vdi, cbz & cbr & writes rar. SVG drops dxf & cgm in & pov out, Subtitle drops sub, jacosub & mpl2 out, & Drawing drops shape & cgm in & cgm, jpg, bmp, tif & wmf out. None of those converted.
+-The manifest aliases ImageMagick's bmp to dib.
+-ERROR_DESCRIPTIONS documents the new warning & says what 2004, 2005, 5006, 7001 & 8000 mean now. ABOUT_REST_API, ABOUT_PIPELINE_COMPONENTS, CREATING_GUIS, CREATING_CONVERSION_PIPELINES, INSTALLATION_INSTRUCTIONS, DEVELOPMENT_NOTES & the README describe them.
+-The core, config.php, the interfaces, the manifest, app-engine-config.php, the shared LibreOffice module & the Archive, Audio, Document, Drawing, Ebook, Image, Stream, SVG & Subtitle pipelines are v4.2.8. The Engine stays v4.2.7 & the language packs v4.2.6.
+
+--------------------
 COMMIT 11/18/2026
 v4.2.7 - Every tool that reads a file an upload names is stopped by a setting of its own or never runs without a sandbox, & recipe & opf are refused.
 

@@ -114,19 +114,19 @@ $EngineSessionFolders = array('ScadTemp');
 // / Accepting a pipeline, or moving one to a new version, is one line here, & no Engine version moves for it.
 // / The order is the order pipelines are enumerated & listed in.
 $EngineAcceptedPipelines = array(
-  'Stream' => 'v4.2.1',
+  'Stream' => 'v4.2.8',
   'Scad' => 'v4.2.1',
   'OCR' => 'v4.2.7',
-  'Document' => 'v4.2.1',
-  'Subtitle' => 'v4.2.1',
-  'SVG' => 'v4.2.5',
-  'Drawing' => 'v4.2.1',
-  'Image' => 'v4.2.7',
+  'Document' => 'v4.2.8',
+  'Subtitle' => 'v4.2.8',
+  'SVG' => 'v4.2.8',
+  'Drawing' => 'v4.2.8',
+  'Image' => 'v4.2.8',
   'Model' => 'v4.2.1',
   'Video' => 'v4.2.1',
-  'Ebook' => 'v4.2.7',
-  'Audio' => 'v4.2.1',
-  'Archive' => 'v4.2.4',
+  'Ebook' => 'v4.2.8',
+  'Audio' => 'v4.2.8',
+  'Archive' => 'v4.2.8',
   // / Five conversion families, from v4.2.5. Data converts between structured data formats, LaTeX typesets a LaTeX document,
   // / Trace traces an image into vector outlines, Email converts an Outlook message & Markup converts between markup & document formats.
   'Data' => 'v4.2.5',
@@ -158,7 +158,7 @@ $EngineAcceptedPipelines = array(
 // / archiveExtraction.php serves the Archive & Extractor pipelines alike, from v4.1.7, for the same reason.
 // / workFolder.php gives a conversion a folder of its own, & serves the Data, LaTeX & Trace pipelines alike, from v4.2.5.
 $EngineAcceptedSharedModules = array(
-  'libreOffice.php' => 'v4.1.1',
+  'libreOffice.php' => 'v4.2.8',
   'archiveExtraction.php' => 'v4.1.7',
   'workFolder.php' => 'v4.2.5');
 

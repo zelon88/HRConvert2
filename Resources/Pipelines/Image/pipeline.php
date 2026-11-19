@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.7.
+// / v4.2.8.
 // / The Image pipeline's converter. pipelineCore.php loads it only to dispatch an Image conversion.
 // / Error block 8000 through 8002 belongs to this pipeline.
 // / The OCR pipeline raises 8001 for the same ImageMagick.
@@ -40,6 +40,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / dimension scales to it. ImageMagick treats WxH as a bounding box & preserves the
 // / aspect ratio, so an exclamation mark is added when the user supplied both & therefore
 // / asked for both exactly.
+// / A file holding several images is read whole only into a format that holds several, from v4.2.8, & the output's format is named.
 function convertImages($pathname, $newPathname, $extension, $height, $width, $rotate) {
   // / Set variables.
   global $Verbose, $Lol, $Lolol, $StopCounter, $SleepTimer, $DirSep, $EnableMemoryProtection;
@@ -49,8 +50,10 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $imageBinary = FALSE;
-  $returnData = $wh = $wxh = $bgSwitch = $outputExt = $magickCommand = $policyFolder = $iconLimit = '';
+  $returnData = $wh = $wxh = $bgSwitch = $outputExt = $inputExt = $inputFrame = $outputFormat = $magickCommand = $policyFolder = $iconLimit = '';
   $policyVariables = array();
+  // / The formats this pipeline writes that hold several images, as pages, frames or sizes.
+  $multiImageOutputs = array('gif', 'tif', 'tiff', 'pdf', 'webp', 'ico');
   $stopper = 0;
   $sleepTime = $SleepTimer;
   // / Locate & verify ImageMagick. A path is returned only when both succeeded.
@@ -81,10 +84,19 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
     // / A larger image is shrunk to fit, after any size the user asked for.
     // / A smaller one is left as it is.
     if ($outputExt === 'ico') $iconLimit = '-resize '.escapeshellarg('256x256>').' ';
+    // / A layered PSD, a PDF of several pages, an animated GIF or a TIFF of several pages holds several images. Read whole into a
+    // / format that holds one, ImageMagick writes a numbered file for each & never the file asked for, so the conversion failed.
+    // / Such an output is made from the first image. A PSD is always read as its first, which is the image its layers flatten to.
+    // / The frame is escaped apart from the path, so the sandbox finds the path it rewrites & no shell reads the brackets as a pattern.
+    $inputExt = strtolower(pathinfo($pathname, PATHINFO_EXTENSION));
+    if ($inputExt === 'psd' or !in_array($outputExt, $multiImageOutputs, TRUE)) $inputFrame = escapeshellarg('[0]');
+    // / The output is written in the format its extension names, & ImageMagick is told so. Asked for a format it cannot write, it
+    // / otherwise warns & writes the format it read under the name asked for, so a host without an AVIF encoder handed out a PNG named avif.
+    $outputFormat = escapeshellarg(strtoupper($outputExt).':');
     // / Build & sandbox the command once. It does not change between retries.
     // / The input comes FIRST. -alpha remove is an operation & needs an image already
     // / loaded, so a settings block placed before the input fails with no images found.
-    $magickCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.$bgSwitch.$wh.$rotate.$iconLimit.escapeshellarg($newPathname);
+    $magickCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).$inputFrame.' '.$bgSwitch.$wh.$rotate.$iconLimit.$outputFormat.escapeshellarg($newPathname);
     // / The policy folder is the sandbox's read only resource, where the profile's Overlays put its
     // / policy.xml in place of the host's, & it is named in MAGICK_CONFIGURE_PATH, which ImageMagick
     // / reads before its own configuration, so a host whose policy sits somewhere else still loads
@@ -122,7 +134,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $bgSwitch, $iconLimit, $imageBinary, $magickCommand, $commandMayRun, $policyFolder, $policyVariables);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $inputExt, $inputFrame, $outputFormat, $multiImageOutputs, $bgSwitch, $iconLimit, $imageBinary, $magickCommand, $commandMayRun, $policyFolder, $policyVariables);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

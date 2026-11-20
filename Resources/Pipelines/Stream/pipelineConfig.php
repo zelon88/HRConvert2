@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.8.
+// / v4.2.9.
 // / This file declares what the Stream conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.8';
+$PipelineVersion = 'v4.2.9';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -52,11 +52,13 @@ $PipelineDisplayName = 'Stream';
 
 // / Lower runs first when two implementations both claim a conversion.
 // / Stream sits last of every family & that is load bearing.
-// / Its outputs are ordinary audio & video containers, so an mp4 or an mp3 is claimed by
-// / the Video or Audio family as well as by this one. A local file must always reach the
-// / converter that reads a file, never the one that fetches a URL. convertFiles() is what
-// / enforces this, by keeping Stream at the end of its hand ordered family maps & taking
-// / the first family that matches. This number does NOT enforce it, because
+// / Its outputs are ordinary audio & video containers, & an administrator may list what it
+// / reads as an ordinary video too, as a ts can be. A local file must always reach the
+// / converter that reads a file, never the one that fetches a URL, unless a request names
+// / Stream. convertFiles() is what enforces this, by keeping Stream at the end of its hand
+// / ordered family maps & taking the first family that matches.
+// / Until v4.2.9 the Stream family read & wrote every audio & video format, so an mp4 or an
+// / mp3 was claimed by the Video or Audio family as well as by this one. This number does NOT enforce it, because
 // / resolvePipelineCandidates() filters on the family before it reads a priority, so a
 // / priority only orders the implementations inside one family.
 $PipelinePriority = 900;
@@ -74,8 +76,9 @@ $PipelineEntryPoint = 'convertStreams';
 $PipelineSubsystem = 'Audio, Video & Streams';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.
-// / This pipeline needs none. streamFileWalker() is defined in pipeline.php & used nowhere else.
-$PipelineSharedModules = array();
+// / ffmpegDemuxers.php names the demuxers FFMPEG may read a stream & its segments with, from v4.2.9.
+// / streamFileWalker() is defined in pipeline.php & used nowhere else.
+$PipelineSharedModules = array('ffmpegDemuxers.php');
 
 // / The request fields this pipeline actually reads.
 // / A stream is decided by its target & its output extension. A height, a width, a
@@ -90,7 +93,8 @@ $PipelineRequestFields = array('Extension');
 // / why streamFileWalker() inspects it before FFMPEG is ever launched at it.
 $Capabilities = array(
   'Input' => array('m3u', 'm3u8', 'pls', 'mpd', 'asx', 'xspf'),
-  'Output' => array('mp4', 'mkv', 'webm', 'ts', 'mp3', 'aac', 'm4a', 'flv'));
+  'Output' => array('3gp', 'mkv', 'avi', 'mp4', 'mpeg', 'wmv', 'mov', 'm4v', 'ogv', 'webm', 'flv', 'ts', 'mpg',
+    'mp3', 'aac', 'ogg', 'wma', 'mp2', 'flac', 'm4a', 'wav', 'oga', 'opus', 'aiff', 'au', 'ac3', 'mka'));
 
 // / Pairs removed from the cross product above, written as 'input>output'.
 // / No output format declared here is also an input. config.php offers a ts as a stream, though, & the Video family writes one from

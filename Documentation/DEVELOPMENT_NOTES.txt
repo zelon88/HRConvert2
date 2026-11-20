@@ -219,6 +219,25 @@ INSIDE ITS SANDBOX A TOOL STILL SEES WHAT THE BASE SANDBOX SHOWS. v4.2.7.
 Calibre copied /etc/passwd into a book inside its sandbox, because the base sandbox shows it for
 LibreOffice's user lookup. It shows /opt as well, where the guide clones the source. Both are the
 Engine's, & ENGINE_RECONCILIATION_HRCONVERT2.txt leaves them for its maintainer.
+
+FFMPEG & FFPROBE ARE STOPPED BY THEIR OWN SETTING. v4.2.9.
+Every command names the demuxers it may use in -format_whitelist, from ffmpegDemuxers.php, & leaves
+out hls, dash, concat & imf, which open a file another file names, sdp, rtsp, rtp & sap, which open
+an address one names, & the input devices. The list follows a nested read, so a stream's playlist is
+refused at a segment that is itself a manifest. A DASH manifest & an ffconcat list named mp4 were
+traced through FFMPEG 6.1, which read each & the file it named, & the list refuses both. Every audio,
+video & subtitle sample the format suite converts reads with it as without it. A demuxer a later
+FFMPEG adds is refused until it is traced & named. The ffmpeg profile still requires a sandbox,
+because the Stream pipeline's FFMPEG follows a playlist by design & runs under it. A profile of its
+own for streams would let the rest run where no sandbox can be built.
+
+A TOOL SEES THE ENGINE'S OWN ACCOUNT & NONE OF THE HOST'S IDENTITY. v4.2.9.
+The base sandbox shows the passwd, group & machine-id in Resources/Engine/Sandbox, names the host
+sandbox, & runs its tool as sandbox, 1000, where bubblewrap makes the user namespace itself, as 0.8 &
+later do. Older bubblewrap runs a tool as the web server's account, which only the host's passwd
+names, so it shows the host's passwd & group as before, & -v's Sandbox identity line says so. /opt is
+no longer shown, & the calibre profile shows /opt/calibre. The web server's environment is still
+passed in, & ENGINE_RECONCILIATION_HRCONVERT2.txt leaves it for the Engine's maintainer.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -245,6 +264,15 @@ read PDF. Identify's refused both already. Outside a sandbox a rule in the host'
 names the same coder decides it, so a host that grants SVG or PostScript back grants it there.
 Naming the decoder on the command line, as Trace does, holds whatever the host's policy says, & is
 left for a later release for Image & OCR.
+
+IMAGEMAGICK IS TOLD THE DECODER IT READS WITH. v4.2.9.
+The Image & OCR pipelines name it, as DECODER:path, from imageMagickDecoders.php, so no policy decides
+what reads a file. It is named by what the file holds, so a photograph named for the wrong format is
+still read, & by the extension where a file's first bytes say nothing, as a TGA's do not. A camera raw
+file holds a TIFF's header, so its decoder is its extension's. PostScript, an SVG or an MVG named png is
+handed to the PNG decoder, which cannot read it. A file named pdf is read as a PDF only where its first
+bytes are a PDF's header, because Ghostscript reads PostScript as readily, & is refused with 8003 or
+15015 otherwise. Trace names its decoder by the extension alone, as before.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -839,6 +867,34 @@ Asked for a format it has no encoder for, ImageMagick warns & writes the format 
 it was given, so a server whose libheif had no AV1 encoder handed out a png named avif & called it a
 success. The output is named FORMAT:path, & such a request now fails with 8000. On Ubuntu 24.04 libheif
 recommends its AV1 encoder & only suggests its HEVC decoder, so building ImageMagick there reads no heic.
+
+HEIC, HEIF, EXR & CAMERA RAW. v4.2.9.
+build-imagemagick-v7.sh installs LibRaw & OpenEXR & builds ImageMagick with both, & installs libheif's
+HEVC decoder & encoder & its AV1 encoder where a release packages them apart, as Ubuntu 24.04 does &
+Debian 12 does not. Image then reads exr, cr2, nef, arw & dng & writes heic, heif & exr. A CR2, a NEF,
+a DNG & an EXR made outside the project were read, & HEIC, HEIF, AVIF & EXR written & read back. No ARW
+sample could be fetched, so arw is offered on LibRaw's word. LibRaw warns of corrupted data in the CR2
+& still decodes it.
+
+WEBM IS VP9 & OPUS, ENCODED IN REAL TIME. v4.2.9.
+VP9's own settings took three times as long as a ten second 720p video lasted, on two cores. Real time,
+a thread per row & a constant quality of 30 took 2.6 seconds against H.264's 2.2, with an SSIM of 0.996
+against H.264's 0.994, so a Raspberry Pi can write one.
+
+A 3GP'S SOUND IS AAC. v4.2.9.
+A 3gp's own sound is AMR, & Ubuntu 24.04's FFMPEG has no AMR encoder, so a 3gp of any video with sound
+failed there. Video & Stream name AAC, which every 3gp player plays.
+
+A STREAM IS COPIED ONLY INTO A CONTAINER THAT HOLDS WHAT IT CARRIES. v4.2.9.
+A stream carries H.264 or HEVC video & AAC, AC-3 or MP3 sound. mp4, mov, mkv, ts & flv hold them as they
+are, so they are copied. m4v holds no HEVC, & it & avi, mpeg, wmv, webm, ogv & 3gp are encoded as the
+Video pipeline encodes them, & an audio format takes the sound alone. Each was written from a local
+H.264 stream & an HEVC one.
+
+A DOCUMENT CONVERTER THAT RAN TO ITS END IS ASKED ONCE. v4.2.9.
+LibreOffice exits 0 whether it wrote a file, found no filter for the pair or could not load the file,
+& asked again it does the same. A LibreOffice a memory ceiling, a supervisor or a crash stopped exits
+above 128, & may finish when asked again, so only that one is retried.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1718,6 +1774,21 @@ read --Supported Archive Formats-- for both directions while the archive menu wa
 its input list. The image, drawing & OpenSCAD lists, $UserImageArray, $UserDrawingArray &
 $UserSCADArray, were read by nothing but the interfaces once they read the input lists, & were retired.
 Model keeps its combined list until its importers are audited.
+
+A FAMILY MADE OF KINDS CLAIMS A PAIR ONLY WITHIN ONE. v4.2.9.
+The Document family's lists merged documents, spreadsheets, presentations & XPS, so it claimed docx to
+pptx & xlsx to docx, & LibreOffice, which writes nothing across them but a PDF, made nothing. Its menus
+offered only what one kind lists. applicationConversionFamilies() names its kinds third, &
+conversionFamilyClaims() holds a pair to one of them, so a request naming no family, as a workflow's
+does, reaches Pandoc for docx to pptx. Every pair conversionFamilyFor() chose for v4.2.8 was chosen again
+against the stock lists, & the seventeen that changed all moved from Document to Markup. Spreadsheets
+list pdf, which LibreOffice writes, so a workflow still converts one to pdf.
+
+THE STREAM FAMILY READS STREAMS. v4.2.9.
+Each of its lists held both the stream list & the audio & video outputs, so it claimed every audio &
+video pair. A request naming it sent an mp4 to the stream inspector, which refused it with 21001, & an
+mp3 to mp4 conversion, which no other family claims, reached it too. It reads $StreamArray & writes
+$StreamOutputArray, as its menu always offered.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

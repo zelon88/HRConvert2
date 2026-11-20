@@ -224,6 +224,13 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
               <li><?php echo $gui1DraArr; ?></li>
               <?php } ?>
             </ol>
+            <?php } if (in_array('SVG', $OfferedConversionTypes)) { ?>
+            <strong><?php echo $Gui1Text42; ?></strong>
+            <ol>
+              <?php foreach ($SVGInputArray as $gui1SvgArr) { ?>
+              <li><?php echo $gui1SvgArr; ?></li>
+              <?php } ?>
+            </ol>
             <?php } if (in_array('Data', $OfferedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text38; ?></strong>
             <ol>

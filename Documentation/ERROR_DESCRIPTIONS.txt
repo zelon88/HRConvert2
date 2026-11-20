@@ -2014,6 +2014,11 @@ ERROR DESCRIPTION
   A menu sends the family it offers, from v4.2.8, & a request naming a family that does not convert the pair is warned of first.
   Until v4.2.8 the Image, Drawing & archive menus & the upload page were drawn from lists the converter did not read, so a file
   such as an xcf or a gz was offered a conversion that ended here.
+  From v4.2.9 the Document family converts a pair only where one of its kinds, documents, spreadsheets, presentations or XPS,
+  lists both, as its menus always offered. xlsx to docx, or xps to anything but pdf, ends here where no other family converts it.
+  LibreOffice made nothing of either, & xpstopdf wrote a PDF under the name asked for. The Stream family reads only what
+  --Supported Stream Formats-- lists, so mp3 to mp4, which no other family converts, ends here, where the stream inspector
+  refused it with 21001.
   Other errors preceding this error will help narrow down the cause of this error.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2164,7 +2169,11 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  LibreOffice ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  LibreOffice ran & left no file. From v4.2.9 it is asked once, because LibreOffice that runs to its end & writes nothing, as it
+  does for a pair it has no filter for, would write nothing again. Only one a signal stopped, as a memory ceiling, a supervisor or
+  a crash stops it, is asked again, as many times as --File Operation Retry Count-- allows. Until v4.2.9 every attempt was made, &
+  each waited a second longer than the last.
+  From v4.2.9 the Document family no longer claims a pair across its kinds, so docx to pptx is Pandoc's & no longer ends here.
   Until v4.0.6 this read The document converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what LibreOffice printed, which usually names the cause.
   LibreOffice converts every document but an XPS file, which xpstopdf converts.
@@ -2267,6 +2276,28 @@ ERROR DESCRIPTION
   tool reads a file an upload names by its path, & -v names them beside Sandbox required.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox, & how.
   Documentation/Build/diagnose-bwrap.sh probes it the way HRConvert2 does, & changes nothing.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8003, <SESSION_IDENTIFIER>: A file named pdf that holds no PDF was refused, so ImageMagick never read it!
+
+FILE
+  Resources/Pipelines/Image/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.2.9 ImageMagick reads an image with the decoder the imageMagickDecoders.php shared module names, & with no other.
+  A decoder is named by what a file holds, & by its extension where what it holds names none. The PDF decoder hands the file to
+  Ghostscript, which reads PostScript as readily as a PDF, so a file named pdf is read as one only where its first bytes are a
+  PDF's header, & the file was refused because they were not. A file named pdf that holds an image is read as that image.
+  The file may be damaged, or PostScript, or something else named pdf. Nothing was converted, & nothing was run.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -3748,6 +3779,27 @@ ERROR DESCRIPTION
   NOTE. pdftotext cannot read a scanned page. A PDF with no text layer produces nothing at
   all even when pdftotext is present & current, which is the entire reason method 2 exists.
   An empty result is not necessarily a fault in this dependency.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15015, <SESSION_IDENTIFIER>: A file named pdf that holds no PDF was refused, so ImageMagick never read it!
+
+FILE
+  Resources/Pipelines/OCR/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  OCR method 2 rasterizes a PDF's pages with ImageMagick. From v4.2.9 ImageMagick reads them with the decoder the
+  imageMagickDecoders.php shared module names, & a file named pdf is read as a PDF only where its first bytes are a PDF's header,
+  because Ghostscript reads PostScript as readily as a PDF. Error 8003 says the same of the Image pipeline.
+  The file may be damaged, or PostScript, or something else named pdf. No page was rasterized, & the file was not read.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -9711,6 +9763,11 @@ WARNINGS ABOUT THE SANDBOX & REFUSED FORMATS
     WARNING!!! Bubblewrap is unavailable & sandboxing is not required, so a conversion will run unprotected.
       No sandbox could be built, & the conversion ran without one, as config.php allows. --Throw Sandbox Warning-- set to FALSE
       silences this. Run -v as root & read the Sandbox line.
+    WARNING!!! The Engine's own <FILES> for a sandbox could not be read from <FOLDER>, so a sandbox shows the host's in place of each.
+      From v4.2.9, & from sandboxIdentityFlags(). A sandbox shows the passwd, group & machine-id in Resources/Engine/Sandbox in place of
+      the host's, & runs its tool as the account they name. <FILES> names those missing or unreadable, & the host's is shown in place
+      of each, as before v4.2.9, so the conversion still runs. Restore the folder from the release this installation came from. -v's
+      Sandbox identity line says what a tool sees.
   The Stream pipeline raises this, from Resources/Pipelines/Stream/pipeline.php.
     WARNING!!! The stream converter was not launched, because no sandbox could be built.
       The sandbox refused the stream, & 21000 follows. From v4.2.7 the ffmpeg sandbox profile sets RequireSandbox, so a stream is

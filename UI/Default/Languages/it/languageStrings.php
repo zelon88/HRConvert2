@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility chec takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.6';
+$LanguageVersion = 'v4.2.9';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -177,6 +177,8 @@ $Gui1Text39 = 'Formati Email';
 $Gui1Text40 = 'Può ricalcare le immagini come disegni vettoriali.';
 // / 'Graph Formats'
 $Gui1Text41 = 'Formati Dei Grafi';
+// / 'Vector Formats'
+$Gui1Text42 = 'Formati Vettoriali';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

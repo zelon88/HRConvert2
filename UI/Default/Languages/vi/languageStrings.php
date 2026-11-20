@@ -38,7 +38,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.6';
+$LanguageVersion = 'v4.2.9';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -183,6 +183,8 @@ $Gui1Text39 = 'Định Dạng Email';
 $Gui1Text40 = 'Có thể dò nét hình ảnh thành bản vẽ vector.';
 // / 'Graph Formats'
 $Gui1Text41 = 'Định Dạng Đồ Thị';
+// / 'Vector Formats'
+$Gui1Text42 = 'Định Dạng Vector';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

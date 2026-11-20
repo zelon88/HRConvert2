@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.2.7.
+// / v4.2.9.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.2.7';
+$EngineVersion = 'v4.2.9';
 // / -----------------------------------------------------------------------------------
 
 
@@ -444,8 +444,8 @@ function showVersionReport() {
   $pipelineIsOffered = FALSE;
   $pipelineName = '';
   $unmetRequirements = array();
-  $listenerIsRunning = $bwrapBinary = $listenerIsAsked = FALSE;
-  $sandboxLauncher = '';
+  $listenerIsRunning = $bwrapBinary = $listenerIsAsked = $launcherMakesUserNamespace = $identityIsOwn = FALSE;
+  $sandboxLauncher = $identityFlags = $identityReason = '';
   $listenerStatus = array();
   // / The report collapses each group to a count & names only what failed.
   $componentChecks = array();
@@ -476,7 +476,7 @@ function showVersionReport() {
   $applicationVersion = ltrim((string)$EngineApplicationVersion, 'vV');
   // / The launcher says whether a sandbox runs the application's own copy of bubblewrap, which is how a kernel restricting unprivileged namespaces is kept restricted.
   // / The report is the Engine's, so what the Engine defines needs no guard here. A Core it loads, the Pipeline Core & Dependency Core among them, still does.
-  list ($bwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
+  list ($bwrapBinary, $sandboxLauncher, , $launcherMakesUserNamespace) = verifySandboxLauncher();
   // / Report what is installed & what state it is in.
   // / Every line is a fact. An explanation belongs in Documentation, not in this output.
   print($Lol.$ApplicationName.' '.$applicationVersion.$Lol);
@@ -572,6 +572,10 @@ function showVersionReport() {
       if ($servicePath !== '' && $choiceOrigin === 'own' && $choiceStatus === 'ok') print('  '.str_pad((string)$manifestEntry['Name'].', own build', 28).$servicePath.$Lol); } }
   print('  '.str_pad(($RunningInContainer ? 'Sandbox, Docker' : 'Sandbox, Bubblewrap'), 28).($bwrapBinary === FALSE ? 'FAILED, not functional' : 'OK'.((function_exists('privateBwrapPath') && $bwrapBinary === privateBwrapPath()) ? ', '.privateBwrapPath().', AppArmor profile '.sandboxApparmorProfileName() : '')).$Lol);
   if ($bwrapBinary === FALSE) $failureCount++;
+  // / What a tool sees of the host's identity, as sandboxIdentityFlags() decides it for every conversion, from v4.2.9.
+  if ($bwrapBinary !== FALSE) {
+    list ($identityIsOwn, $identityFlags, $identityReason) = sandboxIdentityFlags($launcherMakesUserNamespace);
+    print('  '.str_pad('Sandbox identity', 28).($identityIsOwn ? 'OWN, '.$identityReason : 'HOST, '.$identityReason).$Lol); }
   $failureCount = $failureCount + printReportRows($reportSections['DependencyNotes']);
 
   // / The application's own sections, its subsystems among them, follow its dependencies.
@@ -708,7 +712,7 @@ function showVersionReport() {
   print($Lol);
   $VersionInfoDisplayed = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $engineManifestVersion, $acceptedEngineManifest, $reportFunction, $applicationVersion, $apacheConfigName, $reportSections, $listenerIsAsked, $secretRows, $secretRow, $secretGroupWasFound, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $pipelineIsOffered, $pipelineName, $unmetRequirements, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $bwrapBinary, $listenerStatus, $listenerIsRunning, $socketMode, $componentChecks, $componentPair, $componentName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail, $requiredProfiles);
+  purgeSensitiveMemory($EnableMemoryProtection, $engineManifestVersion, $acceptedEngineManifest, $reportFunction, $applicationVersion, $apacheConfigName, $reportSections, $listenerIsAsked, $secretRows, $secretRow, $secretGroupWasFound, $manifestEntry, $serviceEntry, $servicePath, $choiceIsPresent, $choiceVersion, $choiceStatus, $choiceOutput, $choicePath, $choiceOrigin, $sandboxLauncher, $treeIsServed, $pipelineKindCounts, $pipelineKindLabels, $pipelineKind, $pipelineKindCount, $pipelineRecord, $pipelineIsOffered, $pipelineName, $unmetRequirements, $manifestVersion, $disabledFeatures, $disabledFeature, $misplacedRoots, $hostedStatus, $hostedDetail, $setupVersion, $hostedWritten, $hostedRemoved, $setupIsAvailable, $scriptIsValid, $scriptStatus, $scriptDisplayStatus, $scriptDetail, $bwrapBinary, $listenerStatus, $listenerIsRunning, $socketMode, $componentChecks, $componentPair, $componentName, $failureCount, $maintainHtaccess, $apacheConfigIsInstalled, $dataIsProtected, $exposureStatus, $exposureDetail, $requiredProfiles, $launcherMakesUserNamespace, $identityIsOwn, $identityFlags, $identityReason);
   return $VersionInfoDisplayed; }
 // / -----------------------------------------------------------------------------------
 // / A function to check that this host can actually do the work, without changing it.
@@ -5311,9 +5315,11 @@ function detectHostArchitecture() {
 // / A function to confirm this server can actually isolate a dependency invocation, & to say how.
 // / Accepts nothing.
 // / Returns the absolute path of a WORKING bubblewrap binary or FALSE, the launcher that built the
-// / sandbox, & whether an attempt was cut short, in that order. The launcher is escaped already,
-// / carries --unshare-user --disable-userns where they build a sandbox too, & goes where the binary
-// / would have gone.
+// / sandbox, whether an attempt was cut short & whether the launcher makes the user namespace itself,
+// / in that order. The launcher is escaped already, carries --unshare-user --disable-userns where they
+// / build a sandbox too, & goes where the binary would have gone. The fourth answer is TRUE exactly
+// / where it carries them, from v4.2.9, because --uid needs --unshare-user, & sandboxIdentityFlags()
+// / chooses the account a tool runs as only there.
 // / A path is returned only when a real sandbox was launched, so a caller holding one may build a command with it directly.
 // / This is a capability check, because bubblewrap may be installed & still be unable to build a namespace.
 // / The kernel, an AppArmor profile or a container runtime can each refuse unprivileged user namespaces.
@@ -5334,7 +5340,7 @@ function verifySandboxLauncher() {
   global $Verbose, $RunningAsRoot, $CurrentUser, $ApacheUser, $EnableMemoryProtection;
   $BwrapBinary = FALSE;
   $SandboxLauncher = $commandHint = '';
-  $ProbeWasInterrupted = FALSE;
+  $ProbeWasInterrupted = $LauncherMakesUserNamespace = FALSE;
   $bwrapReasons = $candidateBinaries = $bwrapOutput = $lockOutput = array();
   $locatedBinary = $privateBinary = $candidateBinary = $bwrapCommand = $candidateLabel = $probeArguments = $lockCommand = '';
   $userNamespaceLock = ' --unshare-user --disable-userns';
@@ -5394,7 +5400,9 @@ function verifySandboxLauncher() {
         $lockOutput = array();
         if ($probeAsAccount) list ($lockOutput, $lockExitCode) = runAsAccount($lockCommand, $ApacheUser);
         else exec($lockCommand, $lockOutput, $lockExitCode);
-        if ($lockExitCode === 0) $SandboxLauncher = $SandboxLauncher.$userNamespaceLock;
+        if ($lockExitCode === 0) {
+          $SandboxLauncher = $SandboxLauncher.$userNamespaceLock;
+          $LauncherMakesUserNamespace = TRUE; }
         else if ($Verbose) logEntry('Bubblewrap could not stop a sandbox making user namespaces. '.trim((string)(isset($lockOutput[0]) ? $lockOutput[0] : 'No reason was reported.')).' Sandboxes run without --disable-userns.'); }
       else array_push($bwrapReasons, $candidateLabel.': '.trim((string)(isset($bwrapOutput[0]) ? $bwrapOutput[0] : 'no reason was reported'))); } }
   // / The warning names what answers the failure. A copy that is not there is installed with the
@@ -5408,7 +5416,7 @@ function verifySandboxLauncher() {
   if ($Verbose) logEntry('Bubblewrap Sandbox Check: '.($BwrapBinary === FALSE ? 'FAILED, Reason: '.implode(' ', $bwrapReasons) : 'PASSED, Using: '.$SandboxLauncher).'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $commandHint, $bwrapReasons, $candidateBinaries, $bwrapOutput, $lockOutput, $locatedBinary, $privateBinary, $candidateBinary, $bwrapCommand, $candidateLabel, $probeArguments, $lockCommand, $userNamespaceLock, $bwrapExitCode, $copyExitCode, $lockExitCode, $probeAsAccount, $copyIsTried, $privateIsSafe, $copyIsJudged);
-  return array($BwrapBinary, $SandboxLauncher, $ProbeWasInterrupted); }
+  return array($BwrapBinary, $SandboxLauncher, $ProbeWasInterrupted, $LauncherMakesUserNamespace); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -5499,6 +5507,50 @@ function sandboxRequiredProfiles() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to assemble the binds that give a sandbox the Engine's own identity, from v4.2.9.
+// / Accepts whether the launcher makes the user namespace itself, as verifySandboxLauncher() answers it.
+// / Returns whether a tool sees the Engine's own identity & none of the host's, the flags, & a sentence saying what it sees, in that order.
+// / A dependency looks up the account it runs as, & LibreOffice aborts without one, so a sandbox has always shown a passwd & a group.
+// / Until v4.2.9 they were the host's, with the host's machine-id & host name, & Calibre copied the host's passwd into a book an EPUB
+// / named it in. A tool now sees the passwd, group & machine-id in Resources/Engine/Sandbox, & runs as the one account they name,
+// / sandbox, 1000, & its host is named sandbox.
+// / An account can be chosen only where the launcher makes the user namespace itself, as bubblewrap 0.8 & later does, because --uid
+// / needs --unshare-user. Elsewhere a tool runs as the web server's account, which only the host's passwd names, so it is shown the
+// / host's passwd & group, as before, & -v says so. The machine-id & the host name are the Engine's either way.
+// / A file missing from Resources/Engine/Sandbox is warned of & the host's is shown in its place, so a conversion still runs.
+function sandboxIdentityFlags($launcherMakesUserNamespace) {
+  // / Set variables.
+  global $InstLoc, $DirSep, $ApacheUser, $EnableMemoryProtection;
+  $IdentityIsOwn = FALSE;
+  $IdentityFlags = $IdentityReason = '';
+  $identityFolder = $identityName = '';
+  $missingFiles = array();
+  $accountIsOwn = $machineIsOwn = FALSE;
+  // / The account's number matches the one passwd & group name, & is the only one the namespace maps.
+  $sandboxAccount = 1000;
+  $identityFolder = rtrim((string)$InstLoc, $DirSep).$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Sandbox';
+  foreach (array('passwd', 'group', 'machine-id') as $identityName) if (!is_file($identityFolder.$DirSep.$identityName) or !is_readable($identityFolder.$DirSep.$identityName)) $missingFiles[] = $identityName;
+  if (count($missingFiles) > 0) warningEntry('The Engine\'s own '.implode(', ', $missingFiles).' for a sandbox could not be read from '.$identityFolder.', so a sandbox shows the host\'s in place of each.');
+  $accountIsOwn = ((bool)$launcherMakesUserNamespace && !in_array('passwd', $missingFiles, TRUE) && !in_array('group', $missingFiles, TRUE));
+  $machineIsOwn = !in_array('machine-id', $missingFiles, TRUE);
+  // / --unshare-all always makes the namespace the host name lives in, so the host name is the Engine's in every sandbox.
+  $IdentityFlags = ' --hostname sandbox';
+  if ($accountIsOwn) $IdentityFlags = $IdentityFlags.' --uid '.$sandboxAccount.' --gid '.$sandboxAccount
+    .' --ro-bind '.escapeshellarg($identityFolder.$DirSep.'passwd').' /etc/passwd'
+    .' --ro-bind '.escapeshellarg($identityFolder.$DirSep.'group').' /etc/group';
+  else $IdentityFlags = $IdentityFlags.' --ro-bind-try /etc/passwd /etc/passwd --ro-bind-try /etc/group /etc/group';
+  if ($machineIsOwn) $IdentityFlags = $IdentityFlags.' --ro-bind '.escapeshellarg($identityFolder.$DirSep.'machine-id').' /etc/machine-id';
+  else $IdentityFlags = $IdentityFlags.' --ro-bind-try /etc/machine-id /etc/machine-id';
+  $IdentityIsOwn = ($accountIsOwn && $machineIsOwn);
+  if ($IdentityIsOwn) $IdentityReason = 'a tool runs as sandbox, '.$sandboxAccount.', & sees none of the host\'s accounts, its machine-id or its name.';
+  else if (!$accountIsOwn && !(bool)$launcherMakesUserNamespace) $IdentityReason = 'a tool runs as '.$ApacheUser.' & sees the host\'s passwd & group, because bubblewrap here cannot make a user namespace of its own. Bubblewrap 0.8 & later can.';
+  else $IdentityReason = 'a tool sees the host\'s '.implode(', ', $missingFiles).', because '.$identityFolder.' is missing '.(count($missingFiles) === 1 ? 'it' : 'them').'.';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $identityFolder, $identityName, $missingFiles, $accountIsOwn, $machineIsOwn, $sandboxAccount, $launcherMakesUserNamespace);
+  return array($IdentityIsOwn, $IdentityFlags, $IdentityReason); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to wrap a dependency invocation in a bubblewrap sandbox.
 // / Accepts a finished command, the real path of the input, the real path of the output,
 // / & a boolean granting network access.
@@ -5549,13 +5601,16 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   $sandboxIsRequired = TRUE;
   // / The same is true of this one, for the same reason.
   $profileRequiresSandbox = TRUE;
-  $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = $profileFlags = $resourceFlags = $overlayFlags = $sandboxLauncher = '';
+  $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = $profileFlags = $resourceFlags = $overlayFlags = $sandboxLauncher = $identityFlags = '';
   $environmentFlags = $environmentPrefix = $environmentName = $environmentValue = '';
+  $launcherMakesUserNamespace = $identityIsOwn = FALSE;
   $rewriteSearch = $rewriteReplace = array();
   $inputDir = $outputDir = $sandboxInput = $sandboxOutput = '';
   // / The launcher is what built the proving sandbox, so it is what builds this one. On a kernel that
   // / restricts unprivileged namespaces it is this application's own copy of bubblewrap.
-  list ($bwrapBinary, $sandboxLauncher) = verifySandboxLauncher();
+  list ($bwrapBinary, $sandboxLauncher, , $launcherMakesUserNamespace) = verifySandboxLauncher();
+  // / The account, the machine & the host name a tool sees are the Engine's, from v4.2.9, & never the host's where the launcher allows it.
+  list ($identityIsOwn, $identityFlags) = sandboxIdentityFlags($launcherMakesUserNamespace);
   // / Collect the mounts this one dependency needs. Nothing else receives them.
   $profileFlags = sandboxProfileFlags($sandboxProfile);
   // / The files the calling pipeline carries in place of host files, such as its own policy.
@@ -5646,18 +5701,18 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
       .' --ro-bind-try /etc/fonts /etc/fonts'
       .' --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache'
       .' --ro-bind-try /etc/ssl/certs /etc/ssl/certs'
-      .' --ro-bind-try /opt /opt'
+      // / /opt is not shown, from v4.2.9. Nothing every dependency needs is installed beneath it, & a profile names the folder of one
+      // / that is, as the calibre profile names /opt/calibre, where Calibre's own installer puts it.
       .' --proc /proc'
       .' --dev /dev'
       .' --tmpfs /tmp'
       .' --tmpfs /run'
       // / A dependency resolves the running user with getpwuid() during startup & throws
       // / out of its configuration backend when the lookup fails. --unshare-all unshares
-      // / the user namespace, so without these the lookup has nothing to read & LibreOffice
-      // / aborts with Signal 6 before it opens a file.
-      .' --ro-bind-try /etc/passwd /etc/passwd'
-      .' --ro-bind-try /etc/group /etc/group'
-      .' --ro-bind-try /etc/machine-id /etc/machine-id'
+      // / the user namespace, so without a passwd & a group the lookup has nothing to read &
+      // / LibreOffice aborts with Signal 6 before it opens a file. Both are the Engine's own
+      // / where the launcher allows it, from v4.2.9, & so are the machine-id & the host name.
+      .$identityFlags
       .' --ro-bind-try /etc/localtime /etc/localtime'
       // / --dev builds a minimal device tree with no /dev/shm, which several dependencies
       // / require for shared memory. A tmpfs is enough & stays inside the namespace.
@@ -5691,7 +5746,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   // / when the administrator has turned the sandbox off.
   if ($CommandMayRun) $SandboxedCommand = limitCommand($SandboxedCommand, $sandboxProfile);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHostsFile, $environmentFlags, $environmentPrefix, $environmentName, $environmentValue, $environmentVariables, $resourceFlags, $rewriteSearch, $rewriteReplace, $readOnlyResourcePath, $bwrapBinary, $sandboxLauncher, $overlayFlags, $sandboxIsRequired, $profileRequiresSandbox, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
+  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHostsFile, $environmentFlags, $environmentPrefix, $environmentName, $environmentValue, $environmentVariables, $resourceFlags, $rewriteSearch, $rewriteReplace, $readOnlyResourcePath, $bwrapBinary, $sandboxLauncher, $launcherMakesUserNamespace, $identityIsOwn, $identityFlags, $overlayFlags, $sandboxIsRequired, $profileRequiresSandbox, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
   return array($CommandMayRun, $SandboxedCommand); }
 // / -----------------------------------------------------------------------------------
 

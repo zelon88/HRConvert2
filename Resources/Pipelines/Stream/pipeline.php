@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.8.
+// / v4.2.9.
 // / The Stream pipeline's converter. pipelineCore.php loads it only to dispatch a Stream conversion.
 // / Error block 21000 through 21002 belongs to this pipeline.
 // / This is the reference implementation of a detached worker pipeline.
@@ -373,11 +373,11 @@ function streamFileWalker($StreamFile) {
 // / Builds from 2.0 through 6.0 whitelist nested playlist segments themselves, which inspection cannot protect.
 function convertStreams($pathname, $newPathname) {
   // / Set variables.
-  global $Verbose, $StreamConnectionTimeout, $AllowStreamOverHTTP, $EnableMemoryProtection, $DirSep;
+  global $Verbose, $StreamConnectionTimeout, $AllowStreamOverHTTP, $EnableMemoryProtection, $DirSep, $MediaOutputArray, $VideoOutputArray;
   $ConversionSuccess = $ConversionErrors = FALSE;
   $ffmpegVersionIsValid = $inspectionFailed = $streamBudgetExhausted = FALSE;
   $allStreamURIs = $seenURLs = array();
-  $haltReason = $httpString = $returnData = $ffmpegCommand = $pinnedHosts = $pinnedHostsFile = '';
+  $haltReason = $httpString = $returnData = $ffmpegCommand = $pinnedHosts = $pinnedHostsFile = $outputExtension = $streamCodec = '';
   $commandMayRun = FALSE;
   $streamRecord = array();
   // / The six value pipeline contract. A stream is the reference case for a pipeline whose
@@ -403,13 +403,31 @@ function convertStreams($pathname, $newPathname) {
     else {
       // / Only widen the protocol whitelist to plain http when config.php explicitly allows it.
       if ($AllowStreamOverHTTP) $httpString = ',http';
+      // / The codecs follow the container, from v4.2.9.
+      // / A stream carries H.264 or HEVC video & AAC, AC-3 or MP3 sound. An mp4, a mov, an mkv, a ts & an flv hold them as they are, so
+      // / those are copied & nothing is encoded. An m4v holds no HEVC, so it is not one of them.
+      // / Every other video format is written as the Video pipeline writes it, a webm as VP9 & Opus, an ogv as Theora & Vorbis, a 3gp as
+      // / H.264 & AAC & the rest as H.264. An audio format, one the audio list holds & the video list does not, takes the sound alone, encoded
+      // / as FFMPEG encodes that format.
+      // / Until v4.2.9 every format was copied into, so the stream menu offered an avi, a webm, an mp3 & every other audio format, & FFMPEG
+      // / wrote none of them, because none of them holds what a stream carries.
+      $outputExtension = strtolower((string)$Extension);
+      if (in_array($outputExtension, array('mp4', 'mov', 'mkv', 'ts', 'flv'), TRUE)) $streamCodec = ' -c copy';
+      else if ($outputExtension === 'webm') $streamCodec = ' -c:v libvpx-vp9 -row-mt 1 -deadline realtime -cpu-used 7 -crf 30 -b:v 0 -c:a libopus';
+      else if ($outputExtension === 'ogv') $streamCodec = ' -c:v libtheora -c:a libvorbis';
+      else if ($outputExtension === '3gp') $streamCodec = ' -c:v libx264 -c:a aac';
+      else if (in_array($outputExtension, (array)$MediaOutputArray) && !in_array($outputExtension, (array)$VideoOutputArray)) $streamCodec = ' -vn';
+      else $streamCodec = ' -c:v libx264';
       // / Launch FFMPEG in the background & capture its PID so waitForStream() can reap it later.
       // / -rw_timeout is an INPUT option & must appear before -i to have any effect.
       // / The connection timeout is documented in seconds & is converted to microseconds here.
+      // / FFMPEG reads the playlist & each segment only with a demuxer ffmpegDemuxerWhitelist() names for a stream, from v4.2.9, so a segment
+      // / that is itself a manifest or a list is refused, whatever it is called.
       $ffmpegCommand = 'ffmpeg -protocol_whitelist '.escapeshellarg('file,https,tcp,tls,crypto'.$httpString)
+        .' -format_whitelist '.escapeshellarg(ffmpegDemuxerWhitelist(TRUE))
         .' -rw_timeout '.((int)$StreamConnectionTimeout * 1000000)
         .' -i '.escapeshellarg($pathname)
-        .' -c copy '.escapeshellarg($newPathname);
+        .$streamCodec.' '.escapeshellarg($newPathname);
       // / This command is sandboxed, & bwrap is PID 1 in the PID namespace --unshare-all creates.
       // / When bwrap dies the kernel kills every process inside, & it lives exactly as long as its child.
       // / Its identifier is the right handle, so waitForStream & terminateWorkerProcess work unchanged.
@@ -462,7 +480,7 @@ function convertStreams($pathname, $newPathname) {
         errorEntry('The stream converter failed to launch!', 21000, FALSE); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $newPathname is not purged, because it is a return value.
-  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHosts, $pinnedHostsFile, $streamRecord, $returnData, $ffmpegCommand, $commandMayRun, $httpString, $allStreamURIs, $seenURLs, $haltReason, $streamBudgetExhausted, $inspectionFailed, $ffmpegVersionIsValid, $pathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHosts, $pinnedHostsFile, $streamRecord, $returnData, $ffmpegCommand, $commandMayRun, $httpString, $allStreamURIs, $seenURLs, $haltReason, $streamBudgetExhausted, $inspectionFailed, $ffmpegVersionIsValid, $pathname, $outputExtension, $streamCodec);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $Extension, $OutputFilename, $StreamPID); }
 // / -----------------------------------------------------------------------------------
 

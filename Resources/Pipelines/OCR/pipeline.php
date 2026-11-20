@@ -12,9 +12,9 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.7.
+// / v4.2.9.
 // / The OCR pipeline. pipelineCore.php loads it only to dispatch an OCR operation.
-// / Error block 15000 through 15014 belongs to this pipeline.
+// / Error block 15000 through 15015 belongs to this pipeline.
 // / It also raises 8001 for ImageMagick.
 // / OCR is an operation pipeline, which takes a selection of files & decides a route per file.
 // / It returns three values, the third being the filenames it produced, which the core prints.
@@ -57,7 +57,8 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   $returnData = $file = $pathname = $oldPathname = $oldExtension = $newPathname = $verifiedFilename = '';
   $pathnameTEMP = $pathnameTEMP0 = $pathnameTEMP1 = $pathnameTEMP3 = $pathnameTEMPTesseract = '';
   $filename = $cleanFilname = $pageNumber = $pagedFile = $readPageData = '';
-  $ocrCommand = $policyFolder = '';
+  $ocrCommand = $policyFolder = $pageDecoder = '';
+  $pageDecoderIsNamed = FALSE;
   $policyVariables = array();
   $documentEnginePID = $writePageData = 0;
   $pagedFilesArrRAW = array();
@@ -146,17 +147,23 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
           // / Method 2 is the advanced route. Each page is rasterized & read by Tesseract.
           // / It reads a scanned page that holds no text layer, & is considerably slower.
           if ($Method === 2 or $Method === '2') {
+            // / The PDF is read with the decoder imageMagickDecoder() names, from v4.2.9, & with no other, whatever a policy says. A file
+            // / named pdf is read as one only where it holds one, because Ghostscript would read PostScript, & is refused otherwise.
+            list ($pageDecoderIsNamed, $pageDecoder) = imageMagickDecoder($pathname, $oldExtension);
             if ($imageBinary === FALSE) {
               $OperationErrors = TRUE;
               errorEntry('The installed ImageMagick version is missing, unidentifiable, or too old!', 8001, FALSE); }
             else if ($tesseractBinary === FALSE) {
               $OperationErrors = TRUE;
               errorEntry('The installed Tesseract version is missing, unidentifiable, or too old!', 15013, FALSE); }
+            else if (!$pageDecoderIsNamed) {
+              $OperationErrors = TRUE;
+              errorEntry('A file named pdf that holds no PDF was refused, so ImageMagick never read it!', 15015, FALSE); }
             else {
               $pathnameTEMP1 = str_replace('..', '', str_replace('.'.$oldExtension, '.jpg', $pathname));
               if ($Verbose) logEntry('Performing OCR intermediate operation using method 2.');
-              // / Perform the conversion using ImageMagick.
-              $ocrCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP1);
+              // / Perform the conversion using ImageMagick. The decoder is escaped apart from the path, so the sandbox finds the path it rewrites.
+              $ocrCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pageDecoder.':').escapeshellarg($pathname).' '.escapeshellarg($pathnameTEMP1);
               // / The policy this pipeline carries goes with the command. In the sandbox it is the only
               // / ImageMagick configuration there is, & outside one MAGICK_CONFIGURE_PATH has it read first.
               $policyFolder = dirname(__FILE__).$DirSep.'Policy';
@@ -319,7 +326,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Error handler for if any failures happened during file loops.
   if ($anyFileSucceeded) $OperationSuccessful = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $commandMayRun, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $policyFolder, $policyVariables, $PDFWorkSelected, $UserFilename, $UserExtension, $Method, $documentConverted, $verifiedFilename);
+  purgeSensitiveMemory($EnableMemoryProtection, $pageDecoder, $pageDecoderIsNamed, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $commandMayRun, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $policyFolder, $policyVariables, $PDFWorkSelected, $UserFilename, $UserExtension, $Method, $documentConverted, $verifiedFilename);
   return array($OperationSuccessful, $OperationErrors, $OutputFilenames); }
 // / -----------------------------------------------------------------------------------
 

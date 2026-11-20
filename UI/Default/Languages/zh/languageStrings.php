@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.6';
+$LanguageVersion = 'v4.2.9';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -173,6 +173,8 @@ $Gui1Text39 = '电子邮件格式';
 $Gui1Text40 = '可以将图像描摹为矢量图。';
 // / 'Graph Formats'
 $Gui1Text41 = '关系图格式';
+// / 'Vector Formats'
+$Gui1Text42 = '矢量格式';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

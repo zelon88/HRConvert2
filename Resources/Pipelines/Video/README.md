@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.1
+- **Version** v4.2.9
 - **Kind** conversion
 - **Family** Video
 - **Entry point** convertVideos

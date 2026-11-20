@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.8.
+// / v4.2.9.
 // / This file declares what the Audio conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.8';
+$PipelineVersion = 'v4.2.9';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -63,8 +63,8 @@ $PipelineEntryPoint = 'convertAudio';
 $PipelineSubsystem = 'Audio, Video & Streams';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.
-// / This pipeline needs none.
-$PipelineSharedModules = array();
+// / ffmpegDemuxers.php names the demuxers FFMPEG may read a file with, from v4.2.9.
+$PipelineSharedModules = array('ffmpegDemuxers.php');
 
 // / The request fields this pipeline actually reads.
 // / A bitrate is read here & nowhere else in the application.

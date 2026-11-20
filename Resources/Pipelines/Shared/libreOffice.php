@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.8.
+// / v4.2.9.
 // / The LibreOffice shared module, which is not a pipeline & converts nothing on its own.
 // / It holds the code the Document & OCR pipelines both need, so neither depends on the other.
 // / It is version pinned exactly as a pipeline is, by the table in Resources/Contract/app-engine-config.php.
@@ -35,7 +35,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v4.2.8';
+$SharedModuleVersion = 'v4.2.9';
 // / -----------------------------------------------------------------------------------
 
 
@@ -242,9 +242,12 @@ function removeLibreOfficeProfile($profileFolder) {
 // / -----------------------------------------------------------------------------------
 // / A function to convert one document with LibreOffice inside a sandbox.
 // / Accepts the input path, the intended output path & the target extension, in that order.
-// / Returns a completion boolean, whatever the converter printed & whether LibreOffice ran at all, in that order.
+// / Returns a completion boolean, whatever the converter printed, whether LibreOffice ran at all & whether a signal stopped it, in that order.
 // / LibreOffice that never ran was refused, as a conversion no sandbox could be built for is, & would be refused again, so a caller
 // / that retries stops, from v4.2.8. A caller that reads only the first two values is answered as it was.
+// / LibreOffice that ran to its end & wrote nothing would write nothing again, because it has no filter for the pair or cannot open the
+// / document, & it exits 0 either way. One a signal stopped, as a memory ceiling, a supervisor or a crash stops it, exits 128 & more, &
+// / may finish when asked again, so it is said to have been stopped, from v4.2.9, & a caller retries only that.
 // / Each conversion is its own LibreOffice process inside sandboxCommand, with no network.
 // / That closes every URL handler a hostile document could reach.
 // / LibreOffice reads a copy of the input named after the output, so it writes the output's own name.
@@ -254,7 +257,7 @@ function removeLibreOfficeProfile($profileFolder) {
 function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
   // / Set variables.
   global $Verbose, $EnableMemoryProtection, $DirSep;
-  $ConversionCompleted = $LibreOfficeRan = FALSE;
+  $ConversionCompleted = $LibreOfficeRan = $LibreOfficeWasStopped = FALSE;
   $ReturnData = '';
   $sofficeBinary = $sofficeFlags = $importFlag = $targetFormat = $sofficeCommand = $sandboxedCommand = $producedPath = $cleanExtension = $profileFolder = '';
   $inputFolder = $copyPath = $readPath = $derivedPath = '';
@@ -322,6 +325,8 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
         exec('LANG=C.UTF-8 LC_ALL=C.UTF-8 '.$sandboxedCommand.' 2>&1', $commandOutput, $commandExitCode);
         $LibreOfficeRan = TRUE;
         $ReturnData = implode(PHP_EOL, $commandOutput);
+        // / A process a signal ended exits 128 plus the signal's number, & one that ran to its end exits less.
+        $LibreOfficeWasStopped = ($commandExitCode > 128);
         // / A LibreOffice that was killed exits 137, which is 128 plus the number of the signal that kills.
         // / Inside a per conversion ceiling that is almost always its memory.
         if ($commandExitCode === 137) warningEntry('LibreOffice was killed while it converted '.basename($inputPath).'. One killed inside a per conversion ceiling has almost always run out of the memory it was given. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.');
@@ -336,9 +341,9 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
   // / The answer is read from the flag, because the output directory is edited into the command either way.
   if ($Verbose) logEntry('LibreOffice Conversion: '.basename($inputPath).' to '.$cleanExtension.', Sandboxed: '.($commandIsSandboxed ? 'YES' : 'NO').', Result: '.($ConversionCompleted ? 'OK' : 'FAILED').'.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  // / $ReturnData & $LibreOfficeRan are not purged, because they are return values.
+  // / $ReturnData, $LibreOfficeRan & $LibreOfficeWasStopped are not purged, because they are return values.
   purgeSensitiveMemory($EnableMemoryProtection, $sofficeBinary, $sofficeCommand, $sandboxedCommand, $producedPath, $cleanExtension, $commandMayRun, $documentIsSanitized, $referencesRemoved, $inputPath, $outputPath, $targetExtension, $profileFolder, $profileIsReady, $profileIsRemoved, $sofficeFlags, $importFlag, $targetFormat, $writerTargets, $commandIsSandboxed, $commandOutput, $commandExitCode, $inputFolder, $copyPath, $readPath, $derivedPath, $inputIsCopied, $readPathIsSafe);
-  return array($ConversionCompleted, $ReturnData, $LibreOfficeRan); }
+  return array($ConversionCompleted, $ReturnData, $LibreOfficeRan, $LibreOfficeWasStopped); }
 // / -----------------------------------------------------------------------------------
 
 ?>

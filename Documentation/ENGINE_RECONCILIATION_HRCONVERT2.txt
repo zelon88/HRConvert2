@@ -296,3 +296,77 @@ to find the first that serves it. describePipelineCapabilities() answers for an 
 function naming every family that serves an input & output pair, in the application's order, would
 answer it in one call, & would serve any application whose families overlap.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--v4.2.9--
+
+ONE ENGINE FILE CHANGED, & ONE FOLDER IS NEW. BOTH ARE BACKWARD COMPATIBLE.
+
+  Resources/Engine/engine.php                 v4.2.7 to v4.2.9
+  Resources/Engine/Sandbox/                   New. passwd, group, machine-id & index.html.
+
+HRConvert2 v4.2.9 requires Engine v4.2.9. Both changes close what v4.2.7 saw inside a sandbox & left
+below for this file's maintainer. A fault inside the sandbox is fixed in the Engine when it is found,
+& recorded here, so the two copies can still be merged with the reason for each change.
+
+--A sandbox shows the Engine's own identity, & none of the host's--
+
+WHAT CHANGED. sandboxCommand() no longer shows a tool the host's /etc/passwd, /etc/group or
+/etc/machine-id, or the host's name. The new function sandboxIdentityFlags() binds the passwd, group
+& machine-id in Resources/Engine/Sandbox in their place, names the host sandbox with --hostname, &
+runs the tool as the one account those files name, sandbox, whose uid & gid are 1000, with --uid &
+--gid. verifySandboxLauncher() returns a fourth value, whether the launcher it built carries
+--unshare-user --disable-userns, which it does exactly where bubblewrap 0.8 or later built a sandbox
+with them. --uid needs --unshare-user, so only there is the account chosen. Elsewhere the tool runs
+as the web server's account, which only the host's passwd names, so the host's passwd & group are
+shown as before. The machine-id & the host name are the Engine's either way. A file missing from the
+folder is warned of, & the host's is shown in its place, so a conversion still runs. -v prints a new
+line, Sandbox identity, OWN or HOST, saying what a tool sees.
+
+WHY. HRConvert2 v4.2.7 found Calibre copying the host's /etc/passwd into a book an EPUB's manifest
+named it in, inside its sandbox. The base sandbox showed it, & the group file, because LibreOffice
+aborts with Signal 6 when getpwuid() finds no user, & the machine-id beside them. A passwd naming the
+one account a tool runs as answers getpwuid() as the host's did, & a tool that copies it copies
+nothing of the host's. A machine-id names its host for good, & the host's name is the next thing a
+tool could copy, so neither is the host's either. LibreOffice, Calibre & every tool HRConvert2's
+format suite runs convert as before under the new account.
+
+HOW TO TAKE IT. Copy Resources/Engine/Sandbox, sandboxIdentityFlags(), the fourth value of
+verifySandboxLauncher(), the changes to sandboxCommand() & the Sandbox identity line of
+showVersionReport(). A caller reading two or three values from verifySandboxLauncher() is unaffected,
+& so is every sandbox profile. A tool that read a file below a host account's home, which nothing in
+either application does, would find no such account. HRProtect needs nothing more, unless a tool of
+its own is installed below /opt, which the next change is about.
+
+--The base sandbox no longer shows /opt--
+
+WHAT CHANGED. --ro-bind-try /opt /opt is gone from the base sandbox. A profile shows the folder of a
+tool installed below /opt in its ReadOnlyPaths.
+
+WHY. Nothing every dependency needs is installed below /opt, & what is there is whatever an
+administrator put there. HRConvert2's installation guide clones its own source below it.
+
+HOW TO TAKE IT. A profile whose tool lives below /opt names its folder. HRConvert2's calibre profile
+names /opt/calibre, where Calibre's own installer puts it. An application on the other copy finds its
+tools below /opt once, with command -v & readlink -f on each tool a profile runs, & names each folder.
+
+--What HRConvert2 now relies on, unchanged--
+
+Nothing below is a change to the Engine. Each is something the Engine already did that HRConvert2
+v4.2.9 depends on for the first time, so a reconciled Engine has to keep doing it.
+
+AN OPERATION PIPELINE LOADS A SHARED MODULE AS A CONVERSION PIPELINE DOES. Identify declares the new
+ffmpegDemuxers.php & OCR the new imageMagickDecoders.php beside libreOffice.php, & the Pipeline Core
+loads each once per request before the first pipeline that declared it, whatever its kind.
+
+A NEW SHARED MODULE IS PINNED BY HAND ONCE. --build --pins --write rewrites the version of every module
+in $EngineAcceptedSharedModules & adds none, so each new module was added to the table by hand first.
+
+--Seen, & left for the Engine's maintainer--
+
+A SANDBOX SHOWS THE WEB SERVER'S ENVIRONMENT. Bubblewrap passes its own environment into the
+namespace, & a tool can read it from /proc/self/environ & copy it into what it makes, as Calibre copied
+the passwd. Apache's names its account & its folders, & an administrator's SetEnv & PassEnv add
+whatever they name. --clearenv with PATH, LANG & what each caller names set again would show none of
+it. Each tool's need for a variable of the host's has to be traced first, as v4.2.7 traced paths.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

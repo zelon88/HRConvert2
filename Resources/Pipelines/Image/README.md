@@ -1,6 +1,6 @@
 # The Image pipeline
 
-The Image pipeline converts files. It accepts 36 input format(s) & produces 27 output format(s).
+The Image pipeline converts files. It accepts 36 input format(s) & produces 30 output format(s).
 
 This file is written by `Documentation/Build/hrconvert2-approvals.py --readme`.
 It is rewritten from the pipeline's own declarations & from the dependency manifest,
@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.8
+- **Version** v4.2.9
 - **Kind** conversion
 - **Family** Image
 - **Entry point** convertImages
@@ -20,7 +20,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 **Accepts** jpg, jpeg, jpe, png, gif, bmp, dib, tif, tiff, webp, ico, tga, pcx, ppm, pgm, pbm, pnm, xpm, xbm, dds, psd, pdf, heic, heif, avif, jp2, j2k, jxl, dpx, cin, exr, hdr, cr2, nef, arw, dng
 
-**Produces** jpg, jpeg, jpe, png, gif, bmp, dib, tif, tiff, webp, ico, tga, pcx, ppm, pgm, pbm, pnm, xpm, dds, pdf, eps, avif, jp2, j2k, jxl, cin, hdr
+**Produces** jpg, jpeg, jpe, png, gif, bmp, dib, tif, tiff, webp, ico, tga, pcx, ppm, pgm, pbm, pnm, xpm, dds, pdf, eps, avif, heic, heif, jp2, j2k, jxl, cin, hdr, exr
 
 ## Dependencies
 

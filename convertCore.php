@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.8.
+// / v4.2.9.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -45,7 +45,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.2.8';
+  $HRConvertVersion = 'v4.2.9';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -59,13 +59,13 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.2.8';
+  $RequiredGuiVersion = 'v4.2.9';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A Language Pack version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v4.2.6';
+  $RequiredLanguageVersion = 'v4.2.9';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / No Core Manager version is pinned here. Every manager role is a subcomponent of the
   // / Engine & getAcceptedManagers() inside the Engine pins each one exactly.
@@ -110,7 +110,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.2.7';
+  $RequiredEngineVersion = 'v4.2.9';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -1176,15 +1176,18 @@ function encodeIdentifyReply($identifyComplete, $identifyErrors, $identifyResult
 
 // / -----------------------------------------------------------------------------------
 // / A function to name the conversion families & the extensions each reads & writes.
-// / Accepts nothing. Returns each family, keyed by name, as the list it reads & the list it writes, in that order.
+// / Accepts nothing. Returns each family, keyed by name, as the list it reads, the list it writes & the kinds it is made of, if any, in that order.
 // / The order is significant & Stream must remain last.
 // / The five families added in v4.2.5 sit after Ebook & before Stream, so each takes only a pair no older family claims, & a conversion
 // / an installation made before v4.2.5 is made by the same pipeline after it. LaTeX sits before Markup, so a tex to pdf conversion is
 // / typeset by the LaTeX pipeline, & Markup is asked for what LaTeX does not write. Graph, from v4.2.6, sits after them & before Stream.
-// / Every stream output format is also an ordinary audio or video format, so an mp3 to aac conversion belongs to Audio & to Stream both.
-// / The first family to match wins, so Stream sits last & only ever claims a file no earlier family recognized.
-// / A stream family needs both halves together, because a family matches only when the input & the output extension are both in it.
-// / The two halves are kept apart everywhere else, so that detecting an m3u8 does not also claim every ordinary audio & video file.
+// / Every stream output format is also an ordinary audio or video format, & an administrator may list what Stream reads as a video too, as
+// / a ts can be, so Stream sits last, & a local file is converted as the file it is unless a request names Stream.
+// / The Stream family reads what $StreamArray holds & writes what $StreamOutputArray holds, from v4.2.9. Until v4.2.9 each of its lists held
+// / both, so it claimed an mp4 to mkv conversion, a request naming it sent the mp4 to the stream inspector, which refused it with 21001, &
+// / a workflow's Convert could ask for an m3u8, which nothing writes.
+// / The Document family is made of four kinds, documents, spreadsheets, presentations & XPS, & claims a pair only where one kind reads the
+// / input & writes the output, from v4.2.9, as its menus have always offered it. conversionFamilyClaims() says why.
 // / convertFiles() resolves a conversion with it, & a workflow asks it which files a conversion reads, so the two cannot disagree.
 // / A family a request names is asked first, from v4.2.8, so the order decides what converts a file whose request names no family, or one
 // / that cannot convert it.
@@ -1194,7 +1197,8 @@ function applicationConversionFamilies() {
   global $DocumentInputArray, $DocumentOutputArray, $SpreadsheetInputArray, $SpreadsheetOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ImageInputArray, $ImageOutputArray, $ModelInputArray, $ModelOutputArray, $SCADInputArray, $SCADOutputArray, $SVGInputArray, $SVGOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $MediaInputArray, $MediaOutputArray, $ArchiveArray, $DearchiveArray, $DrawingInputArray, $DrawingOutputArray, $EbookInputArray, $EbookOutputArray, $StreamArray, $StreamOutputArray,
     $LaTeXInputArray, $LaTeXOutputArray, $DataInputArray, $DataOutputArray, $TraceInputArray, $TraceOutputArray, $EmailInputArray, $EmailOutputArray, $MarkupInputArray, $MarkupOutputArray, $GraphInputArray, $GraphOutputArray;
   $ConversionFamilies = array(
-    'Document' => array(array_merge($DocumentInputArray, $SpreadsheetInputArray, $PresentationInputArray, $XPSInputArray), array_merge($DocumentOutputArray, $SpreadsheetOutputArray, $PresentationOutputArray, $XPSOutputArray)),
+    'Document' => array(array_merge($DocumentInputArray, $SpreadsheetInputArray, $PresentationInputArray, $XPSInputArray), array_merge($DocumentOutputArray, $SpreadsheetOutputArray, $PresentationOutputArray, $XPSOutputArray),
+      array(array($DocumentInputArray, $DocumentOutputArray), array($SpreadsheetInputArray, $SpreadsheetOutputArray), array($PresentationInputArray, $PresentationOutputArray), array($XPSInputArray, $XPSOutputArray))),
     'Image' => array($ImageInputArray, $ImageOutputArray),
     'Model' => array($ModelInputArray, $ModelOutputArray),
     'Scad' => array($SCADInputArray, $SCADOutputArray),
@@ -1211,7 +1215,7 @@ function applicationConversionFamilies() {
     'Email' => array($EmailInputArray, $EmailOutputArray),
     'Markup' => array($MarkupInputArray, $MarkupOutputArray),
     'Graph' => array($GraphInputArray, $GraphOutputArray),
-    'Stream' => array(array_merge($StreamArray, $StreamOutputArray), array_merge($StreamArray, $StreamOutputArray)));
+    'Stream' => array($StreamArray, $StreamOutputArray));
   return $ConversionFamilies; }
 // / -----------------------------------------------------------------------------------
 
@@ -1497,7 +1501,7 @@ function convertOptionsTransform($operationOptions) {
 // / Accepts the file's extension & the step's options. Returns TRUE when a family reads the one & writes the other.
 // / A file that is already the format asked for is not read, because there is nothing to convert.
 // / It asks the lists convertFiles() asks, less any family this server does not offer, so a workflow leaves out a file the converter would refuse,
-// / & one no installed tool reads, from v4.2.1.
+// / & one no installed tool reads, from v4.2.1. A family claims a pair as conversionFamilyClaims() says, from v4.2.9.
 function convertOperationAccepts($fileExtension, $operationOptions) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -1506,7 +1510,7 @@ function convertOperationAccepts($fileExtension, $operationOptions) {
   $familyFormats = array();
   $inputExtension = strtolower((string)$fileExtension);
   $outputExtension = (is_array($operationOptions) && isset($operationOptions['Extension'])) ? strtolower((string)$operationOptions['Extension']) : '';
-  foreach (offeredConversionFamilies() as $familyName => $familyFormats) if (is_array($familyFormats[0]) && is_array($familyFormats[1]) && in_array($inputExtension, $familyFormats[0]) && in_array($outputExtension, $familyFormats[1])) $OperationAccepts = TRUE;
+  foreach (offeredConversionFamilies() as $familyName => $familyFormats) if (conversionFamilyClaims($familyFormats, $inputExtension, $outputExtension)) $OperationAccepts = TRUE;
   if ($inputExtension === $outputExtension) $OperationAccepts = FALSE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $outputExtension, $inputExtension, $familyName, $familyFormats, $fileExtension, $operationOptions);
@@ -1908,8 +1912,8 @@ function getSandboxProfiles() {
     'calibre' => array(
       'OperationType' => 'Ebook',
       'RequireSandbox' => TRUE,
-      'ReadOnlyPaths' => array('/usr/share/calibre'),
-      'Reason' => 'Conversion recipes are read from this directory.'),
+      'ReadOnlyPaths' => array('/usr/share/calibre', '/opt/calibre'),
+      'Reason' => 'Conversion recipes are read from /usr/share/calibre. Calibre\'s own installer puts the whole of it in /opt/calibre, which the base sandbox no longer shows from v4.2.9.'),
 
     // / TeX Live keeps its configuration in /etc/texmf, & its formats, font maps & file database in /var/lib/texmf, & XeLaTeX cannot start
     // / without either. A document that names a system font has fontconfig find it, & with no cache fontconfig reads every font on the
@@ -1992,6 +1996,9 @@ function getSandboxProfiles() {
     // / Resvg finds fonts by reading the font folders below /usr itself, & msgconvert is a Perl program reading only what is below /usr.
     // / msgconvert asks for the server's full name while it writes a message, & finds none in here, which changes nothing it writes.
     // / FFmpeg reads a DASH manifest whatever an upload is called, & fetches each segment it names, & FFprobe, which Identify asks, does too.
+    // / From v4.2.9 every command names the demuxers it may use, & leaves out those that open a file another names, as
+    // / ffmpegDemuxers.php says. The profile still sets RequireSandbox, because the Stream pipeline's FFmpeg follows a playlist by design &
+    // / runs under it too. A profile of its own for streams would let the rest run where no sandbox can be built, & is left for a later release.
     // / Resvg draws an image an SVG names by a relative or an absolute path. Neither is run without a sandbox.
     'ffmpeg' => array('OperationType' => 'Video', 'RequireSandbox' => TRUE),
     'archive' => array('OperationType' => 'Archive'),
@@ -2103,17 +2110,17 @@ function applicationConfigModel() {
       'UserDocumentInputArray' => array('Type' => 'array', 'Default' => 'array(\'txt\', \'doc\', \'docx\', \'rtf\', \'odt\', \'pdf\', \'docm\', \'dot\', \'dotx\', \'ott\', \'fodt\', \'wpd\', \'abw\', \'pages\')', 'Depends' => '', 'Description' => 'Supported Document Input Formats'),
       'UserDocumentOutputArray' => array('Type' => 'array', 'Default' => 'array(\'txt\', \'doc\', \'docx\', \'rtf\', \'odt\', \'pdf\', \'ott\', \'fodt\')', 'Depends' => '', 'Description' => 'Supported Document Output Formats'),
       'UserSpreadsheetInputArray' => array('Type' => 'array', 'Default' => 'array(\'csv\', \'xls\', \'xlsx\', \'ods\', \'xlsm\', \'ots\', \'fods\')', 'Depends' => '', 'Description' => 'Supported Spreadsheet Input Formats'),
-      'UserSpreadsheetOutputArray' => array('Type' => 'array', 'Default' => 'array(\'csv\', \'xls\', \'xlsx\', \'ods\')', 'Depends' => '', 'Description' => 'Supported Spreadsheet Output Formats'),
+      'UserSpreadsheetOutputArray' => array('Type' => 'array', 'Default' => 'array(\'csv\', \'xls\', \'xlsx\', \'ods\', \'pdf\')', 'Depends' => '', 'Description' => 'Supported Spreadsheet Output Formats'),
       'UserXPSInputArray' => array('Type' => 'array', 'Default' => 'array(\'xps\', \'oxps\')', 'Depends' => '', 'Description' => 'Supported XPS Input Formats'),
       'UserXPSOutputArray' => array('Type' => 'array', 'Default' => 'array(\'pdf\')', 'Depends' => '', 'Description' => 'Supported XPS Output Formats'),
       'UserPresentationInputArray' => array('Type' => 'array', 'Default' => 'array(\'pptx\', \'ppt\', \'potx\', \'potm\', \'pot\', \'ppa\', \'odp\', \'otp\', \'fodp\')', 'Depends' => '', 'Description' => 'Supported Presentation Input Formats'),
       'UserPresentationOutputArray' => array('Type' => 'array', 'Default' => 'array(\'pptx\', \'ppt\', \'potx\', \'potm\', \'pot\', \'odp\', \'pdf\')', 'Depends' => '', 'Description' => 'Supported Presentation Output Formats'),
-      'UserImageInputArray' => array('Type' => 'array', 'Default' => 'array(\'jpeg\', \'jpg\', \'png\', \'bmp\', \'gif\', \'webp\', \'dds\', \'avif\', \'heic\', \'ico\', \'tiff\', \'tif\', \'jp2\', \'jpe\', \'dib\', \'j2k\', \'jxl\', \'heif\', \'tga\', \'pcx\', \'pnm\', \'pbm\', \'pgm\', \'ppm\', \'xpm\', \'xbm\', \'hdr\', \'dpx\', \'cin\', \'psd\', \'pdf\')', 'Depends' => '', 'Description' => 'Supported Image Input Formats'),
-      'UserImageOutputArray' => array('Type' => 'array', 'Default' => 'array(\'jpeg\', \'jpg\', \'png\', \'bmp\', \'gif\', \'webp\', \'dds\', \'avif\', \'ico\', \'tiff\', \'tif\', \'jp2\', \'jpe\', \'dib\', \'j2k\', \'jxl\', \'tga\', \'pcx\', \'pnm\', \'pbm\', \'pgm\', \'ppm\', \'xpm\', \'hdr\', \'cin\', \'pdf\', \'eps\')', 'Depends' => '', 'Description' => 'Supported Image Output Formats'),
+      'UserImageInputArray' => array('Type' => 'array', 'Default' => 'array(\'jpeg\', \'jpg\', \'png\', \'bmp\', \'gif\', \'webp\', \'dds\', \'avif\', \'heic\', \'ico\', \'tiff\', \'tif\', \'jp2\', \'jpe\', \'dib\', \'j2k\', \'jxl\', \'heif\', \'tga\', \'pcx\', \'pnm\', \'pbm\', \'pgm\', \'ppm\', \'xpm\', \'xbm\', \'hdr\', \'dpx\', \'cin\', \'psd\', \'pdf\', \'exr\', \'cr2\', \'nef\', \'arw\', \'dng\')', 'Depends' => '', 'Description' => 'Supported Image Input Formats'),
+      'UserImageOutputArray' => array('Type' => 'array', 'Default' => 'array(\'jpeg\', \'jpg\', \'png\', \'bmp\', \'gif\', \'webp\', \'dds\', \'avif\', \'heic\', \'heif\', \'ico\', \'tiff\', \'tif\', \'jp2\', \'jpe\', \'dib\', \'j2k\', \'jxl\', \'tga\', \'pcx\', \'pnm\', \'pbm\', \'pgm\', \'ppm\', \'xpm\', \'hdr\', \'exr\', \'cin\', \'pdf\', \'eps\')', 'Depends' => '', 'Description' => 'Supported Image Output Formats'),
       'UserMediaInputArray' => array('Type' => 'array', 'Default' => 'array(\'sox\', \'spdif\', \'spx\', \'tta\', \'u16be\', \'u16le\', \'u24be\', \'u24le\', \'u32be\', \'u32le\', \'u8\', \'voc\', \'wav\', \'wv\', \'wsaud\', \'mulaw\', \'mxf\', \'mxf_d10\', \'mxf_opatom\', \'oga\', \'ogg\', \'opus\', \'oss\', \'psp\', \'rawvideo\', \'s16be\', \'s16le\', \'s24be\', \'s24le\', \'s32be\', \'s32le\', \'s8\', \'sbc\', \'ilbc\', \'ircam\', \'latm\', \'lrc\', \'mp2\', \'mp3\', \'mlp\', \'flac\', \'g722\', \'g723_1\', \'g726\', \'g726le\', \'gsm\', \'caf\', \'daud\', \'dts\', \'eac3\', \'f32be\', \'f32le\', \'f64be\', \'f64le\', \'ac3\', \'ac4\', \'adts\', \'aiff\', \'alaw\', \'amr\', \'aptx\', \'aptx_hd\', \'argo_asf\', \'argo_cvg\', \'ast\', \'au\', \'a64\', \'aa\', \'aac\', \'aax\', \'acm\', \'act\', \'adp\', \'adx\', \'aea\', \'afc\', \'aix\', \'alp\', \'amrnb\', \'amrwb\', \'apac\', \'apc\', \'ape\', \'apm\', \'binka\', \'bit\', \'boa\', \'bonk\', \'brstm\', \'dfpwm\', \'dsf\', \'dss\', \'epaf\', \'fsb\', \'fwse\', \'g729\', \'hca\', \'idf\', \'kux\', \'kvag\', \'laf\', \'lavfi\', \'loas\', \'luodat\', \'lvf\', \'lxf\', \'mca\', \'mcc\', \'megsts\', \'mlv\', \'mmf\', \'mods\', \'moflex\', \'mpc8\', \'msf\', \'msnwctcp\', \'mtaf\', \'musx\', \'nc\', \'nistsphere\', \'nsp\', \'paf\', \'pam_pipe\', \'pbm_pipe\', \'pfm_pipe\', \'pp_bnk\', \'psxstr\', \'pva\', \'pvf\', \'qcp\', \'rka\', \'rl2\', \'rpl\', \'rso\', \'s337m\', \'sap\', \'sbg\', \'scd\', \'sdns\', \'sdp\', \'sds\', \'sdx\', \'siff\', \'simbiosis_imx\', \'sln\', \'smk\', \'smush\', \'sol\', \'svag\', \'svs\', \'tak\', \'thp\', \'tierexseq\', \'tty\', \'ty\', \'usm\', \'vag\', \'vidc\', \'vpk\', \'vqf\', \'w64\', \'wady\', \'wavarc\', \'wsd\', \'wsvqa\', \'wve\', \'xa\', \'xbin\', \'xbm_pipe\', \'xmd\', \'xpm_pipe\', \'xwma\', \'yop\', \'wma\', \'m4a\', \'mp4\', \'m4v\', \'mkv\', \'webm\', \'avi\', \'mov\', \'wmv\', \'asf\', \'flv\', \'mpg\', \'mpeg\', \'ogv\', \'3gp\', \'vob\', \'rm\', \'aif\', \'mka\', \'ra\')', 'Depends' => '', 'Description' => 'Supported Audio Input Formats'),
       'UserMediaOutputArray' => array('Type' => 'array', 'Default' => 'array(\'mp3\', \'aac\', \'ogg\', \'wma\', \'mp2\', \'flac\', \'m4a\', \'wav\', \'oga\', \'opus\', \'aiff\', \'au\', \'ac3\', \'mka\')', 'Depends' => '', 'Description' => 'Supported Audio Output Formats'),
       'UserVideoInputArray' => array('Type' => 'array', 'Default' => 'array(\'smoothstreaming\', \'svcd\', \'swf\', \'truehd\', \'vc1\', \'vc1test\', \'vcd\', \'vob\', \'vvc\', \'webm\', \'yuv4mpegpipe\', \'mpjpeg\', \'mxf\', \'mxf_d10\', \'mxf_opatom\', \'nut\', \'obu\', \'ogv\', \'psp\', \'rawvideo\', \'rm\', \'roq\', \'rtp_mpegts\', \'smjpeg\', \'hevc\', \'hls\', \'image2\', \'image2pipe\', \'ipod\', \'ismv\', \'m4v\', \'matroska\', \'mjpeg\', \'mkvtimestamp_v2\', \'mov\', \'mp4\', \'mpeg\', \'mpeg1video\', \'mpeg2video\', \'mpegts\', \'mpegtsraw\', \'mpegvideo\', \'fbdev\', \'film_cpk\', \'filmstrip\', \'gxf\', \'h261\', \'h263\', \'h264\', \'hds\', \'avs2\', \'avs3\', \'cavsvideo\', \'cavs\', \'dirac\', \'dnxhd\', \'dv\', \'dvd\', \'evc\', \'3g2\', \'3gp\', \'apng\', \'argo_asf\', \'argo_cvg\', \'asf\', \'asf_stream\', \'avi\', \'avif\', \'avm2\', \'3dostr\', \'4xm\', \'adf\', \'ads\', \'alias_pix\', \'anm\', \'argo_brp\', \'asf_o\', \'av1\', \'avs\', \'bethsoftvid\', \'bfi\', \'bink\', \'bmv\', \'brender_pix\', \'brender\', \'cdg\', \'cdxl\', \'cine\', \'concat\', \'cri\', \'dcstr\', \'derf\', \'dfa\', \'dhav\', \'dsicin\', \'dtshd\', \'dxa\', \'ea\', \'exr\', \'fits\', \'flic\', \'frm\', \'gdv\', \'genh\', \'gif\', \'idcin\', \'iff\', \'ifv\', \'ingenient\', \'ipmovie\', \'iss\', \'iv8\', \'ivf\', \'ivr\', \'j2k\', \'jp2\', \'jv\', \'live_flv\', \'lmlm4\', \'mtv\', \'mv\', \'mvi\', \'mxg\', \'nsv\', \'nuv\', \'osq\', \'pcx_pipe\', \'pdv\', \'pgm_pipe\', \'pgmuv_pipe\', \'pgx_pipe\', \'phm_pipe\', \'protocol_pipe\', \'pictor_pipe\', \'png_pipe\', \'ppm_pipe\', \'psd_pipe\', \'qdraw_pipe\', \'qoi_pipe\', \'r3d\', \'redspark\', \'rroq\', \'rsd\', \'rtsp\', \'sdr2\', \'ser\', \'sga\', \'sgi_pipe\', \'shn\', \'sunrast_pipe\', \'svg_pipe\', \'tiff_pipe\', \'tmv\', \'v210\', \'v210x\', \'vbn_pipe\', \'video4linux2\', \'v4l2\', \'vividas\', \'vivo\', \'vmd\', \'wc3movie\', \'webm_dash_manifest\', \'webp_pipe\', \'wtv\', \'xmv\', \'xvag\', \'xwd_pipe\', \'mkv\', \'wmv\', \'flv\', \'mpg\')', 'Depends' => '', 'Description' => 'Supported Video Input Formats'),
-      'UserVideoOutputArray' => array('Type' => 'array', 'Default' => 'array(\'3gp\', \'mkv\', \'avi\', \'mp4\', \'mpeg\', \'wmv\', \'mov\', \'m4v\', \'ogv\', \'flv\', \'ts\', \'mpg\')', 'Depends' => '', 'Description' => 'Supported Video Output Formats'),
+      'UserVideoOutputArray' => array('Type' => 'array', 'Default' => 'array(\'3gp\', \'mkv\', \'avi\', \'mp4\', \'mpeg\', \'wmv\', \'mov\', \'m4v\', \'ogv\', \'webm\', \'flv\', \'ts\', \'mpg\')', 'Depends' => '', 'Description' => 'Supported Video Output Formats'),
       'UserStreamArray' => array('Type' => 'array', 'Default' => 'array(\'m3u8\', \'ts\')', 'Depends' => '', 'Description' => 'Supported Stream Formats'),
       'UserDrawingInputArray' => array('Type' => 'array', 'Default' => 'array(\'dxf\', \'vdx\', \'fig\', \'dia\', \'wpg\')', 'Depends' => '', 'Description' => 'Supported Drawing Input Formats'),
       'UserDrawingOutputArray' => array('Type' => 'array', 'Default' => 'array(\'dxf\', \'vdx\', \'fig\', \'dia\', \'wpg\', \'shape\', \'png\', \'svg\', \'pdf\', \'eps\', \'emf\', \'plt\', \'tex\')', 'Depends' => '', 'Description' => 'Supported Drawing Output Formats'),
@@ -2849,12 +2856,37 @@ function renameFiles($FilesToRename, $NamePattern) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to decide whether a conversion family claims one conversion, from v4.2.9.
+// / Accepts the family's lists, as applicationConversionFamilies() gives them, the input extension & the output extension.
+// / Returns TRUE where the family reads the one & writes the other.
+// / A family made of kinds claims a pair only where one kind reads the input & writes the output. The Document family is made of documents,
+// / spreadsheets, presentations & XPS, & LibreOffice writes a spreadsheet only from a spreadsheet & a presentation only from a presentation,
+// / & across them nothing but a PDF, which every kind lists. Until v4.2.9 its lists were merged, so it claimed docx to pptx, & LibreOffice
+// / was asked for it, from a workflow or a request naming no family, & wrote nothing, though Pandoc converts it. Its menus offered only
+// / what one kind lists, & still do. A family that names no kinds is one kind, & claims what its two lists hold, as every family did.
+function conversionFamilyClaims($familyFormats, $inputExtension, $outputExtension) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $FamilyClaims = FALSE;
+  $familyKinds = $kindFormats = array();
+  $inputExtension = strtolower((string)$inputExtension);
+  $outputExtension = strtolower((string)$outputExtension);
+  if (is_array($familyFormats) && is_array($familyFormats[0] ?? NULL) && is_array($familyFormats[1] ?? NULL)) {
+    $familyKinds = is_array($familyFormats[2] ?? NULL) ? $familyFormats[2] : array(array($familyFormats[0], $familyFormats[1]));
+    foreach ($familyKinds as $kindFormats) if (is_array($kindFormats[0] ?? NULL) && is_array($kindFormats[1] ?? NULL) && in_array($inputExtension, $kindFormats[0]) && in_array($outputExtension, $kindFormats[1])) $FamilyClaims = TRUE; }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $familyKinds, $kindFormats, $familyFormats, $inputExtension, $outputExtension);
+  return $FamilyClaims; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to choose the family that converts one file, from v4.2.8.
 // / Accepts the conversion families, the file's extension, the extension asked for & the family the request named, which may be empty.
 // / Returns the name of the family that converts it, or an empty string where no family's lists hold the pair.
-// / A family claims a pair when its input list holds the one & its output list the other, & several can. docx to pptx is the Document
-// / family's & the Markup family's, & until v4.2.8 the first of them was the only one asked, from the Markup menu too, though LibreOffice
-// / makes no presentation of a text document.
+// / A family claims a pair when its input list holds the one & its output list the other, as conversionFamilyClaims() says, & several can.
+// / pdf to docx is the Document family's & the E-Book family's. docx to pptx was the Document family's & the Markup family's, & until v4.2.8
+// / the first of them was the only one asked, from the Markup menu too, though LibreOffice makes no presentation of a text document. From
+// / v4.2.9 the Document family no longer claims it.
 // / A family serves a pair when a pipeline of its own converts it. One whose pipeline excludes the pair, as the Document family's excludes
 // / pdf to txt, would fail it, so a family that serves the pair converts it before one that only claims it.
 // / The family a request named converts the file where it serves the pair. Otherwise the first family that serves it does, & failing that
@@ -2874,8 +2906,7 @@ function conversionFamilyFor($conversionFamilies, $inputExtension, $outputExtens
   $requestedName = strtolower(trim((string)$requestedFamily));
   $formatIsUnchanged = ($inputExtension === $outputExtension);
   foreach ((array)$conversionFamilies as $familyName => $familyFormats) {
-    if (!is_array($familyFormats) or !is_array($familyFormats[0] ?? NULL) or !is_array($familyFormats[1] ?? NULL)) continue;
-    if (!in_array($inputExtension, $familyFormats[0]) or !in_array($outputExtension, $familyFormats[1])) continue;
+    if (!conversionFamilyClaims($familyFormats, $inputExtension, $outputExtension)) continue;
     redeclare($familyServes, (!$formatIsUnchanged && $PipelineCoreActive && function_exists('familyHasPipeline') && familyHasPipeline($familyName, $inputExtension, $outputExtension)));
     if ($claimingFamily === '') $claimingFamily = $familyName;
     if ($servingFamily === '' && $familyServes) $servingFamily = $familyName;

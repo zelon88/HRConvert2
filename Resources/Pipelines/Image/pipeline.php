@@ -12,9 +12,9 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.8.
+// / v4.2.9.
 // / The Image pipeline's converter. pipelineCore.php loads it only to dispatch an Image conversion.
-// / Error block 8000 through 8002 belongs to this pipeline.
+// / Error block 8000 through 8003 belongs to this pipeline.
 // / The OCR pipeline raises 8001 for the same ImageMagick.
 // / ImageMagick comes from verifiedToolPath().
 // / This pipeline carries its own ImageMagick policy, in Policy/policy.xml beside this file.
@@ -50,7 +50,8 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
   $WorkerPID = 0;
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $imageBinary = FALSE;
-  $returnData = $wh = $wxh = $bgSwitch = $outputExt = $inputExt = $inputFrame = $outputFormat = $magickCommand = $policyFolder = $iconLimit = '';
+  $returnData = $wh = $wxh = $bgSwitch = $outputExt = $inputExt = $inputFrame = $outputFormat = $magickCommand = $policyFolder = $iconLimit = $inputDecoder = '';
+  $decoderIsNamed = FALSE;
   $policyVariables = array();
   // / The formats this pipeline writes that hold several images, as pages, frames or sizes.
   $multiImageOutputs = array('gif', 'tif', 'tiff', 'pdf', 'webp', 'ico');
@@ -90,13 +91,17 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
     // / The frame is escaped apart from the path, so the sandbox finds the path it rewrites & no shell reads the brackets as a pattern.
     $inputExt = strtolower(pathinfo($pathname, PATHINFO_EXTENSION));
     if ($inputExt === 'psd' or !in_array($outputExt, $multiImageOutputs, TRUE)) $inputFrame = escapeshellarg('[0]');
+    // / The input is read with the decoder imageMagickDecoder() names, from v4.2.9, & with no other, whatever a policy says, so PostScript,
+    // / an SVG or an MVG named as an image is handed to that image's decoder, which cannot read it. The decoder is escaped apart from the
+    // / path, as the frame is, so the sandbox finds the path it rewrites.
+    list ($decoderIsNamed, $inputDecoder) = imageMagickDecoder($pathname, $inputExt);
     // / The output is written in the format its extension names, & ImageMagick is told so. Asked for a format it cannot write, it
     // / otherwise warns & writes the format it read under the name asked for, so a host without an AVIF encoder handed out a PNG named avif.
     $outputFormat = escapeshellarg(strtoupper($outputExt).':');
     // / Build & sandbox the command once. It does not change between retries.
     // / The input comes FIRST. -alpha remove is an operation & needs an image already
     // / loaded, so a settings block placed before the input fails with no images found.
-    $magickCommand = escapeshellarg($imageBinary).' '.escapeshellarg($pathname).$inputFrame.' '.$bgSwitch.$wh.$rotate.$iconLimit.$outputFormat.escapeshellarg($newPathname);
+    $magickCommand = escapeshellarg($imageBinary).' '.escapeshellarg($inputDecoder.':').escapeshellarg($pathname).$inputFrame.' '.$bgSwitch.$wh.$rotate.$iconLimit.$outputFormat.escapeshellarg($newPathname);
     // / The policy folder is the sandbox's read only resource, where the profile's Overlays put its
     // / policy.xml in place of the host's, & it is named in MAGICK_CONFIGURE_PATH, which ImageMagick
     // / reads before its own configuration, so a host whose policy sits somewhere else still loads
@@ -109,7 +114,11 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
     // / The policy.xml the installed ImageMagick reads is covered too, wherever its build keeps it.
     if ($policyFolder !== '' && function_exists('coverResolvedImageMagickPolicy')) coverResolvedImageMagickPolicy('imagemagick');
     list ($commandMayRun, $magickCommand) = sandboxCommand($magickCommand, $pathname, $newPathname, FALSE, 'imagemagick', $policyFolder, $policyVariables);
-    if (!$commandMayRun) {
+    // / A file named pdf that holds no PDF is the one file no decoder is named for, because Ghostscript would read it as PostScript.
+    if (!$decoderIsNamed) {
+      $ConversionErrors = TRUE;
+      errorEntry('A file named pdf that holds no PDF was refused, so ImageMagick never read it!', 8003, FALSE); }
+    else if (!$commandMayRun) {
       $ConversionErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so this image conversion cannot be isolated!', 8002, FALSE); }
     else {
@@ -134,7 +143,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $inputExt, $inputFrame, $outputFormat, $multiImageOutputs, $bgSwitch, $iconLimit, $imageBinary, $magickCommand, $commandMayRun, $policyFolder, $policyVariables);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $inputExt, $inputFrame, $outputFormat, $multiImageOutputs, $bgSwitch, $iconLimit, $imageBinary, $magickCommand, $commandMayRun, $policyFolder, $policyVariables, $decoderIsNamed, $inputDecoder);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

@@ -1380,7 +1380,9 @@ $UserDocumentOutputArray = array('txt', 'doc', 'docx', 'rtf', 'odt', 'pdf', 'ott
 $UserSpreadsheetInputArray = array('csv', 'xls', 'xlsx', 'ods', 'xlsm', 'ots', 'fods');
 // /  --Supported Spreadsheet Output Formats--
 // /   The spreadsheets a user may convert TO, from v4.2.8.
-$UserSpreadsheetOutputArray = array('csv', 'xls', 'xlsx', 'ods');
+// /   pdf is written from v4.2.9, as every other kind of document lists it, because the Document family claims a conversion only where
+// /   one kind lists both formats from v4.2.9, & a workflow converted a spreadsheet to pdf before it.
+$UserSpreadsheetOutputArray = array('csv', 'xls', 'xlsx', 'ods', 'pdf');
 // /  --Supported XPS Input Formats--.
 $UserXPSInputArray = array('xps', 'oxps');
 // /  --Supported XPS Output Formats--.
@@ -1396,13 +1398,17 @@ $UserPresentationOutputArray = array('pptx', 'ppt', 'potx', 'potm', 'pot', 'odp'
 // /   as an input, so nothing here is offered & then refused.
 // /   A layered psd is read as the image its layers flatten to, & a pdf, gif or tiff of several images is read as its first when the
 // /   output holds one, from v4.2.8. Until then such a file was written as a file for each image, & the conversion failed.
-$UserImageInputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'heic', 'ico', 'tiff', 'tif', 'jp2', 'jpe', 'dib', 'j2k', 'jxl', 'heif', 'tga', 'pcx', 'pnm', 'pbm', 'pgm', 'ppm', 'xpm', 'xbm', 'hdr', 'dpx', 'cin', 'psd', 'pdf');
+// /   exr & the camera raw formats cr2, nef, arw & dng are read, from v4.2.9, where ImageMagick is built with OpenEXR & LibRaw, as
+// /   Documentation/Build/build-imagemagick-v7.sh builds it.
+$UserImageInputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'heic', 'ico', 'tiff', 'tif', 'jp2', 'jpe', 'dib', 'j2k', 'jxl', 'heif', 'tga', 'pcx', 'pnm', 'pbm', 'pgm', 'ppm', 'xpm', 'xbm', 'hdr', 'dpx', 'cin', 'psd', 'pdf', 'exr', 'cr2', 'nef', 'arw', 'dng');
 // /  --Supported Image Output Formats--
 // /   What a user may ask for. Every entry is a format the pipeline declares as an
 // /   output.
 // /   avif is written only where libheif has an AV1 encoder. ImageMagick is told the format it writes, from v4.2.8, so a server without
 // /   one refuses avif. Until then it wrote a png under the name asked for.
-$UserImageOutputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'ico', 'tiff', 'tif', 'jp2', 'jpe', 'dib', 'j2k', 'jxl', 'tga', 'pcx', 'pnm', 'pbm', 'pgm', 'ppm', 'xpm', 'hdr', 'cin', 'pdf', 'eps');
+// /   heic & heif are written, from v4.2.9, where libheif has an HEVC encoder, & exr where ImageMagick is built with OpenEXR. The build
+// /   script installs libheif's encoders, which Ubuntu 24.04 packages apart from libheif.
+$UserImageOutputArray = array('jpeg', 'jpg', 'png', 'bmp', 'gif', 'webp', 'dds', 'avif', 'heic', 'heif', 'ico', 'tiff', 'tif', 'jp2', 'jpe', 'dib', 'j2k', 'jxl', 'tga', 'pcx', 'pnm', 'pbm', 'pgm', 'ppm', 'xpm', 'hdr', 'exr', 'cin', 'pdf', 'eps');
 // /  --Supported Audio Input Formats--.
 // /   A video is read for its sound, from v4.2.8, so mp4, mkv, avi, mov, webm & the other video containers here become audio from the Audio menu.
 $UserMediaInputArray = array('sox', 'spdif', 'spx', 'tta', 'u16be', 'u16le', 'u24be', 'u24le', 'u32be', 'u32le', 'u8', 'voc', 'wav', 'wv', 'wsaud', 'mulaw', 'mxf', 'mxf_d10', 'mxf_opatom', 'oga', 'ogg', 'opus', 'oss', 'psp', 'rawvideo', 's16be', 's16le', 's24be', 's24le', 's32be', 's32le', 's8', 'sbc', 'ilbc', 'ircam', 'latm', 'lrc', 'mp2', 'mp3', 'mlp', 'flac', 'g722', 'g723_1', 'g726', 'g726le', 'gsm', 'caf', 'daud', 'dts', 'eac3', 'f32be', 'f32le', 'f64be', 'f64le', 'ac3', 'ac4', 'adts', 'aiff', 'alaw', 'amr', 'aptx', 'aptx_hd', 'argo_asf', 'argo_cvg', 'ast', 'au', 'a64', 'aa', 'aac', 'aax', 'acm', 'act', 'adp', 'adx', 'aea', 'afc', 'aix', 'alp', 'amrnb', 'amrwb', 'apac', 'apc', 'ape', 'apm', 'binka', 'bit', 'boa', 'bonk', 'brstm', 'dfpwm', 'dsf', 'dss', 'epaf', 'fsb', 'fwse', 'g729', 'hca', 'idf', 'kux', 'kvag', 'laf', 'lavfi', 'loas', 'luodat', 'lvf', 'lxf', 'mca', 'mcc', 'megsts', 'mlv', 'mmf', 'mods', 'moflex', 'mpc8', 'msf', 'msnwctcp', 'mtaf', 'musx', 'nc', 'nistsphere', 'nsp', 'paf', 'pam_pipe', 'pbm_pipe', 'pfm_pipe', 'pp_bnk', 'psxstr', 'pva', 'pvf', 'qcp', 'rka', 'rl2', 'rpl', 'rso', 's337m', 'sap', 'sbg', 'scd', 'sdns', 'sdp', 'sds', 'sdx', 'siff', 'simbiosis_imx', 'sln', 'smk', 'smush', 'sol', 'svag', 'svs', 'tak', 'thp', 'tierexseq', 'tty', 'ty', 'usm', 'vag', 'vidc', 'vpk', 'vqf', 'w64', 'wady', 'wavarc', 'wsd', 'wsvqa', 'wve', 'xa', 'xbin', 'xbm_pipe', 'xmd', 'xpm_pipe', 'xwma', 'yop', 'wma', 'm4a', 'mp4', 'm4v', 'mkv', 'webm', 'avi', 'mov', 'wmv', 'asf', 'flv', 'mpg', 'mpeg', 'ogv', '3gp', 'vob', 'rm', 'aif', 'mka', 'ra');
@@ -1411,8 +1417,9 @@ $UserMediaOutputArray = array('mp3', 'aac', 'ogg', 'wma', 'mp2', 'flac', 'm4a', 
 // /  --Supported Video Input Formats--.
 $UserVideoInputArray = array('smoothstreaming', 'svcd', 'swf', 'truehd', 'vc1', 'vc1test', 'vcd', 'vob', 'vvc', 'webm', 'yuv4mpegpipe', 'mpjpeg', 'mxf', 'mxf_d10', 'mxf_opatom', 'nut', 'obu', 'ogv', 'psp', 'rawvideo', 'rm', 'roq', 'rtp_mpegts', 'smjpeg', 'hevc', 'hls', 'image2', 'image2pipe', 'ipod', 'ismv', 'm4v', 'matroska', 'mjpeg', 'mkvtimestamp_v2', 'mov', 'mp4', 'mpeg', 'mpeg1video', 'mpeg2video', 'mpegts', 'mpegtsraw', 'mpegvideo', 'fbdev', 'film_cpk', 'filmstrip', 'gxf', 'h261', 'h263', 'h264', 'hds', 'avs2', 'avs3', 'cavsvideo', 'cavs', 'dirac', 'dnxhd', 'dv', 'dvd', 'evc', '3g2', '3gp', 'apng', 'argo_asf', 'argo_cvg', 'asf', 'asf_stream', 'avi', 'avif', 'avm2', '3dostr', '4xm', 'adf', 'ads', 'alias_pix', 'anm', 'argo_brp', 'asf_o', 'av1', 'avs', 'bethsoftvid', 'bfi', 'bink', 'bmv', 'brender_pix', 'brender', 'cdg', 'cdxl', 'cine', 'concat', 'cri', 'dcstr', 'derf', 'dfa', 'dhav', 'dsicin', 'dtshd', 'dxa', 'ea', 'exr', 'fits', 'flic', 'frm', 'gdv', 'genh', 'gif', 'idcin', 'iff', 'ifv', 'ingenient', 'ipmovie', 'iss', 'iv8', 'ivf', 'ivr', 'j2k', 'jp2', 'jv', 'live_flv', 'lmlm4', 'mtv', 'mv', 'mvi', 'mxg', 'nsv', 'nuv', 'osq', 'pcx_pipe', 'pdv', 'pgm_pipe', 'pgmuv_pipe', 'pgx_pipe', 'phm_pipe', 'protocol_pipe', 'pictor_pipe', 'png_pipe', 'ppm_pipe', 'psd_pipe', 'qdraw_pipe', 'qoi_pipe', 'r3d', 'redspark', 'rroq', 'rsd', 'rtsp', 'sdr2', 'ser', 'sga', 'sgi_pipe', 'shn', 'sunrast_pipe', 'svg_pipe', 'tiff_pipe', 'tmv', 'v210', 'v210x', 'vbn_pipe', 'video4linux2', 'v4l2', 'vividas', 'vivo', 'vmd', 'wc3movie', 'webm_dash_manifest', 'webp_pipe', 'wtv', 'xmv', 'xvag', 'xwd_pipe', 'mkv', 'wmv', 'flv', 'mpg');
 // /  --Supported Video Output Formats--.
-// /   ogv is written as Theora & Vorbis, & every other format here as H.264.
-$UserVideoOutputArray = array('3gp', 'mkv', 'avi', 'mp4', 'mpeg', 'wmv', 'mov', 'm4v', 'ogv', 'flv', 'ts', 'mpg');
+// /   ogv is written as Theora & Vorbis, webm as VP9 & Opus, from v4.2.9, & every other format here as H.264.
+// /   VP9 is encoded in real time, so a webm takes about as long as an mp4, & a Raspberry Pi can write one.
+$UserVideoOutputArray = array('3gp', 'mkv', 'avi', 'mp4', 'mpeg', 'wmv', 'mov', 'm4v', 'ogv', 'webm', 'flv', 'ts', 'mpg');
 // /  --Supported Stream Formats--.
 $UserStreamArray = array('m3u8', 'ts');
 // /   The old array offered ts as an upload & m3u8 as an output, which is each direction

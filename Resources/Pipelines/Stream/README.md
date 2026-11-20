@@ -1,6 +1,6 @@
 # The Stream pipeline
 
-The Stream pipeline converts files. It accepts 6 input format(s) & produces 8 output format(s).
+The Stream pipeline converts files. It accepts 6 input format(s) & produces 27 output format(s).
 
 This file is written by `Documentation/Build/hrconvert2-approvals.py --readme`.
 It is rewritten from the pipeline's own declarations & from the dependency manifest,
@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.8
+- **Version** v4.2.9
 - **Kind** conversion
 - **Family** Stream
 - **Entry point** convertStreams
@@ -20,7 +20,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 **Accepts** m3u, m3u8, pls, mpd, asx, xspf
 
-**Produces** mp4, mkv, webm, ts, mp3, aac, m4a, flv
+**Produces** 3gp, mkv, avi, mp4, mpeg, wmv, mov, m4v, ogv, webm, flv, ts, mpg, mp3, aac, ogg, wma, mp2, flac, m4a, wav, oga, opus, aiff, au, ac3, mka
 
 ## Dependencies
 

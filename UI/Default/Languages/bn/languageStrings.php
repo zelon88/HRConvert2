@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.6';
+$LanguageVersion = 'v4.2.9';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -179,6 +179,8 @@ $Gui1Text39 = 'ইমেল বিন্যাস';
 $Gui1Text40 = 'চিত্রগুলি ট্রেস করে ভেক্টর অঙ্কনে রূপান্তর করতে পারে।';
 // / 'Graph Formats'
 $Gui1Text41 = 'গ্রাফ বিন্যাস';
+// / 'Vector Formats'
+$Gui1Text42 = 'ভেক্টর বিন্যাস';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

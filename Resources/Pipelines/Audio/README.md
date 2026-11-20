@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.2.8
+- **Version** v4.2.9
 - **Kind** conversion
 - **Family** Audio
 - **Entry point** convertAudio

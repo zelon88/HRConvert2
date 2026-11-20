@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.8.
+// / v4.2.9.
 // / The Document pipeline's converter. pipelineCore.php loads it only to dispatch a Document conversion.
 // / Error block 2005, 7000 through 7001 belongs to this pipeline.
 // / It declares the LibreOffice shared module, which Pipeline Core loads before it.
@@ -38,11 +38,12 @@ function convertDocuments($pathname, $newPathname, $extension) {
   // / The last two keep their defaults, & $WorkerPID stays 0 unless a detached process is supervised.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
-  $ConversionSuccess = $ConversionErrors = $documentEngineStarted = $conversionCompleted = $commandMayRun = $converterWasRefused = FALSE;
+  $ConversionSuccess = $ConversionErrors = $documentEngineStarted = $conversionCompleted = $commandMayRun = $converterWasRefused = $converterWasStopped = FALSE;
   // / This initializes TRUE, because a converter is taken to have run until it is refused.
   $converterRan = TRUE;
   $returnData = $xpsCommand = $sandboxedCommand = '';
-  $stopper = $documentEnginePID = 0;
+  $stopper = $documentEnginePID = $xpsExitCode = 0;
+  $xpsOutput = array();
   $sleepTime = $SleepTimer;
   $arrayxpsi = array('xps', 'oxps');
   $oldExtension = getExtension($pathname);
@@ -55,11 +56,14 @@ function convertDocuments($pathname, $newPathname, $extension) {
   // / The following code performs the actual document conversion.
   if ($documentEngineStarted) {
     if ($Verbose) logEntry('Converting document.');
-    // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
-    // / first attempt that leaves a file.
+    // / Attempt the conversion, & stop at the first attempt that leaves a file.
+    // / A converter that ran to its end & left no file is not asked again, from v4.2.9, because it would leave none again. LibreOffice has
+    // / no filter for many pairs, & a document it cannot open it cannot open twice. Only one a signal stopped, as a memory ceiling, a
+    // / supervisor or a crash stops one, is asked again, as many times as --File Operation Retry Count-- allows. Until v4.2.9 every attempt
+    // / was made, & each waited a second longer than the last, so a pair LibreOffice has no filter for was refused after a quarter minute.
     // / A converter that was refused is not asked again, from v4.2.8, because it would be refused again. A conversion no sandbox could
     // / be built for was refused & warned of once for every attempt, & then reported as producing no file after every one of them.
-    while (!$converterWasRefused && pipelineAttemptIsDue($newPathname, $stopper)) {
+    while (!$converterWasRefused && ($stopper === 0 or $converterWasStopped) && pipelineAttemptIsDue($newPathname, $stopper)) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
       // / An XPS file is handled by xpstopdf, which is also sandboxed & also has no network.
@@ -69,11 +73,17 @@ function convertDocuments($pathname, $newPathname, $extension) {
         list ($commandMayRun, $sandboxedCommand) = sandboxCommand($xpsCommand, $pathname, $newPathname, FALSE, 'poppler');
         redeclare($converterRan, $commandMayRun);
         if (!$commandMayRun) errorEntry('An XPS conversion was refused because no sandbox could be built!', 2005, FALSE);
-        else $returnData = (string)shell_exec($sandboxedCommand.' 2>&1'); }
+        // / Its exit code is kept, so one a signal stopped is told from one that ran to its end, from v4.2.9.
+        else {
+          redeclare($xpsOutput, array());
+          exec($sandboxedCommand.' 2>&1', $xpsOutput, $xpsExitCode);
+          redeclare($returnData, implode(PHP_EOL, $xpsOutput));
+          redeclare($converterWasStopped, ((int)$xpsExitCode > 128)); } }
       // / Everything else goes to LibreOffice, one sandboxed process per conversion.
       // / The shared module says why it did not run, so nothing more is said of it here.
-      else list ($conversionCompleted, $returnData, $converterRan) = convertWithLibreOffice($pathname, $newPathname, $extension);
+      else list ($conversionCompleted, $returnData, $converterRan, $converterWasStopped) = convertWithLibreOffice($pathname, $newPathname, $extension);
       if (!$converterRan) $converterWasRefused = TRUE;
+      if ($Verbose && $converterWasStopped) logEntry('The document converter was stopped before it finished, so it is asked again where --File Operation Retry Count-- allows.');
       // / Count the number of conversions to avoid infinite loops.
       $stopper++; }
     // / Log the output of the operation to the logfile, if it is not blank.
@@ -87,7 +97,7 @@ function convertDocuments($pathname, $newPathname, $extension) {
       if (!$converterWasRefused) errorEntry('The document converter produced no file after '.$stopper.' attempt(s)!', 7001, FALSE); } }
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $stopper, $pathname, $returnData, $documentEngineStarted, $documentEnginePID, $conversionCompleted, $commandMayRun, $converterRan, $converterWasRefused, $xpsCommand, $sandboxedCommand, $sleepTime, $oldExtension, $arrayxpsi);
+  purgeSensitiveMemory($EnableMemoryProtection, $stopper, $pathname, $returnData, $documentEngineStarted, $documentEnginePID, $conversionCompleted, $commandMayRun, $converterRan, $converterWasRefused, $converterWasStopped, $xpsCommand, $xpsOutput, $xpsExitCode, $sandboxedCommand, $sleepTime, $oldExtension, $arrayxpsi);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

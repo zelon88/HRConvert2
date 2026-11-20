@@ -182,9 +182,9 @@ sudo php convertCore.php -fp    # Repair permissions & the web server setup
 | Category | Examples |
 | :--- | :--- |
 | **Documents** | doc, docx, odt, rtf, txt, pdf, WordPerfect wpd, Apple pages |
-| **Spreadsheets** | xls, xlsx, xlsm, ods, csv |
+| **Spreadsheets** | xls, xlsx, xlsm, ods, csv, to pdf |
 | **Presentations** | ppt, pptx, odp |
-| **Images** | jpg, png, gif, webp, heic, avif, jxl, psd, tga, ico, tiff |
+| **Images** | jpg, png, gif, webp, heic, avif, jxl, psd, tga, ico, tiff, exr, camera raw cr2, nef, arw & dng |
 | **Video** | mp4, mkv, avi, mov, webm, flv, and 50+ more |
 | **Audio** | mp3, flac, aac, wav, opus, wma, the sound of a video, and 30+ more |
 | **Subtitles** | srt, vtt, ass, sub, sbv, ttml, and more |

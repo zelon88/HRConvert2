@@ -27,6 +27,27 @@ The authoritative list of dependencies is Resources/Engine/depends.php & Resourc
 
 --------------------
 COMMIT 11/19/2026
+v4.2.9 - A family claims only what its pipeline converts, a sandbox shows none of the host's identity, FFMPEG & ImageMagick are told what they may read, & HEIC, HEIF, EXR, camera raw & WebM are offered.
+
+-v4.2.9.
+-The Document family converts a pair only where one of its kinds, documents, spreadsheets, presentations or XPS, lists both, as its menus always offered. docx, odt & rtf to pptx, pptx to docx & a spreadsheet to a document are Pandoc's, from a workflow & a request naming no family too. LibreOffice made nothing of them. xps to anything but pdf fails with 5006, where xpstopdf wrote a PDF under the name asked for. New conversionFamilyClaims().
+-Spreadsheets write pdf. --Supported Spreadsheet Output Formats-- lists it, as LibreOffice writes it & a workflow converted a spreadsheet to pdf before. config.php stays v4.2.8, because no setting was added.
+-The Stream family reads --Supported Stream Formats-- & writes the audio & video outputs. It claimed every audio & video pair, so a request naming it sent an mp4 to the stream inspector, which refused it with 21001, & a workflow's Convert could ask for m3u8.
+-The Stream pipeline chooses its codecs by container. mp4, mov, mkv, ts & flv are copied as before. webm, ogv, 3gp & the other video formats are encoded as the Video pipeline encodes them, & an audio format takes the sound alone. The stream menu offered avi, webm, mp3 & every other audio format, & FFMPEG wrote none of them.
+-A document converter that runs to its end & leaves no file is asked once, & 7001 follows. Only one a signal stopped is asked again, as often as --File Operation Retry Count-- allows. A pair LibreOffice has no filter for was asked every time. convertWithLibreOffice() returns whether a signal stopped it.
+-Video writes webm as VP9 & Opus, encoded in real time, & offers it. Video & Stream write a 3gp's sound as AAC. Ubuntu 24.04's FFMPEG has no AMR encoder, so a 3gp of a video with sound was never written there.
+-Image reads exr, cr2, nef, arw & dng, & writes heic, heif & exr. avif is written where libheif has an AV1 encoder, as before.
+-build-imagemagick-v7.sh installs LibRaw & OpenEXR & builds ImageMagick with both, & installs libheif's HEVC decoder & encoder & its AV1 encoder where a release packages them apart, as Ubuntu 24.04 does. Its check says whether HEIC, AVIF & EXR are read & written & DNG read. AVIF was reported present where it was only read.
+-Every FFMPEG & FFprobe command names the demuxers it may use, & none that opens a file another file names. A DASH manifest or an ffconcat list named mp4 was read, & each file it named with it. New shared module ffmpegDemuxers.php. The ffmpeg profile still requires a sandbox, for streams.
+-The Image & OCR pipelines name ImageMagick's decoder by what a file holds, & by its extension where that says nothing, so neither policy decides it. A file named pdf that holds no PDF is refused with 8003 & 15015. New shared module imageMagickDecoders.php.
+-The upload page lists the SVG family's inputs under Vector Formats. cdr, ai, emf, wmf, vsd & svgz were read & not listed. New language string Gui1Text42.
+-Engine. A sandbox shows the Engine's own passwd, group & machine-id from Resources/Engine/Sandbox & the host name sandbox, & runs its tool as sandbox, 1000, where the launcher makes the user namespace, as bubblewrap 0.8 & later does. Elsewhere it shows the host's passwd & group, as before. Calibre copied the host's passwd into a book. A missing file is warned of, & -v's new Sandbox identity line says which a tool sees. New sandboxIdentityFlags(), & verifySandboxLauncher() says whether the launcher makes the user namespace.
+-Engine. The base sandbox no longer shows /opt. The calibre profile shows /opt/calibre, where Calibre's own installer puts it.
+-ERROR_DESCRIPTIONS documents 8003, 15015 & the new warning, & says what 5006 & 7001 mean now. INSTALLATION_INSTRUCTIONS, DEVELOPMENT_NOTES, ABOUT_PIPELINE_COMPONENTS & the README describe them. ENGINE_RECONCILIATION_HRCONVERT2 records the Engine's change.
+-The core, the Engine, the interfaces, the language packs, app-engine-config.php, the shared LibreOffice module & the Audio, Document, Identify, Image, OCR, Stream, Subtitle & Video pipelines are v4.2.9, & the core requires Engine v4.2.9. config.php & the manifest stay v4.2.8.
+
+--------------------
+COMMIT 11/19/2026
 v4.2.8 - Each menu converts with its own family, & the formats each pipeline converts are offered, each proven through its pipeline first.
 
 -v4.2.8.

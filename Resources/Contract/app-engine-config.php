@@ -114,18 +114,18 @@ $EngineSessionFolders = array('ScadTemp');
 // / Accepting a pipeline, or moving one to a new version, is one line here, & no Engine version moves for it.
 // / The order is the order pipelines are enumerated & listed in.
 $EngineAcceptedPipelines = array(
-  'Stream' => 'v4.2.8',
+  'Stream' => 'v4.2.9',
   'Scad' => 'v4.2.1',
-  'OCR' => 'v4.2.7',
-  'Document' => 'v4.2.8',
-  'Subtitle' => 'v4.2.8',
+  'OCR' => 'v4.2.9',
+  'Document' => 'v4.2.9',
+  'Subtitle' => 'v4.2.9',
   'SVG' => 'v4.2.8',
   'Drawing' => 'v4.2.8',
-  'Image' => 'v4.2.8',
+  'Image' => 'v4.2.9',
   'Model' => 'v4.2.1',
-  'Video' => 'v4.2.1',
+  'Video' => 'v4.2.9',
   'Ebook' => 'v4.2.8',
-  'Audio' => 'v4.2.8',
+  'Audio' => 'v4.2.9',
   'Archive' => 'v4.2.8',
   // / Five conversion families, from v4.2.5. Data converts between structured data formats, LaTeX typesets a LaTeX document,
   // / Trace traces an image into vector outlines, Email converts an Outlook message & Markup converts between markup & document formats.
@@ -137,7 +137,7 @@ $EngineAcceptedPipelines = array(
   // / A sixth from v4.2.6. Graph draws a graph written in Graphviz's DOT language as a picture.
   'Graph' => 'v4.2.6',
   // / The second operation pipeline. It reads every file & changes none.
-  'Identify' => 'v4.2.7',
+  'Identify' => 'v4.2.9',
   // / The third & fourth, from v4.1.6. The Archiver puts a selection of files into archives, & Scan scans the files a user asks it to.
   // / Each was code in convertCore.php until then.
   'Archiver' => 'v4.2.1',
@@ -157,10 +157,14 @@ $EngineAcceptedPipelines = array(
 // / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.
 // / archiveExtraction.php serves the Archive & Extractor pipelines alike, from v4.1.7, for the same reason.
 // / workFolder.php gives a conversion a folder of its own, & serves the Data, LaTeX & Trace pipelines alike, from v4.2.5.
+// / ffmpegDemuxers.php names the demuxers FFMPEG & FFprobe may read with, & serves the Video, Audio, Subtitle, Stream & Identify pipelines alike, from v4.2.9.
+// / imageMagickDecoders.php names the decoder ImageMagick reads an image with, & serves the Image & OCR pipelines alike, from v4.2.9.
 $EngineAcceptedSharedModules = array(
-  'libreOffice.php' => 'v4.2.8',
+  'libreOffice.php' => 'v4.2.9',
   'archiveExtraction.php' => 'v4.1.7',
-  'workFolder.php' => 'v4.2.5');
+  'workFolder.php' => 'v4.2.5',
+  'ffmpegDemuxers.php' => 'v4.2.9',
+  'imageMagickDecoders.php' => 'v4.2.9');
 
 // / Where each of this application's own pins reads its version from.
 // / php convertCore.php --build --pins --write writes every pin from the files named here,

@@ -31,7 +31,7 @@
 $LanguageStringsLoaded = TRUE;
 // / The version of this language pack for compatibility checking.
 // / Compatibility check takes place in convertCore.php, buildGui() function.
-$LanguageVersion = 'v4.2.6';
+$LanguageVersion = 'v4.2.9';
 $LanguageVersion = ltrim($LanguageVersion, 'vV');
 // / Set the reading direction for text on the page.
 $GUIDirection = 'ltr';
@@ -177,6 +177,8 @@ $Gui1Text39 = 'Miundo ya Barua Pepe';
 $Gui1Text40 = 'Inaweza kufuatilia picha na kuzigeuza kuwa michoro ya vekta.';
 // / 'Graph Formats'
 $Gui1Text41 = 'Miundo ya Grafu';
+// / 'Vector Formats'
+$Gui1Text42 = 'Miundo ya Vekta';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

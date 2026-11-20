@@ -12,12 +12,12 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v4.1.7.
+# / v4.2.9.
 # / This file is the ImageMagick 7 source build for HRConvert2.
 # / It removes the packaged ImageMagick & any earlier source build, then builds & installs
-# / version 7 under /usr/local with HEIC, AVIF & JPEG XL support, which the packaged build
-# / lacks. Run as root. Resources/Contract/depends.php names this script as the ImageMagick
-# / BuildCommand, so --setup --install-depends is what normally runs it.
+# / version 7 under /usr/local with HEIC, AVIF, JPEG XL, OpenEXR & camera raw support, which
+# / the packaged build lacks. Run as root. Resources/Contract/depends.php names this script as
+# / the ImageMagick BuildCommand, so --setup --install-depends is what normally runs it.
 # /
 # / Hardware Requirements ...
 # / This application requires at least a Raspberry Pi Model B+ or greater.
@@ -70,13 +70,31 @@ apt-get install -y \
     libwebp-dev \
     libgif-dev
 
-# Modern format support (HEIC, AVIF, JPEG-XL, JPEG2000)
+# Modern format support (HEIC, AVIF, JPEG-XL, JPEG2000, OpenEXR & camera raw)
 echo "Installing modern format libraries..."
 apt-get install -y \
     libheif-dev \
     libavif-dev \
     libjxl-dev \
-    libopenjp2-7-dev
+    libopenjp2-7-dev \
+    libopenexr-dev \
+    libraw-dev
+
+# / libheif reads & writes HEIC & AVIF through codecs. Debian 12 & Raspberry Pi OS build every codec into libheif1. Ubuntu 24.04 splits
+# / each into a plugin package of its own & installs only the AV1 ones, so a HEIC was not read there, & neither a HEIC nor a HEIF
+# / written, while ImageMagick still named both. Each plugin this release has is installed, & a release that names none has them built in.
+# / libde265 reads HEVC, which HEIC & HEIF hold, x265 writes it, & aomenc writes AV1, which AVIF holds. libheif1 depends on an AV1 reader.
+echo "Installing the libheif codecs this release packages separately..."
+HEIF_PLUGINS=""
+for HEIF_PLUGIN in libheif-plugin-libde265 libheif-plugin-x265 libheif-plugin-aomenc; do
+    if apt-cache show "$HEIF_PLUGIN" > /dev/null 2>&1; then HEIF_PLUGINS="$HEIF_PLUGINS $HEIF_PLUGIN"; fi
+done
+if [ -n "$HEIF_PLUGINS" ]; then
+    # shellcheck disable=SC2086
+    apt-get install -y $HEIF_PLUGINS
+else
+    echo "This release packages no libheif codec separately, so libheif1 holds them."
+fi
 
 # Additional useful libraries
 echo "Installing additional utility libraries..."
@@ -121,6 +139,8 @@ echo "  --with-heic=yes           (HEIC/HEIF support for iPhone photos)"
 echo "  --with-avif=yes           (AVIF modern image codec)"
 echo "  --with-jxl=yes            (JPEG XL next-gen compression)"
 echo "  --with-openjp2=yes        (JPEG 2000 support)"
+echo "  --with-openexr=yes        (OpenEXR high dynamic range images)"
+echo "  --with-raw=yes            (camera raw images through LibRaw)"
 echo "  --enable-shared           (Build shared libraries)"
 echo ""
 
@@ -134,6 +154,8 @@ echo ""
     --with-avif=yes \
     --with-jxl=yes \
     --with-openjp2=yes \
+    --with-openexr=yes \
+    --with-raw=yes \
     --with-xml=yes \
     --with-freetype=yes \
     --with-fontconfig=yes \
@@ -189,16 +211,36 @@ check_delegate() {
     return 0
 }
 
+# / Function to report whether ImageMagick reads, or reads & writes, a format, from the mode -list format gives it.
+# / A delegate can be built in & still lack a codec. Until v4.2.9 AVIF was reported found when it could only be read, & no AVIF was
+# / ever written. It reports & never fails, as check_delegate does.
+check_format() {
+    local format=$1
+    local wanted=$2
+    local friendly=$3
+    local mode
+    mode=$(magick -list format | awk -v format="$format" '{name = $1; sub(/\*$/, "", name)} name == format {for (i = 2; i <= NF; i++) if ($i ~ /^[r-][w-][+-]$/) {print $i; exit}}')
+    if [ "$wanted" = "rw" ] && [ "${mode:0:2}" = "rw" ]; then
+        echo "  ✓ $friendly, read & written"
+    elif [ "$wanted" = "r" ] && [ "${mode:0:1}" = "r" ]; then
+        echo "  ✓ $friendly, read"
+    else
+        echo "  ✗ $friendly (NOT FOUND - '${mode:-absent}' where '$wanted' was wanted, so a library or codec may be missing)"
+    fi
+    return 0
+}
+
 echo "Modern Format Support:"
 check_delegate "heic" "HEIC/HEIF (iPhone photos, iPhone video thumbnails)"
 check_delegate "jxl" "JPEG-XL (next-generation image compression)"
 check_delegate "jp2" "JPEG2000 (high-quality archival format)"
+check_delegate "openexr" "OpenEXR (high dynamic range images)"
+check_delegate "raw" "LibRaw (camera raw images)"
 # AVIF is read & written by the HEIC coder through libheif, so it is listed as a format & never as a delegate.
-if magick -list format | grep -qi "^ *AVIF"; then
-    echo "  ✓ AVIF (AV1 image format, modern codec)"
-else
-    echo "  ✗ AVIF (AV1 image format, modern codec) (NOT FOUND - libheif may lack an AV1 codec)"
-fi
+check_format "HEIC" "rw" "HEIC (HEVC through libheif)"
+check_format "AVIF" "rw" "AVIF (AV1 through libheif)"
+check_format "EXR" "rw" "EXR (OpenEXR)"
+check_format "DNG" "r" "DNG & the camera raw formats LibRaw reads"
 
 echo ""
 echo "========================================="

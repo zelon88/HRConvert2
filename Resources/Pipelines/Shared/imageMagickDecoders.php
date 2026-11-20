@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / The ImageMagick decoder shared module, which is not a pipeline & converts nothing on its own.
 // / It names the decoder ImageMagick reads an image with, which a command puts before the image's path, as DECODER:path.
 // / The Image & OCR pipelines both hand ImageMagick a file a user gave, so neither of them owns it.
@@ -34,12 +34,12 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v4.2.9';
+$SharedModuleVersion = 'v4.3.0';
 // / -----------------------------------------------------------------------------------
 
 
 // / -----------------------------------------------------------------------------------
-// / A function to name the decoder ImageMagick reads one image with, from v4.2.9.
+// / A function to name the decoder ImageMagick reads one image with, from v4.3.0.
 // / Accepts the image's path & its extension, in that order.
 // / Returns whether a decoder is named, which is FALSE only where the file is refused, & the decoder's name without its colon, in that order.
 // / ImageMagick otherwise reads a file by what it holds, so PostScript named png reached Ghostscript & an SVG named png the SVG coder.

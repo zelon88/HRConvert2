@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / The LibreOffice shared module, which is not a pipeline & converts nothing on its own.
 // / It holds the code the Document & OCR pipelines both need, so neither depends on the other.
 // / It is version pinned exactly as a pipeline is, by the table in Resources/Contract/app-engine-config.php.
@@ -35,7 +35,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v4.2.9';
+$SharedModuleVersion = 'v4.3.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -247,7 +247,7 @@ function removeLibreOfficeProfile($profileFolder) {
 // / that retries stops, from v4.2.8. A caller that reads only the first two values is answered as it was.
 // / LibreOffice that ran to its end & wrote nothing would write nothing again, because it has no filter for the pair or cannot open the
 // / document, & it exits 0 either way. One a signal stopped, as a memory ceiling, a supervisor or a crash stops it, exits 128 & more, &
-// / may finish when asked again, so it is said to have been stopped, from v4.2.9, & a caller retries only that.
+// / may finish when asked again, so it is said to have been stopped, from v4.3.0, & a caller retries only that.
 // / Each conversion is its own LibreOffice process inside sandboxCommand, with no network.
 // / That closes every URL handler a hostile document could reach.
 // / LibreOffice reads a copy of the input named after the output, so it writes the output's own name.

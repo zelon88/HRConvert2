@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / The Video pipeline's converter. pipelineCore.php loads it only to dispatch a Video conversion.
 // / Error block 11000 through 11002 belongs to this pipeline.
 // / Audio, Video, Subtitle & Stream share the FFMPEG subsystem.
@@ -53,9 +53,9 @@ function convertVideos($pathname, $newPathname, $extension) {
     // / The codec follows the container.
     // / WebM takes VP9 & Opus, Ogg takes Theora & Vorbis, & neither takes H.264.
     // / Every other format is written with libx264.
-    // / A 3gp's sound is written as AAC, from v4.2.9. Its own is AMR, which FFMPEG encodes only where it was built with an AMR encoder, &
+    // / A 3gp's sound is written as AAC, from v4.3.0. Its own is AMR, which FFMPEG encodes only where it was built with an AMR encoder, &
     // / Ubuntu 24.04's is not, so a 3gp of a video with sound was never written there.
-    // / VP9 is encoded in real time, on a thread per row, at a constant quality of 30, from v4.2.9. Its own settings took three times as
+    // / VP9 is encoded in real time, on a thread per row, at a constant quality of 30, from v4.3.0. Its own settings took three times as
     // / long as a 720p video lasted on two cores, & these took a quarter of that & kept nearly all the quality, about as long as H.264.
     $outputExtension = strtolower(trim((string)$extension, '.'));
     if ($outputExtension === 'webm') $videoCodec = ' -c:v libvpx-vp9 -row-mt 1 -deadline realtime -cpu-used 7 -crf 30 -b:v 0 -c:a libopus';
@@ -63,7 +63,7 @@ function convertVideos($pathname, $newPathname, $extension) {
     else if ($outputExtension === '3gp') $videoCodec = ' -c:v libx264 -c:a aac';
     else $videoCodec = ' -c:v libx264';
     // / Standard error is captured, because FFMPEG reports everything there, failures included.
-    // / FFMPEG reads the file only with a demuxer ffmpegDemuxerWhitelist() names, from v4.2.9, so a manifest or a list it is handed is
+    // / FFMPEG reads the file only with a demuxer ffmpegDemuxerWhitelist() names, from v4.3.0, so a manifest or a list it is handed is
     // / refused, whatever it is called, & no file it names is read.
     $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -format_whitelist '.escapeshellarg(ffmpegDemuxerWhitelist(FALSE)).' -i '.escapeshellarg($pathname).$videoCodec.' '.escapeshellarg($newPathname).' 2>&1';
     list ($commandMayRun, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE, 'ffmpeg');

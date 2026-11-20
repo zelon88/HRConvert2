@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.2.9';
+$EngineVersion = 'v4.3.0';
 // / -----------------------------------------------------------------------------------
 
 
@@ -572,7 +572,7 @@ function showVersionReport() {
       if ($servicePath !== '' && $choiceOrigin === 'own' && $choiceStatus === 'ok') print('  '.str_pad((string)$manifestEntry['Name'].', own build', 28).$servicePath.$Lol); } }
   print('  '.str_pad(($RunningInContainer ? 'Sandbox, Docker' : 'Sandbox, Bubblewrap'), 28).($bwrapBinary === FALSE ? 'FAILED, not functional' : 'OK'.((function_exists('privateBwrapPath') && $bwrapBinary === privateBwrapPath()) ? ', '.privateBwrapPath().', AppArmor profile '.sandboxApparmorProfileName() : '')).$Lol);
   if ($bwrapBinary === FALSE) $failureCount++;
-  // / What a tool sees of the host's identity, as sandboxIdentityFlags() decides it for every conversion, from v4.2.9.
+  // / What a tool sees of the host's identity, as sandboxIdentityFlags() decides it for every conversion, from v4.3.0.
   if ($bwrapBinary !== FALSE) {
     list ($identityIsOwn, $identityFlags, $identityReason) = sandboxIdentityFlags($launcherMakesUserNamespace);
     print('  '.str_pad('Sandbox identity', 28).($identityIsOwn ? 'OWN, '.$identityReason : 'HOST, '.$identityReason).$Lol); }
@@ -5318,7 +5318,7 @@ function detectHostArchitecture() {
 // / sandbox, whether an attempt was cut short & whether the launcher makes the user namespace itself,
 // / in that order. The launcher is escaped already, carries --unshare-user --disable-userns where they
 // / build a sandbox too, & goes where the binary would have gone. The fourth answer is TRUE exactly
-// / where it carries them, from v4.2.9, because --uid needs --unshare-user, & sandboxIdentityFlags()
+// / where it carries them, from v4.3.0, because --uid needs --unshare-user, & sandboxIdentityFlags()
 // / chooses the account a tool runs as only there.
 // / A path is returned only when a real sandbox was launched, so a caller holding one may build a command with it directly.
 // / This is a capability check, because bubblewrap may be installed & still be unable to build a namespace.
@@ -5507,11 +5507,11 @@ function sandboxRequiredProfiles() {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to assemble the binds that give a sandbox the Engine's own identity, from v4.2.9.
+// / A function to assemble the binds that give a sandbox the Engine's own identity, from v4.3.0.
 // / Accepts whether the launcher makes the user namespace itself, as verifySandboxLauncher() answers it.
 // / Returns whether a tool sees the Engine's own identity & none of the host's, the flags, & a sentence saying what it sees, in that order.
 // / A dependency looks up the account it runs as, & LibreOffice aborts without one, so a sandbox has always shown a passwd & a group.
-// / Until v4.2.9 they were the host's, with the host's machine-id & host name, & Calibre copied the host's passwd into a book an EPUB
+// / Until v4.3.0 they were the host's, with the host's machine-id & host name, & Calibre copied the host's passwd into a book an EPUB
 // / named it in. A tool now sees the passwd, group & machine-id in Resources/Engine/Sandbox, & runs as the one account they name,
 // / sandbox, 1000, & its host is named sandbox.
 // / An account can be chosen only where the launcher makes the user namespace itself, as bubblewrap 0.8 & later does, because --uid
@@ -5609,7 +5609,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   // / The launcher is what built the proving sandbox, so it is what builds this one. On a kernel that
   // / restricts unprivileged namespaces it is this application's own copy of bubblewrap.
   list ($bwrapBinary, $sandboxLauncher, , $launcherMakesUserNamespace) = verifySandboxLauncher();
-  // / The account, the machine & the host name a tool sees are the Engine's, from v4.2.9, & never the host's where the launcher allows it.
+  // / The account, the machine & the host name a tool sees are the Engine's, from v4.3.0, & never the host's where the launcher allows it.
   list ($identityIsOwn, $identityFlags) = sandboxIdentityFlags($launcherMakesUserNamespace);
   // / Collect the mounts this one dependency needs. Nothing else receives them.
   $profileFlags = sandboxProfileFlags($sandboxProfile);
@@ -5701,7 +5701,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
       .' --ro-bind-try /etc/fonts /etc/fonts'
       .' --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache'
       .' --ro-bind-try /etc/ssl/certs /etc/ssl/certs'
-      // / /opt is not shown, from v4.2.9. Nothing every dependency needs is installed beneath it, & a profile names the folder of one
+      // / /opt is not shown, from v4.3.0. Nothing every dependency needs is installed beneath it, & a profile names the folder of one
       // / that is, as the calibre profile names /opt/calibre, where Calibre's own installer puts it.
       .' --proc /proc'
       .' --dev /dev'
@@ -5711,7 +5711,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
       // / out of its configuration backend when the lookup fails. --unshare-all unshares
       // / the user namespace, so without a passwd & a group the lookup has nothing to read &
       // / LibreOffice aborts with Signal 6 before it opens a file. Both are the Engine's own
-      // / where the launcher allows it, from v4.2.9, & so are the machine-id & the host name.
+      // / where the launcher allows it, from v4.3.0, & so are the machine-id & the host name.
       .$identityFlags
       .' --ro-bind-try /etc/localtime /etc/localtime'
       // / --dev builds a minimal device tree with no /dev/shm, which several dependencies

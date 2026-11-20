@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / The Image pipeline's converter. pipelineCore.php loads it only to dispatch an Image conversion.
 // / Error block 8000 through 8003 belongs to this pipeline.
 // / The OCR pipeline raises 8001 for the same ImageMagick.
@@ -91,7 +91,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
     // / The frame is escaped apart from the path, so the sandbox finds the path it rewrites & no shell reads the brackets as a pattern.
     $inputExt = strtolower(pathinfo($pathname, PATHINFO_EXTENSION));
     if ($inputExt === 'psd' or !in_array($outputExt, $multiImageOutputs, TRUE)) $inputFrame = escapeshellarg('[0]');
-    // / The input is read with the decoder imageMagickDecoder() names, from v4.2.9, & with no other, whatever a policy says, so PostScript,
+    // / The input is read with the decoder imageMagickDecoder() names, from v4.3.0, & with no other, whatever a policy says, so PostScript,
     // / an SVG or an MVG named as an image is handed to that image's decoder, which cannot read it. The decoder is escaped apart from the
     // / path, as the frame is, so the sandbox finds the path it rewrites.
     list ($decoderIsNamed, $inputDecoder) = imageMagickDecoder($pathname, $inputExt);

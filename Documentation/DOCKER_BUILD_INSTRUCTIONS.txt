@@ -171,7 +171,9 @@ NOTE ON THE SYS_ADMIN CAPABILITY.
   documents, e-books, SVG, drawings, models, audio, video, subtitles & streams, from v4.2.7,
   because each of their tools reads a file an upload names. It runs every other conversion
   unprotected & logs a warning, or refuses it too where --Require Sandbox On Docker-- is TRUE in
-  config.php. No process that converts or serves a user's file holds the capability, or any other.
+  config.php. From v4.3.0 the image's ImageMagick has ImageMagick's secure policy, so unprotected it
+  reads no PDF, & no image over 8000 pixels wide or high or 32 frames long.
+  No process that converts or serves a user's file holds the capability, or any other.
   '--security-opt seccomp=unconfined'  works instead on some hosts, as the Dockerfile says.
   The workflow tests with the capability, & the README & INSTALLATION_INSTRUCTIONS.txt ask for it.
   Until v4.0.0 this step used the seccomp option & said only OpenSCAD needed it, which was

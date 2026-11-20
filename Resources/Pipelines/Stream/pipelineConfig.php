@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / This file declares what the Stream conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.9';
+$PipelineVersion = 'v4.3.0';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -57,7 +57,7 @@ $PipelineDisplayName = 'Stream';
 // / converter that reads a file, never the one that fetches a URL, unless a request names
 // / Stream. convertFiles() is what enforces this, by keeping Stream at the end of its hand
 // / ordered family maps & taking the first family that matches.
-// / Until v4.2.9 the Stream family read & wrote every audio & video format, so an mp4 or an
+// / Until v4.3.0 the Stream family read & wrote every audio & video format, so an mp4 or an
 // / mp3 was claimed by the Video or Audio family as well as by this one. This number does NOT enforce it, because
 // / resolvePipelineCandidates() filters on the family before it reads a priority, so a
 // / priority only orders the implementations inside one family.
@@ -76,7 +76,7 @@ $PipelineEntryPoint = 'convertStreams';
 $PipelineSubsystem = 'Audio, Video & Streams';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.
-// / ffmpegDemuxers.php names the demuxers FFMPEG may read a stream & its segments with, from v4.2.9.
+// / ffmpegDemuxers.php names the demuxers FFMPEG may read a stream & its segments with, from v4.3.0.
 // / streamFileWalker() is defined in pipeline.php & used nowhere else.
 $PipelineSharedModules = array('ffmpegDemuxers.php');
 

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / The FFMPEG demuxer shared module, which is not a pipeline & converts nothing on its own.
 // / It names the demuxers FFMPEG & FFprobe may read a file with, which a command passes them as -format_whitelist.
 // / The Video, Audio, Subtitle, Metadata, Stream & Identify pipelines each run one on a file a user gave, so none of them owns it.
@@ -34,12 +34,12 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v4.2.9';
+$SharedModuleVersion = 'v4.3.0';
 // / -----------------------------------------------------------------------------------
 
 
 // / -----------------------------------------------------------------------------------
-// / A function to name the demuxers FFMPEG & FFprobe may read one file with, from v4.2.9.
+// / A function to name the demuxers FFMPEG & FFprobe may read one file with, from v4.3.0.
 // / Accepts whether the file is a stream, which is read through its playlist.
 // / Returns the demuxers' names, separated by commas & ready for -format_whitelist.
 // / FFMPEG chooses a demuxer by what a file holds, whatever it is called. A DASH manifest or an ffconcat list named mp4 was read by the

@@ -220,7 +220,7 @@ Calibre copied /etc/passwd into a book inside its sandbox, because the base sand
 LibreOffice's user lookup. It shows /opt as well, where the guide clones the source. Both are the
 Engine's, & ENGINE_RECONCILIATION_HRCONVERT2.txt leaves them for its maintainer.
 
-FFMPEG & FFPROBE ARE STOPPED BY THEIR OWN SETTING. v4.2.9.
+FFMPEG & FFPROBE ARE STOPPED BY THEIR OWN SETTING. v4.3.0.
 Every command names the demuxers it may use in -format_whitelist, from ffmpegDemuxers.php, & leaves
 out hls, dash, concat & imf, which open a file another file names, sdp, rtsp, rtp & sap, which open
 an address one names, & the input devices. The list follows a nested read, so a stream's playlist is
@@ -231,7 +231,7 @@ FFMPEG adds is refused until it is traced & named. The ffmpeg profile still requ
 because the Stream pipeline's FFMPEG follows a playlist by design & runs under it. A profile of its
 own for streams would let the rest run where no sandbox can be built.
 
-A TOOL SEES THE ENGINE'S OWN ACCOUNT & NONE OF THE HOST'S IDENTITY. v4.2.9.
+A TOOL SEES THE ENGINE'S OWN ACCOUNT & NONE OF THE HOST'S IDENTITY. v4.3.0.
 The base sandbox shows the passwd, group & machine-id in Resources/Engine/Sandbox, names the host
 sandbox, & runs its tool as sandbox, 1000, where bubblewrap makes the user namespace itself, as 0.8 &
 later do. Older bubblewrap runs a tool as the web server's account, which only the host's passwd
@@ -265,7 +265,7 @@ names the same coder decides it, so a host that grants SVG or PostScript back gr
 Naming the decoder on the command line, as Trace does, holds whatever the host's policy says, & is
 left for a later release for Image & OCR.
 
-IMAGEMAGICK IS TOLD THE DECODER IT READS WITH. v4.2.9.
+IMAGEMAGICK IS TOLD THE DECODER IT READS WITH. v4.3.0.
 The Image & OCR pipelines name it, as DECODER:path, from imageMagickDecoders.php, so no policy decides
 what reads a file. It is named by what the file holds, so a photograph named for the wrong format is
 still read, & by the extension where a file's first bytes say nothing, as a TGA's do not. A camera raw
@@ -868,7 +868,7 @@ it was given, so a server whose libheif had no AV1 encoder handed out a png name
 success. The output is named FORMAT:path, & such a request now fails with 8000. On Ubuntu 24.04 libheif
 recommends its AV1 encoder & only suggests its HEVC decoder, so building ImageMagick there reads no heic.
 
-HEIC, HEIF, EXR & CAMERA RAW. v4.2.9.
+HEIC, HEIF, EXR & CAMERA RAW. v4.3.0.
 build-imagemagick-v7.sh installs LibRaw & OpenEXR & builds ImageMagick with both, & installs libheif's
 HEVC decoder & encoder & its AV1 encoder where a release packages them apart, as Ubuntu 24.04 does &
 Debian 12 does not. Image then reads exr, cr2, nef, arw & dng & writes heic, heif & exr. A CR2, a NEF,
@@ -876,22 +876,55 @@ a DNG & an EXR made outside the project were read, & HEIC, HEIF, AVIF & EXR writ
 sample could be fetched, so arw is offered on LibRaw's word. LibRaw warns of corrupted data in the CR2
 & still decodes it.
 
-WEBM IS VP9 & OPUS, ENCODED IN REAL TIME. v4.2.9.
+IMAGEMAGICK IS PINNED, CHECKED & HARDENED. v4.3.0.
+build-imagemagick-v7.sh downloaded ImageMagick.tar.gz, which is always the newest release, & built it
+unchecked. It now clones the 7.1.2-36 tag from ImageMagick's repository & builds it only where the tag
+names commit dcec873ede2912a1b045a50fd54cd138ee5f3fa4. A commit names its whole tree, & git checks every
+object it fetches against its name, so a moved tag or an altered fetch builds nothing. A release
+archive's checksum would serve as well, but neither imagemagick.org nor GitHub's downloads could be
+reached from the machine that pinned it, & a checksum not computed from the file is a guess. The fetch
+& the check come before anything is removed, so a failure leaves the installed ImageMagick in place.
+The approval record asks for _FORTIFY_SOURCE=3, a strong stack protector, PIE & full RELRO. Ubuntu
+24.04's compiler already applies every one of them, as the build here showed, so the flags make the
+same build where a compiler does not. It defines _FORTIFY_SOURCE itself, so it is undefined first, &
+Debian's & Ubuntu's both build PIE, so -pie is not passed. The record also names --with-modules with --disable-shared, which contradict each other,
+because a module is a shared library, & --with-security-policy=head, which is none of ImageMagick's
+four. The build keeps its shared libraries without modules, as before, & installs the secure policy,
+which ImageMagick names for untrusted images.
+In a sandbox a pipeline's own policy covers the host's, so the secure one decides nothing there.
+Outside one both are read, the pipeline's first. A rule the host's names overrides the pipeline's, &
+its resource limits bind, so a PDF, an image over 8000 pixels wide or high & one of more than 32
+frames are refused there. Each was seen refused with the Image pipeline's policy named in
+MAGICK_CONFIGURE_PATH. The build took two & a half minutes on two cores of Ubuntu 24.04, & its last
+lines confirmed the pin, the hardening & the policy.
+
+WEBM IS VP9 & OPUS, ENCODED IN REAL TIME. v4.3.0.
 VP9's own settings took three times as long as a ten second 720p video lasted, on two cores. Real time,
 a thread per row & a constant quality of 30 took 2.6 seconds against H.264's 2.2, with an SSIM of 0.996
 against H.264's 0.994, so a Raspberry Pi can write one.
 
-A 3GP'S SOUND IS AAC. v4.2.9.
+A 3GP'S SOUND IS AAC. v4.3.0.
 A 3gp's own sound is AMR, & Ubuntu 24.04's FFMPEG has no AMR encoder, so a 3gp of any video with sound
 failed there. Video & Stream name AAC, which every 3gp player plays.
 
-A STREAM IS COPIED ONLY INTO A CONTAINER THAT HOLDS WHAT IT CARRIES. v4.2.9.
+A STREAM IS COPIED ONLY INTO A CONTAINER THAT HOLDS WHAT IT CARRIES. v4.3.0.
 A stream carries H.264 or HEVC video & AAC, AC-3 or MP3 sound. mp4, mov, mkv, ts & flv hold them as they
 are, so they are copied. m4v holds no HEVC, & it & avi, mpeg, wmv, webm, ogv & 3gp are encoded as the
 Video pipeline encodes them, & an audio format takes the sound alone. Each was written from a local
 H.264 stream & an HEVC one.
 
-A DOCUMENT CONVERTER THAT RAN TO ITS END IS ASKED ONCE. v4.2.9.
+AN UPLOADED TS IS A LEAF. v4.3.0.
+The walker treats a segment as a leaf, with nothing to fetch, but the inspection before it read an
+uploaded ts whole & for addresses, as it reads a playlist. A segment is binary. x264 writes its own
+web address into the first frame it encodes, so a ts holding that frame was refused for plain http, &
+bytes that happened to read as a private address refused others. A ts larger than PHP's memory limit,
+128 MB in the php.ini the project ships, ended the request. A segment is now classified from its first
+five packets & read for nothing else, & a playlist is read whole & for every address, as before. No
+demuxer in the stream whitelist that reads a file opening with the sync byte follows a reference, &
+hls reads only a file that opens with #EXTM3U. The QC pass for v4.3.0 found it by converting a ts
+through Apache, which no suite had done.
+
+A DOCUMENT CONVERTER THAT RAN TO ITS END IS ASKED ONCE. v4.3.0.
 LibreOffice exits 0 whether it wrote a file, found no filter for the pair or could not load the file,
 & asked again it does the same. A LibreOffice a memory ceiling, a supervisor or a crash stopped exits
 above 128, & may finish when asked again, so only that one is retried.
@@ -1775,7 +1808,7 @@ its input list. The image, drawing & OpenSCAD lists, $UserImageArray, $UserDrawi
 $UserSCADArray, were read by nothing but the interfaces once they read the input lists, & were retired.
 Model keeps its combined list until its importers are audited.
 
-A FAMILY MADE OF KINDS CLAIMS A PAIR ONLY WITHIN ONE. v4.2.9.
+A FAMILY MADE OF KINDS CLAIMS A PAIR ONLY WITHIN ONE. v4.3.0.
 The Document family's lists merged documents, spreadsheets, presentations & XPS, so it claimed docx to
 pptx & xlsx to docx, & LibreOffice, which writes nothing across them but a PDF, made nothing. Its menus
 offered only what one kind lists. applicationConversionFamilies() names its kinds third, &
@@ -1784,7 +1817,7 @@ does, reaches Pandoc for docx to pptx. Every pair conversionFamilyFor() chose fo
 against the stock lists, & the seventeen that changed all moved from Document to Markup. Spreadsheets
 list pdf, which LibreOffice writes, so a workflow still converts one to pdf.
 
-THE STREAM FAMILY READS STREAMS. v4.2.9.
+THE STREAM FAMILY READS STREAMS. v4.3.0.
 Each of its lists held both the stream list & the audio & video outputs, so it claimed every audio &
 video pair. A request naming it sent an mp4 to the stream inspector, which refused it with 21001, & an
 mp3 to mp4 conversion, which no other family claims, reached it too. It reads $StreamArray & writes

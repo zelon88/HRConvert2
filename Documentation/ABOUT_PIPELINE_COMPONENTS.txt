@@ -355,13 +355,13 @@ folder away through the Engine's cleanFiles(), held to the folder that holds it.
 raises no error. A pipeline that cannot have a folder raises its own, because it knows what the
 folder was for.
 
-ffmpegDemuxers.php is the fourth module, from v4.2.9. The Video, Audio, Subtitle, Stream & Identify
+ffmpegDemuxers.php is the fourth module, from v4.3.0. The Video, Audio, Subtitle, Stream & Identify
 pipelines each run FFMPEG or FFprobe on a file a stranger gave. ffmpegDemuxerWhitelist() names the
 demuxers a command may read with, passed as -format_whitelist, & leaves out every one that opens a
 file or an address another file names. A stream is read by hls & its segments by the few demuxers a
 segment needs. The module raises no error. FFMPEG refuses a file no named demuxer reads.
 
-imageMagickDecoders.php is the fifth module, from v4.2.9. The Image & OCR pipelines hand ImageMagick
+imageMagickDecoders.php is the fifth module, from v4.3.0. The Image & OCR pipelines hand ImageMagick
 a file a stranger gave. imageMagickDecoder() names the decoder it reads with, by what the file holds
 & by its extension where that says nothing, & refuses a file named pdf that holds no PDF, which the
 pipeline reports, as 8003 or 15015.
@@ -521,7 +521,7 @@ ImageMagick reads what a file holds before what it is called, so a policy decide
 named as an image may reach. From v4.2.7 the Image, Trace & OCR policies refuse to read SVG, which
 draws any image it names, & PostScript, which is a program Ghostscript runs. Image still writes PS
 & EPS & reads & writes PDF, & OCR reads PDF. Identify's policy refused both already.
-From v4.2.9 the Image & OCR pipelines name the decoder too, as imageMagickDecoders.php chooses it, so
+From v4.3.0 the Image & OCR pipelines name the decoder too, as imageMagickDecoders.php chooses it, so
 neither policy decides what reads a file.
 Nothing is written into the host. Until v4.0.5 -fp wrote one policy over the host's own
 policy.xml, a file the package owns, & every program on the host ran under it.

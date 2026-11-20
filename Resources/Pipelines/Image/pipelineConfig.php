@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / This file declares what the Image conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.9';
+$PipelineVersion = 'v4.3.0';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -64,7 +64,7 @@ $PipelineEntryPoint = 'convertImages';
 $PipelineSubsystem = 'Images';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.
-// / imageMagickDecoders.php names the decoder ImageMagick reads an image with, from v4.2.9.
+// / imageMagickDecoders.php names the decoder ImageMagick reads an image with, from v4.3.0.
 $PipelineSharedModules = array('imageMagickDecoders.php');
 
 // / The request fields this pipeline actually reads.
@@ -83,7 +83,7 @@ $PipelineRequestFields = array('Extension', 'Height', 'Width', 'Rotate');
 // / a PostScript file is a program. An SVG is the SVG pipeline's, & EPS is still written.
 // / JPEG XL, jpe, Cineon, DIB & the JPEG 2000 codestream are read & written, & HEIF is read, from v4.2.8.
 // / HEIF & AVIF are written only where libheif has an encoder for them, & ImageMagick is told the format it writes, so one without fails.
-// / HEIC, HEIF & EXR are written, & EXR & the camera raw formats read, from v4.2.9, where ImageMagick is built with libheif's encoders,
+// / HEIC, HEIF & EXR are written, & EXR & the camera raw formats read, from v4.3.0, where ImageMagick is built with libheif's encoders,
 // / OpenEXR & LibRaw, as Documentation/Build/build-imagemagick-v7.sh builds it. LibRaw only reads.
 $Capabilities = array(
   'Input' => array(

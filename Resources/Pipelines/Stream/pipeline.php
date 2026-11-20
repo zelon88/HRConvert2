@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / The Stream pipeline's converter. pipelineCore.php loads it only to dispatch a Stream conversion.
 // / Error block 21000 through 21002 belongs to this pipeline.
 // / This is the reference implementation of a detached worker pipeline.
@@ -109,6 +109,11 @@ function classifyStreamContent($streamContents) {
 // / Downloaded files are saved with a numeric name & NO extension on purpose, so extension-based
 // / checks apply to layer 0 only. From layer 1 onward, content is the only authority.
 // / This function inspects. It does not connect to anything & it does not decide the fate of the walk.
+// / A segment is classified from its first packets & read for nothing more, from v4.3.0, because it references nothing, as the walker
+// / already treats it. Until v4.3.0 an uploaded ts was read whole, so one larger than PHP's memory limit ended the request, & its bytes
+// / were read for addresses as a playlist's are, so x264's note of its own web address, or bytes that read as a private address,
+// / refused it with 21001. A playlist is read whole & for every address, as before. Neither demuxer a segment can reach
+// / through the stream whitelist follows a reference, & hls reads only a file that opens with #EXTM3U.
 function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
   // / Set variables.
   global $Verbose, $AllowStreamOverHTTP, $SupportedConversionTypes, $StreamArray, $EnableMemoryProtection;
@@ -118,6 +123,8 @@ function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
   $DomainCount = $IPCount = 0;
   $looksLikePlaylist = $looksLikeSegment = $ContentMismatch = $ContentUnknown = $InspectionFailed = FALSE;
   $extensionAllowed = TRUE;
+  // / Five packets of 188 bytes, which is every byte inspectTSFile() reads.
+  $segmentHeadSize = 940;
   // / Get the file extension of the $StreamFile.
   $streamFileExtension = getExtension($StreamFile);
   // / Log the start of stream file inspection.
@@ -127,10 +134,11 @@ function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
   // / The supported-format check applies to layer 0 only. Files we downloaded have no extension by design.
   if ($CurrentLayer === 0 && !in_array($streamFileExtension, $StreamArray)) $extensionAllowed = FALSE;
   if (in_array('Stream', $SupportedConversionTypes) && in_array('Audio', $SupportedConversionTypes) && $extensionAllowed) {
-    // / Read the contents of the stream file.
-    $streamFileContents = file_get_contents($StreamFile);
+    // / Read the start of the stream file, which is all a segment's classification reads, & the whole of it only where it is a playlist.
+    $streamFileContents = (string)@file_get_contents($StreamFile, FALSE, NULL, 0, $segmentHeadSize);
     // / Classify by content. This is the ONLY place that decision is made. See classifyStreamContent().
     list ($looksLikePlaylist, $looksLikeSegment) = classifyStreamContent($streamFileContents);
+    if ($looksLikePlaylist) $streamFileContents = (string)@file_get_contents($StreamFile);
     // / Determine if the content of the file matches its file extension.
     // / Layer 0 only. A name that disagrees with the content is not a quirk to work around, it is the attack.
     if ($CurrentLayer === 0) {
@@ -140,8 +148,8 @@ function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
     if (!$looksLikePlaylist && !$looksLikeSegment) $ContentUnknown = TRUE;
     // / Any single failure condition ends this inspection immediately.
     if ($ContentMismatch or $ContentUnknown) $InspectionFailed = TRUE;
-    // / If the file passed classification, then continue.
-    if (!$InspectionFailed) {
+    // / If the file passed classification as a playlist, then continue. A segment is a leaf & holds no address to check.
+    if (!$InspectionFailed && $looksLikePlaylist) {
       // / Set a flag if the file references any plain-http address. Controlled by config.php.
       if (stripos($streamFileContents, 'http://') !== FALSE) $StreamContainsHTTP = TRUE;
       // / Check the stream file contents for domain names and assemble them into an array.
@@ -188,7 +196,7 @@ function inspectStreamFile($StreamFile, $ParentURL, $CurrentLayer) {
   // / Content that disagrees with its own extension is the shape of a disguised file.
   if ($ContentMismatch) warningEntry('Stream File '.$StreamFile.' content does not match its file extension.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $streamFileExtension, $streamLine, $streamFileContents, $DomainMatches, $IPMatches, $streamLineMatches, $RawURI, $extensionAllowed);
+  purgeSensitiveMemory($EnableMemoryProtection, $streamFileExtension, $streamLine, $streamFileContents, $DomainMatches, $IPMatches, $streamLineMatches, $RawURI, $extensionAllowed, $segmentHeadSize);
   return array($InspectionFailed, $StreamURIs, $StreamContainsLAN, $StreamContainsIP, $StreamContainsHTTP, $looksLikePlaylist, $looksLikeSegment); }
 // / -----------------------------------------------------------------------------------
 
@@ -403,13 +411,13 @@ function convertStreams($pathname, $newPathname) {
     else {
       // / Only widen the protocol whitelist to plain http when config.php explicitly allows it.
       if ($AllowStreamOverHTTP) $httpString = ',http';
-      // / The codecs follow the container, from v4.2.9.
+      // / The codecs follow the container, from v4.3.0.
       // / A stream carries H.264 or HEVC video & AAC, AC-3 or MP3 sound. An mp4, a mov, an mkv, a ts & an flv hold them as they are, so
       // / those are copied & nothing is encoded. An m4v holds no HEVC, so it is not one of them.
       // / Every other video format is written as the Video pipeline writes it, a webm as VP9 & Opus, an ogv as Theora & Vorbis, a 3gp as
       // / H.264 & AAC & the rest as H.264. An audio format, one the audio list holds & the video list does not, takes the sound alone, encoded
       // / as FFMPEG encodes that format.
-      // / Until v4.2.9 every format was copied into, so the stream menu offered an avi, a webm, an mp3 & every other audio format, & FFMPEG
+      // / Until v4.3.0 every format was copied into, so the stream menu offered an avi, a webm, an mp3 & every other audio format, & FFMPEG
       // / wrote none of them, because none of them holds what a stream carries.
       $outputExtension = strtolower((string)$Extension);
       if (in_array($outputExtension, array('mp4', 'mov', 'mkv', 'ts', 'flv'), TRUE)) $streamCodec = ' -c copy';
@@ -421,7 +429,7 @@ function convertStreams($pathname, $newPathname) {
       // / Launch FFMPEG in the background & capture its PID so waitForStream() can reap it later.
       // / -rw_timeout is an INPUT option & must appear before -i to have any effect.
       // / The connection timeout is documented in seconds & is converted to microseconds here.
-      // / FFMPEG reads the playlist & each segment only with a demuxer ffmpegDemuxerWhitelist() names for a stream, from v4.2.9, so a segment
+      // / FFMPEG reads the playlist & each segment only with a demuxer ffmpegDemuxerWhitelist() names for a stream, from v4.3.0, so a segment
       // / that is itself a manifest or a list is refused, whatever it is called.
       $ffmpegCommand = 'ffmpeg -protocol_whitelist '.escapeshellarg('file,https,tcp,tls,crypto'.$httpString)
         .' -format_whitelist '.escapeshellarg(ffmpegDemuxerWhitelist(TRUE))

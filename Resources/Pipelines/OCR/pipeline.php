@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / The OCR pipeline. pipelineCore.php loads it only to dispatch an OCR operation.
 // / Error block 15000 through 15015 belongs to this pipeline.
 // / It also raises 8001 for ImageMagick.
@@ -147,7 +147,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
           // / Method 2 is the advanced route. Each page is rasterized & read by Tesseract.
           // / It reads a scanned page that holds no text layer, & is considerably slower.
           if ($Method === 2 or $Method === '2') {
-            // / The PDF is read with the decoder imageMagickDecoder() names, from v4.2.9, & with no other, whatever a policy says. A file
+            // / The PDF is read with the decoder imageMagickDecoder() names, from v4.3.0, & with no other, whatever a policy says. A file
             // / named pdf is read as one only where it holds one, because Ghostscript would read PostScript, & is refused otherwise.
             list ($pageDecoderIsNamed, $pageDecoder) = imageMagickDecoder($pathname, $oldExtension);
             if ($imageBinary === FALSE) {

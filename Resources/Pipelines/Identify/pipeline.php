@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / The Identify pipeline. pipelineCore.php loads it only to dispatch an Identify operation.
 // / Error block 37000 through 37004 belongs to this pipeline.
 // / Identify is an operation pipeline. It takes a selection of files & changes none of them.
@@ -364,7 +364,7 @@ function identifyAskFFprobe($probeBinary, $filePath, $scratchFolder) {
   $exitStatus = -1;
   $jsonStart = $jsonEnd = FALSE;
   $probeAnswer = $streamRecord = $streamList = array();
-  // / FFprobe reads the file only with a demuxer ffmpegDemuxerWhitelist() names, from v4.2.9, so a manifest or a list is refused, whatever
+  // / FFprobe reads the file only with a demuxer ffmpegDemuxerWhitelist() names, from v4.3.0, so a manifest or a list is refused, whatever
   // / it is called, & no file it names is read. It was the reason FFprobe ran only in a sandbox, & it still does.
   list ($SandboxAllowed, $toolRan, $toolOutput, $outputWasCut, $exitStatus) = identifyRunTool(escapeshellarg($probeBinary).' -v error -hide_banner -protocol_whitelist file -format_whitelist '.escapeshellarg(ffmpegDemuxerWhitelist(FALSE)).' -show_entries '.escapeshellarg('format=format_name,format_long_name,duration,bit_rate:stream=codec_type,codec_name,width,height,sample_rate,channels').' -of json '.escapeshellarg($filePath), $filePath, $scratchFolder, 'ffmpeg', '', array(), 1048576);
   // / A warning FFprobe prints is read with its answer, so the answer is taken from its first opening brace to its last closing one.

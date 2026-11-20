@@ -307,14 +307,19 @@ streams are refused anyway now, because each of their tools reads a file an uplo
 names their sandbox profiles beside Sandbox required. Repair the sandbox, as Conversions refuse &
 the log names bubblewrap says below.
 
-THE v4.2.9 DROP IN NEEDS NO REPAIR. It adds no setting & changes none already there. Its lists
+THE v4.3.0 DROP IN NEEDS NO REPAIR. It adds no setting & changes none already there. Its lists
 offer webm video, heic, heif & exr images out, exr & camera raw images in & pdf from a spreadsheet,
 which reach an existing installation only where config.php's own lists name them. Copy the lists
 from Resources/Contract/config-template.php, or add the formats you want by hand. ImageMagick
-reads exr & camera raw, & writes heic & heif, only once it is built again with v4.2.9's script,
+reads exr & camera raw, & writes heic & heif, only once it is built again with v4.3.0's script,
 which installs LibRaw, OpenEXR & libheif's codecs. An installed ImageMagick is present, so no
 dependency command builds it again. Run the script as root from the release, as the guide clones it:
   sudo bash /opt/HRConvert2/Documentation/Build/build-imagemagick-v7.sh
+The script builds ImageMagick 7.1.2-36 & no other, checked against the commit its tag names before
+anything is removed, hardened, & with ImageMagick's secure policy, & its last lines say whether each
+took. Each pipeline's own policy covers that one in a sandbox. A conversion that runs unprotected,
+because --Require Sandbox-- is FALSE or a container has no SYS_ADMIN, is under both, so ImageMagick
+reads no PDF there, & no image over 8000 pixels wide or high or 32 frames long.
 -v's new Sandbox identity line says OWN where bubblewrap 0.8 or later runs a tool as the Engine's
 own account, & HOST where it is older. A tool installed below /opt by its own installer, other than
 Calibre, needs its folder named in its sandbox profile, because the sandbox no longer shows /opt.
@@ -334,7 +339,7 @@ A heic or heif photo is read only where libheif has its HEVC decoder. On Ubuntu 
 libheif-plugin-libde265 package, which libheif only suggests, so building ImageMagick does not
 install it. An avif is written only where libheif-plugin-aomenc is installed, which it recommends.
   sudo apt-get install libheif-plugin-libde265 libheif-plugin-aomenc
-From v4.2.9 build-imagemagick-v7.sh installs both, & libheif-plugin-x265, which writes heic & heif,
+From v4.3.0 build-imagemagick-v7.sh installs both, & libheif-plugin-x265, which writes heic & heif,
 wherever the release packages them apart.
 
 FROM v4.2.1 A BUTTON IS DRAWN ONLY WHERE THE TOOL BEHIND IT IS INSTALLED. A conversion, Strip

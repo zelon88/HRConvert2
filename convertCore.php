@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -45,7 +45,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.2.9';
+  $HRConvertVersion = 'v4.3.0';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -59,13 +59,13 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.2.9';
+  $RequiredGuiVersion = 'v4.3.0';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A Language Pack version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Language Packs are not always guaranteed to be forward or reverse compatible.
-  $RequiredLanguageVersion = 'v4.2.9';
+  $RequiredLanguageVersion = 'v4.3.0';
   $RequiredLanguageVersion = ltrim($RequiredLanguageVersion, 'vV');
   // / No Core Manager version is pinned here. Every manager role is a subcomponent of the
   // / Engine & getAcceptedManagers() inside the Engine pins each one exactly.
@@ -110,7 +110,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.2.9';
+  $RequiredEngineVersion = 'v4.3.0';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -1183,11 +1183,11 @@ function encodeIdentifyReply($identifyComplete, $identifyErrors, $identifyResult
 // / typeset by the LaTeX pipeline, & Markup is asked for what LaTeX does not write. Graph, from v4.2.6, sits after them & before Stream.
 // / Every stream output format is also an ordinary audio or video format, & an administrator may list what Stream reads as a video too, as
 // / a ts can be, so Stream sits last, & a local file is converted as the file it is unless a request names Stream.
-// / The Stream family reads what $StreamArray holds & writes what $StreamOutputArray holds, from v4.2.9. Until v4.2.9 each of its lists held
+// / The Stream family reads what $StreamArray holds & writes what $StreamOutputArray holds, from v4.3.0. Until v4.3.0 each of its lists held
 // / both, so it claimed an mp4 to mkv conversion, a request naming it sent the mp4 to the stream inspector, which refused it with 21001, &
 // / a workflow's Convert could ask for an m3u8, which nothing writes.
 // / The Document family is made of four kinds, documents, spreadsheets, presentations & XPS, & claims a pair only where one kind reads the
-// / input & writes the output, from v4.2.9, as its menus have always offered it. conversionFamilyClaims() says why.
+// / input & writes the output, from v4.3.0, as its menus have always offered it. conversionFamilyClaims() says why.
 // / convertFiles() resolves a conversion with it, & a workflow asks it which files a conversion reads, so the two cannot disagree.
 // / A family a request names is asked first, from v4.2.8, so the order decides what converts a file whose request names no family, or one
 // / that cannot convert it.
@@ -1501,7 +1501,7 @@ function convertOptionsTransform($operationOptions) {
 // / Accepts the file's extension & the step's options. Returns TRUE when a family reads the one & writes the other.
 // / A file that is already the format asked for is not read, because there is nothing to convert.
 // / It asks the lists convertFiles() asks, less any family this server does not offer, so a workflow leaves out a file the converter would refuse,
-// / & one no installed tool reads, from v4.2.1. A family claims a pair as conversionFamilyClaims() says, from v4.2.9.
+// / & one no installed tool reads, from v4.2.1. A family claims a pair as conversionFamilyClaims() says, from v4.3.0.
 function convertOperationAccepts($fileExtension, $operationOptions) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -1913,7 +1913,7 @@ function getSandboxProfiles() {
       'OperationType' => 'Ebook',
       'RequireSandbox' => TRUE,
       'ReadOnlyPaths' => array('/usr/share/calibre', '/opt/calibre'),
-      'Reason' => 'Conversion recipes are read from /usr/share/calibre. Calibre\'s own installer puts the whole of it in /opt/calibre, which the base sandbox no longer shows from v4.2.9.'),
+      'Reason' => 'Conversion recipes are read from /usr/share/calibre. Calibre\'s own installer puts the whole of it in /opt/calibre, which the base sandbox no longer shows from v4.3.0.'),
 
     // / TeX Live keeps its configuration in /etc/texmf, & its formats, font maps & file database in /var/lib/texmf, & XeLaTeX cannot start
     // / without either. A document that names a system font has fontconfig find it, & with no cache fontconfig reads every font on the
@@ -1996,7 +1996,7 @@ function getSandboxProfiles() {
     // / Resvg finds fonts by reading the font folders below /usr itself, & msgconvert is a Perl program reading only what is below /usr.
     // / msgconvert asks for the server's full name while it writes a message, & finds none in here, which changes nothing it writes.
     // / FFmpeg reads a DASH manifest whatever an upload is called, & fetches each segment it names, & FFprobe, which Identify asks, does too.
-    // / From v4.2.9 every command names the demuxers it may use, & leaves out those that open a file another names, as
+    // / From v4.3.0 every command names the demuxers it may use, & leaves out those that open a file another names, as
     // / ffmpegDemuxers.php says. The profile still sets RequireSandbox, because the Stream pipeline's FFmpeg follows a playlist by design &
     // / runs under it too. A profile of its own for streams would let the rest run where no sandbox can be built, & is left for a later release.
     // / Resvg draws an image an SVG names by a relative or an absolute path. Neither is run without a sandbox.
@@ -2856,12 +2856,12 @@ function renameFiles($FilesToRename, $NamePattern) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to decide whether a conversion family claims one conversion, from v4.2.9.
+// / A function to decide whether a conversion family claims one conversion, from v4.3.0.
 // / Accepts the family's lists, as applicationConversionFamilies() gives them, the input extension & the output extension.
 // / Returns TRUE where the family reads the one & writes the other.
 // / A family made of kinds claims a pair only where one kind reads the input & writes the output. The Document family is made of documents,
 // / spreadsheets, presentations & XPS, & LibreOffice writes a spreadsheet only from a spreadsheet & a presentation only from a presentation,
-// / & across them nothing but a PDF, which every kind lists. Until v4.2.9 its lists were merged, so it claimed docx to pptx, & LibreOffice
+// / & across them nothing but a PDF, which every kind lists. Until v4.3.0 its lists were merged, so it claimed docx to pptx, & LibreOffice
 // / was asked for it, from a workflow or a request naming no family, & wrote nothing, though Pandoc converts it. Its menus offered only
 // / what one kind lists, & still do. A family that names no kinds is one kind, & claims what its two lists hold, as every family did.
 function conversionFamilyClaims($familyFormats, $inputExtension, $outputExtension) {
@@ -2886,7 +2886,7 @@ function conversionFamilyClaims($familyFormats, $inputExtension, $outputExtensio
 // / A family claims a pair when its input list holds the one & its output list the other, as conversionFamilyClaims() says, & several can.
 // / pdf to docx is the Document family's & the E-Book family's. docx to pptx was the Document family's & the Markup family's, & until v4.2.8
 // / the first of them was the only one asked, from the Markup menu too, though LibreOffice makes no presentation of a text document. From
-// / v4.2.9 the Document family no longer claims it.
+// / v4.3.0 the Document family no longer claims it.
 // / A family serves a pair when a pipeline of its own converts it. One whose pipeline excludes the pair, as the Document family's excludes
 // / pdf to txt, would fail it, so a family that serves the pair converts it before one that only claims it.
 // / The family a request named converts the file where it serves the pair. Otherwise the first family that serves it does, & failing that

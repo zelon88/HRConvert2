@@ -12,26 +12,77 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v4.2.9.
+# / v4.3.0.
 # / This file is the ImageMagick 7 source build for HRConvert2.
-# / It removes the packaged ImageMagick & any earlier source build, then builds & installs
-# / version 7 under /usr/local with HEIC, AVIF, JPEG XL, OpenEXR & camera raw support, which
-# / the packaged build lacks. Run as root. Resources/Contract/depends.php names this script as
-# / the ImageMagick BuildCommand, so --setup --install-depends is what normally runs it.
+# / It fetches ImageMagick 7.1.2-36, & only the commit its release tag names, then removes the
+# / packaged ImageMagick & any earlier source build, & builds & installs it under /usr/local,
+# / hardened, under ImageMagick's secure policy & with HEIC, AVIF, JPEG XL, OpenEXR & camera raw
+# / support, which the packaged build lacks. Run as root. Resources/Contract/depends.php names
+# / this script as the ImageMagick BuildCommand, so --setup --install-depends is what normally
+# / runs it.
 # /
 # / Hardware Requirements ...
 # / This application requires at least a Raspberry Pi Model B+ or greater.
 # / This application will run on just about any x86 or x64 computer.
 # /
 # / Dependency Requirements ...
-# / This file requires bash, apt-get, wget, tar & make, & is run as root.
-# / It downloads the ImageMagick source over the network.
+# / This file requires bash, apt-get, git & make, & is run as root. It installs git & the compiler.
+# / It fetches the ImageMagick source over the network, & builds nothing it has not checked.
 # /
 # / <3 Open-Source
 # / -----------------------------------------------------------------------------------
 
 # Exit immediately if a command exits with a non-zero status
 set -e
+
+# / The release this script builds, & the commit its tag names, from v4.3.0. Until v4.3.0 the
+# / newest release was downloaded the day the script ran & built unchecked, so two installations
+# / a week apart ran two different ImageMagicks, & an archive altered on its way in was built
+# / as readily as the real one.
+# / A tag can be moved, & a commit cannot. Git names a commit by the hash of everything it holds,
+# / & checks every object it fetches against its name, so the source is ImageMagick's own
+# / repository, which the approval record lists, & is built only where the tag still names the
+# / commit pinned here. A later release is taken by changing both, to the tag & its own commit.
+IM_VERSION="7.1.2-36"
+IM_COMMIT="dcec873ede2912a1b045a50fd54cd138ee5f3fa4"
+IM_REPOSITORY="https://github.com/ImageMagick/ImageMagick.git"
+
+echo "=== Installing the tools that fetch & build ImageMagick ==="
+apt-get update
+apt-get install -y build-essential git
+
+echo "=== Fetching ImageMagick $IM_VERSION ==="
+# / The source is fetched & built in a folder made new for this run under /var/tmp or TMPDIR,
+# / that only root can open & that is removed however the build ends. Until v4.0.6 it was
+# / fetched to fixed names in /tmp, where every account can write, so a folder another account
+# / put there first was one root unpacked into & built from.
+# / It is fetched & checked before anything is removed, from v4.3.0, so a fetch that fails or a
+# / commit that does not match leaves the ImageMagick already installed where it was.
+WORK="$(mktemp -d "${TMPDIR:-/var/tmp}/hrconvert2-imagemagick.XXXXXXXX")"
+trap 'rm -rf "$WORK"' EXIT
+
+MAX_RETRIES=5
+RETRY_COUNT=0
+
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+    rm -rf "${WORK:?}/ImageMagick"
+    git -c advice.detachedHead=false clone --quiet --depth 1 --branch "$IM_VERSION" "$IM_REPOSITORY" "$WORK/ImageMagick" && break
+    RETRY_COUNT=$((RETRY_COUNT + 1))
+    echo "Fetch attempt $RETRY_COUNT failed, retrying in 10 seconds..."
+    sleep 10
+done
+
+if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+    echo "Failed to fetch ImageMagick $IM_VERSION after $MAX_RETRIES attempts. Nothing was removed or built."
+    exit 1
+fi
+
+FETCHED_COMMIT="$(git -C "$WORK/ImageMagick" rev-parse HEAD)"
+if [ "$FETCHED_COMMIT" != "$IM_COMMIT" ]; then
+    echo "ImageMagick's $IM_VERSION tag names commit $FETCHED_COMMIT, & this script builds only $IM_COMMIT. Nothing was removed or built."
+    exit 1
+fi
+echo "ImageMagick $IM_VERSION is commit $FETCHED_COMMIT, as pinned."
 
 echo "=== Removing old ImageMagick versions ==="
 
@@ -57,9 +108,7 @@ rm -rf /usr/local/etc/ImageMagick*
 rm -f /usr/local/share/man/man1/magick*
 rm -f /usr/local/share/man/man1/convert*
 
-echo "=== Installing development tools and image libraries ==="
-apt-get update
-apt-get install -y build-essential wget
+echo "=== Installing image libraries ==="
 
 # Core image libraries
 echo "Installing core image format libraries..."
@@ -105,34 +154,20 @@ apt-get install -y \
     libfreetype6-dev \
     libfontconfig1-dev
 
-echo "=== Downloading ImageMagick v7 source ==="
-# / The source is fetched & built in a folder made new for this run under /var/tmp or TMPDIR,
-# / that only root can open & that is removed however the build ends. Until v4.0.6 it was
-# / fetched to fixed names in /tmp, where every account can write, so a folder another account
-# / put there first was one root unpacked into & built from.
-WORK="$(mktemp -d "${TMPDIR:-/var/tmp}/hrconvert2-imagemagick.XXXXXXXX")"
-trap 'rm -rf "$WORK"' EXIT
-cd "$WORK"
+cd "$WORK/ImageMagick"
 
-MAX_RETRIES=5
-RETRY_COUNT=0
-
-while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    wget https://download.imagemagick.org/archive/ImageMagick.tar.gz && break
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    echo "Download attempt $RETRY_COUNT failed, retrying in 10 seconds..."
-    sleep 10
-done
-
-if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-    echo "Failed to download after $MAX_RETRIES attempts"
-    exit 1
-fi
-
-tar -xf ImageMagick.tar.gz
-cd ImageMagick-7*
-
-echo "=== Configuring ImageMagick v7 with modern format support ==="
+echo "=== Configuring ImageMagick $IM_VERSION with modern format support ==="
+# / The hardening the approval record requires, from v4.3.0. _FORTIFY_SOURCE=3 checks the size
+# / of each buffer handed to the C library, the stack protector stops a write past a function's
+# / frame, & full RELRO with immediate binding leaves the program's tables read only once it
+# / starts. Ubuntu 24.04's & Debian 12's compilers build position independent programs already,
+# / so -pie is not passed again. CFLAGS replaces configure's own -g -O2, & _FORTIFY_SOURCE does
+# / nothing without optimizing, so -O2 is passed with it.
+export CFLAGS="-O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong"
+export CXXFLAGS="$CFLAGS"
+export LDFLAGS="-Wl,-z,relro,-z,now"
+echo "Compiler flags: $CFLAGS"
+echo "Linker flags:   $LDFLAGS"
 echo "Configure flags:"
 echo "  --with-quantum-depth=8    (8-bit color depth, standard)"
 echo "  --with-heic=yes           (HEIC/HEIF support for iPhone photos)"
@@ -141,6 +176,7 @@ echo "  --with-jxl=yes            (JPEG XL next-gen compression)"
 echo "  --with-openjp2=yes        (JPEG 2000 support)"
 echo "  --with-openexr=yes        (OpenEXR high dynamic range images)"
 echo "  --with-raw=yes            (camera raw images through LibRaw)"
+echo "  --with-security-policy=secure  (ImageMagick's restrictive policy, for untrusted files)"
 echo "  --enable-shared           (Build shared libraries)"
 echo ""
 
@@ -159,6 +195,7 @@ echo ""
     --with-xml=yes \
     --with-freetype=yes \
     --with-fontconfig=yes \
+    --with-security-policy=secure \
     --enable-shared \
     --disable-static \
     --prefix=/usr/local
@@ -186,6 +223,36 @@ echo ""
 echo "Version Information:"
 magick --version
 
+# / The installed build is the one pinned, from v4.3.0, & says how it was hardened & which policy it reads.
+# / Each line reports & never fails, as the checks below do, because ImageMagick is installed by now.
+echo ""
+if magick --version | head -1 | grep -q "ImageMagick $IM_VERSION "; then
+    echo "  ✓ ImageMagick $IM_VERSION, commit $IM_COMMIT, as pinned"
+else
+    echo "  ✗ The magick found first is not ImageMagick $IM_VERSION. Another may be ahead of /usr/local/bin in PATH."
+fi
+# / The library is named for the quantum depth & HDRI it was built with, so it is found rather than named.
+MAGICK_BINARY="$(command -v magick)"
+MAGICK_CORE="$(find /usr/local/lib -maxdepth 1 -name 'libMagickCore-7.*.so' | head -1)"
+if [ -n "$MAGICK_CORE" ] && readelf -d "$MAGICK_BINARY" | grep -q "BIND_NOW\|FLAGS.*NOW" && readelf -d "$MAGICK_CORE" | grep -q "BIND_NOW\|FLAGS.*NOW" && readelf -l "$MAGICK_BINARY" | grep -q "GNU_RELRO" && readelf -l "$MAGICK_CORE" | grep -q "GNU_RELRO"; then
+    echo "  ✓ Full RELRO with immediate binding, in magick & $MAGICK_CORE"
+else
+    echo "  ✗ Full RELRO with immediate binding (NOT FOUND)"
+fi
+if readelf -h "$MAGICK_BINARY" | grep -q "DYN"; then echo "  ✓ Position independent"; else echo "  ✗ Position independent (NOT FOUND)"; fi
+if [ -n "$MAGICK_CORE" ] && readelf -s --wide "$MAGICK_CORE" | grep -q "__[a-z0-9_]*_chk@" && readelf -s --wide "$MAGICK_CORE" | grep -q "__stack_chk_fail@"; then
+    echo "  ✓ Fortified & stack protected, in $MAGICK_CORE"
+else
+    echo "  ✗ Fortified & stack protected (NOT FOUND)"
+fi
+# / -list policy names no rule that grants or refuses, so the policy installed is compared with the secure one in the source it came from.
+POLICY_FILE="$(magick -list configure | awk '$1 == "CONFIGURE_PATH" {print $2}')policy.xml"
+if cmp -s "$POLICY_FILE" "$WORK/ImageMagick/config/policy-secure.xml"; then
+    echo "  ✓ ImageMagick's secure policy, in $POLICY_FILE. Each HRConvert2 pipeline covers it with its own inside a sandbox."
+else
+    echo "  ✗ ImageMagick's secure policy (NOT FOUND in $POLICY_FILE)"
+fi
+
 echo ""
 echo "========================================="
 echo "=== CHECKING MODERN FORMAT SUPPORT ==="
@@ -212,7 +279,7 @@ check_delegate() {
 }
 
 # / Function to report whether ImageMagick reads, or reads & writes, a format, from the mode -list format gives it.
-# / A delegate can be built in & still lack a codec. Until v4.2.9 AVIF was reported found when it could only be read, & no AVIF was
+# / A delegate can be built in & still lack a codec. Until v4.3.0 AVIF was reported found when it could only be read, & no AVIF was
 # / ever written. It reports & never fails, as check_delegate does.
 check_format() {
     local format=$1

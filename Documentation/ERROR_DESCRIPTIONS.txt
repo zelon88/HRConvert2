@@ -2014,7 +2014,7 @@ ERROR DESCRIPTION
   A menu sends the family it offers, from v4.2.8, & a request naming a family that does not convert the pair is warned of first.
   Until v4.2.8 the Image, Drawing & archive menus & the upload page were drawn from lists the converter did not read, so a file
   such as an xcf or a gz was offered a conversion that ended here.
-  From v4.2.9 the Document family converts a pair only where one of its kinds, documents, spreadsheets, presentations or XPS,
+  From v4.3.0 the Document family converts a pair only where one of its kinds, documents, spreadsheets, presentations or XPS,
   lists both, as its menus always offered. xlsx to docx, or xps to anything but pdf, ends here where no other family converts it.
   LibreOffice made nothing of either, & xpstopdf wrote a PDF under the name asked for. The Stream family reads only what
   --Supported Stream Formats-- lists, so mp3 to mp4, which no other family converts, ends here, where the stream inspector
@@ -2169,11 +2169,11 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  LibreOffice ran & left no file. From v4.2.9 it is asked once, because LibreOffice that runs to its end & writes nothing, as it
+  LibreOffice ran & left no file. From v4.3.0 it is asked once, because LibreOffice that runs to its end & writes nothing, as it
   does for a pair it has no filter for, would write nothing again. Only one a signal stopped, as a memory ceiling, a supervisor or
-  a crash stops it, is asked again, as many times as --File Operation Retry Count-- allows. Until v4.2.9 every attempt was made, &
+  a crash stops it, is asked again, as many times as --File Operation Retry Count-- allows. Until v4.3.0 every attempt was made, &
   each waited a second longer than the last.
-  From v4.2.9 the Document family no longer claims a pair across its kinds, so docx to pptx is Pandoc's & no longer ends here.
+  From v4.3.0 the Document family no longer claims a pair across its kinds, so docx to pptx is Pandoc's & no longer ends here.
   Until v4.0.6 this read The document converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what LibreOffice printed, which usually names the cause.
   LibreOffice converts every document but an XPS file, which xpstopdf converts.
@@ -2205,6 +2205,8 @@ ERROR DESCRIPTION
   A file ImageMagick cannot read, a format this build does not write & a coder the policy the pipeline carries refuses are the usual causes.
   From v4.2.8 ImageMagick is told the format it writes, so a format it has no encoder for ends here. avif & heif are written only where
   libheif has an encoder for them, & until v4.2.8 a server without one wrote a png under the name asked for.
+  A conversion that runs with no sandbox is under the host's ImageMagick policy too, & from v4.3.0 build-imagemagick-v7.sh installs
+  ImageMagick's secure policy, which reads no PDF, & no image over 8000 pixels wide or high or 32 frames long, so each of those ends here.
   A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2293,7 +2295,7 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  From v4.2.9 ImageMagick reads an image with the decoder the imageMagickDecoders.php shared module names, & with no other.
+  From v4.3.0 ImageMagick reads an image with the decoder the imageMagickDecoders.php shared module names, & with no other.
   A decoder is named by what a file holds, & by its extension where what it holds names none. The PDF decoder hands the file to
   Ghostscript, which reads PostScript as readily as a PDF, so a file named pdf is read as one only where its first bytes are a
   PDF's header, & the file was refused because they were not. A file named pdf that holds an image is read as that image.
@@ -3796,7 +3798,7 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  OCR method 2 rasterizes a PDF's pages with ImageMagick. From v4.2.9 ImageMagick reads them with the decoder the
+  OCR method 2 rasterizes a PDF's pages with ImageMagick. From v4.3.0 ImageMagick reads them with the decoder the
   imageMagickDecoders.php shared module names, & a file named pdf is read as a PDF only where its first bytes are a PDF's header,
   because Ghostscript reads PostScript as readily as a PDF. Error 8003 says the same of the Image pipeline.
   The file may be damaged, or PostScript, or something else named pdf. No page was rasterized, & the file was not read.
@@ -4189,6 +4191,8 @@ ERROR DESCRIPTION
   unless --Default Stream Inspection Forfeit Action-- is ALLOW. The uploaded file itself is always inspected.
   An address in a range --Permitted Private Ranges-- names is not refused, whether the file names it as a host or as an address.
   The file may be a playlist disguised with a .ts extension, or content of an unrecognized type.
+  Until v4.3.0 an uploaded ts was refused here whatever it held, because its bytes were read for addresses as a playlist's are, & an
+  encoder's note such as x264's web address is one. A segment is now classified from its first packets & read for nothing more.
   A relative reference in an uploaded playlist cannot be resolved, because an upload has no source URL to inherit from.
   Playlists downloaded from a content delivery network commonly use relative references and must be edited to use absolute URLs.
   Consult the Verbose log entries immediately preceding this error for the layer and file involved.
@@ -9314,6 +9318,8 @@ ERROR DESCRIPTION
   From v4.2.5. ImageMagick reads an image by the decoder its extension names & nothing else, under the policy the Trace pipeline carries,
   & it could not read this one. A file named as an image that is something else, such as PostScript or SVG named .png, is refused by
   design. With --Enhanced Logging Verbosity-- on, the entry above this one carries what ImageMagick said.
+  Where it runs with no sandbox, the host's ImageMagick policy decides too, & from v4.3.0 build-imagemagick-v7.sh installs ImageMagick's
+  secure policy, which reads no image over 8000 pixels wide or high or 32 frames long.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -9764,9 +9770,9 @@ WARNINGS ABOUT THE SANDBOX & REFUSED FORMATS
       No sandbox could be built, & the conversion ran without one, as config.php allows. --Throw Sandbox Warning-- set to FALSE
       silences this. Run -v as root & read the Sandbox line.
     WARNING!!! The Engine's own <FILES> for a sandbox could not be read from <FOLDER>, so a sandbox shows the host's in place of each.
-      From v4.2.9, & from sandboxIdentityFlags(). A sandbox shows the passwd, group & machine-id in Resources/Engine/Sandbox in place of
+      From v4.3.0, & from sandboxIdentityFlags(). A sandbox shows the passwd, group & machine-id in Resources/Engine/Sandbox in place of
       the host's, & runs its tool as the account they name. <FILES> names those missing or unreadable, & the host's is shown in place
-      of each, as before v4.2.9, so the conversion still runs. Restore the folder from the release this installation came from. -v's
+      of each, as before v4.3.0, so the conversion still runs. Restore the folder from the release this installation came from. -v's
       Sandbox identity line says what a tool sees.
   The Stream pipeline raises this, from Resources/Pipelines/Stream/pipeline.php.
     WARNING!!! The stream converter was not launched, because no sandbox could be built.

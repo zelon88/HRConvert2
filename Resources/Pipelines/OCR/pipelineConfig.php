@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / This file declares what the OCR pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.2.9';
+$PipelineVersion = 'v4.3.0';
 
 // / This is an operation pipeline & it is the first one.
 // / A conversion pipeline takes one file, returns the six value contract, & is dispatched
@@ -77,7 +77,7 @@ $PipelineSubsystem = 'OCR';
 // / The document pipeline declares this same module & that is the point.
 // / A document being OCR'd is converted to PDF first, by the same code a document
 // / conversion uses. Both pipelines in one request load this module once between them.
-// / imageMagickDecoders.php names the decoder ImageMagick reads a PDF's pages with, from v4.2.9.
+// / imageMagickDecoders.php names the decoder ImageMagick reads a PDF's pages with, from v4.3.0.
 $PipelineSharedModules = array('libreOffice.php', 'imageMagickDecoders.php');
 
 // / The request fields this pipeline actually reads.

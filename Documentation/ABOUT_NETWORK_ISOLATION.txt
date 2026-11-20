@@ -112,7 +112,9 @@ Bytes-- instead, & 0 there is no ceiling at all.
 THE UPLOADED STREAM FILE IS ALWAYS INSPECTED, from v4.1.7, & --Stream Inspection Layers-- counts
 the layers fetched beneath it. At 0 nothing it references is fetched, so a file that references
 anything was not inspected completely, & --Default Stream Inspection Forfeit Action-- decides it.
-Until v4.1.7 a setting of 0 skipped the uploaded file too.
+Until v4.1.7 a setting of 0 skipped the uploaded file too. An uploaded segment is classified from its
+first five packets, as a fetched one is, from v4.3.0, because it references nothing. Until then it
+was read whole & for addresses, as a playlist is, & refused for what its bytes happened to hold.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

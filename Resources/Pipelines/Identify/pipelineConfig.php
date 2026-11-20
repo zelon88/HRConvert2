@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / This file declares what the Identify pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php & the policy beside this file ship & move with it.
-$PipelineVersion = 'v4.2.9';
+$PipelineVersion = 'v4.3.0';
 
 // / This is an operation pipeline, as OCR is.
 // / It takes a selection of files, reports what each one is & changes none of them.
@@ -63,7 +63,7 @@ $PipelineEntryPoint = 'identifyFiles';
 $PipelineSubsystem = 'Identification';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.
-// / ffmpegDemuxers.php names the demuxers FFprobe may read a file with, from v4.2.9.
+// / ffmpegDemuxers.php names the demuxers FFprobe may read a file with, from v4.3.0.
 $PipelineSharedModules = array('ffmpegDemuxers.php');
 
 // / The request fields this pipeline actually reads.

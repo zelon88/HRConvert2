@@ -125,7 +125,8 @@ RUN mkdir -p /DATA/HRConvert2
 # / drop in & verifies the result. Nothing is written into ImageMagick's configuration. Each
 # / pipeline that runs it carries its own policy into every conversion's sandbox. Without
 # / SYS_ADMIN there is no sandbox, & that policy is read before the image's own, whose rules
-# / decide any coder they name.
+# / decide any coder they name. The image's own is ImageMagick's secure policy, from v4.3.0, so
+# / there no PDF is read, & no image over 8000 pixels wide or high or 32 frames long.
 # / The dependency stage above has already run, so it finds every dependency present & moves on.
 # / -y answers the confirmation, because a build has nobody to ask.
 # / The listener service unit is not installed. A container has no systemd & the entrypoint

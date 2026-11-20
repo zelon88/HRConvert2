@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.9.
+// / v4.3.0.
 // / The Subtitle pipeline's converter. pipelineCore.php loads it only to dispatch a Subtitle conversion.
 // / Error block 22000 through 22002 belongs to this pipeline.
 // / Audio, Video, Subtitle & Stream share the FFMPEG subsystem.
@@ -51,7 +51,7 @@ function convertSubtitles($pathname, $newPathname, $extension) {
     errorEntry('The installed FFMPEG version is missing, unidentifiable, or too old!', 22002, FALSE); }
   else {
     // / Build & sandbox the command once. It does not change between retries.
-    // / FFMPEG reads the file only with a demuxer ffmpegDemuxerWhitelist() names, from v4.2.9, so a manifest or a list it is handed is
+    // / FFMPEG reads the file only with a demuxer ffmpegDemuxerWhitelist() names, from v4.3.0, so a manifest or a list it is handed is
     // / refused, whatever it is called, & no file it names is read.
     $ffmpegCommand = escapeshellarg($ffmpegBinary).' -y -format_whitelist '.escapeshellarg(ffmpegDemuxerWhitelist(FALSE)).' -i '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
     list ($commandMayRun, $ffmpegCommand) = sandboxCommand($ffmpegCommand, $pathname, $newPathname, FALSE, 'ffmpeg');

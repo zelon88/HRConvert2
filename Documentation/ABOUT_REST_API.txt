@@ -233,7 +233,7 @@ The following is a list of supported POST inputs, organized into sections based 
           not equally well. pdf to docx is the Document family's & the Ebook family's.
           A request that names none, or names a family that does not convert the pair, is converted by the first
           family whose pipeline does, & the second is warned of in the log.
-          From v4.2.9 the Document family converts a pair only where documents, spreadsheets, presentations or
+          From v4.3.0 the Document family converts a pair only where documents, spreadsheets, presentations or
           XPS list both, so docx to pptx is the Markup family's alone, & Pandoc makes it whatever is named. The
           Stream family reads only the stream formats, m3u8 & ts, & writes the audio & video formats.
 

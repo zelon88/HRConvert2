@@ -298,14 +298,14 @@ answer it in one call, & would serve any application whose families overlap.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
---v4.2.9--
+--v4.3.0--
 
 ONE ENGINE FILE CHANGED, & ONE FOLDER IS NEW. BOTH ARE BACKWARD COMPATIBLE.
 
-  Resources/Engine/engine.php                 v4.2.7 to v4.2.9
+  Resources/Engine/engine.php                 v4.2.7 to v4.3.0
   Resources/Engine/Sandbox/                   New. passwd, group, machine-id & index.html.
 
-HRConvert2 v4.2.9 requires Engine v4.2.9. Both changes close what v4.2.7 saw inside a sandbox & left
+HRConvert2 v4.3.0 requires Engine v4.3.0. Both changes close what v4.2.7 saw inside a sandbox & left
 below for this file's maintainer. A fault inside the sandbox is fixed in the Engine when it is found,
 & recorded here, so the two copies can still be merged with the reason for each change.
 
@@ -353,7 +353,7 @@ tools below /opt once, with command -v & readlink -f on each tool a profile runs
 --What HRConvert2 now relies on, unchanged--
 
 Nothing below is a change to the Engine. Each is something the Engine already did that HRConvert2
-v4.2.9 depends on for the first time, so a reconciled Engine has to keep doing it.
+v4.3.0 depends on for the first time, so a reconciled Engine has to keep doing it.
 
 AN OPERATION PIPELINE LOADS A SHARED MODULE AS A CONVERSION PIPELINE DOES. Identify declares the new
 ffmpegDemuxers.php & OCR the new imageMagickDecoders.php beside libreOffice.php, & the Pipeline Core
@@ -369,4 +369,9 @@ namespace, & a tool can read it from /proc/self/environ & copy it into what it m
 the passwd. Apache's names its account & its folders, & an administrator's SetEnv & PassEnv add
 whatever they name. --clearenv with PATH, LANG & what each caller names set again would show none of
 it. Each tool's need for a variable of the host's has to be traced first, as v4.2.7 traced paths.
+
+TWO OF THE ENGINE'S MESSAGES ARE NOT WHAT ERROR_DESCRIPTIONS.txt SAYS. 31007 is raised for a manager
+role whose subcomponent could not be loaded as well as for one not recognized, & only the second is
+documented. 32011 is documented as naming the path it could not create, & names none. HRConvert2 v4.3.0
+found both comparing every message the code raises with the one documented under its number.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.5.
+// / v4.3.1.
 // / The LaTeX pipeline's converter. pipelineCore.php loads it only to dispatch a LaTeX conversion.
 // / Error block 45000 through 45005 belongs to this pipeline.
 // / XeLaTeX comes from verifiedToolPath().
@@ -123,10 +123,11 @@ function typesetLaTeX($pathname, $newPathname, $extension) {
       errorEntry('Bubblewrap is missing or non functional, so this LaTeX document cannot be typeset in isolation!', 45002, FALSE); }
     else {
       if ($Verbose) logEntry('Typesetting a LaTeX document.');
-      // / Attempt the typesetting as many times as --File Operation Retry Count-- allows, & stop at the first attempt that leaves a PDF.
+      // / Attempt the typesetting, & stop at the first attempt that leaves a PDF. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
       // / A document that ran out of time is not attempted again, because it would run out of time again, & one TeX finished with an
       // / error or with no pages is not attempted again either, because TeX would stop at the same line.
-      while (!$timedOut && !$texFinished && pipelineAttemptIsDue($pdfPath, $stopper)) {
+      while (!$timedOut && !$texFinished && pipelineRetryIsDue($pdfPath, $stopper, $exitStatus)) {
         // / If the last attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
         // / The first pass always runs, & the second only where the first wrote a PDF & asks for one.

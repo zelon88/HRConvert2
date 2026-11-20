@@ -141,24 +141,27 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
                                                   ImageMagick remains functionally essential for HRConvert2's image subsystem. Core risks must be accepted
                                                   and strictly managed using the combination of source-level configuration limits and Bubblewrap.
     1h Origin & supply chain risk                 Low-Medium Risk. Governed transparently by ImageMagick Studio LLC with open Git version control repositories.
-                                                  Source distributions are cryptographically signed. Because this is a source install type, our build system pipeline
-                                                  assumes the burden of downloading archives securely via HTTPS and validating target hashes against the master release definitions.
+                                                  Source distributions are cryptographically signed. Because this is a source install type, our build script
+                                                  assumes the burden of fetching the source securely. It clones the pinned release tag from ImageMagick's own repository over HTTPS
+                                                  and builds only where that tag names the commit pinned in the script, whose hash covers everything the source holds.
     1i Dependency traps for existing installs     The Delegate Package Trap. Because this is a source build, ImageMagick will silently disable features or delegate types
                                                   at compile time if underlying system library development headers (like `libpng-dev`, `libjpeg-dev`, `libwebp-dev`)
                                                   are missing from the build machine, leading to unexpected image translation failures during downstream runtime requests.
     2a System package versus a source build       Source Build Mandatory. As defined by the manifest, we bypass repository-packaged binaries.
                                                   Compiling from source is highly preferred here as it allows us to intentionally block unneeded delegate modules,
                                                   compile with strict performance boundaries, and force advanced hardening optimizations into the final execution binary.
-    2b Build flags, libraries & features          Mandatory Hardening Config. Pass explicit configure definitions: `--with-modules`, `--disable-shared`, `--with-security-policy=head`.
+    2b Build flags, libraries & features          Mandatory Hardening Config. Pass explicit configure definitions: `--with-security-policy=secure`, `--enable-shared`, `--disable-static`,
+                                                  and no `--with-modules`, so every coder is built into the library and none is loaded from a file at runtime.
                                                   Inject standard compilation fortification rules into the compiler wrappers to guarantee memory protection:
-                                                  CFLAGS="-D_FORTIFY_SOURCE=3 -fstack-protector-strong -fPIE" LDFLAGS="-pie -Wl,-z,relro,-z,now"
+                                                  CFLAGS="-O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong" LDFLAGS="-Wl,-z,relro,-z,now"
+                                                  Ubuntu's and Debian's compilers already build position independent executables, so -fPIE and -pie are not passed.
     2c Minimum version & version edge cases       Strictly 7.1+ as defined by the manifest facts to guarantee the unified `magick` binary architecture is used,
                                                   bypassing old legacy version 6 shell configurations and ensuring updated memory boundaries exist in the internal parser layers.
     2d Licensing implications of the build        ImageMagick License (a permissive, non-copyleft Apache 2.0-compatible copyright structure).
                                                   Completely clean for internal execution, packaging, and commercial enterprise distribution strings without copyleft contamination risks.
     3a Distribution method                        Source archives (tar.xz) or public Git source trees hosted via GitHub or official image archiving servers.
-    3b Download source used                       Official release mirrors (https://imagemagick.org).
-    3c How an installer obtains this version      The automated pipeline script pulls the specific release tarball via curl/wget, validates checksum data,
+    3b Download source used                       ImageMagick's own Git repository (https://github.com/ImageMagick/ImageMagick), at the release tag the build script pins.
+    3c How an installer obtains this version      The automated build script clones the pinned release tag with git, builds only where the tag names the pinned commit,
                                                   resolves system delegate dependencies, and executes the `./configure && make && make install` workflow.
     3d Inspection of any bundled binary or code   Inspection Impractical. Highly complex, multi-million line optimization engine integrating high-density math equations,
                                                   vector matrix loops, color profile translation trees, and extensive third-party assembly wrappers.

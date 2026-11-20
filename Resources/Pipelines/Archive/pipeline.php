@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.8.
+// / v4.3.1.
 // / The Archive pipeline's converter. pipelineCore.php loads it only to dispatch an Archive conversion.
 // / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13108 belongs to this pipeline.
 // / The Archiver pipeline raises 13012, & shares 13006, 13008, 13009 & 13010 with this one.
@@ -273,7 +273,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   $limitsAreConfigured = $extractionSucceeded = $stagingIsRemoved = FALSE;
   $sevenZipBinary = $rarBinary = $tarBinary = $mkisofsBinary = $isoHybridBinary = FALSE;
   $returnData = $archiveCommand = $hybridCommand = $extractionRefusal = $UserFilename = '';
-  $stopper = $byteLimit = $entryLimit = $extractedBytes = $extractedEntries = 0;
+  $stopper = $exitStatus = $byteLimit = $entryLimit = $extractedBytes = $extractedEntries = 0;
   $linkWalkCompleted = TRUE;
   $linksRemoved = 0;
   $sleepTime = $SleepTimer;
@@ -390,12 +390,12 @@ function convertArchives($pathname, $newPathname, $extension) {
           $ConversionErrors = TRUE;
           errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
         else {
-          // / Attempt it as many times as --File Operation Retry Count-- allows, & stop at the first
-          // / attempt that leaves an archive.
-          while (pipelineAttemptIsDue($newPathname, $stopper)) {
+          // / Attempt the operation, & stop at the first attempt that leaves an archive. From v4.3.1 a converter that ran to its end
+          // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+          while (pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
             // / If the last attempt failed, wait a moment before trying again.
             if ($stopper !== 0) sleep($sleepTime++);
-            $returnData = (string)shell_exec($archiveCommand.' 2>&1');
+            list ($returnData, $exitStatus) = runPipelineCommand($archiveCommand);
             // / Log the output of the archive operation to the logfile, if it is not blank.
             if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
             // / Count the number of attempts to avoid infinite loops.
@@ -440,7 +440,7 @@ function convertArchives($pathname, $newPathname, $extension) {
   $stagingIsRemoved = (!file_exists($stagingRoot) or cleanFiles($stagingRoot, array($ConvertDir)));
   if (!$stagingIsRemoved) warningEntry('The folder '.basename($pathname).' was extracted into could not be removed. It is removed with the session.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $linkWalkCompleted, $linksRemoved, $filename, $stagingRoot, $safedir2, $unwrapFolder, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $archiveCommand, $hybridCommand, $archiveError, $commandMayRun, $archiveToolsAreValid, $bootloadersAreValid, $limitsAreConfigured, $extractionSucceeded, $extractionRefusal, $stagingIsRemoved, $byteLimit, $entryLimit, $extractedBytes, $extractedEntries, $sevenZipBinary, $rarBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $linkWalkCompleted, $linksRemoved, $filename, $stagingRoot, $safedir2, $unwrapFolder, $oldExtension, $returnData, $pathname, $array7zo, $arrayzipo, $array7zo2, $array7zo3, $arraytaro, $arrayraro, $sleepTime, $stopper, $exitStatus, $archiveCommand, $hybridCommand, $archiveError, $commandMayRun, $archiveToolsAreValid, $bootloadersAreValid, $limitsAreConfigured, $extractionSucceeded, $extractionRefusal, $stagingIsRemoved, $byteLimit, $entryLimit, $extractedBytes, $extractedEntries, $sevenZipBinary, $rarBinary, $tarBinary, $mkisofsBinary, $isoHybridBinary);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $UserFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

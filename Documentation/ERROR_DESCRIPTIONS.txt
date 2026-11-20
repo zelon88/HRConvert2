@@ -1193,7 +1193,9 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-503, <SESSION_IDENTIFIER>: The DATA directory is returning a server error, so no download & no share link can work.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-503, <SESSION_IDENTIFIER>: The <LOCATION_NAME> directory is returning a server error, so no download & no share link can work. The usual cause is a
+  directive in <LOCATION_NAME>/.htaccess that this directory's AllowOverride level does not permit; the web server error log names it. Delete that
+  file to restore service, then apply the rules in the server configuration instead.
 
 FILE
   Resources/Engine/Cores/environmentCore.php
@@ -1224,7 +1226,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-504, <SESSION_IDENTIFIER>: The Apache configuration HRConvert2 wrote did not pass apachectl configtest & was withdrawn.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-504, <SESSION_IDENTIFIER>: The Apache configuration <APPLICATION_NAME> wrote did not pass apachectl configtest & was withdrawn. The test reported: <OUTPUT>
 
 FILE
   Resources/Engine/Cores/setupCore.php
@@ -1576,7 +1578,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3001, <SESSION_IDENTIFIER>: Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3001, <SESSION_IDENTIFIER>: Could not verify the input file.
 
 FILE
   /convertCore.php
@@ -1627,7 +1629,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3003, <SESSION_IDENTIFIER>: Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3003, <SESSION_IDENTIFIER>: Could not verify the input file.
 
 FILE
   /convertCore.php
@@ -1694,7 +1696,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4001, <SESSION_IDENTIFIER>: Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-4001, <SESSION_IDENTIFIER>: Could not verify the input file.
 
 FILE
   /Resources/Pipelines/Archiver/pipeline.php
@@ -1869,7 +1871,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5001, <SESSION_IDENTIFIER>: Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-5001, <SESSION_IDENTIFIER>: Could not verify the input file.
 
 FILE
   /convertCore.php
@@ -2050,7 +2052,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6001, <SESSION_IDENTIFIER>: Unsupported file format!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6001, <SESSION_IDENTIFIER>: Unsupported file format, <EXTENSION>!
 
 FILE
   /convertCore.php
@@ -2199,14 +2201,16 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  ImageMagick ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  ImageMagick ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The image converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what ImageMagick printed, which usually names the cause.
   A file ImageMagick cannot read, a format this build does not write & a coder the policy the pipeline carries refuses are the usual causes.
   From v4.2.8 ImageMagick is told the format it writes, so a format it has no encoder for ends here. avif & heif are written only where
   libheif has an encoder for them, & until v4.2.8 a server without one wrote a png under the name asked for.
-  A conversion that runs with no sandbox is under the host's ImageMagick policy too, & from v4.3.0 build-imagemagick-v7.sh installs
-  ImageMagick's secure policy, which reads no PDF, & no image over 8000 pixels wide or high or 32 frames long, so each of those ends here.
+  From v4.3.1 ImageMagick never runs without a sandbox, & error 8002 says where one could not be built. Until then a conversion that ran
+  with no sandbox was under the host's ImageMagick policy too, & from v4.3.0 build-imagemagick-v7.sh installs ImageMagick's secure policy,
+  which reads no PDF, & no image over 8000 pixels wide or high or 32 frames long, so each of those ended here.
   A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2276,6 +2280,8 @@ ERROR DESCRIPTION
   From v4.2.7 a sandbox profile that sets RequireSandbox is refused whatever those settings say.
   The libreoffice, calibre, inkscape, resvg, dia, meshlab & ffmpeg profiles set it, because each
   tool reads a file an upload names by its path, & -v names them beside Sandbox required.
+  From v4.3.1 the imagemagick, tesseract & mat2 profiles set it too, so an image conversion is
+  refused here whatever those settings say. Until v4.3.1 it ran without a sandbox where they allowed.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox, & how.
   Documentation/Build/diagnose-bwrap.sh probes it the way HRConvert2 does, & changes nothing.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2317,7 +2323,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Assimp or MeshLab, by the route the pipeline chose, ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Assimp or MeshLab, by the route the pipeline chose, ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The model converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Assimp or MeshLab, by the route the pipeline chose, printed, which usually names the cause.
   A model neither can read is the usual cause.
@@ -2354,7 +2361,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9002, <SESSION_IDENTIFIER>: The installed MeshLab version is missing, unidentifiable, or too old!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9002, <SESSION_IDENTIFIER>: The installed MeshLab version is missing, unidentifiable, or too old & PyMeshLab is not usable!
 
 FILE
   Resources/Pipelines/Model/pipeline.php
@@ -2373,8 +2380,8 @@ ERROR DESCRIPTION
   numerically & a build reporting 2020.9 satisfies a minimum of 2020.09.
   A build that reports no parseable version is refused, because an unknown build cannot be
   cleared against a minimum.
-  This check is SKIPPED when --Use PyMeshLab Python Bindings-- is TRUE, because the bundled python module
-  is used instead of the meshlabserver binary & has no version to interrogate.
+  It is raised only where PyMeshLab is not in use, because --Use PyMeshLab Python Bindings-- is FALSE or the bundled
+  module could not be used, which a warning before this error says. PyMeshLab replaces the meshlabserver binary.
   Assimp is checked separately as error 9001, because every model route uses Assimp while
   only the mesh routes use MeshLab.
   Run  php convertCore.php -v  to see the detected version.
@@ -2448,7 +2455,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Dia ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Dia ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The drawing converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Dia printed, which usually names the cause.
   A drawing Dia cannot read & a format it does not write are the usual causes.
@@ -2531,7 +2539,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  FFMPEG ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  FFMPEG ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The video converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what FFMPEG printed, which usually names the cause.
   A file FFMPEG cannot read & a codec this build does not carry are the usual causes.
@@ -2606,7 +2615,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  FFMPEG ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  FFMPEG ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The audio converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what FFMPEG printed, which usually names the cause.
   A file FFMPEG cannot read & a codec this build does not carry are the usual causes.
@@ -2713,7 +2723,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  7-Zip ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  7-Zip ran & left no archive. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what 7-Zip printed, which usually names the cause.
   Error 13000 follows it, because the operation produced nothing.
@@ -2735,7 +2746,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  mkisofs ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  mkisofs ran & left no archive. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what mkisofs printed, which usually names the cause.
   Error 13000 follows it, because the operation produced nothing.
@@ -2757,7 +2769,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  7-Zip ran as many times as --File Operation Retry Count-- allows to write a zip archive, & no attempt left an archive.
+  7-Zip ran to write a zip archive & left no archive. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
   Until v4.1.7 Zip wrote it, & dropped every folder the archive held.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what 7-Zip printed, which usually names the cause.
@@ -2780,7 +2793,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Tar ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  Tar ran & left no archive. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Tar printed, which usually names the cause.
   Error 13000 follows it, because the operation produced nothing.
@@ -2802,7 +2816,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Rar ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  Rar ran & left no archive. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Rar printed, which usually names the cause.
   Error 13000 follows it, because the operation produced nothing.
@@ -3106,7 +3121,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  mkisofs ran as many times as --File Operation Retry Count-- allows, & no attempt left an archive.
+  mkisofs ran & left no archive. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The archiver timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what mkisofs printed, which usually names the cause.
   It is the bootable image, & ABOUT_CREATING_BOOTABLE_ISO_IMAGES.txt says what it needs.
@@ -3117,7 +3133,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13105, <SESSION_IDENTIFIER>: Cryptographic validation failed for internal UEFI assets! Files are missing or corrupted.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13105, <SESSION_IDENTIFIER>: Cryptographic validation failed for internal boot assets! Files are missing or corrupted.
 
 FILE
   Resources/Pipelines/Archive/pipeline.php
@@ -3129,7 +3145,7 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  The static image asset required to create a bootable UEFI system partition failed its integrity check.
+  A static asset required to make a bootable image, such as the image of a UEFI system partition, failed its integrity check.
   The targeted virtual filesystem image file may be missing from the internal $BootloadersDir storage path.
   The image may have been altered, damaged during deployment, or truncated during a standard update cycle.
   The computed file hash did not match the hash pinned for it in verifyIsoBootloaders(), in Resources/Pipelines/Archive/pipeline.php.
@@ -3410,7 +3426,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15001, <SESSION_IDENTIFIER>: Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15001, <SESSION_IDENTIFIER>: Could not verify the input file.
 
 FILE
   Resources/Pipelines/OCR/pipeline.php
@@ -3484,7 +3500,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15004, <SESSION_IDENTIFIER>: Could not complete the conversion using method 0. Reattempting using method 1.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15004, <SESSION_IDENTIFIER>: Could not complete the conversion using method 1. Reattempting using method 2.
 
 FILE
   Resources/Pipelines/OCR/pipeline.php
@@ -3513,7 +3529,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15005, <SESSION_IDENTIFIER>: Could not complete the conversion using method 1.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15005, <SESSION_IDENTIFIER>: Could not complete the conversion using method 2.
 
 FILE
   Resources/Pipelines/OCR/pipeline.php
@@ -3611,7 +3627,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15009, <SESSION_IDENTIFIER>: Could not create an intermediate directory at <FILE_PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-15009, <SESSION_IDENTIFIER>: Could not create an intermediate file at <FILE_PATH>!
 
 FILE
   Resources/Pipelines/OCR/pipeline.php
@@ -3696,11 +3712,11 @@ ERROR DESCRIPTION
   A PDF is a container format that can reference external resources & embed fonts, scripts
   and images, so a PDF parser is a considerably larger attack surface than it appears.
   See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
-  NOTE. The ImageMagick step of the advanced OCR method does NOT produce this error.
-  ImageMagick has the policy the OCR pipeline carries, so an unavailable sandbox is a downgrade
-  to a weaker control rather than to no control, & that step continues with a warning instead.
-  Outside a sandbox that policy is read before the host's own, whose rules still decide any
-  coder they name.
+  The ImageMagick step of the advanced OCR method, which splits a PDF into pages, raises this error
+  too, from v4.3.1, & nothing after it is attempted for that file. Until v4.3.1 it ran without a
+  sandbox under the policy the OCR pipeline carries, with a warning, even where config.php required
+  one. The tesseract profile sets RequireSandbox from v4.3.1, so --Require Sandbox-- & --Require
+  Sandbox On Docker-- do not decide this.
   NOTE. A document is turned into a PDF first by LibreOffice, in a sandbox of its own, & a
   refusal there is error 2004.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
@@ -4240,7 +4256,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  FFMPEG ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  FFMPEG ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The subtitle converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what FFMPEG printed, which usually names the cause.
   A subtitle file FFMPEG cannot read is the usual cause.
@@ -4555,7 +4572,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Inkscape ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Inkscape ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   From v4.2.5 Resvg renders an SVG to a PNG first, & this is raised only once Inkscape has had its turn too.
   Until v4.0.6 this read The SVG converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Inkscape printed, which usually names the cause.
@@ -5760,7 +5778,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Calibre ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  Calibre ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   Until v4.0.6 this read The e-book converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Calibre printed, which usually names the cause.
   A book Calibre cannot read is the usual cause. A format it cannot write it names as No plugin to handle output format.
@@ -5998,6 +6017,7 @@ ERROR DESCRIPTION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31007, <SESSION_IDENTIFIER>: An unrecognized manager role was requested!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31007, <SESSION_IDENTIFIER>: The manager subcomponent for this role could not be loaded!
 
 FILE
   Resources/Engine/engine.php
@@ -6016,6 +6036,9 @@ ERROR DESCRIPTION
   This error is in place to maintain syntactical integrity of the codebase.
   Logically this error should never be triggered, because the role is supplied by the Core Manager
   itself & the startup key would already have been refused for any other caller.
+  The second form is raised for a role that is recognized, where the Manager file that serves it could not be
+  loaded. The file is missing, or its version is not the one the Engine pins, & the warning before it says which.
+  Restore Resources/Engine/Managers from the release this installation came from.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6295,7 +6318,7 @@ WARNINGS ABOUT STARTUP KEYS
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31018, <SESSION_IDENTIFIER>: The installation location resolved to a system directory & was NOT deleted. Check $InstLoc in config.php.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31018, <SESSION_IDENTIFIER>: The installation location resolved to a system directory & was NOT deleted. Check $InstLoc in config.php. Path: <PATH>.
 
 FILE
   Resources/Engine/Cores/setupCore.php
@@ -6318,7 +6341,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31019, <SESSION_IDENTIFIER>: The backup location resolved to a system directory & was NOT emptied. Check $BackupLoc in config.php.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31019, <SESSION_IDENTIFIER>: The backup location resolved to a system directory & was NOT emptied. Check $BackupLoc in config.php. Path: <PATH>.
 
 FILE
   Resources/Engine/Cores/setupCore.php
@@ -6878,7 +6901,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32011, <SESSION_IDENTIFIER>: A required data location could not be created at <PATH>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-32011, <SESSION_IDENTIFIER>: A required data location could not be created!
 
 FILE
   Resources/Engine/Cores/setupCore.php
@@ -7240,7 +7263,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34002, <SESSION_IDENTIFIER>: The <PIPELINE_NAME> pipeline declared the entry point <FUNCTION_NAME>, which does not exist!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34002, <SESSION_IDENTIFIER>: The <PIPELINE_NAME> pipeline declared the entry point <FUNCTION_NAME>, which does not exist! Its converter is expected at <PATH>.
 
 FILE
   Resources/Engine/Cores/pipelineCore.php
@@ -7350,6 +7373,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Strip Metadata was requested but no Metadata pipeline is installed!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Merge was requested but no PDF pipeline is installed!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Split was requested but no PDF pipeline is installed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Extract was requested but no Extractor pipeline is installed!
 
 FILE
   /convertCore.php
@@ -7745,7 +7769,8 @@ ERROR DESCRIPTION
   The type, the character set & every detail a tool reads are missing from what is reported.
   The second form is from v4.2.7. config.php does not require a sandbox, so the tools ran unprotected, except FFprobe, which runs
   under the ffmpeg sandbox profile. That profile sets RequireSandbox & is never run without one, so the details of an audio or a
-  video file were not read, & a note on each such file says so. Neither setting changes that.
+  video file were not read, & a note on each such file says so. Neither setting changes that. From v4.3.1 ImageMagick, which
+  reads an image's details under the imagemagick profile, is never run without one either.
   This is logged once for the whole selection rather than once for every tool & every file.
   A WARNING!!! above it, from the sandbox, says why the sandbox could not be built.
   Run  php convertCore.php -v  as root & read the Sandbox line. Bubblewrap is a required dependency.
@@ -8406,7 +8431,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41002, <SESSION_IDENTIFIER>: A video's metadata is stripped with FFMPEG, which is missing, unidentifiable, or too old!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41002, <SESSION_IDENTIFIER>: The metadata of a video, a WAV or an AIFF is stripped with FFMPEG, which is missing, unidentifiable, or too old!
 
 FILE
   Resources/Pipelines/Metadata/pipeline.php
@@ -8418,7 +8443,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  mat2 strips the metadata of a video with FFMPEG, & the manifest could not verify it.
+  The Metadata pipeline strips the metadata of a video, a WAV & an AIFF with FFMPEG, from v4.3.1, & the manifest could not verify it.
+  Until v4.3.1 mat2 ran FFMPEG for each, & this was raised for a video alone, which the message named. A WAV or an AIFF failed with 41007.
   Every other file in the request is still stripped.
   Run  php convertCore.php -v  to see what is wrong with FFMPEG.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -8497,14 +8523,18 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  mat2 runs in the sandbox, & the sandbox could not be built while --Require Sandbox-- is on.
+  mat2 runs in the sandbox, & so does FFMPEG, which strips a video, a WAV & an AIFF, & the sandbox could not be built.
+  From v4.3.1 the mat2 & ffmpeg sandbox profiles both set RequireSandbox, so --Require Sandbox-- & --Require Sandbox On
+  Docker-- do not decide this, & neither tool is run without a sandbox, wherever it runs. Until v4.3.1 mat2 ran without one
+  where the settings allowed, & ran FFMPEG on a video, a WAV or an AIFF without one too, though the ffmpeg profile was never run
+  without one.
   Run  php convertCore.php -v  to see what is wrong with Bubblewrap.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41007, <SESSION_IDENTIFIER>: Could not strip the metadata from <FILE_NAME>! mat2 said: <MESSAGE>
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41007, <SESSION_IDENTIFIER>: Could not strip the metadata from <FILE_NAME>! <TOOL> said: <MESSAGE>
 
 FILE
   Resources/Pipelines/Metadata/pipeline.php
@@ -8516,8 +8546,10 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  mat2 ran & wrote no clean copy. From v4.2.0 the error names the last line mat2 printed, which is its reason, or ends mat2 said nothing.
-  With --Enhanced Logging Verbosity-- on, everything mat2 printed is logged before this error.
+  The tool ran & wrote no clean copy. From v4.2.0 the error names the last line it printed, which is its reason, or ends <TOOL> said nothing.
+  <TOOL> is mat2, or FFMPEG for a video, a WAV or an AIFF from v4.3.1. With --Enhanced Logging Verbosity-- on, everything it printed is
+  logged before this error. FFMPEG reads an mp4 only as an MP4, an avi only as an AVI, a wmv only as an ASF, a wav only as a WAV & an
+  aiff only as an AIFF, so a file that is another format than its extension says, such as a manifest given a video's name, is refused here.
   The file may be damaged, or not be the format its extension says it is.
   mat2 refuses an archive, such as an EPUB or an office document, holding a part it does not know, & names the part.
   mat2 fails when it tries to start a sandbox of its own inside this one. The Metadata pipeline keeps it from doing so for every release it knows.
@@ -8544,15 +8576,39 @@ ERROR DESCRIPTION
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-41009, <SESSION_IDENTIFIER>: No command could strip the metadata of <FILE_NAME>, because FFMPEG is missing or no demuxer it may use reads a <EXTENSION> file!
+
+FILE
+  Resources/Pipelines/Metadata/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.3.1. FFMPEG strips the metadata of a video, a WAV & an AIFF, & the Metadata pipeline could build no command for one.
+  FFMPEG reads each only with the demuxer its extension names, mov for an mp4, avi for an avi, asf for a wmv, wav for a wav & aiff
+  for an aiff, & only where Resources/Pipelines/Shared/ffmpegDemuxers.php names that demuxer too. A module that leaves one out refuses
+  every file of that kind.
+  FFMPEG is checked before each file is read, & error 41002 says it is missing, so this is seen where it went missing between them.
+  Restore the pipeline & its shared module from the release this installation came from.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR NUMBER RESERVATION
-  41000 through 41019 are reserved for the Metadata pipeline, & 41009 through 41019 are currently unused.
-  41000 through 41008 are raised by the Metadata pipeline, & are documented above.
+  41000 through 41019 are reserved for the Metadata pipeline, & 41010 through 41019 are currently unused.
+  41000 through 41009 are raised by the Metadata pipeline, & are documented above.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-42000, <SESSION_IDENTIFIER>: PDFUnite is missing, unidentifiable, or too old, so nothing was merged!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-42000, <SESSION_IDENTIFIER>: PDFSeparate or PDFInfo is missing, unidentifiable, or too old, so nothing was split!
 
 FILE
   Resources/Pipelines/PDF/pipeline.php
@@ -8565,7 +8621,7 @@ LOGGED
 
 ERROR DESCRIPTION
   The PDF pipeline merges PDFs with PDFUnite, & the manifest could not verify it.
-  The same number is raised as  PDFSeparate or PDFInfo is missing, unidentifiable, or too old, so nothing was split!  when a split cannot run.
+  The second form is raised when a split cannot run, because PDFSeparate or PDFInfo is missing.
   All three come in the poppler-utils package. Run  php convertCore.php -v  to see which is missing.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -8930,7 +8986,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  From v4.2.5. Dasel ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  From v4.2.5. Dasel ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   A file Dasel cannot read as the format its name says, such as broken JSON or a CSV file whose rows do not line up, is the usual cause.
   With --Enhanced Logging Verbosity-- on, the entry above this one carries what Dasel said, which names the line it stopped at.
   A converter its memory ceiling killed ends the same way. --Maximum Per Conversion Resources-- in config.php sets the most each type may be given,
@@ -9235,7 +9292,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  From v4.2.5. Potrace ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  From v4.2.5. Potrace ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
   With --Enhanced Logging Verbosity-- on, the entry above this one carries what Potrace said. A BMP Potrace cannot read, such as one of
   a kind it does not know, is the usual cause, & converting it to PNG first lets ImageMagick reduce it instead.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -9275,6 +9333,7 @@ LOGGED
 
 ERROR DESCRIPTION
   From v4.2.5. A trace was refused because the server could not build a sandbox for ImageMagick or for Potrace.
+  From v4.3.1 the imagemagick profile sets RequireSandbox, so the settings never let ImageMagick run without one.
   Both read an image a stranger uploaded, & neither offers a native restriction on what it may read, so the sandbox is the only boundary
   available, & the trace is refused rather than run without one.
   See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
@@ -9318,8 +9377,9 @@ ERROR DESCRIPTION
   From v4.2.5. ImageMagick reads an image by the decoder its extension names & nothing else, under the policy the Trace pipeline carries,
   & it could not read this one. A file named as an image that is something else, such as PostScript or SVG named .png, is refused by
   design. With --Enhanced Logging Verbosity-- on, the entry above this one carries what ImageMagick said.
-  Where it runs with no sandbox, the host's ImageMagick policy decides too, & from v4.3.0 build-imagemagick-v7.sh installs ImageMagick's
-  secure policy, which reads no image over 8000 pixels wide or high or 32 frames long.
+  From v4.3.1 ImageMagick never runs without a sandbox, & error 46002 says where one could not be built. Until then, where it ran with no
+  sandbox, the host's ImageMagick policy decided too, & from v4.3.0 build-imagemagick-v7.sh installs ImageMagick's secure policy, which
+  reads no image over 8000 pixels wide or high or 32 frames long.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -9382,7 +9442,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  From v4.2.5. msgconvert ran as many times as --File Operation Retry Count-- allows, & no attempt left a file.
+  From v4.2.5. msgconvert ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times unless it ran out of time.
   A file that is not an Outlook message, or one too damaged to read, is the usual cause. A file msgconvert stopped part of the way through is
   removed. With --Enhanced Logging Verbosity-- on, the entry above this one carries what msgconvert said.
   msgconvert also says it could not find the server's full name, which the sandbox does not have, & that changes nothing it writes.
@@ -9490,7 +9551,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  From v4.2.5. Pandoc ran as many times as --File Operation Retry Count-- allows, & no attempt left a file. <REASON> is the line that says why,
+  From v4.2.5. Pandoc ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times unless it ran out of time. <REASON> is the line that says why,
   where Pandoc printed one, & the first line TeX marked as an error where a PDF failed. A file Pandoc stopped part of the way through is removed.
   A PowerPoint or a notebook that needs an image Pandoc may not read names the image. A document is converted alone, so it never can.
   A PDF that names a LaTeX package this server does not have fails as a LaTeX document does, & error 45000 describes it.
@@ -9649,7 +9711,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  From v4.2.6. Graphviz ran as many times as --File Operation Retry Count-- allows, & no attempt left a file. <REASON> is the first line
+  From v4.2.6. Graphviz ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
+  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times unless it ran out of time. <REASON> is the first line
   Graphviz marked as an error, such as a syntax error & the line it is on, or the last line it printed. A file Graphviz stopped part of the
   way through is removed. A graph that is not written in the DOT language fails here, as does a format this Graphviz was built without.
   With --Enhanced Logging Verbosity-- on, the entry above this one carries everything Graphviz said.
@@ -9762,6 +9825,9 @@ WARNINGS ABOUT THE SANDBOX & REFUSED FORMATS
       From v4.2.7. The profile sets RequireSandbox, because its tool follows a path an upload names & nothing passed with its command
       stops it, so --Require Sandbox-- & --Require Sandbox On Docker-- do not decide it. The libreoffice, calibre, inkscape, resvg, dia,
       meshlab & ffmpeg profiles set it, & -v names them beside Sandbox required. The error of the pipeline that asked follows.
+      From v4.3.1 the imagemagick, tesseract & mat2 profiles set it too, though a policy or a command stops what each would read,
+      because ImageMagick's & Tesseract's approval records ask for a sandbox always. The warning's last sentence is the Engine's,
+      & gives the reason the first seven were traced for.
     WARNING!!! Bubblewrap is unavailable & sandboxing is required, so a conversion was refused. Install bubblewrap, or set <SETTING> to FALSE in config.php to run conversions unprotected.
       No sandbox could be built & config.php requires one, so the conversion was not run. <SETTING> is $RequireSandbox, or
       $RequireSandboxOnDocker in a container. Setting it to FALSE runs every conversion unprotected but those whose profile sets

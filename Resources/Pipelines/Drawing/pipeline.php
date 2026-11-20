@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.8.
+// / v4.3.1.
 // / The Drawing pipeline's converter. pipelineCore.php loads it only to dispatch a Drawing conversion.
 // / Error block 10000 through 10002 belongs to this pipeline.
 // / Dia comes from verifiedToolPath().
@@ -46,7 +46,7 @@ function convertDrawings($pathname, $newPathname, $extension) {
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $drawingBinary = FALSE;
   $returnData = $diaCommand = '';
-  $stopper = 0;
+  $stopper = $exitStatus = 0;
   $sleepTime = $SleepTimer;
   // / Locate & verify Dia. A path is returned only when both succeeded.
   $drawingBinary = verifiedToolPath('Dia');
@@ -62,12 +62,12 @@ function convertDrawings($pathname, $newPathname, $extension) {
       errorEntry('Bubblewrap is missing or non functional, so this drawing conversion cannot be isolated!', 10001, FALSE); }
     else {
       if ($Verbose) logEntry('Converting drawing.');
-      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
-      // / first attempt that leaves a file.
-      while (pipelineAttemptIsDue($newPathname, $stopper)) {
+      // / Attempt the conversion, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+      while (pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
-        $returnData = (string)shell_exec($diaCommand.' 2>&1');
+        list ($returnData, $exitStatus) = runPipelineCommand($diaCommand);
         // / Count the number of conversions to avoid infinite loops.
         $stopper++; }
       // / Log the output of the operation to the logfile, if it is not blank.
@@ -82,7 +82,7 @@ function convertDrawings($pathname, $newPathname, $extension) {
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $sleepTime, $diaCommand, $drawingBinary, $commandMayRun);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $exitStatus, $pathname, $sleepTime, $diaCommand, $drawingBinary, $commandMayRun);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

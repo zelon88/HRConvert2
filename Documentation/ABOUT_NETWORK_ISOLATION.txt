@@ -185,7 +185,9 @@ WHETHER A TOOL MAY RUN WITHOUT ITS NAMESPACE IS NOT GUESSED EITHER, FROM v4.2.7.
 Each tool was handed an upload naming a file outside its folder & traced. One that read the file
 & wrote it into what it made, with nothing passed to it able to stop that, has a profile setting
 RequireSandbox, & the Engine never runs it without a sandbox, whatever --Require Sandbox-- says.
-That is the libreoffice, calibre, inkscape, resvg, dia, meshlab & ffmpeg profiles.
+That is the libreoffice, calibre, inkscape, resvg, dia, meshlab & ffmpeg profiles. From v4.3.1 the
+imagemagick, tesseract & mat2 profiles set it too, though a policy or a command stops what each
+would read, because ImageMagick's & Tesseract's approval records ask for a sandbox always.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

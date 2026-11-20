@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.5.
+// / v4.3.1.
 // / The Markup pipeline's converter. pipelineCore.php loads it only to dispatch a Markup conversion.
 // / Error block 48000 through 48005 belongs to this pipeline.
 // / Pandoc & XeLaTeX come from verifiedToolPath().
@@ -131,9 +131,10 @@ function convertMarkup($pathname, $newPathname, $extension) {
       errorEntry('Bubblewrap is missing or non functional, so this markup conversion cannot be isolated!', 48002, FALSE); }
     else {
       if ($Verbose) logEntry('Converting a markup document.');
-      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the first attempt that leaves a file.
+      // / Attempt the conversion, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
       // / A document that ran out of time is not attempted again, because it would run out of time again.
-      while (!$timedOut && pipelineAttemptIsDue($newPathname, $stopper)) {
+      while (!$timedOut && pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
         redeclare($commandOutput, array());

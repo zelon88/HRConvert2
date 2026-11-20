@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.0.
+// / v4.3.1.
 // / The Audio pipeline's converter. pipelineCore.php loads it only to dispatch an Audio conversion.
 // / Error block 12000 through 12002 belongs to this pipeline.
 // / Audio, Video, Subtitle & Stream share the FFMPEG subsystem.
@@ -42,7 +42,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
   $ffmpegBinary = FALSE;
   $returnData = $ffmpegCommand = '';
   $br = ' ';
-  $stopper = 0;
+  $stopper = $exitStatus = 0;
   $sleepTime = $SleepTimer;
   // / Determine if the bitrate is being set.
   if (empty($bitrate) or $bitrate === '') $bitrate = 'auto';
@@ -64,12 +64,12 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
       errorEntry('Bubblewrap is missing or non functional, so this audio conversion cannot be isolated!', 12002, FALSE); }
     else {
       if ($Verbose) logEntry('Converting audio.');
-      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
-      // / first attempt that leaves a file.
-      while (pipelineAttemptIsDue($newPathname, $stopper)) {
+      // / Attempt the conversion, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+      while (pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
-        $returnData = (string)shell_exec($ffmpegCommand.' 2>&1');
+        list ($returnData, $exitStatus) = runPipelineCommand($ffmpegCommand);
         // / Count the number of conversions to avoid infinite loops.
         $stopper++; }
       // / Log the output of the operation to the logfile, if it is not blank.
@@ -84,7 +84,7 @@ function convertAudio($pathname, $newPathname, $extension, $bitrate) {
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $br, $bitrate, $sleepTime, $ffmpegBinary, $ffmpegCommand, $commandMayRun);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $exitStatus, $pathname, $br, $bitrate, $sleepTime, $ffmpegBinary, $ffmpegCommand, $commandMayRun);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

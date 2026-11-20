@@ -8,7 +8,7 @@
 # / https://www.gnu.org/licenses/gpl-3.0.html
 # /
 # / File Information ...
-# / v4.0.6.
+# / v4.3.1.
 # / Builds FFMPEG from source by running ffmpeg-build2.sh, which sits beside it, in a folder of
 # / its own.
 # /
@@ -33,6 +33,11 @@
 # / What the build needs before anything is made.
 if ! command -v curl > /dev/null 2>&1; then
   echo "Cannot build FFMPEG, because curl is not installed."
+  exit 1
+fi
+# / FFMPEG's own source is fetched with git at the commit ffmpeg-build2.sh pins, from v4.3.1.
+if ! command -v git > /dev/null 2>&1; then
+  echo "Cannot build FFMPEG, because git is not installed."
   exit 1
 fi
 SCRIPT_FOLDER="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"

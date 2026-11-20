@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.7.
+// / v4.3.1.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -116,26 +116,26 @@ $EngineSessionFolders = array('ScadTemp');
 $EngineAcceptedPipelines = array(
   'Stream' => 'v4.3.0',
   'Scad' => 'v4.2.1',
-  'OCR' => 'v4.3.0',
-  'Document' => 'v4.3.0',
-  'Subtitle' => 'v4.3.0',
-  'SVG' => 'v4.2.8',
-  'Drawing' => 'v4.2.8',
-  'Image' => 'v4.3.0',
-  'Model' => 'v4.2.1',
-  'Video' => 'v4.3.0',
-  'Ebook' => 'v4.2.8',
-  'Audio' => 'v4.3.0',
-  'Archive' => 'v4.2.8',
+  'OCR' => 'v4.3.1',
+  'Document' => 'v4.3.1',
+  'Subtitle' => 'v4.3.1',
+  'SVG' => 'v4.3.1',
+  'Drawing' => 'v4.3.1',
+  'Image' => 'v4.3.1',
+  'Model' => 'v4.3.1',
+  'Video' => 'v4.3.1',
+  'Ebook' => 'v4.3.1',
+  'Audio' => 'v4.3.1',
+  'Archive' => 'v4.3.1',
   // / Five conversion families, from v4.2.5. Data converts between structured data formats, LaTeX typesets a LaTeX document,
   // / Trace traces an image into vector outlines, Email converts an Outlook message & Markup converts between markup & document formats.
-  'Data' => 'v4.2.5',
-  'LaTeX' => 'v4.2.5',
-  'Trace' => 'v4.2.7',
-  'Email' => 'v4.2.5',
-  'Markup' => 'v4.2.5',
+  'Data' => 'v4.3.1',
+  'LaTeX' => 'v4.3.1',
+  'Trace' => 'v4.3.1',
+  'Email' => 'v4.3.1',
+  'Markup' => 'v4.3.1',
   // / A sixth from v4.2.6. Graph draws a graph written in Graphviz's DOT language as a picture.
-  'Graph' => 'v4.2.6',
+  'Graph' => 'v4.3.1',
   // / The second operation pipeline. It reads every file & changes none.
   'Identify' => 'v4.3.0',
   // / The third & fourth, from v4.1.6. The Archiver puts a selection of files into archives, & Scan scans the files a user asks it to.
@@ -145,7 +145,7 @@ $EngineAcceptedPipelines = array(
   // / The fifth, from v4.1.7. The Extractor puts every file an archive holds into the session beside it.
   'Extractor' => 'v4.2.1',
   // / The sixth & seventh, from v4.1.8. The Metadata pipeline makes a copy of a file without its metadata, & the PDF pipeline merges PDFs & splits them into pages.
-  'Metadata' => 'v4.2.1',
+  'Metadata' => 'v4.3.1',
   'PDF' => 'v4.2.1',
   // / Scanner pipelines. They declare no formats & are chosen by name.
   'ClamAV' => 'v4.2.1',
@@ -157,13 +157,13 @@ $EngineAcceptedPipelines = array(
 // / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.
 // / archiveExtraction.php serves the Archive & Extractor pipelines alike, from v4.1.7, for the same reason.
 // / workFolder.php gives a conversion a folder of its own, & serves the Data, LaTeX & Trace pipelines alike, from v4.2.5.
-// / ffmpegDemuxers.php names the demuxers FFMPEG & FFprobe may read with, & serves the Video, Audio, Subtitle, Stream & Identify pipelines alike, from v4.3.0.
+// / ffmpegDemuxers.php names the demuxers FFMPEG & FFprobe may read with, & serves the Video, Audio, Subtitle, Stream & Identify pipelines alike, from v4.3.0, & the Metadata pipeline from v4.3.1.
 // / imageMagickDecoders.php names the decoder ImageMagick reads an image with, & serves the Image & OCR pipelines alike, from v4.3.0.
 $EngineAcceptedSharedModules = array(
-  'libreOffice.php' => 'v4.3.0',
+  'libreOffice.php' => 'v4.3.1',
   'archiveExtraction.php' => 'v4.1.7',
   'workFolder.php' => 'v4.2.5',
-  'ffmpegDemuxers.php' => 'v4.3.0',
+  'ffmpegDemuxers.php' => 'v4.3.1',
   'imageMagickDecoders.php' => 'v4.3.0');
 
 // / Where each of this application's own pins reads its version from.

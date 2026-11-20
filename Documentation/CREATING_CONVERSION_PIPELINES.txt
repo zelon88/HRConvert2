@@ -319,10 +319,13 @@ Read these before writing code. They are preconditions, not steps.
   8h. Build the command once, before the retry loop. It never changes.
   8i. Sandbox the command, then test the permission boolean.
   8j. Refuse with your reserved sandbox number when that boolean is FALSE.
-  8k. Retry while `pipelineAttemptIsDue($newPathname, $stopper)` says so. It allows
-      `$RetryCount` attempts, & always one, & stops as soon as the output exists. Sleep
-      before every attempt but the first. Raise your error once, after the loop, when the
-      output still does not exist, & name the number of attempts made.
+  8k. Run the command with `runPipelineCommand()`, which returns what it printed & its exit
+      status, & retry while `pipelineRetryIsDue($newPathname, $stopper, $exitStatus)` says so,
+      from v4.3.1. It always allows the first attempt, & another only where a signal stopped
+      the last one, up to `$RetryCount` attempts, & stops as soon as the output exists. A
+      converter that ran to its end & left nothing would leave nothing again. Sleep before
+      every attempt but the first. Raise your error once, after the loop, when the output
+      still does not exist, & name the number of attempts made.
   8l. Log dependency output under `$Verbose`, but only when it is not blank.
   8m. Clean up every local in the cleanup line. Never null anything you return.
 

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.7.
+// / v4.3.1.
 // / The Trace pipeline's converter. pipelineCore.php loads it only to dispatch a Trace conversion.
 // / Error block 46000 through 46006 belongs to this pipeline.
 // / Potrace & ImageMagick come from verifiedToolPath().
@@ -96,8 +96,9 @@ function traceReduceImage($pathname, $imageDecoder, $workFolder) {
     if (!$commandMayRun) errorEntry('Bubblewrap is missing or non functional, so this image cannot be traced in isolation!', 46002, FALSE);
     else {
       if ($Verbose) logEntry('Reducing an image to a bitmap for tracing.');
-      // / Attempt the reduction as many times as --File Operation Retry Count-- allows, & stop at the first attempt that leaves a bitmap.
-      while (pipelineAttemptIsDue($bitmapPath, $stopper)) {
+      // / Attempt the reduction, & stop at the first attempt that leaves a bitmap. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+      while (pipelineRetryIsDue($bitmapPath, $stopper, $exitStatus)) {
         // / If the last attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
         list ($exitStatus, $commandOutput) = runInWorkFolder($magickCommand, $workFolder);
@@ -128,7 +129,7 @@ function traceImages($pathname, $newPathname, $extension) {
   $ConversionSuccess = $ConversionErrors = $commandMayRun = $folderWasMade = $bitmapWasMade = $potraceReadsImage = FALSE;
   $potraceBinary = FALSE;
   $imageDecoder = $potraceBackend = $workFolder = $bitmapPath = $potraceCommand = $returnData = '';
-  $stopper = 0;
+  $stopper = $exitStatus = 0;
   $sleepTime = $SleepTimer;
   list ($imageDecoder, $potraceBackend, $potraceReadsImage) = traceFormatNames(pathinfo((string)$pathname, PATHINFO_EXTENSION), $extension);
   // / Locate & verify Potrace. A path is returned only when both succeeded.
@@ -156,11 +157,12 @@ function traceImages($pathname, $newPathname, $extension) {
       errorEntry('Bubblewrap is missing or non functional, so this image cannot be traced in isolation!', 46002, FALSE); }
     else {
       if ($Verbose) logEntry('Tracing an image.');
-      // / Attempt the tracing as many times as --File Operation Retry Count-- allows, & stop at the first attempt that leaves a file.
-      while (pipelineAttemptIsDue($newPathname, $stopper)) {
+      // / Attempt the tracing, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+      while (pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
-        $returnData = (string)shell_exec($potraceCommand.' 2>&1');
+        list ($returnData, $exitStatus) = runPipelineCommand($potraceCommand);
         // / Count the number of attempts to avoid infinite loops.
         $stopper++; }
       // / Log the output of the operation to the logfile, if it is not blank.
@@ -173,7 +175,7 @@ function traceImages($pathname, $newPathname, $extension) {
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   if ($folderWasMade) removeWorkFolder($workFolder);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $commandMayRun, $folderWasMade, $bitmapWasMade, $potraceReadsImage, $potraceBinary, $imageDecoder, $potraceBackend, $workFolder, $bitmapPath, $potraceCommand, $returnData, $stopper, $sleepTime, $pathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $commandMayRun, $folderWasMade, $bitmapWasMade, $potraceReadsImage, $potraceBinary, $imageDecoder, $potraceBackend, $workFolder, $bitmapPath, $potraceCommand, $returnData, $stopper, $exitStatus, $sleepTime, $pathname);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

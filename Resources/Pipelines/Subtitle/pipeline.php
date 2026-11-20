@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.0.
+// / v4.3.1.
 // / The Subtitle pipeline's converter. pipelineCore.php loads it only to dispatch a Subtitle conversion.
 // / Error block 22000 through 22002 belongs to this pipeline.
 // / Audio, Video, Subtitle & Stream share the FFMPEG subsystem.
@@ -42,7 +42,7 @@ function convertSubtitles($pathname, $newPathname, $extension) {
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $ffmpegBinary = FALSE;
   $returnData = $ffmpegCommand = '';
-  $stopper = 0;
+  $stopper = $exitStatus = 0;
   $sleepTime = $SleepTimer;
   // / Locate & verify FFMPEG. A path is returned only when both succeeded.
   $ffmpegBinary = verifiedToolPath('FFMPEG');
@@ -60,12 +60,12 @@ function convertSubtitles($pathname, $newPathname, $extension) {
       errorEntry('Bubblewrap is missing or non functional, so this subtitle conversion cannot be isolated!', 22001, FALSE); }
     else {
       if ($Verbose) logEntry('Converting subtitle.');
-      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
-      // / first attempt that leaves a file.
-      while (pipelineAttemptIsDue($newPathname, $stopper)) {
+      // / Attempt the conversion, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+      while (pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
-        $returnData = (string)shell_exec($ffmpegCommand.' 2>&1');
+        list ($returnData, $exitStatus) = runPipelineCommand($ffmpegCommand);
         // / Count the number of conversions to avoid infinite loops.
         $stopper++; }
       // / Log the output of the operation to the logfile, if it is not blank.
@@ -78,7 +78,7 @@ function convertSubtitles($pathname, $newPathname, $extension) {
       // / The output file is the only verdict on whether the conversion produced anything.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $commandMayRun);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $exitStatus, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $commandMayRun);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

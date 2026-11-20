@@ -1,6 +1,6 @@
 # The Subtitle pipeline
 
-The Subtitle pipeline converts files. It accepts 14 input format(s) & produces 5 output format(s).
+The Subtitle pipeline converts files. It accepts 13 input format(s) & produces 5 output format(s).
 
 This file is written by `Documentation/Build/hrconvert2-approvals.py --readme`.
 It is rewritten from the pipeline's own declarations & from the dependency manifest,
@@ -8,7 +8,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## What it declares
 
-- **Version** v4.3.0
+- **Version** v4.3.1
 - **Kind** conversion
 - **Family** Subtitle
 - **Entry point** convertSubtitles
@@ -18,7 +18,7 @@ so it cannot drift from either. Do not edit it by hand.
 
 ## Formats
 
-**Accepts** srt, ass, ssa, vtt, sub, sbv, smi, ttml, stl, jacosub, mpl2, pjs, realtext, subviewer
+**Accepts** srt, ass, ssa, vtt, sub, sbv, smi, stl, jacosub, mpl2, pjs, realtext, subviewer
 
 **Produces** srt, ass, ssa, vtt, ttml
 

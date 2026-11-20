@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.0.
+// / v4.3.1.
 // / The OCR pipeline. pipelineCore.php loads it only to dispatch an OCR operation.
 // / Error block 15000 through 15015 belongs to this pipeline.
 // / It also raises 8001 for ImageMagick.
@@ -45,11 +45,12 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / Every route produces a text file, which is then converted to the requested output.
 // / Every binary comes from verifiedToolPath(), so the version verified is the version that runs.
 // / Every tool is sandboxed, & an operation that cannot be isolated is refused.
-// / The ImageMagick page split is the exception, because policy.xml is a native control it keeps.
+// / The ImageMagick page split is no exception, from v4.3.1. It ran without a sandbox where none could be built, whatever the settings said,
+// / because it keeps a policy, & the tesseract profile it runs under is never run without one now.
 function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
   global $Verbose, $VirusScan, $ConvertTempDir, $Lol, $Lolol, $Append, $DirSep, $EnableMemoryProtection;
-  $documentConverted = $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = FALSE;
+  $documentConverted = $OperationSuccessful = $OperationErrors = $multiple = $virusFound = $skip = $variableIsSanitized = $pagesWereSplit = FALSE;
   $fileIsVerified = $scanComplete = $documentEngineStarted = $commandMayRun = $anyFileSucceeded = $loopCheck = FALSE;
   $ocrToolsAreValid = FALSE;
   $tesseractBinary = $pdftotextBinary = $imageBinary = FALSE;
@@ -82,7 +83,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   if (!is_array($PDFWorkSelected)) $PDFWorkSelected = array($PDFWorkSelected);
   // / Iterate through the array of input files.
   foreach ($PDFWorkSelected as $file) {
-    $loopCheck = $multiple = FALSE;
+    $loopCheck = $multiple = $pagesWereSplit = FALSE;
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
     if (!$variableIsSanitized or !is_string($file) or $file === '' or $file === '.' or $file === '..' or $file === 'index.html') {
@@ -174,14 +175,18 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
               // / The policy.xml the installed ImageMagick reads is covered too, wherever its build keeps it.
               if ($policyFolder !== '' && function_exists('coverResolvedImageMagickPolicy')) coverResolvedImageMagickPolicy('tesseract');
               list ($commandMayRun, $ocrCommand) = sandboxCommand($ocrCommand, $pathname, $pathnameTEMP1, FALSE, 'tesseract', $policyFolder, $policyVariables);
-              // / ImageMagick has a policy, so an unavailable sandbox is a downgrade to a
-              // / weaker control rather than to no control at all. The operation continues.
-              if (!$commandMayRun) warningEntry('Bubblewrap is unavailable. This OCR page split will run unsandboxed under the ImageMagick policy this pipeline carries, which is read first, so the host\'s own policy still decides any coder it names.');
-              $returnData = shell_exec($ocrCommand);
+              // / The page split is refused where no sandbox can be built, from v4.3.1, as every other step is. Until then it ran without one
+              // / under its policy, even where config.php required a sandbox, & the tesseract profile it runs under never runs without one now.
+              if (!$commandMayRun) {
+                $OperationErrors = TRUE;
+                errorEntry('Bubblewrap is missing or non functional, so this OCR operation cannot be isolated!', 15012, FALSE); }
+              else {
+                $pagesWereSplit = TRUE;
+                $returnData = shell_exec($ocrCommand); }
               // / Log the output of the operation to the logfile, if it is not blank.
               if ($Verbose && trim($returnData) !== '') logEntry('The converter (IM-1) returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
               // / If a file doesn't exist there is a good chance it is because ImageMagick has split the pages up.
-              if (!file_exists($pathnameTEMP1)) {
+              if ($pagesWereSplit && !file_exists($pathnameTEMP1)) {
                 // / Scan the current directory for files matching the filename.
                 $pagedFilesArrRAW = scandir($ConvertTempDir);
                 foreach ($pagedFilesArrRAW as $pagedFile) {
@@ -222,9 +227,9 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
                   $multiple = TRUE;
                   if (!file_exists($pathnameTEMP0)) errorEntry('Could not OCR file!', 15006, FALSE);
                   else if ($Verbose) logEntry('A file was created at '.$pathnameTEMP0); } }
-              if ($Verbose) logEntry('Converted file '.$pathnameTEMP1.' to '.$pathnameTEMP.'.');
-              // / A single page PDF produces one image rather than a numbered set.
-              if (!$multiple) {
+              if ($Verbose && $pagesWereSplit) logEntry('Converted file '.$pathnameTEMP1.' to '.$pathnameTEMP.'.');
+              // / A single page PDF produces one image rather than a numbered set. A split that was refused produced neither.
+              if ($pagesWereSplit && !$multiple) {
                 $pathnameTEMPTesseract = str_replace('..', '', str_replace('.txt', '', $pathnameTEMP));
                 if ($Verbose) logEntry('Performing OCR final operation using method 2.');
                 $ocrCommand = escapeshellarg($tesseractBinary).' '.escapeshellarg($pathnameTEMP1).' '.escapeshellarg($pathnameTEMPTesseract);
@@ -326,7 +331,7 @@ function ocrFiles($PDFWorkSelected, $UserFilename, $UserExtension, $Method) {
   // / Error handler for if any failures happened during file loops.
   if ($anyFileSucceeded) $OperationSuccessful = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pageDecoder, $pageDecoderIsNamed, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $commandMayRun, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $policyFolder, $policyVariables, $PDFWorkSelected, $UserFilename, $UserExtension, $Method, $documentConverted, $verifiedFilename);
+  purgeSensitiveMemory($EnableMemoryProtection, $pageDecoder, $pageDecoderIsNamed, $pagesWereSplit, $file, $pathname, $oldPathname, $filename, $oldExtension, $newPathname, $doc1array, $img1array, $pdf1array, $pathnameTEMP, $pathnameTEMP0, $pathnameTEMP1, $pathnameTEMP3, $pagedFilesArrRAW, $pagedFile, $cleanFilname, $pageNumber, $readPageData, $writePageData, $multiple, $pathnameTEMPTesseract, $clean, $copy, $skip, $allowedOCR, $variableIsSanitized, $loopCheck, $anyFileSucceeded, $ocrCommand, $commandMayRun, $fileIsVerified, $scanComplete, $virusFound, $documentEngineStarted, $documentEnginePID, $returnData, $ocrToolsAreValid, $tesseractBinary, $pdftotextBinary, $imageBinary, $policyFolder, $policyVariables, $PDFWorkSelected, $UserFilename, $UserExtension, $Method, $documentConverted, $verifiedFilename);
   return array($OperationSuccessful, $OperationErrors, $OutputFilenames); }
 // / -----------------------------------------------------------------------------------
 

@@ -26,10 +26,28 @@ The authoritative list of dependencies is Resources/Engine/depends.php & Resourc
 
 
 --------------------
+COMMIT 11/20/2026
+v4.3.1 - A converter that ran to its end is asked once, FFMPEG strips a video's, a WAV's & an AIFF's metadata, ImageMagick, Tesseract & mat2 never run without a sandbox, FFMPEG is pinned, & every error message is documented as the code writes it.
+
+-v4.3.1.
+-Every pipeline asks a converter that ran to its end & left no file once, as Document has since v4.3.0. Only one a signal stopped is asked again, as often as --File Operation Retry Count-- allows. Fifteen pipelines asked five times & waited six seconds for a file their converter could not read. Only 129 through 159 is a signal, for Document too, because FFMPEG 6.1 exits with 183 for a file it reads nothing in, & msgconvert with 255. Engine. New pipelineRetryIsDue(), runPipelineCommand() & pipelineCommandWasStopped().
+-The Metadata pipeline strips the metadata of a video, a WAV & an AIFF with FFMPEG, using mat2's own command & the verified FFMPEG, & reads an mp4 only as MP4, an avi only as AVI, a wmv only as ASF, a wav only as WAV & an aiff only as AIFF. mat2 ran FFMPEG for each with no demuxer named, & outside a sandbox where the settings allowed, so a DASH manifest named mp4 or wav could copy any sound or video it named into the clean copy. New error 41009.
+-The imagemagick, tesseract & mat2 sandbox profiles require a sandbox, as the ImageMagick & Tesseract approvals ask. A container without SYS_ADMIN refuses images, OCR, traces & Strip Metadata too.
+-OCR's page split is refused with 15012 where no sandbox can be built. It ran ImageMagick without one, even where config.php required one.
+-The stock video, audio & subtitle input lists name only formats an upload can be read as. Forty entries are gone from them, demuxers ffmpegDemuxers.php refuses, devices, outputs FFMPEG never reads & names it does not know, so the stock configuration allows 537 formats where it allowed 574. config.php stays v4.2.8, & an existing one keeps its lists.
+-The Subtitle pipeline no longer reads ttml. FFMPEG has no TTML demuxer, & every conversion from ttml failed with 22000.
+-ffmpegDemuxers.php names apv, g728, hxvs, iamf, jpegxs_pipe, lc3, qoa & rcwt, which FFMPEG 7.0 through 8.1 add & which read only their own file. dvdvideo opens a DVD's other files & is left out.
+-ffmpeg-build2.sh builds FFMPEG from commit 30e346c76f01657f16398ddf9a93035c14ddb956 of release/6.1, fetched by its hash & checked before anything is built. It built the branch's head, whatever it was that day. ffmpeg-build.sh requires git.
+-The ImageMagick answers 1h, 2b, 3b & 3c in the Image & OCR approval records say what build-imagemagick-v7.sh does. They named two options ImageMagick lacks & a download it no longer makes.
+-hrconvert2-doccheck.py checks that each message the code raises is documented under its number, & that a reservation calls no documented number unused. Twenty messages were not documented, & now are.
+-ERROR_DESCRIPTIONS documents 41009, says what 8000, 8002, 15012, 37004, 41002, 41006, 41007, 46002, 46004 & the no file after attempts errors mean now, & documents 503, 504, 3001, 3003, 4001, 5001, 6001, 9002, 13105, 15001, 15004, 15005, 15009, 31007, 31018, 31019, 32011, 34002, 34006 & 42000 as the code raises them. INSTALLATION_INSTRUCTIONS, DOCKER_BUILD_INSTRUCTIONS, DEVELOPMENT_NOTES, ABOUT_PIPELINE_COMPONENTS, CREATING_CONVERSION_PIPELINES, ABOUT_NETWORK_ISOLATION, ABOUT_QUALITY_CONTROL & the README describe them. ENGINE_RECONCILIATION_HRCONVERT2 records the Engine's change.
+-The core, the Pipeline Core, app-engine-config.php, the shared FFMPEG demuxer & LibreOffice modules & the Archive, Audio, Data, Document, Drawing, Ebook, Email, Graph, Image, LaTeX, Markup, Metadata, Model, OCR, Subtitle, SVG, Trace & Video pipelines are v4.3.1, & the core requires Pipeline Core v4.3.1. The Engine, the interfaces & the language packs stay v4.3.0, & config.php & the manifest v4.2.8.
+
+--------------------
 COMMIT 11/19/2026
 v4.3.0 - A family claims only what its pipeline converts, a sandbox shows none of the host's identity, FFMPEG & ImageMagick are told what they may read, ImageMagick is pinned & hardened, & HEIC, HEIF, EXR, camera raw & WebM are offered.
 
--v4.3.0. 
+-v4.3.0.
 -The Document family converts a pair only where one of its kinds, documents, spreadsheets, presentations or XPS, lists both, as its menus always offered. docx, odt & rtf to pptx, pptx to docx & a spreadsheet to a document are Pandoc's, from a workflow & a request naming no family too. LibreOffice made nothing of them. xps to anything but pdf fails with 5006, where xpstopdf wrote a PDF under the name asked for. New conversionFamilyClaims().
 -Spreadsheets write pdf. --Supported Spreadsheet Output Formats-- lists it, as LibreOffice writes it & a workflow converted a spreadsheet to pdf before. config.php stays v4.2.8, because no setting was added.
 -The Stream family reads --Supported Stream Formats-- & writes the audio & video outputs. It claimed every audio & video pair, so a request naming it sent an mp4 to the stream inspector, which refused it with 21001, & a workflow's Convert could ask for m3u8.

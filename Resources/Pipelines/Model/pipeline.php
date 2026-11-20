@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.3.1.
 // / The Model pipeline's converter. pipelineCore.php loads it only to dispatch a Model conversion.
 // / Error block 9000 through 9004 belongs to this pipeline.
 // / Assimp & MeshLab come from verifiedToolPath().
@@ -168,6 +168,23 @@ function buildMeshLabCommand($usePyMeshLab, $pyMeshLabDir, $meshlabBinary, $inpu
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to give the exit status one attempt of one stage or two is judged by, from v4.3.1.
+// / Accepts the status the attempt was judged by before the stage that just ran, & that stage's status, in that order.
+// / Returns the status a signal stopped the first stage with, where one did, & otherwise the status of the stage that just ran.
+// / So an attempt is made again where a signal stopped either stage, as pipelineCommandWasStopped() tells a signal, & a status a
+// / converter chose for itself, which may be higher than a signal's, never hides one.
+function modelAttemptStatus($attemptStatus, $stageStatus) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $JudgedStatus = 0;
+  $JudgedStatus = (pipelineCommandWasStopped($attemptStatus) ? (int)$attemptStatus : (int)$stageStatus);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $JudgedStatus is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $attemptStatus, $stageStatus);
+  return $JudgedStatus; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to convert 3D model formats.
 // / MeshLab triangulates & normalizes engineering formats.
 // / Assimp handles scene graphs, rigs & the web asset formats MeshLab cannot write.
@@ -186,7 +203,7 @@ function convertModels($pathname, $newPathname, $extension) {
   $ConversionSuccess = $ConversionErrors = $modelsValid =  $meshlabBinary = $assimpBinary = $readyToConvert = $meshlabCommand = $assimpCommand = $commandMayRun = FALSE;
   $returnData = $assimpData = $inputExt = $pyMeshLabDir = $intermediatePathname = $assimpInput = '';
   $meshlabOnly = array();
-  $stopper = 0;
+  $stopper = $exitStatus = $stageStatus = 0;
   $sleepTime = $SleepTimer;
   $outputExt = $conversionRoute = $pyMeshLabInterpreter = $sidecarPathname = '';
   $meshlabEnvironment = array();
@@ -268,11 +285,13 @@ function convertModels($pathname, $newPathname, $extension) {
     // / Which of the two utilities will do the MeshLab half is recorded, under verbose only.
     // / It records what will run, not what was asked for.
     if ($conversionRoute !== '' && $Verbose) logEntry('MeshLab work will run through '.($pyMeshLabInUse ? 'the bundled PyMeshLab.' : 'the meshlabserver binary.'));
-    // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
-    // / first attempt that leaves a file.
-    while ($conversionRoute !== '' && pipelineAttemptIsDue($newPathname, $stopper)) {
+    // / Attempt the conversion, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+    // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+    // / An attempt runs one stage or two, & is judged by the status modelAttemptStatus() gives it, so a signal stopping either is seen.
+    while ($conversionRoute !== '' && pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
       // / If the last conversion attempt failed, wait a moment before trying again.
       if ($stopper !== 0) sleep($sleepTime++);
+      redeclare($exitStatus, 0);
       // / Route normalize. MeshLab triangulates the mesh & Assimp writes the output.
       if ($conversionRoute === 'normalize' or $conversionRoute === 'bridge') {
         // / The bridge route runs the two utilities the other way round, so the first stage
@@ -284,7 +303,8 @@ function convertModels($pathname, $newPathname, $extension) {
             $ConversionErrors = TRUE;
             errorEntry('Bubblewrap is missing or non functional, so this model conversion cannot be isolated!', 9003, FALSE);
             break; }
-          $returnData = shell_exec($meshlabCommand); }
+          list ($returnData, $stageStatus) = runPipelineCommand($meshlabCommand);
+          redeclare($exitStatus, modelAttemptStatus($exitStatus, $stageStatus)); }
         else {
           $assimpCommand = buildAssimpCommand($assimpBinary, $pathname, $intermediatePathname, 'obj');
           list ($commandMayRun, $assimpCommand) = sandboxCommand($assimpCommand, $pathname, $intermediatePathname, FALSE, 'meshlab');
@@ -292,7 +312,8 @@ function convertModels($pathname, $newPathname, $extension) {
             $ConversionErrors = TRUE;
             errorEntry('Bubblewrap is missing or non functional, so this model conversion cannot be isolated!', 9003, FALSE);
             break; }
-          $assimpData = shell_exec($assimpCommand); }
+          list ($assimpData, $stageStatus) = runPipelineCommand($assimpCommand);
+          redeclare($exitStatus, modelAttemptStatus($exitStatus, $stageStatus)); }
         // / If the first stage produced nothing, hand the second the original rather than nothing.
         $assimpInput = file_exists($intermediatePathname) ? $intermediatePathname : $pathname;
         // / The second stage is sandboxed separately & is judged separately.
@@ -304,7 +325,8 @@ function convertModels($pathname, $newPathname, $extension) {
             $ConversionErrors = TRUE;
             errorEntry('Bubblewrap is missing or non functional, so this model conversion cannot be isolated!', 9003, FALSE);
             break; }
-          $assimpData = shell_exec($assimpCommand); }
+          list ($assimpData, $stageStatus) = runPipelineCommand($assimpCommand);
+          redeclare($exitStatus, modelAttemptStatus($exitStatus, $stageStatus)); }
         else {
           list ($meshlabCommand, $meshlabEnvironment) = buildMeshLabCommand($pyMeshLabInUse, $pyMeshLabDir, $meshlabBinary, $assimpInput, $newPathname, $pyMeshLabInterpreter);
           list ($commandMayRun, $meshlabCommand) = sandboxCommand($meshlabCommand, $assimpInput, $newPathname, FALSE, 'meshlab', $pyMeshLabDir, $meshlabEnvironment);
@@ -312,7 +334,8 @@ function convertModels($pathname, $newPathname, $extension) {
             $ConversionErrors = TRUE;
             errorEntry('Bubblewrap is missing or non functional, so this model conversion cannot be isolated!', 9003, FALSE);
             break; }
-          $returnData = shell_exec($meshlabCommand); } }
+          list ($returnData, $stageStatus) = runPipelineCommand($meshlabCommand);
+          redeclare($exitStatus, modelAttemptStatus($exitStatus, $stageStatus)); } }
       // / Route assimp. A scene format Assimp can both read & write goes straight to it.
       else if ($conversionRoute === 'assimp') {
         $assimpCommand = buildAssimpCommand($assimpBinary, $pathname, $newPathname, $outputExt);
@@ -321,7 +344,8 @@ function convertModels($pathname, $newPathname, $extension) {
           $ConversionErrors = TRUE;
           errorEntry('Bubblewrap is missing or non functional, so this model conversion cannot be isolated!', 9003, FALSE);
           break; }
-        $assimpData = shell_exec($assimpCommand); }
+        list ($assimpData, $stageStatus) = runPipelineCommand($assimpCommand);
+        redeclare($exitStatus, modelAttemptStatus($exitStatus, $stageStatus)); }
       // / Route meshlab. MeshLab reads the input & writes a format Assimp cannot produce.
       else {
         list ($meshlabCommand, $meshlabEnvironment) = buildMeshLabCommand($pyMeshLabInUse, $pyMeshLabDir, $meshlabBinary, $pathname, $newPathname, $pyMeshLabInterpreter);
@@ -330,7 +354,8 @@ function convertModels($pathname, $newPathname, $extension) {
           $ConversionErrors = TRUE;
           errorEntry('Bubblewrap is missing or non functional, so this model conversion cannot be isolated!', 9003, FALSE);
           break; }
-        $returnData = shell_exec($meshlabCommand); }
+        list ($returnData, $stageStatus) = runPipelineCommand($meshlabCommand);
+        redeclare($exitStatus, modelAttemptStatus($exitStatus, $stageStatus)); }
       // / Count the number of conversions to avoid infinite loops.
       $stopper++; }
     // / Every attempt was made & none left a file.
@@ -369,7 +394,7 @@ function convertModels($pathname, $newPathname, $extension) {
     // / The output file is the only verdict on whether the conversion produced anything.
     if (file_exists($newPathname)) $ConversionSuccess = TRUE; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pyMeshLabIsInstalled, $sidecarPathname, $meshlabEnvironment, $pyMeshLabInUse, $pyMeshLabInterpreter, $returnData, $assimpData, $stopper, $pathname, $intermediatePathname, $assimpInput, $inputExt, $outputExt, $conversionRoute, $meshlabOnly, $assimpCanWrite, $meshlabCanWrite, $meshlabCanRead, $pyMeshLabDir, $sleepTime, $modelsValid, $readyToConvert, $meshlabCommand, $assimpCommand, $commandMayRun, $meshlabBinary, $assimpBinary);
+  purgeSensitiveMemory($EnableMemoryProtection, $pyMeshLabIsInstalled, $sidecarPathname, $meshlabEnvironment, $pyMeshLabInUse, $pyMeshLabInterpreter, $returnData, $assimpData, $stopper, $stageStatus, $exitStatus, $pathname, $intermediatePathname, $assimpInput, $inputExt, $outputExt, $conversionRoute, $meshlabOnly, $assimpCanWrite, $meshlabCanWrite, $meshlabCanRead, $pyMeshLabDir, $sleepTime, $modelsValid, $readyToConvert, $meshlabCommand, $assimpCommand, $commandMayRun, $meshlabBinary, $assimpBinary);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

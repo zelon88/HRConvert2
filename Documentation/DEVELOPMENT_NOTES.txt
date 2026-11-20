@@ -238,6 +238,18 @@ later do. Older bubblewrap runs a tool as the web server's account, which only t
 names, so it shows the host's passwd & group as before, & -v's Sandbox identity line says so. /opt is
 no longer shown, & the calibre profile shows /opt/calibre. The web server's environment is still
 passed in, & ENGINE_RECONCILIATION_HRCONVERT2.txt leaves it for the Engine's maintainer.
+
+IMAGEMAGICK, TESSERACT & MAT2 ARE NEVER RUN WITHOUT A SANDBOX. v4.3.1.
+ImageMagick's & Tesseract's approval records ask for a Bubblewrap wrapper always, & their profiles let
+them run without one where --Require Sandbox-- or --Require Sandbox On Docker-- allowed, under a policy
+that stops what they would read. Each profile sets RequireSandbox now, & so does mat2's, which reads a
+PDF with Poppler & a photo with ExifTool. A container started without SYS_ADMIN refuses images, OCR,
+traces & Strip Metadata too. OCR's page split ran ImageMagick wherever no sandbox could be built, with a
+warning, even where config.php required one, because it ran the command sandboxCommand() had refused.
+It raises 15012 now, as every other OCR step does. The approval records of Poppler, OpenSCAD, ClamAV &
+the archive tools ask for Bubblewrap always too. Their profiles stay under the two settings at v4.3.1,
+by the maintainer's decision, so a container without SYS_ADMIN still runs them unprotected where
+--Require Sandbox On Docker-- is FALSE, as it is by default.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -452,6 +464,20 @@ supported distribution carries, & 0.49.0 needs 2.35, which all of them but Debia
 THE DATA SUBSYSTEM IS NAMED STRUCTURED DATA. v4.2.5.
 --subsystem matches any subsystem whose name holds what was typed, so --subsystem=Data would have
 installed, & removed, Metadata's MAT2 as well.
+
+FFMPEG IS PINNED TO A COMMIT. v4.3.1.
+ffmpeg-build2.sh downloaded the head of FFMPEG's release/6.1 branch, whatever it was that day. It
+fetches commit 30e346c76f01657f16398ddf9a93035c14ddb956 by its hash now, the head of release/6.1 on
+10/30/2026, & builds nothing where what it fetched has another. That commit holds 24 fixes made after
+n6.1.6, the last 6.1 tag, from June 2026, several of them in the H.264, MOV, Ogg & HEVC readers. Git
+is needed, & ffmpeg-build.sh checks for it. The copy's .git folder goes before configure, so FFMPEG
+names itself 6.1.6 from its RELEASE file, which depends.php's pattern reads as 6.1, as it read the
+tarball's. The fetch was run as written, with a commit that does not exist & with a git that reports
+another, & FFMPEG alone, built from the pinned source, reported ffmpeg version 6.1.6. The script as a
+whole was not run, because most of the libraries it builds come from hosts the machine that pinned it
+cannot reach. Those downloads are pinned by version & not by checksum, so a library a mirror altered
+would be built as it arrived. Their checksums can only be taken from a host that reaches them, & are
+left for a later release.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -928,6 +954,53 @@ A DOCUMENT CONVERTER THAT RAN TO ITS END IS ASKED ONCE. v4.3.0.
 LibreOffice exits 0 whether it wrote a file, found no filter for the pair or could not load the file,
 & asked again it does the same. A LibreOffice a memory ceiling, a supervisor or a crash stopped exits
 above 128, & may finish when asked again, so only that one is retried.
+
+FFMPEG STRIPS THE METADATA OF A VIDEO, A WAV & AN AIFF, & READS EACH ONLY AS ITS EXTENSION SAYS. v4.3.1.
+mat2 0.13 strips a video, a WAV & an AIFF by running the first ffmpeg on the path, with no demuxer
+named, so a DASH manifest named mp4 or wav could have FFMPEG copy any sound or video it named by its
+full path into the clean copy, as v4.3.0 found the Video pipeline doing. FFMPEG reads a manifest's
+segments only where their names end in one of eight sound & video extensions, & an ffconcat list names
+no file outside its own folder, which holds nothing else here. mat2's profile ran without a sandbox
+where the settings allowed, so that FFMPEG ran outside the sandbox the ffmpeg profile never runs
+without. The Metadata pipeline runs mat2's own command itself now, with the FFMPEG the Dependency Core
+verified, under the ffmpeg profile, reading an mp4 only as MP4, an avi only as AVI, a wmv only as ASF,
+a wav only as WAV & an aiff only as AIFF, only where ffmpegDemuxers.php names that demuxer too, & with
+the file protocol alone. mat2 strips everything else. v4.3.1 left WAV & AIFF to mat2 until its own
+tests found mat2 running FFMPEG for them as it does for a video. A manifest named wav was measured
+copying a sound into the clean copy under mat2's command, & refused under the pipeline's. Each clean
+copy the pipeline made of an mp4, an avi, a wmv, a wav & an aiff carrying a title, an artist & a
+comment named none of them, & was the same, byte for byte, as the copy mat2's own command made of the
+same file.
+
+AN INPUT LIST NAMES ONLY FORMATS AN UPLOAD CAN BE READ AS. v4.3.1.
+Each name in the stock video, audio & subtitle input lists was looked for in what FFMPEG 6.1 reads, by
+its own -formats & -demuxers, & in what ffmpegDemuxers.php allows. A name kept is a demuxer the module
+allows, a variant of a container one of them reads, such as vob or psp, or an extension one reads,
+such as mkv or wmv. Forty entries were taken out. hls, concat, rtsp, rtp, sap, sdp & dash open another
+file or an address, & the module refuses them. fbdev, v4l2, video4linux2, oss & lavfi are devices.
+hds, smoothstreaming, rtp_mpegts, mkvtimestamp_v2, a64 & ttml are written & never read, & so are
+segment, ssegment, stream_segment, crc, framecrc, framehash, framemd5, streamhash, uncodedframecrc,
+fifo, fifo_test, sdl & sdl2, which the subtitle list named. brender, pgmuv_pipe, protocol_pipe, rroq,
+megsts, tierexseq & subtitles are nothing FFMPEG knows, megsts & tierexseq being misspellings of two
+games' formats. A config.php written before v4.3.1 keeps its lists, & accepts an upload with any of
+those names as its extension, which no menu converts.
+
+THE SUBTITLE PIPELINE READS NO TTML. v4.3.1.
+FFMPEG writes TTML & has no demuxer for it, in 6.1 or in 8.1, so every conversion from ttml v4.2.8
+offered failed with 22000. Only srt to ttml was proven then.
+
+THE DEMUXERS FFMPEG 7.0 THROUGH 8.1 ADD WERE TRACED. v4.3.1.
+apv, g728, hxvs, iamf, jpegxs_pipe, lc3, qoa & rcwt were read in FFMPEG 8.1.3's source & open nothing
+but the file they are given, so ffmpegDemuxers.php names them, & a host with a later FFMPEG reads them
+as it reads the rest. dvdvideo opens the files of the DVD folder or image it is given, through
+libdvdread & libdvdnav, so it is left out with hls & dash. 8.1 removes none of 6.1's demuxers.
+
+AN ARW CONVERTS. v4.3.1.
+v4.3.0 offered arw on LibRaw's word, because no ARW sample could be fetched. A photograph a Sony a6000
+took, 6024 by 4024 pixels & 25,000,192 bytes, fetched from a public repository's Git LFS store &
+checked against the SHA-256 its pointer names, converts to jpg & to png through the Image pipeline in
+its sandbox, read by LibRaw, in about three seconds, & to jpg through the Image menu over HTTP. Its
+decoder is its extension's, ARW, as v4.3.0 made it for every camera raw file.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1553,6 +1626,27 @@ pipelineCore.php.
 A COMPLETE INSTALL STATES ITS STAGE COUNT ONCE.
 The second permissions pass of runCompleteInstall was added without its summary line, which went on
 saying six stages while every stage heading said seven.
+
+A CONVERTER THAT RAN TO ITS END IS NOT ASKED AGAIN. v4.3.1.
+Seventeen retry loops in fifteen pipelines asked a converter as many times as --File Operation Retry
+Count-- allows, five by default, & waited a second longer before each attempt, six seconds in all,
+whether or not another attempt could change anything. A converter given the same file does the same
+again, so pipelineRetryIsDue() allows another attempt only where a signal stopped the last one, as a
+memory ceiling, a supervisor or a crash does. Document has kept that rule since v4.3.0.
+runPipelineCommand() runs a command & returns its exit status, which shell_exec() never gave, &
+pipelineCommandWasStopped() is the one place a signal is told from an exit, so no pipeline holds the
+numbers. Bubblewrap & the shell report a process a signal ended as 128 plus the signal's number. That
+was measured with bubblewrap 0.9 & dash, for a process killed inside a sandbox & out, for one killed
+from outside & for one that faulted. Only 129 through 159 is read as a signal, the signals numbered 1
+through 31, because a converter may exit with more on its own. FFMPEG from 6.1 exits with its own
+error code, 183 for a file it reads nothing in, 234 for an argument or a demuxer it refuses, 254 for a
+file it cannot find, 228 for a full disk & 255 for a file it may not open, & msgconvert's Perl exits
+with 255 where it dies. Each was measured. Document read anything above 128 as a signal from v4.3.0, &
+so did v4.3.1 until its own tests found FFMPEG & msgconvert asked again for files neither could read.
+FFMPEG & 7-Zip exit with 255 after catching a signal too, & are not asked again either. No converter
+is stopped by a real time signal. A Model attempt runs one stage or two, & is made again where a
+signal stopped either, as modelAttemptStatus() says. Graph, Markup, Email & LaTeX still stop at a
+timeout, LaTeX at an error TeX logged & Data at a structure it refuses, as before.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

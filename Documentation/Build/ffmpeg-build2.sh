@@ -13,9 +13,10 @@
 # on a server for users of any web browser without authentication.
 
 # FILE INFORMATION ...
-# v4.1.7.
+# v4.3.1.
 # This file builds FFMPEG from source to enable more advanced file operations.
 # ffmpeg-build.sh runs it in a folder of its own, which it removes when the build ends.
+# FFMPEG itself is fetched with git at the one commit FFMPEG_COMMIT names, & that commit is verified before anything is built, from v4.3.1.
 
 # HARDWARE REQUIREMENTS ...
 # This application requires at least a Raspberry Pi Model B+ or greater.
@@ -33,6 +34,12 @@
 
 PROGNAME=$(basename "$0")
 FFMPEG_VERSION=6.1
+# The FFMPEG source is pinned to one commit of its release branch, from v4.3.1. Until then the branch's head was downloaded, whatever
+# it was that day, so no two builds could be said to hold the same code. This commit is the head of release/6.1 on 10/30/2026, which
+# holds 24 fixes made after the n6.1.6 tag, several of them in the H.264, MOV, Ogg & HEVC readers every conversion uses.
+# A new pin names a new commit here, which is read & tested first. The fetch refuses any other.
+FFMPEG_REPOSITORY="https://github.com/FFmpeg/FFmpeg.git"
+FFMPEG_COMMIT="30e346c76f01657f16398ddf9a93035c14ddb956"
 SCRIPT_VERSION=1.50
 CWD=$(pwd)
 PACKAGES="$CWD/packages"
@@ -331,6 +338,11 @@ fi
 
 if ! command_exists "curl"; then
   echo "curl not installed."
+  exit 1
+fi
+
+if ! command_exists "git"; then
+  echo "git not installed. FFmpeg is fetched with it at its pinned commit."
   exit 1
 fi
 
@@ -1007,7 +1019,34 @@ if [ -d "$CWD/.git" ]; then
 fi
 
 build "ffmpeg" "$FFMPEG_VERSION"
-download "https://github.com/FFmpeg/FFmpeg/archive/refs/heads/release/$FFMPEG_VERSION.tar.gz" "FFmpeg-release-$FFMPEG_VERSION.tar.gz"
+# FFmpeg is fetched by the full hash of its pinned commit, & what was fetched is compared with that hash before anything is built.
+# The copy's .git folder goes before configure, so FFmpeg names itself by its RELEASE file, as it did when it came as a tarball.
+FFMPEG_SOURCE="$PACKAGES/FFmpeg-$FFMPEG_COMMIT"
+make_dir "$FFMPEG_SOURCE"
+if ! git -C "$FFMPEG_SOURCE" init --quiet; then
+  echo "Failed to prepare $FFMPEG_SOURCE for FFmpeg."
+  exit 1
+fi
+if ! git -C "$FFMPEG_SOURCE" fetch --quiet --depth 1 "$FFMPEG_REPOSITORY" "$FFMPEG_COMMIT"; then
+  echo "Failed to fetch FFmpeg commit $FFMPEG_COMMIT. Retrying in 10 seconds"
+  sleep 10
+  if ! git -C "$FFMPEG_SOURCE" fetch --quiet --depth 1 "$FFMPEG_REPOSITORY" "$FFMPEG_COMMIT"; then
+    echo "Failed to fetch FFmpeg commit $FFMPEG_COMMIT from $FFMPEG_REPOSITORY. Nothing was built."
+    exit 1
+  fi
+fi
+if ! git -C "$FFMPEG_SOURCE" -c advice.detachedHead=false checkout --quiet FETCH_HEAD; then
+  echo "Failed to check out FFmpeg commit $FFMPEG_COMMIT. Nothing was built."
+  exit 1
+fi
+FETCHED_COMMIT="$(git -C "$FFMPEG_SOURCE" rev-parse HEAD)"
+if [ "$FETCHED_COMMIT" != "$FFMPEG_COMMIT" ]; then
+  echo "The fetched FFmpeg commit is $FETCHED_COMMIT, & this script builds only $FFMPEG_COMMIT. Nothing was built."
+  exit 1
+fi
+echo "FFmpeg release/$FFMPEG_VERSION, commit $FFMPEG_COMMIT, as pinned."
+rm -rf "${FFMPEG_SOURCE:?}/.git"
+cd "$FFMPEG_SOURCE" || exit 1
 # shellcheck disable=SC2086
 ./configure "${CONFIGURE_OPTIONS[@]}" \
   --disable-debug \

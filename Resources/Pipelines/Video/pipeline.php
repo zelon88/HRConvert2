@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.0.
+// / v4.3.1.
 // / The Video pipeline's converter. pipelineCore.php loads it only to dispatch a Video conversion.
 // / Error block 11000 through 11002 belongs to this pipeline.
 // / Audio, Video, Subtitle & Stream share the FFMPEG subsystem.
@@ -42,7 +42,7 @@ function convertVideos($pathname, $newPathname, $extension) {
   $ConversionSuccess = $ConversionErrors = $commandMayRun = FALSE;
   $ffmpegBinary = FALSE;
   $returnData = $ffmpegCommand = $outputExtension = $videoCodec = '';
-  $stopper = 0;
+  $stopper = $exitStatus = 0;
   $sleepTime = $SleepTimer;
   // / Locate & verify FFMPEG. A path is returned only when both succeeded.
   $ffmpegBinary = verifiedToolPath('FFMPEG');
@@ -72,12 +72,12 @@ function convertVideos($pathname, $newPathname, $extension) {
       errorEntry('Bubblewrap is missing or non functional, so this video conversion cannot be isolated!', 11002, FALSE); }
     else {
       if ($Verbose) logEntry('Converting video.');
-      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
-      // / first attempt that leaves a file.
-      while (pipelineAttemptIsDue($newPathname, $stopper)) {
+      // / Attempt the conversion, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+      while (pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
-        $returnData = (string)shell_exec($ffmpegCommand);
+        list ($returnData, $exitStatus) = runPipelineCommand($ffmpegCommand);
         // / Count the number of conversions to avoid infinite loops.
         $stopper++; }
       // / A converter that produced nothing at all is worth a line of its own.
@@ -97,7 +97,7 @@ function convertVideos($pathname, $newPathname, $extension) {
       // / The output file is the only verdict on whether the conversion produced anything.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $outputExtension, $videoCodec, $returnData, $stopper, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $commandMayRun);
+  purgeSensitiveMemory($EnableMemoryProtection, $outputExtension, $videoCodec, $returnData, $stopper, $exitStatus, $pathname, $sleepTime, $ffmpegBinary, $ffmpegCommand, $commandMayRun);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

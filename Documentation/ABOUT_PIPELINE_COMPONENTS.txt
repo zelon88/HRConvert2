@@ -394,9 +394,12 @@ Contracts 1 through 3 are unchanged & still live in CREATING_CONVERSION_PIPELINE
         pair, & error 34010 once none can. Until v4.0.6 anything at the path was offered, an
         empty icon & a folder included.
     4k. Every pipeline that retries asks pipelineAttemptIsDue(), from v4.0.6, so every one
-        makes --File Operation Retry Count-- attempts, & always one. Until v4.0.6 most made one
-        attempt more than that & raised their error after the attempt that used it up, whether
-        that attempt worked or not.
+        makes --File Operation Retry Count-- attempts at most, & always one. Until v4.0.6 most
+        made one attempt more than that & raised their error after the attempt that used it up,
+        whether that attempt worked or not. From v4.3.1 each asks pipelineRetryIsDue(), which
+        asks pipelineAttemptIsDue() only where a signal stopped the last attempt, so a converter
+        that ran to its end & left nothing is asked once. runPipelineCommand() runs a command &
+        returns its exit status, & pipelineCommandWasStopped() says whether a signal ended it.
 
   5. A NON-ZERO $WorkerPID MEANS THE CORE MUST STAY ALIVE AFTER SERVING THE USER.
 

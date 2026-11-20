@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.6.
+// / v4.3.1.
 // / The Graph pipeline's converter. pipelineCore.php loads it only to dispatch a Graph conversion.
 // / Error block 49000 through 49004 belongs to this pipeline.
 // / Graphviz comes from verifiedToolPath().
@@ -111,9 +111,10 @@ function convertGraph($pathname, $newPathname, $extension) {
       errorEntry('Bubblewrap is missing or non functional, so this graph cannot be isolated!', 49002, FALSE); }
     else {
       if ($Verbose) logEntry('Drawing a graph.');
-      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the first attempt that leaves a file.
+      // / Attempt the conversion, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
       // / A graph that ran out of time is not attempted again, because it would run out of time again.
-      while (!$timedOut && pipelineAttemptIsDue($newPathname, $stopper)) {
+      while (!$timedOut && pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
         redeclare($commandOutput, array());

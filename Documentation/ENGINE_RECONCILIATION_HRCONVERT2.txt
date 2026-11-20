@@ -375,3 +375,74 @@ role whose subcomponent could not be loaded as well as for one not recognized, &
 documented. 32011 is documented as naming the path it could not create, & names none. HRConvert2 v4.3.0
 found both comparing every message the code raises with the one documented under its number.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--v4.3.1--
+
+ONE ENGINE FILE CHANGED, & IT IS BACKWARD COMPATIBLE. SEVEN OF THE ENGINE'S MESSAGES ARE DOCUMENTED AGAIN.
+
+  Resources/Engine/Cores/pipelineCore.php     v4.2.4 to v4.3.1
+
+HRConvert2 v4.3.1 requires Pipeline Core v4.3.1. The Engine itself is v4.3.0, as before, & nothing
+else in it changed.
+
+--A converter that ran to its end is not asked again--
+
+WHAT CHANGED. The Pipeline Core has three new functions. pipelineRetryIsDue() takes the path a
+converter writes, the attempts made & the exit status of the last one, & is TRUE before the first
+attempt, & after it only where pipelineCommandWasStopped() says a signal ended the last one & where
+pipelineAttemptIsDue() allows another. pipelineCommandWasStopped() is TRUE for an exit status of 129
+through 159, which is 128 plus a signal numbered 1 through 31. runPipelineCommand() runs a command
+with its standard error sent to its standard output, & returns what it printed & its exit status.
+pipelineAttemptIsDue() is unchanged.
+
+WHY. Seventeen retry loops in fifteen of HRConvert2's pipelines asked a converter that ran to its end
+& left no file as many times as --File Operation Retry Count-- allows, five by default, with six
+seconds of waiting between them, & a converter given the same file did the same each time. The
+Document pipeline had the rule in its own code from v4.3.0. A rule every pipeline keeps belongs to the
+Pipeline Core, as pipelineAttemptIsDue() does, & the number a signal is told by is held in one place.
+Bubblewrap & the shell both report a process a signal ended as 128 plus the signal's number, which
+HRConvert2 measured with bubblewrap 0.9 & dash, inside a sandbox & out. A status above 159 is a
+converter's own. FFMPEG from 6.1 exits with its own error code, 183 for a file it reads nothing in &
+234, 254 or 255 for others, & msgconvert's Perl exits with 255 where it dies, so HRConvert2's own
+tests found both asked again for a file neither could read while the rule was above 128.
+
+HOW TO TAKE IT. Copy the three functions & raise the application's pin to the Pipeline Core. A
+pipeline that calls none of them is unaffected. Every pipeline in HRConvert2's library that retries
+calls them from v4.3.1, & libreOffice.php calls pipelineCommandWasStopped(), so an Engine that runs
+that library needs all three. HRProtect's own pipelines need nothing more.
+
+--The Engine's documents--
+
+ERROR_DESCRIPTIONS.txt documents 503, 504, 31007, 31018, 31019, 32011 & 34002 as the Engine raises
+them. v4.3.0 left 31007 & 32011 below for this file's maintainer, & the new messages check found the
+other five, each documented without the detail the Engine adds to it. Nothing in the Engine's code
+changed for any of them. 31007 is documented with both its messages, & 32011 without the path it
+never named.
+hrconvert2-doccheck.py gains that check, which compares every message the code raises with the ones
+documented under its number, & its entries check reads each reservation, which may call no documented
+number unused, as 41000's did once 41009 was documented. ABOUT_QUALITY_CONTROL.txt names both.
+ABOUT_PIPELINE_COMPONENTS.txt & CREATING_CONVERSION_PIPELINES.txt describe the three new functions.
+
+--What HRConvert2 now relies on, unchanged--
+
+Nothing below is a change to the Engine. Each is something the Engine already did that HRConvert2
+v4.3.1 depends on for the first time, so a reconciled Engine has to keep doing it.
+
+A PROFILE'S RequireSandbox IS READ AS v4.2.7 DEFINED IT. HRConvert2's imagemagick, tesseract & mat2
+profiles set it from v4.3.1, & the Engine refuses each wherever no sandbox can be built.
+
+A SECOND KIND OF PIPELINE DECLARES ffmpegDemuxers.php. The Metadata pipeline, an operation pipeline,
+declares it from v4.3.1, as Identify has since v4.3.0.
+
+--Seen, & left for the Engine's maintainer--
+
+A REFUSED COMMAND IS RETURNED AS IT WAS GIVEN. sandboxCommand() returns FALSE with the unwrapped
+command where it refuses one, so a caller that runs the command without testing the boolean runs it
+unprotected. HRConvert2's OCR page split did, with a warning, until v4.3.1, even where config.php
+required a sandbox. Returning an empty command with the refusal would make that mistake run nothing.
+Every caller of either application has to be read first, because a caller that names the command it
+was refused in a message would name nothing. HRConvert2's Metadata pipeline keeps whether it built a
+command apart from what sandboxCommand() returns, from v4.3.1, so it reports a refusal as one either
+way.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

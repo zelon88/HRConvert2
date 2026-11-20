@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.8.
+// / v4.3.1.
 // / The SVG pipeline's converter. pipelineCore.php loads it only to dispatch an SVG conversion.
 // / Error block 25000 through 25002 belongs to this pipeline.
 // / Inkscape & Resvg come from verifiedToolPath().
@@ -64,8 +64,9 @@ function svgRenderWithResvg($pathname, $newPathname, $height, $width) {
     // / Where no sandbox may be built, Inkscape is asked, & refuses with this pipeline's own error.
     if ($commandMayRun) {
       if ($Verbose) logEntry('Rendering SVG with Resvg.');
-      // / Attempt the render as many times as --File Operation Retry Count-- allows, & stop at the first attempt that leaves a file.
-      while (pipelineAttemptIsDue($newPathname, $stopper)) {
+      // / Attempt the render, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+      while (pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
         redeclare($commandOutput, array());
@@ -103,7 +104,7 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
   $ConversionSuccess = $ConversionErrors = $commandMayRun = $renderedByResvg = FALSE;
   $svgBinary = FALSE;
   $returnData = $argEcho = $inkscapeCommand = $inputExtension = '';
-  $stopper = 0;
+  $stopper = $exitStatus = 0;
   $sleepTime = $SleepTimer;
   // / Build the export sizing arguments. A dimension of zero is not passed at all.
   if (!empty($width) && $width > 0) $argEcho = '--export-width='.escapeshellarg($width);
@@ -127,12 +128,12 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
       errorEntry('Bubblewrap is missing or non functional, so this SVG conversion cannot be isolated!', 25002, FALSE); }
     else {
       if ($Verbose) logEntry('Converting SVG.');
-      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
-      // / first attempt that leaves a file.
-      while (pipelineAttemptIsDue($newPathname, $stopper)) {
+      // / Attempt the conversion, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+      while (pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
-        $returnData = (string)shell_exec($inkscapeCommand.' 2>&1');
+        list ($returnData, $exitStatus) = runPipelineCommand($inkscapeCommand);
         // / Count the number of conversions to avoid infinite loops.
         $stopper++; }
       // / Log the output of the operation to the logfile, if it is not blank.
@@ -145,7 +146,7 @@ function convertSVG($pathname, $newPathname, $extension, $height, $width) {
       // / The output file is the only verdict on whether the conversion produced anything.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $sleepTime, $argEcho, $svgBinary, $inkscapeCommand, $commandMayRun, $renderedByResvg, $inputExtension);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $exitStatus, $pathname, $height, $width, $sleepTime, $argEcho, $svgBinary, $inkscapeCommand, $commandMayRun, $renderedByResvg, $inputExtension);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

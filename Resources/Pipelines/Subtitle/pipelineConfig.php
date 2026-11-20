@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.0.
+// / v4.3.1.
 // / This file declares what the Subtitle conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.3.0';
+$PipelineVersion = 'v4.3.1';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -78,14 +78,18 @@ $PipelineRequestFields = array('Extension');
 // / so an omission here cannot delete a conversion. They become authoritative in the
 // / detected modes.
 // / FFMPEG reads MicroDVD, JACOsub & MPL2 & has no encoder for any of them, so sub, jacosub & mpl2 are read & not written, from v4.2.8.
+// / FFMPEG writes TTML & has no demuxer that reads it, in 6.1 or since, so ttml is written & not read, from v4.3.1. It was offered as an input
+// / from v4.2.8, & every conversion from it failed.
 $Capabilities = array(
-  'Input' => array('srt', 'ass', 'ssa', 'vtt', 'sub', 'sbv', 'smi', 'ttml', 'stl', 'jacosub', 'mpl2', 'pjs', 'realtext', 'subviewer'),
+  'Input' => array('srt', 'ass', 'ssa', 'vtt', 'sub', 'sbv', 'smi', 'stl', 'jacosub', 'mpl2', 'pjs', 'realtext', 'subviewer'),
   'Output' => array('srt', 'ass', 'ssa', 'vtt', 'ttml'));
 
 // / Pairs removed from the cross product above, written as 'input>output'.
 // / A conversion that produces the format it was handed is not a conversion.
 // / ass to ssa & ssa to ass are NOT excluded. SSA is the older revision of the same format
 // / & moving between them is a real change a user can legitimately want.
+// / ttml to ttml stays excluded, though ttml is not read from v4.3.1, because a config.php written before then still lists ttml as an
+// / input, & there a ttml asked for as ttml is refused with 34009 as it was, rather than handed to FFMPEG.
 $PipelineExclude = array(
   'srt>srt', 'ass>ass', 'ssa>ssa', 'vtt>vtt', 'ttml>ttml');
 

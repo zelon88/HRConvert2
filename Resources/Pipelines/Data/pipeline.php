@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.5.
+// / v4.3.1.
 // / The Data pipeline's converter. pipelineCore.php loads it only to dispatch a Data conversion.
 // / Error block 44000 through 44007 belongs to this pipeline.
 // / Dasel & yq come from verifiedToolPath().
@@ -181,9 +181,9 @@ function convertDataFiles($pathname, $newPathname, $extension) {
           $structureIsRefused = TRUE;
           $ConversionErrors = TRUE;
           errorEntry(strtoupper($outputFormat).' needs '.(($outputFormat === 'toml') ? 'a table' : 'a list of records').' at the top of a document, & '.basename((string)$pathname).' holds '.(($topType === 'array') ? 'a list' : (($topType === 'map') ? 'a table' : 'a single value')).' there, so it cannot be written as '.strtoupper($outputFormat).'!', 44003, FALSE); } }
-      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
-      // / first attempt that leaves a file.
-      while (!$structureIsRefused && pipelineAttemptIsDue($newPathname, $stopper)) {
+      // / Attempt the conversion, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+      while (!$structureIsRefused && pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
         if ($outputFormat === 'xml') {

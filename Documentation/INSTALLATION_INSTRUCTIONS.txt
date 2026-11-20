@@ -122,10 +122,11 @@ There are three ways to obtain HRConvert2.
     a. Visit  'https://hub.docker.com/r/zelon88/hrconvert2'
     b. Run  'docker run -d -p 8080:80 --cap-add SYS_ADMIN zelon88/hrconvert2'
     c. SYS_ADMIN lets a container create the namespace every conversion is sandboxed in.
-       Without it documents, e-books, SVG, drawings, models, audio, video, subtitles &
-       streams are refused, & every other conversion runs unprotected with a warning, or is
-       refused too where --Require Sandbox On Docker-- is TRUE. No process that converts or
-       serves a user's file holds SYS_ADMIN, or any other capability.
+       Without it documents, e-books, SVG, drawings, models, audio, video, subtitles,
+       streams, images, OCR, traces & Strip Metadata are refused, & every other conversion
+       runs unprotected with a warning, or is refused too where --Require Sandbox On Docker--
+       is TRUE. No process that converts or serves a user's file holds SYS_ADMIN, or any
+       other capability.
     d. This guide does not otherwise apply to that option.
 
   Option 2. Clone the repository. This is the supported route & the rest of this guide.
@@ -317,12 +318,23 @@ dependency command builds it again. Run the script as root from the release, as 
   sudo bash /opt/HRConvert2/Documentation/Build/build-imagemagick-v7.sh
 The script builds ImageMagick 7.1.2-36 & no other, checked against the commit its tag names before
 anything is removed, hardened, & with ImageMagick's secure policy, & its last lines say whether each
-took. Each pipeline's own policy covers that one in a sandbox. A conversion that runs unprotected,
-because --Require Sandbox-- is FALSE or a container has no SYS_ADMIN, is under both, so ImageMagick
-reads no PDF there, & no image over 8000 pixels wide or high or 32 frames long.
+took. Each pipeline's own policy covers that one in a sandbox, & from v4.3.1 ImageMagick never runs
+without one.
 -v's new Sandbox identity line says OWN where bubblewrap 0.8 or later runs a tool as the Engine's
 own account, & HOST where it is older. A tool installed below /opt by its own installer, other than
 Calibre, needs its folder named in its sandbox profile, because the sandbox no longer shows /opt.
+
+THE v4.3.1 DROP IN NEEDS NO REPAIR. It adds no setting & changes none already there. Its video, audio
+& subtitle input lists leave out forty entries no upload can be read as, which an existing config.php
+keeps until they are taken out by hand. Copy the three lists from Resources/Contract/config-template.php,
+or leave them, because no menu converts any of those names. ImageMagick, Tesseract & mat2 are never
+run without a sandbox now, so where -v says FAILED beside Sandbox, images, OCR, traces & Strip
+Metadata are refused too, whatever --Require Sandbox-- says. Repair the sandbox, as Conversions
+refuse & the log names bubblewrap says below. ffmpeg-build2.sh builds FFMPEG from one pinned commit
+& needs git, which --setup --install-depends installs with the Engine's dependencies. An installed
+FFMPEG is present, so no dependency command builds it again. Run the script as root from the
+release to build the pinned commit:
+  sudo bash /opt/HRConvert2/Documentation/Build/ffmpeg-build.sh
 
 RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.2.8 DROP IN, &
 BEFORE -fp. v4.2.8 splits the document & spreadsheet lists, $UserDocumentArray &

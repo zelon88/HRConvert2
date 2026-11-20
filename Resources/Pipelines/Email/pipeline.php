@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.5.
+// / v4.3.1.
 // / The Email pipeline's converter. pipelineCore.php loads it only to dispatch an Email conversion.
 // / Error block 47000 through 47004 belongs to this pipeline.
 // / msgconvert comes from verifiedToolPath().
@@ -67,9 +67,10 @@ function convertEmails($pathname, $newPathname, $extension) {
       errorEntry('Bubblewrap is missing or non functional, so this email conversion cannot be isolated!', 47002, FALSE); }
     else {
       if ($Verbose) logEntry('Converting an email.');
-      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the first attempt that leaves a file.
+      // / Attempt the conversion, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
       // / A message that ran out of time is not attempted again, because it would run out of time again.
-      while (!$timedOut && pipelineAttemptIsDue($newPathname, $stopper)) {
+      while (!$timedOut && pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
         redeclare($commandOutput, array());

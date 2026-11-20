@@ -12,7 +12,7 @@
 # / on a server for users of any web browser without authentication.
 # /
 # / File Information ...
-# / v4.2.4.
+# / v4.3.1.
 # / This file checks the documentation the way hrconvert2-check.py checks the code.
 # /
 # / Run it from the installation root, beside the application's entry point, convertCore.php for HRConvert2.
@@ -40,7 +40,8 @@
 # / answers, five entries whose FATAL field said the opposite of the code, a list of contents
 # / naming a file that does not exist, & dozens of names of settings & functions that had
 # / been renamed or removed. None of it changes what the application does, which is exactly
-# / why nothing caught it.
+# / why nothing caught it. v4.3.0 found twenty messages the code raised that their entries did
+# / not document, which the messages check has caught since v4.3.1.
 # / Each check below says what it CANNOT see as well as what it can.
 # /
 # / Hardware Requirements ...
@@ -65,6 +66,8 @@ LABELS = ('COPYRIGHT INFORMATION ...', 'LICENSE INFORMATION ...', 'APPLICATION I
 OPTIONAL_LABELS = ('ADDITIONAL INFORMATION ...',)
 CLOSER = '<3 Open-Source'
 FIELDS = ['ERROR MESSAGE', 'FILE', 'FATAL', 'LOGGED', 'ERROR DESCRIPTION']
+# / What stands for a part of a message the code fills in, or a placeholder in a documented one. No message holds it.
+WILDCARD = '\x00'
 # / Names a document cites on purpose that no code defines. Each one says why it is cited.
 # / A name earns a place here only when the sentence around it already explains it.
 HISTORICAL_NAMES = {
@@ -379,6 +382,9 @@ def raised_errors(sources, root):
 # / or NO.
 # / FILE names a file that raises the number, & FATAL says what the code does, wherever
 # / the code writes both as literals & raises the number one way only.
+# / A reservation names no number it calls unused that an entry documents, & where it
+# / says which of its numbers are raised, that range holds every one documented in its
+# / block, from v4.3.1. v4.3.1 documented 41009 & left its reservation calling it unused.
 # / It cannot tell whether a description is still true. Reading that is a person's job.
 def check_entries(root, report):
     path = os.path.join(root, 'Documentation', 'ERROR_DESCRIPTIONS.txt')
@@ -460,6 +466,226 @@ def check_entries(root, report):
             if lines[position].strip() in ('YES', 'NO') and lines[position].strip() != wanted:
                 report('ENTRIES', name + ':' + str(position + 1) + ' ' + label + ' says FATAL ' + lines[position].strip()
                        + ' & the code raises it with ' + ('TRUE' if wanted == 'YES' else 'FALSE') + '. Say ' + wanted)
+                faults += 1
+    # / A reservation is read as one sentence, so a range written across two lines is still found.
+    # / Two phrasings call a range unused, & a block whose raised numbers are not one range says so in words, which is not judged.
+    documented = set(number for (prefix, number) in seen)
+    for index, line in enumerate(lines):
+        if line != 'ERROR NUMBER RESERVATION':
+            continue
+        end = next((i for i in range(index + 1, len(lines)) if lines[i] == RULE), len(lines))
+        sentence = ' '.join(lines[i].strip() for i in range(index + 1, end))
+        unused = re.findall(r'(\d+) through (\d+) are currently unused', sentence)
+        unused += re.findall(r'(\d+) through (\d+) are reserved for [^,&.]* and are currently unused', sentence)
+        for first, last in unused:
+            clash = sorted(number for number in documented if int(first) <= number <= int(last))
+            if clash:
+                report('ENTRIES', name + ':' + str(index + 1) + ' the reservation calls ' + first + ' through ' + last
+                       + ' unused, & ' + ', '.join(str(number) for number in clash) + ' is documented. Say which are unused')
+                faults += 1
+        reserved = re.search(r'(\d+) through (\d+) are reserved', sentence)
+        for first, last in re.findall(r'(\d+) through (\d+) are raised', sentence):
+            if not reserved:
+                continue
+            outside = sorted(number for number in documented if int(reserved.group(1)) <= number <= int(reserved.group(2))
+                             and not int(first) <= number <= int(last))
+            if outside:
+                report('ENTRIES', name + ':' + str(index + 1) + ' the reservation says ' + first + ' through ' + last
+                       + ' are raised, & ' + ', '.join(str(number) for number in outside) + ' is documented too. Say which are raised')
+                faults += 1
+    return faults
+
+
+# / -----------------------------------------------------------------------------------
+# / A function to read the arguments of one call, from v4.3.1.
+# / Accepts the text of a PHP file & the index of the call's opening parenthesis.
+# / Returns the arguments as written, split where the call itself separates them, or None
+# / where the call never closes. A comma inside a string, a nested call or an array is not
+# / a separator, so an argument is returned whole however it is built.
+def call_arguments(text, start):
+    arguments, current = [], []
+    depth, index, quote = 0, start, None
+    while index < len(text):
+        character = text[index]
+        if quote:
+            current.append(character)
+            if character == '\\' and index + 1 < len(text):
+                current.append(text[index + 1])
+                index += 2
+                continue
+            if character == quote:
+                quote = None
+        elif character in '\'"':
+            quote = character
+            current.append(character)
+        elif character in '([{':
+            depth += 1
+            if depth > 1:
+                current.append(character)
+        elif character in ')]}':
+            depth -= 1
+            if depth == 0:
+                arguments.append(''.join(current).strip())
+                return arguments
+            current.append(character)
+        elif character == ',' and depth == 1:
+            arguments.append(''.join(current).strip())
+            current = []
+        elif depth >= 1:
+            current.append(character)
+        index += 1
+    return None
+
+
+# / -----------------------------------------------------------------------------------
+# / A function to turn the message a call writes into a pattern, from v4.3.1.
+# / Accepts the PHP expression a message is built from. Returns the message with WILDCARD
+# / in place of each part the code fills in, or None where no part of it is written out.
+# / The expression is split where the code joins parts with a full stop, outside every
+# / string & bracket. A single quoted string is its text, & so is a double quoted one that
+# / names no variable & no escape. Everything else, such as a variable, a call or a choice
+# / between two texts, is a wildcard, because it may be any text.
+def message_pattern(expression):
+    parts, current = [], []
+    depth, index, quote = 0, 0, None
+    while index < len(expression):
+        character = expression[index]
+        if quote:
+            current.append(character)
+            if character == '\\' and index + 1 < len(expression):
+                current.append(expression[index + 1])
+                index += 2
+                continue
+            if character == quote:
+                quote = None
+        elif character in '\'"':
+            quote = character
+            current.append(character)
+        elif character in '([{':
+            depth += 1
+            current.append(character)
+        elif character in ')]}':
+            depth -= 1
+            current.append(character)
+        elif character == '.' and depth == 0:
+            parts.append(''.join(current).strip())
+            current = []
+        else:
+            current.append(character)
+        index += 1
+    parts.append(''.join(current).strip())
+    pattern, written = '', False
+    for part in parts:
+        single = re.fullmatch(r"'((?:[^'\\]|\\.)*)'", part, re.S)
+        double = re.fullmatch(r'"([^"\\$]*)"', part)
+        if single:
+            pattern += single.group(1).replace("\\'", "'").replace('\\\\', '\\')
+            written = True
+        elif double:
+            pattern += double.group(1)
+            written = True
+        else:
+            pattern += WILDCARD
+    return squeeze(pattern) if written else None
+
+
+# / -----------------------------------------------------------------------------------
+# / A function to make two patterns comparable, from v4.3.1.
+# / Accepts a pattern. Returns it with every run of whitespace one space & every run of
+# / wildcards one wildcard, because a message wrapped in a document is read as one line.
+def squeeze(pattern):
+    return re.sub(WILDCARD + '+', WILDCARD, re.sub(r'\s+', ' ', pattern).strip())
+
+
+# / -----------------------------------------------------------------------------------
+# / A function to decide whether two patterns can describe one line of a log, from v4.3.1.
+# / Accepts two patterns. Returns TRUE where some text matches both. A wildcard matches any
+# / run of characters, none included, so a placeholder may stand for any part the code
+# / fills in, & a part the code fills in may hold any word the document writes out.
+# / It walks both patterns at once, as two machines reading the same text would.
+def patterns_meet(first, second):
+    seen, waiting = set(), [(0, 0)]
+    while waiting:
+        place = waiting.pop()
+        if place in seen:
+            continue
+        seen.add(place)
+        left, right = place
+        if left == len(first) and right == len(second):
+            return True
+        moves = []
+        if left < len(first) and first[left] == WILDCARD:
+            moves.append((left + 1, right))
+            if right < len(second):
+                moves.append((left, right + 1))
+        if right < len(second) and second[right] == WILDCARD:
+            moves.append((left, right + 1))
+            if left < len(first):
+                moves.append((left + 1, right))
+        if left < len(first) and right < len(second) and WILDCARD not in (first[left], second[right]) and first[left] == second[right]:
+            moves.append((left + 1, right + 1))
+        waiting.extend(move for move in moves if move not in seen)
+    return False
+
+
+# / -----------------------------------------------------------------------------------
+# / A function to read the messages ERROR_DESCRIPTIONS.txt documents, from v4.3.1.
+# / Accepts the file's lines. Returns each number's messages, as written & as patterns.
+# / Each ERROR!!! line in an entry's ERROR MESSAGE field begins a message. It runs on to the
+# / next line until it ends in a full stop, an exclamation mark or a question mark, & a
+# / line after that is a note about it, such as the wording an older release used.
+def documented_messages(lines):
+    messages = {}
+    index = 0
+    while index < len(lines):
+        if lines[index] == 'ERROR MESSAGE':
+            index += 1
+            current = None
+            while index < len(lines) and lines[index].strip():
+                found = re.match(r'\s+ERROR!!! <TIMESTAMP>, (?:<APPLICATION_NAME>|[A-Za-z0-9]+)-(\d+), <SESSION_IDENTIFIER>: (.*)$', lines[index])
+                if found:
+                    current = [found.group(2)]
+                    messages.setdefault(int(found.group(1)), []).append(current)
+                elif current is not None and not re.match(r'\s+(?:ERROR|WARNING)!!!', lines[index]) and not re.search(r'[.!?]$', current[0].rstrip()):
+                    current[0] += ' ' + lines[index].strip()
+                else:
+                    current = None
+                index += 1
+        index += 1
+    return dict((number, [(text[0], squeeze(re.sub(r'<[A-Z][A-Z0-9_]*>', WILDCARD, text[0]))) for text in texts]) for number, texts in messages.items())
+
+
+# / -----------------------------------------------------------------------------------
+# / THE MESSAGES CHECK, from v4.3.1. Each message the code raises is one ERROR_DESCRIPTIONS.txt
+# / documents under its number, so an administrator who searches for a line of the log finds it.
+# / Every errorEntry() & quickDie() whose number is written as a literal is read, & its message
+# / is compared with each one documented under that number. The two agree where some line of a
+# / log could be written by the code & read as the documented message, with each <PLACEHOLDER>
+# / standing for a part the code fills in. v4.3.0 found twenty that did not agree.
+# / It cannot see a message held whole in a variable, a number held in a variable, or a number
+# / no entry documents, which the entries check reports where it is raised & never documented.
+# / It cannot tell a placeholder that names the wrong thing, because any text may fill one.
+def check_messages(root, report):
+    path = os.path.join(root, 'Documentation', 'ERROR_DESCRIPTIONS.txt')
+    if not os.path.exists(path):
+        return 0
+    documented = documented_messages(read_lines(path))
+    faults = 0
+    for source in php_sources(root)[0]:
+        text = open(source, encoding='utf-8', errors='replace').read()
+        where = os.path.relpath(source, root)
+        for found in re.finditer(r'\b(errorEntry|quickDie)\s*\(', text):
+            arguments = call_arguments(text, found.end() - 1)
+            if not arguments or len(arguments) != (3 if found.group(1) == 'errorEntry' else 2) or not re.fullmatch(r'\d+', arguments[1]):
+                continue
+            number = int(arguments[1])
+            pattern = message_pattern(arguments[0])
+            if pattern is None or number not in documented:
+                continue
+            if not any(patterns_meet(pattern, written) for message, written in documented[number]):
+                report('MESSAGES', where + ':' + str(text[:found.start()].count('\n') + 1) + ' raises ' + str(number) + ' as ' + repr(pattern.replace(WILDCARD, '<...>'))
+                       + ' & ERROR_DESCRIPTIONS.txt documents it as ' + ' or '.join(repr(message) for message, written in documented[number])
+                       + '. Document the message the code raises, with a <PLACEHOLDER> for each part it fills in')
                 faults += 1
     return faults
 
@@ -601,6 +827,7 @@ def main():
         ('sections', 'every section is a rule, a title, a body & a rule', lambda: check_sections(paths, report)),
         ('whitespace', 'no trailing whitespace & no three blank lines together', lambda: check_whitespace(paths, markdown, report)),
         ('entries', 'ERROR_DESCRIPTIONS.txt holds one true entry per number, in order', lambda: check_entries(root, report)),
+        ('messages', 'every message the code raises is one documented under its number', lambda: check_messages(root, report)),
         ('names', 'every function & setting a document names still exists', lambda: check_names(root, paths, markdown, report)))
     if '--list' in sys.argv:
         print('Checks, in the order they run.')

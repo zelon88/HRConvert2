@@ -246,7 +246,10 @@ DEPENDENCY_APPROVALS.txt. It has no twin.
   sections    Every section is a rule, a title, a blank line, a body & a rule.
   whitespace  No line ends in whitespace & no three blank lines sit together.
   entries     ERROR_DESCRIPTIONS.txt holds one entry per number, in order, & its FILE &
-              FATAL fields agree with the code wherever the code says so plainly.
+              FATAL fields agree with the code wherever the code says so plainly. A
+              reservation calls no documented number unused, from v4.3.1.
+  messages    Every message the code raises is documented under its number, with a
+              <PLACEHOLDER> for each part the code fills in, from v4.3.1.
   names       Every function & setting a document names still exists.
 
 The layout it holds files to is the one ABOUT_DOCUMENTATION.txt describes. The changelog
@@ -259,7 +262,9 @@ is a sentence somebody has to rewrite, so it is reported & left alone.
 
 It was written after the manual pass at v4.0.0 found what it looks for by reading every
 document. Its first run then found five entries whose FATAL field said the opposite of what
-the code does, which nobody reading the documents alone could have seen.
+the code does, which nobody reading the documents alone could have seen. v4.3.0's QC pass
+found twenty messages the code raised that no entry documented, with a script of its own,
+which became the messages check at v4.3.1.
 What each check cannot see is written above it, as it is in the other two. None of them can
 tell whether a sentence is still true.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

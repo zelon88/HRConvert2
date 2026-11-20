@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.0.
+// / v4.3.1.
 // / The Image pipeline's converter. pipelineCore.php loads it only to dispatch an Image conversion.
 // / Error block 8000 through 8003 belongs to this pipeline.
 // / The OCR pipeline raises 8001 for the same ImageMagick.
@@ -55,7 +55,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
   $policyVariables = array();
   // / The formats this pipeline writes that hold several images, as pages, frames or sizes.
   $multiImageOutputs = array('gif', 'tif', 'tiff', 'pdf', 'webp', 'ico');
-  $stopper = 0;
+  $stopper = $exitStatus = 0;
   $sleepTime = $SleepTimer;
   // / Locate & verify ImageMagick. A path is returned only when both succeeded.
   $imageBinary = verifiedToolPath('ImageMagick');
@@ -123,12 +123,12 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
       errorEntry('Bubblewrap is missing or non functional, so this image conversion cannot be isolated!', 8002, FALSE); }
     else {
       if ($Verbose) logEntry('Converting image.');
-      // / Attempt the conversion as many times as --File Operation Retry Count-- allows, & stop at the
-      // / first attempt that leaves a file.
-      while (pipelineAttemptIsDue($newPathname, $stopper)) {
+      // / Attempt the conversion, & stop at the first attempt that leaves a file. From v4.3.1 a converter that ran to its end
+      // / & left none is not asked again, because it would leave none again, & one a signal stopped is, as pipelineRetryIsDue() decides.
+      while (pipelineRetryIsDue($newPathname, $stopper, $exitStatus)) {
         // / If the last conversion attempt failed, wait a moment before trying again.
         if ($stopper !== 0) sleep($sleepTime++);
-        $returnData = (string)shell_exec($magickCommand.' 2>&1');
+        list ($returnData, $exitStatus) = runPipelineCommand($magickCommand);
         // / Count the number of conversions to avoid infinite loops.
         $stopper++; }
       // / Log the output of the operation to the logfile, if it is not blank.
@@ -143,7 +143,7 @@ function convertImages($pathname, $newPathname, $extension, $height, $width, $ro
       // / attempt would report success for a conversion that was refused & never ran.
       if (file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $inputExt, $inputFrame, $outputFormat, $multiImageOutputs, $bgSwitch, $iconLimit, $imageBinary, $magickCommand, $commandMayRun, $policyFolder, $policyVariables, $decoderIsNamed, $inputDecoder);
+  purgeSensitiveMemory($EnableMemoryProtection, $returnData, $stopper, $exitStatus, $pathname, $height, $width, $wxh, $rotate, $wh, $sleepTime, $outputExt, $inputExt, $inputFrame, $outputFormat, $multiImageOutputs, $bgSwitch, $iconLimit, $imageBinary, $magickCommand, $commandMayRun, $policyFolder, $policyVariables, $decoderIsNamed, $inputDecoder);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

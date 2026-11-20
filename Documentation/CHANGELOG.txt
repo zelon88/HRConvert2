@@ -29,7 +29,7 @@ The authoritative list of dependencies is Resources/Engine/depends.php & Resourc
 COMMIT 11/19/2026
 v4.3.0 - A family claims only what its pipeline converts, a sandbox shows none of the host's identity, FFMPEG & ImageMagick are told what they may read, ImageMagick is pinned & hardened, & HEIC, HEIF, EXR, camera raw & WebM are offered.
 
--v4.3.0.
+-v4.3.0. 
 -The Document family converts a pair only where one of its kinds, documents, spreadsheets, presentations or XPS, lists both, as its menus always offered. docx, odt & rtf to pptx, pptx to docx & a spreadsheet to a document are Pandoc's, from a workflow & a request naming no family too. LibreOffice made nothing of them. xps to anything but pdf fails with 5006, where xpstopdf wrote a PDF under the name asked for. New conversionFamilyClaims().
 -Spreadsheets write pdf. --Supported Spreadsheet Output Formats-- lists it, as LibreOffice writes it & a workflow converted a spreadsheet to pdf before. config.php stays v4.2.8, because no setting was added.
 -The Stream family reads --Supported Stream Formats-- & writes the audio & video outputs. It claimed every audio & video pair, so a request naming it sent an mp4 to the stream inspector, which refused it with 21001, & a workflow's Convert could ask for m3u8.

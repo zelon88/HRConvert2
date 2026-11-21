@@ -41,14 +41,17 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Approved on                                   11/05/2026
     Expires on                                    01/01/2027
     Audited by                                    Justin Grimes (@zelon88)
-    Audit outcome                                 PASSED WITH CONDITIONS
+    Audit outcome                                 PASSED WITH CONDITIONS, for the package, on 11/05/2026. The answers below were rewritten for v4.3.2, when
+                                                  Assimp became HRConvert2's own build, & await Justin's signature.
     Notes or Conditions                           Massive C++ format parsing footprint. Prone to memory corruption exploits. Must always run encapsulated inside Bubblewrap.
+                                                  From v4.3.2 only HRConvert2's own build is used, with three importers, & the assimp sandbox profile holds its memory.
+                                                  A fresh audit is due when the pin moves, when a patch is added or dropped, or when an importer is added.
 
   Manifest facts, read from Resources/Contract/depends.php
     Binary                                        assimp
     Install type                                  apt
     Package                                       assimp-utils
-    Minimum version                               5.0
+    Minimum version                               6.0.6
     Required                                      NO
     Subsystem                                     3D Models
     License                                       BSD-3-Clause
@@ -57,55 +60,83 @@ subsystem it declares. A pipeline is detachable, so this record travels with it.
     Purpose                                       Converts between 3D model formats.
 
   Audit answers. Every one is a judgement a person records here.
-    1a Security design is amenable to ours        Yes, procedurally. The Open Asset Import Library features an active public repository on GitHub,
-                                                  maintains a formal `SECURITY.md` tracking policy, and incorporates Google Fuzzer code blocks (`fuzz/`)
-                                                  directly inside its source tree to proactively map stability bugs. However, the core library architecture
-                                                  is written in low-level C/C++ handling complex, highly volatile, and untrusted binary mesh geometries,
-                                                  presenting a high structural parsing attack surface.
-    1b Recent CVEs, issues or exploits            High Risk / Frequently Targeted. Because it parses 40+ distinct 3D file structures, it is a premier fuzzing target.
-                                                  Recent vulnerabilities (such as CVE-2024-41180, CVE-2023-45842, and CVE-2023-45843) expose recurrent heap-based
-                                                  buffer overflows, out-of-bounds array reads, and null-pointer dereferences inside its asset-loader modules
-                                                  (specifically tracking FBX, Blend, and OBJ parsers). Malformed file uploads can trigger instant thread crashes
-                                                  or arbitrary code execution.
-    1c Development activity & breakage risk       Highly Active / Low-Moderate Breakage Risk. Upstream maintainers actively roll patches and optimizations
-                                                  (version 5.x tiers are highly stable). The command-line parsing operations provided by `assimp-utils`
-                                                  (like the `assimp` CLI structure) remain stable, meaning the risk of breaking internal HRConvert2
-                                                  execution syntax during point-version patches is very low.
-    1d What it needs to function                  Resource Intensive / Stateless Matrix. Requires significant memory blocks to load large coordinate vectors,
-                                                  polygon faces, and material attributes into an in-memory data tree. Operates completely as a stateless console
-                                                  utility requiring local file system read/write rights to map target files. Links directly against system C++
-                                                  libraries and standard glibc streams.
-    1e Can it be sandboxed or isolated            Highly Amenable. 3D geometry format translation is a completely self-contained, mathematical array transformation loop.
-                                                  It requires no host networking channels, administrative root execution privileges, or external inter-process
-                                                  communication (IPC). It isolates perfectly inside a strict, networkless Bubblewrap sandbox jail mapping exclusively
-                                                  the designated file workspace.
-    1f Security options & hardened configuration  None native to the binary utility. Hardening must be applied entirely from the outside via the environment orchestration.
-                                                  The utility must be wrapper-invoked inside a strict Bubblewrap namespace configuration that drops all Linux kernel
-                                                  capabilities, mounts an isolated tmpfs path, and limits max file payload metrics before execution.
-    1g Could another dependency do this better    No. For converting across dozens of obscure, proprietary, and open 3D assets (FBX, Collada, STL, GLTF) inside a single, unified
-                                                  tool repository, Assimp is functionally irreplaceable for HRConvert2's 3D Models subsystem. The parser risks
-                                                  must be explicitly managed via strict Bubblewrap encapsulation.
-    1h Origin & supply chain risk                 Low-Medium Risk. Maintained by a prominent global community of graphics and game development engineers.
-                                                  Source code pipelines and issue logs are completely open on GitHub. Because this is an `apt` installation type,
-                                                  the primary supply chain validation and patch-management burden is safely handled by your Linux distribution's security team.
-    1i Dependency traps for existing installs     The Format-Specific Overflow Trap. Attackers targeting file conversion servers frequently look for applications using Assimp
-                                                  because they can mask an exploit inside an obscure 3D file extension format that the application maintainer did not realize
-                                                  the underlying Assimp binary was compiled to automatically parse. External sandbox encapsulation is mandatory to neutralize this vector.
-    2a System package versus a source build       System Package Preferred. Installing via `apt` ensures that the platform handles complex multi-architecture C++ compilation loops
-                                                  automatically, matches library configurations safely against the host OS ecosystem, and delivers rapid security patches
-                                                  downstream via standard automated server package updates.
-    2b Build flags, libraries & features          Default package compilation flags applied by apt are sufficient when fully encapsulated by Bubblewrap.
-    2c Minimum version & version edge cases       Strictly 5.0+ as defined by the manifest facts to ensure robust modern asset parsing pipelines and built-in protection mechanisms
-                                                  against legacy 4.x branch structural geometry vulnerabilities are present.
-    2d Licensing implications of the build        Modified BSD-3-Clause (Highly Permissive). A business-friendly open-source copyright framework. It allows static linking,
-                                                  imposes zero copyleft contamination threats, and carries no redistribution traps for internal or commercial enterprise utilization.
-    3a Distribution method                        Standard distribution native package manager repositories (apt).
-    3b Download source used                       Official distribution mirror networks.
-    3c How an installer obtains this version      Automated package fetch via the platform manager utility (apt-get install -y assimp-utils).
-    3d Inspection of any bundled binary or code   Inspection Practical but Complex. Large, sprawling C++ codebase optimized for geometric data parsing matrices,
-                                                  requiring domain-specific graphics pipeline knowledge to audit low-level parser loops effectively.
-    3e Sanity check of the build system           Relies entirely on the distribution package builder's native architecture integration tests.
-    3f Build script provided                      No.
+    1a Security design is amenable to ours        Yes, with three importers. Assimp is a large C++ library of importers & exporters, fuzzed upstream through
+                                                  OSS-Fuzz, with a SECURITY.md. It chooses an importer by what a file holds where no importer claims its
+                                                  extension, so every importer it carries is reachable from an upload, & a distribution builds seventy.
+                                                  HRConvert2's own build carries the OBJ, FBX & glTF 2.0 importers alone, the three most used, which were read
+                                                  at 6.0.6 for v4.3.2.
+    1b Recent CVEs, issues or exploits            6.0.6, of 2026-11-09, fixes every 2025 & 2026 CVE named against the three importers except two in glTF 2.0:
+                                                  CVE-2026-129477, a path traversal through a buffer's URI, & CVE-2026-129478, a heap read through a data
+                                                  URI's header. Both are fixed by pull requests #7027 & #7029, which are not merged, & are carried as patches
+                                                  0001 to 0003. Fuzzing the path HRConvert2 drives under ASan & UBSan found nothing in the OBJ or FBX
+                                                  importer, & found three faults in the glTF 2.0 exporter & one in the X3D exporter, each a read outside a
+                                                  buffer, fixed by patches 0004 to 0007. Running every finding through the release build afterwards found a
+                                                  skin fault in fifty of them, fixed by 0009 & 0010. A valid glTF whose skin names no inverse-bind matrices
+                                                  crashed the glTF 2.0 importer on a null reference, & a weight for a vertex past a mesh's end had the glTF
+                                                  2.0 exporter write outside two arrays. A skin joint or an animation channel naming a node outside the
+                                                  scene's node tree had it follow a null reference, also fixed by 0010, as is memory every skinned gltf & glb
+                                                  carried unfilled, as much as its joint data. None of 0004 to 0010 is upstream yet. PreTransformVertices,
+                                                  which the STL & PLY exporters run, SEGVs on a crafted model, so neither is built. Ubuntu 24.04's assimp
+                                                  5.3.1 has had no security update since March 2024. The CVEs this record named until v4.3.2 were wrong:
+                                                  CVE-2023-45842's record is Buildroot's, none could be retrieved for CVE-2024-41180 & CVE-2023-45843, & none
+                                                  of the three is among the 79 Debian lists against assimp.
+    1c Development activity & breakage risk       Active. The build is pinned to the commit v6.0.6 names, & moves with upstream: when #7027 & #7029 are merged
+                                                  or 6.0.7 is tagged, the pin moves there & their patches go. The pipeline asks for each exporter by its
+                                                  identifier, gltf2, glb2, collada, objnomtl & assjson, & build-assimp.sh refuses a build whose version,
+                                                  commit, importers or exporters are not those expected, so a change upstream is seen at build time & not in a
+                                                  conversion.
+    1d What it needs to function                  Nothing but the file it reads & a folder to write in. No network, no display & no account but its own.
+                                                  Memory grows with the model, & a crafted glb of 20 bytes asked for 4.1 GiB. zlib is the system's, as a
+                                                  shared library, so the host's updates reach it.
+    1e Can it be sandboxed or isolated            Yes, & it is never run without one. The assimp profile sets RequireSandbox & AddressSpaceLimit, so it runs
+                                                  with no network, as the Engine's own account, with each process held to the Model type's memory, 2048 MiB as
+                                                  shipped, where the 20 byte glb fails at once. It is shown a copy of the upload, read only, & an empty folder
+                                                  to write in, & never the user's folder. What a glTF or an OBJ names outside itself is checked in PHP before
+                                                  it is opened.
+    1f Security options & hardened configuration  None at run time. The hardening is the build's: three importers, glTF 1.0 never read, no Draco, USD or M3D,
+                                                  _FORTIFY_SOURCE=3, a strong stack protector, stack clash & control flow protection where the compiler has
+                                                  them, a position independent program & full RELRO. The pipeline refuses an Assimp that reads anything
+                                                  besides obj, fbx, gltf & glb, with error 9008.
+    1g Could another dependency do this better    Not alone. MeshLab reads the other model formats HRConvert2 offers & writes STL & PLY, & from v4.3.2 each
+                                                  upload is read by one of the two. No other command line tool reads FBX & glTF 2.0 & writes as many formats,
+                                                  & Blender is far larger.
+    1h Origin & supply chain risk                 Low. The source is github.com/assimp/assimp, fetched by its full commit hash,
+                                                  a79ff6bbce54d3e01186a918dc6374ed55317426, & compared with that hash before anything is built, because a tag
+                                                  can be moved & a commit cannot. The ten patches are in this repository, under
+                                                  Documentation/Build/patches/assimp, & a patch that does not apply stops the build.
+    1i Dependency traps for existing installs     An install from before v4.3.2 used assimp-utils, which is never run again & is left installed until
+                                                  --uninstall-depends removes it with its subsystem. The Model pipeline is not offered until --setup
+                                                  --install-depends --subsystem="3D Models" has built the own copy, which needs a compiler, CMake 3.22 & git,
+                                                  which the script installs, & a route to GitHub. It takes about a minute & a half on two x86 cores & much
+                                                  longer on a Raspberry Pi. x, 3mf & dxf are no longer read as models, & an existing config.php still offers
+                                                  them until they are taken out of its lists.
+    2a System package versus a source build       Source build, always. Ubuntu 24.04 carries 5.3.1 & Debian's sid 6.0.6, & both build every importer, which is
+                                                  what this build exists to leave out. The Fallback says 'Always' => TRUE, so the package manager's copy is
+                                                  never installed or run, whatever version it is.
+    2b Build flags, libraries & features          ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT off, & the OBJ, FBX & GLTF importers on, with
+                                                  ASSIMP_BUILD_NO_GLTF1_IMPORTER. ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT off, & OBJ, 3DS, COLLADA, X3D, FBX,
+                                                  GLTF, 3MF, X, ASSBIN, ASSJSON & ASSXML on. ASSXML is there because the command line does not link without
+                                                  it, & the glTF 1.0 exporters stay because 6.0.6 does not build without them. A static library, tests,
+                                                  samples, documents, Draco, USD & M3D off, & zlib the system's.
+    2c Minimum version & version edge cases       6.0.6. assimp version printed 6.0 alone until patch 0008, which prints the patch level, so the floor, the
+                                                  Fallback's Version & the build all say 6.0.6, & a pin moved to another release builds again.
+    2d Licensing implications of the build        BSD-3-Clause, compatible with GPLv3. The licences of the libraries in Assimp's contrib folder are installed
+                                                  beside the program, in share/doc/assimp, with a BUILD.txt naming the commit, the flags & each patch.
+                                                  HRConvert2's patches are offered upstream under Assimp's own licence.
+    3a Distribution method                        Built from source on each host by Documentation/Build/build-assimp.sh, into
+                                                  /usr/local/libexec/hrconvert2/builds/assimp, & never bundled.
+    3b Download source used                       https://github.com/assimp/assimp, by commit. DEPENDENCY_SOURCE may name a local clone of that repository, &
+                                                  the commit is fetched from it & checked exactly as from GitHub.
+    3c How an installer obtains this version      sudo php convertCore.php --setup --install-depends --subsystem="3D Models". Dependency Core runs the script
+                                                  with DEPENDENCY_PREFIX & DEPENDENCY_VERSION=6.0.6, asks what it built its version, & puts it in service only
+                                                  where every name in it is root's alone, it answers 6.0.6 & the web server's account can run it.
+    3d Inspection of any bundled binary or code   Nothing is bundled. The three importers were read at 6.0.6, & the path HRConvert2 drives was fuzzed under
+                                                  ASan & UBSan, with every finding reproduced, for HRCONVERT2_ASSIMP_IMPORTER_REVIEW.md in the Project. Each
+                                                  patch is a few lines & was read before it was carried.
+    3e Sanity check of the build system           The script refuses a prefix that is not an absolute path, a version it does not build, a CMake older than
+                                                  3.22, a commit other than the one pinned & a patch that does not apply, & checks the program it built for
+                                                  its version, its commit, its importers, its glTF 2.0 exporters & the system's zlib before it installs it.
+    3f Build script provided                      Yes. Documentation/Build/build-assimp.sh, with its patches in Documentation/Build/patches/assimp.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

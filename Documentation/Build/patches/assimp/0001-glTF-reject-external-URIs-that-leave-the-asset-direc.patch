@@ -1,0 +1,233 @@
+From f6792224bd354f889114f4e9883205dd86e8f28d Mon Sep 17 00:00:00 2001
+From: Italo Armenti <italo.armenti@gmail.com>
+Date: Mon, 2 Nov 2026 12:08:26 +0000
+Subject: [PATCH 01/10] glTF: reject external URIs that leave the asset directory
+
+External buffer and image URIs were joined to the asset directory and
+opened unchanged. Reject absolute paths and ".." segments, and refuse
+external files when the asset is loaded from memory. Safe relative
+paths are still resolved against the model directory.
+---
+ code/AssetLib/glTF/glTFAsset.h          |  4 ++
+ code/AssetLib/glTF/glTFAsset.inl        |  9 ++++-
+ code/AssetLib/glTF2/glTF2Asset.h        |  4 ++
+ code/AssetLib/glTF2/glTF2Asset.inl      |  9 ++++-
+ code/AssetLib/glTFCommon/glTFCommon.cpp | 53 +++++++++++++++++++++++++
+ code/AssetLib/glTFCommon/glTFCommon.h   |  5 +++
+ 6 files changed, 82 insertions(+), 2 deletions(-)
+
+diff --git a/code/AssetLib/glTF/glTFAsset.h b/code/AssetLib/glTF/glTFAsset.h
+index dd798477..64f60e1a 100644
+--- a/code/AssetLib/glTF/glTFAsset.h
++++ b/code/AssetLib/glTF/glTFAsset.h
+@@ -918,6 +918,7 @@ private:
+     IOSystem *mIOSystem;
+ 
+     std::string mCurrentAssetDir;
++    bool mLoadFromMemory = false;
+ 
+     size_t mSceneLength;
+     size_t mBodyOffset, mBodyLength;
+@@ -985,6 +986,9 @@ public:
+     //! Main function
+     void Load(const std::string &file, bool isBinary = false);
+ 
++    //! Reject absolute paths, ".." segments, and external URIs on memory loads.
++    void CheckExternalUri(const char *uri) const;
++
+     //! Enables the "KHR_binary_glTF" extension on the asset
+     void SetAsBinary();
+ 
+diff --git a/code/AssetLib/glTF/glTFAsset.inl b/code/AssetLib/glTF/glTFAsset.inl
+index 7a8304f4..6236ddb8 100644
+--- a/code/AssetLib/glTF/glTFAsset.inl
++++ b/code/AssetLib/glTF/glTFAsset.inl
+@@ -212,6 +212,7 @@ inline void Buffer::Read(Value &obj, Asset &r) {
+             memcpy(this->mData.get(), dataURI.data, dataURI.dataLength);
+         }
+     } else { // Local file
++        r.CheckExternalUri(uri);
+         if (byteLength > 0) {
+             std::string dir = !r.mCurrentAssetDir.empty() ? (
+                                                                     r.mCurrentAssetDir.back() == '/' ?
+@@ -518,6 +519,7 @@ inline void Image::Read(Value &obj, Asset &r) {
+                     mData.reset(ptr);
+                 }
+             } else {
++                r.CheckExternalUri(uristr);
+                 this->uri = uristr;
+             }
+         }
+@@ -1154,11 +1156,12 @@ inline void Asset::ReadBinaryHeader(IOStream &stream) {
+ }
+ 
+ inline void Asset::Load(const std::string &pFile, bool isBinary) {
++    mLoadFromMemory = (0 == strncmp(pFile.c_str(), AI_MEMORYIO_MAGIC_FILENAME, AI_MEMORYIO_MAGIC_FILENAME_LENGTH));
+     mCurrentAssetDir.clear();
+ 
+     /*int pos = std::max(int(pFile.rfind('/')), int(pFile.rfind('\\')));
+     if (pos != int(std::string::npos)) mCurrentAssetDir = pFile.substr(0, pos + 1);*/
+-    if (0 != strncmp(pFile.c_str(), AI_MEMORYIO_MAGIC_FILENAME, AI_MEMORYIO_MAGIC_FILENAME_LENGTH)) {
++    if (!mLoadFromMemory) {
+         mCurrentAssetDir = getCurrentAssetDir(pFile);
+     }
+ 
+@@ -1268,6 +1271,10 @@ inline void Asset::ReadExtensionsUsed(Document &doc) {
+ #undef CHECK_EXT
+ }
+ 
++inline void Asset::CheckExternalUri(const char *uri) const {
++    glTFCommon::ValidateExternalUri(uri, mLoadFromMemory);
++}
++
+ inline IOStream *Asset::OpenFile(const std::string &path, const char *mode, bool absolute) {
+ #ifdef ASSIMP_API
+     (void)absolute;
+diff --git a/code/AssetLib/glTF2/glTF2Asset.h b/code/AssetLib/glTF2/glTF2Asset.h
+index 988911b7..0275a8af 100644
+--- a/code/AssetLib/glTF2/glTF2Asset.h
++++ b/code/AssetLib/glTF2/glTF2Asset.h
+@@ -1204,6 +1204,9 @@ public:
+     //! Main function
+     void Load(const std::string &file, bool isBinary = false);
+ 
++    //! Reject absolute paths, ".." segments, and external URIs on memory loads.
++    void CheckExternalUri(const char *uri) const;
++
+     //! Parse the AssetMetadata and check that the version is 2.
+     bool CanRead(const std::string &pFile, bool isBinary = false);
+ 
+@@ -1235,6 +1238,7 @@ private:
+     IOSystem *mIOSystem;
+     rapidjson::IRemoteSchemaDocumentProvider *mSchemaDocumentProvider;
+     std::string mCurrentAssetDir;
++    bool mLoadFromMemory = false;
+     size_t mSceneLength;
+     size_t mBodyOffset;
+     size_t mBodyLength;
+diff --git a/code/AssetLib/glTF2/glTF2Asset.inl b/code/AssetLib/glTF2/glTF2Asset.inl
+index 6b01359d..341c417e 100644
+--- a/code/AssetLib/glTF2/glTF2Asset.inl
++++ b/code/AssetLib/glTF2/glTF2Asset.inl
+@@ -606,6 +606,7 @@ inline void Buffer::Read(Value &obj, Asset &r) {
+             memcpy(this->mData.get(), dataURI.data, dataURI.dataLength);
+         }
+     } else { // Local file
++        r.CheckExternalUri(uri);
+         if (byteLength > 0) {
+             std::string dir = !r.mCurrentAssetDir.empty() ? (r.mCurrentAssetDir.back() == '/' ? r.mCurrentAssetDir : r.mCurrentAssetDir + '/') : "";
+ 
+@@ -1197,6 +1198,7 @@ inline void Image::Read(Value &obj, Asset &r) {
+                     mData.reset(ptr);
+                 }
+             } else {
++                r.CheckExternalUri(uristr);
+                 this->uri = uristr;
+             }
+         } else if (Value *bufferViewVal = FindUInt(obj, "bufferView")) {
+@@ -2110,8 +2112,9 @@ inline rapidjson::Document Asset::ReadDocument(IOStream &stream, bool isBinary,
+ 
+ inline void Asset::Load(const std::string &pFile, bool isBinary)
+ {
++    mLoadFromMemory = (0 == strncmp(pFile.c_str(), AI_MEMORYIO_MAGIC_FILENAME, AI_MEMORYIO_MAGIC_FILENAME_LENGTH));
+     mCurrentAssetDir.clear();
+-    if (0 != strncmp(pFile.c_str(), AI_MEMORYIO_MAGIC_FILENAME, AI_MEMORYIO_MAGIC_FILENAME_LENGTH)) {
++    if (!mLoadFromMemory) {
+         mCurrentAssetDir = glTFCommon::getCurrentAssetDir(pFile);
+     }
+ 
+@@ -2281,6 +2284,10 @@ inline void Asset::ReadExtensionsUsed(Document &doc) {
+ #undef CHECK_EXT
+ }
+ 
++inline void Asset::CheckExternalUri(const char *uri) const {
++    glTFCommon::ValidateExternalUri(uri, mLoadFromMemory);
++}
++
+ inline IOStream *Asset::OpenFile(const std::string &path, const char *mode, bool /*absolute*/) {
+ #ifdef ASSIMP_API
+     return mIOSystem->Open(path, mode);
+diff --git a/code/AssetLib/glTFCommon/glTFCommon.cpp b/code/AssetLib/glTFCommon/glTFCommon.cpp
+index b7607b75..3add6853 100644
+--- a/code/AssetLib/glTFCommon/glTFCommon.cpp
++++ b/code/AssetLib/glTFCommon/glTFCommon.cpp
+@@ -40,6 +40,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+ #include "AssetLib/glTFCommon/glTFCommon.h"
+ 
++#include <cstddef>
++
+ using namespace glTFCommon::Util;
+ 
+ namespace glTFCommon::Util {
+@@ -108,3 +110,54 @@ bool ParseDataURI(const char *const_uri, size_t uriLen, DataURI &out) {
+ }
+ 
+ } // namespace glTFCommon::Uti
++
++namespace {
++
++// Relative path with no ".." segment, drive prefix, or URI scheme.
++bool IsSafeRelativeUri(const char *uri) {
++    if (uri == nullptr || uri[0] == '\0') {
++        return false;
++    }
++    if (uri[0] == '/' || uri[0] == '\\') {
++        return false;
++    }
++
++    const char *segment = uri;
++    for (const char *ch = uri;; ++ch) {
++        const bool atEnd = (*ch == '\0');
++        if (!atEnd && *ch != '/' && *ch != '\\') {
++            continue;
++        }
++
++        const size_t length = static_cast<size_t>(ch - segment);
++        if (length == 2 && segment[0] == '.' && segment[1] == '.') {
++            return false;
++        }
++        for (size_t i = 0; i < length; ++i) {
++            if (segment[i] == ':') {
++                return false;
++            }
++        }
++
++        if (atEnd) {
++            return true;
++        }
++        segment = ch + 1;
++    }
++}
++
++} // namespace
++
++namespace glTFCommon {
++
++void ValidateExternalUri(const char *uri, bool fromMemory) {
++    const char *shown = uri != nullptr ? uri : "";
++    if (fromMemory) {
++        throw DeadlyImportError("GLTF: external file reference \"", shown, "\" is not allowed when loading from memory");
++    }
++    if (!IsSafeRelativeUri(uri)) {
++        throw DeadlyImportError("GLTF: external URI \"", shown, "\" must stay inside the asset directory");
++    }
++}
++
++} // namespace glTFCommon
+diff --git a/code/AssetLib/glTFCommon/glTFCommon.h b/code/AssetLib/glTFCommon/glTFCommon.h
+index 9266bf09..974938ab 100644
+--- a/code/AssetLib/glTFCommon/glTFCommon.h
++++ b/code/AssetLib/glTFCommon/glTFCommon.h
+@@ -210,6 +210,11 @@ inline std::string getCurrentAssetDir(const std::string &pFile) {
+ #    pragma warning(pop)
+ #endif // _MSC_VER
+ 
++//! Throws if an external buffer or image URI must not be opened.
++//! Absolute paths and ".." segments are rejected. When \a fromMemory is true
++//! every external reference is rejected; data URIs are handled by the caller.
++void ValidateExternalUri(const char *uri, bool fromMemory);
++
+ namespace Util {
+ 
+ void EncodeBase64(const uint8_t *in, size_t inLength, std::string &out);

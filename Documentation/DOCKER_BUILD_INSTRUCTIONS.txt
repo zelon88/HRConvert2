@@ -137,6 +137,10 @@ or when you need an image the workflow will not produce.
       nothing it leaves reaches the image. Until v4.0.6 FFMPEG's build left its whole tree
       in Documentation/Build/ffmpeg-build in the web root, & every container started from
       that image refused to run anything as root, with error 28008.
+  6f. From v4.3.2 the install also builds HRConvert2's own Assimp, with build-assimp.sh &
+      the patches beside it, which fetches Assimp's pinned commit from GitHub. It adds about a
+      minute & a half on two x86 cores. The image installs no assimp-utils, & -v inside the
+      container names the own build under /usr/local/libexec/hrconvert2/builds/assimp.
 -----------------------------------------------------------------------------------
 
 

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.2.
 // / The Document pipeline's converter. pipelineCore.php loads it only to dispatch a Document conversion.
 // / Error block 2005, 7000 through 7001 belongs to this pipeline.
 // / It declares the LibreOffice shared module, which Pipeline Core loads before it.
@@ -58,8 +58,9 @@ function convertDocuments($pathname, $newPathname, $extension) {
     if ($Verbose) logEntry('Converting document.');
     // / Attempt the conversion, & stop at the first attempt that leaves a file.
     // / A converter that ran to its end & left no file is not asked again, from v4.3.0, because it would leave none again. LibreOffice has
-    // / no filter for many pairs, & a document it cannot open it cannot open twice. Only one a signal stopped, as a memory ceiling, a
-    // / supervisor or a crash stops one, is asked again, as many times as --File Operation Retry Count-- allows. Until v4.3.0 every attempt
+    // / no filter for many pairs, & a document it cannot open it cannot open twice. Only one something outside it stopped, as a memory
+    // / ceiling or a supervisor stops one, is asked again, as many times as --File Operation Retry Count-- allows. One that crashed is
+    // / not, from v4.3.2, because it would crash again, as pipelineCommandWasStopped() decides. Until v4.3.0 every attempt
     // / was made, & each waited a second longer than the last, so a pair LibreOffice has no filter for was refused after a quarter minute.
     // / A converter that was refused is not asked again, from v4.2.8, because it would be refused again. A conversion no sandbox could
     // / be built for was refused & warned of once for every attempt, & then reported as producing no file after every one of them.

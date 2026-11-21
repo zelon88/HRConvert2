@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.2.
 // / The Pipeline Core, one of the Engine's cores.
 // / It verifies, describes & dispatches the pipelines under Resources/Pipelines, each at the exact version the application pins.
 // / Which pipelines are accepted is the application's decision, read from its contract, so this file names none of them.
@@ -37,7 +37,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v4.3.1';
+$PipelineCoreVersion = 'v4.3.2';
 // / -----------------------------------------------------------------------------------
 
 
@@ -827,12 +827,13 @@ function pipelineAttemptIsDue($outputPath, $attemptsMade) {
 // / -----------------------------------------------------------------------------------
 // / A function to decide whether a pipeline asks its converter once more, from v4.3.1.
 // / Accepts the path the converter writes, how many attempts were made & the exit status of the last one, in that order.
-// / Returns TRUE before the first attempt, & after it only where a signal stopped the last one & pipelineAttemptIsDue() allows another.
+// / Returns TRUE before the first attempt, & after it only where something outside the converter stopped the last one &
+// / pipelineAttemptIsDue() allows another.
 // / A converter that ran to its end & left no file would leave none again, because it would be given the same file. Until v4.3.1 every
 // / pipeline but Document asked again anyway, as many times as --File Operation Retry Count-- allows, & waited a second longer before
 // / each attempt than the last, so a file a converter could not read was refused after five attempts & six seconds of waiting.
-// / One a memory ceiling, a supervisor or a crash stopped was stopped by a signal, which says nothing of the file, so that one is
-// / asked again. pipelineCommandWasStopped() says which it was.
+// / One a memory ceiling or a supervisor stopped was stopped from outside, which says nothing of the file, so that one is asked
+// / again. One that crashed is not, from v4.3.2, because it would crash again on the same file. pipelineCommandWasStopped() says which.
 function pipelineRetryIsDue($outputPath, $attemptsMade, $lastExitStatus) {
   // / Set variables.
   global $EnableMemoryProtection;
@@ -844,21 +845,24 @@ function pipelineRetryIsDue($outputPath, $attemptsMade, $lastExitStatus) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to say whether a signal stopped a command, from v4.3.1.
-// / Accepts the command's exit status. Returns TRUE where a signal stopped it.
-// / A process a signal ended exits 128 plus the signal's number, as Bubblewrap & the shell both report one. A memory ceiling, a
-// / supervisor & a crash stop a converter with a signal numbered 1 through 31, so only 129 through 159 says a signal stopped it.
+// / A function to say whether something outside a command stopped it, from v4.3.1.
+// / Accepts the command's exit status. Returns TRUE where KILL or TERM stopped it, from v4.3.2.
+// / A process a signal ended exits 128 plus the signal's number, as Bubblewrap & the shell both report one. A memory ceiling & a
+// / supervisor stop a converter with KILL, 9, or TERM, 15, so only 137 & 143 say something outside it stopped it, & an attempt made
+// / again may finish.
+// / A converter that crashed was stopped by a signal of its own making, SEGV, ABRT, BUS, FPE or ILL, & is given the same file again,
+// / so it would crash again. Its 139, 134, 135, 136 or 132 is not stopped, from v4.3.2. Until then 129 through 159 were, so a model
+// / that crashed Assimp was converted & crashed it again as many times as --File Operation Retry Count-- allows.
 // / A converter that ran to its end may exit with more. FFMPEG from 6.1 exits with 183 where it reads nothing it knows, 234 where it
 // / refuses an argument, 254 where it finds no file & 255 where it may not open one, & msgconvert's Perl exits with 255 where it dies.
 // / FFMPEG & 7-Zip exit with 255 after catching a signal too, which cannot be told from that failure, so neither is asked again.
-// / No converter is stopped by a real time signal, numbered 34 & above. One that never ran exits with 127 or less, because the
-// / shell could not find it or could not start it.
+// / One that never ran exits with 127 or less, because the shell could not find it or could not start it.
 // / Every pipeline & shared module that tells the two apart asks this, so none of them holds the numbers.
 function pipelineCommandWasStopped($exitStatus) {
   // / Set variables.
   global $EnableMemoryProtection;
   $CommandWasStopped = FALSE;
-  $CommandWasStopped = ((int)$exitStatus > 128 && (int)$exitStatus < 160);
+  $CommandWasStopped = ((int)$exitStatus === 128 + 9 or (int)$exitStatus === 128 + 15);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $exitStatus);
   return $CommandWasStopped; }

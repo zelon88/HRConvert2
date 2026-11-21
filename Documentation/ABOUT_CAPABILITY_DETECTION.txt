@@ -95,7 +95,8 @@ MOST DEPENDENCIES CANNOT BE ASKED ANYTHING.
 
   ImageMagick   Yes.  magick -list format  reports read & write separately.
   FFMPEG        Yes.  ffmpeg -formats  reports demux & mux separately.
-  Assimp        Yes, but with two commands. listext & listexport.
+  Assimp        Yes, with two commands, listext & listexport. HRConvert2 asks it nothing, from
+                v4.3.2, as the section on a subsystem two tools serve says.
   Calibre       Awkwardly, through calibre-debug.
   7-Zip         Partly.  7z i  lists codecs rather than formats.
   LibreOffice   No. There is no format list command in any released version.
@@ -141,6 +142,29 @@ A pipeline consults the write set for the output extension and the read set for 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About A Subsystem Two Tools Serve--
+
+A SUBSYSTEM IS JUDGED BY THE TOOLS THAT ANSWER, & A TOOL THAT CANNOT ANSWER ADDS NOTHING.
+A pipeline is judged by its subsystem, & every dependency of that subsystem that answered is
+asked whether it reads the input & writes the output. One that could not answer is unknown &
+contradicts nothing, & it confirms nothing either. Where a subsystem is served by two tools &
+only one can be asked, that one answers for both.
+
+3D Models is such a subsystem. Assimp reads obj, fbx, gltf & glb for the Model pipeline, &
+MeshLab reads the rest & writes stl, ply, off, dxf, wrl & ctm, & MeshLab cannot be asked.
+Assimp's answer contradicted every pair only MeshLab handles. A distribution's Assimp, which
+reads seventy extensions, contradicted ctm & what only MeshLab writes. HRConvert2's own Assimp
+reads four, & contradicted 140 of the pipeline's 176 pairs. Advisory mode warned of each such
+conversion, & a narrowing mode refused it.
+
+So from v4.3.2 HRConvert2 asks Assimp nothing, & the Model pipeline's declarations stand in
+every mode. Its own build reads & writes what build-assimp.sh checked it for before it was
+installed, & the Model pipeline refuses any Assimp that reads more, so detection had nothing to
+say of it that is not already known. The Engine still asks a tool with two commands, as Assimp
+was asked.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Aliases, Which Are Not Optional--
 
 A TOOL NAMES FORMATS AFTER ITS OWN INTERNALS, NOT AFTER THE EXTENSION A USER TYPES.
@@ -151,20 +175,22 @@ A TOOL NAMES FORMATS AFTER ITS OWN INTERNALS, NOT AFTER THE EXTENSION A USER TYP
   ImageMagick has no tif. It has TIFF & TIFF64.
   Assimp has no dae. It has collada.
 
-Seven of Assimp's twenty two export identifiers are not the extension. Without a table
-correcting this, a narrowing pass deletes working conversions from a correct installation.
-CapabilityAliases in depends.php is that table.
+Seven of a distribution's Assimp's twenty two export identifiers are not the extension. Without
+a table correcting this, a narrowing pass deletes working conversions from a correct
+installation. CapabilityAliases in depends.php is that table, & FFMPEG's & ImageMagick's
+entries carry one. Assimp's carried one until v4.3.2, when HRConvert2 stopped asking it.
 
 AN ALIAS ADDS AN EXTENSION. IT NEVER RENAMES ONE.
 A tool that prints TIFF can still be handed a file named tiff, so removing the token in
 favour of tif would lose a format while gaining one. Both are kept.
 
 A VARIANT IS NOT AN ALIAS.
-Assimp writes obj and objnomtl, stl and stlb, ply and plyb, fbx and fbxa. Those are
-different operations rather than two names for one. The table maps them so that the
-question "can Assimp write obj" is answered correctly. It does not tell a pipeline what to
+Assimp writes obj and objnomtl, gltf and gltf2, glb and glb2, fbx and fbxa. Those are
+different operations rather than two names for one. Assimp's table mapped them so that the
+question "can Assimp write obj" was answered correctly. It never told a pipeline what to
 ask for, and the Model pipeline still names objnomtl deliberately, because the plain obj
-exporter leaves a material sidecar beside the model that the user never asked for.
+exporter leaves a material sidecar beside the model that the user never asked for. It names
+gltf2 & glb2 from v4.3.2, because gltf & glb are glTF 1.0, which it wrote until then.
 
 THE TABLE IS HAND MAINTAINED & A GAP IN IT IS A FALSE NEGATIVE.
 That is the direction that costs somebody a conversion, which is the entire reason

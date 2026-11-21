@@ -1,0 +1,25 @@
+From 74786ed108af2f0670d98d867f8c12d115c4f047 Mon Sep 17 00:00:00 2001
+From: HRConvert2 <hrconvert2@invalid>
+Date: Fri, 20 Nov 2026 03:31:41 -0500
+Subject: [PATCH 05/10] glTF2 exporter: export no tangents for a mesh without
+ normals
+
+The tangents' handedness was computed from aim->mNormals, which a mesh with tangents & no normals does not have.
+---
+ code/AssetLib/glTF2/glTF2Exporter.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/code/AssetLib/glTF2/glTF2Exporter.cpp b/code/AssetLib/glTF2/glTF2Exporter.cpp
+index 4d72bb40..c121de0d 100644
+--- a/code/AssetLib/glTF2/glTF2Exporter.cpp
++++ b/code/AssetLib/glTF2/glTF2Exporter.cpp
+@@ -1261,7 +1261,8 @@ void glTF2Exporter::ExportMeshes() {
+         }
+ 
+         /******************** Tangents ********************/
+-        if (nullptr != aim->mTangents && nullptr != aim->mBitangents) {
++        // The handedness is found from the normal, so a mesh with tangents & no normals exports no tangents.
++        if (nullptr != aim->mTangents && nullptr != aim->mBitangents && nullptr != aim->mNormals) {
+           // Find the handedness by calculating the bitangent without the handedness factor,
+           // the use a dot product to find out if the original bitangent was inverted (multiplied
+           // by a factor of -1.0) or not (multiplied by 1.0)

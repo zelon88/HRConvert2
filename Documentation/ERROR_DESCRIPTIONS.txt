@@ -70,6 +70,7 @@ The Authentication Core reserves 43000 through 43019 & the Email Core 43100 thro
 The Data pipeline reserves 44000 through 44019, the LaTeX pipeline 45000 through 45019, the Trace pipeline 46000 through 46019,
 the Email pipeline 47000 through 47019 & the Markup pipeline 48000 through 48019, from v4.2.5.
 The Graph pipeline reserves 49000 through 49019, from v4.2.6.
+The Model pipeline raises 9000 through 9008, from v4.3.2, where it raised 9000 through 9004.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2172,9 +2173,10 @@ LOGGED
 
 ERROR DESCRIPTION
   LibreOffice ran & left no file. From v4.3.0 it is asked once, because LibreOffice that runs to its end & writes nothing, as it
-  does for a pair it has no filter for, would write nothing again. Only one a signal stopped, as a memory ceiling, a supervisor or
-  a crash stops it, is asked again, as many times as --File Operation Retry Count-- allows. Until v4.3.0 every attempt was made, &
-  each waited a second longer than the last.
+  does for a pair it has no filter for, would write nothing again. Only one something outside it stopped, as a memory ceiling or a
+  supervisor stops it with KILL or TERM, is asked again, as many times as --File Operation Retry Count-- allows. One that crashed
+  is not, from v4.3.2, because it would crash again on the same document. Until v4.3.0 every attempt was made, & each waited a
+  second longer than the last.
   From v4.3.0 the Document family no longer claims a pair across its kinds, so docx to pptx is Pandoc's & no longer ends here.
   Until v4.0.6 this read The document converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what LibreOffice printed, which usually names the cause.
@@ -2323,13 +2325,27 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Assimp or MeshLab, by the route the pipeline chose, ran & left no file. From v4.3.1 it is asked again only where a signal stopped it,
-  as many times as --File Operation Retry Count-- allows. Until then it was asked that many times whatever happened.
+  Assimp or MeshLab, by the route the pipeline chose, ran & left no file. From v4.3.1 it is asked again only where something outside it
+  stopped it, & from v4.3.2 that is KILL or TERM alone, as a memory ceiling or a supervisor stops a converter. One that crashed, with SEGV,
+  ABRT, BUS, FPE or ILL, is not asked again, because it would crash again on the same file. Until v4.3.1 it was asked as many times as
+  --File Operation Retry Count-- allows whatever happened, & until v4.3.2 a crash was asked again too.
   Until v4.0.6 this read The model converter timed out! No time limit ever caused it, & one more attempt was made after it.
   With --Enhanced Logging Verbosity-- on, the entry immediately above this one carries what Assimp or MeshLab, by the route the pipeline chose, printed, which usually names the cause.
-  A model neither can read is the usual cause.
+  A model neither can read is the usual cause. On a two stage route the second converter runs only where the first left a model for it.
   A converter its memory ceiling killed ends the same way. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
-  The warning below this names the command that was run, so it can be run again by hand.
+  From v4.3.2 Assimp is also held to an address space of the Model type's memory, by the assimp sandbox profile, & a model that asks for
+  more fails at once, & Assimp's output says std::bad_alloc. A 20 byte glb asked for 4.1 GiB before it failed.
+  The warning below this names the command that was run, so it can be run again by hand. It names the conversion's own folder, which is
+  taken away when the conversion ends, so the input must be put back in its in folder to run it.
+  A model refused for what it names outside itself is not this error. A warning says why, & no number follows it, because an upload
+  caused it & it was handled. A glTF whose buffer is named by a path, or whose header is 128 bytes or longer, whose image is named by a
+  path, whose glb chunk ends past the file, whose JSON names a key twice in one object, or is larger than a quarter of the memory the
+  request has left, is refused before Assimp opens it. So is an OBJ joining its lines in a way no program writes, or with a line longer
+  than 8 MiB. An OBJ's material library named by a path is left out of the copy Assimp reads, & a warning counts the lines left out.
+  From v4.3.3 an OFF is refused before MeshLab opens it unless it is a header of ST, C & N before OFF & three counts, a line for each
+  vertex & a line for each face, naming 3 or 4 different vertices the file holds, & any colour is 3 or 4 numbers. The warning says
+  MeshLab never opened it.
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2347,15 +2363,18 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  Assimp is one of the engines behind every 3D model geometry optimization, rectification, & format conversion.
-  The Model Conversion Engine passes work to them, so no model conversion can succeed without them.
-  MeshLab or Assimp may not be installed, or may not be reachable on the system path used by the web server user.
-  The installed Assimp may be older than the MinimumVersion of its entry in Resources/Contract/depends.php.
-  This minimum exists for broad format export array coverage & topological mesh cleaning stabilization & is not a security control.
-  HRConvert2 compares these values numerically down to the minor release branch depth, so all releases are ranked correctly.
-  HRConvert2 refuses any build it cannot positively identify, because an unknown build cannot be cleared.
-  Check the installed versions by running 'assimp version' as the web server user.
-  The conversion sequence is aborted to protect the processing pipeline from invalid command parameters or missing dependencies.
+  Assimp is one of the engines behind every 3D model format conversion, & a route that reads or writes obj, fbx, gltf, glb, 3ds, dae,
+  x3d, 3mf, x, assbin or json cannot run without it. From v4.3.2 a route MeshLab alone runs never asks for it.
+  From v4.3.2 the Assimp used is HRConvert2's own build alone, which Documentation/Build/build-assimp.sh makes under
+  /usr/local/libexec/hrconvert2/builds/assimp, because its Fallback in Resources/Contract/depends.php says 'Always' => TRUE. The package
+  manager's Assimp is never run, whatever version it is, so this is raised where the own build has not been made, & installing
+  assimp-utils does not clear it. Run  sudo php convertCore.php --setup --install-depends --subsystem="3D Models"  to build it. It
+  installs a compiler, CMake & git where there are none, needs a route to GitHub, & takes about a minute & a half on two x86 cores.
+  The own build reports 6.0.6, from its patch 0008, & its entry's MinimumVersion is 6.0.6, so a build that reports less is built again.
+  HRConvert2 compares these values numerically, so all releases are ranked correctly, & refuses any build it cannot positively
+  identify, because an unknown build cannot be cleared.
+  Run  php convertCore.php -v  to see what this installation has, & --setup --check-depends to see whether the own build is in service.
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2373,7 +2392,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  MeshLab normalizes mesh formats before Assimp writes the output & could not be verified.
+  MeshLab reads stl, ply, off, 3ds, dae, x3d & ctm, & writes stl, ply, off, dxf, wrl & ctm, & could not be verified.
+  From v4.3.2 it is asked for only by a route that runs it.
   Install it with  sudo apt install meshlab
   The minimum is the MinimumVersion of its entry in Resources/Contract/depends.php.
   MeshLab uses date style version numbers such as 2020.09, so the minor part is compared
@@ -2382,9 +2402,9 @@ ERROR DESCRIPTION
   cleared against a minimum.
   It is raised only where PyMeshLab is not in use, because --Use PyMeshLab Python Bindings-- is FALSE or the bundled
   module could not be used, which a warning before this error says. PyMeshLab replaces the meshlabserver binary.
-  Assimp is checked separately as error 9001, because every model route uses Assimp while
-  only the mesh routes use MeshLab.
+  Assimp is checked separately as error 9001.
   Run  php convertCore.php -v  to see the detected version.
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2406,11 +2426,12 @@ ERROR DESCRIPTION
   Assimp & MeshLab both parse complex binary scene formats & both carry CVE histories.
   Neither offers a native restriction on what it may read, so the sandbox is the only
   boundary available & the conversion is refused rather than run without one.
-  Assimp reads a glTF's buffer from wherever the glTF names it & writes it into the model it
-  makes. From v4.2.7 the meshlab sandbox profile, which Assimp runs under too, sets
-  RequireSandbox, so --Require Sandbox-- & --Require Sandbox On Docker-- do not decide this.
+  Assimp reads a glTF's buffer from wherever the glTF names it & writes it into the model it makes. The assimp sandbox profile,
+  from v4.3.2, & the meshlab profile, from v4.2.7, both set RequireSandbox, so --Require Sandbox-- & --Require Sandbox On Docker--
+  do not decide this. Until v4.3.2 Assimp ran under the meshlab profile.
   See error 8002 for the full list of reasons a sandbox may be unavailable & how to fix it.
   Run  php convertCore.php -v  to confirm whether this server has a working sandbox.
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -2429,15 +2450,116 @@ LOGGED
 
 ERROR DESCRIPTION
   A model conversion was requested into a format that no installed utility can produce.
-  The two utilities cover different sets & neither covers the whole of --Supported Model Formats-- in config.php on its own.
-  Assimp writes obj, stl, ply, 3ds, dae, x3d, fbx, gltf, glb and 3mf.
-  MeshLab writes ply, stl, obj, off, dae, x3d, dxf, wrl, ctm and u3d.
-  A format in neither list cannot be produced, however the conversion is routed.
-  This is reported before the retry loop is entered, because retrying a command that cannot succeed only delays the same failure.
+  From v4.3.2 Assimp writes obj, 3ds, dae, x3d, fbx, gltf, glb, 3mf, x, assbin & json, & MeshLab writes stl, ply, off, dxf, wrl & ctm.
+  Until then Assimp wrote stl & ply too, through its PreTransformVertices, which a crafted model makes crash.
+  A format in neither list cannot be produced, however the conversion is routed. u3d is one.
+  This is reported before anything runs, because retrying a command that cannot succeed only delays the same failure.
   READING A FORMAT IS NOT THE SAME AS WRITING IT.
-  Assimp reads OFF perfectly well and has no OFF exporter at all.
+  Assimp reads more formats than it writes, & MeshLab writes formats Assimp cannot. Error 9005 is the same refusal for a format
+  neither reads.
   An earlier version routed on the input extension alone, so an obj to off conversion reached Assimp, which answered that it could not guess the output format, and the retry loop repeated the identical command until it timed out with error 9000.
-  Remove the format from --Supported Model Formats-- in config.php, or install a utility that can write it.
+  Remove the format from --Supported Model Output Formats-- in config.php, or install a utility that can write it.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9005, <SESSION_IDENTIFIER>: Neither Assimp nor MeshLab reads the <FILE_TYPE> format here!
+
+FILE
+  Resources/Pipelines/Model/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  A model was uploaded in a format neither of the two reads, from v4.3.2, & nothing was run.
+  Each upload is read by one program. HRConvert2's own Assimp reads obj, fbx, gltf & glb, with the three importers it is built with,
+  & MeshLab reads stl, ply, off, 3ds, dae, x3d & ctm. Until v4.3.2 Assimp read every model, with every importer a distribution
+  builds, & it chose an importer by what a file holds where none claimed its extension, so any of seventy was reachable from an upload.
+  x, 3mf & dxf are read by neither from v4.3.2. Assimp writes x & 3mf, & MeshLab writes dxf. The three leave the stock
+  --Supported Model Input Formats-- & --Supported Model Formats--. config.php stays v4.2.8, so an existing one keeps them, & a model
+  in one is refused here or, where the pipeline no longer declares the format, by error 34005. Remove the three from the two
+  settings by hand. A dxf is still read by the Drawing pipeline, as a drawing.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9006, <SESSION_IDENTIFIER>: Could not stage <FILE_NAME> for conversion!
+
+FILE
+  Resources/Pipelines/Model/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.3.2 a model is converted in a folder of the conversion's own, which the workFolder.php shared module makes beside the staged
+  input, & a converter is shown a copy of the upload, read only, & an empty folder to write into, & never the user's own folder.
+  The folder could not be made, the copy could not be made in it, or no free name was left for a gltf's buffer, & nothing was run.
+  The temporary location may be full or read only, or the account running the conversion may not write to it.
+  Run  sudo php convertCore.php -fp  to repair the data location's folders & their permissions.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9007, <SESSION_IDENTIFIER>: Could not move the converted model to <FILE_NAME>! <REASON>
+
+FILE
+  Resources/Pipelines/Model/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  The converter wrote the model in the conversion's own folder, & it could not be moved into the user's folder, from v4.3.2.
+  Only the output leaves that folder, & a gltf's buffer with it. Each must be a plain file, because a link moved into the user's
+  folder would be followed when it is downloaded, & a buffer takes its name by a link, which fails rather than replaces a name taken
+  since the conversion began. The reason says which of these it was. Nothing of the user's was written over, & the conversion's
+  folder was taken away with what the converter wrote in it.
+  Until v4.3.2 a converter wrote straight into the user's folder, & a gltf's buffer replaced a file of the same name there.
+  The user's folder may be full, or the account running the conversion may not write to it. -fp repairs the permissions.
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-9008, <SESSION_IDENTIFIER>: The Assimp in use reads <FORMATS> besides obj, fbx, gltf & glb, so it was not used!
+
+FILE
+  Resources/Pipelines/Model/pipeline.php
+
+FATAL
+  NO
+
+LOGGED
+  YES
+
+ERROR DESCRIPTION
+  From v4.3.2 HRConvert2 runs only an Assimp that reads what its own build reads, obj, fbx, gltf & glb, & vrm, which is glTF 2.0 by
+  another name. The pipeline asks the Assimp the manifest names for the extensions it imports, with  assimp listext , before it
+  converts anything, & an Assimp with any other importer is refused here, & nothing was run.
+  Assimp chooses an importer by what a file holds where none claims its extension, so every importer it carries is reachable from an
+  upload, & a distribution's Assimp carries seventy. HRConvert2's own build carries three, which were reviewed for v4.3.2.
+  Dependency Core never uses a package manager's Assimp, because its Fallback says 'Always' => TRUE. This is raised where an operator
+  named another program in the Binary of the Assimp entry in Resources/Contract/depends.php, or the own build was replaced by hand.
+  Put the Binary back to assimp & run  sudo php convertCore.php --setup --install-depends --subsystem="3D Models" .
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -7357,6 +7479,9 @@ ERROR DESCRIPTION
   It became empty once the last family migrated and it has been removed.
   Pasting a converter back into the core would produce a second implementation that the Pipeline Core knows nothing about, cannot version check, and cannot rank against the real one.
   Repair the pipeline folder instead.
+  From v4.3.2 a model in x, 3mf or dxf ends here where config.php still offers it as a model input, because the Model pipeline
+  reads none of them & no longer declares them. Error 9005 says why, & the three should be taken out of
+  --Supported Model Input Formats--.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

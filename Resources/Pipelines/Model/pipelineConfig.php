@@ -12,11 +12,11 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.3.
 // / This file declares what the Model conversion pipeline is & what it can do.
 // / It is read by pipelineCore.php on every request & it must stay cheap.
 // / It assigns variables & does nothing else, with no functions, no logic & no output.
-// / Error block 9000 through 9004 belongs to this pipeline.
+// / Error block 9000 through 9008 belongs to this pipeline.
 // / See Documentation/ABOUT_PIPELINE_COMPONENTS.txt for what each declaration means.
 // /
 // / <3 Open-Source
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / The version of this pipeline folder. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedPipelines(). This version covers the whole
 // / folder, so pipeline.php beside it ships & moves with this file.
-$PipelineVersion = 'v4.3.1';
+$PipelineVersion = 'v4.3.3';
 
 // / What this pipeline is dispatched as. A conversion pipeline takes one file & returns
 // / the six value contract. An operation pipeline takes a selection & returns its own
@@ -57,15 +57,15 @@ $PipelineEntryPoint = 'convertModels';
 // / The depends.php subsystem this pipeline needs. Dependency Core owns installation.
 // / This string must match a Subsystem name in depends.php exactly.
 // / Naming the subsystem rather than the package keeps one source of truth for the version.
-// / Two binaries serve this family & only one is named here.
-// / Assimp converts between mesh formats & MeshLab handles what Assimp will not. Assimp is
-// / named because it is the one without which nothing here works at all. The pipeline asks
-// / the manifest for both through verifiedToolPath().
+// / Two binaries serve this family & both are in this subsystem.
+// / Assimp converts between scene formats & MeshLab handles what Assimp will not. The pipeline
+// / asks the manifest for each it needs through verifiedToolPath().
 $PipelineSubsystem = '3D Models';
 
 // / Shared modules this pipeline needs, loaded before its converter is loaded.
-// / This pipeline needs none.
-$PipelineSharedModules = array();
+// / workFolder.php makes the folder each conversion runs in, from v4.3.2, so a converter is shown a copy of the upload & an empty
+// / folder to write in, & never the user's own folder.
+$PipelineSharedModules = array('workFolder.php');
 
 // / The request fields this pipeline actually reads.
 // / A mesh conversion is decided entirely by the output extension. A height, a width, a
@@ -76,19 +76,17 @@ $PipelineRequestFields = array('Extension');
 // / These lists are informational while $SupportedFormatDetectionType is hardcoded-only.
 // / config.php is authoritative in that mode, so an omission here cannot delete a
 // / conversion. They become authoritative in the detected modes.
-// / Assimp & MeshLab between them read more than this. These are the formats worth
-// / offering from a web interface.
+// / Each input is read by one program, from v4.3.2. Assimp, which is HRConvert2's own build with three importers, reads obj, fbx,
+// / gltf & glb, & MeshLab reads the rest. Until then Assimp read every input, with every importer a distribution builds, & blend,
+// / lwo, ms3d, ac, b3d, q3d, irr, md2, md3, md5mesh, smd, ase & raw were declared here as well.
+// / x, 3mf & dxf are written & not read, from v4.3.2, because MeshLab has no reader for any of them & the own build no importer.
 $Capabilities = array(
   'Input' => array(
-    'obj', 'stl', 'ply', 'dae', 'fbx', '3ds', 'blend', 'gltf', 'glb', 'x3d', 'off', 'lwo',
-    'ms3d', 'ac', 'b3d', 'q3d', 'irr', 'md2', 'md3', 'md5mesh', 'smd', 'ase', 'dxf', 'raw',
-    // / 3mf, x & ctm read as well as write. 3mf was offered by config.php as an input long
-    // / before this line existed, so every 3mf upload was refused by a pipeline that never
-    // / claimed it, which reads as a broken conversion rather than as a missing declaration.
-    '3mf', 'x', 'ctm'),
+    'obj', 'fbx', 'gltf', 'glb',
+    'stl', 'ply', 'off', '3ds', 'dae', 'x3d', 'ctm'),
   // / A format here that neither Assimp nor MeshLab can write is refused at conversion time with error 9004.
   // / The writer lists live in pipeline.php beside the route selection that consults them.
-  // / 3mf & x are written by Assimp, & ctm, dxf & wrl by the MeshLab route.
+  // / 3mf & x are written by Assimp, & stl, ply, ctm, dxf & wrl by the MeshLab route, stl & ply from v4.3.2.
   // / u3d is left out, because MeshLab writes it only through an IDTF converter the bundle does not carry.
   // / A format that works most of the time is worse than one never offered.
   'Output' => array(
@@ -100,14 +98,16 @@ $Capabilities = array(
 $PipelineExclude = array(
     'obj>obj', 'stl>stl', 'ply>ply', 'dae>dae', 'fbx>fbx', 'gltf>gltf', 'glb>glb', 'x3d>x3d',
     'off>off', '3ds>3ds',
-    // / dxf is an input & an output, so the pair exists.
+    // / ctm is an input & an output, so the pair exists.
     // / A format that is only an output cannot pair with itself, so adding one as an input adds a line here.
-    'dxf>dxf', 'x>x', 'ctm>ctm', '3mf>3mf');
+    // / x, 3mf & dxf are outputs alone from v4.3.2, so their pairs are gone.
+    'ctm>ctm');
 
 // / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
 // / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.
-// / Assimp reads every model this pipeline converts, so nothing is converted without it.
-// / MeshLab, or PyMeshLab where it is on, writes what Assimp cannot, & a format neither writes is refused with its own error.
+// / Assimp reads or writes almost every model this pipeline converts, so it is offered only where Assimp is installed.
+// / MeshLab, or PyMeshLab where it is on, reads what Assimp's own build does not & writes what it cannot, & a format neither reads
+// / or writes is refused with its own error.
 $PipelineRequiredDependencies = array('Assimp');
 // / -----------------------------------------------------------------------------------
 ?>

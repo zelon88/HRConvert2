@@ -312,8 +312,11 @@ Read these before writing code. They are preconditions, not steps.
       FALSE means the core refused it & it must not be executed. The case where sandboxing
       is not required returns TRUE with the command unwrapped & warns from inside itself,
       unless the profile sets RequireSandbox, from v4.2.7.
-  8f. ROUTE ON WHAT A TOOL CAN WRITE, NOT ON WHAT IT CAN READ. Assimp reads OFF & has no OFF
-      exporter, & an input based route retried an impossible command until it timed out.
+  8f. ROUTE ON WHAT A TOOL CAN WRITE, NOT ON WHAT IT CAN READ. Assimp reads more than it
+      writes, & an input based route retried an impossible command until it timed out. From
+      v4.3.2 the Model pipeline routes on both, so each upload is read by one program & each
+      output written by the one that writes it, & refuses a format neither reads with its own
+      number before anything runs.
   8g. Gate on `verifiedToolPath()` first. Error out with your reserved number.
       `verifiedToolVerdict()` gives the reason a tool was refused, for that error to name.
   8h. Build the command once, before the retry loop. It never changes.
@@ -321,13 +324,21 @@ Read these before writing code. They are preconditions, not steps.
   8j. Refuse with your reserved sandbox number when that boolean is FALSE.
   8k. Run the command with `runPipelineCommand()`, which returns what it printed & its exit
       status, & retry while `pipelineRetryIsDue($newPathname, $stopper, $exitStatus)` says so,
-      from v4.3.1. It always allows the first attempt, & another only where a signal stopped
-      the last one, up to `$RetryCount` attempts, & stops as soon as the output exists. A
-      converter that ran to its end & left nothing would leave nothing again. Sleep before
+      from v4.3.1. It always allows the first attempt, & another only where KILL or TERM
+      stopped the last one, as a memory ceiling or a supervisor stops a converter, up to
+      `$RetryCount` attempts, & stops as soon as the output exists. A converter that ran to its
+      end & left nothing would leave nothing again, & one that crashed would crash again, from
+      v4.3.2. Take away an output a stopped attempt left, because it may be part of one. Sleep before
       every attempt but the first. Raise your error once, after the loop, when the output
       still does not exist, & name the number of attempts made.
   8l. Log dependency output under `$Verbose`, but only when it is not blank.
   8m. Clean up every local in the cleanup line. Never null anything you return.
+  8n. GIVE A TOOL A FOLDER OF ITS OWN WHERE IT WRITES MORE THAN IT IS ASKED FOR. A converter
+      that writes a side file, or names a file beside its input, sees the user's own folder
+      when it is handed a path there. The workFolder.php shared module makes a private folder
+      beside the staged input. The Data, LaTeX, Trace & Model pipelines copy the input in, run
+      the tool there, move only the output out & take the folder away, & the Model pipeline
+      gives its tool an in folder, read only, & an empty out folder, from v4.3.2.
 
 9. Check `convertFiles()` for globals & proper conversion type routing.
   9a. `convert()` no longer carries a branch per family. It asks Pipeline Core whether any

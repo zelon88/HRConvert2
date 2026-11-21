@@ -196,7 +196,7 @@ $refreshURL = 'convertCore.php?'.$sessionParams.$sortParams;
             <?php } if (in_array('Model', $OfferedConversionTypes)) { ?>
             <strong><?php echo $Gui1Text22; ?></strong>
             <ol>
-              <?php foreach ($ModelArray as $gui1ModArr) { ?>
+              <?php foreach ($ModelInputArray as $gui1ModArr) { ?>
               <li><?php echo $gui1ModArr; ?></li>
               <?php } ?>
             </ol>

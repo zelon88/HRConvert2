@@ -1,0 +1,68 @@
+From 19ad6a0af148710191447404ec1cb936dced53ba Mon Sep 17 00:00:00 2001
+From: HRConvert2 <hrconvert2@invalid>
+Date: Fri, 20 Nov 2026 03:31:41 -0500
+Subject: [PATCH 04/10] glTF2 exporter: map node meshes past meshes skipped for
+ having no faces
+
+ExportMeshes() skips a mesh with no faces, & the nodes kept its scene index, so a node named a mesh past the end of the list or the wrong one. Each scene mesh is mapped to the index it is exported under, & a node names no mesh that was skipped.
+---
+ code/AssetLib/glTF2/glTF2Exporter.cpp | 19 +++++++++++++++++--
+ code/AssetLib/glTF2/glTF2Exporter.h   |  1 +
+ 2 files changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/code/AssetLib/glTF2/glTF2Exporter.cpp b/code/AssetLib/glTF2/glTF2Exporter.cpp
+index 0db7ae5d..4d72bb40 100644
+--- a/code/AssetLib/glTF2/glTF2Exporter.cpp
++++ b/code/AssetLib/glTF2/glTF2Exporter.cpp
+@@ -123,6 +123,15 @@ glTF2Exporter::glTF2Exporter(const char *filename, IOSystem *pIOSystem, const ai
+ 
+     ExportMaterials();
+ 
++    // A mesh without faces is not exported, so each scene mesh is mapped to the index it is exported under.
++    mMeshIndexMap.assign(mScene->mNumMeshes, -1);
++    int exportedMeshes = 0;
++    for (unsigned int idx_mesh = 0; idx_mesh < mScene->mNumMeshes; ++idx_mesh) {
++        if (mScene->mMeshes[idx_mesh]->mNumFaces != 0) {
++            mMeshIndexMap[idx_mesh] = exportedMeshes++;
++        }
++    }
++
+     if (mScene->mRootNode) {
+         ExportNodeHierarchy(mScene->mRootNode);
+     }
+@@ -1550,7 +1559,10 @@ unsigned int glTF2Exporter::ExportNodeHierarchy(const aiNode *n) {
+     }
+ 
+     for (unsigned int i = 0; i < n->mNumMeshes; ++i) {
+-        node->meshes.emplace_back(mAsset->meshes.Get(n->mMeshes[i]));
++        const unsigned int sceneMesh = n->mMeshes[i];
++        if (sceneMesh < mMeshIndexMap.size() && mMeshIndexMap[sceneMesh] >= 0) {
++            node->meshes.emplace_back(mAsset->meshes.Get(static_cast<unsigned int>(mMeshIndexMap[sceneMesh])));
++        }
+     }
+ 
+     for (unsigned int i = 0; i < n->mNumChildren; ++i) {
+@@ -1603,7 +1615,10 @@ unsigned int glTF2Exporter::ExportNode(const aiNode *n, Ref<Node> &parent) {
+     }
+ 
+     for (unsigned int i = 0; i < n->mNumMeshes; ++i) {
+-        node->meshes.emplace_back(mAsset->meshes.Get(n->mMeshes[i]));
++        const unsigned int sceneMesh = n->mMeshes[i];
++        if (sceneMesh < mMeshIndexMap.size() && mMeshIndexMap[sceneMesh] >= 0) {
++            node->meshes.emplace_back(mAsset->meshes.Get(static_cast<unsigned int>(mMeshIndexMap[sceneMesh])));
++        }
+     }
+ 
+     for (unsigned int i = 0; i < n->mNumChildren; ++i) {
+diff --git a/code/AssetLib/glTF2/glTF2Exporter.h b/code/AssetLib/glTF2/glTF2Exporter.h
+index 78b20afa..a5cd904f 100644
+--- a/code/AssetLib/glTF2/glTF2Exporter.h
++++ b/code/AssetLib/glTF2/glTF2Exporter.h
+@@ -142,6 +142,7 @@ private:
+     std::map<std::string, unsigned int> mTexturesByPath;
+     std::shared_ptr<glTF2::Asset> mAsset;
+     std::vector<unsigned char> mBodyData;
++    std::vector<int> mMeshIndexMap;
+     ai_real configEpsilon;
+ };
+ 

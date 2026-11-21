@@ -152,3 +152,9 @@ The Strip Metadata icon, metadata.png, in the Default & Original interfaces. Dra
 The Merge & Split icon, pages.png, in the Default & Original interfaces. Drawn for this project in v4.1.8.
 GPLv3, as the rest of this project is.
 https://github.com/zelon88/HRConvert2
+
+and.....
+
+Gemini & Claude Sonnet
+HRConvert2's logo, of the HonestRepair family's Diablo2 generation. Drawn for this project by Google's Gemini & Anthropic's Claude Sonnet.
+The banner, convert-banner.png, the logo, logo.png & logo (Custom).png, & the favicons, favicon.ico & xfavicon.ico, in the Default & Original interfaces, from v4.3.2.

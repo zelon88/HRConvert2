@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.3.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -45,7 +45,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.3.1';
+  $HRConvertVersion = 'v4.3.3';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -59,7 +59,7 @@ function verifyInstallation() {
   // / Note that this check looks for the component version to be identical to what is listed below.
   // / A GUI version that does not exactly match the version listed below is not considered acceptable.
   // / This is because Guis are not always guaranteed to be forward or reverse compatible.
-  $RequiredGuiVersion = 'v4.3.0';
+  $RequiredGuiVersion = 'v4.3.2';
   $RequiredGuiVersion = ltrim($RequiredGuiVersion, 'vV');
   // / Define the Language Pack version that this convertCore.php can accept.
   // / Note that this check looks for the component version to be identical to what is listed below.
@@ -77,19 +77,19 @@ function verifyInstallation() {
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v4.2.5';
+  $RequiredDependencyCoreVersion = 'v4.3.2';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
   // / A manifest from another release may name a package that no longer exists.
-  $RequiredDependsVersion = 'v4.2.8';
+  $RequiredDependsVersion = 'v4.3.2';
   $RequiredDependsVersion = ltrim($RequiredDependsVersion, 'vV');
   // / The Pipeline Core component version this core requires.
   // / This is an exact match, because a component built for another core may declare an entry point whose arguments have moved, or capabilities this core cannot honour.
   // / Raise this when the Pipeline Core itself changes & for nothing else.
   // / It is an Engine core, at Resources/Engine/Cores/pipelineCore.php.
   // / The pipelines this application accepts are listed in its contract, in app-engine-config.php, so adding a pipeline or moving one to a new version raises nothing here.
-  $RequiredPipelineCoreVersion = 'v4.3.1';
+  $RequiredPipelineCoreVersion = 'v4.3.2';
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The Workflow Core component version this core requires.
   // / This is an exact match, because a component built for another core may call an operation with arguments that have moved.
@@ -110,7 +110,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.3.0';
+  $RequiredEngineVersion = 'v4.3.2';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -1840,6 +1840,10 @@ function invokeSplitOperation($selectedFiles, $operationOptions) {
 // /                   keyed by the host path & naming the file within the read only resource
 // /                   the call carries. The host file is never touched. A host path that is
 // /                   not a plain file here, or that is reached through a link, is skipped.
+// /   AddressSpaceLimit  TRUE where the Engine holds each process of the tool to an address space of the
+// /                   memory its type is allowed, with prlimit, from v4.3.2, wherever a scope can be made &
+// /                   wherever it cannot. Only a tool measured under it says TRUE, because one that reserves
+// /                   far more address space than it uses, as a JVM does, would be stopped by it.
 // /   RequireSandbox  TRUE where the tool reads a file an upload names, or runs code one carries, &
 // /                   nothing passed with its command stops it. The Engine never runs such a tool
 // /                   without a sandbox, whatever --Require Sandbox-- & --Require Sandbox On Docker--
@@ -1956,7 +1960,8 @@ function getSandboxProfiles() {
     // / which is what MapToRoot & the Tmpfs below are for.
     // / The vendor file keeps glvnd away from a GPU driver that crashes while enumerating
     // / devices this namespace deliberately does not expose.
-    // / Assimp, which runs under this profile too, reads a glTF's buffer from a path the glTF names & writes it into the model it makes.
+    // / MeshLab reads a model an upload holds, & what it names, with readers HRConvert2 has not reviewed, so it never runs without a sandbox.
+    // / Assimp ran under this profile until v4.3.2 & has its own below.
     'meshlab' => array(
       'OperationType' => 'Model',
       'RequireSandbox' => TRUE,
@@ -1968,6 +1973,17 @@ function getSandboxProfiles() {
         'GALLIUM_DRIVER' => 'llvmpipe',
         '__EGL_VENDOR_LIBRARY_FILENAMES' => '/usr/share/glvnd/egl_vendor.d/50_mesa.json'),
       'Reason' => 'An X server inside the namespace, rendering in software, with no GPU driver loaded.'),
+
+    // / Assimp reads a model an upload holds, from v4.3.2 with HRConvert2's own build & its three importers, & writes into a folder of the
+    // / conversion's own. It needs no display, no Mesa & nothing of MeshLab's, so it is shown none of them, & runs as the Engine's own
+    // / account rather than as root. Its glTF importer reads a buffer from a path the glTF names, so it never runs without a sandbox.
+    // / A 20 byte glb asked for 4.1 GiB before it failed, so each of its processes is held to the memory a model is allowed. A scope's
+    // / ceiling kills only once memory is used, & holds nowhere a scope cannot be made. Assimp was measured under the limit.
+    'assimp' => array(
+      'OperationType' => 'Model',
+      'RequireSandbox' => TRUE,
+      'AddressSpaceLimit' => TRUE,
+      'Reason' => 'A model read with no display & as no root, with its address space held to the memory a model is allowed.'),
 
     'openscad' => array(
       'OperationType' => 'Scad',
@@ -2141,8 +2157,8 @@ function applicationConfigModel() {
       'UserDrawingOutputArray' => array('Type' => 'array', 'Default' => 'array(\'dxf\', \'vdx\', \'fig\', \'dia\', \'wpg\', \'shape\', \'png\', \'svg\', \'pdf\', \'eps\', \'emf\', \'plt\', \'tex\')', 'Depends' => '', 'Description' => 'Supported Drawing Output Formats'),
       'UserSVGInputArray' => array('Type' => 'array', 'Default' => 'array(\'svg\', \'plain-svg\', \'svgz\', \'ai\', \'pdf\', \'emf\', \'wmf\', \'cdr\', \'vsd\')', 'Depends' => '', 'Description' => 'Supported SVG Input Formats'),
       'UserSVGOutputArray' => array('Type' => 'array', 'Default' => 'array(\'png\', \'pdf\', \'ps\', \'eps\', \'emf\', \'wmf\', \'svg\', \'svgz\', \'dxf\', \'hpgl\', \'tex\')', 'Depends' => '', 'Description' => 'Supported SVG Output Formats'),
-      'UserModelArray' => array('Type' => 'array', 'Default' => 'array(\'stl\', \'ply\', \'off\', \'3ds\', \'fbx\', \'dae\', \'gltf\', \'glb\', \'obj\', \'3mf\', \'x3d\', \'dxf\', \'x\', \'ctm\')', 'Depends' => '', 'Description' => 'Supported Model Formats'),
-      'UserModelInputArray' => array('Type' => 'array', 'Default' => 'array(\'stl\', \'ply\', \'off\', \'3ds\', \'fbx\', \'dae\', \'gltf\', \'glb\', \'obj\', \'3mf\', \'x3d\', \'dxf\', \'x\', \'ctm\')', 'Depends' => '', 'Description' => 'Supported Model Input Formats'),
+      'UserModelArray' => array('Type' => 'array', 'Default' => 'array(\'stl\', \'ply\', \'off\', \'3ds\', \'fbx\', \'dae\', \'gltf\', \'glb\', \'obj\', \'x3d\', \'ctm\')', 'Depends' => '', 'Description' => 'Supported Model Formats'),
+      'UserModelInputArray' => array('Type' => 'array', 'Default' => 'array(\'stl\', \'ply\', \'off\', \'3ds\', \'fbx\', \'dae\', \'gltf\', \'glb\', \'obj\', \'x3d\', \'ctm\')', 'Depends' => '', 'Description' => 'Supported Model Input Formats'),
       'UserModelOutputArray' => array('Type' => 'array', 'Default' => 'array(\'stl\', \'ply\', \'off\', \'3ds\', \'fbx\', \'dae\', \'gltf\', \'glb\', \'obj\', \'3mf\', \'x3d\', \'dxf\', \'x\', \'ctm\', \'wrl\', \'assbin\', \'json\')', 'Depends' => '', 'Description' => 'Supported Model Output Formats'),
       'UserSCADInputArray' => array('Type' => 'array', 'Default' => 'array(\'scad\')', 'Depends' => '', 'Description' => 'Supported SCAD Input Formats'),
       'UserSCADOutputArray' => array('Type' => 'array', 'Default' => 'array(\'stl\', \'off\', \'amf\', \'3mf\', \'csg\')', 'Depends' => '', 'Description' => 'Supported SCAD Output Formats'),
@@ -2421,7 +2437,7 @@ function verifyFile($file, $UserFilename, $UserExtension, $clean, $copy, $skip) 
 // / pack is required from inside this function. Nothing outside this call can read them.
 function buildGUI($guiType, $ShowGUI, $ButtonCode) {
   // / Set variables.
-  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentInputArray, $DocumentOutputArray, $SpreadsheetInputArray, $SpreadsheetOutputArray, $ImageInputArray, $ImageOutputArray, $ModelArray, $DrawingInputArray, $DrawingOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADInputArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $DataInputArray, $DataOutputArray, $LaTeXInputArray, $LaTeXOutputArray, $TraceInputArray, $TraceOutputArray, $EmailInputArray, $EmailOutputArray, $MarkupInputArray, $MarkupOutputArray, $GraphInputArray, $GraphOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $GuiEngineFile, $GuiTaskbarFile, $EngineAnswer, $EnginePageState;
+  global $GuiFiles, $LanguageFiles, $LanguageStringsFile, $LanguageBaselineFile, $GuiHeaderFile, $GuiFooterFile, $GuiUI1File, $GuiUI2File, $CoreLoaded, $ConvertDir, $ConvertTempDir, $Token1, $Token2, $SesHash, $SesHash2, $SesHash3, $SesHash4, $Date, $Time, $TOSURL, $PPURL, $ShowFinePrint, $PDFWorkArr, $ArchiveArray, $DearchiveArray, $DocumentInputArray, $DocumentOutputArray, $SpreadsheetInputArray, $SpreadsheetOutputArray, $ImageInputArray, $ImageOutputArray, $ModelArray, $ModelInputArray, $ModelOutputArray, $DrawingInputArray, $DrawingOutputArray, $VideoInputArray, $VideoOutputArray, $SubtitleInputArray, $SubtitleOutputArray, $StreamArray, $MediaInputArray, $MediaOutputArray, $PresentationInputArray, $PresentationOutputArray, $XPSInputArray, $XPSOutputArray, $ConvertGuiCounter1, $ConsolidatedLogFileName, $Alert, $Alert1, $Alert2, $Alert3, $FCPlural, $FCPlural1, $FCPlural2, $FCPlural3, $File, $Files, $FileCount, $SpinnerStyle, $SpinnerColor, $PacmanLoc, $Allowed, $AllowUserVirusScan, $AllowUserShare, $SupportedConversionTypes, $FullURL, $LanguageDir, $FaviconPath, $DropzonePath, $DropzoneStylesheetPath, $StylesheetPath, $JsLibraryPath, $WorkflowsJsPath, $JqueryPath, $GUIDirection, $SupportedFormatCount, $GUIAlignment, $HeaderDisplayed, $UIDisplayed, $FooterDisplayed, $LanguageStringsLoaded, $GUIDisplayed, $GuiResourcesDir, $GuiImageDir, $GuiCSSDir, $GuiJSDir, $StreamOutputArray, $SCADInputArray, $SCADOutputArray, $AllowUserSelectableColor, $AllowUserSelectableGui, $AllowUserSelectableLanguage, $SupportedColors, $SupportedGuis, $SupportedLanguages, $ColorToUse, $GuiToUse, $LanguageToUse, $GuiDir, $SVGInputArray, $SVGOutputArray, $LanguageFlagFile, $LanguageVersion, $RequiredLanguageVersion, $DefaultLanguage, $BootableIsoArray, $AllowBootableIsoImage, $EbookInputArray, $EbookOutputArray, $DataInputArray, $DataOutputArray, $LaTeXInputArray, $LaTeXOutputArray, $TraceInputArray, $TraceOutputArray, $EmailInputArray, $EmailOutputArray, $MarkupInputArray, $MarkupOutputArray, $GraphInputArray, $GraphOutputArray, $EnableMemoryProtection, $NoGui, $ShowFiles, $FileListOnly, $Verbose, $AllowUserURLDownload, $GuiMaxWidth, $GuiWidth, $LogoURL, $ResolvedLogoURL, $AllowUserIdentify, $SortToUse, $FileDetails, $EnableWorkflows, $EnableWorkflowBuilder, $EnableWorkflowImportExport, $GuiEngineFile, $GuiTaskbarFile, $EngineAnswer, $EnginePageState;
   $GUIDisplayed = FALSE;
   $guiUIFile = $GuiUI1File;
   $Files = $FileDetails = $ArchiveOperationArray = $ExtractOperationArray = $MetadataOperationArray = $OfferedOperations = $OfferedConversionTypes = $OfferedScanners = array();

@@ -27,6 +27,38 @@ The authoritative list of dependencies is Resources/Engine/depends.php & Resourc
 
 --------------------
 COMMIT 11/20/2026
+v4.3.3 - Harden handling of OFF files.
+
+-v4.3.3.
+-Harden handling of OFF files.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.2 - HRConvert2 builds its own Assimp, with three importers, & uses no other, each model upload is read by one program in a folder of its own, a glTF & an OBJ are checked before Assimp opens either, a crashed converter is not asked again, & the new logos are in.
+
+-v4.3.2.
+-build-assimp.sh builds Assimp 6.0.6 from commit a79ff6bbce54d3e01186a918dc6374ed55317426, with the OBJ, FBX & glTF 2.0 importers alone & the ten patches in Documentation/Build/patches/assimp. 0001 to 0003 are pull requests #7027 & #7029, which Assimp has not released, for CVE-2026-129477 & CVE-2026-129478. 0004 to 0007 fix four reads outside a buffer HRConvert2's fuzzing found in the glTF 2.0 & X3D exporters. 0008 has assimp version print 6.0.6 where it printed 6.0. 0009 & 0010 fix a skin fault HRConvert2 found. A valid glTF whose skin names no inverse-bind matrices crashed the glTF 2.0 importer, a weight for a vertex past a mesh's end had its exporter write outside two arrays, a joint or an animation channel naming a node outside the scene crashed the exporter, & every skinned gltf & glb carried memory the exporter never filled. Ubuntu's Assimp reads seventy extensions & chooses an importer by what a file holds, so every one was reachable from an upload.
+-The manifest's Assimp entry requires 6.0.6, & names the build as its Fallback, used always. Engine. A Fallback saying 'Always' => TRUE has the package manager's copy never installed, upgraded or run, & only the own build used. New ownBuildIsAlways().
+-Engine. A sandbox profile saying 'AddressSpaceLimit' => TRUE runs its tool under prlimit, with an address space of the memory a conversion of its type is allowed, inside any scope & with per conversion limits off. The new assimp profile asks for it & requires a sandbox. A 20 byte glb had Assimp take 4 GiB. New sandboxProfileAsks().
+-Engine. The meshlab profile, which maps to root, passes bubblewrap one --uid & one --gid. bubblewrap 0.9 warned of the second pair on every MeshLab run. New sandboxAccountFlags().
+-Engine. A converter a crash stopped is not asked again. Only KILL & TERM, 137 & 143, are, which a memory ceiling, a timeout & a supervisor send. A converter that faults on a file faults on it every time, & was asked five times.
+-The Model pipeline reads each upload with one program. Assimp reads obj, fbx, gltf & glb, & MeshLab reads stl, ply, off, 3ds, dae, x3d & ctm. Where the other writes the output, it reads the model the first wrote. A format neither reads fails with the new 9005.
+-MeshLab writes stl & ply. Assimp's STL & PLY exporters run PreTransformVertices, which a crafted model makes crash, & neither is built.
+-Assimp hands MeshLab a 3ds where it handed an obj, because meshlabserver 2020.09, which Ubuntu 24.04 packages, reads no obj, & each such conversion failed with 9000 under it. A 3ds carries no vertex colours.
+-Each model conversion runs in a folder of its own beside the upload, made by workFolder.php as Data's, LaTeX's & Trace's are. A converter reads a copy of the upload & writes into an empty folder, & only the output, & a gltf's .bin, leaves it, never as a link. A converter wrote what it liked in the user's folder. New errors 9006 & 9007.
+-A gltf's .bin takes a name nothing in the user's folder holds, chosen before Assimp runs, so the gltf names the buffer placed beside it. Assimp replaced a file of that name.
+-Before Assimp opens a gltf or a glb, its buffers must be data URIs, its images data URIs or plain file names, a glb's chunks must fit its length, & its JSON may name no key twice, because PHP keeps the last & Assimp's parser the first. An OBJ's mtllib line naming a path is left out of the copy Assimp reads. Each is a warning, & Assimp never opens a refused model.
+-An Assimp that reads more than obj, fbx, gltf & glb is not used, with the new 9008, wherever it is found.
+-The manifest asks Assimp nothing about what it reads & writes. MeshLab serves 3D Models too & cannot be asked, so detection judged the Model pipeline by Assimp alone, & the own build contradicted 140 of its 176 pairs. Advisory mode warned of each such conversion & a narrowing mode refused it. The pipeline's declarations stand in every mode.
+-gltf & glb are written as glTF 2.0, & dae as Collada. Assimp wrote glTF 1.0 under both, & dae under a warning that it was unknown.
+-The Model family no longer reads x, 3mf or dxf. The own build has no importer for any, & MeshLab no reader, & the stock --Supported Model Input Formats-- & --Supported Model Formats-- drop the three. A dxf is still read as a drawing. config.php stays v4.2.8, & an existing one keeps them.
+-Both interfaces draw a model's menus from --Supported Model Input Formats-- & --Supported Model Output Formats--, as the other families' since v4.2.8, so wrl, assbin & json are offered.
+-The interfaces' banners, logos & favicons are HRConvert2's new logo, credited to Gemini & Claude Sonnet, & the README's screenshots are taken again with it.
+-ERROR_DESCRIPTIONS documents 9005, 9006, 9007 & 9008, & says what 7001, 9000 through 9004 & 34005 mean now. INSTALLATION_INSTRUCTIONS, DOCKER_BUILD_INSTRUCTIONS, DEVELOPMENT_NOTES, ABOUT_DEPENDENCIES, ABOUT_RESOURCE_RATE_LIMITING, ABOUT_PIPELINE_COMPONENTS, CREATING_CONVERSION_PIPELINES, ABOUT_CAPABILITY_DETECTION, ABOUT_NETWORK_ISOLATION & the README describe them. The Model approval record's Assimp answers & the supply chain audit's Assimp row describe the own build. ENGINE_RECONCILIATION_HRCONVERT2 records the Engine's changes.
+-The core, the Engine, the Dependency & Pipeline Cores, the manifest, app-engine-config.php, the interfaces, the shared LibreOffice module & the Document & Model pipelines are v4.3.2, & the core requires each. The language packs stay v4.3.0, & config.php v4.2.8.
+
+--------------------
+COMMIT 11/20/2026
 v4.3.1 - A converter that ran to its end is asked once, FFMPEG strips a video's, a WAV's & an AIFF's metadata, ImageMagick, Tesseract & mat2 never run without a sandbox, FFMPEG is pinned, & every error message is documented as the code writes it.
 
 -v4.3.1.

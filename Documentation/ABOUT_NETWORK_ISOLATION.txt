@@ -188,6 +188,9 @@ RequireSandbox, & the Engine never runs it without a sandbox, whatever --Require
 That is the libreoffice, calibre, inkscape, resvg, dia, meshlab & ffmpeg profiles. From v4.3.1 the
 imagemagick, tesseract & mat2 profiles set it too, though a policy or a command stops what each
 would read, because ImageMagick's & Tesseract's approval records ask for a sandbox always.
+From v4.3.2 Assimp runs under an assimp profile of its own, which sets it, where it ran under the
+meshlab profile, & it reads a copy of the upload in a folder of the conversion's own, read only,
+& writes into an empty one, so even a glTF naming a file beside it finds nothing there.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

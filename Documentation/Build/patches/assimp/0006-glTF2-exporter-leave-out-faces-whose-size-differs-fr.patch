@@ -1,0 +1,67 @@
+From 98e17b35cb35582644fd241febf5e681d2bd0107 Mon Sep 17 00:00:00 2001
+From: HRConvert2 <hrconvert2@invalid>
+Date: Fri, 20 Nov 2026 03:31:41 -0500
+Subject: [PATCH 06/10] glTF2 exporter: leave out faces whose size differs from
+ the first face's
+
+Every face was read at the first face's size, so a shorter face was read past its own indices & what was read was written into the file.
+---
+ code/AssetLib/glTF2/glTF2Exporter.cpp | 30 +++++++++++++++++++--------
+ 1 file changed, 21 insertions(+), 9 deletions(-)
+
+diff --git a/code/AssetLib/glTF2/glTF2Exporter.cpp b/code/AssetLib/glTF2/glTF2Exporter.cpp
+index c121de0d..c6b3af07 100644
+--- a/code/AssetLib/glTF2/glTF2Exporter.cpp
++++ b/code/AssetLib/glTF2/glTF2Exporter.cpp
+@@ -1322,30 +1322,42 @@ void glTF2Exporter::ExportMeshes() {
+ 
+         /*************** Vertices indices ****************/
+         if (aim->mNumFaces > 0) {
++            // The indices are written as faces of the first face's size. A face of any other size is left out,
++            // because reading it at that size reads past its own indices.
+             unsigned int nIndicesPerFace = aim->mFaces[0].mNumIndices;
+-            unsigned int nIndices = aim->mNumFaces * nIndicesPerFace;
++            size_t nIndices = static_cast<size_t>(aim->mNumFaces) * nIndicesPerFace;
+             if (aim->mNumVertices <= std::numeric_limits<unsigned short>::max()) {
+                 std::vector<IndicesShortType> indices;
+-                indices.resize(nIndices);
++                indices.reserve(nIndices);
+                 for (size_t i = 0; i < aim->mNumFaces; ++i) {
++                    if (aim->mFaces[i].mNumIndices != nIndicesPerFace) {
++                        continue;
++                    }
+                     for (size_t j = 0; j < nIndicesPerFace; ++j) {
+-                        indices[i * nIndicesPerFace + j] = IndicesShortType(aim->mFaces[i].mIndices[j]);
++                        indices.push_back(IndicesShortType(aim->mFaces[i].mIndices[j]));
+                     }
+                 }
+ 
+-                p.indices = ExportData(*mAsset, meshId, b, indices.size(), &indices[0], AttribType::SCALAR, AttribType::SCALAR,
+-                        ComponentType_UNSIGNED_SHORT, BufferViewTarget_ELEMENT_ARRAY_BUFFER);
++                if (!indices.empty()) {
++                    p.indices = ExportData(*mAsset, meshId, b, indices.size(), &indices[0], AttribType::SCALAR, AttribType::SCALAR,
++                            ComponentType_UNSIGNED_SHORT, BufferViewTarget_ELEMENT_ARRAY_BUFFER);
++                }
+             } else {
+                 std::vector<IndicesType> indices;
+-                indices.resize(nIndices);
++                indices.reserve(nIndices);
+                 for (size_t i = 0; i < aim->mNumFaces; ++i) {
++                    if (aim->mFaces[i].mNumIndices != nIndicesPerFace) {
++                        continue;
++                    }
+                     for (size_t j = 0; j < nIndicesPerFace; ++j) {
+-                        indices[i * nIndicesPerFace + j] = IndicesType(aim->mFaces[i].mIndices[j]);
++                        indices.push_back(IndicesType(aim->mFaces[i].mIndices[j]));
+                     }
+                 }
+ 
+-                p.indices = ExportData(*mAsset, meshId, b, indices.size(), &indices[0], AttribType::SCALAR, AttribType::SCALAR,
+-                        ComponentType_UNSIGNED_INT, BufferViewTarget_ELEMENT_ARRAY_BUFFER);
++                if (!indices.empty()) {
++                    p.indices = ExportData(*mAsset, meshId, b, indices.size(), &indices[0], AttribType::SCALAR, AttribType::SCALAR,
++                            ComponentType_UNSIGNED_INT, BufferViewTarget_ELEMENT_ARRAY_BUFFER);
++                }
+             }
+         }
+ 

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.2.
 // / The LibreOffice shared module, which is not a pipeline & converts nothing on its own.
 // / It holds the code the Document & OCR pipelines both need, so neither depends on the other.
 // / It is version pinned exactly as a pipeline is, by the table in Resources/Contract/app-engine-config.php.
@@ -35,7 +35,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v4.3.1';
+$SharedModuleVersion = 'v4.3.2';
 // / -----------------------------------------------------------------------------------
 
 
@@ -242,12 +242,14 @@ function removeLibreOfficeProfile($profileFolder) {
 // / -----------------------------------------------------------------------------------
 // / A function to convert one document with LibreOffice inside a sandbox.
 // / Accepts the input path, the intended output path & the target extension, in that order.
-// / Returns a completion boolean, whatever the converter printed, whether LibreOffice ran at all & whether a signal stopped it, in that order.
+// / Returns a completion boolean, whatever the converter printed, whether LibreOffice ran at all & whether something outside it stopped
+// / it, in that order.
 // / LibreOffice that never ran was refused, as a conversion no sandbox could be built for is, & would be refused again, so a caller
 // / that retries stops, from v4.2.8. A caller that reads only the first two values is answered as it was.
 // / LibreOffice that ran to its end & wrote nothing would write nothing again, because it has no filter for the pair or cannot open the
-// / document, & it exits 0 either way. One a signal stopped, as a memory ceiling, a supervisor or a crash stops it, exits 129 through
-// / 159, & may finish when asked again, so it is said to have been stopped, from v4.3.0, & a caller retries only that.
+// / document, & it exits 0 either way. One something outside it stopped, as a memory ceiling or a supervisor stops it, exits 137 or
+// / 143, & may finish when asked again, so it is said to have been stopped, from v4.3.0, & a caller retries only that. One that
+// / crashed is not, from v4.3.2, because it would crash again on the same document, as pipelineCommandWasStopped() decides.
 // / Each conversion is its own LibreOffice process inside sandboxCommand, with no network.
 // / That closes every URL handler a hostile document could reach.
 // / LibreOffice reads a copy of the input named after the output, so it writes the output's own name.

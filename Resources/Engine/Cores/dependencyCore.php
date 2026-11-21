@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.5.
+// / v4.3.2.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v4.2.5';
+$DependencyCoreVersion = 'v4.3.2';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -739,6 +739,30 @@ function ownBuildIsDeclaredHere($dependencyEntry) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to decide whether a dependency uses this application's own build always, from v4.3.2.
+// / Accepts one manifest entry, resolved for this architecture or not. Returns TRUE where this host can have the own build & the
+// / Fallback the entry resolves to says 'Always' => TRUE.
+// / Such an entry never uses the package manager's copy, whatever version it is, because what the own build leaves out is the point
+// / of it. Assimp's is built with three importers & a distribution's carries every one Assimp has.
+// / The package manager's copy is not installed for it, not upgraded & never run. It is still removed with its subsystem, because a
+// / release before the entry said Always installed it.
+// / An entry that cannot have an own build here is not one, because there is nothing it could always use. An operator who names a
+// / program by its path has chosen that program, & an architecture the entry does not support runs neither.
+// / Resolving an entry that is already resolved changes nothing, so either may be handed in.
+function ownBuildIsAlways($dependencyEntry) {
+  // / Set variables.
+  global $HostArchitecture, $EnableMemoryProtection;
+  $BuildIsAlways = $architectureIsSupported = FALSE;
+  $resolvedEntry = array();
+  $unsupportedReason = '';
+  list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
+  $BuildIsAlways = ($architectureIsSupported && ownBuildIsDeclared($resolvedEntry) && isset($resolvedEntry['Fallback']['Always']) && $resolvedEntry['Fallback']['Always'] === TRUE);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $architectureIsSupported, $unsupportedReason, $dependencyEntry);
+  return $BuildIsAlways; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to decide whether the program of this application's own build of a dependency may
 // / be run.
 // / Accepts the build's folder & the path of its program. Returns whether it may & why it may not,
@@ -871,6 +895,9 @@ function ownBuildInService($dependencyEntry) {
 // / Then the package manager's copy is used where it answers inside the window, & the warning says --update-depends removes the build.
 // / Where it does not, the entry is misconfigured & says why.
 // / resolveDependencyState() still reads the package manager's copy alone, because whether an own build is needed is about that copy.
+// / An entry whose own build is used always never falls back, from v4.3.2. ownBuildIsAlways() says which entries those are.
+// / The package manager's copy is not asked at all, so an own build that is missing is absent, one that is not root's alone or not
+// / runnable is misconfigured, & one outside the window says so, whatever the package manager's copy is.
 function resolveDependencyChoice($dependencyEntry) {
   // / Set variables.
   global $HostArchitecture, $EnableMemoryProtection;
@@ -879,9 +906,10 @@ function resolveDependencyChoice($dependencyEntry) {
   $DependencyStatus = 'absent';
   $BinaryOrigin = 'system';
   $resolvedEntry = array();
-  $architectureIsSupported = $ownIsTrusted = $ownIsPresent = $ownIsRunnable = FALSE;
+  $architectureIsSupported = $ownIsTrusted = $ownIsPresent = $ownIsRunnable = $ownIsAlways = FALSE;
   $unsupportedReason = $ownFolder = $ownPath = $ownNotice = $ownLead = $ownAdvice = $ownVersion = $ownStatus = $ownOutput = $runAccount = '';
   list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
+  $ownIsAlways = ownBuildIsAlways($resolvedEntry);
   if ($architectureIsSupported && ownBuildIsDeclared($resolvedEntry)) {
     $ownFolder = ownBuildFolder($resolvedEntry);
     $ownPath = $ownFolder.DIRECTORY_SEPARATOR.'bin'.DIRECTORY_SEPARATOR.(string)$resolvedEntry['Binary'];
@@ -898,6 +926,21 @@ function resolveDependencyChoice($dependencyEntry) {
     list ($DependencyIsPresent, $DetectedVersion, $DependencyStatus, $RawOutput) = array($ownIsPresent, $ownVersion, $ownStatus, $ownOutput);
     $BinaryPath = $ownPath;
     $BinaryOrigin = 'own'; }
+  // / An entry whose own build is used always reports the own build's state & nothing else, from v4.3.2.
+  else if ($ownIsAlways) {
+    if ($ownNotice !== '') {
+      $DependencyStatus = 'misconfigured';
+      $RawOutput = engineApplicationName().'\'s own build'.$ownLead.$ownNotice;
+      warningEntry(engineApplicationName().'\'s own build of '.(string)$resolvedEntry['Name'].$ownLead.$ownNotice.$ownAdvice.' Only the own build is used, so '.(string)$resolvedEntry['Name'].' is unavailable until then.'); }
+    else if ($ownIsTrusted) {
+      list ($DependencyIsPresent, $DetectedVersion, $DependencyStatus, $RawOutput) = array($ownIsPresent, $ownVersion, $ownStatus, $ownOutput);
+      $BinaryPath = $ownPath;
+      $BinaryOrigin = 'own';
+      if ($ownStatus === 'unknown-version') {
+        $DependencyStatus = 'misconfigured';
+        $RawOutput = engineApplicationName().'\'s own build answers with no version this release can read. '.$ownOutput; } }
+    // / Nothing is at the own build's path, so the entry is absent, & the report says the package manager's copy does not count.
+    else $RawOutput = 'Only '.engineApplicationName().'\'s own build is used, & none is installed.'; }
   else {
     list ($DependencyIsPresent, $DetectedVersion, $DependencyStatus, $RawOutput) = resolveDependencyState($dependencyEntry);
     // / The package manager's program is found exactly as it always was, by its name unless the
@@ -920,7 +963,7 @@ function resolveDependencyChoice($dependencyEntry) {
         $DependencyStatus = 'misconfigured';
         $RawOutput = engineApplicationName().'\'s own build answers with no version this release can read. '.$ownOutput; } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $architectureIsSupported, $ownIsTrusted, $ownIsPresent, $ownIsRunnable, $unsupportedReason, $ownFolder, $ownPath, $ownNotice, $ownLead, $ownAdvice, $ownVersion, $ownStatus, $ownOutput, $runAccount, $dependencyEntry);
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $architectureIsSupported, $ownIsTrusted, $ownIsPresent, $ownIsRunnable, $ownIsAlways, $unsupportedReason, $ownFolder, $ownPath, $ownNotice, $ownLead, $ownAdvice, $ownVersion, $ownStatus, $ownOutput, $runAccount, $dependencyEntry);
   return array($DependencyIsPresent, $DetectedVersion, $DependencyStatus, $RawOutput, $BinaryPath, $BinaryOrigin); }
 // / -----------------------------------------------------------------------------------
 
@@ -933,6 +976,8 @@ function resolveDependencyChoice($dependencyEntry) {
 // / A page asks this for each tool a pipeline cannot run without, on every load, so it never runs the tool. It costs a few lookups,
 // / & a shell asking command -v for a program locateDependency() finds in none of the usual folders.
 // / Whether an installed program is too old is not asked, because only running it could say.
+// / An entry whose own build is used always is installed only where that build is in service, from v4.3.2, because the package
+// / manager's copy is never run for it.
 function dependencyIsInstalled($dependencyEntry) {
   // / Set variables.
   global $HostArchitecture, $EnableMemoryProtection;
@@ -946,6 +991,7 @@ function dependencyIsInstalled($dependencyEntry) {
     list ($serviceEntry, $servicePath) = ownBuildInService($dependencyEntry);
     $programName = (string)($resolvedEntry['Binary'] ?? '');
     if ($servicePath !== '' or $programName === '') $DependencyIsInstalled = TRUE;
+    else if (ownBuildIsAlways($resolvedEntry)) $DependencyIsInstalled = FALSE;
     // / A path is looked for where the manifest puts it, & a name as locateDependency() finds it, as resolveDependencyState() looks.
     else if (strpos($programName, DIRECTORY_SEPARATOR) !== FALSE) $DependencyIsInstalled = (is_file($programName) && is_executable($programName));
     else $DependencyIsInstalled = (locateDependency($programName) !== ''); }
@@ -1241,6 +1287,8 @@ function sweepOwnBuilds($dependsManifest) {
 // / A rebuild follows when it is missing, not root's alone, outside the window, older than pinned, or not runnable by the conversion account.
 // / An own build an entry no longer declares is taken away, so dropping a Fallback detaches it everywhere.
 // / A Fallback this release cannot use is warned about, because nothing else would say why it was never built.
+// / An entry whose own build is used always never asks the package manager's copy, from v4.3.2, & never has its own build taken
+// / away for it. Its own build is built where it is missing, & built again for every reason above.
 function settleOwnBuild($dependencyEntry) {
   // / Set variables.
   global $HostArchitecture, $Lol, $EnableMemoryProtection;
@@ -1248,7 +1296,7 @@ function settleOwnBuild($dependencyEntry) {
   $SettleStatus = 'none';
   $SettleDetail = '';
   $resolvedEntry = array();
-  $architectureIsSupported = $systemIsPresent = $ownIsTrusted = $ownIsPresent = $ownIsRunnable = FALSE;
+  $architectureIsSupported = $systemIsPresent = $ownIsTrusted = $ownIsPresent = $ownIsRunnable = $buildIsAlways = FALSE;
   $unsupportedReason = $systemVersion = $systemStatus = $systemOutput = $detachDetail = $ownFolder = $ownPath = $ownNotice = $ownVersion = $ownStatus = $ownOutput = $pinnedVersion = $buildReason = $runAccount = '';
   list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
   if ($architectureIsSupported && isset($resolvedEntry['Fallback']) && !ownBuildIsDeclared($resolvedEntry)) warningEntry((string)$resolvedEntry['Name'].' declares a Fallback this release cannot use, so no own build is made. Only an apt entry naming its program by a plain name, with a VersionCommand that runs that program, may have one, & its Fallback must carry a BuildCommand.');
@@ -1258,8 +1306,9 @@ function settleOwnBuild($dependencyEntry) {
       $SettleStatus = ($BuildIsSettled ? 'removed' : 'FAILED');
       $SettleDetail = (!$BuildIsSettled ? $detachDetail : 'its manifest entry declares no Fallback here, so '.$detachDetail); } }
   else {
-    list ($systemIsPresent, $systemVersion, $systemStatus, $systemOutput) = resolveDependencyState($resolvedEntry);
-    if ($systemStatus === 'ok') {
+    $buildIsAlways = ownBuildIsAlways($resolvedEntry);
+    if (!$buildIsAlways) list ($systemIsPresent, $systemVersion, $systemStatus, $systemOutput) = resolveDependencyState($resolvedEntry);
+    if (!$buildIsAlways && $systemStatus === 'ok') {
       list ($BuildIsSettled, $detachDetail) = detachOwnCopy($resolvedEntry);
       // / The package manager's copy answers whether or not an own build could be taken away, &
       // / resolveDependencyChoice() warns while one is still there.
@@ -1279,7 +1328,8 @@ function settleOwnBuild($dependencyEntry) {
         $SettleStatus = 'unchanged';
         $SettleDetail = $ownPath.', '.(string)$resolvedEntry['Name'].' '.$ownVersion.'.'; }
       else {
-        if ($systemStatus === 'absent') $buildReason = 'the package manager installed none';
+        if ($buildIsAlways) $buildReason = 'its manifest entry uses '.engineApplicationName().'\'s own build always';
+        else if ($systemStatus === 'absent') $buildReason = 'the package manager installed none';
         // / A program that answers with no version may not be this one at all, so it is not called the package manager's, from v4.2.5.
         else if ($systemStatus === 'unknown-version') $buildReason = 'the '.(string)$resolvedEntry['Binary'].' on this host answers with no version this release can read';
         else $buildReason = 'the package manager\'s is '.($systemVersion !== '' ? $systemVersion : $systemStatus);
@@ -1287,7 +1337,7 @@ function settleOwnBuild($dependencyEntry) {
         list ($BuildIsSettled, $SettleStatus, $SettleDetail) = buildOwnCopy($resolvedEntry, $buildReason); } } }
   if ($SettleStatus !== 'none' && $SettleStatus !== 'unchanged') print('  '.str_pad((string)$resolvedEntry['Name'].' own build', 20).$SettleStatus.', '.$SettleDetail.$Lol);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $architectureIsSupported, $systemIsPresent, $ownIsTrusted, $ownIsPresent, $ownIsRunnable, $unsupportedReason, $systemVersion, $systemStatus, $systemOutput, $detachDetail, $ownFolder, $ownPath, $ownNotice, $ownVersion, $ownStatus, $ownOutput, $pinnedVersion, $buildReason, $runAccount, $dependencyEntry);
+  purgeSensitiveMemory($EnableMemoryProtection, $resolvedEntry, $architectureIsSupported, $systemIsPresent, $ownIsTrusted, $ownIsPresent, $ownIsRunnable, $buildIsAlways, $unsupportedReason, $systemVersion, $systemStatus, $systemOutput, $detachDetail, $ownFolder, $ownPath, $ownNotice, $ownVersion, $ownStatus, $ownOutput, $pinnedVersion, $buildReason, $runAccount, $dependencyEntry);
   return array($BuildIsSettled, $SettleStatus, $SettleDetail); }
 // / -----------------------------------------------------------------------------------
 
@@ -1353,11 +1403,12 @@ function checkDepends($subsystemFilter) {
     // / program a conversion runs, & says whether the entry can have one. An own build in service is
     // / asked first wherever it is used, so the package manager's copy is asked here as well, & the
     // / report says when that one has caught up, because nothing else would.
+    // / An entry whose own build is used always is not, from v4.3.2, because no version that copy has would take the own build away.
     foreach ($dependsManifest as $dependencyEntry) {
       list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput, $binaryPath, $binaryOrigin) = resolveDependencyChoice($dependencyEntry);
       list ($resolvedEntry, $architectureIsSupported, $unsupportedReason) = applyArchitectureRules($dependencyEntry, (string)$HostArchitecture);
       $systemVersion = $systemStatus = '';
-      if ($binaryOrigin === 'own' && $dependencyStatus === 'ok') list ($systemIsPresent, $systemVersion, $systemStatus, $systemOutput) = resolveDependencyState($dependencyEntry);
+      if ($binaryOrigin === 'own' && $dependencyStatus === 'ok' && !ownBuildIsAlways($resolvedEntry)) list ($systemIsPresent, $systemVersion, $systemStatus, $systemOutput) = resolveDependencyState($dependencyEntry);
       $presenceMap[(string)$dependencyEntry['Name']] = ($dependencyStatus === 'ok' or $dependencyStatus === 'unknown-version');
       // / The last value says whether the own copy is a release binary, fetched rather than built, from v4.2.5, so the report says which.
       $stateMap[(string)$dependencyEntry['Name']] = array($detectedVersion, $dependencyStatus, $rawOutput, $binaryPath, $binaryOrigin, ($architectureIsSupported && ownBuildIsDeclared($resolvedEntry)), ($systemStatus === 'ok' ? $systemVersion : ''),
@@ -1534,6 +1585,8 @@ function runInstallCommand($commandText, $displayName) {
 // / A dependency of Type source runs the build command its entry carries.
 // / A package manager's install is believed once the entry answers inside its window, & an entry
 // / declaring a Fallback builds this application's own copy where the package manager's does not.
+// / An entry whose own build is used always installs nothing through the package manager, from v4.3.2. Its own build is made, & a
+// / package that would never run is not added to the host.
 function installOneDependency($dependencyEntry, $packageManager) {
   // / Set variables.
   // / $Lol is declared because a source build reports its progress. A build takes minutes
@@ -1649,6 +1702,8 @@ function installOneDependency($dependencyEntry, $packageManager) {
     list ($commandStarted, $commandOutput, $commandExitCode) = runInstallCommand($installCommand, (string)$dependencyEntry['Name']);
     $ReturnData = implode(PHP_EOL, $commandOutput);
     if ($commandStarted && $commandExitCode === 0) $InstallSucceeded = TRUE; }
+  // / Nothing is asked of the package manager, & believePackageInstall() below makes the own build, from v4.3.2.
+  else if ((string)$dependencyEntry['Type'] === 'apt' && ownBuildIsAlways($dependencyEntry)) $ReturnData = '';
   else if ($packageManager === '') $ReturnData = 'No package manager is available on this host.';
   else {
     // / Every package name is escaped separately. A manifest is not user input, but a
@@ -1930,15 +1985,18 @@ function installDepends($authorizationToken, $subsystemFilter, $operatorConfirme
 // / This application's own build of a dependency is settled after the package manager, which takes
 // / it away where the package manager has caught up & builds it again where it is behind the
 // / version its Fallback pins.
+// / An entry whose own build is used always is not upgraded by the package manager, from v4.3.2. It counts as installed where its
+// / own build is or the package manager's copy is, because a release before it said Always installed that copy, & updating such a
+// / host builds the own copy that replaces it.
 function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed) {
   // / Set variables.
   global $RequiredDependsVersion, $Lol, $EnableMemoryProtection;
   $UpdateSucceeded = TRUE;
   $DependenciesUpdated = 0;
   $dependsManifest = $dependencyEntry = array();
-  $manifestIsAvailable = $dependencyIsPresent = $callerIsAuthorized = $sandboxBinaryIsReady = $ownBuildIsSettled = $sweepIsClean = FALSE;
+  $manifestIsAvailable = $dependencyIsPresent = $callerIsAuthorized = $sandboxBinaryIsReady = $ownBuildIsSettled = $sweepIsClean = $buildIsAlways = $systemIsPresent = FALSE;
   $itemsSwept = 0;
-  $rawOutput = $detectedVersion = $dependencyStatus = $detectedDependsVersion = $packageManager = $updateCommand = $operatorChoice = $settleStatus = $settleDetail = '';
+  $rawOutput = $detectedVersion = $dependencyStatus = $detectedDependsVersion = $packageManager = $updateCommand = $operatorChoice = $settleStatus = $settleDetail = $systemVersion = $systemStatus = $systemOutput = '';
   $commandOutput = array();
   $commandExitCode = 1;
   $callerIsAuthorized = validateDependencyAuthorization($authorizationToken);
@@ -1966,17 +2024,22 @@ function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed
           // / An extension travels with PHP & is upgraded by upgrading PHP.
           if ((string)$dependencyEntry['Type'] !== 'apt' && (string)$dependencyEntry['Type'] !== 'pip') continue;
           list ($dependencyIsPresent, $detectedVersion, $dependencyStatus, $rawOutput) = resolveDependencyChoice($dependencyEntry);
+          $buildIsAlways = ((string)$dependencyEntry['Type'] === 'apt' && ownBuildIsAlways($dependencyEntry));
+          $systemIsPresent = FALSE;
+          if ($buildIsAlways && $dependencyStatus === 'absent') list ($systemIsPresent, $systemVersion, $systemStatus, $systemOutput) = resolveDependencyState($dependencyEntry);
           // / An unsupported dependency is named & skipped rather than attempted.
           // / A package that does not exist for this architecture fails like a broken mirror, & sends an operator after a network fault.
           if ($dependencyStatus === 'unsupported') { print('  '.str_pad((string)$dependencyEntry['Name'], 20).'not available on this machine. '.(string)$rawOutput.$Lol); continue; }
-          if ($dependencyStatus === 'absent') { print('  '.str_pad((string)$dependencyEntry['Name'], 20).'not installed, skipped'.$Lol); continue; }
+          if ($dependencyStatus === 'absent' && !$systemIsPresent) { print('  '.str_pad((string)$dependencyEntry['Name'], 20).'not installed, skipped'.$Lol); continue; }
           $commandOutput = array();
           // / The command is tested before the redirect is appended. Comparing the finished
           // / string against ' 2>&1' worked only while that suffix never changed, & an empty
           // / command would have been executed the moment it did.
           if ((string)$dependencyEntry['Type'] === 'pip') $updateCommand = 'pip3 install --break-system-packages --upgrade '.escapeshellarg((string)$dependencyEntry['Package']);
           else $updateCommand = dependencyPackageCommand($packageManager, (string)$dependencyEntry['Package'], 'update');
-          if (trim($updateCommand) === '') print('  '.str_pad((string)$dependencyEntry['Name'], 20).'no package manager, skipped'.$Lol);
+          // / The package manager's copy of an entry that uses its own build always is never run, so it is left as it is.
+          if ($buildIsAlways) print('  '.str_pad((string)$dependencyEntry['Name'], 20).'uses '.engineApplicationName().'\'s own build always, so the package manager\'s copy is not upgraded'.$Lol);
+          else if (trim($updateCommand) === '') print('  '.str_pad((string)$dependencyEntry['Name'], 20).'no package manager, skipped'.$Lol);
           else {
             exec($updateCommand.' 2>&1', $commandOutput, $commandExitCode);
             if ($commandExitCode === 0) {
@@ -2000,7 +2063,7 @@ function updateDepends($authorizationToken, $subsystemFilter, $operatorConfirmed
         $sandboxBinaryIsReady = refreshSandboxBinary($dependsManifest, $subsystemFilter);
         print($Lol.'Upgraded '.$DependenciesUpdated.' dependenc(ies).'.$Lol.$Lol); } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $manifestIsAvailable, $dependencyIsPresent, $callerIsAuthorized, $sandboxBinaryIsReady, $ownBuildIsSettled, $sweepIsClean, $itemsSwept, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $updateCommand, $operatorChoice, $settleStatus, $settleDetail, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
+  purgeSensitiveMemory($EnableMemoryProtection, $dependsManifest, $dependencyEntry, $manifestIsAvailable, $dependencyIsPresent, $callerIsAuthorized, $sandboxBinaryIsReady, $ownBuildIsSettled, $sweepIsClean, $buildIsAlways, $systemIsPresent, $itemsSwept, $detectedVersion, $dependencyStatus, $detectedDependsVersion, $packageManager, $updateCommand, $operatorChoice, $settleStatus, $settleDetail, $systemVersion, $systemStatus, $systemOutput, $commandOutput, $commandExitCode, $authorizationToken, $subsystemFilter, $operatorConfirmed, $rawOutput);
   return array($UpdateSucceeded, $DependenciesUpdated); }
 // / -----------------------------------------------------------------------------------
 

@@ -250,6 +250,26 @@ It raises 15012 now, as every other OCR step does. The approval records of Poppl
 the archive tools ask for Bubblewrap always too. Their profiles stay under the two settings at v4.3.1,
 by the maintainer's decision, so a container without SYS_ADMIN still runs them unprotected where
 --Require Sandbox On Docker-- is FALSE, as it is by default.
+
+ASSIMP RUNS UNDER A PROFILE OF ITS OWN, WITH ITS ADDRESS SPACE HELD. v4.3.2.
+Assimp ran under the meshlab profile, which maps its tool to root, shows MeshLab's folders & makes
+room for Xvfb, & Assimp needs none of it. The assimp profile runs it as the Engine's own account,
+requires a sandbox, & asks for an address space limit, which prlimit sets at the memory a model
+conversion is allowed, 2048 MiB by default. A 20 byte glb whose JSON chunk claims 4 GiB had Assimp
+take 4.1 GiB & two seconds before it gave up. Under the limit it fails at once with std::bad_alloc,
+having used 14 MiB. A scope's MemoryMax would have let it use 2 GiB first, & a host where no scope
+can be made would not have stopped it. The limit holds with per conversion limits off, because the
+profile asked for it & the host did not. An address space is not the memory used, so only a profile
+measured under it asks, & the Model suite converts every model it holds under it. meshlabserver
+converted a small model under 512 MiB of address space, & reached 939 MiB without a limit, so the
+meshlab profile may ask too, once large models & PyMeshLab are measured under it.
+
+A PROFILE THAT MAPS TO ROOT NAMES ONE ACCOUNT. v4.3.2.
+From v4.3.0 the base sandbox runs its tool as the Engine's own account, 1000, & the meshlab profile
+maps to root on top of it, so bubblewrap was handed --uid & --gid twice. bubblewrap 0.9 takes the
+last of each, & prints Only the last --uid option will take effect, & the same of --gid, so every
+MeshLab conversion carried two warnings in its output. The Engine's own pair is taken away where a
+profile maps to root.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -478,6 +498,48 @@ whole was not run, because most of the libraries it builds come from hosts the m
 cannot reach. Those downloads are pinned by version & not by checksum, so a library a mirror altered
 would be built as it arrived. Their checksums can only be taken from a host that reaches them, & are
 left for a later release.
+
+ASSIMP IS HRCONVERT2'S OWN BUILD, ALWAYS, WITH THREE IMPORTERS. v4.3.2.
+Assimp chooses an importer by what a file holds where no importer claims the file's extension, &
+where two claim it & neither recognises it, so every importer a build carries is reachable from an
+upload. Ubuntu 24.04's assimp 5.3.1 reads seventy extensions & has had no security update since
+March 2024. The review for v4.3.2 chose OBJ, FBX & glTF 2.0, the three most used, & build-assimp.sh
+builds those alone, from the commit the v6.0.6 tag names, fetched by its hash as ffmpeg-build2.sh
+fetches FFMPEG's, with ten patches, each of which must apply. Two pull requests Assimp has not
+released fix CVE-2026-129477 & CVE-2026-129478, a buffer URI leaving the glTF's folder & a data
+URI's header read past its end. Fuzzing the path the Model pipeline drives, under ASan & UBSan,
+found nothing in the OBJ or FBX importer, & four reads outside a buffer in the glTF 2.0 & X3D
+exporters, which four more patches fix. Running every finding through the release build afterwards
+found a skin fault in fifty of them, which 0009 & 0010 fix. A valid glTF whose skin names no
+inverse-bind matrices crashed the glTF 2.0 importer on a null reference, & a weight for a vertex
+past a mesh's end had the glTF 2.0 exporter write outside two arrays. A skin joint or an animation
+channel naming a node outside the scene's node tree had it follow a null reference, & every skinned
+gltf & glb carried, beyond its joints, as many bytes again of memory the exporter never filled.
+0010 fixes both as well, found as the upstream reports were written. None of these is upstream yet.
+The eighth has assimp version print the patch level, because 6.0.6 printed 6.0, which the Engine
+reads as 6.0.0, below the floor. The STL & PLY exporters run PreTransformVertices, which a crafted
+model makes crash, so neither is built & MeshLab writes both. The glTF 1.0 importer is not built, &
+its exporters are, because 6.0.6 does not build without them. The build takes about a minute & a
+half on two x86 cores, & leaves a 4.19 MB program.
+An own build is otherwise retired once the package manager catches up, which is right for 7-Zip &
+wrong here, because what this build leaves out is the point of it, & Debian's sid already carries
+6.0.6 with every importer. The Fallback says 'Always' => TRUE, so the package manager's copy is
+never installed, upgraded or run, & the Model pipeline refuses an Assimp that imports more than the
+own build, with 9008, wherever it was found. No checksum is pinned, because a commit names
+everything it holds. A patch added on 6.0.6 is not built again where 6.0.6 already was, because
+Dependency Core compares versions, & ENGINE_RECONCILIATION_HRCONVERT2.txt leaves that for the
+Engine's maintainer.
+
+ASSIMP IS NOT ASKED WHAT IT READS & WRITES. v4.3.2.
+3D Models is served by Assimp & by MeshLab, & MeshLab cannot be asked, so detection judged the
+subsystem by Assimp's answer alone. Against the own build that answer contradicted 140 of the Model
+pipeline's 176 pairs, every one MeshLab reads or writes & every one to json. Advisory mode warned of
+each such conversion, & a narrowing mode refused it. A distribution's Assimp contradicted fewer, ctm
+& what only MeshLab writes, & json, which Assimp names assjson & the alias table never mapped, from
+the day detection began. The own build reads & writes what build-assimp.sh checked it for, & the
+Model pipeline refuses any other, so the manifest asks it nothing, & the pipeline's declarations
+stand in every mode. ENGINE_RECONCILIATION_HRCONVERT2.txt leaves a subsystem two tools serve for the
+Engine's maintainer.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1001,6 +1063,58 @@ took, 6024 by 4024 pixels & 25,000,192 bytes, fetched from a public repository's
 checked against the SHA-256 its pointer names, converts to jpg & to png through the Image pipeline in
 its sandbox, read by LibRaw, in about three seconds, & to jpg through the Image menu over HTTP. Its
 decoder is its extension's, ARW, as v4.3.0 made it for every camera raw file.
+
+EACH MODEL FORMAT IS READ BY ONE PROGRAM, & EACH CONVERSION IN A FOLDER OF ITS OWN. v4.3.2.
+Which program read an upload followed from the output asked for, so a dae met Assimp's Collada
+importer on the way to an obj & MeshLab's on the way to an off, & any upload Assimp read could reach
+every importer it carried. Each format is read by one program now. Assimp reads obj, fbx, gltf &
+glb, the formats its own build has importers for, & MeshLab reads stl, ply, off, 3ds, dae, x3d &
+ctm. Where one reads the upload & the other writes the output, the second reads a model the first
+wrote, which an upload shapes only through the first program's writer. x, 3mf & dxf are written &
+not read, because MeshLab has no reader for any of them & the own build no importer. A dxf is still
+read as a drawing.
+A conversion runs in a folder of its own beside the staged upload, with in, mid & out folders, & a
+converter reads a copy & writes into an empty folder, so it is never shown the user's own folder, &
+only the output leaves it, never as a link. Assimp's gltf exporter writes a .bin beside the gltf, &
+its Collada exporter a model's embedded textures, & both went into the user's folder, where a .bin
+replaced a file of its name. The .bin's name is chosen before Assimp runs now, & the textures are
+left behind with the folder.
+
+THE BRIDGE HANDS MESHLAB A 3DS. v4.3.2.
+meshlabserver 2020.09, which Ubuntu 24.04 packages, reads no obj at all. vcglib's OBJ importer stops
+at an assertion, in import_obj.h at line 640, & MeshLab aborts, so every model Assimp handed it as
+an obj failed. PyMeshLab reads one, & needs glibc 2.35 & an interpreter matching its build. An x3d
+was tried & refused, because Assimp's X3D exporter writes a name from the model into an attribute
+unescaped, so the model would decide the markup MeshLab reads. A 3ds is binary, names nothing
+MeshLab follows, & carries no vertex colours, which an stl has no place for in any case. MeshLab
+2020.09 reads no Collada Assimp writes either, & reads its own.
+
+A GLTF & AN OBJ ARE READ BEFORE ASSIMP OPENS EITHER. v4.3.2.
+The sandbox shows Assimp the copy of the upload & nothing else, so a buffer a glTF names outside
+itself, or a material library an OBJ names, is not there to read, & the checks are the convenience
+on top of it that says why a model was refused. A glTF's buffers must be data URIs, because an
+upload is one file & a buffer beside it never arrives, & its images data URIs or plain names, which
+Assimp records & does not open. A data URI's header must end within 128 bytes, as #7029 bounds it. A
+key named twice is refused, because PHP keeps the last & RapidJSON, which Assimp parses with, the
+first, so the two would read different buffers. A glb's chunks must fit its length, which refuses
+the 20 byte glb before the address space limit is needed. JSON larger than a quarter of the memory
+PHP has left is refused, because decoding it could end the request. An OBJ's lines are read as
+Assimp reads them, with a backslash joining the next line & a carriage return, a NUL or a form feed
+ending one, & an mtllib line naming a path is left out of the copy Assimp reads, with a warning,
+because the model converts without its materials. A refusal is a warning, because an upload caused
+it & it was handled.
+
+AN OFF IS READ BEFORE MESHLAB OPENS IT. v4.3.3.
+OFF is an old & loose format, & no two readers agree on all of it. HRConvert2 now reads an OFF the
+way MeshLab does before MeshLab sees it, & passes only the plainest form of the format, which nearly
+every OFF already is. A rare file leaning on its looser parts is refused, & a smaller surface for
+every other upload is worth that. The full reasoning follows in a later release. A refusal is a
+warning, because an upload caused it & it was handled.
+
+GLTF & GLB ARE GLTF 2.0, & DAE IS COLLADA. v4.3.2.
+The pipeline asked Assimp for gltf & glb by their extensions, which are Assimp's names for glTF 1.0,
+which Khronos superseded in 2017, so every gltf & glb it wrote was glTF 1.0. It asks for gltf2 &
+glb2. dae is no name of Assimp's, & Assimp said so & guessed Collada from the extension.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1647,6 +1761,16 @@ FFMPEG & 7-Zip exit with 255 after catching a signal too, & are not asked again 
 is stopped by a real time signal. A Model attempt runs one stage or two, & is made again where a
 signal stopped either, as modelAttemptStatus() says. Graph, Markup, Email & LaTeX still stop at a
 timeout, LaTeX at an error TeX logged & Data at a structure it refuses, as before.
+
+A CONVERTER A CRASH STOPPED IS NOT ASKED AGAIN EITHER. v4.3.2.
+v4.3.1 read 129 through 159 as a signal & asked a converter again after any of them. A converter
+that crashed, with SEGV, ABRT, BUS, FPE or ILL, is handed the same file again & crashes again, so a
+model that crashed Assimp was converted, & crashed it, as many times as
+--File Operation Retry Count-- allows, & meshlabserver aborted as often on every obj the bridge
+handed it. Only KILL & TERM, 137 & 143, are asked again, which a memory ceiling, a timeout & a
+supervisor send, & after which an attempt may finish. An address space limit makes a tool fail
+rather than be killed, so the attempt that reaches one is not made again either, & the next would
+reach it too.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2069,6 +2193,19 @@ two Chinese variables written inside the quotes. The sentences that count upload
 printed for many counts, which found sixteen languages whose words did not agree with the count,
 a sentence printed twice in Hindi & Italian, a Persian sentence that ended on a second verb, & a
 second copy of the opening sections in Polish.
+
+A MODEL'S MENUS ARE DRAWN FROM THE MODEL LISTS. v4.3.2.
+v4.2.8 drew every family's menus from its input & output lists but Model's, which waited for its
+importers to be audited. They were for v4.3.2, so both interfaces draw a model's menus as the other
+families' are drawn, & wrl, assbin & json, which the pipeline writes, are offered.
+
+THE INTERFACES SHOW HRCONVERT2'S OWN LOGO. v4.3.2.
+The banner, the logo & the favicons are HRConvert2's logo of the HonestRepair family's Diablo2
+generation, each at the size of the image it replaced, so no page's layout moved. The README's
+screenshots were taken again with it, by the script v4.2.1 took them with. The page signed in holds
+Delete my files above the logo now, so its side of v4-accounts is cut lower, & v4-phone, which
+no page shows, is cut to the card. v4-workflows holds no logo, & came out as it was. Gemini &
+Claude Sonnet drew the logo, & ICON_CREDITS.txt credits both.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

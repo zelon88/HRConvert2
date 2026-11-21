@@ -1450,12 +1450,14 @@ $UserSVGOutputArray = array('png', 'pdf', 'ps', 'eps', 'emf', 'wmf', 'svg', 'svg
 // /   All three are required. A config missing any of them is refused at startup & no
 // /   command adds a missing setting, so take the shipped file or add them by hand.
 // /   This one remains because other code reads the combined list.
-$UserModelArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf', 'x', 'ctm');
+$UserModelArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', 'x3d', 'ctm');
 // /  --Supported Model Input Formats--
 // /   What a user may upload for a model conversion.
 // /   Every entry must be a format the Model pipeline declares as an input, or the upload is
 // /   offered & then refused by a pipeline that never claimed it.
-$UserModelInputArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', '3mf', 'x3d', 'dxf', 'x', 'ctm');
+// /   x, 3mf & dxf are written & not read, from v4.3.2. MeshLab has no reader for any of them, &
+// /   HRConvert2's own Assimp no importer. An older config.php keeps them here, & the three should go.
+$UserModelInputArray = array('stl', 'ply', 'off', '3ds', 'fbx', 'dae', 'gltf', 'glb', 'obj', 'x3d', 'ctm');
 // /  --Supported Model Output Formats--
 // /   What a user may ask for. This list is longer than the input list & that is the whole
 // /   reason the two are separate.

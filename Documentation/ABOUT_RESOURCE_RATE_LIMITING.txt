@@ -443,6 +443,20 @@ The mechanism actually in use is reported by -v & is written to the log for each
   system      A system scope. An operator configured this deliberately. Remove it.
   none        No scope. The conversion is deprioritized with nice & has no memory ceiling.
 
+A PROFILE MAY HOLD ITS TOOL'S ADDRESS SPACE, from v4.3.2.
+A sandbox profile setting AddressSpaceLimit is given an address space ceiling too, of the memory
+its conversion type is allowed, with prlimit, which util-linux provides & any account may set on
+its own children. It goes in front of the command, inside any scope, & every process the command
+starts inherits it. It holds where no scope can be made, & where --Enable Per Conversion Limits--
+is FALSE, because the profile asked for it & the host did not. A tool that asks for more is
+refused the memory & fails at once, where a scope's MemoryMax kills it only once the memory is
+used. HRConvert2's assimp profile sets it, because a 20 byte glb made Assimp ask for 4.1 GiB, &
+under the stock Model ceiling of 2048M it fails at once having used 14 MiB.
+An address space is not the memory a tool uses. A tool that reserves far more than it uses, as a
+JVM does, would be stopped by it, so only a profile measured under it sets it. The verbose Conversion
+Scope entry names it, & says off where per conversion limits are. Where prlimit is missing a
+warning says so & the conversion runs without it, because a ceiling is never a reason to refuse.
+
 Limits are keyed by conversion type but are resolved from the sandbox profile of the tool being
 run. This is exact for LibreOffice, ImageMagick & Tesseract. It is approximate for FFMPEG, which
 serves audio, video, subtitles & streams, & which is charged at the heaviest of them.

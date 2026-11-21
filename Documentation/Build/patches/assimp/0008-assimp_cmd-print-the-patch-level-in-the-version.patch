@@ -1,0 +1,34 @@
+From 63bde2b4ad2033b902876bb38c09b468c1fc2e2b Mon Sep 17 00:00:00 2001
+From: HRConvert2 <hrconvert2@invalid>
+Date: Fri, 20 Nov 2026 04:09:06 -0500
+Subject: [PATCH 08/10] assimp_cmd: print the patch level in the version
+
+assimp version printed the major & minor version alone, so 6.0.5 & 6.0.6 answered alike. A program that installs a pinned release cannot tell from that whether the build in place is the one pinned. The library has reported its patch level through aiGetVersionPatch() all along.
+---
+ tools/assimp_cmd/code/Main.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/tools/assimp_cmd/code/Main.cpp b/tools/assimp_cmd/code/Main.cpp
+index 847b8e89..2fa4ec53 100644
+--- a/tools/assimp_cmd/code/Main.cpp
++++ b/tools/assimp_cmd/code/Main.cpp
+@@ -69,7 +69,7 @@ constexpr char AICMD_MSG_ABOUT[] =
+ " -- Commandline toolchain --\n"
+ "------------------------------------------------------ \n\n"
+ 
+-"Version %i.%i %s%s%s%s%s(GIT commit %x)\n\n";
++"Version %i.%i.%i %s%s%s%s%s(GIT commit %x)\n\n";
+ 
+ constexpr char AICMD_MSG_HELP[] =
+ "assimp <verb> <parameters>\n\n"
+@@ -110,6 +110,7 @@ int main (int argc, char* argv[]) {
+ 		printf(AICMD_MSG_ABOUT,
+ 			aiGetVersionMajor(),
+ 			aiGetVersionMinor(),
++			aiGetVersionPatch(),
+ 			(flags & ASSIMP_CFLAGS_DEBUG ?			"-debug "   : ""),
+ 			(flags & ASSIMP_CFLAGS_NOBOOST ?		"-noboost " : ""),
+ 			(flags & ASSIMP_CFLAGS_SHARED ?			"-shared "  : ""),
+-- 
+2.43.0
+

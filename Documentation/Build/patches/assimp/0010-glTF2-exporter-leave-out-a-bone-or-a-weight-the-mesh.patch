@@ -1,0 +1,150 @@
+From 0b17af8606a05b89b04b521167db0ed550448d87 Mon Sep 17 00:00:00 2001
+From: HRConvert2 <hrconvert2@invalid>
+Date: Fri, 20 Nov 2026 05:36:58 -0500
+Subject: [PATCH 10/10] glTF2 exporter: leave out a bone or a weight the mesh
+ cannot hold
+
+ExportSkin looked a bone's node up by its name & used the reference it got back whether or not a node was found, so a bone naming no node of the scene, such as a joint the scene's node tree does not hold, crashed the exporter on a null reference. Such a bone is left out of the skin, with its weights. A mesh none of whose bones is left gets no joints or weights, & a skin is made only when a bone of an exported mesh names a node, because FindSkeletonRootJoint reads the first joint of the skin.
+
+It also indexed two arrays of one entry for each vertex by the vertex each weight names, & a weight can name a vertex past the mesh's end once the steps the export runs first have rebuilt the mesh, which wrote outside both arrays. A weight for a vertex the mesh does not have is left out.
+
+ExportAnimations looked each channel's node up the same way, & the writer followed the node of a channel whose node the scene's node tree does not hold. Such a channel is left out, & an animation none of whose channels is left is not written.
+
+It also converted each joint accessor to unsigned shorts in a buffer as long as the floats, filled half of it, & copied all of it into the body buffer, so the other half, whatever the allocation held, was written into every gltf & glb with a skin. The buffer is zeroed when it is made.
+---
+ code/AssetLib/glTF2/glTF2Exporter.cpp | 54 ++++++++++++++++++++++++---
+ 1 file changed, 48 insertions(+), 6 deletions(-)
+
+diff --git a/code/AssetLib/glTF2/glTF2Exporter.cpp b/code/AssetLib/glTF2/glTF2Exporter.cpp
+index c6b3af07..52e69d23 100644
+--- a/code/AssetLib/glTF2/glTF2Exporter.cpp
++++ b/code/AssetLib/glTF2/glTF2Exporter.cpp
+@@ -1073,12 +1073,18 @@ void ExportSkin(Asset &mAsset, const aiMesh *aimesh, Ref<Mesh> &meshRef, Ref<Buf
+         allVerticesPairs.push_back(vertexPair);
+     }
+ 
++    unsigned int keptBones = 0;
+     for (unsigned int idx_bone = 0; idx_bone < aimesh->mNumBones; ++idx_bone) {
+         const aiBone *aib = aimesh->mBones[idx_bone];
+ 
+         // aib->mName   =====>  skinRef->jointNames
+         // Find the node with id = mName.
+         Ref<Node> nodeRef = mAsset.nodes.Get(aib->mName.C_Str());
++        // A bone names a node of the scene, & one that names none is left out of the skin, with its weights.
++        if (!nodeRef) {
++            continue;
++        }
++        ++keptBones;
+         nodeRef->jointName = nodeRef->name;
+ 
+         unsigned int jointNamesIndex = 0;
+@@ -1105,6 +1111,10 @@ void ExportSkin(Asset &mAsset, const aiMesh *aimesh, Ref<Mesh> &meshRef, Ref<Buf
+               ++idx_weights) {
+             unsigned int vertexId = aib->mWeights[idx_weights].mVertexId;
+             float vertWeight = aib->mWeights[idx_weights].mWeight;
++            // The arrays below hold one entry for each vertex, so a weight for a vertex the mesh does not have is left out.
++            if (vertexId >= NumVerts) {
++                continue;
++            }
+             allVerticesPairs[vertexId].push_back({jointNamesIndex, vertWeight});
+             jointsPerVertex[vertexId] += 1;
+             maxJointsPerVertex =
+@@ -1112,6 +1122,12 @@ void ExportSkin(Asset &mAsset, const aiMesh *aimesh, Ref<Mesh> &meshRef, Ref<Buf
+         }
+     } // End: for-loop mNumMeshes
+ 
++    // A mesh none of whose bones names a node is exported without joints & weights.
++    if (keptBones == 0) {
++        delete[] jointsPerVertex;
++        return;
++    }
++
+     if (!unlimitedBonesPerVertex){
+         // skinning limited only for 4 bones per vertex, default
+         maxJointsPerVertex = 4;
+@@ -1159,7 +1175,9 @@ void ExportSkin(Asset &mAsset, const aiMesh *aimesh, Ref<Mesh> &meshRef, Ref<Buf
+                 ComponentTypeSize(vertexJointAccessor->componentType);
+             size_t s_bytesLen = bytesLen * s_bytesPerComp / bytesPerComp;
+             Ref<Buffer> buf = vertexJointAccessor->bufferView->buffer;
+-            uint8_t *arrys = new uint8_t[bytesLen];
++            // The joints are written back as unsigned shorts, which fill half of these bytes, & ReplaceData_joint copies
++            // all of them into the buffer, so the rest is zeroed rather than left as whatever the allocation held.
++            uint8_t *arrys = new uint8_t[bytesLen]();
+             unsigned int i = 0;
+             for (unsigned int j = 0; j < bytesLen; j += bytesPerComp) {
+                 size_t len_p = offset + j;
+@@ -1203,12 +1221,19 @@ void glTF2Exporter::ExportMeshes() {
+ 
+     //----------------------------------------
+     // Initialize variables for the skin
++    // A skin is made only when a bone of a mesh that is exported names a node, because a skin with no joints
++    // is not valid glTF, & FindSkeletonRootJoint reads the first joint of the skin.
+     bool createSkin = false;
+-    for (unsigned int idx_mesh = 0; idx_mesh < mScene->mNumMeshes; ++idx_mesh) {
++    for (unsigned int idx_mesh = 0; idx_mesh < mScene->mNumMeshes && !createSkin; ++idx_mesh) {
+         const aiMesh *aim = mScene->mMeshes[idx_mesh];
+-        if (aim->HasBones()) {
+-            createSkin = true;
+-            break;
++        if (!aim->HasBones() || aim->mNumFaces == 0) {
++            continue;
++        }
++        for (unsigned int idx_bone = 0; idx_bone < aim->mNumBones; ++idx_bone) {
++            if (mAsset->nodes.Get(aim->mBones[idx_bone]->mName.C_Str())) {
++                createSkin = true;
++                break;
++            }
+         }
+     }
+ 
+@@ -1480,8 +1505,9 @@ void glTF2Exporter::ExportMeshes() {
+ 
+         // Find nodes that contain a mesh with bones and add "skeletons" and "skin" attributes to those nodes.
+         Ref<Node> rootNode = mAsset->nodes.Get(unsigned(0));
+-        Ref<Node> meshNode;
+         for (unsigned int meshIndex = 0; meshIndex < mAsset->meshes.Size(); ++meshIndex) {
++            // A mesh no node holds is given no skin.
++            Ref<Node> meshNode;
+             Ref<Mesh> mesh = mAsset->meshes.Get(meshIndex);
+             bool hasBones = false;
+             for (unsigned int i = 0; i < mesh->primitives.size(); ++i) {
+@@ -1495,6 +1521,9 @@ void glTF2Exporter::ExportMeshes() {
+             }
+             std::string meshID = mesh->id;
+             FindMeshNode(rootNode, meshNode, meshID);
++            if (!meshNode) {
++                continue;
++            }
+             Ref<Node> rootJoint = FindSkeletonRootJoint(skinRef);
+             if (bAddCustomizedProperty)
+                 meshNode->skeletons.push_back(rootJoint);
+@@ -1755,6 +1784,15 @@ void glTF2Exporter::ExportAnimations() {
+         // times as seconds instead of dividing by zero.
+         const float ticksPerSecond = anim->mTicksPerSecond != 0.0 ? static_cast<float>(anim->mTicksPerSecond) : 1.0f;
+ 
++        // An animation none of whose channels names a node of the scene is left out, because it would have no channels.
++        bool anyChannelIsHeld = false;
++        for (unsigned int channelIndex = 0; channelIndex < anim->mNumChannels && !anyChannelIsHeld; ++channelIndex) {
++            anyChannelIsHeld = static_cast<bool>(mAsset->nodes.Get(anim->mChannels[channelIndex]->mNodeName.C_Str()));
++        }
++        if (!anyChannelIsHeld) {
++            continue;
++        }
++
+         std::string nameAnim = "anim";
+         if (anim->mName.length > 0) {
+             nameAnim = anim->mName.C_Str();
+@@ -1769,6 +1807,10 @@ void glTF2Exporter::ExportAnimations() {
+             name = mAsset->FindUniqueID(name, "animation");
+ 
+             Ref<Node> animNode = mAsset->nodes.Get(nodeChannel->mNodeName.C_Str());
++            // A channel whose node the scene does not hold is left out, because the writer follows the node of every channel.
++            if (!animNode) {
++                continue;
++            }
+ 
+             if (nodeChannel->mNumPositionKeys > 0) {
+                 Animation::Sampler translationSampler;
+-- 
+2.43.0
+

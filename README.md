@@ -121,7 +121,7 @@ See [ABOUT_WORKFLOWS](Documentation/ABOUT_WORKFLOWS.txt) for the format, the lib
 Accounts are **off by default**, and an installation that leaves them off works exactly as it always has. Turn them on and your users can sign in and keep their files between visits.
 
 <p align="center">
-  <img src="Documentation/Screenshots/v4-accounts.png" alt="The sign-in page, and beside it a page signed in, with the user's name at the end of the bar opening a panel that offers Sign out" width="100%"/>
+  <img src="Documentation/Screenshots/v4-accounts.png" alt="The sign-in page, and beside it a page signed in, with the user's name at the end of the bar opening a panel that offers Sign out and Delete my files" width="100%"/>
 </p>
 
 - **🍪 No cookie, ever.** A signed-in page keeps a short-lived key in its own memory and the tab's `window.name`, never in a cookie, site storage, a URL or a log. The page trades it for a new one every few seconds. A stolen copy soon expires, and since each key can be traded only once, trading it signs out both the thief and the user. Close the tab and you are signed out.
@@ -191,7 +191,7 @@ sudo php convertCore.php -fp    # Repair permissions & the web server setup
 | **E-Books** | epub, mobi, azw, azw3, azw4, htmlz |
 | **Archives** | zip, rar, 7z, tar, gz, bz2, xz, cab, arj, deb, rpm |
 | **Extract** | Every file an archive holds, placed beside it, within the size & count limits you set |
-| **3D Models** | obj, stl, ply, collada, and OpenSCAD sources |
+| **3D Models** | obj, fbx, gltf, glb, stl, ply, off, 3ds, collada, x3d & ctm, into those & 3mf, x, dxf & wrl, and OpenSCAD sources |
 | **Drawings & Vectors** | dxf, dia, vdx, svg, ai, emf, CorelDRAW cdr, Visio vsd |
 | **Tracing** | Trace a logo, a signature or a scanned drawing into svg, dxf, pdf or eps outlines |
 | **Data Files** | json, yaml, toml, xml & csv, into one another |
@@ -216,8 +216,8 @@ sudo php convertCore.php -fp    # Repair permissions & the web server setup
 HRConvert2 assumes every tool that parses a hostile file can be exploited. So the sandbox is the security boundary, and everything else is a layer on top of it.
 
 - **🧱 Sandboxed converters.** ImageMagick, FFmpeg, LibreOffice, Inkscape, OpenSCAD and every other converter run inside bubblewrap. Each sees only its own input and output, with no network at all.
-- **🧼 Hostile inputs disarmed.** OpenSCAD sources are rewritten before they render. Archives are listed before they are opened & measured while they are extracted, & their links are pruned before they reach anything. Stream URLs are inspected before FFmpeg sees them. Fetched files are checked before they are placed.
-- **📋 An audited supply chain.** Every dependency is declared in one manifest with minimum and maximum versions. Every pipeline carries an approval record for the dependencies it uses, and approvals expire every year.
+- **🧼 Hostile inputs disarmed.** OpenSCAD sources are rewritten before they render. Archives are listed before they are opened & measured while they are extracted, & their links are pruned before they reach anything. Stream URLs are inspected before FFmpeg sees them. A glTF's buffers & an OBJ's material libraries are checked before Assimp opens either, & a model is converted in a folder of its own. Fetched files are checked before they are placed.
+- **📋 An audited supply chain.** Every dependency is declared in one manifest with minimum and maximum versions. Every pipeline carries an approval record for the dependencies it uses, and approvals expire every year. Where a distribution's package is too old, or carries more than HRConvert2 should run, HRConvert2 builds its own, pinned by commit or checksum: Assimp with three reviewed importers, 7-Zip, ImageMagick and FFmpeg.
 - **🏆 Reports are welcome and credited.** Every advisory is accepted, and every reporter is credited publicly once the fix ships. Two were credited in v4.0.0. See the [Security Policy](Documentation/SECURITY.md).
 - **🔍 Checked by machine as well as by hand.** Two independent linters, in Python and Bash, check every change, and each check is proven against faults planted on purpose. Every error the application can raise is documented with its cause and its fix.
 - **🔑 No guessable secrets.** Sessions derive from a per-install secret, and updates need shell access.

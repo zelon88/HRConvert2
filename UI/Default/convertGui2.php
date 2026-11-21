@@ -616,7 +616,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
            onclick='toggle_visibility("svgOptionsDiv<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgButton<?php echo $ConvertGuiCounter1; ?>"); toggle_visibility("svgXButton<?php echo $ConvertGuiCounter1; ?>");' title='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>' alt='<?php echo htmlspecialchars($Gui2Text15, ENT_QUOTES, 'UTF-8'); ?>'/>
           <?php } 
 
-          if (in_array($extension, $ModelArray) && in_array('Model', $OfferedConversionTypes)) { ?>
+          if (in_array($extension, $ModelInputArray) && in_array('Model', $OfferedConversionTypes)) { ?>
           <a style='float:<?php echo $GUIAlignment; ?>;'>&nbsp;|&nbsp;</a>
 
           <img id='modelButton<?php echo $ConvertGuiCounter1; ?>' name='modelButton<?php echo $ConvertGuiCounter1; ?>' src='<?php echo $GuiImageDir; ?>convert.png' style='float:<?php echo $GUIAlignment; ?>; display:block;' 
@@ -1150,7 +1150,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
         </div>
         <?php } 
 
-        if (in_array($extension, $ModelArray) && in_array('Model', $OfferedConversionTypes)) {
+        if (in_array($extension, $ModelInputArray) && in_array('Model', $OfferedConversionTypes)) {
         ?>
         <div id='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' name='modelOptionsDiv<?php echo $ConvertGuiCounter1; ?>' class='file-operation-panel' style="max-width:750px; display:none;">
           <p style="max-width:500px;"></p>
@@ -1158,7 +1158,7 @@ box-shadow: 1px 1px 5px 5px rgba(0,0,0,.3);'>
           <p><?php echo $Gui2Text17; ?><input type="text" id='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' name='usermodelfilename<?php echo $ConvertGuiCounter1; ?>' value='<?php echo htmlspecialchars(str_replace('.', '', $FileNoExt), ENT_QUOTES, 'UTF-8'); ?>'>
           <select id='modelextension<?php echo $ConvertGuiCounter1; ?>' name='modelextension<?php echo $ConvertGuiCounter1; ?>'>
             <option value="3ds"><?php echo $Gui2Text18; ?></option>
-            <?php foreach ($ModelArray as $gui2ModArr) { ?>
+            <?php foreach ($ModelOutputArray as $gui2ModArr) { ?>
             <option value="<?php echo $gui2ModArr; ?>"><?php echo $gui2ModArr; ?></option>
             <?php } ?>
           </select></p>

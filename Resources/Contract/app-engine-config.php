@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.3.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -117,12 +117,12 @@ $EngineAcceptedPipelines = array(
   'Stream' => 'v4.3.0',
   'Scad' => 'v4.2.1',
   'OCR' => 'v4.3.1',
-  'Document' => 'v4.3.1',
+  'Document' => 'v4.3.2',
   'Subtitle' => 'v4.3.1',
   'SVG' => 'v4.3.1',
   'Drawing' => 'v4.3.1',
   'Image' => 'v4.3.1',
-  'Model' => 'v4.3.1',
+  'Model' => 'v4.3.3',
   'Video' => 'v4.3.1',
   'Ebook' => 'v4.3.1',
   'Audio' => 'v4.3.1',
@@ -160,7 +160,7 @@ $EngineAcceptedPipelines = array(
 // / ffmpegDemuxers.php names the demuxers FFMPEG & FFprobe may read with, & serves the Video, Audio, Subtitle, Stream & Identify pipelines alike, from v4.3.0, & the Metadata pipeline from v4.3.1.
 // / imageMagickDecoders.php names the decoder ImageMagick reads an image with, & serves the Image & OCR pipelines alike, from v4.3.0.
 $EngineAcceptedSharedModules = array(
-  'libreOffice.php' => 'v4.3.1',
+  'libreOffice.php' => 'v4.3.2',
   'archiveExtraction.php' => 'v4.1.7',
   'workFolder.php' => 'v4.2.5',
   'ffmpegDemuxers.php' => 'v4.3.1',

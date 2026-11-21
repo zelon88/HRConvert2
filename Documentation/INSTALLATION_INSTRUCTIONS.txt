@@ -336,6 +336,19 @@ FFMPEG is present, so no dependency command builds it again. Run the script as r
 release to build the pinned commit:
   sudo bash /opt/HRConvert2/Documentation/Build/ffmpeg-build.sh
 
+RUN  'sudo php convertCore.php --setup --install-depends --subsystem="3D Models"'  ONCE AFTER
+UNPACKING THE v4.3.2 DROP IN. From v4.3.2 Assimp is HRConvert2's own build alone, 6.0.6 with the OBJ,
+FBX & glTF 2.0 importers & ten patches, & the package manager's assimp-utils is never run, so
+models are not offered, & -v says Assimp is absent, until it has run. It installs a compiler, CMake &
+git where there are none, fetches Assimp's pinned commit from GitHub, & takes about a minute & a half
+on two x86 cores, & far longer on a Raspberry Pi. -v names the own build once it is in service.
+assimp-utils is left installed & is never used, & --uninstall-depends removes it with the subsystem.
+The drop in adds no setting, & config.php stays v4.2.8. x, 3mf & dxf are written & no longer read
+as models, & an existing config.php keeps the three in --Supported Model Formats-- & in
+--Supported Model Input Formats-- until they are taken out by hand, & a model in one fails until
+then. A dxf is still read as a drawing. Both interfaces now offer the whole of
+--Supported Model Output Formats--, so wrl, assbin & json appear in the Model menu.
+
 RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.2.8 DROP IN, &
 BEFORE -fp. v4.2.8 splits the document & spreadsheet lists, $UserDocumentArray &
 $UserSpreadsheetArray, into an input list & an output list each,

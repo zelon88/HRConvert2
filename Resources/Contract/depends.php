@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File information ...
-// / v4.2.8.
+// / v4.3.2.
 // / HRConvert2 Dependency Manifest, the application's half.
 // / This file is data. It defines nothing & does nothing.
 // / The Engine's verifyDependsManifest() reads it. Nothing else may.
@@ -61,6 +61,10 @@
 // / the package manager's copy again after the package manager has run, & takes the own copy
 // / away once that one answers inside the window, so an entry falls back only for as long as
 // / the package manager is behind. An entry with no Fallback is unchanged.
+// / A Fallback saying 'Always' => TRUE is the only copy the entry uses, from v4.3.2. The package
+// / manager's is never run for it, never installed & never upgraded, whatever version it is, &
+// / the own copy is built wherever it is missing. It is for a build whose point is what it
+// / leaves out, which no distribution's package can promise.
 // /
 // / A bundled Type is a microservice this project distributes rather than a package this
 // / project installs. It is never installed, never updated & never removed.
@@ -118,7 +122,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-2: Thi
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependsVersion = 'v4.2.8';
+$DependsVersion = 'v4.3.2';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -301,25 +305,26 @@ $DependsManifest = array(
     'MinimumVersion' => '2021.01', 'VersionCommand' => 'openscad --version', 'VersionPattern' => '/OpenSCAD version (\d+\.\d+)/',
     'Required' => FALSE, 'Subsystem' => 'SCAD', 'Requires' => array('Bubblewrap'),
     'License' => 'GPL-2.0', 'Source' => 'https://openscad.org', 'Purpose' => 'Renders parametric models.'),
+  // / ASSIMP IS HRCONVERT2'S OWN BUILD, ALWAYS, from v4.3.2. A distribution's Assimp carries every importer Assimp has & chooses one
+  // / by what a file holds where no importer claims its extension, so each of its seventy importers is reachable from an upload.
+  // / build-assimp.sh builds 6.0.6 with three importers, OBJ, FBX & glTF 2.0, the exporters the Model pipeline asks for & the ten
+  // / patches beside it, hardened, into this application's own build folder. 'Always' => TRUE keeps the package manager's Assimp
+  // / from ever being run, whatever version it is, so assimp-utils is not installed. One a release before v4.3.2 installed is left
+  // / where it is & never run, & --uninstall-depends removes it with the subsystem.
+  // / The program reports 6.0.6 from patch 0008, so the floor & the pin are one version & a pin moved to another release builds again.
+  // / The source is fetched by its commit, which names everything it holds, so the Sha256 is empty.
+  // / The Model pipeline also refuses an Assimp whose listext names a format beyond the three, for an operator who names another
+  // / program in Binary.
   array('Name' => 'Assimp', 'Binary' => 'assimp', 'Type' => 'apt', 'Package' => 'assimp-utils',
-    'MinimumVersion' => '5.0', 'VersionCommand' => 'assimp version', 'VersionPattern' => '/[Vv]ersion\s+v?(\d+\.\d+)/',
-    // / Assimp answers two separate questions with two separate commands, so the read set
-    // / is detected here & the write set is detected by the entry below. Neither command
-    // / reports flags, so each is a plain list & each declares its own direction.
-    // / listext prints one line of *.ext;*.ext, so the pattern strips the glob.
-    'CapabilityCommand' => 'assimp listext', 'CapabilityStyle' => 'list',
-    'CapabilityDirection' => 'read', 'CapabilityPattern' => '/;/',
-    // / listexport prints export identifiers, one per line, & seven of the twenty two are
-    // / not the extension a user types. collada is dae, gltf2 is gltf, glb2 is glb, stlb is
-    // / stl, plyb is ply, fbxa is fbx & objnomtl is obj.
-    // / Those last four are variants rather than names for the same thing. This table says
-    // / what Assimp is able to write. It does not say what the pipeline should ask for, &
-    // / the Model pipeline still names objnomtl deliberately to avoid the material sidecar
-    // / the plain obj exporter leaves beside the model.
-    'CapabilityWriteCommand' => 'assimp listexport', 'CapabilityWriteStyle' => 'list',
-    'CapabilityWritePattern' => '/\R/',
-    'CapabilityAliases' => array('collada' => 'dae', 'gltf2' => 'gltf', 'glb2' => 'glb',
-      'stlb' => 'stl', 'plyb' => 'ply', 'fbxa' => 'fbx', 'objnomtl' => 'obj', 'stp' => 'step'),
+    'MinimumVersion' => '6.0.6', 'VersionCommand' => 'assimp version', 'VersionPattern' => '/[Vv]ersion\s+v?(\d+\.\d+(?:\.\d+)?)/',
+    'Fallback' => array('Version' => '6.0.6', 'Sha256' => '', 'Always' => TRUE,
+      'BuildCommand' => 'bash '.escapeshellarg($InstLoc.DIRECTORY_SEPARATOR.'Documentation'.DIRECTORY_SEPARATOR.'Build'.DIRECTORY_SEPARATOR.'build-assimp.sh'),
+      'Source' => 'https://github.com/assimp/assimp', 'License' => 'BSD-3-Clause'),
+    // / Assimp is asked nothing about what it reads & writes, from v4.3.2. MeshLab serves 3D Models as well & cannot be asked, so
+    // / detection judged the subsystem by Assimp's answer alone, & against the own build that answer contradicted 140 of the Model
+    // / pipeline's 176 pairs, every one MeshLab reads or writes & every one to json. Advisory mode warned of each such conversion &
+    // / a narrowing mode refused it. The own build reads & writes what build-assimp.sh checked it for before it was installed, & the Model pipeline
+    // / refuses any other, so the pipeline's declarations stand in every mode. Until v4.3.2 this entry asked listext & listexport.
     'Required' => FALSE, 'Subsystem' => '3D Models', 'Requires' => array('Bubblewrap'),
     'License' => 'BSD-3-Clause', 'Source' => 'https://github.com/assimp/assimp', 'Purpose' => 'Converts between 3D model formats.'),
   // / PyMeshLab is BUNDLED at Resources/PyMeshLab & is imported by inserting that directory

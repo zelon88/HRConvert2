@@ -230,6 +230,8 @@ as follows.
                 ready to run rather than building one, & --install-depends then says it is
                 fetching rather than building, as --check-depends says it would. Left out for a
                 build.
+  Always        TRUE, from v4.3.2, where the own copy is the only copy the entry ever uses,
+                whatever the package manager's is. See An Own Copy Used Always, below.
 
 A RELEASE BINARY IS FETCHED, CHECKED & INSTALLED BY ONE SCRIPT, from v4.2.5.
 Documentation/Build/hrconvert2-release-fetch.sh is handed the program's name, the https address
@@ -314,6 +316,37 @@ A host that cannot reach GitHub or 7-zip.org may hand the 7-Zip source archive o
 A FALLBACK IS DETACHABLE. Once the distributions this application supports carry a version
 inside the window, the Fallback is taken out of the manifest, & the next --update-depends takes
 every own copy it built away. Nothing else changes.
+
+AN OWN COPY USED ALWAYS, from v4.3.2.
+A Fallback saying 'Always' => TRUE is for a build whose point is what it leaves out, which no
+distribution's package can promise at any version. HRConvert2's Assimp is one. Assimp chooses an
+importer by what a file holds where no importer claims its extension, so every importer it carries
+is reachable from an upload. A distribution's carries seventy, & build-assimp.sh builds three.
+
+  'Fallback' => array('Version' => '6.0.6', 'Sha256' => '', 'Always' => TRUE,
+    'BuildCommand' => 'bash '.escapeshellarg($InstLoc.'/Documentation/Build/build-assimp.sh'),
+    'Source' => 'https://github.com/assimp/assimp', 'License' => 'BSD-3-Clause'),
+
+Such an entry never uses the package manager's copy. Wherever the entry is used, the own copy is
+the program, & where it is missing the entry is absent, & --check-depends says only the own copy
+is used. One that is not root's alone, or that the conversion account cannot run, is
+misconfigured, & the conversion is refused rather than handed the package manager's copy.
+  --install-depends    Asks the package manager for nothing, & builds the own copy where it is
+                       missing or outside the window.
+  --update-depends     Upgrades nothing through the package manager for it, & builds the own copy
+                       where it is missing & the package manager's copy is installed, because a
+                       release before the entry said Always installed that copy, & where it is
+                       behind the Version pinned. It never takes the own copy away.
+  --uninstall-depends  Takes the own copy away, & removes the package with its subsystem as
+                       before, because an older release installed it.
+The Sha256 is empty for Assimp, because build-assimp.sh fetches its source by commit & compares
+what it fetched with the commit pinned. A Fallback whose program reports only part of its version
+cannot be told from an older build, so Assimp's build carries a patch that makes it report 6.0.6
+rather than 6.0, & its floor & pin are 6.0.6.
+A host that cannot reach GitHub may hand over a clone of Assimp's repository by its path, & the
+commit is fetched from it & checked exactly as from GitHub.
+
+  sudo DEPENDENCY_SOURCE=/root/assimp php convertCore.php --setup --install-depends --subsystem="3D Models"
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

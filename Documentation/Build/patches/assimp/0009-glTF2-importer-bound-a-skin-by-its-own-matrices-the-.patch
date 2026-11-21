@@ -1,0 +1,79 @@
+From 62aea91b2ca4f1237cee08654db8d0ca3fc5cc66 Mon Sep 17 00:00:00 2001
+From: HRConvert2 <hrconvert2@invalid>
+Date: Fri, 20 Nov 2026 05:36:58 -0500
+Subject: [PATCH 09/10] glTF2 importer: bound a skin by its own matrices & the
+ mesh's vertices
+
+A skin's inverseBindMatrices is optional, & each matrix it leaves out is the identity, but the importer used the accessor whether or not the skin named one, so a valid skinned glTF without it crashed the importer on a null reference. Skin::Read already refuses an accessor that is not a MAT4 of floats or that holds fewer matrices than the skin has joints, & the importer now asks the same where it reads them, so it does not rest on that check alone.
+
+The JOINTS_n & WEIGHTS_n accessors were never compared with the mesh's vertex count, so a weight could name a vertex the mesh does not have. JoinIdenticalVertices then read past its own table of the mesh's vertices, & the glTF 2.0 exporter wrote past two arrays of one entry for each vertex. A weight for a vertex the mesh does not have is left out.
+---
+ code/AssetLib/glTF2/glTF2Importer.cpp | 23 ++++++++++++++++++-----
+ 1 file changed, 18 insertions(+), 5 deletions(-)
+
+diff --git a/code/AssetLib/glTF2/glTF2Importer.cpp b/code/AssetLib/glTF2/glTF2Importer.cpp
+index c9a02bd1..cf58dc27 100644
+--- a/code/AssetLib/glTF2/glTF2Importer.cpp
++++ b/code/AssetLib/glTF2/glTF2Importer.cpp
+@@ -1105,7 +1105,7 @@ static void GetNodeTransform(aiMatrix4x4 &matrix, const glTF2::Node &node) {
+     }
+ }
+ 
+-static void BuildVertexWeightMapping(Mesh::Primitive &primitive, std::vector<std::vector<aiVertexWeight>> &map, std::vector<unsigned int>* vertexRemappingTablePtr) {
++static void BuildVertexWeightMapping(Mesh::Primitive &primitive, std::vector<std::vector<aiVertexWeight>> &map, std::vector<unsigned int>* vertexRemappingTablePtr, size_t meshVertexCount) {
+     Mesh::Primitive::Attributes &attr = primitive.attributes;
+     if (attr.weight.empty() || attr.joint.empty()) {
+         return;
+@@ -1231,7 +1231,9 @@ static void BuildVertexWeightMapping(Mesh::Primitive &primitive, std::vector<std
+             for (int j = 0; j < 4; ++j) {
+                 const unsigned int bone = indices[w][i].values[j];
+                 const float weight = weights[w][i].values[j];
+-                if (weight > 0 && bone < map.size()) {
++                // A weight for a vertex the mesh does not have is left out, because every
++                // exporter indexes its own per vertex arrays by the vertex a weight names.
++                if (weight > 0 && bone < map.size() && i < meshVertexCount) {
+                     map[bone].reserve(8);
+                     map[bone].emplace_back(static_cast<unsigned int>(i), weight);
+                 }
+@@ -1321,7 +1323,7 @@ aiNode *glTF2Importer::ImportNode(glTF2::Asset &r, glTF2::Ref<glTF2::Node> &ptr)
+                     std::vector<unsigned int> *vertexRemappingTablePtr = mVertexRemappingTables[aiMeshIdx].empty() ? nullptr : &mVertexRemappingTables[aiMeshIdx];
+ 
+                     std::vector<std::vector<aiVertexWeight>> weighting(numBones);
+-                    BuildVertexWeightMapping(node.meshes[0]->primitives[primitiveNo], weighting, vertexRemappingTablePtr);
++                    BuildVertexWeightMapping(node.meshes[0]->primitives[primitiveNo], weighting, vertexRemappingTablePtr, mesh->mNumVertices);
+ 
+                     mesh->mNumBones = static_cast<unsigned int>(numBones);
+                     mesh->mBones = new aiBone *[mesh->mNumBones];
+@@ -1337,8 +1339,15 @@ aiNode *glTF2Importer::ImportNode(glTF2::Asset &r, glTF2::Ref<glTF2::Node> &ptr)
+                     // we then need to reconvert the data back into the vertex-to-bone
+                     // mapping which makes things doubly-slow.
+ 
++                    // inverseBindMatrices is optional, & each matrix it leaves out is the identity.
++                    // Only a MAT4 of floats is read, because a smaller element would leave the
++                    // rest of each matrix as whatever the allocation held.
+                     mat4 *pbindMatrices = nullptr;
+-                    node.skin->inverseBindMatrices->ExtractData(pbindMatrices, nullptr);
++                    size_t bindMatrixCount = 0;
++                    if (node.skin->inverseBindMatrices && node.skin->inverseBindMatrices->type == AttribType::MAT4 &&
++                            node.skin->inverseBindMatrices->componentType == ComponentType_FLOAT) {
++                        bindMatrixCount = node.skin->inverseBindMatrices->ExtractData(pbindMatrices, nullptr);
++                    }
+ 
+                     for (uint32_t i = 0; i < numBones; ++i) {
+                         const std::vector<aiVertexWeight> &weights = weighting[i];
+@@ -1355,7 +1364,11 @@ aiNode *glTF2Importer::ImportNode(glTF2::Asset &r, glTF2::Ref<glTF2::Node> &ptr)
+                             bone->mName = (kDefaultName + postfix);
+                         }
+                         GetNodeTransform(bone->mOffsetMatrix, *joint);
+-                        CopyValue(pbindMatrices[i], bone->mOffsetMatrix);
++                        if (i < bindMatrixCount) {
++                            CopyValue(pbindMatrices[i], bone->mOffsetMatrix);
++                        } else {
++                            bone->mOffsetMatrix = aiMatrix4x4();
++                        }
+                         bone->mNumWeights = static_cast<uint32_t>(weights.size());
+ 
+                         if (bone->mNumWeights > 0) {
+-- 
+2.43.0
+

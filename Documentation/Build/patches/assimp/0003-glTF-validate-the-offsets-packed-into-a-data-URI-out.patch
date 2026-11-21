@@ -1,0 +1,126 @@
+From 7652e87fe4556003357019616b217ee25ea879bc Mon Sep 17 00:00:00 2001
+From: azizelbelaychy <aziz.elbelaychy@ostorlab.dev>
+Date: Thu, 29 Oct 2026 14:42:02 +0000
+Subject: [PATCH 03/10] glTF: validate the offsets packed into a data URI
+ (out-of-bounds read)
+
+ParseDataURI() stores the offsets of the media type, the charset, the
+base64 flag and the data in single bytes of the uri string itself, as
+signed chars. A data offset above 127 wrapped around to a negative value,
+so out.data pointed in front of the string and out.dataLength was
+inflated by the wrap. A buffer whose byteLength equals that length
+passes the check in Buffer::Read() and the memcpy() reads out of bounds.
+
+The byte 0x10 marks a uri as already parsed, and what is stored behind it
+was trusted. A uri that merely starts with that byte (\u0010 in the JSON)
+skips the "data:" check and supplies the offsets itself, which gives the
+same out-of-bounds read without any wraparound.
+
+Compute the offsets as size_t, reject data URIs whose header does not fit
+into the packed bytes, read the packed offsets back as unsigned and
+validate them against the length of the uri on every call.
+
+Confirmed with AddressSanitizer (heap-buffer-overflow READ) for both
+variants. The new tests fail without the change and pass with it.
+
+Fixes #6927
+---
+ code/AssetLib/glTFCommon/glTFCommon.cpp | 55 ++++++++++++++++++-------
+ 1 file changed, 40 insertions(+), 15 deletions(-)
+
+diff --git a/code/AssetLib/glTFCommon/glTFCommon.cpp b/code/AssetLib/glTFCommon/glTFCommon.cpp
+index 3add6853..297d605c 100644
+--- a/code/AssetLib/glTFCommon/glTFCommon.cpp
++++ b/code/AssetLib/glTFCommon/glTFCommon.cpp
+@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include "AssetLib/glTFCommon/glTFCommon.h"
+ 
+ #include <cstddef>
++#include <limits>
+ 
+ using namespace glTFCommon::Util;
+ 
+@@ -63,12 +64,11 @@ bool ParseDataURI(const char *const_uri, size_t uriLen, DataURI &out) {
+ 
+     char *uri = const_cast<char *>(const_uri);
+     if (uri[0] != 0x10) {
+-        uri[0] = 0x10;
+-        uri[1] = uri[2] = uri[3] = uri[4] = 0;
++        size_t mediaTypeOffset = 0, charsetOffset = 0, base64Offset = 0, dataOffset = 0;
+ 
+         size_t i = 5, j;
+         if (uri[i] != ';' && uri[i] != ',') { // has media type?
+-            uri[1] = char(i);
++            mediaTypeOffset = i;
+             for (;i < uriLen && uri[i] != ';' && uri[i] != ','; ++i) {
+                 // nothing to do!
+             }
+@@ -80,31 +80,56 @@ bool ParseDataURI(const char *const_uri, size_t uriLen, DataURI &out) {
+             }
+ 
+             if (strncmp(uri + j, "charset=", 8) == 0) {
+-                uri[2] = char(j + 8);
++                charsetOffset = j + 8;
+             } else if (strncmp(uri + j, "base64", 6) == 0) {
+-                uri[3] = char(j);
++                base64Offset = j;
+             }
+         }
+         if (i < uriLen) {
+             uri[i++] = '\0';
+-            uri[4] = char(i);
++            dataOffset = i;
+         } else {
+-            uri[1] = uri[2] = uri[3] = 0;
+-            uri[4] = 5;
++            mediaTypeOffset = charsetOffset = base64Offset = 0;
++            dataOffset = 5;
++        }
++
++        // The offsets are packed into single bytes of the uri itself, so they have to fit into
++        // one. The data offset is the largest of them.
++        if (dataOffset > std::numeric_limits<unsigned char>::max()) {
++            throw DeadlyImportError("GLTF: the header of a data URI is too long");
+         }
++
++        uri[0] = 0x10;
++        uri[1] = static_cast<char>(mediaTypeOffset);
++        uri[2] = static_cast<char>(charsetOffset);
++        uri[3] = static_cast<char>(base64Offset);
++        uri[4] = static_cast<char>(dataOffset);
++    }
++
++    // The packed offsets are unsigned bytes. A uri that merely starts with the marker byte was
++    // never parsed by this function, so what is stored in it must be validated before it is used.
++    if (uriLen < 5) {
++        return false;
++    }
++    const size_t mediaTypeOffset = static_cast<unsigned char>(uri[1]);
++    const size_t charsetOffset = static_cast<unsigned char>(uri[2]);
++    const size_t base64Offset = static_cast<unsigned char>(uri[3]);
++    const size_t dataOffset = static_cast<unsigned char>(uri[4]);
++    if (mediaTypeOffset > uriLen || charsetOffset > uriLen || base64Offset > uriLen || dataOffset > uriLen) {
++        throw DeadlyImportError("GLTF: malformed data URI");
+     }
+ 
+-    if (uri[1] != 0) {
+-        out.mediaType = uri + uri[1];
++    if (mediaTypeOffset != 0) {
++        out.mediaType = uri + mediaTypeOffset;
+     }
+-    if (uri[2] != 0) {
+-        out.charset = uri + uri[2];
++    if (charsetOffset != 0) {
++        out.charset = uri + charsetOffset;
+     }
+-    if (uri[3] != 0) {
++    if (base64Offset != 0) {
+         out.base64 = true;
+     }
+-    out.data = uri + uri[4];
+-    out.dataLength = (uri + uriLen) - out.data;
++    out.data = uri + dataOffset;
++    out.dataLength = uriLen - dataOffset;
+ 
+     return true;
+ }

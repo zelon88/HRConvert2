@@ -397,9 +397,12 @@ Contracts 1 through 3 are unchanged & still live in CREATING_CONVERSION_PIPELINE
         makes --File Operation Retry Count-- attempts at most, & always one. Until v4.0.6 most
         made one attempt more than that & raised their error after the attempt that used it up,
         whether that attempt worked or not. From v4.3.1 each asks pipelineRetryIsDue(), which
-        asks pipelineAttemptIsDue() only where a signal stopped the last attempt, so a converter
-        that ran to its end & left nothing is asked once. runPipelineCommand() runs a command &
-        returns its exit status, & pipelineCommandWasStopped() says whether a signal ended it.
+        asks pipelineAttemptIsDue() only where something outside the converter stopped the last
+        attempt, so a converter that ran to its end & left nothing is asked once. runPipelineCommand()
+        runs a command & returns its exit status, & pipelineCommandWasStopped() says whether KILL
+        or TERM ended it, which a memory ceiling or a supervisor sends. From v4.3.2 a converter that
+        crashed, with SEGV, ABRT, BUS, FPE or ILL, is not asked again either, because it would
+        crash again on the same file. Until then any signal from 1 to 31 counted.
 
   5. A NON-ZERO $WorkerPID MEANS THE CORE MUST STAY ALIVE AFTER SERVING THE USER.
 

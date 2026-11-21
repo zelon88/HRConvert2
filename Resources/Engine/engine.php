@@ -13,7 +13,7 @@
 // / that carries it.
 // /
 // / File Information ...
-// / v4.3.0.
+// / v4.3.2.
 // / The Engine. It provides the environment an application runs in.
 // / The application pins it exactly via $RequiredEngineVersion.
 // / Error block 35000 through 35019 is reserved. 35000 is the direct load guard every component shares, the kernel's included.
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this Engine. Read by the application WITHOUT executing this file.
-$EngineVersion = 'v4.3.0';
+$EngineVersion = 'v4.3.2';
 // / -----------------------------------------------------------------------------------
 
 
@@ -4678,6 +4678,24 @@ function sandboxProfileFlags($sandboxProfile) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to say whether a sandbox profile turns one of its settings on, from v4.3.2.
+// / Accepts the profile name & the setting's name, in that order. Returns TRUE where the profile gives that setting a true value.
+// / A setting is read as sandboxProfileFlags() reads MapToRoot, so both answer alike. A profile this application does not declare
+// / turns nothing on, which leaves the base sandbox & the host's limits as they are.
+function sandboxProfileAsks($sandboxProfile, $settingName) {
+  // / Set variables.
+  // / The profile array is supplied by the application, for the reason given above.
+  global $EngineSandboxProfiles, $EnableMemoryProtection;
+  $ProfileAsks = FALSE;
+  $cleanProfile = strtolower(trim((string)$sandboxProfile));
+  $cleanSetting = (string)$settingName;
+  $ProfileAsks = (isset($EngineSandboxProfiles) && is_array($EngineSandboxProfiles) && isset($EngineSandboxProfiles[$cleanProfile][$cleanSetting]) && (bool)$EngineSandboxProfiles[$cleanProfile][$cleanSetting]);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $cleanProfile, $cleanSetting, $sandboxProfile, $settingName);
+  return $ProfileAsks; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to wrap a command in a transient systemd scope carrying its limits.
 // / Accepts the command to wrap & the sandbox profile about to run, in that order.
 // / Returns the wrapped command, or the command unchanged when limiting is unavailable.
@@ -4691,23 +4709,38 @@ function sandboxProfileFlags($sandboxProfile) {
 // / at all & still keeps a conversion from starving the web server under contention.
 // / This never refuses. A resource ceiling is a courtesy to the host & not a security
 // / control, so an unavailable limiter runs the conversion anyway.
+// / A profile setting AddressSpaceLimit is given an address space ceiling as well, from v4.3.2, of the memory its type is allowed.
+// / prlimit sets it on the command it runs, & every process beneath that inherits it, so the ceiling holds per process where no
+// / scope can be made, & with per conversion limits turned off, because the profile asked for it & the host did not.
+// / It goes nearest the command, inside any scope, so the scope's own processes are never limited by it.
+// / A tool that reserves far more address space than it uses would be stopped by it, so only a profile that has been measured asks.
+// / A tool that reaches it is refused the memory it asked for & fails at once, where the scope's ceiling kills only once memory is used.
 function limitCommand($command, $sandboxProfile) {
   // / Set variables.
   global $EnablePerConversionLimits, $Verbose, $EnableMemoryProtection;
   $LimitedCommand = (string)$command;
-  $scopeMode = $scopeBinary = $scopeEnvironment = $scopePrefix = '';
-  $limitIsValid = FALSE;
+  $scopeMode = $scopeBinary = $scopeEnvironment = $scopePrefix = $prlimitBinary = $addressSpaceNote = '';
+  $limitIsValid = $addressSpaceIsAsked = FALSE;
   $cpuPercentage = $memoryMegabytes = $nicePriority = 0;
-  if (!$EnablePerConversionLimits) $LimitedCommand = (string)$command;
+  $addressSpaceIsAsked = sandboxProfileAsks($sandboxProfile, 'AddressSpaceLimit');
+  if (!$EnablePerConversionLimits && !$addressSpaceIsAsked) $LimitedCommand = (string)$command;
   else {
     list ($limitIsValid, $cpuPercentage, $memoryMegabytes) = resolveConversionLimit($sandboxProfile);
     if (!$limitIsValid) warningEntry('No usable per conversion limit could be resolved. This conversion runs unlimited.');
     else {
-      list ($scopeMode, $scopeBinary, $scopeEnvironment) = verifySystemdRun();
+      // / The address space ceiling is a number of bytes, & prlimit is found as every other tool the Engine runs is found.
+      if ($addressSpaceIsAsked) {
+        $prlimitBinary = locateDependency('prlimit');
+        if ($prlimitBinary === '') warningEntry('The '.strtolower(trim((string)$sandboxProfile)).' sandbox profile asks for an address space limit & prlimit is not installed, so its conversion runs without one. util-linux provides prlimit.');
+        else {
+          $LimitedCommand = escapeshellarg($prlimitBinary).' --as='.((int)$memoryMegabytes * 1048576).' -- '.$LimitedCommand;
+          $addressSpaceNote = ', address space '.(int)$memoryMegabytes.'M per process'; } }
+      if ($EnablePerConversionLimits) list ($scopeMode, $scopeBinary, $scopeEnvironment) = verifySystemdRun();
       // / --quiet keeps the unit name off stderr, which several callers capture as output.
       // / --collect releases the unit when it exits, so a failed conversion leaves nothing.
       // / Swap is pinned to zero so a memory ceiling cannot be evaded by swapping.
-      if ($scopeMode === 'user' or $scopeMode === 'system') {
+      if (!$EnablePerConversionLimits) $scopeMode = 'off';
+      else if ($scopeMode === 'user' or $scopeMode === 'system') {
         $scopePrefix = $scopeEnvironment.escapeshellarg($scopeBinary)
           .($scopeMode === 'user' ? ' --user' : '')
           .' --scope --quiet --collect'
@@ -4715,7 +4748,7 @@ function limitCommand($command, $sandboxProfile) {
           .' -p MemoryMax='.(int)$memoryMegabytes.'M'
           .' -p MemorySwapMax=0'
           .' -- ';
-        $LimitedCommand = $scopePrefix.$command; }
+        $LimitedCommand = $scopePrefix.$LimitedCommand; }
       else {
         // / No cgroup is available, so the ceiling cannot be enforced. The conversion is
         // / deprioritized instead, which is weaker but needs nothing from the operator.
@@ -4723,10 +4756,10 @@ function limitCommand($command, $sandboxProfile) {
         $nicePriority = (int)round(19 - (($cpuPercentage / 100) * 19));
         if ($nicePriority < 0) $nicePriority = 0;
         if ($nicePriority > 19) $nicePriority = 19;
-        $LimitedCommand = 'nice -n '.$nicePriority.' '.$command; }
-      if ($Verbose) logEntry('Conversion Scope: '.$scopeMode.', CPU '.$cpuPercentage.'%, Memory '.$memoryMegabytes.'M'.($scopeMode === 'none' ? ', enforced as niceness '.$nicePriority.' only' : '').'.'); } }
+        $LimitedCommand = 'nice -n '.$nicePriority.' '.$LimitedCommand; }
+      if ($Verbose) logEntry('Conversion Scope: '.$scopeMode.', CPU '.$cpuPercentage.'%, Memory '.$memoryMegabytes.'M'.($scopeMode === 'none' ? ', enforced as niceness '.$nicePriority.' only' : '').$addressSpaceNote.'.'); } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $scopeMode, $scopeBinary, $scopeEnvironment, $scopePrefix, $limitIsValid, $cpuPercentage, $memoryMegabytes, $nicePriority, $command, $sandboxProfile);
+  purgeSensitiveMemory($EnableMemoryProtection, $scopeMode, $scopeBinary, $scopeEnvironment, $scopePrefix, $prlimitBinary, $addressSpaceNote, $limitIsValid, $addressSpaceIsAsked, $cpuPercentage, $memoryMegabytes, $nicePriority, $command, $sandboxProfile);
   return $LimitedCommand; }
 // / -----------------------------------------------------------------------------------
 
@@ -5518,16 +5551,17 @@ function sandboxRequiredProfiles() {
 // / needs --unshare-user. Elsewhere a tool runs as the web server's account, which only the host's passwd names, so it is shown the
 // / host's passwd & group, as before, & -v says so. The machine-id & the host name are the Engine's either way.
 // / A file missing from Resources/Engine/Sandbox is warned of & the host's is shown in its place, so a conversion still runs.
+// / The account's flags are sandboxAccountFlags()'s, from v4.3.2, so sandboxCommand() can take them away for a profile mapping to root.
 function sandboxIdentityFlags($launcherMakesUserNamespace) {
   // / Set variables.
   global $InstLoc, $DirSep, $ApacheUser, $EnableMemoryProtection;
   $IdentityIsOwn = FALSE;
   $IdentityFlags = $IdentityReason = '';
-  $identityFolder = $identityName = '';
+  $identityFolder = $identityName = $accountFlags = '';
   $missingFiles = array();
   $accountIsOwn = $machineIsOwn = FALSE;
-  // / The account's number matches the one passwd & group name, & is the only one the namespace maps.
-  $sandboxAccount = 1000;
+  $sandboxAccount = 0;
+  list ($sandboxAccount, $accountFlags) = sandboxAccountFlags();
   $identityFolder = rtrim((string)$InstLoc, $DirSep).$DirSep.'Resources'.$DirSep.'Engine'.$DirSep.'Sandbox';
   foreach (array('passwd', 'group', 'machine-id') as $identityName) if (!is_file($identityFolder.$DirSep.$identityName) or !is_readable($identityFolder.$DirSep.$identityName)) $missingFiles[] = $identityName;
   if (count($missingFiles) > 0) warningEntry('The Engine\'s own '.implode(', ', $missingFiles).' for a sandbox could not be read from '.$identityFolder.', so a sandbox shows the host\'s in place of each.');
@@ -5535,7 +5569,7 @@ function sandboxIdentityFlags($launcherMakesUserNamespace) {
   $machineIsOwn = !in_array('machine-id', $missingFiles, TRUE);
   // / --unshare-all always makes the namespace the host name lives in, so the host name is the Engine's in every sandbox.
   $IdentityFlags = ' --hostname sandbox';
-  if ($accountIsOwn) $IdentityFlags = $IdentityFlags.' --uid '.$sandboxAccount.' --gid '.$sandboxAccount
+  if ($accountIsOwn) $IdentityFlags = $IdentityFlags.$accountFlags
     .' --ro-bind '.escapeshellarg($identityFolder.$DirSep.'passwd').' /etc/passwd'
     .' --ro-bind '.escapeshellarg($identityFolder.$DirSep.'group').' /etc/group';
   else $IdentityFlags = $IdentityFlags.' --ro-bind-try /etc/passwd /etc/passwd --ro-bind-try /etc/group /etc/group';
@@ -5546,8 +5580,21 @@ function sandboxIdentityFlags($launcherMakesUserNamespace) {
   else if (!$accountIsOwn && !(bool)$launcherMakesUserNamespace) $IdentityReason = 'a tool runs as '.$ApacheUser.' & sees the host\'s passwd & group, because bubblewrap here cannot make a user namespace of its own. Bubblewrap 0.8 & later can.';
   else $IdentityReason = 'a tool sees the host\'s '.implode(', ', $missingFiles).', because '.$identityFolder.' is missing '.(count($missingFiles) === 1 ? 'it' : 'them').'.';
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $identityFolder, $identityName, $missingFiles, $accountIsOwn, $machineIsOwn, $sandboxAccount, $launcherMakesUserNamespace);
+  purgeSensitiveMemory($EnableMemoryProtection, $identityFolder, $identityName, $accountFlags, $missingFiles, $accountIsOwn, $machineIsOwn, $sandboxAccount, $launcherMakesUserNamespace);
   return array($IdentityIsOwn, $IdentityFlags, $IdentityReason); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the account a sandbox runs its tool as, from v4.3.2.
+// / Accepts nothing. Returns the account's number & the bubblewrap flags choosing it, in that order.
+// / The number matches the one account Resources/Engine/Sandbox's passwd & group name besides root & nobody, sandbox, & is the only
+// / one the namespace maps. sandboxIdentityFlags() names it, & sandboxCommand() takes the flags away for a profile mapping to root,
+// / because bubblewrap 0.9 warns where --uid or --gid is given twice, & that warning reached the output of every MeshLab conversion.
+function sandboxAccountFlags() {
+  // / Set variables.
+  $AccountNumber = 1000;
+  $AccountFlags = ' --uid '.$AccountNumber.' --gid '.$AccountNumber;
+  return array($AccountNumber, $AccountFlags); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -5601,16 +5648,24 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   $sandboxIsRequired = TRUE;
   // / The same is true of this one, for the same reason.
   $profileRequiresSandbox = TRUE;
-  $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = $profileFlags = $resourceFlags = $overlayFlags = $sandboxLauncher = $identityFlags = '';
+  $SandboxedCommand = $networkFlag = $mountFlags = $workingDir = $profileFlags = $resourceFlags = $overlayFlags = $sandboxLauncher = $identityFlags = $accountFlags = '';
   $environmentFlags = $environmentPrefix = $environmentName = $environmentValue = '';
   $launcherMakesUserNamespace = $identityIsOwn = FALSE;
   $rewriteSearch = $rewriteReplace = array();
   $inputDir = $outputDir = $sandboxInput = $sandboxOutput = '';
+  $sandboxAccount = 0;
+  $accountAt = FALSE;
   // / The launcher is what built the proving sandbox, so it is what builds this one. On a kernel that
   // / restricts unprivileged namespaces it is this application's own copy of bubblewrap.
   list ($bwrapBinary, $sandboxLauncher, , $launcherMakesUserNamespace) = verifySandboxLauncher();
   // / The account, the machine & the host name a tool sees are the Engine's, from v4.3.0, & never the host's where the launcher allows it.
   list ($identityIsOwn, $identityFlags) = sandboxIdentityFlags($launcherMakesUserNamespace);
+  // / A profile mapping its tool to root chooses that account itself, so the Engine's own is not chosen as well, from v4.3.2.
+  // / Only the first occurrence is taken, which is where sandboxIdentityFlags() put it, ahead of every path it binds.
+  if (sandboxProfileAsks($sandboxProfile, 'MapToRoot')) {
+    list ($sandboxAccount, $accountFlags) = sandboxAccountFlags();
+    $accountAt = strpos($identityFlags, $accountFlags);
+    if ($accountAt !== FALSE) $identityFlags = substr_replace($identityFlags, '', $accountAt, strlen($accountFlags)); }
   // / Collect the mounts this one dependency needs. Nothing else receives them.
   $profileFlags = sandboxProfileFlags($sandboxProfile);
   // / The files the calling pipeline carries in place of host files, such as its own policy.
@@ -5746,7 +5801,7 @@ function sandboxCommand($command, $inputPath, $outputPath, $allowNetwork, $sandb
   // / when the administrator has turned the sandbox off.
   if ($CommandMayRun) $SandboxedCommand = limitCommand($SandboxedCommand, $sandboxProfile);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHostsFile, $environmentFlags, $environmentPrefix, $environmentName, $environmentValue, $environmentVariables, $resourceFlags, $rewriteSearch, $rewriteReplace, $readOnlyResourcePath, $bwrapBinary, $sandboxLauncher, $launcherMakesUserNamespace, $identityIsOwn, $identityFlags, $overlayFlags, $sandboxIsRequired, $profileRequiresSandbox, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
+  purgeSensitiveMemory($EnableMemoryProtection, $pinnedHostsFile, $environmentFlags, $environmentPrefix, $environmentName, $environmentValue, $environmentVariables, $resourceFlags, $rewriteSearch, $rewriteReplace, $readOnlyResourcePath, $bwrapBinary, $sandboxLauncher, $launcherMakesUserNamespace, $identityIsOwn, $identityFlags, $accountFlags, $sandboxAccount, $accountAt, $overlayFlags, $sandboxIsRequired, $profileRequiresSandbox, $networkFlag, $mountFlags, $profileFlags, $workingDir, $inputDir, $outputDir, $sandboxInput, $sandboxOutput, $command, $inputPath, $outputPath, $allowNetwork, $sandboxProfile);
   return array($CommandMayRun, $SandboxedCommand); }
 // / -----------------------------------------------------------------------------------
 

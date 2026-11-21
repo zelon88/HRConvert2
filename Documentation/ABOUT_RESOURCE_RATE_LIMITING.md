@@ -307,6 +307,13 @@ The web server user cannot create a system scope and must not be given permissio
 | `system` | A system scope. An operator configured this deliberately. Remove it. |
 | `none` | No scope. The conversion is deprioritized with `nice` and has no memory ceiling. |
 
+### 🧱 An Address Space Ceiling for One Profile
+From v4.3.2 a sandbox profile setting `AddressSpaceLimit` is also given an address space ceiling of the memory its conversion type is allowed, with `prlimit`, which util-linux provides and any account may set on its own children. It goes in front of the command, inside any scope, and every process the command starts inherits it. It holds where no scope can be made, and where `--Enable Per Conversion Limits--` is `FALSE`, because the profile asked for it and the host did not. A tool that asks for more is refused the memory and fails at once, where a scope's `MemoryMax` kills it only once the memory is used.
+
+HRConvert2's `assimp` profile sets it. A 20 byte glb made Assimp ask for 4.1 GiB, and under the stock Model ceiling of `2048M` it fails at once having used 14 MiB.
+
+An address space is not the memory a tool uses. A tool that reserves far more than it uses, as a JVM does, would be stopped by it, so only a profile measured under it sets it. Where `prlimit` is missing a warning says so and the conversion runs without it.
+
 ---
 
 ## 🪂 About Fallback Behaviour

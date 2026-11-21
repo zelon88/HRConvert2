@@ -446,3 +446,139 @@ was refused in a message would name nothing. HRConvert2's Metadata pipeline keep
 command apart from what sandboxCommand() returns, from v4.3.1, so it reports a refusal as one either
 way.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--v4.3.2--
+
+THREE ENGINE FILES CHANGED. EACH IS BACKWARD COMPATIBLE, & ONE NARROWS WHAT A PIPELINE RETRIES.
+
+  Resources/Engine/engine.php                 v4.3.0 to v4.3.2
+  Resources/Engine/Cores/dependencyCore.php   v4.2.5 to v4.3.2
+  Resources/Engine/Cores/pipelineCore.php     v4.3.1 to v4.3.2
+
+HRConvert2 v4.3.2 requires the Engine, Dependency Core & Pipeline Core at v4.3.2, & its manifest is
+v4.3.2. Nothing else in the Engine changed.
+
+Each of the three is HRConvert2's fork of the file, & is un-reconciled. Canon's v4.3.1 brings a
+lineage mark, r or ur, for a fork's stamp, & HRConvert2 v4.3.2's version parsers & checkers predate
+it, so these stamps carry none. A canon v4.3.2 of any of them would be a different file.
+
+--A Fallback may be used always--
+
+WHAT CHANGED. A manifest entry's Fallback may say 'Always' => TRUE. The new ownBuildIsAlways() is
+TRUE where this host can have the entry's own build & the Fallback it resolves to says so.
+resolveDependencyChoice() then reports the own build's state & nothing else. It is absent where
+nothing is at the own build's path, with a line saying only the own build is used, misconfigured
+where the own build is not root's alone or the conversion account cannot run it, & the own build's
+own state otherwise, & it never falls back to the package manager's copy. settleOwnBuild() never
+asks the package manager's copy & never takes the own build away for it. dependencyIsInstalled()
+counts only the own build in service. checkDepends() never says the package manager's copy
+qualifies. installOneDependency() installs nothing through the package manager, &
+believePackageInstall() builds the own copy as before. updateDepends() upgrades nothing through the
+package manager for such an entry, & counts it installed where the package manager's copy is, so a
+host that had the package gets the own build. uninstallDepends() is unchanged, & still removes the
+package with its subsystem.
+
+WHY. An own build was used only while the package manager's version fell outside the entry's window,
+so a host whose package manager caught up went back to the copy it keeps current. That is right for
+7-Zip, & wrong for a build whose point is what it leaves out. HRConvert2 builds Assimp with three
+importers, because Assimp chooses an importer by what a file holds where none claims its extension,
+so every importer it carries is reachable from an upload, & a distribution's carries seventy.
+Debian's sid carries 6.0.6, inside any window the entry could set.
+
+HOW TO TAKE IT. Copy ownBuildIsAlways() & the changes to the seven functions above, & raise the
+application's pin to the Dependency Core. An entry whose Fallback does not say 'Always' behaves
+exactly as before, which is every entry HRProtect has.
+
+--A sandbox profile may hold its tool's address space--
+
+WHAT CHANGED. A profile may say 'AddressSpaceLimit' => TRUE. limitCommand() then puts prlimit --as=
+in front of the command, with the memory the profile's type is allowed in bytes, inside any scope, &
+does so where per conversion limits are turned off too, because the profile asked for it & the host
+did not. prlimit is found with locateDependency(), & where it is missing a warning says so & the
+conversion runs without the ceiling, because limitCommand() never refuses. The new
+sandboxProfileAsks() says whether a profile gives a setting a true value, read as
+sandboxProfileFlags() reads MapToRoot. The verbose Conversion Scope line names the address space, &
+says off where per conversion limits are.
+
+WHY. A scope's MemoryMax kills a tool only once memory is used, & no scope can be made on a host
+whose kernel delegates no cgroup controller, where a conversion is only deprioritized. HRConvert2
+found a 20 byte glb that makes Assimp ask for 4.1 GiB. Under a 2048 MiB address space it fails at
+once with std::bad_alloc, having used 14 MiB. An address space is not the memory used, so a tool
+that reserves far more than it uses, as a JVM does, would be stopped by it, & only a profile
+measured under it asks for it.
+
+HOW TO TAKE IT. Copy sandboxProfileAsks() & limitCommand(). A profile that does not ask is limited
+exactly as before.
+
+--A profile mapping to root names one account--
+
+WHAT CHANGED. The new sandboxAccountFlags() returns the number of the Engine's own account & the
+--uid & --gid flags that choose it. sandboxIdentityFlags() takes the flags from it, &
+sandboxCommand() takes them away again for a profile whose MapToRoot is set, so that profile's --uid
+0 --gid 0 is the only account named.
+
+WHY. bubblewrap 0.9 prints Only the last --uid option will take effect, & the same of --gid, where
+either is given twice, & every MeshLab conversion carried both lines in its output from v4.3.0,
+which named the Engine's own account beside a profile's.
+
+HOW TO TAKE IT. Copy sandboxAccountFlags() & the changes to the other two. HRProtect declares no
+profile mapping to root.
+
+--A converter that crashed is not asked again--
+
+WHAT CHANGED. pipelineCommandWasStopped() is TRUE for 137 & 143 alone, which are KILL & TERM, where
+it was TRUE for 129 through 159. pipelineRetryIsDue() is unchanged, & reads it.
+
+WHY. A memory ceiling & a supervisor stop a converter with KILL or TERM, & an attempt made again may
+finish. A converter that crashed, with SEGV, ABRT, BUS, FPE or ILL, is given the same file again &
+crashes again. A model that crashed Assimp was converted, & crashed it, as many times as --File
+Operation Retry Count-- allows.
+
+HOW TO TAKE IT. Copy the function & raise the application's pin to the Pipeline Core. Every pipeline
+that retries asks a crashed converter once. HRConvert2's libreOffice.php asks the function whether
+something stopped LibreOffice, so a LibreOffice that crashed is asked once too, & its comment, & the
+Document pipeline's, say so.
+
+--The Engine's documents--
+
+ABOUT_DEPENDENCIES.txt documents 'Always'. ABOUT_RESOURCE_RATE_LIMITING documents AddressSpaceLimit,
+& convertCore.php's list of profile fields names it. ABOUT_PIPELINE_COMPONENTS.txt &
+CREATING_CONVERSION_PIPELINES.txt say what is asked again. ERROR_DESCRIPTIONS.txt says it of 7001 &
+9000.
+
+--What HRConvert2 now relies on, unchanged--
+
+Nothing below is a change to the Engine. Each is something the Engine already did that HRConvert2
+v4.3.2 depends on for the first time, so a reconciled Engine has to keep doing it.
+
+AN OWN BUILD'S VERSION IS COMPARED IN THREE PARTS. compareVersionMinimum() compares the patch level
+& reads one a version leaves out as 0, so an Assimp reporting 6.0, as every Assimp did before patch
+0008, is older than 6.0.6. The Assimp entry's floor, its Fallback's Version & what the own build
+reports are all 6.0.6.
+
+A FALLBACK MAY PIN NO CHECKSUM. buildOwnCopy() hands DEPENDENCY_SHA256 empty where the Fallback's
+Sha256 is, & build-assimp.sh pins its source by commit instead.
+
+--Seen, & left for the Engine's maintainer--
+
+A FALLBACK THAT CHANGES ONLY ITS PATCHES IS NOT BUILT AGAIN. settleOwnBuild() builds an own build
+again where it answers below the version pinned, & a build carrying a new patch on the same release
+answers the same version. HRConvert2's Assimp is such a build, & a patch added on 6.0.6 reaches a
+host that built 6.0.6 already only once its build is moved out of the builds folder &
+--install-depends is run again. A mark the build leaves of what made it, such as a checksum of the
+Fallback's BuildCommand & of the script & patches it runs, compared before a build is called
+unchanged, would catch it.
+
+A FALLBACK CANNOT PIN A COMMIT. The Engine hands over a version & a checksum, & a build fetched by
+commit holds its commit in its own script. A Commit field handed over as DEPENDENCY_COMMIT would put
+that pin in the manifest beside the others.
+
+A SUBSYSTEM TWO TOOLS SERVE IS JUDGED BY THE ONE THAT CAN BE ASKED. capabilityVerdict() reads every
+record naming a pipeline's subsystem, & one that could not answer adds nothing, so where one tool of
+two answers, its answer contradicts every format only the other handles. HRConvert2's 3D Models had
+Assimp answer for MeshLab, & v4.3.2 asks Assimp nothing instead, which is a change to its manifest &
+none to the Engine. A record could say which of a pipeline's formats it answers for, or a direction
+an installed tool of a subsystem cannot answer could leave the subsystem unknown, which would stop
+narrowing wherever such a tool is installed, so each subsystem would have to be read first.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

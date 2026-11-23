@@ -139,7 +139,7 @@ function summaries($events) {
 
 // Part 0. What this suite stands on.
 check('the Event Core calls nothing that removes, renames or runs a command', $coreCalls === array());
-check('the Event Core says it is v4.3.1', isset($EventCoreVersion) && $EventCoreVersion === 'v4.3.1');
+check('the Event Core says it is v4.3.1, with or without a lineage mark', isset($EventCoreVersion) && preg_match('/^v4\.3\.1(u?r)?$/', $EventCoreVersion) === 1);
 foreach (array('eventSeverityRank', 'eventSourceIsValid', 'eventKindIsValid', 'eventIdentifierIsValid', 'eventFolderPath', 'eventDayPath', 'cleanEventValue', 'eventValueIsClean', 'eventRecordIsValid', 'eventLineOf', 'recordEvent', 'readEventDay', 'readEvents', 'findEvent', 'eventDaysBetween', 'lesserEventToken', 'eventHandleIsOfPath') as $coreFunction) check('the Event Core defines '.$coreFunction.'()', function_exists($coreFunction));
 list ($directStatus, $directSaid) = runCommand(array(PHP_BINARY, $coreFile));
 check('the Event Core refuses to be loaded directly, with error Engine-35000', $directSaid === 'ERROR!!! Engine-35000, A core component cannot be loaded directly!'.PHP_EOL, trim($directSaid));

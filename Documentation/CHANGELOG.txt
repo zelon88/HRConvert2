@@ -34,6 +34,8 @@ v4.3.4 - Take the HRProprietary Engine v4.3.3 starter kit.
 -engine.php, the Dependency Core & the Pipeline Core keep HRConvert2's changes, as v4.3.3ur, v4.3.3ur & v4.3.2ur. Every other Engine component carries r.
 -The ClamAV & ScanCore pipelines are the kit's v4.3.1. The Archive pipeline is v4.3.4, with the kit's fix.
 -Document four warnings the message checker found undocumented, & drop one the OCR pipeline no longer raises.
+-config.php gains --Record Events--. Run --config --repair once after unpacking the drop in.
+-The Event Core's three suites accept a lineage mark, so they pass in HRConvert2.
 -ENGINE_RECONCILIATION_HRCONVERT2.txt says what was taken & what was not.
 
 --------------------

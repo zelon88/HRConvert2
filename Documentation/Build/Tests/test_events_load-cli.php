@@ -90,7 +90,7 @@ $corePath = 'Engine'.DIRECTORY_SEPARATOR.'Cores'.DIRECTORY_SEPARATOR.'eventCore.
 
 
 // Part 0. What this suite stands on.
-$pinFound = preg_match('/^\s*\$RequiredEventCoreVersion = \'v([0-9]+\.[0-9]+\.[0-9]+)\';$/m', (string)file_get_contents($entryFile), $pinMatch);
+$pinFound = preg_match('/^\s*\$RequiredEventCoreVersion = \'v([0-9]+\.[0-9]+\.[0-9]+(?:u?r)?)\';$/m', (string)file_get_contents($entryFile), $pinMatch);
 $RequiredEventCoreVersion = ($pinFound === 1) ? $pinMatch[1] : '';
 check('the entry point pins the Event Core, & the tree\'s own core declares the version that is pinned', $pinFound === 1 && readComponentVersion($corePath, 'EventCoreVersion') === $RequiredEventCoreVersion, $RequiredEventCoreVersion);
 check('no function of the Event Core is defined here, & none ever will be', coreFunctionsDefined() === array());

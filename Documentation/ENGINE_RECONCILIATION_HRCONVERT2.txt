@@ -608,11 +608,30 @@ CODING_CONVENTIONS.txt says of an application's copy from the kit's v4.3.1, & HR
 exactly. The Pipeline Core shows why the mark exists. Canon's v4.3.2 & HRConvert2's v4.3.2 were two
 different files with one stamp, as the v4.3.2 section said they would be.
 
+--The Event Core's Suites Accept A Lineage Mark--
+
+test_events-cli.php, test_events_load-cli.php & test_events_engine-cli.php read the Event Core's pin &
+its stamp as three numbers alone. In an application's copy the core carries r, as CODING_CONVENTIONS.txt
+asks, so all three failed on the mark alone. test_events_load-cli.php found no pin, & 16 of its 27 checks
+failed, & test_events_engine-cli.php stopped. Each now accepts r or ur after the numbers, as
+compareVersionMinimum() & both checkers do. The kit's Example pins canon plainly, & passes as before.
+
+HOW TO TAKE IT. Copy the three suites. Each holds this change & nothing else.
+
+--The Engine's Suites, Run From HRConvert2--
+
+From HRConvert2's root, inside contained.sh, or contained-install.sh for test_install-cli.php, every
+check passed: test_events 440, test_events_load 27, test_events_engine 17, test_kernel 170,
+test_kernel_without_engine 11, test_install 66, test_schedule 185 & test_identity 50.
+test_quarantine-cli.php & test_starter-cli.php stop before they test anything, because HRConvert2 carries
+neither the Quarantine pipeline nor the Starter. Both are carried with the rest of the folder, as its
+README.txt asks, & both run from the kit's examples.
+
 --What HRConvert2 did not take--
 
 ENGINE_RECONCILIATION_HRPROTECT.txt, because it is another application's record. The Quarantine pipeline,
-because HRConvert2 accepts no pipeline that needs it. Documentation/Logos, which only the kit's README.md
-shows. Example/ & the kit's README files.
+because HRConvert2 carries only the pipelines it accepts, & it accepts no Quarantine pipeline.
+Documentation/Logos, which only the kit's README.md shows. Example/ & the kit's README files.
 
 The Example's config-template.php & depends.php predate HRConvert2 v4.2.5, & its versionInfo.php says
 v4.2.4, so HRConvert2 kept its own whole. The Example's convertCore.php & app-engine-config.php were

@@ -43,7 +43,7 @@ $coreCalls = forbiddenCallsIn(token_get_all((string)file_get_contents($coreFile)
 if (count($coreCalls) > 0) testStop('The Event Core calls '.implode(', ', $coreCalls).', & this suite does not load a core that removes, renames or runs anything.');
 liftFunctions($kernelFile, array('getChildFunction', 'purgeSensitiveMemory', 'pathIsTrustedByRoot', 'findAccountDatabaseEntry', 'identifyRunningAccount', 'folderIsHeldForRoot', 'openFileWithoutFollowing', 'printableText', 'sanitizeString', 'sanitize', 'readComponentVersion', 'verifyCoreComponent'), array());
 liftFunctions($engineFile, array('claimPrivateFolder', 'eventCoreStanding', 'loadEventCore', 'noteEvent'), array());
-$pinFound = preg_match('/^\s*\$RequiredEventCoreVersion = \'v([0-9]+\.[0-9]+\.[0-9]+)\';$/m', (string)file_get_contents($entryFile), $pinMatch);
+$pinFound = preg_match('/^\s*\$RequiredEventCoreVersion = \'v([0-9]+\.[0-9]+\.[0-9]+(?:u?r)?)\';$/m', (string)file_get_contents($entryFile), $pinMatch);
 $RequiredEventCoreVersion = ($pinFound === 1) ? $pinMatch[1] : '';
 
 function plainFacts($eventSummary) {

@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.4.
+// / v4.2.4r.
 // / THIS IS THE ENGINE'S HALF OF THE DEPENDENCY MANIFEST, & it lists what the Engine needs whatever application bundles it.
 // / This file is data. It defines nothing & does nothing.
 // / The Engine's verifyDependsManifest() reads it, & nothing else may.
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 
 // / -----------------------------------------------------------------------------------
 // / The version of this half. The Engine reads it without executing the file, & pins it exactly.
-$EngineDependsVersion = 'v4.2.4';
+$EngineDependsVersion = 'v4.2.4r';
 // / -----------------------------------------------------------------------------------
 
 

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.4.
+// / v4.3.1r.
 // / The Workflow Core, one of the Engine's cores.
 // / A workflow is a list of steps, & each step runs one of the application's operations on files a user selected or an earlier step made.
 // / This file reads, checks & runs workflows, & keeps the status a page reads while one runs.
@@ -43,7 +43,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by the application without executing this file.
-$WorkflowCoreVersion = 'v4.2.4';
+$WorkflowCoreVersion = 'v4.3.1r';
 // / -----------------------------------------------------------------------------------
 
 
@@ -2302,13 +2302,12 @@ function runWorkflowWorker($jobId) {
 // / Accepts the text. Returns it with every control character shown as a question mark, & every byte outside printable ASCII too where it is not UTF-8.
 // / --workflow --list reads the staging folder, which the web server account can write, & a name or a problem quoting a file's own text could carry a sequence a terminal obeys.
 // / C1 control characters are replaced as well as C0 ones, because some terminals obey them as the start of a sequence.
+// / The kernel's printableText() does the work, from v4.3.1, & is asked to cut nothing, so what this returns is what it always returned.
 function printableWorkflowText($untrustedText) {
   // / Set variables.
   global $EnableMemoryProtection;
   $PrintableText = '';
-  $PrintableText = preg_replace('/[\x00-\x1F\x7F\x{80}-\x{9F}]/u', '?', (string)$untrustedText);
-  // / Text that is not UTF-8 fails the pattern above & comes back as NULL, so every byte outside printable ASCII is replaced instead.
-  if (!is_string($PrintableText)) $PrintableText = (string)preg_replace('/[^\x20-\x7E]/', '?', (string)$untrustedText);
+  $PrintableText = printableText($untrustedText, FALSE);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $untrustedText);
   return $PrintableText; }

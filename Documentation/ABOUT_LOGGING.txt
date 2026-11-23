@@ -1,13 +1,13 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
+HRProprietary Engine, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
 
 FILE INFORMATION ...
 v3.8.9.
@@ -138,9 +138,14 @@ for an application that dispatches long running work rather than for this one.
 Turning either on removes the possibility of two processes interleaving rather than
 guarding against it, which is why they exist at all.
 
-THERE IS NO Worker ROLE YET & THAT IS DELIBERATE.
-Nothing spawns a PHP worker today. A detached conversion spawns FFMPEG rather than PHP.
-The role exists in the naming for when HRProtect dispatches workers of its own.
+THE Worker ROLE IS FOR A WORKER OF THE APPLICATION'S OWN, FROM v4.3.1.
+Nothing of the Engine's spawns a PHP worker. A detached conversion spawns FFMPEG rather than PHP.
+An application starts one of its own arguments as a worker with startApplicationWorker(). Where
+its contract sets $EnginePerWorkerLogFiles TRUE & it sets $LogWorkerIdentifier to the identifier
+of the work before verifyLogs() runs, that worker logs to a file of its own.
+  HRConvert2_Worker-<identifier>_0_<date>.txt   One worker, were HRConvert2 to start one.
+Every other command logs as it did. A worker root starts logs where root's logfile is, in Engine
+in the data location, & pruneRootLogs() removes it with the rest of root's once it is thirty days old.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,6 +194,11 @@ error is written to that file once, by quickDie(), rather than logged by errorEn
 again. Op-Act, warning & error lines all go to the file; with $Verbose FALSE the Op-Act lines are
 suppressed. The printed report an administrator sees on the terminal is separate from the log, as
 it is for a web request, & is the human-facing summary.
+
+ROOT'S LOGFILE IS NOT HANDED TO A COMMAND ROOT RUNS, FROM v4.3.1. Root writes through one open
+handle for as long as it runs. A process hands every handle it holds to each command it starts,
+unless the handle was opened to be closed there, & openFileWithoutFollowing() now opens it so.
+Until then every command root ran could write to root's logfile, a sandboxed one included.
 
 AN ADMINISTRATOR AT A TERMINAL STILL SEES EVERY WARNING & ERROR AS IT HAPPENS.
 When root opens its file in Engine with standard error on a terminal, openLogFileForRoot() sets
@@ -285,4 +295,22 @@ hash & cannot be turned back into them.
 The scanner pipelines report through the application log, & a user requested scan writes its
 own report into the session. verifyLogs() also named & rotated a ClamLog file until v4.0.0,
 which nothing had written since ClamAV moved into its pipeline.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Text Nobody Vetted--
+
+An entry is written as it is handed over. composeLogEntry() puts a tier, a sequence number, a
+time, the number of an error & a session before it, & changes nothing in it.
+
+Some of what an entry holds was chosen by nobody the application trusts. The name of a file, &
+what a tool prints about one, is chosen by whoever made the file. A line break in it would forge
+a line of the log, & an escape sequence would have a terminal obey it when the log is read.
+
+The kernel's printableText() makes such text safe to log & to print, from v4.3.1. It shows every
+control character as a question mark, C1 ones included, & every byte outside printable ASCII too
+where the text is not UTF-8. With its second argument TRUE it also cuts text longer than 1000
+bytes, where a character ends, & ends it with three dots.
+
+Whatever logs or prints text it did not choose passes that text through printableText() first.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

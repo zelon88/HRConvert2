@@ -1,4 +1,4 @@
-# 📐 HRConvert2: Core Coding Conventions & Architecture Manual
+# 📐 HRProprietary: Core Coding Conventions & Architecture Manual
 
 Welcome to the official developer style guide! This manual details the strict quality baselines, architectural constraints, and safety safeguards enforced across the HRConvert2 codebase.
 
@@ -7,18 +7,18 @@ Welcome to the official developer style guide! This manual details the strict qu
 ## 🛠️ Core Infrastructure Specifications
 
 ### Legal & Distribution
-* **Intellectual Property:** HRConvert2 is Copyright © 2026 by Justin Grimes ([GitHub](https://www.github.com/zelon88)).
+* **Intellectual Property:** The HRProprietary Engine is Copyright © 2026 by Justin Grimes ([GitHub](https://www.github.com/zelon88)).
 * **Licensing Model:** Protected under the strict terms of the **GNU GPLv3 Open-Source License**. Refer to the [Official License Portal](https://www.gnu.org/licenses/gpl-3.0.html) for distribution requirements.
 
 ### System Intent
-This application provides a highly accessible, unauthenticated web interface enabling file conversions directly on a server infrastructure using any modern web browser.
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
 
 | Metric | Minimum Operational Requirements |
 | :--- | :--- |
 | **Hardware** | Raspberry Pi Model B+ (or any standard x86 / x64 architecture computing platform) |
 | **Environment** | Debian Linux + Apache Web Server v2.4 + PHP v8.0 or greater |
 
-> ⚙️ **Core Dependencies:** The authoritative list of dependencies is `Resources/Contract/depends.php` and nothing else. Run `php convertCore.php -v` to see what this installation has.
+> ⚙️ **Core Dependencies:** What the Engine itself needs is `Resources/Engine/depends.php`, and `--setup` installs it with the application's own half. Run `php <entry point> -v` to see what an installation has.
 
 ---
 
@@ -75,6 +75,7 @@ To safeguard the codebase against logic pollution and resource leaks, all contri
 ### 🧱 Repetition, Input & Execution
 * **Rule 20: The Duplication Limit** — A pattern repeated more than twice belongs in a function or a template. See *Function Architecture & Repetition* below.
 * **Rule 21: Sanitized Input** — Call `sanitize()` against any user input before using it. It accepts any variable type as input.
+  * A path is user input too, and `sanitize()` would make it the name of another file. Call `sanitizePath()` against a path instead. It accepts a path whole or refuses it whole.
 * **Rule 22: Sandboxed Dependencies** — No dependency command may run unsandboxed. Every `exec()` or `shell_exec()` that runs a tool this application depends on goes through `sandboxCommand()`. A command that genuinely cannot be sandboxed carries a comment saying why, and is still given a disposable environment by `dependencyEnvironmentPrefix()`. `CODING_CONVENTIONS.txt` has the full rule.
 
 ---
@@ -102,6 +103,8 @@ The core function `sanitizeString()` deliberately permits `?`, `+`, and `=` beca
 
 ### 🛡️ Input Sanitization Boundaries
 * **Remote Code Execution (RCE) Shielding:** The `sanitize()` and `sanitizeString()` functions establish a formal RCE boundary protecting all user-controlled data input streams. Data surviving this filter cannot inject into a shell, into HTML, or into a path.
+* **Paths:** The `sanitizePath()` function is the boundary for a path. It removes nothing, because a path with a character removed names a different file. It refuses a control character, anything PHP would open as a stream rather than a file, such as `phar://`, and a path longer than PHP opens. In strict mode it also refuses a path that is not absolute, and one holding a part that is a dot, two dots or empty. It follows no link and does not say that the path exists. A path it accepted may still hold a space, a quote or a dollar sign, so it is quoted where it is handed to a shell and escaped where it is printed.
+* **Text Nobody Vetted:** The `printableText()` function makes text safe to print and to log, from v4.3.1. The name of a file, and what a tool prints about one, is chosen by whoever made the file. A line break in it would forge a line of a log, and an escape sequence would have a terminal obey it. Every control character is shown as a question mark, and in strict mode text longer than 1000 bytes is cut where a character ends. It changes what is shown and nothing else.
 * **The OpenSCAD Scanner:** This component behaves purely as a user convenience layer for tracking `#include` targets and notifying users of dead links; it does not function as an active defensive barrier.
 * **File Reads:** The `file_get_contents()` function is only as dangerous as the sink it feeds. The file read operation itself cannot execute code as an RCE vector; threat vectors are restricted to the target path limits and what happens to the resulting bytes later.
 
@@ -152,6 +155,8 @@ System version components must be evaluated against strict matching logic tables
 Use `compareVersionMinimum()` to compare two versions. It is the only correct way. Always process version validation parameters using strict numerical operators. Simple string evaluations fail structurally because a string check ranks engine version `24.2` lower than version `7.6`, and mistakenly ranks version `3.10` lower than `3.9`.
 
 The core engine must programmatically explode the version string on the dot separator, cast each split element into a true integer, and evaluate major updates before minor updates. Additionally, you must completely strip any leading alphabetical characters (such as `v`) prior to calculation; casting a string like `'v3'` straight to an integer drops the numerical value to `0`, destructively reducing a precise three-part version comparison down to an invalid two-part comparison. Any dependency package reporting an unparseable or completely missing version string is **refused immediately** to prevent unvalidated background executions.
+
+> 🧬 **Lineage Mark:** From v4.3.1 a stamp may end in `r` or `ur`. Canon is stamped plainly, as `v4.3.1`. An application's copy of the Engine is `v4.3.1r` where it is canon's unchanged, and `v4.3.1ur` where the application changed it and the change waits in its `ENGINE_RECONCILIATION_` file. An exact match compares the whole stamp, so the three are three builds. `compareVersionMinimum()` compares the numbers alone, because the mark says whose copy a build is and nothing of its order.
 
 > 📊 **Dual Baselines:** A dependency can have a feature floor and a security floor (e.g., FFMPEG). Its entry in `Resources/Contract/depends.php` carries one `MinimumVersion`, so that is the higher of the two, and the comment beside the entry says which floor it is.
 

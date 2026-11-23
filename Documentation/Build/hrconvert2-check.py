@@ -536,6 +536,33 @@ def check_stray_files(root, report):
 
 
 # / -----------------------------------------------------------------------------------
+# / THE LOGO CHECK. The Engine's own logo is the file the Engine was distributed with, from v4.3.1.
+def check_engine_logo(root, report):
+    # / The logo is Resources/Engine/UI/HRProprietary_logo.png. An application adds a logo of its own beside it
+    # / & never removes it or writes over it, so it is held to the hash buildProtectionPage() holds in engine.php.
+    # / The protection page shows it only where it is that file, & this says so before an installation does.
+    # / The Bash tool checks the same shapes. The two must agree.
+    import hashlib
+    import os
+    import re
+    faults = 0
+    engine_path = os.path.join(root, 'Resources', 'Engine', 'engine.php')
+    logo_path = os.path.join(root, 'Resources', 'Engine', 'UI', 'HRProprietary_logo.png')
+    if os.path.isfile(engine_path):
+        declared = re.search(r"^\s*\$engineLogoSha256 = '([0-9a-f]{64})';$", open(engine_path, encoding='utf-8').read(), re.M)
+        if declared is None:
+            report('LOGO', 'Resources/Engine/engine.php holds no $engineLogoSha256, so the Engine\'s logo cannot be held to it')
+            faults += 1
+        elif os.path.islink(logo_path) or not os.path.isfile(logo_path):
+            report('LOGO', 'Resources/Engine/UI/HRProprietary_logo.png is missing or is a link. An application adds a logo beside it & never removes it')
+            faults += 1
+        elif hashlib.sha256(open(logo_path, 'rb').read()).hexdigest() != declared.group(1):
+            report('LOGO', 'Resources/Engine/UI/HRProprietary_logo.png is not the file the Engine was distributed with. An application never writes over it')
+            faults += 1
+    return faults
+
+
+# / -----------------------------------------------------------------------------------
 # / THE SPACING CHECK. Separators & blank lines follow the house shape.
 def check_file_spacing(files, report):
     # / The shape this project writes, measured from the files that were never edited by a
@@ -863,7 +890,7 @@ def check_version_pins(root, report):
     core = open(core_path, encoding='utf-8').read()
     faults = 0
     # / A component is pinned as $RequiredNameVersion & declares $NameVersion.
-    for match in re.finditer(r"\$Required(\w+?)Version\s*=\s*'v?([0-9.]+)'", core):
+    for match in re.finditer(r"\$Required(\w+?)Version\s*=\s*'v?([0-9.]+(?:u?r)?)'", core):
         component = match.group(1)
         pinned = match.group(2)
         # / EVERY FILE THAT DECLARES THE VERSION IS COMPARED, & each one that differs is named, as the
@@ -883,25 +910,28 @@ def check_version_pins(root, report):
                 if not name.endswith('.php'):
                     continue
                 body = open(os.path.join(base, name), encoding='utf-8').read()
-                found = re.search(r"\$" + component + r"Version\s*=\s*'v?([0-9.]+)'", body)
+                found = re.search(r"\$" + component + r"Version\s*=\s*'v?([0-9.]+(?:u?r)?)'", body)
                 if found and found.group(1) != pinned:
                     report('PIN', component + ' is pinned at ' + pinned + ' & ' + name
                            + ' declares ' + found.group(1))
                     faults += 1
     # / A manager is pinned by the Engine rather than by the application, & so is the Engine's half of the dependency
-    # / manifest, from v4.2.4, which declares $EngineDependsVersion in Resources/Engine/depends.php.
+    # / manifest, from v4.2.4, which declares $EngineDependsVersion in Resources/Engine/depends.php, & the Environment
+    # / Core, from v4.3.1, which declares $EnvironmentCoreVersion in Resources/Engine/Cores/environmentCore.php.
     engine_path = os.path.join(root, 'Resources', 'Engine', 'engine.php')
     if os.path.exists(engine_path):
-        for match in re.finditer(r"'(\w+\.php)'\s*=>\s*'v?([0-9.]+)'", open(engine_path, encoding='utf-8').read()):
+        for match in re.finditer(r"'(\w+\.php)'\s*=>\s*'v?([0-9.]+(?:u?r)?)'", open(engine_path, encoding='utf-8').read()):
             if match.group(1) == 'depends.php':
                 manager_path, declaration = os.path.join(root, 'Resources', 'Engine', 'depends.php'), 'EngineDependsVersion'
+            elif match.group(1) == 'environmentCore.php':
+                manager_path, declaration = os.path.join(root, 'Resources', 'Engine', 'Cores', 'environmentCore.php'), 'EnvironmentCoreVersion'
             else:
                 manager_path, declaration = os.path.join(root, 'Resources', 'Engine', 'Managers', match.group(1)), 'ManagerVersion'
             if not os.path.exists(manager_path):
                 report('PIN', 'the Engine pins ' + match.group(1) + ' & ' + os.path.relpath(manager_path, root) + ' is not installed')
                 faults += 1
                 continue
-            found = re.search(r"\$" + declaration + r"\s*=\s*'v?([0-9.]+)'", open(manager_path, encoding='utf-8').read())
+            found = re.search(r"\$" + declaration + r"\s*=\s*'v?([0-9.]+(?:u?r)?)'", open(manager_path, encoding='utf-8').read())
             if not found:
                 report('PIN', match.group(1) + ' reports no version & an unknown build cannot be cleared')
                 faults += 1
@@ -913,10 +943,10 @@ def check_version_pins(root, report):
     # / Its name does not follow the pattern above, so it was never checked, & it drifted from
     # / v3.9.3 onward. -fp disables a script that does not match, so a stale pin disables the
     # / installer every release ships.
-    script_pin = re.search(r"\$RequiredConfigScript\s*=\s*'v?([0-9.]+)'", core)
+    script_pin = re.search(r"\$RequiredConfigScript\s*=\s*'v?([0-9.]+(?:u?r)?)'", core)
     scripts = glob.glob(os.path.join(root, 'Documentation', 'Build', '*-setup.sh'))
     if script_pin and scripts:
-        found = re.search(r'^SCRIPT_VERSION="v?([0-9.]+)"', open(scripts[0], encoding='utf-8').read(), re.M)
+        found = re.search(r'^SCRIPT_VERSION="v?([0-9.]+(?:u?r)?)"', open(scripts[0], encoding='utf-8').read(), re.M)
         if not found:
             report('PIN', os.path.basename(scripts[0]) + ' declares no SCRIPT_VERSION & an unknown build cannot be cleared')
             faults += 1
@@ -925,6 +955,30 @@ def check_version_pins(root, report):
                    + os.path.basename(scripts[0]) + ' declares ' + found.group(1)
                    + '. Set $RequiredConfigScript in ' + ENTRY_POINT + ' to match.')
             faults += 1
+    # / A pipeline is pinned in the contract's $EngineAcceptedPipelines & declares $PipelineVersion, & a shared
+    # / module is pinned in $EngineAcceptedSharedModules & declares $SharedModuleVersion, from v4.3.1. The
+    # / Pipeline Core refuses a pipeline whose pin differs, so until v4.3.1 a stale pin passed both checkers &
+    # / was refused at boot. Pipelines are traded between applications, which is how a pin drifts.
+    contract_path = os.path.join(root, 'Resources', 'Contract', 'app-engine-config.php')
+    contract = open(contract_path, encoding='utf-8').read() if os.path.exists(contract_path) else ''
+    for list_name, declaration in (('EngineAcceptedPipelines', 'PipelineVersion'), ('EngineAcceptedSharedModules', 'SharedModuleVersion')):
+        listed = re.search(r'^\$' + list_name + r'\s*=\s*array\((.*?)\);', contract, re.S | re.M)
+        for pin in re.finditer(r"'([\w.]+)'\s*=>\s*'v?([0-9.]+(?:u?r)?)'", listed.group(1) if listed else ''):
+            if declaration == 'PipelineVersion':
+                declaring = os.path.join(root, 'Resources', 'Pipelines', pin.group(1), 'pipelineConfig.php')
+            else:
+                declaring = os.path.join(root, 'Resources', 'Pipelines', 'Shared', pin.group(1))
+            if not os.path.isfile(declaring):
+                report('PIN', 'the contract pins ' + pin.group(1) + ' & ' + os.path.relpath(declaring, root) + ' is not installed')
+                faults += 1
+                continue
+            found = re.search(r"^\s*\$" + declaration + r"\s*=\s*'v?([0-9.]+(?:u?r)?)'", open(declaring, encoding='utf-8').read(), re.M)
+            if not found:
+                report('PIN', os.path.relpath(declaring, root) + ' declares no $' + declaration + ' & an unknown build cannot be cleared')
+                faults += 1
+            elif found.group(1) != pin.group(2):
+                report('PIN', pin.group(1) + ' is pinned at ' + pin.group(2) + ' & declares ' + found.group(1))
+                faults += 1
     return faults
 
 
@@ -1487,8 +1541,8 @@ def check_pairs_destructured(files, report):
 # / separators & a missing one leaves no gap to judge. Fourteen functions across four files
 # / had lost an opening separator before this check existed, & every one was found by eye.
 # / It reads only functions declared at the start of a line, which is every function in
-# / this project except the guarded copies in environmentCore.php. Those sit inside an if
-# / & are indented, so they are skipped rather than misread.
+# / this project except describeEnvironment() in environmentCore.php, which sits inside an if
+# / & is indented, so it is skipped rather than misread.
 # / It cannot tell a preface that describes the function from a comment that does not. The
 # / sentence check reads what the comment says. This one reads where it is.
 def check_function_frame(files, report):
@@ -1697,6 +1751,7 @@ def main():
         ('kernel', 'the kernel calls only itself, PHP & a guarded Engine', lambda: check_kernel_independence(root, files, report)),
         ('config', 'every setting a configuration template holds is modelled, & held once', lambda: check_config_globals(root, report)),
         ('stray', 'nothing ships that is not part of the application', lambda: check_stray_files(root, report)),
+        ('logo', 'the Engine\'s own logo is the file it was distributed with', lambda: check_engine_logo(root, report)),
         ('spacing', 'separators & blank lines follow the house shape', lambda: check_file_spacing(files, report)),
         ('caps', 'no comment line is entirely capitals', lambda: check_comment_case(files, report)),
         ('purge', 'every cleanup at a return carries its comment', lambda: check_purge_comment(files, report)),

@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.3.
+// / v4.2.3r.
 // / The Authentication Core, one of the Engine's cores.
 // / It keeps accounts, signs users in & out, confirms an address, recovers an account & limits how often each may be tried.
 // / A signed in page holds a key in its memory & nowhere a browser keeps for a site, so no cookie is ever set.
@@ -38,7 +38,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by the application without executing this file.
-$AuthenticationCoreVersion = 'v4.2.3';
+$AuthenticationCoreVersion = 'v4.2.3r';
 // / -----------------------------------------------------------------------------------
 
 

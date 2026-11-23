@@ -1,13 +1,13 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
+HRProprietary Engine, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
 
 FILE INFORMATION ...
 v3.9.7.
@@ -21,7 +21,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
+What the Engine itself needs is Resources/Engine/depends.php, & --setup installs it with the application's own half. Run  php <entry point> -v  to see what an installation has.
 
 ADDITIONAL INFORMATION ...
 HRConvert2 logs information about its operational activity to the Logs subdirectory of the data location by default.
@@ -182,6 +182,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-0, <SESSION_IDENTIFIER>: Could not process the HRConvert2 Configuration file (config.php)!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-0, <SESSION_IDENTIFIER>: No configuration file & no Setup Core to write one!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-0, <SESSION_IDENTIFIER>: No configuration file & no Engine to write one!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-0, <SESSION_IDENTIFIER>: No configuration file & no Environment Core to write one! <ADDITIONAL_DATA>
 
 FILE
   Resources/Kernel/kernel.php
@@ -202,9 +203,10 @@ ERROR DESCRIPTION
     sudo php convertCore.php --config --repair
   A file that exists & will not parse is a PHP fatal error rather than this one, & the web
   server error log names its line.
-  The second & third wordings come from that repair command. It writes the file with the
-  Setup Core & the Engine, & one of them is missing. Restore it from the release this core
-  came from.
+  The second, third & fourth wordings come from that repair command. It writes the file with the
+  Setup Core, the Engine & the Engine's Environment Core, & one of them is missing. Restore it from
+  the release this core came from. The fourth is from v4.3.1, & what follows it says whether the
+  Environment Core is missing, reports no version, reports another version or could not be loaded.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -236,10 +238,33 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! Starter-2: This file cannot process your request! Please submit your request to app.php instead!
+
+FILE
+  /Resources/versionInfo.php
+  /Resources/Contract/config-template.php
+  /Resources/Contract/depends.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  The Starter's error 2, from v4.3.2. A file of the Starter's own was requested directly, rather than read by app.php.
+  config.php is written from the Starter's half of the template, so it carries the same guard.
+  Nothing is wrong. Something asked for a file it should not have.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-3, <SESSION_IDENTIFIER>: Could not set the execution timer!
 
 FILE
   convertCore.php
+  app.php
 
 FATAL
   YES
@@ -262,6 +287,7 @@ ERROR MESSAGE
 
 FILE
   convertCore.php
+  app.php
 
 FATAL
   YES
@@ -285,6 +311,7 @@ ERROR MESSAGE
 
 FILE
   convertCore.php
+  app.php
 
 FATAL
   YES
@@ -306,10 +333,11 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6: Could not verify inputs!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6, <SESSION_IDENTIFIER>: Could not verify inputs!
 
 FILE
   convertCore.php
+  app.php
 
 FATAL
   YES
@@ -327,10 +355,11 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7: Could not verify session!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-7, <SESSION_IDENTIFIER>: Could not verify session!
 
 FILE
   convertCore.php
+  app.php
 
 FATAL
   YES
@@ -347,10 +376,11 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8: Could not verify unique session identifier!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-8, <SESSION_IDENTIFIER>: Could not verify unique session identifier!
 
 FILE
   convertCore.php
+  app.php
 
 FATAL
   YES
@@ -371,6 +401,7 @@ ERROR MESSAGE
 
 FILE
   convertCore.php
+  app.php
 
 FATAL
   YES
@@ -1194,9 +1225,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-503, <SESSION_IDENTIFIER>: The <LOCATION_NAME> directory is returning a server error, so no download & no share link can work. The usual cause is a
-  directive in <LOCATION_NAME>/.htaccess that this directory's AllowOverride level does not permit; the web server error log names it. Delete that
-  file to restore service, then apply the rules in the server configuration instead.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-503, <SESSION_IDENTIFIER>: The <LOCATION> directory is returning a server error, so no download & no share link can work. The usual cause is a directive in <LOCATION>/.htaccess that this directory's AllowOverride level does not permit; the web server error log names it. Delete that file to restore service, then apply the rules in the server configuration instead.
 
 FILE
   Resources/Engine/Cores/environmentCore.php
@@ -1227,7 +1256,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-504, <SESSION_IDENTIFIER>: The Apache configuration <APPLICATION_NAME> wrote did not pass apachectl configtest & was withdrawn. The test reported: <OUTPUT>
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-504, <SESSION_IDENTIFIER>: The Apache configuration <APPLICATION_NAME> wrote did not pass apachectl configtest & was withdrawn. The test reported: <ADDITIONAL_DATA>
 
 FILE
   Resources/Engine/Cores/setupCore.php
@@ -2053,7 +2082,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6001, <SESSION_IDENTIFIER>: Unsupported file format, <EXTENSION>!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-6001, <SESSION_IDENTIFIER>: Unsupported file format, <FILE_TYPE>!
 
 FILE
   /convertCore.php
@@ -3307,8 +3336,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13107, <SESSION_IDENTIFIER>: A hybrid bootable image requires the
-  isohybrid utility from syslinux-utils, which is missing or too old!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-13107, <SESSION_IDENTIFIER>: A hybrid bootable image requires the isohybrid utility from syslinux-utils, which is missing or too old!
 
 FILE
   Resources/Pipelines/Archive/pipeline.php
@@ -3355,7 +3383,7 @@ ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-14000, <SESSION_IDENTIFIER>: The file <FILE_NAME> failed first stage validation!
   RETIRED AT v4.0.0. This number is no longer raised. A file that fails first stage validation is a
   request this application handled correctly, so it is refused with a warning that names the file,
-  WARNING!!! The file <FILE_NAME> failed first stage validation & was refused. The operation then
+  which WARNINGS ABOUT A SESSION'S FILES holds. The operation then
   reports the file it skipped under its own number, & the rest of the request carries on. Until
   v4.0.0 this error halted every request that carried one such file. The number is reserved & not
   reused.
@@ -4058,7 +4086,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17001, <SESSION_IDENTIFIER>: Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-17001, <SESSION_IDENTIFIER>: Could not verify the input file.
 
 FILE
   /Resources/Pipelines/Scan/pipeline.php
@@ -4169,7 +4197,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19001, <SESSION_IDENTIFIER>: Could not verify the input file!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-19001, <SESSION_IDENTIFIER>: Could not verify the input file.
 
 FILE
   /Resources/Pipelines/Scan/pipeline.php
@@ -5205,8 +5233,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28005, <SESSION_IDENTIFIER>: The Engine is unavailable, so this
-  request cannot be served. Run  php convertCore.php -v  on the server to see which component failed.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28005, <SESSION_IDENTIFIER>: The Engine is unavailable, so this request cannot be served. Run  php <ENTRY_POINT> -v  on the server to see which component failed.
 
 FILE
   Resources/Kernel/kernel.php
@@ -5219,12 +5246,12 @@ LOGGED
 
 ERROR DESCRIPTION
   A web request arrived & Resources/Engine/engine.php is missing, unreadable, or reports a version this
-  core does not require.
+  core does not require. From v4.3.1 an Engine that loaded & did not start is unavailable too.
   Conversion, resource budgeting, data location cleaning, URL fetching & stream handling all live in the
   Engine, so there is nothing a visitor could successfully do on this installation.
   This halt exists so the failure is a sentence rather than a blank page. Before it was added, the first
   unguarded Engine call produced an undefined function & the visitor saw nothing at all.
-  The command line is deliberately NOT halted here. Run  php convertCore.php -v  to see which component
+  The command line is deliberately NOT halted here. Run  php <ENTRY_POINT> -v  to see which component
   failed & what version it reports. Without an Engine, -h lists only -v & -h & says why.
   An Engine refused on version grounds is the common cause & the fix is to install the matching Engine
   rather than to edit either version stamp.
@@ -5361,6 +5388,34 @@ ERROR DESCRIPTION
   unread, so each would read as NULL wherever it is used, which is a silently changed behaviour rather than an error.
   So nothing runs, not even --config --repair, which writes a configuration from the same two files.
   Restore the file named from the release this installation came from. A drop-in from v4.2.4 onward carries both.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-28010, <SESSION_IDENTIFIER>: The account running this process could not be identified, because posix_geteuid is unavailable & /proc/self/status could not be read. It may be root, so nothing was run. Enable the posix extension in PHP.
+
+FILE
+  Resources/Kernel/kernel.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  Every decision the kernel makes about root rests on the ID of the account running the process, & this one
+  could not be read. posix_geteuid names it, & /proc/self/status does where PHP has no posix functions.
+  Neither answered, so the process may be root, & it stops before anything in the installation runs rather
+  than guess. A web request stops the same way.
+  Distribution PHP carries the posix extension. This is a server where an administrator disabled it, or put
+  posix_geteuid in disable_functions, & also kept PHP from reading /proc, as open_basedir can. Enable the
+  extension, or take posix_geteuid out of disable_functions.
+  Until v4.3.3 the kernel asked whoami instead, which is another program, found through PATH.
+  The loader in the hosted location refuses with this number & a shorter sentence on the command line, & a
+  browser is told only that the application is unavailable.
+  The message is not logged, because it is raised before a logfile exists, & it is printed instead.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6158,9 +6213,9 @@ ERROR DESCRIPTION
   This error is in place to maintain syntactical integrity of the codebase.
   Logically this error should never be triggered, because the role is supplied by the Core Manager
   itself & the startup key would already have been refused for any other caller.
-  The second form is raised for a role that is recognized, where the Manager file that serves it could not be
-  loaded. The file is missing, or its version is not the one the Engine pins, & the warning before it says which.
-  Restore Resources/Engine/Managers from the release this installation came from.
+  The second message means the role is real & its manager is missing, or is not the version the
+  Engine pins. A WARNING before it says which. Put Resources/Engine back from the release the
+  application came from, & start the listener again.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -6485,11 +6540,11 @@ ERROR DESCRIPTION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: An install secret could not be generated, because this host could not supply random bytes!
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret could not be written to <FILE_PATH>! <ADDITIONAL_DATA>
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret written to <FILE_PATH> did not read back correctly!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret could not be written to <FILE_PATH>! <ADDITIONAL_DATA> It is the copy the web server account reads first, & it does not carry the key root holds.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret written to <FILE_PATH> did not read back correctly! It is the copy the web server account reads first, & it does not carry the key root holds.
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret at <FILE_PATH> could not be reached, because another account could replace <FOLDER_PATH>, so nothing was replaced! <ADDITIONAL_DATA>
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret was not rotated, because another account could replace <FOLDER_PATH>, & the copy there would keep the old key! <ADDITIONAL_DATA>
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret was not written to <FILE_PATH>, because another account could replace it there. <ADDITIONAL_DATA>
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The install secret was not written to <FILE_PATH>, because another account could replace it there. <ADDITIONAL_DATA> It is the copy the web server account reads first, & it does not carry the key root holds.
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: <WRITE_FAILURE> It is not known to carry the key in use & could not be removed either. <ADDITIONAL_DATA>
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: <WRITE_FAILURE> It still carries the old key until the next command run as root writes the new one there.
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-31020, <SESSION_IDENTIFIER>: The web server account would not read the install secret root holds! <ADDITIONAL_DATA>
@@ -6555,8 +6610,8 @@ ERROR DESCRIPTION
   list's mask. The web server user would refuse a copy there, & so would the next command run as
   root, so none is written. -fp gives the data location & Secrets back to root first. A folder
   above the data location is not this application's, & ERROR 31024 names it.
-  WRITE_FAILURE in the seventh & eighth messages is the second, third or sixth message, about a copy
-  other than the one read first.
+  WRITE_FAILURE in the seventh & eighth messages is the second, third or sixth message without its last
+  sentence, about a copy other than the one read first. Until v4.3.1 those three ended without it.
   The seventh message means that copy is not known to carry the key in use & could not be removed
   either. ADDITIONAL_DATA says why. The web server user reads the key in the copy it reads first,
   so a key in the other copy is found only when that copy cannot be used. Remove the copy named as
@@ -7035,7 +7090,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  A directory named in config.php could not be created.
+  A directory named in config.php could not be created. The WARNING before it names the folder & why.
+  Until v4.3.1 this file showed a path in the message, which the message has never carried.
   The parent directory does not exist & could not be created.
   The path names a mount point that is not mounted.
   The filesystem is read only or full.
@@ -7372,7 +7428,7 @@ LOGGED
 ERROR DESCRIPTION
   The Pipeline Core loaded and passed its own version check, but not one of the pipelines it accepts could be verified.
   A dispatcher with nothing behind it is worse than no dispatcher at all, so the Pipeline Core stands itself down when this happens.
-  An application that accepts no pipeline at all causes this too. A warning naming $EngineAcceptedPipelines is written first in that case.
+  An application that accepts no pipeline at all converts nothing, & from v4.3.2 that raises nothing & -v says NONE. Until then it raised this too.
   No conversion of any kind will succeed for the remainder of the request.
   Uploading, downloading, deleting, archiving and virus scanning all continue to work normally.
   This error is not fatal because a user who cannot read the page cannot report the problem.
@@ -7385,7 +7441,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34002, <SESSION_IDENTIFIER>: The <PIPELINE_NAME> pipeline declared the entry point <FUNCTION_NAME>, which does not exist! Its converter is expected at <PATH>.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34002, <SESSION_IDENTIFIER>: The <PIPELINE_NAME> pipeline declared the entry point <FUNCTION_NAME>, which does not exist! Its converter is expected at <FILE_PATH>.
 
 FILE
   Resources/Engine/Cores/pipelineCore.php
@@ -7493,6 +7549,7 @@ ERROR MESSAGE
   An OCR operation, which read wrongly for every family but OCR.
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: OCR was requested but no OCR pipeline is installed & this core has no built in OCR!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Identify was requested but no Identify pipeline is installed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Extract was requested but no Extractor pipeline is installed!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Archive was requested but no Archiver pipeline is installed!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: A virus scan was requested but no Scan pipeline is installed!
   ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34006, <SESSION_IDENTIFIER>: Strip Metadata was requested but no Metadata pipeline is installed!
@@ -7598,9 +7655,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34010, <SESSION_IDENTIFIER>: The converter left <FILE_NAME> empty, so the conversion failed & the empty file was removed!
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34010, <SESSION_IDENTIFIER>: The converter left <FILE_NAME> as something other than a file, so the conversion failed!
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34010, <SESSION_IDENTIFIER>: The converter reported success & left nothing at <FILE_NAME>, so the conversion failed!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-34010, <SESSION_IDENTIFIER>: The <PIPELINE> pipeline's result was refused, & no other pipeline claims the conversion. <ADDITIONAL_DATA>
 
 FILE
   Resources/Engine/Cores/pipelineCore.php
@@ -7612,11 +7667,16 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  A pipeline said it had converted a file, & what it left is not a result.
+  A pipeline said it had converted a file, & what it left is not a result. What follows the message is one of these.
+    The converter left <FILE_NAME> empty, so the conversion failed & the empty file was removed!
+    The converter left <FILE_NAME> as something other than a file, so the conversion failed!
+    The converter reported success & left nothing at <FILE_NAME>, so the conversion failed!
+  Until v4.3.1 the sentence alone was the message. The message names the pipeline whose result was refused from then.
   A converter that fails part way can leave an empty file, as ImageMagick does for an icon it cannot write, & Calibre writes a folder for OEB.
   An empty file is removed. A folder or a link is left for the sweep, which removes the session it is in.
   A pipeline that reports success & leaves nothing at all is named too, so the failure is never silent.
-  Where another installed pipeline could still convert the file, each of these is a warning instead, & that pipeline is tried next.
+  Where another installed pipeline could still convert the file, this is a warning instead, & that pipeline is tried next.
+  The warning names the pipeline as well, & is in WARNINGS ABOUT PIPELINES.
   A plain text format may be empty, because a document or an image with no text in it converts to an empty one, so txt, csv, tsv, md & the subtitle formats are not held to this.
   Until v4.0.6 every pipeline judged by whether anything was there, so each of these was offered to the user as the result.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -7641,8 +7701,6 @@ WARNINGS ABOUT PIPELINES
     WARNING!!! The application's <LIST> pins <NAME> to something that is not a version. It was refused.
       <LIST> is the list of accepted pipelines or of accepted shared modules, which Resources/Contract/app-engine-config.php sets.
       A bad entry costs that entry & nothing else.
-    WARNING!!! This application accepts no pipeline. They are named in $EngineAcceptedPipelines, which <FILE_PATH> sets.
-      No pipeline is read, & 34001 follows it. What is missing is the list, & not anything in a pipeline's folder.
     WARNING!!! A pipeline asked for the shared module <NAME>, which this Pipeline Core does not accept.
     WARNING!!! The shared module <NAME> is not installed at <FILE_PATH>.
     WARNING!!! The shared module <NAME> could not be read.
@@ -7671,6 +7729,9 @@ WARNINGS ABOUT PIPELINES
     WARNING!!! The <PIPELINE> pipeline cannot run without <NAME>, which the dependency manifest does not name, so it is believed installed.
       From v4.2.1. A required tool is looked for by its manifest entry, & a name the manifest lacks cannot be looked for, so the
       pipeline is offered. The name must match the manifest's exactly. --pipeline --check-depends names every one that does not.
+    WARNING!!! The <PIPELINE> pipeline's result was refused, so the next pipeline that claims the conversion is tried. <ADDITIONAL_DATA>
+      From v4.3.1. A pipeline said it converted a file & what it left is not a result, as 34010 describes, & another installed pipeline
+      claims the conversion, so it is tried next. What follows says what was left. 34010 is raised once no pipeline is left to try.
     WARNING!!! Capability mismatch. The <FAMILY> pipeline claims <FILE_TYPE> to <FILE_TYPE> & <SUBSYSTEM> reports it cannot. A narrowing mode would refuse this conversion. Check the alias table in depends.php before enabling one.
       Raised only in the detected-advisory mode, which converts as declared & says what a narrowing mode would have refused.
       ABOUT_CAPABILITY_DETECTION describes the modes.
@@ -7733,6 +7794,26 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
+  ERROR!!! Starter-35000, An engine configuration cannot be loaded directly!
+
+FILE
+  /Resources/Contract/app-engine-config.php
+
+FATAL
+  YES
+
+LOGGED
+  NO
+
+ERROR DESCRIPTION
+  The Starter's Engine configuration was requested directly, rather than read by the Engine, from v4.3.2.
+  It names the Starter rather than the Engine, because the file is the Starter's own data.
+  Nothing is wrong. Something asked for a file it should not have.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ERROR MESSAGE
   ERROR!!! Engine-35000, <COMPONENT> cannot be loaded directly!
 
 FILE
@@ -7759,8 +7840,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-36000, <SESSION_IDENTIFIER>: The Environment Manager was
-  started as <USER> & requires root. Nothing was checked.
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-36000, <SESSION_IDENTIFIER>: The Environment Manager was started as <USER> & requires root. Nothing was checked.
 
 FILE
   Resources/Engine/Managers/environmentManager.php
@@ -8177,9 +8257,10 @@ WARNINGS ABOUT WORKFLOWS
       files it would delete may be the only copies of what that step failed to make. The workflow ends as failed, with the reason
       incomplete, & nothing is deleted. The entries before this one name each error. Fix what failed & run the workflow again.
     WARNING!!! The Workflow Core is unavailable. No workflow can run until it is repaired.
+    WARNING!!! A workflow worker was started without a session it can continue.
+  The core raises these, from convertCore.php.
     WARNING!!! A workflow was requested & the Workflow Core is unavailable.
     WARNING!!! A workflow was requested & workflows are disabled.
-    WARNING!!! A workflow worker was started without a session it can continue.
     WARNING!!! A workflow's virus scan report could not be kept beside the files it scanned.
     WARNING!!! A request carried <INPUT> as something other than text, & it was refused.
       From v4.1.5. streamBaseURL, userURLDownload, workflowDocument & workflowCheck are read as text, & so is
@@ -9989,4 +10070,1485 @@ WARNINGS ABOUT CHOOSING A CONVERSION FAMILY
       family whose lists in config.php do not hold the pair is converted as a request naming none is, by the first family that does.
       A page sends only the family whose menu offered the output, so this is a request made some other way, such as a script calling
       the REST API with the wrong family. Where no family holds the pair, 5006 follows.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT AN ARGUMENT BEGINNING --app
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The kernel raises these, from Resources/Kernel/kernel.php, for an argument that belongs to the application.
+  Until v4.3.1 the catalogue did not hold them.
+    WARNING!!! The application argument <COMMAND> was supplied & this application declares no handler.
+      From v4.2.4. An argument beginning --app belongs to the application, & its contract names no function in
+      $EngineApplicationArgumentHandler. Nothing was run, & the command exits 2.
+    WARNING!!! The handler <FUNCTION_NAME> returned something other than an exit status for <COMMAND>, so the command is reported as failed.
+      From v4.3.1. A handler sets the exit status by returning a whole number from 0 to 255, & returns nothing where the command
+      succeeded. This one returned something else. The command exits 1. It is a fault in the application's handler & not in what was typed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT A TIMER OF AN APPLICATION'S OWN
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  Every one of these is from v4.3.1. The Setup Core raises them, from Resources/Engine/Cores/setupCore.php, for a command an application
+  puts on a schedule through $EngineTimerProvider. ENGINE_RECONCILIATION_HRPROTECT.txt enters them under Change 10.
+  --setup --install-service, --setup --install-complete & -fp are the commands that raise them, & each prints what it logged.
+    WARNING!!! The calendar of the timer <TIMER_NAME>, <CALENDAR>, is not one systemd reads, so the timer runs daily.
+      The calendar a timer was given holds a character a calendar is not made of, or systemd-analyze did not read it.
+      The timer is written with daily in its place, so the command still runs.
+      systemd-analyze calendar  followed by the calendar says what systemd makes of one. Correct it, run  -fp  & restart the timer.
+    WARNING!!! The timer <TIMER_NAME> was refused, because <ADDITIONAL_DATA>.
+      A record the application's timer provider returned is not fit to be written into a unit root runs. What follows says which field.
+      No unit is written for it. A name is lower case letters, digits & dashes, & is neither environment nor listener.
+      An Argument is one word beginning --app-, a Reach is confined or host, & a Success is eight exit statuses at most.
+      It is a fault in the application & not in what an administrator configured.
+    WARNING!!! A timer provider named <FUNCTION_NAME> was declared & does not exist. The application puts nothing on a schedule.
+    WARNING!!! The timer provider named <FUNCTION_NAME> answered with no list. The application puts nothing on a schedule.
+      The contract names a function in $EngineTimerProvider that is not defined, or that returned something other than a list of timers.
+      No unit is written. It is a fault in the application.
+    WARNING!!! An application asks for sixteen timers at most, so every one after the sixteenth was refused.
+      The provider returned more than sixteen. The first sixteen were examined, & the rest have no unit.
+    WARNING!!! The timer <TIMER_NAME> was not built, because <ADDITIONAL_DATA>.
+      A unit runs PHP & the application by their whole paths, & one of the two holds something other than letters, digits, dots, dashes,
+      underscores & slashes. A unit splits a line at a space & reads a percent sign as its own, so such a path is not written into one.
+      What follows names the path. Install the application in a folder whose path holds none of those.
+    WARNING!!! The timer <TIMER_NAME> could not be written to <FILE_PATH>. <ADDITIONAL_DATA>
+      A service or a timer could not be written into /etc/systemd/system, & what follows says why. It is usually a full disk,
+      or a folder on the way there that an account other than root could replace. Nothing was enabled, & --setup --install-service exits 1.
+      A unit that is a link is left as it is, & so is the unit beside it, because an administrator masks a unit by putting a link where it was.
+      sudo systemctl unmask  takes a mask away, & the command can then be run again.
+    WARNING!!! The timers of <APPLICATION_NAME> can only be written while running as root.
+      A command that writes a unit was reached by an account that is not root. Nothing was written. Run it with sudo.
+    WARNING!!! The timers of <APPLICATION_NAME> were written & systemd could not be told to read them again. <ADDITIONAL_DATA>
+      The units are in place & systemctl daemon-reload failed. What follows is what it said.
+      systemd goes on with what it had read. Run  sudo systemctl daemon-reload  & read what it answers.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE PROTECTION PAGE
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php & Resources/Engine/Cores/environmentCore.php, when it gives a folder
+  the page that keeps it from being listed. From v4.3.1 every such page is built from Resources/Engine/UI/protectionPage.html.
+  A web server -fp configured lists no folder even where a page is missing, so each of these is a second wall that fell, not the first.
+    WARNING!!! The protection page logo <FILE_PATH> cannot be shown, because <ADDITIONAL_DATA>, so the Engine's own is shown in its place.
+      From v4.3.1. The contract names a logo in $EngineProtectionLogo that is not a PNG, a JPEG, a GIF or a WebP of 256 KiB at most,
+      in a file that is not a link & lies inside the installation. What follows says which. Correct the file or the path in the contract.
+    WARNING!!! The Engine's own logo, Resources/Engine/UI/HRProprietary_logo.png, cannot be shown, because <ADDITIONAL_DATA>. The protection page is built without a logo.
+      From v4.3.1. The Engine's logo is missing, is a link, or is not the file the Engine was distributed with, whose hash
+      buildProtectionPage() holds in engine.php. An application adds a logo of its own beside it & never removes it or writes over it. Put back the file from the
+      Engine's release. The page is still written, with no logo, because a folder still needs its page.
+    WARNING!!! The protection page template, Resources/Engine/UI/protectionPage.html, cannot be read, so the page rendered from it beside it is used.
+      From v4.3.1. The template is missing or has lost a placeholder, so Resources/Engine/UI/index.html, the page rendered from it, is written
+      in its place. Put back the template from the Engine's release.
+    WARNING!!! Neither the protection page template nor the page rendered from it can be read, so no protection page can be written.
+      From v4.3.1. Both files are missing from Resources/Engine/UI. No folder is given a page until they are put back.
+    WARNING!!! A required directory has no document root protection: <FILE_PATH>
+      A folder a web request needs exists & has no page, & none could be written. A warning above or the writer's notice below says why.
+    WARNING!!! A hosted location could not be protected because it does not resolve: <FILE_PATH>
+    WARNING!!! A hosted location could not be given a protection page: <FILE_PATH>
+    WARNING!!! A hosted location could not be given a protection page, because the Engine that writes one is not loaded: <FILE_PATH>
+      The Environment Core gives each folder the application creates a page, where $EngineProtectHostedLocations is TRUE. The folder does
+      not resolve, the page could not be written, or the Engine was not loaded to write it. The last is from v4.3.1.
+    WARNING!!! A protection page could not be written. <ADDITIONAL_DATA>
+      From v4.3.1. The kernel's writeFileWithoutFollowing() writes a page, which replaces a link rather than writing through it, & it
+      refused or failed. What follows is one of four sentences. <FILE_PATH> was not written, with what the folder is not, because root
+      writes only in a folder held for root. A new file could not be created beside <FILE_PATH>. Only part of <FILE_PATH> could be
+      written. The new copy of <FILE_PATH> could not be moved into place. The last three are a full disk or a folder that cannot be written.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE EVENT RECORD
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  Both are the Engine's from v4.3.1, & were HRProtect's from its v0.0.3. Neither changes what a command does or the status it exits
+  with, & each is said once for a command.
+  The Engine raises these, from Resources/Engine/engine.php.
+    WARNING!!! The event record is neither written to nor read by this command, because the Event Core is <STATE>. <ADDITIONAL_DATA>
+      A command had an event to keep, or was asked to read the record, & the Event Core could not be used.
+      The state is detached, refused or unable, & what follows it says why.
+      detached means Resources/Engine/Cores/eventCore.php is not installed.
+      refused means it reports no version or one the application does not pin, or that it could not be loaded.
+      unable means the command is not root's, or that the Events folder is not root's alone or could not be made.
+      Run  sudo php <entry point> -fp  for a folder that is not root's alone. Only a command that runs as root keeps an event.
+      The command does its work & reports it as it would have.
+      php <entry point> -v  says where the Event Core stands. A record switched off with --Record Events-- raises no warning, because
+      that was chosen.
+    WARNING!!! An event could not be written to the event record, & no other that cannot be is said by this command. <ADDITIONAL_DATA>
+      The Event Core was ready & one event was not kept. What follows is the reason the Event Core gave.
+      A full disk is the usual reason, & the part of a line it let through was taken back out.
+      A file of the record that is not root's alone, that is a link or that has a second name is refused, & is never written through.
+      An event that is not well formed is refused as well. That is a fault in the application that kept it & is worth reporting.
+      The command goes on, & what it found is in its report & its log. Every later event this command cannot keep is passed over
+      without a word.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT AN ENGINE THAT DID NOT START
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises the first, from Resources/Engine/engine.php, & the kernel the others, from Resources/Kernel/kernel.php.
+    WARNING!!! The Engine did not start, because its Environment Core, Resources/Engine/Cores/environmentCore.php, was refused. <ADDITIONAL_DATA> Put it back from the Engine's release.
+      From v4.3.1. The Engine pins its Environment Core exactly, in getAcceptedEnvironmentCore(), & does not start without it, because
+      nearly everything the Engine does calls into it. What follows says whether it is missing, reports no version, reports another version
+      or could not be loaded. Until v4.3.1 a missing one was a warning that said an application could supply its own definitions, & the
+      first command that needed one, -v & -h among them, ended with a PHP fatal error.
+    WARNING!!! The Engine is unavailable. Dependency location, startup keys, environment validation & per operation resource limits are unavailable until it is repaired.
+      The Engine is missing, is not the version the application pins, or loaded & did not start. A warning before this one says which.
+      -v & -h are answered by the kernel, which says what it can. A web request is halted with error 28005, & every other command is refused.
+      Put back Resources/Engine from the release the application came from, into the installation, & run -v again.
+    WARNING!!! The command <COMMAND> was refused because the Engine is unavailable.
+      Every command but -v, -h & --app needs the Engine. The command exits 1 & says what to run. Where the installation is in
+      Application in the data location & the command was run from another folder, it names the installation, because a drop-in
+      unpacked into the folder the web server serves rather than into Application does this.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT MEMORY PROTECTION
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The kernel raises this, from Resources/Kernel/kernel.php. Until v4.3.1 it was named in the description of 40000 & had no line.
+    WARNING!!! Cannot purge sensitive memory for the <FUNCTION_NAME> function! Memory protection is Disabled.<ADDITIONAL_DATA> Continuing...
+      The condition 40000 describes, where the failure is not fatal. --Enable Memory Protection-- in config.php is FALSE, or the caller
+      asked for a failure that is not fatal, & what follows the state says when the caller's choice does not match config.php. Before a
+      logfile is open it is written to the server's error log. It should never be raised, because assigning NULL cannot fail.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE LOGFILE
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The kernel raises these, from Resources/Kernel/kernel.php, as it opens the logfile. Each is written once a logfile is open, or shown
+  with error 9 when none can be. ABOUT_LOGGING says where each account logs.
+    WARNING!!! Root could not open its logfile, so it logs to standard error instead. <ADDITIONAL_DATA>
+      Root logs to Engine in the data location, & Engine is there. Its logfile is opened without following a link of either kind, & was
+      refused or could not be made. What follows says why. A link, a file with a second name & a file another account owns are refused.
+      Root's entries go to standard error for the rest of the command, which a terminal shows & systemd journals. Before -fp has made
+      Engine, as after an upgrade, root logs there without this warning.
+    WARNING!!! The log folder <FOLDER> could not be made, so the next one is tried.
+      An account other than root logs to the folder --Log Storage Directory-- names, & to Logs in the data location when that one
+      cannot be made. The folder above it belongs to another account, is read only or is full.
+    WARNING!!! The logfile <FILE_PATH> could not be created.
+      A log folder was there & no logfile could be written in it, so nothing this command logs is kept. The folder belongs to another
+      account, is read only or is full. The web server account's is Logs, which  sudo php <entry point> -fp  gives back to it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT COMPONENTS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The kernel raises these, from Resources/Kernel/kernel.php, for the Engine & for each core the Engine loads. ABOUT_COMPONENTS says
+  what each component is & which are pinned.
+    WARNING!!! The <COMPONENT> component is not installed at <FILE_PATH>.
+    WARNING!!! The <COMPONENT> component at <FILE_PATH> could not be read.
+    WARNING!!! The <COMPONENT> component reports no version & was refused.
+    WARNING!!! The <COMPONENT> component reports v<VERSION> & this core requires v<VERSION>. It was refused.
+      A component's version is read from its file without running it, & the component is loaded only where it is the version pinned,
+      exactly. One that is missing, unreadable, unversioned or another version is not loaded, & whatever needs it is unavailable, which
+      a warning or an error after it says. A component that reports no version is refused, because an unknown build cannot be cleared.
+      Put it back from the release the application came from. Run  php <entry point> -v , which lists each & the version it reports.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE COMMAND LINE
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The kernel raises these, from Resources/Kernel/kernel.php, as it reads a command line.
+    WARNING!!! The command line argument vector could not be read & no command was dispatched.
+      PHP handed over no list of arguments, so the command line has no command, & the help is printed instead.
+    WARNING!!! CLI user detected. File operations are disabled.
+      Every command line raises it but a workflow's worker. A command line works on no visitor's files, so nothing that lists, converts
+      or removes the files of a session runs from one.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE CONFIGURATION
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The kernel raises these, from Resources/Kernel/kernel.php, as it boots.
+    WARNING!!! The configured installation directory does not contain <ENTRY_POINT>, so <FOLDER> is being used instead. Set --Installation Directory-- in Resources/config.php to the real path.
+      --Installation Directory-- names the folder the web server serves, which holds a loader named after the entry point. It is empty
+      or names a folder without one, & the application is not the installed copy in Application in the data location, so the folder
+      the entry point is in is taken to be the one served. A copy run from a folder of its own, such as a fresh clone, does this.
+    WARNING!!! The configuration is missing <NUMBER> required setting(s). Only --config --repair can run.
+      config.php lacks settings the configuration templates name, & the command is --config --repair, which adds them. Every other
+      command halts with 28000, which names each one.
+    WARNING!!! The configured home directory is the data location, which root owns & the web server account cannot write. The cache folder <FOLDER> is used instead.
+      --Home Directory-- is where the web server account's tools keep their own configuration & caches. A value equal to the data
+      location, as older releases shipped, is a folder that account cannot write, so Cache in the data location is used. Set
+      --Home Directory-- to $ConvertLoc.'/Cache', as the configuration template does.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT WHAT ROOT TRUSTS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The kernel raises these, from Resources/Kernel/kernel.php. Root runs, reads & writes nothing another account could change, & -fp
+  gives each location root manages back to root. ABOUT_MANAGED_LOCATIONS says what each location must be.
+    WARNING!!! Root is running code an account other than root could have changed, because <COMMAND> is what gives the installation at <FOLDER> back to root. <ADDITIONAL_DATA>
+      Every other command run as root halts with 28008 on such a tree. -fp, --setup & --config --repair are what give a tree to root,
+      & a fresh clone or an older installation is not root's until one of them has run, so they still run. What follows names the
+      first thing that failed, & the same is printed. An account that could change the tree could have changed this command too.
+    WARNING!!! Root corrects nothing beneath <FOLDERS>, because another account can change them.
+      A folder above the hosted location, above HRProprietary or above an additional data location is not root's alone. Root goes on,
+      & leaves everything beneath each such folder as it is. The report printed with it says what each folder needs. A folder above
+      the data location halts with 31024 instead.
+    WARNING!!! A folder above the data location <FOLDER> could not be examined.
+    WARNING!!! A folder above the hosted location or an additional data location could not be examined.
+      Root judges every folder above those locations before it touches anything below them, & one could not be read. Root goes on with
+      the folders it could judge. A folder that vanished while it was read does this, & the next command judges it again.
+    WARNING!!! The data location at <FOLDER> could be changed by another account, so root took it back, root:root 0755, as -fp does. <ADDITIONAL_DATA>
+    WARNING!!! The data location at <FOLDER> could be changed by another account & could not be given back to root, so the install secret below it is out of root's reach. <ADDITIONAL_DATA> <ADDITIONAL_DATA>
+      Root reads & writes the install secret only where no account but root & the web server account could replace it. A repair, &
+      every command run as root once Secrets is in the data location, takes the data location back first, because -fp could not give
+      it its role otherwise. What follows says what was wrong, & in the second why it could not be changed. An old chown -R, a restored
+      backup or a bind mount leaves one so. Only a copy of the secret root owns counts for the rest of the command.
+    WARNING!!! The data location <FOLDER> does not exist & was not created, because it is beneath a system folder, a folder another account can change or a link. <ADDITIONAL_DATA>
+      Root creates a missing data location only beneath a folder it can trust, & never beneath a system folder such as /etc or /usr.
+      Make it by hand, or set --Data Storage Directory-- in config.php to a folder that is not beneath one, & run -fp as root.
+    WARNING!!! The data location <FOLDER> was created & could not be given to root. <ADDITIONAL_DATA>
+    WARNING!!! The data location did not exist & was created at <FOLDER>.
+      The data location was missing, so root made it, because the install secret is kept in it. The first comes before the second
+      where its owner could not be changed, & -fp gives it back to root.
+    WARNING!!! <FOLDER> held <NUMBER> folder(s) an account other than root could change. Each was made root's alone before anything in it was removed.
+      Root removed a tree, such as an old build of a dependency, & folders in it were not root's alone. Each was made so before it was
+      emptied, so nothing could swap one for a link while root worked in it. The tree is gone. That another account could change part
+      of it is worth knowing.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE INSTALL SECRET
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The kernel raises these, from Resources/Kernel/kernel.php. The description of 31020 says how root keeps the install secret, in two
+  copies with the same key, & which copy the web server account reads first. A key is in use only when that account reads it.
+  Root raises the first group, as every command run as root settles the secret.
+    WARNING!!! The web server account <ACCOUNT> or the group of the same name could not be looked up, so only a copy of the install secret root owns counts, & Secrets cannot be judged.
+      The kernel names the web server account www-data, & this host has no account or no group of that name. A copy that account owns
+      is not taken, & the group of Secrets & of each copy is not judged, so no copy is written again on every command for a group
+      nobody here can name. A web server that runs as another account cannot read the key.
+    WARNING!!! The install secret was settled without its lock, so another command run as root could have been settling it at the same moment. <ADDITIONAL_DATA>
+      One command run as root settles the secret at a time, under secret.lock in Engine, so a command that read the old key never writes
+      it back over a new rotation. What follows says why the lock was not held. Engine is not root's own yet, another command held the
+      lock for fifteen seconds, or the filesystem cannot lock. Where Engine does not exist, as before the first -fp, no lock is taken &
+      nothing is said, because nothing else can be settling a secret there yet.
+    WARNING!!! The copy of the install secret at <FILE_PATH> is not used. <ADDITIONAL_DATA>
+      A copy was there & could not be used, so the other was looked in, & a new key is made only where neither can be used. What
+      follows says why. A copy another account could have written, that is not a plain file, that has a second name or that an account
+      but its owner may write is never read, because a key another account could have written is one it may know. One root read that
+      this core cannot use carries another version, or something this application did not write. It is written again with the key in use.
+    WARNING!!! <WRITE_FAILURE> The copy at <FILE_PATH> still carries the key, & the next command run as root tries again.
+    WARNING!!! <WRITE_FAILURE> It carries the key in use, & the next command run as root tries again.
+      A copy that carries the key in use could not be written again in the shape root keeps it, root:www-data 0640. The first is the
+      copy read first, & the second the other copy. The key is unchanged, so every session is unaffected.
+    WARNING!!! <WRITE_FAILURE> It was not known to carry the key in use, so it was removed. The copy at <FILE_PATH> carries the key.
+    WARNING!!! <WRITE_FAILURE> It is not known to carry the key in use, & is left while the copy at <FILE_PATH> is not right.
+      The other copy carries another key, none, or one root would not read, & could not be written. Once the web server account reads
+      the key in the copy it reads first, the other is removed, so no other key can ever be found there. Until then it is left, because
+      that account may be reading it, & an error after it says when that account would not read the key root holds.
+    WARNING!!! <WRITE_FAILURE> Nothing was at that name, so no other key can be found there.
+      The other copy was missing & could not be made. The copy read first carries the key, so the web server account reads it. From
+      v4.3.1 this ends with its own sentence. WRITE_FAILURE in each of these is the second, third or sixth message of 31020 without its
+      last sentence, about the copy it names.
+    WARNING!!! <ADDITIONAL_DATA> The web server account cannot read the install secret until it is.
+      A new copy was written as root & could not be given the web server account's group. What comes first says why, & names the staged
+      copy. Root reads the key, so the copy is still written, unless the name held a copy that account reads now, which is never replaced
+      by one it could not read, & that is 31020 instead. Run  sudo php <entry point> -fp  again.
+    WARNING!!! The staged copy of the install secret at <FILE_PATH> could not be removed. <ADDITIONAL_DATA>
+      Each write makes the new copy beside the secret under a name of its own, & renames it over the secret's once it is whole. This
+      one did not take the name & could not be removed. It may carry a key, & is root's, 0640, in a folder root holds. Remove it as root.
+      It never stops the next write, which makes a name of its own.
+    WARNING!!! The install secret at <FILE_PATH> was rewritten as root with its existing key. Every session is unaffected.
+    WARNING!!! The install secret at <FILE_PATH> was copied to <FILE_PATH> with its existing key. Every session is unaffected.
+    WARNING!!! The copy of the install secret at <FILE_PATH> carried another key, & now carries the one at <FILE_PATH>. Every session derived from its key is now invalid.
+      A copy was not in the shape root keeps it, & was written again. The first carried the key, & was not root's or not 0640, as an
+      older release or an old chown -R leaves it. The second was missing. The third carried another key, so a visitor whose session was
+      derived from it starts a new one.
+    WARNING!!! A new install secret was written to <FILE_PATHS>.
+      No usable copy was found, so root made a key. The first command run as root on an installation does this, & so does a data
+      location that lost its secret. Every session derived from an earlier key is invalid.
+    WARNING!!! The install secret was rotated. Every session derived from the old one is now invalid.
+      --rotate-secret wrote a new key into the copy the web server account reads first. A warning or an error before it names any copy
+      that could not be written.
+    WARNING!!! The web server account reads the install secret at <FILE_PATH> first, because <ADDITIONAL_DATA>
+      Secrets in the data location is not ready, so the copy at the top of the data location, where older releases keep it, is read
+      first. What follows says why. Secrets is not a folder, its group cannot be judged, it is not root:www-data 0750, or another account
+      could replace it. -fp gives the folder its role & copies the secret in.
+  The web server account raises these, as it reads the install secret. It never writes it.
+    WARNING!!! A copy of the install secret is not used, because another account could have written it. Run -fp as root, which names it & why.
+      The web server account judges each copy as root does, before it reads it, & passes over one root would refuse. It names no path,
+      because a halt at boot shows its words to the visitor. -fp names the copy & what is wrong with it, & writes it again.
+    WARNING!!! The install secret cannot be used by <ACCOUNT> & is not replaced from a web request. <ADDITIONAL_DATA>
+      A copy that account read carries no key, another version or something that did not parse. What follows is the command that
+      replaces it.
+  These are raised as an account reads a secret, the install secret for the web server account & its own for any other account.
+    WARNING!!! The secret file at <FILE_PATH> exists but cannot be read by <ACCOUNT>. It was almost certainly created by a different account. <ADDITIONAL_DATA>
+      For the web server account it is a copy of the install secret that is root's & not in its group, & what follows says to run -fp as
+      root. For any other account it is its own secret, in a folder another account made, & what follows says to delete it as root.
+    WARNING!!! The secret file at <FILE_PATH> reports version <VERSION> & this core requires v<VERSION>. It is being replaced & every session derived from it is now invalid.
+    WARNING!!! The secret file at <FILE_PATH> emitted <NUMBER> byte(s) instead of parsing as PHP. It is malformed & is being replaced.
+      A per user secret this core cannot use is replaced with a new key. A file that reports no version predates version pinning. Until
+      v4.3.1 a malformed one was replaced without a word. Only what that account derives from it is affected, & nothing a visitor holds.
+    WARNING!!! The generated secret file payload is malformed & was not written to <FILE_PATH>.
+    WARNING!!! The install secret could not be written to <FILE_PATH>. The directory may belong to another user, or be read only.
+    WARNING!!! The secret file written to <FILE_PATH> did not read back correctly & was removed.
+      A new per user secret could not be put in place, so the account holds no secret & the installation does not verify for it. The
+      second is the usual one, & names the account's own folder. Delete the folder as root & run the command again.
+    WARNING!!! The per user secret folder at <FOLDER> is a link & was not used. Delete it as root & run the command again.
+    WARNING!!! The per user secret folder at <FOLDER> could not be created.
+    WARNING!!! The per user secret folder at <FOLDER> belongs to another account & was not used. Delete it as root & run the command again.
+    WARNING!!! The per user secret folder at <FOLDER> can be reached by other accounts & was not used. Delete it as root & run the command again.
+      A command line account other than root & the web server account keeps a secret of its own, in a folder of its own in the
+      temporary directory, 0700. That folder could not be used, so the account holds no secret & the installation does not verify for it.
+    WARNING!!! The legacy secret file at <FILE_PATH> was removed.
+    WARNING!!! The legacy secret file at <FILE_PATH> could not be removed. <ADDITIONAL_DATA>
+      secret.php at the top of the data location is the unnamed secret of a release before the named one. It is removed once a secret
+      is ready, so a failure before then leaves it usable. One that could not be removed carries a key nothing reads. Remove it as root.
+  Those raised as an account reads a secret, & the two of the legacy secret file, are written to the server's error log where no
+  logfile is open yet.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT SESSIONS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The kernel raises this, from Resources/Kernel/kernel.php.
+    WARNING!!! A session token arrived & did not verify, so a new session was issued. The token was <NUMBER> characters. A stale bookmark, a rotated install secret, or a request built by something other than this interface will all do this.
+      A request carried a session token the install secret did not sign, so neither half of it is trusted, & the request is given a new
+      session without the old one's files. A first visit carries no token & is not warned about.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT WHAT AN APPLICATION PROVIDES
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php. An application names functions of its own in its contract,
+  Resources/Contract/app-engine-config.php, & the Engine calls each where it needs what only the application knows.
+  ABOUT_ENGINE_CONTRACT says what each is for.
+    WARNING!!! A report provider named <FUNCTION_NAME> was declared & does not exist. The report carries nothing of the application's own.
+    WARNING!!! An environment provider named <FUNCTION_NAME> was declared & is not defined. Only the Engine checks ran.
+    WARNING!!! A sandbox provider named <FUNCTION_NAME> was declared & does not exist. The application's tools have no sandbox profile of their own.
+    WARNING!!! A log provider named <FUNCTION_NAME> was declared & does not exist, so this manager keeps the logfile it started with.
+    WARNING!!! An operator prompt named <FUNCTION_NAME> was declared & does not exist. Every question will be refused.
+    WARNING!!! The policy check named <FUNCTION_NAME> was declared & does not exist, so the <POLICY> policy was not checked.
+    WARNING!!! A repair provider named <FUNCTION_NAME> was declared & does not exist.
+    WARNING!!! A configuration model provider named <FUNCTION_NAME> was declared & does not exist. Only the Engine's settings can be repaired or generated.
+    WARNING!!! A help provider named <FUNCTION_NAME> was declared & does not exist. The help carries nothing of the application's own.
+      $EngineReportProvider, $EngineEnvironmentProvider, $EngineSandboxProvider, $EngineLogProvider, $EngineOperatorPrompt,
+      $EnginePolicyChecks, $EngineRepairProvider, $EngineConfigModelProvider & $EngineHelpProvider each name a function the application
+      defines, & the one named is not defined when the Engine asks for it. The contract & the application's core are from different
+      releases, or the function was renamed. The Engine goes on without what it would have provided, as each says. A policy with no
+      function named is said as for that policy. A manager says the log provider's once for its whole life, because it asks every minute.
+    WARNING!!! The application's own repair, <FUNCTION_NAME>, did not complete.
+      -fp ran the repair $EngineRepairProvider names, & it reported that it did not finish. The rest of -fp goes on. What the repair
+      logged says why.
+    WARNING!!! This application declares no configuration model. Only the Engine's settings can be repaired or generated.
+      $EngineConfigModelProvider is empty, so --config knows only the Engine's settings. It judges the application's own unaccounted
+      for, & writes nothing to a section that holds them, rather than delete what it cannot find.
+    WARNING!!! The configuration template at <FILE_PATH> could not be read, so the model carries none of its defaults.
+      The Engine's template is Resources/Engine/config-template.php & the application's is Resources/Contract/config-template.php. One
+      could not be read, so --config has none of the defaults it holds to write or reset. Put it back from the application's release.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE BOOTSTRAP SCRIPT
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php, as -fp judges the bootstrap script. The script is
+  Documentation/Build/<slug>-setup.sh in the installation, & -v says where it stands. One that does not match this core is disabled
+  by its DisabledByCore line, & enabled again once it matches. Nothing else in it is changed, & it is never removed.
+    WARNING!!! The bootstrap script reports <VERSION> & does not match this core. It has been disabled. Reinstall the script from the matching release.
+    WARNING!!! The bootstrap script now matches this core & was enabled again.
+      -fp set its DisabledByCore line. The first follows an update that left an older script, & the second the script of this release.
+    WARNING!!! Only root may change the bootstrap script, because the installation is root's. Nothing was changed.
+      Its DisabledByCore line needed setting, & the command was not run as root.
+    WARNING!!! The bootstrap script could not be read back to change it. <ADDITIONAL_DATA>
+    WARNING!!! The bootstrap script reports <VERSION> & could not be changed. <ADDITIONAL_DATA> Remove it by hand.
+      Its line needed setting, & the script could not be read, carries no DisabledByCore line, or could not be written. What follows
+      says why. A script left as it is may still run & does not match this core, so remove it as root.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT MANAGERS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php, as it loads a manager, a role a long lived process runs, from
+  Resources/Engine/Managers. Each is judged before it is loaded, against a list in the Engine that pins it exactly, & a file no list
+  names is never read. ABOUT_MANAGERS says what each does.
+    WARNING!!! The manager subcomponent <FILE_NAME> is not one this Engine accepts. It was not loaded.
+    WARNING!!! The manager subcomponent <FILE_NAME> is not installed. The role it serves is unavailable.
+    WARNING!!! The manager subcomponent <FILE_NAME> reports no version. An unknown build cannot be cleared & it was not loaded.
+    WARNING!!! The manager subcomponent <FILE_NAME> reports <VERSION> & this Engine requires <VERSION>. It was not loaded.
+      The Core, Resource, Worker, Request & Authentication Managers. What the manager does is unavailable, & a process started to run
+      its role halts with 31007.
+    WARNING!!! The root manager <FILE_NAME> was asked for by an account other than root. It was not loaded.
+    WARNING!!! The root manager <FILE_NAME> is not one this Engine accepts. It was not loaded.
+    WARNING!!! The root manager <FILE_NAME> is not installed. It cannot run.
+    WARNING!!! The root manager <FILE_NAME> reports no version. An unknown build cannot be cleared & it was not loaded.
+    WARNING!!! The root manager <FILE_NAME> reports <VERSION> & this Engine requires <VERSION>. It was not loaded.
+      The Environment Manager, which runs as root alone & is kept off the list the listener dispatches from. Its pass does not run,
+      & --run-environment-manager says so.
+  A manager that is missing or another version comes from a partial update. Put Resources/Engine back from the release the
+  application came from.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT DATA LOCATIONS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php. The data location config.php names is the primary, & --Additional Data
+  Locations-- may add more, each with a path & a type, roundrobin, leastactive or redundant. A session keeps the location it started
+  in for its whole life. ABOUT_RESOURCE_RATE_LIMITING says how a new session's location is chosen.
+    WARNING!!! An entry in Additional Data Locations is not an array of a path & a type. It was skipped.
+    WARNING!!! An entry in Additional Data Locations has an empty path. It was skipped.
+    WARNING!!! The data location at <FOLDER> is listed more than once. The duplicate was skipped.
+    WARNING!!! The data location at <FOLDER> declares an unrecognized type of <TYPE>. It will be treated as redundant.
+      An entry of --Additional Data Locations-- in config.php is not one the Engine can use as written. Correct it there.
+    WARNING!!! Every distributed data location is unusable. The redundant location at <FOLDER> has taken this session.
+    WARNING!!! No configured data location is usable. Falling back to <FOLDER>.
+      A new session found no location of the pool it may be placed in that exists & can be written, so it was placed in a redundant
+      location, or in the primary. Run  sudo php <entry point> -fp , which makes & corrects each.
+    WARNING!!! The Core Manager listener did not answer a data location request. Using <FOLDER>, located by searching the configured pool for this session.
+    WARNING!!! The Core Manager listener returned no usable data location. Using <FOLDER>, located by searching the configured pool for this session.
+      A web request asked the listener which location its session uses, & had no answer, so the session's folder was looked for in
+      each location. The session's files are where it left them. Start the listener with  sudo php <entry point> -l .
+    WARNING!!! The <LOCATION> location does not exist at <FOLDER>. Nothing to clean.
+      A sweep was asked to clean a location that is not there yet, as before the first request made it.
+    WARNING!!! The <LOCATION> location at <FOLDER> was not swept, because the account sweeping could not be identified.
+      Only what the account sweeping owns is swept, & an account whose ID cannot be read cannot tell what it owns, so the
+      sweep leaves everything. The kernel halts such a process with 28010 as it starts, so a sweep should never see this.
+    WARNING!!! Could not fully clean the temporary location. Some expired sessions may remain & will be retried next request. Serving this request anyway.
+    WARNING!!! Could not fully clean the data location. Some expired sessions may remain & will be retried next request. Serving this request anyway.
+      A web request sweeps expired sessions before it is served, & this sweep could not remove all of them. A session it missed is
+      retried by the next request. One that is never removed belongs to another account, which -fp gives back.
+    WARNING!!! The session folder <NAME> the application contract names is not a name a global can carry, or is the Engine's, so it is not made.
+      $EngineSessionFolders names the folders each session holds, & each is kept in a global of its name. This one does not begin with
+      a capital letter, holds a character a name cannot, or is StreamTemp, which the Engine makes itself. Correct it in the contract.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE LISTENER
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php. The listener is the Core Manager & the managers it supervises. The web
+  server account runs them, & they talk through sockets in Sockets in the data location. ABOUT_MANAGERS says how they work.
+    WARNING!!! A listening socket was requested & this application is declared work-downward, so none was opened.
+      $EngineDispatchDirection in the contract says the application hands its work downward, so nothing needs to reach a manager & no
+      socket is opened. Something asked for one regardless, which is a fault in the application that asked.
+    WARNING!!! Could not open the manager socket at <FILE_PATH>. <ADDITIONAL_DATA>
+      A manager could not listen on its socket, so nothing reaches it. What follows is PHP's reason. A listener already running, or a
+      Sockets folder the web server account cannot write, does this. Stop the listener with -k, & start it again with -l.
+    WARNING!!! A manager socket message failed decryption or replay validation & was discarded.
+      A message did not open with the key derived from the install secret, or repeated one already accepted. A process holding a key
+      from before a rotation does this until it is restarted, & so does anything writing to the socket that is not this application.
+    WARNING!!! The manager socket directory at <FOLDER> is not writable by this account. Run -fp as root to correct it.
+    WARNING!!! The manager socket directory at <FOLDER> is not usable.
+    WARNING!!! The socket folder <FOLDER> was created & could not be given to <ACCOUNT>. <ADDITIONAL_DATA>
+      Sockets is the web server account's, 0700. It was missing, belongs to another account or could not be written, so no manager
+      can listen. -fp gives it to that account. Root never changes its mode by name, because that account could swap it for a link.
+    WARNING!!! The listener is starting into a degraded environment. The sandbox is unavailable & conversions requiring it will be refused. Run the -fp argument as root.
+      The checks the listener runs as it starts found no sandbox it can build. -v says what is missing.
+    WARNING!!! <NUMBER> manager process(es) survived a stop instruction & a kill signal.
+      -k asked each manager to stop, signalled what remained, & checked several times, & these were still running. The listener is not
+      stopped. Find them with ps & end them as root.
+    WARNING!!! This manager could not move on to the logfile it should be writing now. It keeps the one it has.
+      A manager asks the application's log provider every minute which logfile to write, & the provider could not open one. Its entries
+      go on into the logfile it had. It is said once for the manager's whole life.
+    WARNING!!! Root does not read the <NAME> state, because the web server account writes it. Nothing was read.
+    WARNING!!! Root does not write the <NAME> state, because it belongs to the web server account. Nothing was written.
+      The managers share their state through files in Sockets, which the web server account owns & could swap for a link. A command run
+      as root that needs one is handed to that account, so this is one that was not, which is a fault in the code that called it.
+    WARNING!!! Worker <NUMBER> was not terminated because its identifier now belongs to a different process. The worker had already exited.
+      A process identifier is reused once its process ends. The worker had ended & another process holds its number now, so that
+      process was left alone.
+    WARNING!!! Every tracked worker was ended on request. <NUMBER> process(es) ended.
+      The Resource Manager ended every worker it tracks, as --kill-all-workers asks. What each was doing failed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT RESOURCE BUDGETS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php. Before heavy work a request asks the listener for a budget, & before a
+  write that takes none it asks whether the disk has room. Without an answer it goes ahead, unless --Require Resource Awareness-- is
+  TRUE, which refuses instead. ABOUT_RESOURCE_RATE_LIMITING says how a budget is reckoned.
+    WARNING!!! The <OPERATION> operation was refused because the server is at its resource budget.
+      Work already running holds every budget the listener can give, & what the host's load leaves. Nothing was done.
+    WARNING!!! The Core Manager listener did not answer a budget request. <ADDITIONAL_DATA>
+    WARNING!!! The Core Manager listener returned no usable answer to a budget request. <ADDITIONAL_DATA>
+    WARNING!!! The Core Manager listener did not answer a storage request. <ADDITIONAL_DATA>
+      The listener is not running, or did not answer in time. What follows says whether the work went ahead without resource awareness,
+      or was refused because --Require Resource Awareness-- is TRUE. Start the listener with  sudo php <entry point> -l .
+    WARNING!!! The Core Manager listener answered a storage request without measuring the disk. A listener still running a release from before storage requests answers this way until it is restarted. It said: <ADDITIONAL_DATA>
+      The write goes ahead, because an answer that measured nothing refuses nothing. Restart the listener with -k & -l.
+    WARNING!!! A runtime extension was refused. This worker may be reaped.
+      A conversion still working asked for more time, & the listener refused, because it had asked as often as --Maximum Runtime
+      Extensions-- allows or would run past --Maximum Expected Runtime--. The Worker Manager may end it once its time is up.
+    WARNING!!! A budget token could not be released. The reaper will reclaim it.
+      A finished operation could not hand its budget back, because the listener did not confirm it. The listener takes it back once the
+      operation's runtime is over, so other work waits longer than it needs to meanwhile.
+    WARNING!!! This kernel does not report MemAvailable, so the resource budget is governed by load average alone.
+      /proc/meminfo carries no MemAvailable, which a kernel before 3.14 & some containers leave out. Memory is not counted.
+    WARNING!!! The configured reserve share is above 100 percent. It was treated as 100.
+      --Reserve Resource Percentage-- in config.php is above 100. The whole budget is reserved, so no work is approved. Set it lower.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE ENVIRONMENT MANAGER'S STATE & ROOT'S LOGFILES
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php, as an Environment Manager pass keeps what it found & removes root's old
+  logfiles. ABOUT_ENVIRONMENT_MANAGER says what a pass does.
+    WARNING!!! Only root writes the Environment Manager's state. Nothing was written.
+    WARNING!!! The Environment Manager's state has nowhere to go, because the data location is not known. Nothing was written.
+    WARNING!!! The Environment Manager's state could not be encoded. Nothing was written.
+    WARNING!!! The Environment Manager's state could not be written. <ADDITIONAL_DATA>
+      A pass keeps what it found at the top of the data location, root's, 0640, where the web server account can read it & never change
+      it. This pass's was not kept, so what is read is what the pass before it found. The first is a fault in the code that asked.
+      What follows the last says why.
+    WARNING!!! <ADDITIONAL_DATA> The web server account cannot read the Environment Manager's state until it is.
+      The state was written & could not be given the web server account's group. What comes first says why. -fp gives it.
+    WARNING!!! Only root prunes root's logfiles. Nothing was removed.
+    WARNING!!! Root's log folder does not exist yet, so no old logfile was removed. Run -fp to create it.
+    WARNING!!! Root's old logfiles were not removed. <ADDITIONAL_DATA>
+    WARNING!!! An old logfile of root's could not be removed. <ADDITIONAL_DATA>
+      Each pass removes root's logfiles in Engine once they are older than it keeps them. Only a name shaped like one of root's
+      logfiles is considered, & each is removed without following a link. What follows says why one was not. Engine that another
+      account could change is never pruned, & -fp gives it back to root.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT PER CONVERSION LIMITS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php, & the Setup Core the last, from Resources/Engine/Cores/setupCore.php.
+  --Enable Per Conversion Limits-- runs each conversion's sandbox in a transient systemd scope with a ceiling on processor & memory,
+  which --Maximum Per Conversion Resources-- sets for each type. Without a scope a conversion runs at a lower priority & is not
+  limited. ABOUT_RESOURCE_RATE_LIMITING says how a limit is chosen.
+    WARNING!!! systemd-run is not installed. Per conversion limits fall back to scheduling priority only.
+    WARNING!!! A resource scope could not be created. <ADDITIONAL_DATA> Per conversion limits fall back to scheduling priority alone.
+      No scope could be made for the web server account. What follows says whether -fp can enable lingering for it, or whether this
+      kernel does not delegate cgroup controllers, which many NAS & appliance kernels do not & nothing here can change.
+    WARNING!!! Per conversion limits are using a SYSTEM scope. This account holds systemd manage-units, which is enough to start a unit as root. Enable lingering for <ACCOUNT> with the -fp argument & remove that permission.
+      The scope works on the system bus, because the web server account was given systemd's manage-units. That is enough to start a
+      transient service as root, so the account that parses uploaded files has a route to root. Remove the permission.
+    WARNING!!! config.php names no per conversion ceiling for <TYPE>. Using this core's built-in <LIMIT> rather than the general default, which is too small for that type. Add a <TYPE> entry to --Maximum Per Conversion Resources-- to set this yourself.
+    WARNING!!! The per conversion limit for <TYPE> could not be read from <SOURCE>. Using the configured default.
+    WARNING!!! No usable per conversion limit could be resolved. This conversion runs unlimited.
+      A conversion's ceiling is the listener's, scaled to how loaded the host is, or config.php's when no listener runs. <SOURCE> is
+      the listener, config.php or this core's built-in table. The last means none could be read, so the conversion runs without a scope.
+    WARNING!!! The <PROFILE> sandbox profile asks for an address space limit & prlimit is not installed, so its conversion runs without one. util-linux provides prlimit.
+      From v4.3.2, a profile setting AddressSpaceLimit is held to the memory its type is allowed, through prlimit, & the conversion runs
+      without that ceiling where prlimit is missing, because a limit never refuses a conversion. Install util-linux.
+    WARNING!!! Per conversion resource limits could not be fully enabled. <NUMBER> step(s) completed.
+      -fp gives the web server account a systemd manager of its own & the cgroup controllers a scope needs, & a step did not complete.
+      Root's log says which. Conversions fall back to scheduling priority until it does.
+    WARNING!!! This kernel delegates no cgroup controllers, so per conversion limits fall back to scheduling priority.
+      -fp would give the web server account a systemd manager of its own, & this kernel gives it no controllers to limit with. Many
+      NAS & appliance kernels do not, & nothing here can change that.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT RUNNING A COMMAND AS ANOTHER ACCOUNT
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php. Root hands whatever touches the web server account's folders to that
+  account, by forking a child that drops to it for good before it runs anything. A command that could not run as it is not run at all.
+    WARNING!!! A command had to run as <ACCOUNT> & this PHP has no pcntl or posix extension. It was not run at all, because running it as root would be worse.
+      Dropping to another account needs both extensions in the command line PHP. Install them.
+    WARNING!!! The account <ACCOUNT> does not exist on this host, so a command that had to run as it was not run.
+      The account is usually the web server account, www-data, & this host has no account of that name.
+    WARNING!!! A command that had to run as <ACCOUNT> could not be forked.
+      The host refused a new process, which a process limit or a lack of memory does.
+    WARNING!!! A command that had to run as <ACCOUNT> was ended before it finished, so it is treated as failed.
+      A signal ended the child, such as a kill or the kernel's out of memory killer. Its exit status is 128 & the signal.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT BUILDING A SANDBOX
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php. WARNINGS ABOUT THE SANDBOX & REFUSED FORMATS has the others.
+    WARNING!!! Bubblewrap could not build a sandbox as <ACCOUNT>. <ADDITIONAL_DATA>
+    WARNING!!! Bubblewrap could not build a sandbox. <ADDITIONAL_DATA>
+      The Engine tried each bubblewrap it may use, as the web server account where root asked, & each refused. What follows is each
+      reason, & then what answers it. That is -fp, which installs the AppArmor profile an unprivileged user namespace needs,
+      --setup --update-depends, which installs the application's own bubblewrap, or -v run as root, which says why its own could not
+      start. Until then a tool that needs a sandbox is refused, & one that may run without runs without.
+    WARNING!!! A stream download was not attempted, because no sandbox could be built.
+      A stream's first bytes are fetched with curl inside a sandbox, & none could be built, so nothing was fetched.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT STARTING THE ENGINE
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php, as it starts.
+    WARNING!!! The Engine loaded & its configuration is missing. Every capability it gates is treated as enabled & every logging option it carries is treated as disabled.
+      Resources/Engine/engineConfig.php did not load, so nothing it sets is set. Put it back from the release the application came from.
+    WARNING!!! The application contract at Resources/Contract/app-engine-config.php was not loaded, so the Engine knows no managed location, no served folder & no mapped setting. Restore it from the release this core came from.
+      The Engine's configuration loads the contract, & it set nothing the Engine reads. -fp corrects no location while it is missing.
+    WARNING!!! The Pipeline Core is unavailable. No conversion can run until it is repaired.
+      Resources/Engine/Cores/pipelineCore.php is missing, is not the version the application pins, or verified no pipeline. A warning
+      before it says which. The pages, the command line & every report still work. -v lists the pipelines that verified.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT -fp & THE COMMANDS ROOT RUNS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php. Every repair is the same one, whether -fp, --setup or an Environment
+  Manager pass runs it. ABOUT_MANAGED_LOCATIONS says what it corrects.
+    WARNING!!! Setup Core is unavailable, so no managed location could be corrected.
+    WARNING!!! Setup Core is unavailable, so the build environment was not cleaned.
+    WARNING!!! The Setup Core is unavailable, so no update was attempted.
+      Resources/Engine/Cores/setupCore.php is missing or is not the version the application pins, & a warning before it says which.
+      The rest of -fp goes on, & -u exits 1. Put it back from the release the application came from.
+    WARNING!!! -fp did not leave the installation one root may run. <ADDITIONAL_DATA> -fp leaves links, files with more than one name & other filesystems as they are. Remove or put right what is named & run -fp again.
+      Once -fp had corrected what it could, the tree was judged again, & something in it is still not root's alone. What follows
+      names it. Every command run as root but a repair halts with 28008 until it is put right.
+    WARNING!!! The install secret was not rotated, because the running listener could not be stopped first. It would have kept answering with the old key.
+      --rotate-secret stops a running listener before it rewrites the secret, & starts it again after. It could not be stopped, so the
+      secret is unchanged & 31022 follows. Stop it with -k, or with systemctl where a unit owns it, & run the command again.
+    WARNING!!! The build could not read the pins in <FILE_NAME>.
+    WARNING!!! The build could not write the pins in <FILE_PATH>.
+      --build reads every pin from the component it names, & checks or rewrites the pins the entry point holds. A file holding pins
+      could not be read or written, so nothing was settled. It is a developer's command, run on a working copy.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT COMMANDS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises these, from Resources/Engine/engine.php, as it runs a command line. ABOUT_COMMAND_LINE_ARGUMENTS says what each
+  command does & who may run it.
+    WARNING!!! A setup command was refused for an unauthorized user.
+    WARNING!!! A root only command was refused for an unauthorized user.
+      --config & --setup, & -fp, --run-environment-manager, --rotate-secret & -u, are root's alone. The command exits 1, & prints how to
+      run it with sudo.
+    WARNING!!! A clean was refused for an unauthorized user.
+    WARNING!!! An account command was refused for an unauthorized user.
+    WARNING!!! A listener command was refused for an unauthorized user.
+      -c, --account & the listener's commands, -l, -k, --kill-all-workers & --kill-every-worker, are root's & the web server account's.
+      The command exits 1.
+    WARNING!!! A service unit installation was refused for an unauthorized user.
+      --setup --install-service is root's. --setup is refused to everybody else before this is reached, so it should never be raised.
+    WARNING!!! The command <COMMAND> was refused because <FOLDER> is not the installation & lacks <NAMES>.
+      -fp installs the tree it runs from when that is not the installation, & this one lacks the Setup Core, the Engine's configuration
+      or the contract, which installing it needs. A drop-in carries only the files its release changed, so one unpacked over the folder
+      the web server serves is not a whole release. Unpack it into Application in the data location, & run -fp there.
+    WARNING!!! A --setup command named a subsystem the dependency manifest does not declare.
+      --setup takes a subsystem after its option, & the manifest declares none by that name. The command exits 2.
+    WARNING!!! The dependency manifest could not be read, so nothing could be compared against it.
+      --pipeline compares the tools each pipeline requires with the manifest, which could not be loaded. The command exits 1.
+    WARNING!!! An unrecognized clean threshold was supplied. Using the configured default.
+      -c takes a whole number of minutes, or now, & what followed it was neither. --File Deletion Age Threshold-- is used.
+    WARNING!!! Command line invocation with an unrecognized argument.
+      Nothing recognized the command. Where it is an option of another command, the command it belongs to is named. It exits 2.
+    WARNING!!! The Resource Manager could not be reached, so no tracked worker was ended.
+      --kill-all-workers asks the Resource Manager, which did not answer, so nothing was ended. --kill-every-worker ends every process
+      of the web server account without asking.
+  These are said as the command they name begins, so the log holds when it was run.
+    WARNING!!! Command line invocation. Removing dependencies.
+    WARNING!!! Command line invocation. Terminating every tracked worker.
+    WARNING!!! Command line invocation. Terminating every process owned by the web server user.
+    WARNING!!! Command line invocation. Rotating the install secret.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT READING config.php
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Setup Core raises these, from Resources/Engine/Cores/setupCore.php, as --config reads a configuration file.
+    WARNING!!! The configuration file at <FILE_PATH> could not be read.
+    WARNING!!! The configuration file at <FILE_PATH> is empty.
+    WARNING!!! The configuration file at <FILE_PATH> ends inside an unterminated assignment.
+      --config reads the whole file before it repairs, resets or reports anything, & this one could not be read as a configuration.
+      The last means an assignment never reached the semicolon that ends it, so the setting it began is lost. Nothing was done.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT CORRECTING THE MANAGED LOCATIONS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Setup Core raises these, from Resources/Engine/Cores/setupCore.php, as -fp gives each location the contract names in
+  $EngineManagedLocations the owner & mode its role calls for. ABOUT_MANAGED_LOCATIONS lists the roles. -fp prints a line for each.
+    WARNING!!! Managed locations can only be corrected by root, so nothing was changed.
+    WARNING!!! The contract declares no managed locations in $EngineManagedLocations, so nothing was corrected.
+      The first is a fault in the code that asked, because -fp is root's. The second is a contract that is missing or incomplete.
+    WARNING!!! The managed location <NAME> declares the role <ROLE>, which the Engine does not have. It was left alone.
+    WARNING!!! The managed location <NAME> is <FOLDER>, which leads to <FOLDER>. A link is never followed, so it was refused.
+    WARNING!!! The managed location <NAME> resolved to a system or shared folder & was refused: <FOLDER>
+    WARNING!!! The managed location <NAME> at <FOLDER> has the served role & is not inside the hosted location, so it was refused. Nothing is written for it & its exposure is not tested.
+    WARNING!!! The managed location <NAME> is <FOLDER>, which is not the installation that is running, <FOLDER>. It was refused.
+      The setting a location is mapped to names one -fp will not touch. A code location must be the tree the Engine runs from, so a
+      wrong setting cannot hand another tree to root, & no location may be the filesystem root, a system folder, a shared folder or the
+      folder above one. Correct the setting in config.php, or the role in the contract.
+    WARNING!!! The managed location <NAME> at <FOLDER> could be replaced by another account, so root did not walk it & keeps nothing there. <ADDITIONAL_DATA>
+    WARNING!!! The managed location <NAME> at <FOLDER> could be replaced by another account, so root did not walk it. <ADDITIONAL_DATA>
+      Root walks a code, library or root-only tree only where every folder above it is root's, & what follows names one that is not.
+      The first is a root-only location such as the backup, which is skipped & is not a fault. The second is refused.
+    WARNING!!! <NUMBER> file(s) in <FOLDER> have more than one name & were left alone, because changing one name changes every other. Remove them & run -fp again. The first is <FILE_PATH>.
+    WARNING!!! <NUMBER> file(s) at <FOLDER> have more than one name & were left alone, because changing one name changes every other. The first is <FILE_PATH>.
+      A file with a second name could be one outside the tree, so root changes neither its owner nor its mode. The first is in a code
+      tree, & the second in a root-only one.
+    WARNING!!! <FOLDER> could not be given to root completely. <ADDITIONAL_DATA>
+    WARNING!!! The location at <FOLDER> could not be given to root alone completely. <ADDITIONAL_DATA>
+      The owner or mode of something in a code tree, or in a root-only one, could not be set, & what follows is the first of what find
+      reported. A file made immutable, a read only mount or another filesystem does this.
+    WARNING!!! The contract names <PATH> among the paths no release ships, & it is not a path inside the installation, so nothing was done for it.
+    WARNING!!! <FILE_PATH> is in the installation, no release ships it, & it could not be taken away. <ADDITIONAL_DATA> Remove it & run -fp again.
+      $EngineRetiredPaths names what older releases shipped & this one does not, & -fp takes each away. The first names an entry that is
+      not a relative path inside the installation, & the second one that could not be removed, with why.
+    WARNING!!! The location at <FOLDER> is not a folder, & a link is never followed, so it was left alone.
+    WARNING!!! The location at <FOLDER> could not be given to <ACCOUNT>. <ADDITIONAL_DATA>
+    WARNING!!! The location at <FOLDER> could not be made private to <ACCOUNT>. <ADDITIONAL_DATA>
+      A web location, such as Sessions, Cache or Logs, is the web server account's, 0700. Root changes its owner by the name itself, &
+      that account sets its mode, because it could swap any name in it for a link. What follows says why the step failed.
+    WARNING!!! The shared folder at <FOLDER> is not a folder & was left alone.
+    WARNING!!! The shared folder at <FOLDER> can be changed by another account & the folder above it cannot be trusted, so it was left alone. <ADDITIONAL_DATA>
+    WARNING!!! The location at <FOLDER> could not be given back to root. <ADDITIONAL_DATA>
+    WARNING!!! The shared folder at <FOLDER> could be changed by another account. It now belongs to root & only root can write it. Nothing inside it was touched.
+    WARNING!!! The shared folder at <FOLDER> now belongs to root, & its group & other write permission could not be removed.
+    WARNING!!! The shared folder at <FOLDER> still cannot be trusted. <ADDITIONAL_DATA>
+      HRProprietary holds every HRProprietary application & whatever else an operator keeps there, & is never walked. Where the web
+      server account could change it, which would let that account rename an installation out from under root, root takes the folder
+      itself & removes its group & other write permission. What follows says what is in the way.
+    WARNING!!! The data root at <FOLDER> is not a folder, & a link is never followed, so it was left alone.
+    WARNING!!! The data root at <FOLDER> sits where another account could replace it, so it was left alone. <ADDITIONAL_DATA>
+    WARNING!!! The data root at <FOLDER> could not be given back to root. <ADDITIONAL_DATA>
+    WARNING!!! The data root at <FOLDER> belongs to root, & its mode could not be set to 0755.
+    WARNING!!! The data root at <FOLDER> still cannot be trusted. <ADDITIONAL_DATA>
+      The data root is root:root 0755, so every account may reach a folder of its own below it & none but root may change what is in
+      it. What follows says what is in the way. A folder above it that another account can change is named by 31024.
+    WARNING!!! The secrets folder at <FOLDER> is not a folder, & a link is never followed, so it was left alone.
+    WARNING!!! The secrets folder at <FOLDER> sits where another account could replace it, so it was left alone. <ADDITIONAL_DATA>
+    WARNING!!! <ADDITIONAL_DATA> The web server account cannot read the secrets in it until it is.
+    WARNING!!! The secrets folder at <FOLDER> belongs to root, & its mode could not be set to 0750.
+    WARNING!!! The secrets folder at <FOLDER> still cannot be trusted. <ADDITIONAL_DATA>
+      Secrets is root:www-data 0750, so the web server account may read the install secret & change none of it. What follows says what
+      is in the way. Until the folder has its role, that account reads the copy of the secret at the top of the data location first.
+    WARNING!!! The folder at <FOLDER> could not be created. <ADDITIONAL_DATA>
+      A folder is made only beneath one nothing but root can replace. What follows names the folder that is not, where that was why.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE DATA ROOT'S FOLDERS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Setup Core raises these, from Resources/Engine/Cores/setupCore.php, as -fp & --setup make the folders below the data root &
+  move an older layout into them. Releases before v4.0.4 kept sessions & the capability cache at the top of the data location.
+    WARNING!!! The data root can only be provisioned while running as root, so nothing was created or moved.
+      A fault in the code that asked, because -fp & --setup are root's.
+    WARNING!!! <NUMBER> folder(s) at the top of <FOLDER> are not sessions, so they were left where they are. <NAMES> Move them out of the data location.
+    WARNING!!! <NUMBER> older session directory or directories at the top of <FOLDER> were not moved into Sessions, because root moves nothing into a folder another account could replace. <ADDITIONAL_DATA>
+    WARNING!!! A session directory at <FOLDER> could not be moved into <FOLDER>. It was left where it is.
+      A session of an older layout is moved into Sessions, so no open session is lost. A folder not shaped like a session is left, &
+      so is every session while Sessions could be replaced by another account, which -fp gives back to the web server account.
+    WARNING!!! <NUMBER> name(s) in <FOLDER> are not <ACCOUNT>'s, so the sweep leaves them. <NAMES> Remove them.
+      The sweep runs as the web server account & removes only what that account owns. These stay until they are removed by hand.
+    WARNING!!! The capability cache at <FILE_PATH> was not moved into <FOLDER>, because root moves nothing into a folder another account could replace. <ADDITIONAL_DATA>
+    WARNING!!! The capability cache an older release left at <FILE_PATH> could not be removed. <ADDITIONAL_DATA>
+      The capability cache records what the tools on this host convert, & is made again where it is missing. An older one at the top of
+      the primary data root is moved into Cache, & one anywhere else, or one Cache already has, is removed.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT INSTALLING THE APPLICATION
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Setup Core raises these, from Resources/Engine/Cores/setupCore.php, as -fp or --setup --install-complete installs the tree it
+  ran from into Application in the data location, & as -fp publishes what the hosted location serves. Only the entries the contract
+  names in $EngineApplicationLayout are copied, into a folder beside Application only root can enter, & renamed into place.
+  The installation it replaces is moved aside first, & nothing of it is removed before the new one is in place, from v4.3.2.
+    WARNING!!! The folder the application lives in, <FOLDER>, can be changed by an account other than root, so nothing was installed. <ADDITIONAL_DATA>
+    WARNING!!! The running tree at <FOLDER> can be changed by an account other than root, so it was not installed. <ADDITIONAL_DATA>
+      Root installs only a tree it trusts, into a folder only root can change, & what follows names what is in the way. The first is
+      the data location, which -fp gives back to root. The second is the release the command ran from.
+    WARNING!!! The tree at <FOLDER> lacks <NUMBER> file(s) of code the installation at <FOLDER> holds, <FILE_PATH> among them, so it was not installed. A drop-in holds only the files that changed. Unpack it into <FOLDER> & run -fp there.
+      A drop-in is not a release. Every PHP file the installation holds in Resources & UI must be in the tree that replaces it, so a
+      drop-in unpacked where older releases went is never installed in place of the whole application. A release that drops code on
+      purpose installs once the installation it replaces has been moved aside by hand.
+    WARNING!!! Part of the installation at <FOLDER> could not be read, so the tree at <FOLDER> was compared with the rest of it.
+      What could not be read is not counted as missing from the tree. Run -fp as root, which gives the installation back to root.
+    WARNING!!! <FOLDER> is not a folder, so nothing was installed.
+      Application in the data location is a file or a link. Remove it as root & run -fp again.
+    WARNING!!! A folder to stage the installation in could not be created beside <FOLDER>.
+    WARNING!!! The running tree was not installed. <ADDITIONAL_DATA>
+    WARNING!!! The running tree holds no <ENTRY_POINT>, so it was not installed.
+      The staged copy could not be made, an entry could not be copied, as what follows says, or the copy lacks the entry point. The
+      staged copy is removed & the installation is unchanged. A full disk or a read only mount does the first two.
+    WARNING!!! What an earlier installation or update left at <FOLDER> could not be removed, so the installation at <FOLDER> was not moved aside. <ADDITIONAL_DATA>
+      An installation the backup cannot hold waits at Application.old until the new one is in place, & an update moves the one it
+      replaces to the same name, so a run of either that stopped part way can leave one there. It is removed before the installation
+      is moved there, & what follows says why it could not be. Nothing was moved or removed, so the installation is unchanged. Remove
+      Application.old by hand & run -fp again.
+    WARNING!!! The installation at <FOLDER> could not be moved aside, so the new one was not put in its place.
+      The installation is moved to the backup location before the new one takes its name, or to Application.old where the backup
+      cannot hold it. Neither could be done, so the installation is unchanged. An Application that resolves to a system folder is
+      never moved.
+    WARNING!!! The staged installation could not be moved into <FOLDER>, so the installation it would have replaced was put back.
+      The installation had been moved aside & the new copy could not take its name, so the installation was moved back. It is
+      unchanged, & the staged copy is removed. The tree the command ran from is unchanged too, so -fp can be run from it again.
+      Until v4.3.2 an installation the backup could not hold was removed before the new copy was moved, & this left Application
+      missing.
+    WARNING!!! The staged installation could not be moved into <FOLDER>, & the installation it would have replaced could not be put back from <FOLDER>. Move it back by hand.
+      Neither the new copy nor the installation could take the name, so Application is missing. Nothing of the installation was
+      removed. It is whole in the folder named, & moving that folder to Application as root puts it back. The staged copy is removed.
+    WARNING!!! The staged installation could not be moved into <FOLDER>.
+      Application held nothing, so there was nothing to put back. The staged copy is removed, & the tree the command ran from is
+      unchanged.
+    WARNING!!! The installation at <FOLDER> is in place, & its mode could not be set to 0755. The installed copy's -fp sets it.
+      The new installation has its name & is installed. The -fp the installed copy runs next gives every folder in it its mode.
+      Until v4.3.2 this was reported as a staged installation that could not be moved, though it had been.
+    WARNING!!! The installation it replaced is left at <FOLDER>, & could not be removed. <ADDITIONAL_DATA> Remove it by hand.
+      The new installation is in place. The one it replaced waited at Application.old because the backup could not hold it, & what
+      follows says why it could not be removed. Nothing runs from it.
+    WARNING!!! The hosted location reported <STATE>. <ADDITIONAL_DATA>
+      The hosted location is the folder the web server serves, which holds the loader in place of the entry point, the protection page,
+      the static files a browser fetches & DATA. <STATE> is FAILED where a name could not be written, REFUSED where it is a link, a
+      system folder or one another account could replace, or overlaps the installation, UNINSTALLED where its entry point belongs to a
+      release that is not installed, & STRAY where names in it are not the installation's. What follows says what to do.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE APACHE CONFIGURATION
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Setup Core raises these, from Resources/Engine/Cores/setupCore.php, as -fp writes the Apache configuration that refuses every
+  data location & what the web root must not serve. It is written atomically through the kernel, tested with apachectl configtest, &
+  withdrawn when the test fails, as 504 says. <RULES> names the folders the rules serve, such as DATA, or is Apache where there are none.
+    WARNING!!! No hosted location is set, so the Apache configuration could not be built.
+      --Installation Directory-- names no folder, so there is nothing to protect.
+    WARNING!!! No Apache configuration directory was found, so the <RULES> rules were not written there.<ADDITIONAL_DATA>
+      This host has none of /etc/apache2/conf-available, /etc/apache2/conf.d & /etc/httpd/conf.d, as one behind another web server has
+      none. What follows says whether .htaccess is the fallback. The exposure check -v runs says whether a data location can be fetched.
+    WARNING!!! The data location <FOLDER> holds the hosted location, so the Apache configuration cannot refuse it without refusing <APPLICATION_NAME> as well. Move the data location outside the web root.
+      A data location is outside the web root by design. This one contains the folder the web server serves, so refusing it would refuse
+      the application itself, & it is left reachable.
+    WARNING!!! The Apache configuration at <FILE_PATH> could not be examined, so it was left as it is. Remove it & run the -fp argument again. <ADDITIONAL_DATA>
+    WARNING!!! The Apache configuration could not be written. <ADDITIONAL_DATA>
+    WARNING!!! The <APPLICATION_NAME> Apache configuration was written but could not be enabled at <FILE_PATH>.
+      Root reads & writes the file through the kernel, which never follows a link, & leaves a name it cannot read as a plain file,
+      because a file never examined cannot be put back. What follows says why. A Debian host enables it by a link in conf-enabled.
+    WARNING!!! The Apache configuration was written but apachectl could not be found, so it was not tested. Run a configuration test & reload the web server by hand.
+    WARNING!!! The Apache configuration on this host did not parse BEFORE <APPLICATION_NAME> wrote anything, so its file was kept & the pre-existing fault was left for the administrator. apachectl reported: <ADDITIONAL_DATA>
+      The file is tested against what the host already had, so a configuration that was already broken is not blamed on it. Fix what
+      apachectl reports, & run -fp again.
+    WARNING!!! The Apache configuration at <FILE_PATH> could not be put back as it was. <ADDITIONAL_DATA>
+    WARNING!!! The link that enabled the <APPLICATION_NAME> Apache configuration could not be removed. <ADDITIONAL_DATA>
+    WARNING!!! The Apache configuration still does not parse after <APPLICATION_NAME> withdrew its file. Fix what apachectl configtest reports before the web server next starts. It reported: <ADDITIONAL_DATA>
+      The file failed its test & was withdrawn, as 504 says. The first two say the withdrawal was not whole, & the third that the host's
+      configuration is still broken, so a web server that restarts against it will not start.
+    WARNING!!! The Apache configuration was written & tested, but whether the web server is running could not be told, so it was not reloaded. Reload it by hand for the <RULES> rules to take effect.
+    WARNING!!! The Apache configuration was written & tested but the web server could not be reloaded. Reload it by hand for the <RULES> rules to take effect.
+      Only a running server is reloaded. Until it is, it serves under the rules it started with.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT UPDATING
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Setup Core raises these, from Resources/Engine/Cores/setupCore.php, as -u updates the application. The new release is staged
+  beside the installation in a folder only root can change, validated with -v, & kept, & the installation it replaces is kept in
+  --Backup Location--. 29017, 29018, 31018 & 31019 are the updater's errors.
+    WARNING!!! The updated installation failed validation. Rolling back.
+      The new release did not pass -v once it was in place, so the installation it replaced is put back. 29017 or 29018 after it says
+      whether that worked.
+    WARNING!!! The previous installation was not preserved, because the backup location at <FOLDER> sits where another account could replace it. <ADDITIONAL_DATA> The update itself is unaffected.
+    WARNING!!! Could not preserve the previous installation at <FOLDER>. It will be discarded.
+      The installation the update replaces is kept for restoring by hand, & could not be kept there, so it is removed once the new
+      release is in place. What follows the first names what is in the way.
+    WARNING!!! The update completed but the new release could not correct its permissions & policies. Run  sudo php <ENTRY_POINT> -fp  by hand.
+      The new release is in place, & the -fp it runs as it finishes did not exit 0. Its output says why.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT --setup
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Setup Core raises these, from Resources/Engine/Cores/setupCore.php, as --setup installs & configures the host.
+    WARNING!!! A complete installation was requested without the Dependency Core component.
+      --setup --install-complete installs the dependencies first, & Resources/Engine/Cores/dependencyCore.php is missing or is not the
+      version pinned. Nothing was installed. --setup --check-depends & --install-depends still manage dependencies.
+    WARNING!!! The second permissions pass did not complete. Files written by the configuration & service stages may be owned by root.
+      --setup --install-complete runs the repair -fp runs again as its sixth stage, & it did not finish. Run  sudo php <entry point> -fp .
+    WARNING!!! A reinstallation was requested & is not implemented in this release.
+      --setup --reinstall-existing is declared & refused, because -u refuses the version already installed.
+    WARNING!!! A dependency installation was requested & is not implemented in this release.
+      runDependencyInstall() is declared & refused, & nothing calls it in this release. --setup --install-depends installs dependencies.
+    WARNING!!! The listener service unit was written but could not be enabled.
+      --setup --install-service wrote the unit, & systemctl could not enable it, so the listener does not start at boot. Enable it by hand.
+    WARNING!!! The Environment Manager timer was enabled. A root process now runs hourly.
+      Said so the log holds when a root process was put on a schedule. ABOUT_ENVIRONMENT_MANAGER says what a pass does.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE BUILD ENVIRONMENT
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Setup Core raises these, from Resources/Engine/Cores/setupCore.php, as -fp removes the build environment & the development
+  documentation, where --Delete Build Environment-- & --Delete Development Documentation-- ask it to.
+    WARNING!!! The build environment was not removed. Only root removes it, from the -fp argument.
+      A fault in the code that asked, because nothing but -fp asks.
+    WARNING!!! The Build folder was left as it is, because root does not trust it. <ADDITIONAL_DATA>
+      Documentation/Build could be replaced by another account, or leads somewhere else, so root removes nothing in it. Before -fp first
+      gives the code to root, the web server account could put a link where it belongs. Run -fp again once the tree is root's.
+    WARNING!!! Part of the build environment could not be removed. <ADDITIONAL_DATA>
+    WARNING!!! Part of the development documentation could not be removed. <ADDITIONAL_DATA>
+      Each name is removed without following it, & what follows says why one was not. A folder left inside Build keeps Build in place.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE DEPENDENCY MANIFEST
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Dependency Core raises these, from Resources/Engine/Cores/dependencyCore.php. The manifest is in two halves, the Engine's in
+  Resources/Engine/depends.php & the application's in Resources/Contract/depends.php, joined with the Engine's first. Each half's
+  version is read without running it, & must be the one pinned. ABOUT_DEPENDENCIES says what an entry declares.
+    WARNING!!! The dependency manifest is not installed. Dependency management is unavailable.
+    WARNING!!! The dependency manifest could not be read. Dependency management is unavailable.
+    WARNING!!! The dependency manifest reports no version. Dependency management is unavailable.
+    WARNING!!! The dependency manifest reports v<VERSION> & this core requires v<VERSION>. Dependency management is unavailable.
+    WARNING!!! The dependency manifest loaded but declares nothing.
+      The application's half is missing, unreadable, unversioned or another version, or the two halves declare no entry. --setup can
+      check, install & remove nothing, & -v lists no dependency. Put it back from the release the application came from.
+    WARNING!!! The dependency manifest reports v<VERSION> & no required version was supplied. This is a fault in the caller rather than in the manifest.
+      The code that asked passed no pinned version, which is worth reporting. The manifest is not loaded.
+    WARNING!!! The Engine's half of the dependency manifest at <FILE_PATH> is missing or unreadable, so what the Engine needs is neither checked nor installed. Restore Resources/Engine from the release this application came from.
+    WARNING!!! The Engine's half of the dependency manifest reports <VERSION> & this Engine requires v<VERSION>, so what the Engine needs is neither checked nor installed. Restore Resources/Engine from the release this application came from.
+    WARNING!!! The Engine's half of the dependency manifest declares nothing, so what the Engine needs is neither checked nor installed.
+      The application's half is used alone, so PHP's extensions, Apache, curl, git, bubblewrap & the AppArmor utilities are not among
+      what --setup checks & installs.
+    WARNING!!! The dependency <NAME> is named in both halves of the dependency manifest, & the Engine's entry is used. Remove it from Resources/Contract/depends.php.
+      A name belongs in one half. The application's entry is dropped.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT MANAGING DEPENDENCIES
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Dependency Core raises these, from Resources/Engine/Cores/dependencyCore.php, as --setup checks, installs, upgrades & removes the
+  tools the manifest names. WARNINGS ABOUT INSTALLING DEPENDENCIES has the others.
+    WARNING!!! A dependency operation was refused because the caller is not root.
+      Installing, upgrading & removing a package rewrites the machine, so each needs root & a startup key. A fault in the code that asked,
+      because --setup is root's.
+    WARNING!!! No supported package manager was found on this host. Dependencies must be installed by hand.
+      apt-get, dnf, yum, apk & pacman were looked for. -v lists what is missing.
+    WARNING!!! The dependency scratch folder at <FOLDER> is a link, belongs to another account or can be reached by one, & was not used. A folder with an unpredictable name is used instead. Delete it as root.
+    WARNING!!! No private scratch folder could be made for a dependency command, so it was not run.
+      A dependency's command runs with its home, its working folder & its temporary folder in a folder of the temporary directory only
+      this account controls, so nothing another account planted is read. The usual one could not be used, & in the second neither could
+      another.
+    WARNING!!! <NAME> was refused. <REASON>
+      The manifest entry is not one this installation may act on, so the dependency is treated as unsupported. <REASON> says why. An
+      entry with no License or Source is refused unless $EngineAllowIncompleteDeps allows it, & one whose license is not on the
+      compatible list is refused while $EngineEnforceGPLCompliantDeps is on.
+    WARNING!!! The manifest names a path for <NAME> & nothing executable is at it: <FILE_PATH>
+      The entry's Binary is a path, & no program is there, so the dependency is reported absent. Correct the entry, or install it there.
+    WARNING!!! Could not start the install command for <NAME>.
+      The package manager could not be started. Nothing was installed for that dependency.
+    WARNING!!! Dependency <NAME> could not be upgraded.
+    WARNING!!! Dependency <NAME> could not be removed.
+      The package manager refused or failed. Its output was printed, & the rest go on.
+    WARNING!!! An unfiltered dependency removal was refused.
+      --setup --uninstall-depends must name a subsystem, because removing everything in the manifest would take PHP, Apache & the package
+      manager's own tools with it.
+    WARNING!!! Removed dependency <NAME> on request.
+      Said for each, so the log holds what --setup --uninstall-depends removed.
+    WARNING!!! The dependency install turned on the Apache configuration <NAME>, which this application does not use, so it was turned off. A running web server keeps it until it is reloaded.
+    WARNING!!! The dependency install turned on the Apache configuration <NAME>, which this application does not use, & it could not be turned off. <ADDITIONAL_DATA> Run  a2disconf <NAME>  as root.
+      A package can publish something on every site as it installs, as javascript-common does with /javascript. Only a configuration the
+      install turned on & the contract does not want is turned off.
+    WARNING!!! A supply chain report destination was ignored because it is not a csv file name. The default was used.
+    WARNING!!! A supply chain report destination named a directory. Only the file name was used & the report was written beside the logs.
+      --setup --output-supply-chain takes a file name ending in .csv, & writes it beside the logs whatever folder it names.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT AN APPLICATION'S OWN BUILDS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Dependency Core raises these, from Resources/Engine/Cores/dependencyCore.php. Where the package manager's copy of a tool is
+  outside the window the manifest allows, the application builds its own, in /usr/local/libexec/<slug>/builds, root's alone, & uses it
+  while it answers inside the window. ABOUT_DEPENDENCIES says which entries may have one.
+    WARNING!!! <APPLICATION_NAME>'s own build of <NAME> <ADDITIONAL_DATA> The package manager's <VERSION> is used. Run --setup --update-depends as root to take the own build away.
+    WARNING!!! <APPLICATION_NAME>'s own build of <NAME> is <STATE>, so the package manager's <VERSION> is used. Run --setup --update-depends as root to take the own build away.
+      The own build is not root's alone, the account that runs conversions cannot run it, or it does not answer inside the window, & the
+      package manager's copy does, so that copy is used. What follows the name says which.
+    WARNING!!! <APPLICATION_NAME>'s own build of <NAME> is never run. <ADDITIONAL_DATA>
+    WARNING!!! <APPLICATION_NAME>'s own build of <NAME> is not used. <ADDITIONAL_DATA>
+      The same, where the package manager's copy does not answer inside the window either. The first is an own build that is not root's
+      alone, & the second one the account that runs conversions cannot run. The dependency is reported misconfigured, & what follows
+      says what to do.
+    WARNING!!! <APPLICATION_NAME>'s own build of <NAME> <ADDITIONAL_DATA> Only the own build is used, so <NAME> is unavailable until then.
+      From v4.3.2, an entry whose Fallback says 'Always' never falls back to the package manager's copy. Its own build is not root's
+      alone, or the account that runs conversions cannot run it, so the dependency is reported misconfigured. What follows the name
+      says which, & what to do.
+    WARNING!!! <APPLICATION_NAME>'s own build of <NAME> <STATE>. <ADDITIONAL_DATA>
+      A build was made & is not ready. <STATE> is FAILED where it did not build, or is in service & not ready where the account that runs
+      conversions cannot run it. What follows says why.
+    WARNING!!! <APPLICATION_NAME>'s own builds could not be locked, so none was changed. <ADDITIONAL_DATA>
+      Every build, removal & sweep holds one lock in the builds folder, so no two change it at once. What follows says why it was not
+      held. Run the command again once the other has finished.
+    WARNING!!! The build at <FOLDER> could not be removed whole. <ADDITIONAL_DATA>
+    WARNING!!! <FOLDER>, a build taken out of service, could not be removed.
+    WARNING!!! <FOLDER>, a build that was not put in service, could not be removed.
+    WARNING!!! <FOLDER> could not be put back, & the build that was in service is kept at <FOLDER>.
+    WARNING!!! <FOLDER> belongs to no build in service & could not be taken away.
+      A build is replaced by renaming the one in service aside, putting the new one in its place, & removing the old. A step that failed
+      leaves a folder in the builds folder, & the next sweep takes away what no build in service owns. The fourth names where the build
+      that was in service went, so a conversion still runs it. Remove what is named as root.
+    WARNING!!! <APPLICATION_NAME>'s own build of <NAME> could not be taken away. <ADDITIONAL_DATA>
+      --setup --update-depends takes an own build away once the package manager's copy answers inside the window, & this one stays.
+    WARNING!!! <FOLDER> is not a folder root alone can change, so nothing left in it was taken away. <ADDITIONAL_DATA>
+      The builds folder could be changed by another account, so root removes nothing in it. What follows says what is in the way.
+    WARNING!!! <NAME> declares a Fallback this release cannot use, so no own build is made. Only an apt entry naming its program by a plain name, with a VersionCommand that runs that program, may have one, & its Fallback must carry a BuildCommand.
+      The manifest entry is not one an own build can stand for. Correct it in the manifest.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT CAPABILITY DETECTION
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Dependency Core raises these, from Resources/Engine/Cores/dependencyCore.php, as --setup --detect-capabilities asks each tool
+  what it converts & keeps the answer in the capability cache. ABOUT_CAPABILITY_DETECTION says how the cache narrows the formats offered.
+    WARNING!!! The capability command <COMMAND> printed nothing.
+    WARNING!!! Capability detection for <NAME> produced nothing usable. Its declared formats will be trusted instead.
+    WARNING!!! The write capability command for <NAME> produced nothing usable. Its declared output formats will be trusted instead.
+      A tool's answer could not be read, so the formats its manifest entry declares stand for it. Each direction is asked on its own, so
+      one that failed leaves the other as it was answered.
+    WARNING!!! Capability detection was skipped, because the dependency manifest is unavailable.
+      A warning before it says why. No cache was written.
+    WARNING!!! The capability cache could not be written to <FILE_PATH>. Detection will be repeated on the next run & conversions will use declared formats. <ADDITIONAL_DATA>
+      Root writes the cache in Cache through the kernel. What follows says why it could not.
+    WARNING!!! The capability cache declares nothing usable & was ignored.
+    WARNING!!! The capability cache was written in format <VERSION> & this release reads v3.8.7. It was ignored.
+    WARNING!!! The capability cache was built from manifest <VERSION> & this release ships <VERSION>. It was ignored.
+      The cache does not describe this host as this release reads it, so the formats each manifest entry declares are used until
+      --setup --detect-capabilities is run again.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE APACHE MODULES & PHP'S SETTINGS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Environment Core raises these, from Resources/Engine/Cores/environmentCore.php, as -fp & -v check what the web server & PHP need.
+    WARNING!!! apachectl could not be found, so it was not possible to confirm whether the <MODULE> Apache module is loaded. The DATA rules depend on it.
+    WARNING!!! The <MODULE> Apache module is not loaded, so the DATA rules are being skipped. Run the -fp argument as root to enable it.
+    WARNING!!! The <MODULE> Apache module is not loaded & no <FILE_PATH> exists to enable, so the DATA rules are being skipped. Install the module & run the -fp argument again.
+    WARNING!!! The <MODULE> Apache module could not be enabled at <FILE_PATH>, so the DATA rules are being skipped.
+      The rules for a served location sit inside an IfModule for the module they need, so the configuration parses without it & the rules
+      are skipped in silence. These say so. The exposure check -v runs says whether a served location is protected meanwhile.
+    WARNING!!! No PHP configuration directory was found, so the settings <APPLICATION_NAME> needs could not be written. Set them in php.ini by hand.
+      -fp writes the limits a conversion & an upload need as a file in PHP's conf.d for each SAPI, & never edits php.ini, because a
+      PHP upgrade reverts php.ini edited in place. This host has no such folder.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT POLICIES ON THE HOST
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Environment Core raises these, from Resources/Engine/Cores/environmentCore.php. A policy is a file the Engine or the application
+  keeps on the host, such as ImageMagick's policy or the sandbox's AppArmor profile, marked as this application's. -fp writes one that
+  is missing or no longer matches, keeping a copy of anything it replaces, & -v & the Environment Manager report each.
+    WARNING!!! The <POLICY> policy is missing from <FILE_PATH>. Run the -fp argument as root to install it.
+    WARNING!!! The <POLICY> policy at <FILE_PATH> was written by an older release & no longer matches. Run the -fp argument as root to repair it.
+    WARNING!!! The <POLICY> policy at <FILE_PATH> was not written by this application & may not permit what <APPLICATION_NAME> needs. Review it, or run the -fp argument as root to replace it.
+      Reported where nothing may be written. Each says what -fp would do.
+    WARNING!!! The directory <FOLDER> does not exist & could not be created, so the <POLICY> policy was not written.
+    WARNING!!! The <POLICY> policy could not be written to <FILE_PATH>. <ADDITIONAL_DATA>
+    WARNING!!! The <POLICY> policy could not be written to <FILE_PATH>.
+      The policy is not in place, so what it governs is not governed. What follows says why, where it can. A read only mount or a full
+      disk does this.
+    WARNING!!! The <POLICY> policy at <FILE_PATH> was not written by this application & sits in a folder another account can change, where no backup of it can be kept safely, so it was left alone. Move it aside & run -fp again to install this one.
+      A file another account could swap is never copied or replaced. The policy in place governs until it is moved aside by hand.
+    WARNING!!! The existing <POLICY> policy was preserved at <FILE_PATH> before being replaced.
+    WARNING!!! The existing <POLICY> policy at <FILE_PATH> could not be backed up. It was left alone.
+      A policy this application did not write is copied aside, with the time in its name, before it is replaced, & never replaced
+      without that copy.
+    WARNING!!! The <POLICY> policy an earlier release wrote at <FILE_PATH> was put back as it was, from <FILE_PATH>.
+    WARNING!!! The <POLICY> policy an earlier release wrote at <FILE_PATH> replaced nothing, so it was removed.
+    WARNING!!! The <POLICY> policy an earlier release wrote at <FILE_PATH> could not be put back from <FILE_PATH>. Put it back by hand.
+    WARNING!!! The <POLICY> policy an earlier release wrote at <FILE_PATH> could not be removed. Remove it by hand.
+    WARNING!!! The <POLICY> policy an earlier release wrote at <FILE_PATH> kept no copy of what it replaced, & removing it would leave no policy there at all, so it was left in place. Restore the original from the package or the build that provided it.
+      A policy no release writes any longer is retired, & the newest copy of what it replaced is put back. Only a file carrying this
+      application's marker is touched, & only in a folder root alone can change.
+    WARNING!!! An AppArmor profile was written but could not be loaded, because loading one requires root.
+    WARNING!!! An AppArmor profile was written but apparmor_parser is not installed, so it was not loaded.
+    WARNING!!! apparmor_parser refused the profile at <FILE_PATH>. <ADDITIONAL_DATA>
+      A profile written & not loaded changes nothing until the next boot. What follows the last is the parser's reason.
+      --setup --install-depends installs apparmor_parser with the AppArmor utilities.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT SERVED LOCATIONS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Environment Core raises these, from Resources/Engine/Cores/environmentCore.php. A served location, such as DATA, is inside the
+  folder the web server serves, & holds what a visitor downloads. Its protection file & the server configuration make the web server
+  hand everything in it over as a download, & -v proves it with a probe. ABOUT_DATA_DIRECTORY_PROTECTION says how.
+    WARNING!!! No served location is set inside the hosted location, so no protection file was kept current.
+    WARNING!!! No served location is set inside the hosted location, so no protection file could be checked.
+    WARNING!!! The exposure check could not run, because no served location is set inside the hosted location.
+    WARNING!!! A served location is not set, so its protection file could not be checked.
+      The contract names no served location, or config.php sets none inside the folder the web server serves. Nothing is protected
+      & nothing is proven. Correct the setting, or the contract.
+    WARNING!!! The <LOCATION> protection file at <FILE_PATH> did not match this release & was rewritten. If downloads or share links were returning a server error, that is now corrected.
+      A web request keeps each protection file current, & this one was another release's.
+    WARNING!!! --Maintain HTAccess-- is disabled, so the <LOCATION> protection file this application wrote at <FILE_PATH> was removed. The server configuration is now carrying these rules alone. Run the -fp argument & read the <LOCATION> exposure line to confirm the tree is still protected.
+    WARNING!!! --Maintain HTAccess-- is disabled & the <LOCATION> protection file this application wrote could not be removed. <ADDITIONAL_DATA>
+      The protection file is not wanted, so the one this application wrote is taken away, & only a file carrying its marker.
+    WARNING!!! The <LOCATION> directory exposure check could not run because the <LOCATION> location or the server URL is not set.
+    WARNING!!! The <LOCATION> directory exposure check could not run because <FOLDER> is not inside the hosted location <FOLDER>.
+    WARNING!!! The <LOCATION> location at <FOLDER> does not exist & was not created. <ADDITIONAL_DATA>
+    WARNING!!! The <LOCATION> location at <FOLDER> was created & could not be given to <ACCOUNT>. <ADDITIONAL_DATA>
+    WARNING!!! The <LOCATION> directory exposure check could not write its probe into <FOLDER>. <ADDITIONAL_DATA>
+    WARNING!!! The <LOCATION> directory exposure probe could not be removed. <ADDITIONAL_DATA>
+    WARNING!!! The <LOCATION> directory exposure check could not reach <URL>. The exposure of this installation was NOT established. Verify it by hand.
+    WARNING!!! The <LOCATION> directory exposure check received a refusal for <URL>. The --Server URL-- setting may not describe this installation.
+      The check writes a probe into the served location, fetches it through --Server URL--, & judges how it is served. It could not be
+      done, so whether the location is protected is not known. What follows says why, where it can. --Server URL-- must reach this
+      installation from the host itself.
+    WARNING!!! THE <LOCATION> DIRECTORY IS EXPOSED. User supplied files at <URL> are served as renderable documents rather than as downloads, so an uploaded SVG will execute its own script in this origin. If you installed the <LOCATION>/.htaccess, it is being ignored; Apache reads one only where AllowOverride is enabled for that directory. Run the -fp argument as root to write & activate the rules in the server configuration instead. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.
+      The probe came back as a page rather than a download, so neither the protection file nor the server configuration is in force.
+      Run -fp as root now.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE SANDBOX'S KERNEL & PROFILE
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Environment Core raises these, from Resources/Engine/Cores/environmentCore.php, as -fp makes the host able to build a sandbox. A
+  kernel that restricts unprivileged user namespaces needs the AppArmor profile attached to the application's own copy of bubblewrap.
+  ABOUT_NETWORK_ISOLATION says what a sandbox holds.
+    WARNING!!! <APPLICATION_NAME>'s own bubblewrap: <STATE>. <ADDITIONAL_DATA>
+      The application's own copy of bubblewrap, made from the system's in a folder root alone can change, is not ready. What follows says
+      why. The system's bubblewrap is root's alone or no copy is made.
+    WARNING!!! This kernel restricts unprivileged user namespaces & the AppArmor on this host cannot load a profile that permits one, so the <PROFILE> profile was not written.
+    WARNING!!! The <PROFILE> profile could not be loaded, so it was removed from <FILE_PATH> again & no boot trips over it.
+    WARNING!!! The <PROFILE> profile is not attached to <FILE_PATH>, because an account other than root could put a program there. <ADDITIONAL_DATA>
+      The profile that lets a sandbox make a user namespace is not in place, so no sandbox can be built under this kernel's
+      restriction. What follows the last names what is in the way. -v says what can be built.
+    WARNING!!! Sysctl drop in: FAILED. <ADDITIONAL_DATA>
+      A namespace setting -fp changed is held for the next boot by a file in /etc/sysctl.d, & it could not be kept. What follows says why.
+      The setting holds until the next boot.
+    WARNING!!! Lifting kernel.apparmor_restrict_unprivileged_userns did not let a sandbox be built, & it could not be switched back on. It reads <VALUE>.
+      -fp lifts the restriction only where that lets a sandbox be built, & puts it back otherwise. It could not be put back, so the host
+      is less restricted than it was. Run  sysctl -w kernel.apparmor_restrict_unprivileged_userns=1  as root.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE CORE MANAGER
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Core Manager raises these, from Resources/Engine/Managers/coreManager.php. It starts the Request, Resource & Worker Managers,
+  starts one again that stops, & stops them as it stops.
+    WARNING!!! The Core Manager cannot answer a stop signal, because PHP cannot handle one here. Its subordinates are stopped by whatever stops it.
+      This PHP cannot handle a signal, so a TERM ends the Core Manager at once rather than letting it stop the managers it started. -k
+      stops each of them, & a service unit stops its whole group.
+    WARNING!!! The Core Manager could not record its subordinate process identifiers.
+      The managers it started run, & -k & --status cannot find them by the record. A Sockets folder the web server account cannot write
+      does this.
+    WARNING!!! The <ROLE> process is not running. Restarting it.
+    WARNING!!! Could not spawn the <ROLE> manager process.
+      A manager the Core Manager started had stopped, & is started again. One that could not be started leaves its role unavailable
+      until the next check tries again. One that stops again & again has a fault its own log names.
+    WARNING!!! The <ROLE> process <NUMBER> did not stop within twenty seconds & was killed.
+    WARNING!!! A subordinate manager outlived a stop signal & a kill signal.
+      As the Core Manager stopped, a manager would not end. The second names one still running. Find it with ps & end it as root.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE RESOURCE MANAGER
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Resource Manager raises these, from Resources/Engine/Managers/resourceManager.php. It keeps the budget, tracks every worker,
+  sweeps the data locations on a schedule & checks the environment as it runs. ABOUT_RESOURCE_RATE_LIMITING says how.
+    WARNING!!! The Resource Manager could not poll system resources. The budget was not adjusted.
+      /proc could not be read, so the budget stays as it was until the next poll.
+    WARNING!!! The web server account holds <NUMBER> of its <NUMBER> user namespaces. Conversions are refused once 1% or fewer are free.
+      Every sandbox makes a user namespace, & the kernel limits how many one account may hold. Few are left. 31025 follows once 1% or
+      fewer are, & no conversion is granted until more are free.
+    WARNING!!! Reaping worker <NUMBER>. <REASON>.
+      A tracked worker's process has exited, its identifier now belongs to another process, or it ran past its runtime by the reason's
+      count. The Worker Manager is asked to end it, & its budget is taken back.
+    WARNING!!! A scheduled data location sweep did not complete cleanly.
+    WARNING!!! The <TYPE> data location at <FOLDER> does not exist & was not swept.
+      The Resource Manager sweeps expired sessions from every data location on the schedule --Storage Cleanup Interval-- sets. A location
+      could not be swept whole, & the next sweep tries again. One that does not exist is often a mount that is not there.
+    WARNING!!! The operating environment has degraded. The sandbox is unavailable & conversions requiring it will be refused. Run the -fp argument as root.
+    WARNING!!! The bootstrap script reported <STATE>. <ADDITIONAL_DATA>
+    WARNING!!! The data location is inside the document root, so its sessions, caches & logs could be fetched. Move it outside the document root. The -v argument names it.
+    WARNING!!! The <LOCATION> directory is EXPOSED. Uploaded files are served as renderable documents rather than as downloads. Run the -fp argument as root & apply the rules in the server configuration. See Documentation/ABOUT_DATA_DIRECTORY_PROTECTION.txt.
+    WARNING!!! The <LOCATION> directory is returning a server error, so no download & no share link works. Check the web server error log for a line naming <LOCATION>/.htaccess. Deleting that file restores service.
+    WARNING!!! The exposure of the <LOCATION> directory could not be established. It reported <STATE>.
+      The listener runs the checks -v runs again as it works, & one found something wrong. -v says the same at length.
+    WARNING!!! The configured minimum per conversion resources could not be read. Falling back to 10% and 128M.
+    WARNING!!! The configured per conversion limit for <TYPE> could not be read & was left out of the table.
+      --Minimum Per Conversion Resources--, or an entry of --Maximum Per Conversion Resources--, is not a processor percentage & a memory
+      size, such as 50% & 512M. A type left out of the table runs under the default.
+    WARNING!!! The low storage warning is not a whole number from 0 to 99, so a disk is reported low at <NUMBER>% free.
+    WARNING!!! The storage reserve is not a whole number of megabytes, so <NUMBER> MB is kept free on every disk holding a data location.
+      The settings the contract maps StorageWarningPercentage & StorageReserveMegabytes to are not what each must be, so the default
+      is used.
+    WARNING!!! The disk holding <FOLDERS> has <SIZE> free, <NUMBER>% of its size, which is <NUMBER>% or less.<ADDITIONAL_DATA>
+    WARNING!!! The free space on the disk holding <FOLDERS> could not be measured, so nothing is refused for want of it.
+      A disk holding a data location is filling, or could not be measured. What follows the first says when writing to it stops, & 31026
+      says when it has. Each is said once as the disk changes state.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE WORKER & REQUEST MANAGERS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Worker Manager raises the first, from Resources/Engine/Managers/workerManager.php, & the Request Manager the second, from
+  Resources/Engine/Managers/requestManager.php.
+    WARNING!!! Every process owned by <ACCOUNT> was terminated on request. <NUMBER> process(es) ended. Unrelated applications on this host were affected.
+      --kill-every-worker ended every PHP process of the web server account, not only this application's, & is never run on its own.
+    WARNING!!! A worker submitted a request type it is not permitted to issue & it was refused.
+      The Request Manager is the one socket a worker may address, & forwards only what a worker may ask. A worker from another release,
+      or something that is not a worker, does this.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE ENVIRONMENT MANAGER
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Environment Manager raises these, from Resources/Engine/Managers/environmentManager.php, as root, from its timer or
+  --run-environment-manager. A pass checks what -v checks, & repairs once a day where --Environment Manager May Repair-- allows.
+  ABOUT_ENVIRONMENT_MANAGER says what a pass does. 36000 is its error.
+    WARNING!!! The Environment Manager needs root's folder Engine in the data location & it does not exist yet. Run -fp once to create it. Nothing was checked.
+    WARNING!!! The Environment Manager could not open its lock. <ADDITIONAL_DATA> Nothing was checked.
+    WARNING!!! Another Environment Manager pass is running. This one checked nothing & changed nothing.
+      One pass runs at a time, under a lock in Engine, because two repairs at once would each correct what the other was correcting.
+    WARNING!!! Environment Manager found <CHECK> reporting <STATE>. <ADDITIONAL_DATA>
+      Each finding that is not well is said every pass, because an installation drifting is not normal activity.
+    WARNING!!! The Environment Manager could not read what its last pass recorded, so it cannot tell whether it has already repaired today. The state file is <STATE> & is rewritten by this pass.
+      A state it cannot read counts as no repair today.
+    WARNING!!! Environment Manager is repairing <NUMBER> finding(s). This is the one repair permitted today.
+    WARNING!!! Environment Manager repaired once. It corrected <NUMBER> managed location(s). Nothing further will be repaired until tomorrow.
+    WARNING!!! Environment Manager attempted a repair & it reported failure.
+      The first pass of a day that finds a problem runs the repair -fp runs, unattended, so it starts & enables no service. The third
+      says it did not finish, & what it logged says why.
+    WARNING!!! Environment Manager found <NUMBER> problem(s) & has already repaired once today. It will try again tomorrow. Something is undoing this repair & an operator should look.
+    WARNING!!! Environment Manager found <NUMBER> problem(s) & repair is not permitted. Run --fix-permissions as root, or enable repair in config.php.
+      A drift that survived one repair survives the next, so a later pass that day only reports it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT SCANNING WITH CLAMAV & SCANCORE
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The ClamAV & ScanCore pipelines raise these, from Resources/Pipelines/ClamAV/pipeline.php & Resources/Pipelines/ScanCore/pipeline.php.
+  A scan that reached no verdict is never reported clean. WARNINGS ABOUT SCANNING FILES FOR A USER has the Scan pipeline's.
+    WARNING!!! ClamAV cannot scan a file larger than 2047M, so <FILE_NAME> was not scanned & has no verdict.
+      clamscan reads no file of 2 GiB or more, so the file is reported as not scanned.
+    WARNING!!! ClamAV reached <LIMIT> scanning <FILE_NAME>, so it stopped early & reached no verdict. The limits were <SIZE>M per file & unpacked, <NUMBER> files & <SECONDS> seconds.<ADDITIONAL_DATA>
+      A file held more than ClamAV's limits let it unpack, nest or read in time, so it stopped, & the file is reported incomplete. <LIMIT>
+      names the one reached. Where it was time, what follows says a larger processor share for Scan in --Maximum Per Conversion
+      Resources-- gives a scan more.
+    WARNING!!! ClamAV exited <NUMBER> scanning <FILE_NAME>, which is not a verdict.<ADDITIONAL_DATA>
+    WARNING!!! ScanCore exited <NUMBER> scanning <FILE_NAME>, which is not a verdict.<ADDITIONAL_DATA>
+      The scanner ended with a status that means neither clean nor found. 137 means it was killed, most often by its memory ceiling, &
+      what follows then says to raise the memory figure for Scan in --Maximum Per Conversion Resources--.
+    WARNING!!! The chunk size configured for ScanCore is more than a quarter of its memory limit. ScanCore holds about three chunks at once, so a file larger than one chunk would exhaust its memory. A quarter is used instead. Set the chunk size to a quarter of the memory limit or less in config.php.
+      The scan goes on with a chunk a quarter of the memory limit.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT IDENTIFYING & STRIPPING FILES
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Identify pipeline raises the first four, from Resources/Pipelines/Identify/pipeline.php, & the Metadata pipeline the rest, from
+  Resources/Pipelines/Metadata/pipeline.php.
+    WARNING!!! A tool could not be started to identify a file. PHP may have proc_open disabled.
+      The details that tool would have given are missing from the report. disable_functions in php.ini names what PHP refuses.
+    WARNING!!! The ImageMagick policy the Identify pipeline carries is missing, so no image is examined. Restore the pipeline from the release this installation came from.
+      Each pipeline that runs ImageMagick carries a policy that names what it may read, & runs nothing without it.
+    WARNING!!! A file asked to be identified could not be verified, so it was skipped.
+    WARNING!!! The file <FILE_NAME> could not be read, so it was not identified.
+      The file is not in the session any longer, or could not be read there. The rest of the request goes on.
+    WARNING!!! The file <FILE_NAME> is not a format metadata is stripped from here, so no clean copy was made.
+    WARNING!!! A virus was found in <FILE_NAME>, so no clean copy was made.
+    WARNING!!! The name <FILE_NAME> is not one this server accepts, so the clean copy made of it was not kept.
+      A clean copy is made only of a format the pipeline strips, of a file the scan found clean, & under a name sanitize() leaves as it is.
+    WARNING!!! The folder the metadata of <FILE_NAME> was stripped in could not be removed. It is removed with the session.
+      Each copy is stripped in a folder of its own inside the session, which the sweep removes with the session.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT IMAGEMAGICK, OCR & MODELS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Image, OCR & Model pipelines raise these, from Resources/Pipelines/Image/pipeline.php, Resources/Pipelines/OCR/pipeline.php &
+  Resources/Pipelines/Model/pipeline.php.
+    WARNING!!! The ImageMagick policy the Image pipeline carries is missing, so this conversion runs under the host's own. Restore the pipeline from the release this installation came from.
+    WARNING!!! The ImageMagick policy the OCR pipeline carries is missing, so this page split runs under the host's own. Restore the pipeline from the release this installation came from.
+      Each pipeline that runs ImageMagick carries a policy that names the coders it may use, & it is read before the host's. Without it
+      the host's policy alone decides, & the sandbox still holds.
+    WARNING!!! The model <FILE_NAME> was not converted, because <REASON>. <NAME> never opened it.
+      A glTF, an OBJ & an OFF are read before a converter opens one, & one that fails is refused, with the converter that never opened
+      it named. ERROR 9000 says what each check refuses.
+    WARNING!!! <FILE_NAME> names <NUMBER> material librar<ADDITIONAL_DATA> by a path rather than a plain file name, & Assimp read it without <ADDITIONAL_DATA>
+      An OBJ's material library named by a path is left out of the copy Assimp reads, because Assimp would open a file outside the upload.
+    WARNING!!! PyMeshLab was found & could not be imported by <INTERPRETER>. It reported: <ADDITIONAL_DATA>
+    WARNING!!! PyMeshLab is enabled & could not be used. Either no interpreter matching the bundled build is installed, or one is & the module did not import. Falling back to the MeshLab binary.
+    WARNING!!! PyMeshLab could not be imported. A bundled build is compiled for one Python minor version, so check that the interpreter matches the cpython tag on the object in Resources/PyMeshLab/pymeshlab. Set --Use PyMeshLab Python Bindings-- to FALSE to use the meshlabserver binary instead.
+    WARNING!!! PyMeshLab is enabled & no usable MeshLab binary was found. A model conversion has no fallback if the bundle does not load.
+      --Use PyMeshLab Python Bindings-- has a model converted through the bundled PyMeshLab, which only an interpreter of the Python
+      it was built for can import. Where none can, MeshLab's own binary is used, & 9002 follows where that is missing too.
+    WARNING!!! The command that produced no file was: <COMMAND>
+    WARNING!!! Neither utility produced any output at all. The command was found & run, & it printed nothing on either stream.
+      A model conversion left no file. The first names the command, which reproduces the failure, & the second says it printed nothing.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT PDFS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The PDF pipeline raises these, from Resources/Pipelines/PDF/pipeline.php, as it merges PDFs & splits one into its pages.
+    WARNING!!! The file <FILE_NAME> is not a PDF, so its pages were left alone.
+    WARNING!!! A virus was found in <FILE_NAME>, so its pages were left alone.
+    WARNING!!! The PDF <FILE_NAME> has <NUMBER> pages, & --Maximum Extracted Files-- allows <NUMBER>, so it was not split.
+    WARNING!!! The pages of <FILE_NAME> hold <SIZE>, & --Maximum Extracted Size-- allows <NUMBER> MB, so none of them was kept.
+    WARNING!!! The pages of <FILE_NAME> could not be counted, so it was not split. It may be damaged or locked with a password.
+      A split is made only of a PDF the scan found clean, & is held to the limits an extraction is, so a document of thousands of pages
+      cannot fill the disk. The other files of the request go on.
+    WARNING!!! The selection held no PDF, so nothing was merged.
+    WARNING!!! A PDF in the selection could not be read, so nothing was merged.
+    WARNING!!! The name <FILE_NAME> is not one this server accepts, so the merged PDF was not kept.
+      A merge is made of every PDF selected, or of none, & under a name sanitize() leaves as it is.
+    WARNING!!! A folder PDFs were merged or split in could not be removed. It is removed with the session.
+      Each merge & split is made in a folder of its own inside the session, which the sweep removes with the session.
+    WARNING!!! The PDF pipeline was asked for a method it does not have, so nothing was made.
+      A fault in the code that asked, which is worth reporting.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT DOCUMENTS & LIBREOFFICE
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The libreOffice.php shared module raises these, for the Document & OCR pipelines, from Resources/Pipelines/Shared/libreOffice.php.
+  A document is converted in a sandbox, from a copy, with a profile of its own. ABOUT_NETWORK_ISOLATION says why.
+    WARNING!!! Document Sanitization neutralized <NUMBER> external reference(s) in <FILE_NAME> before conversion. A document requesting a remote resource is worth investigating.
+    WARNING!!! The PHP zip extension is unavailable, so <FILE_NAME> could not be checked for external references. The sandbox remains the only protection.
+    WARNING!!! Could not open <FILE_NAME> to check it for external references.
+    WARNING!!! Could not read <FILE_NAME> to check it for external references.
+      A reference to a remote resource is neutralized in the copy LibreOffice reads, so it fetches nothing. A document that could not be
+      checked is converted, & the sandbox, which reaches no network, stops anything it asks for.
+    WARNING!!! LibreOffice could not be given a copy of <FILE_NAME>, so it read the original. Nothing held the name it writes, so nothing was replaced.
+      LibreOffice names its output after its input, so it reads a copy of its own where the original's name would be overwritten. The
+      copy could not be made, & no file held the name, so the original was read.
+    WARNING!!! LibreOffice was killed while it converted <FILE_NAME>. One killed inside a per conversion ceiling has almost always run out of the memory it was given. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.
+      The conversion failed, & the message says what to raise.
+    WARNING!!! A private LibreOffice profile could not be removed from <FOLDER>.
+    WARNING!!! A copy LibreOffice read could not be removed from <FOLDER>.
+      Each conversion has a profile of its own & reads a copy of its own, & each is removed afterwards. One left is removed with the
+      session, & a copy is a second copy of a user's file until then.
+    WARNING!!! A persistent LibreOffice listener is running as process <NUMBER>. It is no longer used & is an unsandboxed parsing surface. Remove it from rc.local or the container entrypoint.
+      An older install guide started soffice as a listener at boot. Nothing uses it, & anything that reaches it is parsed outside any
+      sandbox. Stop it, & remove what starts it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT STREAMS, OPENSCAD, VIDEO & ARCHIVES
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Stream, Scad, Video & Archive pipelines raise these, from the pipeline.php in each of Resources/Pipelines/Stream, Scad, Video &
+  Archive. Each is about a file a stranger wrote, & a refusal is the pipeline working.
+    WARNING!!! Stream File <FILE_NAME> references a private, reserved or loopback address.
+    WARNING!!! Stream File <FILE_NAME> content does not match its file extension.
+    WARNING!!! A stream base address was supplied & refused. <ADDITIONAL_DATA>
+    WARNING!!! Stream Walk Result: DENIED, Layers Walked: <NUMBER>, Files Downloaded: <NUMBER>, URIs Examined: <NUMBER>, Unique URLs Seen: <NUMBER>, Budget Exhausted: <STATE>, Reason: <REASON>.
+      A stream file, such as a playlist, names other addresses, & each is examined before anything is fetched. One that reaches this
+      server's own network, content that is not what its extension says, a base address that is refused & a walk that is refused are
+      each said, & the stream is not converted. A refusal may be an ordinary file whose addresses are relative.
+    WARNING!!! An OpenSCAD file reference survived sanitization. <NUMBER> call(s) remain & <NUMBER> resolved include(s) were expected. The source will not be rendered.
+    WARNING!!! OpenSCAD Sanitization removed <NUMBER> file reference(s) across <NUMBER> uploaded source file(s) in this session. Resolved: <NUMBER>.
+    WARNING!!! The OpenSCAD render could not open <NUMBER> include file(s). The model may be incomplete.
+      An OpenSCAD source may name other files. Each reference to a file outside the session is removed, & one that resolves to a file
+      uploaded with it is kept. A source with a reference left is not rendered.
+    WARNING!!! FFMPEG produced no output at all. The command was found & run, & it printed nothing.
+    WARNING!!! The command that produced no file was: <COMMAND>
+      A video or audio conversion left no file. The second names the command, which reproduces the failure.
+    WARNING!!! Removed <NUMBER> link(s) from the extracted archive because they did not resolve to a file inside it.
+      An archive may carry links, & one that leads outside what was extracted is removed before anything reads it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT INTERFACES & LANGUAGE PACKS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The core raises these, from convertCore.php, as it picks the interface & the language a page is built with. An interface that
+  cannot be used falls back to the default, & a language pack that cannot be used falls back to the default language.
+    WARNING!!! GUI <GUI> does not exist at <FOLDER>.
+    WARNING!!! GUI <GUI> is missing its <FOLDER> folder.
+    WARNING!!! GUI <GUI> is missing one or more required files.
+    WARNING!!! GUI <GUI> reports version <VERSION> but this core requires <VERSION>.
+      The interface asked for, or the one --Default GUI-- names, cannot be used, so the default is used instead. Its Resources folder &
+      the folders in it are part of it, because a page without them has no style & no script. An interface must be the version the
+      core requires exactly, because one from another release may render wrongly either way.
+    WARNING!!! The style file for GUI <GUI> supplied no default button code. Buttons will render unstyled.
+      The interface's style file declared no button style, so the page works & its buttons look plain.
+    WARNING!!! The GUI at <FOLDER> does not carry a <LANGUAGE> language pack.
+    WARNING!!! Language pack <LANGUAGE> at <FOLDER> is missing one or more required files.
+      The language asked for cannot be used with this interface, so the default language is used instead.
+    WARNING!!! Language pack <LANGUAGE> reports version <VERSION> but this core requires <VERSION>. Any string it does not define is being taken from <FILE_PATH>.
+      A language pack must be the version the core requires exactly, & one that is not is used with warnings rather than refused. A
+      string it lacks is taken from the default language's pack, & what follows names it, or says no baseline pack was available.
+    WARNING!!! The configured Logo URL is not an http or https address & was refused. The logo will return to this page instead.
+      The setting for where the logo links is not an address a browser may be sent to, so the logo links to the page it is on.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT A SESSION'S FILES
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The core raises these, from convertCore.php, as it lists, uploads, renames & works on the files of a session. A name a user sent is
+  never trusted, so a refusal is the core working. WARNINGS ABOUT FILES has the Files pipeline's.
+    WARNING!!! The file <FILE_NAME> failed first stage validation & was refused.
+      The name is not a file in the session that this server handles. The operation reports the file it skipped under its own number,
+      & the rest of the request carries on. Until v4.0.0 this was error 14000, which halted the whole request.
+    WARNING!!! The file <FILE_NAME> is not a file in the session this server handles, so it was not renamed.
+    WARNING!!! The pattern gave <FILE_NAME> a name this server does not accept, so it was not renamed.
+      A rename is made only of a file in the session, & only to a name sanitize() leaves as it is. The other files are renamed.
+    WARNING!!! An upload was refused. <ADDITIONAL_DATA>
+      The listener was asked whether the upload may be written, & refused. What follows is why, which is a disk within its storage
+      reserve, or no answer while --Require Resource Awareness-- is TRUE.
+    WARNING!!! The Files pipeline is not available, so nothing was uploaded.
+    WARNING!!! The Files pipeline could not be loaded, so no file list could be built.
+      The Files pipeline does the work on disk for a session's files, & it is missing or is not the version pinned. -v says which.
+    WARNING!!! A sort order this application does not understand was asked for, so the files are listed by name.
+    WARNING!!! The files in this session could not be described, so the list shows no sizes or times.
+      The list is shown regardless, as these say.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE CORE'S FEATURES
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The core raises these, from convertCore.php.
+    WARNING!!! A workflow was requested & workflows are disabled.
+    WARNING!!! A workflow was requested & the Workflow Core is unavailable.
+      A page asked about workflows, & the server answered that none are available. --Enable Workflows-- turns them on, & -v says
+      whether the Workflow Core verified.
+    WARNING!!! An identification was requested & the feature is disabled.
+      A page asked to identify files, & the setting that allows it is off, so nothing was identified.
+    WARNING!!! ImageMagick would not report its configuration path, so <FOLDER> was located by search. Confirm it is the directory this build actually reads.
+      The policy the application writes for ImageMagick goes where ImageMagick reads its configuration. ImageMagick did not say where
+      that is, so the folder was found by looking. A policy written where this build does not read does nothing.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT THE STARTER
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Starter raises these, from app.php. Each is from v4.3.2.
+    WARNING!!! The application argument <COMMAND> is not one the Starter accepts.
+      An argument beginning --app is the application's, & the kernel hands it to the Starter's handler. The Starter has one
+      command, --app-hello, so any other is refused with exit status 2 & changes nothing. php app.php -h lists it.
+    WARNING!!! A web request was refused, because this application has no web interface.
+      The Starter answers the command line only. A request that reaches app.php through a web server is answered with status 403
+      & one sentence of plain text, & nothing is admitted, so no session folder is made & nothing is swept for it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

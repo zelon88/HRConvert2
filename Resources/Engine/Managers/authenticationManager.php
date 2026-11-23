@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.3.
+// / v4.2.3r.
 // / This file is the Authentication Manager. It looks after accounts over time, where the Authentication Core answers a request.
 // /
 // / It is not a manager in the sense the four the listener dispatches are. It opens no socket & runs as no role of its own.
@@ -32,7 +32,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.2.3';
+$ManagerVersion = 'v4.2.3r';
 // / -----------------------------------------------------------------------------------
 
 

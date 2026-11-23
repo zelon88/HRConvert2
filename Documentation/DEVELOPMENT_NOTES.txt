@@ -1,13 +1,13 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 11/10/2026 by Justin Grimes, www.github.com/zelon88
+HRProprietary Engine, Copyright on 11/10/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
 
 FILE INFORMATION ...
 v4.0.6.
@@ -363,6 +363,17 @@ current folder, which was refused wherever that was a home folder.
 The tree is installed into the Application folder of the data location, & then the installed
 copy's own -fp runs, which publishes the hosted location.
 
+NOTHING IS REMOVED FROM APPLICATION BEFORE THE NEW INSTALLATION IS IN PLACE. v4.3.2.
+The installation it replaces is moved aside, to the backup, or to Application.old where the
+backup cannot hold it, & the staged copy is renamed into place. Where the staged copy cannot take
+the name, the one moved aside is moved back, as an update moves back its own. One at
+Application.old is removed only once the new one is in place. Until v4.3.2 an installation the
+backup could not hold was removed first, so a rename that failed left no installation at all, &
+a mode that could not be set after a rename that worked was reported as the rename failing.
+Application.old is the name an update gives the installation it replaces, so a run of either that
+stops part way leaves one name, & the next run of either clears it. A backup that is Application,
+is inside it or holds it is not used, because emptying it would empty the installation too.
+
 A LISTENER RUNNING DURING AN INSTALLATION KEEPS RUNNING THE RELEASE IT STARTED WITH.
 It is reported, & the administrator restarts it.
 
@@ -390,6 +401,14 @@ administrator to remove or put right.
 A LOCATION ANOTHER ACCOUNT COULD REPLACE IS SKIPPED.
 Root keeps nothing there & changes nothing there, because the account that can replace the
 folder can replace it between root's check & root's write.
+
+A FOLDER AN APPLICATION DECLARES IN THE DATA LOCATION IS MADE BY -fp. v4.3.1.
+An application could declare a location & give it a role, & the role was applied, but nothing made
+the folder. One that made the folder itself was told by every -fp that a folder which does not
+belong was at the top of its data location. Setup Core makes each folder the contract declares
+directly below the data location, under a setting that is not one of the Engine's own, & knows its
+name from then on. The Engine's own are left as they were, because the backup folder is made only
+when there is something to keep in it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -548,6 +567,12 @@ Engine's maintainer.
 A PIPELINE'S ERROR NUMBERS DID NOT CHANGE WHEN ITS CODE LEFT convertCore.php.
 Operators had already read them. A number a block no longer raises is retired, not reused, as
 13001 through 13005 are.
+
+AN APPLICATION THAT ACCEPTS NO PIPELINE CONVERTS NOTHING. v4.3.2.
+Until v4.3.2 an empty $EngineAcceptedPipelines was a warning, error 34001 & a Pipeline Core stood
+down on every command, & -v counted a failed check. The Engine was built under an application that
+converts, & the Starter, which converts nothing, is what showed it. An application that accepts none
+loads the Pipeline Core with none, & -v says NONE. 34001 is for a list whose pipelines all fail.
 
 NO PIPELINE CARRIES ITS OWN VERSION CHECK.
 Every pipeline asks verifiedToolPath(), so the manifest alone owns each tool's minimum. Two
@@ -1196,6 +1221,21 @@ so --update=NOW & --update NOW differed. Another lowercased the command & compar
 flag exactly, so --clean now -Y asked a question already answered. The list of targets that are
 case sensitive missed a pipeline name & the values of --app, & running the commands found both.
 
+ROOT IS THE ACCOUNT WHOSE ID IS 0, & THE KERNEL ASKS NO PROGRAM WHO IS RUNNING. v4.3.3.
+identifyRunningAccount() reads the ID from posix_geteuid, or from /proc/self/status where PHP has no posix
+functions, & the name & home from posix_getpwuid, or from /etc/passwd. Until v4.3.3 verifyRunningContext
+asked whoami & took root to be whichever account it printed as root, while verifyCodeIsTrustedByRoot,
+establishDataLocations & the loader -fp writes asked posix alone. Without posix, root was root to the first
+& not to the rest, so it ran without the tree check & with the web server account's cache folder as HOME.
+Every decision about root reads the one function now. One that cannot read an ID halts with 28010, because
+the process may be root & each decision after it would be a guess. folderIsHeldForRoot already judged such
+a process as root. A process that took root's protections & none of its privileges was considered & refused,
+because every path written for an account that is not root would then have to be safe for root as well.
+The Dependency Core's scratch folder, the sweep & the environment record read the same function, &
+findAccountDatabaseEntry() reads /etc/passwd & /etc/group where the web server account is looked up without
+posix, so whoami, id & getent run nowhere in the Engine. Every curl the Engine runs starts with -q, so no
+.curlrc changes a request.
+
 ROOT JUDGES EVERY FOLDER ABOVE A NAME, NOT ONLY THE NAME.
 Renaming a folder within its parent needs no write permission on the folder itself, which was
 measured. Nothing checked the folder above a name until v4.0.1.
@@ -1236,6 +1276,94 @@ Seven settings the list left out are required now, as every other is. They are t
 data locations, unprivileged namespaces, the four per conversion limit settings & the storage
 cleanup interval. Every template since v3.9.6 holds them, & --config --repair adds one a config.php
 written by hand lacks.
+
+A PATH HAS A SANITIZER OF ITS OWN. v4.3.1.
+sanitize() removes what a name must not hold. A path with a character removed names a different
+file, so a path could not go through it, & an application that took a path from its operator read
+it raw & said so in a comment. That was an exception to rule 21, & the rule has none.
+sanitizePath() removes nothing. It accepts a path whole & returns it as it was given, or refuses it
+whole & returns nothing, so no caller is handed the name of a file nobody typed.
+IT IS A FUNCTION & NOT A MODE OF sanitize(). The Environment Core defines a sanitize() of two
+arguments for when the kernel is not loaded, & PHP ignores an argument a function does not declare,
+so a mode would have been an ordinary sanitize() there, without a word, & would have changed the
+path. sanitizeString() is not a URL sanitizer & must not become one, & the same holds of a path.
+No signature changed.
+IT REFUSES WHAT WOULD ACT ON SOMETHING OTHER THAN A FILE, OR ON WHOEVER READS THE PATH.
+A control character forges a line of a log & drives a terminal. A stream wrapper has PHP open
+something that is not a file. What PHP takes for one was measured on PHP 8.3, by registering a
+wrapper under each kind of name & opening a path that begins with it. PHP reads two or more
+letters, digits, dots, plus signs or dashes before :// as the name of a wrapper, in any case, &
+data: alone as one. Where no wrapper has that name it warns & opens the path as a file, & the
+path is refused all the same, because whether one is registered is not the path's to say. A single
+letter before :// is a file name, & so is anything with ./ before it. PHP refuses a path of
+PHP_MAXPATHLEN - 1 bytes or more without asking the system, which was measured the same way.
+IT IS NOT THE BOUNDARY sanitize() IS. A file may be named with a space, a quote, a bracket or a
+dollar sign, so a path it accepted holds them still. It is quoted where it is handed to a shell &
+escaped where it is printed in a page.
+STRICT IS FOR A PATH NOBODY RESOLVES AFTERWARDS. It also refuses a path that is not absolute, &
+one holding a part that is a dot, two dots or empty. A path typed at a terminal is taken without
+it & resolved once, because an operator types a path from where they stand.
+A NAME READ FROM A FOLDER IS NOT INPUT, & IS NEVER SANITIZED. A file is named whatever its owner
+chose, a control character included, & refusing the name would let a file hide behind it. It is
+used byte for byte, & made printable only where it is shown.
+
+AN APPLICATION'S HANDLER SETS THE EXIT STATUS. v4.3.1.
+runApplicationArgument() threw away what the handler returned & exited 0. The reference
+application declares no handler, so nothing had ever returned one. A command line is run by
+scripts & a script reads the status, so a whole number from 0 to 255 is the status, nothing is
+still 0, & anything else is a failure that is logged. The second value was read from the third
+argument whichever way the first was written, so  --app-x=A B  lost B.
+
+A FOLDER IS HELD BY ENTERING IT. v4.3.1.
+folderIsHeldForRoot() lets root work by name in a folder nothing but root can replace. Root acting
+on a file in a folder another account owns has no such folder. enterFolderWithoutFollowing() makes
+that folder the working folder of the process, one name at a time from the filesystem root. It
+refuses a link, & compares each step with what lstat showed. The working folder is the folder
+itself & not a name, so a name inside it is reached without anything above it being looked up again.
+IT RESTS ON WHAT PHP DOES WITH A RELATIVE NAME, WHICH WAS MEASURED. With strace, on PHP 8.3 built
+without thread safety, lstat, stat, link, unlink, rename, mkdir, rmdir, chmod, touch & scandir hand
+a relative name to the system as it was written. fopen & hash_file do not. Each joins the name to
+the path of the working folder & opens the whole path. So a file opened there is compared with what
+lstat showed, by device & inode, before a byte is read, & no file is created there by name.
+A PHP built to run threads keeps a working folder for each thread, & is refused.
+
+TEXT NOBODY VETTED IS MADE PRINTABLE BY THE KERNEL. v4.3.1.
+The Workflow Core has had printableWorkflowText() from v4.2.2, for a name read from a folder the
+web server account can write. The second application wrote the same function four more times, in
+its core & in each of its three pipelines, because a pipeline calls nothing of an application's &
+the kernel had none to call. That is past what rule 20 allows. The kernel has printableText() now,
+& the Workflow Core & the second application call it. printableWorkflowText() keeps its name & its
+argument, & hands the kernel's the work.
+STRICT ALSO CUTS TEXT LONGER THAN 1000 BYTES. A line a scanner prints can be any length, & each of
+the four copies cut it. The Workflow Core's never cut, & asks for nothing to be cut, so what
+--workflow prints did not change. Each was compared with what it replaced, on four thousand samples.
+THE CUT NEEDS NO EXTENSION. The copies cut with mb_strcut. mbstring is the Authentication Core's
+dependency, & the kernel runs before any dependency is checked. So the kernel cuts at 1000 bytes &
+takes back up to three, until what is left is whole characters.
+IT CHANGES WHAT IS SHOWN & NOTHING ELSE. Text that names a file is still used byte for byte
+wherever the file is reached, & an entry is still logged as it is handed over.
+
+A FILE THE KERNEL OPENS IS CLOSED IN EVERY COMMAND THE PROCESS RUNS. v4.3.1.
+A handle a process holds open is handed to each command it starts, & to what that command starts,
+unless it was opened to be closed there. openFileWithoutFollowing() opened root's logfile & every
+lock without saying so. HRProtect runs a scanner in a sandbox, as root, & the list of what a
+running scanner held open named root's logfile & the lock of the scan. A scanner parses hostile
+files & is assumed to be exploitable. One that was could have written what it liked into root's
+log, cut the log short, or let the lock go. The sandbox showed it one folder & handed it two files.
+Both modes the function opens with now end in e. PHP sets O_CLOEXEC for that where the system has
+it, & ignores it where it has not. A command is handed no number for a handle, so nothing that runs
+could have been relying on one.
+IT WAS FOUND BY LOOKING, & NOTHING CHECKED FOR IT. What a sandboxed program can reach is the folders
+it is shown, the handles it is handed & the environment it is given. Only the first was ever listed.
+
+WHAT PHP OPENS WHEN IT IS HANDED A PATH, AS MEASURED. v4.3.1.
+The comment above enterFolderWithoutFollowing() said fopen() opens the whole path, which looks
+every folder up again. It may not look. PHP keeps where each path last led, & fopen(),
+file_get_contents(), hash_file() & file_put_contents() go there until clearstatcache(TRUE) has it
+forget every path. lstat(), stat(), scandir(), unlink() & rename() go where the path leads now.
+The comment says so now. What it concluded is unchanged. A caller compares the open handle with
+what lstat showed it, & creates no file by name in a folder held only by entering it.
+No line of code changed.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1456,6 +1584,72 @@ verifyGlobals worked out the served address before the connection was verified, 
 says whether it is encrypted, so every share link began http. establishEngineSession verifies the
 connection first. A comparison of the two trees' sessions over https found it, & a comparison
 over http would not have.
+
+THE PROTECTION PAGES OF THE KERNEL & THE ENGINE NAME NO APPLICATION. v4.3.1.
+The index.html in Resources/Kernel, Resources/Engine & its Cores & Managers folders was titled for
+the reference application, & sent a browser to that application's entry point after five seconds.
+In any other application that is an address the application does not have. The Engine holds no
+application's name or entry point, so each is a page that names nothing & goes nowhere.
+
+AN APPLICATION STARTS A WORKER OF ITS OWN THROUGH THE ENGINE. v4.3.1.
+The Workflow Core could start a PHP worker, & only for a workflow. An application with long work of
+its own, as a scan of a whole server is, had no way to start it that did not copy that function.
+startApplicationWorker() is that function with the workflow taken out. It starts the entry point
+with one argument beginning --app & one value, through setsid -f, & returns without waiting.
+IT STARTS NOTHING BUT AN ARGUMENT BEGINNING --app. The kernel hands such an argument to the
+application's handler ahead of every command of the Engine's, so nothing of the Engine's can be
+started this way, whatever calls it.
+THE VALUE IS A NAME & NEVER THE WORK. A command line is read by every account, so the value is
+letters, digits & dashes. What the work is stays wherever the application keeps it.
+NO MANAGER IS TOLD. The managers are the web server account's, & the first user of this is root.
+A manager cannot signal root's process, & root reads no manager's state. Whether work root starts
+should also be given a token of the budget is not decided, & nothing here prevents it.
+
+AN APPLICATION PUTS A COMMAND OF ITS OWN ON A SCHEDULE THROUGH THE ENGINE. v4.3.1.
+The Setup Core wrote the units of the listener & of the Environment Manager, each by a function of
+its own. An application with a command to run on a schedule, as a scan of a server is, had no way
+to have one written that did not copy those functions & write to /etc itself.
+$EngineTimerProvider names a function that returns such commands as data, & the Setup Core writes a
+service & a timer for each. The application writes no unit & runs no systemctl.
+EVERY FIELD IS HELD TO WHAT A UNIT MAY BE MADE OF. A unit is a file root's service manager obeys.
+A line break in a field would be a directive, & a percent sign or a dollar sign is where systemd
+begins a name of its own. So each field has its characters, the argument is one word beginning
+--app-, & the paths to PHP & to the application are refused where they hold anything else.
+Nothing is escaped, because nothing that would need escaping is written.
+A TIMER IS REFUSED WHOLE, & A CALENDAR FALLS BACK. A unit written from half of a record would run
+something nobody asked for. A calendar is the one field an administrator's configuration supplies,
+so one systemd cannot read becomes daily, with a warning, & the command still runs.
+NOTHING ENABLES A TIMER. Writing a unit changes nothing a server does. Enabling one puts a root
+process on a schedule, & that is printed & left to an administrator, as it is for the Environment Manager.
+A HOST UNIT IS GIVEN NO DIRECTIVE THAT HIDES ANYTHING. ProtectHome & PrivateTmp are right for the
+Environment Manager, which reads neither. A scanner of files that is told /home is empty would call
+it clean. So the reach is the application's to state, & a host unit is one command as root.
+A UNIT THAT IS A LINK IS NOT WRITTEN OVER. An administrator masks a unit by putting a link to
+/dev/null where it was. The kernel puts a file it writes in the place of whatever held its name, &
+never writes through a link, so writing the unit would have taken the mask away without a word.
+Neither unit is written where either is a link, & the timer is failed with a warning. Links that
+lead to units which are already as they should be need nothing written, & are left alone.
+WARNINGS, & NO NEW ERROR. A number in the Engine's ranges is the maintainer's to give. Every refusal
+here is a warning, & so is a unit that could not be written, which deserves a number beside 32015.
+WHAT IS NOT KNOWN. No unit this writes has been started by systemd in a test. The tests hold the
+text to the letter & have systemd-analyze read it. Whether a reload alone moves a running timer to
+a new calendar is not known either, so -fp prints the restart that is sure to.
+
+--setup --install-service DOES NOT FAIL AN APPLICATION FOR HAVING NO LISTENER. v4.3.1.
+The command exited 1 wherever the listener was skipped. An application that switches resource
+awareness off has no listener, so the command could only fail for it, whatever it wrote.
+A listener that is skipped because the application has none is no longer a failure. One that is
+wanted & skipped, as where systemd is not running, fails the command as it did.
+
+ONE PROTECTION PAGE, BUILT FROM A TEMPLATE. v4.3.1.
+The Engine had three: the files it distributes, the application's root index.html copied into each
+required directory on every request, & a page the Environment Core built inline, which put markup in a
+Core. The page is now one template component, Resources/Engine/UI/protectionPage.html, & the files the
+Engine distributes are that page rendered. Its logo is a data URI, because a page in a folder at any
+depth cannot name another file the server is sure to serve, & a broken image is a console error.
+A timer on the page was considered & declined. A fuzzer reads the status code & never runs the page's
+script, so a timer slows only a person, & a delay on the server holds an Apache worker for each request,
+which turns the page into the lever a denial of service needs.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2706,4 +2900,64 @@ names the error, & -v lists automatic updates among what is switched off.
 FOUND BY TESTING. Off by default, the four settings of updates were named in --config as having no
 effect on every new installation, in the very screen an administrator opens to turn updates on. Each
 carries NamedWhenChanged, as the settings of accounts do, so only one an administrator changed is named.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Engine's Documents In An Application--
+
+AN APPLICATION ADDS TO A DOCUMENT OF THE ENGINE'S & TAKES NOTHING FROM IT.
+The Engine's documents are distributed with it, & an application built on it carries them. The
+first build of the second application cut the error catalogue down to the entries it could raise.
+It left out 192 of 325 & reworded four. The maintainer refused that. A document cut down for one
+application is cut down again, by hand, for every later Engine, & what the Engine distributes is
+what an administrator & the next developer expect to find. So every line the Engine distributes is
+kept, in its order, & an application's own lines are added among them. A script adds them to the
+Engine's own copy, & writes nothing where a line of the Engine's would be missing.
+
+THE ERROR CATALOGUE IS ADOPTED WHOLE.
+An entry for a pipeline an application does not carry is one it cannot raise, & it stays. Where an
+application raises one of the Engine's errors from a file of its own, that file is added to the
+entry's FILE list & nothing else in the entry changes. Its own guard has an entry beside the
+reference application's, under its own name, because one number may be documented under two
+labels. Its own errors are numbered above every block the Engine uses.
+
+THE NAMES THE ENGINE'S DOCUMENTS CITE PASS BY A LIST. v4.3.1.
+The documents explain the Engine by what the reference application does with it, & name its
+functions & its settings. In an application nothing defines those names, so the documents the
+Engine distributes failed the Engine's own check before the application had written a line. The
+checker's REFERENCE_NAMES & REFERENCE_LABELS list each name with the reason it is cited. The other
+course was to rewrite the documents, which takes from them.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--The Error Catalogue--
+
+EVERY MESSAGE IS HELD TO ITS LINE. v4.3.1.
+Rule 17 had every warning & every error documented, & nothing checked it. HRProtect's
+tests/check_messages.php held its own files to the catalogue, & became the Engine's
+hrconvert2-messages-cli.php. Run on the whole kit it found 453 messages with no line, 13 calls it
+could not read & 4 lines no call raised. Each was documented or put right, rather than listed as
+an exception.
+
+A LENIENT MATCH HID WHAT IT SHOULD HAVE FOUND.
+A call & a line first agreed wherever something unknown on either side could stand for anything on
+the other. A call that began with a name & ended with a reason agreed with every line that ended
+the same way, so a refusal of a manifest entry passed for a workflow worker's. Something unknown
+now stands for up to two words, or for words around something unknown of the other side. Two is
+what a choice between it is & they are needs, & three let the subject of a sentence through again.
+
+A MESSAGE HELD IN A VARIABLE WAS READ FROM ITS NEAREST ASSIGNMENT.
+That read one branch of an if & passed the others unchecked, & a variable list() filled from
+another call was read from an older assignment. Every assignment that can reach the call is read
+now, back to one every way to it passes through, & one list() fills cannot be read at all. Reading
+every branch found the installer warning with texts it never warns with, so its failures are kept
+apart from its notices rather than a message that never happens documented.
+
+AN ERROR WHOSE NUMBER IS CHOSEN AS THE CODE RUNS WAS NOT CHECKED.
+The Archive & Scan pipelines pass a variable, & three of their errors had no line. The number is
+read the way a text is, & each it may be is held to its own lines.
+
+A CALL THAT LOGGED ONLY ANOTHER CALL'S NOTICE SAID NOTHING OF ITS OWN.
+The notice the kernel hands back names a path & a reason, & not what was being done. Each such call
+begins with a sentence of its own now, so the log says what failed & the catalogue can hold it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

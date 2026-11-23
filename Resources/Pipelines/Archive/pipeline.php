@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.4.
 // / The Archive pipeline's converter. pipelineCore.php loads it only to dispatch an Archive conversion.
 // / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13108 belongs to this pipeline.
 // / The Archiver pipeline raises 13012, & shares 13006, 13008, 13009 & 13010 with this one.
@@ -278,7 +278,8 @@ function convertArchives($pathname, $newPathname, $extension) {
   $linksRemoved = 0;
   $sleepTime = $SleepTimer;
   $oldExtension = getExtension($pathname);
-  $archiveError = 13000;
+  // / The number a failure to archive is raised with is the format's, & is set where the format is chosen below.
+  $archiveError = 0;
   $filename = (string)pathinfo($pathname, PATHINFO_FILENAME);
   if ($filename === '') $filename = 'archive';
   // / The folder a name of the archive's is made in, & the folder a compressed tar is unwrapped in.

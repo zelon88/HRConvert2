@@ -1,0 +1,187 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRProprietary Engine, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
+
+FILE INFORMATION ...
+v4.3.3.
+This file contains a list of itemized changes made in each iteration of the Engine.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+What the Engine itself needs is Resources/Engine/depends.php, & --setup installs it with the application's own half. Run  php <entry point> -v  to see what an installation has.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+--------------------
+COMMIT 11/21/2026
+v4.3.3 - The kernel names the account running it without another program, & refuses one it cannot name.
+
+-v4.3.3.
+-New identifyRunningAccount() reads the ID from posix_geteuid or /proc/self/status, & the name & home from posix_getpwuid or /etc/passwd. Root is ID 0.
+-Every decision about root reads it, so root's protections no longer depend on PHP's posix functions. whoami, id & getent run nowhere.
+-New findAccountDatabaseEntry() reads /etc/passwd & /etc/group where the web server account is looked up without posix.
+-An ID that cannot be read halts with new error 28010. The loader -fp writes refuses with it too, & -fp writes every loader again.
+-A sweep that cannot identify its account sweeps nothing.
+-Every curl the Engine runs starts with -q.
+-The kernel, engine.php & the Setup, Dependency & Environment Cores are v4.3.3, & every pin follows.
+-New test_identity-cli.php runs the kernel & the loader without posix, & without /proc.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.2 - The kit carries the approvals tool & the documents tool.
+
+-v4.3.2.
+-Documentation/Build/hrconvert2-approvals.py is HRConvert2's v4.2.4 tool, which the kit's documents already named. --check finds 11 Bubblewrap audits unanswered & no application record, a person's to do.
+-New Documentation/Build/add_to_engine_documents.py is HRProtect's v0.0.7 tool. It refuses a document named outside the tree & an AT other than AT END, & says how it is run.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.2 - The Starter, the smallest application the Engine runs, & the Engine's acceptance test, which found that no pipeline was a failure.
+
+-v4.3.2.
+-New Example/Starter is the smallest application the Engine runs, at app.php, the entry point the Engine assumes. Copy it to begin an application.
+-New test_starter-cli.php installs the Starter inside contained-install.sh & runs it as an administrator would. It needs nothing of the Example's.
+-An application that accepts no pipeline converts nothing. No warning, no 34001, & -v says NONE. The Pipeline Core & engine.php are v4.3.2, & both examples pin both.
+-assemble-example.sh assembles the Starter too. The test library runs a suite inside contained-install.sh, & writes there only through mustBeInstallFolder().
+-The message checker holds a line to a call only where the tree holds the file its block names, so an application keeps the Example's lines & the Starter's.
+-Four lines the Example raises sat under the Workflow Core's attribution, & are the core's.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.2 - The Engine's tests hold HRProtect's schedule & Quarantine suites.
+
+-v4.3.2.
+-New test_schedule-cli.php is the Engine's half of HRProtect's tests/test_schedule.php, with the checks its mutation run found missing.
+-New test_quarantine-cli.php is HRProtect's tests/test_quarantine.php. Three faults planted in the pipeline survived it, & three new checks kill them.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.2 - An installation that cannot be put in place puts back the one it was to replace.
+
+-v4.3.2.
+-The Setup Core is v4.3.2, & the Example pins it.
+-installApplicationTree() removes the installation it replaces only once the new one is in place. One the backup cannot hold waits at Application.old, where an update moves its own.
+-Where the new one cannot take the name, the one it replaces is put back.
+-A backup that is the application folder, is inside it or holds it is not used. Emptying it emptied the installation.
+-A mode that could not be set on an installation in place is warned about, & is not reported as a failed move.
+-New test_install-cli.php installs into folders of its own, & fails a rename, a removal or a mode where a check needs it.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.1 - Every warning & error the kit can raise has its line in ERROR_DESCRIPTIONS.txt, & the message checker reads what it missed.
+
+-v4.3.1.
+-Every warning & error engine.php, the Cores, the managers, the pipelines & the Example raise is documented.
+-Lines that had drifted from their calls are put right: 6, 7, 8, 503, 504, 3001, 3003, 4001, 5001, 6001, 9002, 13105, 13107, 15001, 15004, 15005, 15009, 17001, 19001, 31018, 31019, 32011, 34002 & 36000.
+-31007, 34006 & 42000 each gain a line for a message they raised without one.
+-The message checker reads every text a variable can carry to its call, & an error's number as it reads a text. Something unknown stands for two words at most.
+-installApplicationTree() keeps the reason an installation failed apart from its notices.
+-The Archive pipeline sets no error number before a format chooses one.
+-The Example says each of its two sentences of choice with a call of its own.
+-ABOUT_QUALITY_CONTROL.txt & README.txt name the message checker, & DEVELOPMENT_NOTES.txt says why it reads as it does.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.1 - Each warning & error is held to its line in ERROR_DESCRIPTIONS.txt, & the kernel's are documented.
+
+-v4.3.1.
+-New hrconvert2-messages-cli.php holds each warning & error the code raises to a line of the catalogue, & each warning line to a call. It was HRProtect's tests/check_messages.php.
+-A message that logged only a notice another function handed back says first what was being done. 34010 names the pipeline whose result was refused.
+-The install secret's copy read first, & a missing other copy, end with a sentence saying what that means.
+-A malformed per user secret is named as it is replaced. It was replaced without a word.
+-Every warning & error the kernel raises is documented. 28005 is one line, & 31020's lines name the copy read first.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.1 - The Engine's tests are gathered in Documentation/Build/Tests, & run only inside bubblewrap.
+
+-v4.3.1.
+-HRProtect's test library, its two contained runners, its Event Core suite & its kernel suite are the Engine's.
+-New suites of what engine.php does with the Event Core, of the core the kernel loads, & of the kernel without an Engine.
+-Each file of PHP there ends in -cli, refuses HTTP first, & is run from the root of the application it tests.
+-New assemble-example.sh assembles the Example, so the suites & the checkers run against the kit.
+-ABOUT_QUALITY_CONTROL.txt says how a suite is kept from a machine that matters.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.1 - A command the kernel refuses without an Engine is told to replace Resources/Engine, not engine.php alone.
+
+-v4.3.1.
+-The refusal names Resources/Engine, because an Engine whose Environment Core was refused cannot run either.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.1 - The Engine pins its Environment Core & does not start without it, so -v & -h answer where it is missing.
+
+-v4.3.1.
+-The Environment Core reports v4.3.1. getAcceptedEnvironmentCore() pins it, & loadEnvironmentCore() loads it.
+-startEngine() loads it first & starts nothing without it. startEngineSteps() takes every other step it took.
+-engine.php no longer requires it as it is loaded. A missing one ended -v & -h with a PHP fatal error.
+-The kernel loads it where it writes a missing config.php, & stops with error 0 where it is refused.
+-The kernel's -v says an Engine loaded & did not start, & a command refused beside the installation names the installation.
+-Its copies of sanitize(), locateDependency() & getExtension() are gone. The kernel always defined them first.
+-The -v report shows it under the Engine. listEnginePins() & both checkers know its pin.
+-The warning of an Engine that did not start is new, & the kernel's warning of an unavailable Engine is documented.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.1 - HRProtect's Event Core is the Engine's, & a protection page holds the Engine's logo to its hash.
+
+-v4.3.1.
+-The Event Core is an Engine core, at Resources/Engine/Cores/eventCore.php, v4.3.1. Its guard raises Engine-35000.
+-engine.php holds claimPrivateFolder(), eventCoreStanding(), loadEventCore() & noteEvent(), which were HRProtect's.
+-An application that pins no version of the Event Core is told so.
+-The kernel derives $EventLoc, Events in the data location. The Example's contract gives it the root-only role.
+-The Engine's half of config.php gains --Record Events--, from HRProtect's half. TRUE as shipped.
+-The -v report lists the Event Core, & names the event record where it is switched off.
+-listEnginePins() knows where the Event Core lives. The Example pins it.
+-ABOUT_EVENTS.txt is an Engine document. Its warnings are in ERROR_DESCRIPTIONS.txt.
+-The Engine's logo is held to its hash when a page is built. The hash was set at the top of engine.php, which is required inside a function, so it was never global & never checked.
+-README.txt describes the Event Core.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.1 - HRProtect's copy of the Engine is merged into canon, the library takes back its scanners & gains Quarantine, every protection page is one template with the Engine's logo, & a stamp may carry a lineage mark.
+
+-v4.3.1.
+-HRProtect's twelve Engine changes are merged, as ENGINE_RECONCILIATION_HRPROTECT.txt records them, & the file is carried.
+-The kernel, engine.php, engineConfig.php & the Setup & Workflow Cores report v4.3.1. The Example pins them.
+-HRProtect's additions to the Engine's documents & catalogue are adopted. Its own commands, sections & error block stay in HRProtect.
+-ClamAV & ScanCore are HRProtect's, at v4.3.1. ClamAV returns a verdict for every path. Both read their settings through applicationSetting(), & the Example's contract maps the five.
+-The Quarantine pipeline joins the library, at v4.3.1.
+-Every protection page is built from Resources/Engine/UI/protectionPage.html & shows the Engine's logo, or the one $EngineProtectionLogo names beside it.
+-A required directory is no longer given a copy of the application's index.html on every request, & the Environment Core builds no page of its own.
+-Both checkers fail where the Engine's logo is missing or altered, & where a pipeline or shared module pin differs from what it declares.
+-A stamp may end in r or ur. An exact pin compares the mark, & compareVersionMinimum() ignores it.
+-The doc checker judges only the header of a reconciliation file, as it does a changelog's.
+-The Engine's documents carry the Engine's header.
+-Five capability gates nothing read are removed.
+-The watch timeout is documented in minutes, & falls back to fifteen.
+-engineConfig.php names the real defaults of the entry point & the slug.
+-README.txt describes canon.
+
+--------------------
+COMMIT 11/20/2026
+v4.3.1 - The kit takes an application's layout, its folders show HRProprietary's own protection page, & README.md wears the family's logos.
+
+-v4.3.1.
+-Begins from HRConvert2's v4.3.0 starter kit. ENGINE_RECONCILIATION_HRCONVERT2.txt records the Engine changes it carries.
+-ScanCore/ & Pipelines/ moved into Resources/, where an application keeps them.
+-The index.html in Resources/Kernel, Resources/Engine, every pipeline & ScanCore's root & Logs is HRProprietary's neutral page. HRConvert2's redirected to its own convertCore.php, & ScanCore's older copy had a malformed meta tag.
+-Documentation/, Documentation/Build/, Resources/ & the Files, ClamAV & ScanCore pipelines had no index.html. Each has the neutral page.
+-README.md rewritten, with the HRProprietary, HRConvert2 & HRProtect banners in Documentation/Logos/.
+-Added Documentation/Build/Tests/ for the Engine's own tests.
+-Added ENGINE_CHANGELOG.txt, named so it never lands on an application's CHANGELOG.txt. hrconvert2-doccheck.py judges it as a changelog, & ABOUT_QUALITY_CONTROL.txt says so.
+-README.txt follows the new layout.

@@ -1,13 +1,13 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 11/6/2026 by Justin Grimes, www.github.com/zelon88
+HRProprietary Engine, Copyright on 11/6/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
 
 FILE INFORMATION ...
 v4.0.1.
@@ -19,7 +19,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Contract/depends.php & nothing else. Run  php convertCore.php -v  to see what this installation has.
+What the Engine itself needs is Resources/Engine/depends.php, & --setup installs it with the application's own half. Run  php <entry point> -v  to see what an installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -67,7 +67,7 @@ account root is protecting itself from.
               $ManagerSocketDir, $AccountLoc,
               $UserLoc, $WorkflowStageLoc
   served      $ConvertTemp, DATA                     the web server account, 0700, served inert
-  root-only   $EngineDir, $BackupLoc                  root:root, folders 0700, files 0600
+  root-only   $EngineDir, $BackupLoc, $EventLoc       root:root, folders 0700, files 0600
   library     $WorkflowLoc, Workflows                root:root, folders 0755, files 0644
   shared      $ProprietaryLoc                        checked, & only its own entry corrected
 
@@ -78,6 +78,7 @@ Sessions, the web server account's caches & its home in Cache, its logs in Logs 
 in Sockets, & from v4.1.4 the workflows an administrator installs are in Workflows. Root's own log folder is Engine & the previous installation is Last-Installed-Version.
 From v4.2.0 accounts are kept in Accounts & the files each signed in user keeps in Users, where the application offers accounts.
 From v4.2.2 a workflow an administrator stages from a page waits in Staged for root to install.
+From v4.3.1 the Event Core keeps the record of what an application did & found in Events, root's alone. See ABOUT_EVENTS.txt.
 The install secret is kept in Secrets, from v4.0.4, which only root may change & only the web
 server account's group may enter, & a copy with the same key stays at the top for every release
 that reads it there. The Environment Manager's state sits at the top of the data location,
@@ -121,6 +122,12 @@ so a release unpacked into a data root went into Sessions as root's & the sweep 
 A capability cache an older release left at the top of any data root is moved into Cache when it is
 the primary root's & Cache holds none, & is otherwise removed, because nothing reads it. Until
 v4.0.6 only the primary root's was looked at.
+A FOLDER THE CONTRACT DECLARES DIRECTLY BELOW THE DATA LOCATION IS MADE WITH THE REST, FROM
+v4.3.1. Where $EngineManagedLocations names a location under a setting that is not one of the
+Engine's own, & the location is a folder directly below the data location, -fp makes it before any
+role is applied & knows its name from then on, so it is not named in the warning above. A location
+under one of the Engine's own settings is made as it always was, or, as the backup is, only when
+there is something to keep in it.
 
 SECRET.
 Secrets in the data location, from v4.0.4. It belongs to root, its group is the web server
@@ -165,9 +172,10 @@ served locations out of that read. HRConvert2 leaves out DATA. A served location
 location that the read does not leave out stops every command root runs but a repair.
 
 ROOT-ONLY.
-Root's own log folder, Engine, & the previous installation kept for an operator after an update.
-Both are root's alone, & each is kept & walked only where no other account could replace the
-folder it is in, which beneath a root owned data location is always.
+Root's own log folder, Engine, the previous installation kept for an operator after an update, &
+from v4.3.1 Events, where the Event Core keeps its record. Each is root's alone, & each is kept &
+walked only where no other account could replace the folder it is in, which beneath a root owned
+data location is always.
 
 LIBRARY.
 The installed workflow library, Workflows in the data location, from v4.1.4. It is code an
@@ -372,8 +380,8 @@ owns the file. It is written again as root's with its SAME key, so no session en
 run as root has found a place the secret is kept open to another account, only a copy root owns
 counts for the rest of it, because that account could have put a file the web server account owns
 there. Until v4.0.4 a copy at the top counted whoever owned it, & the web server account judged no
-copy. Without PHP's posix functions the web server account & its group are looked up with id &
-getent. When neither can be found, only a copy root owns counts, Secrets & the group of a copy
+copy. Without PHP's posix functions the web server account & its group are read from /etc/passwd &
+/etc/group. When neither can be found, only a copy root owns counts, Secrets & the group of a copy
 cannot be judged, & root says so. A copy another account could only read is still used, & is
 written again 0640 with its key. A list that lets another account read a copy, & nothing more,
 shows in no mode, & is not seen.
@@ -458,6 +466,13 @@ refuses, for root, a folder another account could replace. Until v4.0.1 the writ
 re-own functions did not, & the log folder & the socket folder both sit inside the data
 location, which the web server account owns, so each could be swapped whole. Root creating its
 logfile or its manager state inside one was the hole.
+
+A HANDLE IS NOT HANDED ON, FROM v4.3.1. openFileWithoutFollowing() opens a file with e, which has
+the system close the handle in any command the process goes on to run. Until then a command root
+ran was handed every file root held open that way, & so was whatever that command ran. Root holds
+its logfile & its locks this way. A program run in a sandbox to read a hostile file was shown one
+folder & handed root's logfile to write to. A name is guarded so that root is not led to the wrong
+file, & a handle is closed so that the right file is not given away.
 
 Once the installation is root's, root changes no mode by name in a folder the web server
 account can change. The repairs that make it root's run before it is, as --About The Gate--

@@ -1,13 +1,13 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
+HRProprietary Engine, Copyright on 8/20/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
 
 FILE INFORMATION ...
 v3.7.8.
@@ -18,7 +18,7 @@ This application requires at least a Raspberry Pi Model B+ or greater.
 This application will run on just about any x86 or x64 computer.
 
 DEPENDENCY REQUIREMENTS ...
-The authoritative list of dependencies is Resources/Engine/depends.php & Resources/Contract/depends.php, the Engine's half & the application's, & nothing else. Run  php convertCore.php -v  to see what this installation has.
+What the Engine itself needs is Resources/Engine/depends.php, & --setup installs it with the application's own half. Run  php <entry point> -v  to see what an installation has.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -295,6 +295,15 @@ EVERY OPTION ABOVE IS USED WITH --setup & NEVER ON ITS OWN.
 An option typed alone is not a command. The core recognizes it, names the command it belongs to
 & shows the correct invocation rather than reporting an unrecognized argument.
 
+--install-service ALSO WRITES THE TIMERS AN APPLICATION ASKS FOR, FROM v4.3.1.
+An application names a function in $EngineTimerProvider, & each command that function returns is
+given a service & a timer in /etc/systemd/system, as the Environment Manager is. No timer is
+enabled, & what enables each is printed. --install-complete writes them as well, & -fp writes
+again whichever are installed, so each names the installed copy & holds the calendar the
+configuration now asks for. A host without systemd is written none, & that is not a failure.
+An application that runs no listener has none to install, & from v4.3.1 the command does not exit
+1 for that. Until then it exited 1 wherever the listener was skipped, whatever else it wrote.
+
 READING NEEDS ROOT. WRITING NEEDS ROOT & A TOKEN.
 Every --setup option is root only, & is refused before it starts rather than partway through.
 This said reading needed no privileges until v3.9.9, & the code refused it all the same.
@@ -452,6 +461,30 @@ A prefix is used rather than a list of names, so the Engine never has to ask the
 what it accepts. Everything --app is the application's & everything else is not.
 
 HRConvert2 declares no --app argument yet. Any one given is refused with a message saying so.
+
+The application's handler sets the exit status, from v4.3.1. A handler that returns a whole number
+from 0 to 255 has set it. One that returns nothing has succeeded, & the command exits 0. One that
+returns anything else is reported as failed, with a warning, & the command exits 1. Until v4.3.1
+the command exited 0 whatever the handler returned.
+The first value is what follows the command, after an equal sign or as the next argument. The
+second is the argument after the first, whichever way the first was written.
+Nothing sanitizes a value before the application has it. The application calls sanitize()
+against a value that is a name, & sanitizePath(), which the kernel has from v4.3.1, against a
+value that is a path.
+
+The kernel hands over those two values & no more. An application that takes a flag as well
+reads the argument vector for it, sanitizes what it reads, & decides what a value typed after a
+flag means. An application has each flag typed last, & runs no command with a value typed after
+one, because that value would be in neither of the two & would be lost.
+
+An application may start one of these arguments as a worker, from v4.3.1. The Engine's
+startApplicationWorker() starts the entry point with one argument beginning --app & one value,
+as a process that outlives the command that started it. ABOUT_ENGINE_CONTRACT.txt says how.
+
+An application may put one of these arguments on a schedule, from v4.3.1. The function its
+contract names in $EngineTimerProvider says which & when, & --setup --install-service writes a
+systemd service & a timer for each. Nothing enables a timer. ABOUT_ENGINE_CONTRACT.txt says how.
+
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

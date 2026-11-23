@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.3.3.
+// / v4.3.4.
 // / This application's Engine settings, loaded after engineConfig.php, so anything it sets wins.
 // / A package ships a configuration with working defaults, & the thing being configured drops a file beside it that overrides what it needs, as Apache & PHP do.
 // / engineConfig.php belongs to the Engine & is replaced wholesale when a newer Engine arrives, while this file belongs to the application & survives that.
@@ -126,7 +126,7 @@ $EngineAcceptedPipelines = array(
   'Video' => 'v4.3.1',
   'Ebook' => 'v4.3.1',
   'Audio' => 'v4.3.1',
-  'Archive' => 'v4.3.1',
+  'Archive' => 'v4.3.4',
   // / Five conversion families, from v4.2.5. Data converts between structured data formats, LaTeX typesets a LaTeX document,
   // / Trace traces an image into vector outlines, Email converts an Outlook message & Markup converts between markup & document formats.
   'Data' => 'v4.3.1',
@@ -148,10 +148,10 @@ $EngineAcceptedPipelines = array(
   'Metadata' => 'v4.3.1',
   'PDF' => 'v4.2.1',
   // / Scanner pipelines. They declare no formats & are chosen by name.
-  'ClamAV' => 'v4.2.1',
+  'ClamAV' => 'v4.3.1',
   // / The first pipeline of kind file. Operations that do not care what is in a file.
   'Files' => 'v4.1.8',
-  'ScanCore' => 'v4.2.3');
+  'ScanCore' => 'v4.3.1');
 
 // / The shared modules a pipeline may load & the exact version each must report.
 // / libreOffice.php serves the Document & OCR pipelines alike, so neither of them owns it.
@@ -209,6 +209,8 @@ $EnginePinSources = array(
 // / WorkflowStageLoc is Staged, from v4.2.2, where an administrator signed in to a page stages a workflow for root to install with --workflow --install-staged.
 // / It is the web server account's, because a request is what stages one, & root only ever reads it.
 // / Root writes it & the web server account's group reads it, & no other account can list the folder.
+// / EventLoc is Events, from v4.3.1, where the Event Core keeps the record of what was done & found. It is root's alone, because
+// / an event may name files from anywhere on this server, & -fp makes it whether or not this application keeps an event.
 // / The data location is named by $DataRootLoc here, not $ConvertLoc. $ConvertLoc is narrowed to
 // / the session area a request uses, so it is not the root on the command line where this is
 // / applied. $DataRootLoc always holds the configured root. SessionLoc is the session area below
@@ -228,7 +230,8 @@ $EngineManagedLocations = array(
   'UserLoc' => 'web',
   'WorkflowStageLoc' => 'web',
   'EngineDir' => 'root-only',
-  'BackupLoc' => 'root-only');
+  'BackupLoc' => 'root-only',
+  'EventLoc' => 'root-only');
 
 // / The entries at the top of a release that make up the application, & nothing else.
 // / -fp run from a tree that is not installed copies exactly these into the application folder
@@ -325,6 +328,12 @@ $EngineSettingNames = array(
   'AccountLocation' => 'AccountLoc',
   'UserLocation' => 'UserLoc',
   'ApplicationTitle' => 'ApplicationTitle',
-  'ServerName' => 'URL');
+  'ServerName' => 'URL',
+  // / The scanner pipelines read these by name from v4.3.1. Both keep their scratch work in the temporary folder.
+  'ScannerScratchFolder' => 'ConvertTempDir',
+  'ScanCoreMemoryLimit' => 'ScanCoreMemoryLimit',
+  'ScanCoreChunkSize' => 'ScanCoreChunkSize',
+  'ScanCoreVerbose' => 'ScanCoreVerbose',
+  'ScanCoreDebug' => 'ScanCoreDebug');
 // / -----------------------------------------------------------------------------------
 ?>

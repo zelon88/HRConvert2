@@ -256,6 +256,49 @@ command where there is no Engine. Everything else is the Engine's runEngineComma
 which offers it to dispatchEngineCommand, runs -u through Setup Core & names an option typed
 alone, or an argument nothing recognizes, from engineSubOptionOwners(). An application keeps
 only what follows --app, & a second application gets every other command by making that call.
+THE HANDLER SETS THE EXIT STATUS, FROM v4.3.1. The function $EngineApplicationArgumentHandler
+names is handed the command & two values, & what it returns is the status the command exits with.
+A whole number from 0 to 255 is that status, nothing is 0, & anything else is reported as failed,
+with a warning & status 1. Nothing sanitizes a value before the handler has it, so the handler does.
+AN APPLICATION MAY START A WORKER OF ITS OWN, FROM v4.3.1. The Engine's startApplicationWorker() is
+handed one argument beginning --app & one value. It starts the entry point with the two through
+setsid -f, as a workflow's worker is started, so the worker leads a session of its own, has no
+terminal & outlives the command that started it. It returns whether the worker was started & why
+it was not, & does not wait for it.
+Nothing but an argument beginning --app is started, so the worker arrives at the application's own
+handler & no command of the Engine's can be started this way. The value is letters, digits &
+dashes, 64 at most, because every account can read a command line. It names the work, & the
+application keeps what the work is where only it can read.
+The worker is the application's & no manager's. No manager is told of it, it holds no token of the
+budget, & -k does not stop it. The application that starts one decides whether it should run,
+watches it & stops it. Work a manager should supervise is a workflow's, or a pipeline's detached process.
+A worker logs to a file of its own where the application's contract sets $EnginePerWorkerLogFiles
+TRUE & the application sets $LogWorkerIdentifier before the logging environment is verified.
+
+AN APPLICATION MAY PUT A COMMAND OF ITS OWN ON A SCHEDULE, FROM v4.3.1. The function
+$EngineTimerProvider names returns the commands systemd is to run, each keyed by a name & holding a
+Description, the one Argument beginning --app- it is run with, a Calendar as systemd writes one, &
+its Reach. The Setup Core writes a service & a timer for each, named for the application's slug &
+that name, beside the Environment Manager's. --setup --install-service & --setup --install-complete
+write them, -fp writes again whichever are installed, & nothing enables one. An administrator does.
+A unit that is a link, as one an administrator masked is, is never written over.
+Every field is written into a unit root runs, so each is held to the characters it may have. A timer
+with a field that is refused is refused whole, with a warning. A calendar systemd cannot read falls
+back to daily, with a warning, because a calendar is usually a setting an administrator typed.
+Reach is confined, for what the Environment Manager's own unit is confined by, or host, for a
+command that must see the whole server. A host unit hides nothing from its command & takes nothing
+from it. Success is optional, & lists the exit statuses other than 0 that mean the command did its work.
+A unit sets no limit on how long its command runs, so a command put on a schedule ends itself.
+The Engine's applicationTimerState() says whether a timer is installed, enabled & running, & when
+systemd runs it next, for an application that reports on its own parts.
+A scan takes the host reach, because a scan that could not see a folder would call it clean.
+AN APPLICATION MAY SHOW ITS OWN LOGO ON THE PROTECTION PAGE, FROM v4.3.1. $EngineProtectionLogo names
+a logo of the application's, as a path from the installation's root, & the page that keeps a folder from
+being listed shows it in place of the Engine's. It is kept beside the Engine's own,
+Resources/Engine/UI/HRProprietary_logo.png, & never over it. No application removes the Engine's logo or
+writes over it, & both checkers fail where it is not the file the Engine was distributed with. The page
+holds the logo as a data URI, so it asks the server for nothing else. A logo that cannot be shown is
+refused with a warning, & the Engine's own is shown in its place.
 -v IS THE ENGINE'S REPORT, FROM v4.2.4. The kernel recognizes -v & prints the Engine's
 showVersionReport(), which places what the application's report provider adds among the
 Engine's own sections. Without an Engine it prints the kernel's showKernelVersionReport(), a short
@@ -625,15 +668,13 @@ application that sandboxes nothing should not be told its sandbox is broken.
 A capability that is enabled still degrades the way everything else in this project
 degrades. Enabling it says this application uses it, not that it must be present.
 
-  $EngineEnableEnvironment            Detecting the host.
-  $EngineEnableDependencyLocation     Finding an executable & reporting where it was found.
-  $EngineEnableStartupKeys            Proving a process was started by this application.
-  $EngineEnableEnvironmentValidation  Reporting whether the host is configured correctly.
-  $EngineEnableResourceLimits         Bounding what one unit of work may consume.
   $EngineEnableAuthentication         Accounts. Off unless the application's contract offers them.
 
 The list grows as applications need more. It does not grow speculatively. A gate with
 nothing behind it is a gate somebody will eventually turn on expecting something to happen.
+v4.3.1 removed five such gates, $EngineEnableEnvironment, $EngineEnableDependencyLocation,
+$EngineEnableStartupKeys, $EngineEnableEnvironmentValidation & $EngineEnableResourceLimits, because
+nothing read them. Each is wired again only when an application needs it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

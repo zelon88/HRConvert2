@@ -1,0 +1,299 @@
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+COPYRIGHT INFORMATION ...
+HRProprietary Engine, Copyright on 11/16/2026 by Justin Grimes, www.github.com/zelon88
+
+LICENSE INFORMATION ...
+This project is protected by the GNU GPLv3 Open-Source license.
+https://www.gnu.org/licenses/gpl-3.0.html
+
+APPLICATION INFORMATION ...
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
+
+FILE INFORMATION ...
+v4.3.1.
+This plain text file describes the record an application keeps of what it did & found, the Event Core that keeps it, & how to read it.
+
+HARDWARE REQUIREMENTS ...
+This application requires at least a Raspberry Pi Model B+ or greater.
+This application will run on just about any x86 or x64 computer.
+
+DEPENDENCY REQUIREMENTS ...
+The event record needs a folder only root can open, which -fp makes, & nothing else. Run  php <entry point> -v  to see where the Event Core stands.
+
+<3 Open-Source
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Event Record--
+
+AN EVENT IS ONE THING AN APPLICATION DID OR FOUND, WRITTEN DOWN ONCE & NEVER CHANGED.
+
+A log says what a program was doing. An event says what somebody looking after the server needs to know happened.
+In HRProtect, a scan that began, a file that was found infected & a quarantined file that was put back are events.
+A function that was called is not.
+
+The record is kept by the Event Core, Resources/Engine/Cores/eventCore.php, one of the Engine's cores from v4.3.1.
+It was HRProtect's own, at Resources/Cores/eventCore.php, from HRProtect's v0.0.3 until then.
+It adds a capability & is never load bearing. An application does its work & reports it without it.
+
+  Where     Events in the data location, which the kernel names in $EventLoc. The folder is root's alone.
+  What      One file for each day, named Events-YYYYMMDD.jsonl. A day is a day in UTC.
+  How       One event to a line. A line is one JSON object & ends in a line break.
+  Who       Root writes it & root reads it. A file is mode 600 & no other account can open it.
+
+An event may name files & say what was found in them, so the record is nobody's to read but root's.
+A command that is not root's keeps no event & reads none. It finds the Event Core unable, & says so once.
+
+Nothing in the Engine changes an event or removes one. The Event Core holds no call that removes anything.
+An event holds names somebody else chose, & a scanner that knew one of those names would call the file that holds it infected.
+So no application scans the Events folder, & HRProtect never does, as it never scans its quarantine.
+
+--Record Events-- in config.php switches the record off. It is TRUE as shipped. It is the Engine's setting from v4.3.1, & was HRProtect's.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About One Event--
+
+An event is exactly thirteen fields, in this order.
+
+  Record      The number 1. It says which fields follow. A version that keeps another field writes another number.
+  Id          The letter E, the day & the time the event was kept in UTC, & twelve hexadecimal digits. E20261116-153000-0123456789ab.
+  Time        When it was kept, in UTC, as a person reads it. 2026-11-16T15:30:00Z.
+  Stamp       The same time as a whole number of seconds since 1970, for a program.
+  Host        The name of the machine that kept it.
+  Version     The version of the application that kept it, as $EngineApplicationVersion holds it.
+  Source      The part of the application it came from. A lower case word of at most 32 characters, such as scan or quarantine.
+  Kind        What happened. Two to four lower case words joined by dots, such as file.infected.
+  Category    A whole number from 1 to 4. Which of the four responsibilities the event belongs to.
+  Severity    info, low, medium, high or critical.
+  Summary     One sentence a person can act on. It is cut at 1000 bytes, & three dots say that it was.
+  Subject     What the event is about, as a list keyed by name. A file, a scan or a quarantined file, in HRProtect.
+  Detail      Whatever else is known, as a list keyed by name. What a scanner said, for one.
+
+The Event Core writes Record, Id, Time, Stamp, Host & Version itself. A caller cannot get them wrong.
+The caller hands over the other seven, & an event with a fact missing or out of range is not kept. The caller is told why.
+
+Subject & Detail are always written as JSON objects, an empty one included. A program reading the record never meets a list where it expected names.
+A value inside either is text, a whole number, TRUE, FALSE or a list of those, at most four lists deep & 64 entries to a list.
+A key is a whole number or a plain name of letters & digits that begins with a letter. An entry with any other key is not kept.
+
+A line is at most 65536 bytes with its line break.
+A Detail that would make it longer is replaced by a note saying it was too large to keep, & the event is kept.
+An event still too long without its Detail is not kept.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What Is An Event--
+
+THE APPLICATION DECIDES WHAT IS AN EVENT. THE EVENT CORE KEEPS ANY EVENT WHOSE FACTS ARE WELL FORMED.
+
+The Event Core knows no table of kinds. An application names its own sources & kinds, & files each under a category & a severity.
+A sensor added later keeps its own kinds without a line of the Event Core changing.
+
+An application keeps an event through noteEvent(), in engine.php, & through nothing else.
+It hands over the facts as a list keyed by name. Source, Kind, Category, Severity & Summary, & Subject & Detail where it has them.
+noteEvent() returns whether the event was kept. Nothing that calls it need do anything differently because of the answer,
+because what a command found belongs in its report & its log either way.
+
+An application that keeps events says which in this file, in a section of its own, as it adds to any Engine document it extends.
+The section names each kind, its source & its severity, & what it holds in Subject & Detail.
+
+A file an event names is named twice, as Path, made printable, & PathEncoded, its very bytes in base64.
+See --About Text In An Event--.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Severity & Category--
+
+Severity says how soon somebody should look.
+
+  info        Nothing to do. It happened, & it is on record.
+  low         Worth knowing at the next look.
+  medium      Somebody should look.
+  high        Somebody should look today.
+  critical    Something harmful is known to be where it can do harm.
+
+Category says whose problem it is. There are four, & every application files an event under one of the same four.
+They were HRProtect's, & are the four responsibilities everything in HRProtect falls under.
+
+  1    This machine.
+  2    This server.
+  3    This network.
+  4    The blue team.
+
+A severity is its name & a category is its number, in the record & wherever an application reads it back.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Text In An Event--
+
+A FILE NAME IS WHATEVER BYTES SOMEBODY CHOSE.
+
+A name can hold an escape sequence that clears a terminal, a line break that forges a second line, or bytes that are no text at all.
+An attacker chooses the names of the files an attacker plants, & the record is where a defender reads them.
+
+So every piece of text is made printable before it is kept, by the kernel's printableText(), strictly.
+
+  Text that is UTF-8       Keeps its characters, an accented letter or a character of any script included.
+                           A control character is kept as a question mark. That is everything below a space, the delete character,
+                           & the second set of control characters, U+0080 through U+009F.
+  Text that is not UTF-8   Keeps its printable characters of ASCII. Every other byte is kept as a question mark.
+  Text of any kind         Is cut at 1000 bytes, between two characters, & three dots say that it was.
+
+JSON then writes every character outside ASCII as an escape, so the file itself is ASCII whatever an event names.
+
+Text made printable is no longer the name of the file where the name held anything else, or was long. So a path is kept twice.
+
+  Path           For a person. Printable, & safe to show.
+  PathEncoded    For a program. The very bytes, in base64.
+
+A value whose key ends in Encoded is kept whole or not at all. An encoding that was cleaned or shortened decodes to something else.
+One of more than 8192 characters, or that is not base64, is kept as empty text.
+
+A Summary is one sentence, & is cut like any other text. One that names a path of more than about 900 bytes ends before it has said what happened.
+The Kind still says what happened, the Subject & the Detail hold what they always hold, & PathEncoded is the path whole.
+
+The same function is asked again when the record is read, without the cut.
+A line holding text with a control character in it is not read as an event. It is counted & passed over.
+So nothing read from the record can move a cursor or forge a line, whoever wrote the file.
+
+A CHARACTER THAT TURNS TEXT AROUND IS NOT A CONTROL CHARACTER, & IS KEPT.
+U+202E, which makes what follows it read from right to left, is one. printableText() lets it through, as it does every character that is not a control.
+An event printed as JSON, as eventLineOf() writes it, holds such a character as an escape that does nothing. A Summary printed as text lets it act.
+PathEncoded is the name to trust. See --About Text Nobody Vetted-- in ABOUT_LOGGING.txt for what printableText() does & does not do.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Reading The Record--
+
+THE EVENT CORE READS THE RECORD BACK. AN APPLICATION OFFERS THE COMMANDS THAT ASK IT TO.
+
+  readEvents()        The events kept since a time, of a least severity, oldest first.
+  readEventDay()      The events of one day.
+  findEvent()         One event, by its identifier.
+
+An application asks loadEventCore() first, & reads nothing where it does not answer ready. HRProtect offers two commands that read it.
+
+readEvents() gives at most 10000 events, & the newest of them where more matched than were asked for.
+It looks back over no more than 3660 days, so a time of nothing at all does not walk back to 1970.
+It returns what a reader should be told as a list of sentences. A day that could not be read, lines that were not events, & events
+that matched & were not given.
+
+An identifier begins with the day its event was kept, so findEvent() opens the one file it names & no other.
+An identifier the Event Core would not have given is not looked for. Where a record nonetheless holds two lines with one identifier,
+findEvent() gives the later of them.
+
+A day with no file is a day on which nothing happened. It is read & it is empty.
+A file that is not a plain file with one name that is root's alone, in a folder only root could replace, is not read.
+A line longer than any the Event Core writes, a line that is not JSON & a line that is not an event are each counted & passed over.
+A last line with no line break is still being written, or was cut short, & is neither read nor counted.
+
+Reading locks nothing. A reader that held the file would hold up every command that had something to record.
+
+What a person types to ask for events is handed to sanitize() first, & a value sanitize() changed is refused rather than used as
+something else. An identifier is checked by eventIdentifierIsValid() instead, because a changed identifier names another event.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About A Record That Cannot Be Kept--
+
+A COMMAND NEVER STOPS BECAUSE AN EVENT COULD NOT BE WRITTEN.
+
+The Event Core is in one of five states.
+
+  ready       It is installed, it is the version the application pins, & its folder is root's alone.
+  off         --Record Events-- is FALSE in config.php. Nothing is recorded or read.
+  detached    Resources/Engine/Cores/eventCore.php is not installed.
+  refused     It is installed, & it reports no version or one the application does not pin, or it could not be loaded.
+  unable      It is loaded, & the command is not root's, or the Events folder is not root's alone or could not be made.
+
+php <entry point> -v says which of the first four it is in without loading it, & answers any account.
+It reports off under what is available & switched off, & detached & refused as failures.
+unable is found only by a command that loads the core.
+
+In every state but ready a command does its work & reports it exactly as it would have.
+In detached, refused & unable a command that would have written to the record or read it warns once that it does neither, & says why.
+In off a command that only records says nothing. A command that was asked to read the record says that it is switched off.
+
+An event can also fail to be written while the core is ready. A full disk is the usual reason, & a process with no file handle left is another.
+The command warns once, with the reason, & says that no later failure is said by this command. Then it goes on.
+The part of a line a full disk let through is taken back out, so the record holds whole events only.
+Where it could not be taken back out, the next event begins on a line of its own & the piece is counted as a line that is not an event.
+
+The exit status of a command says what the command did. It does not change because the record could not be kept.
+
+Both warnings are in ERROR_DESCRIPTIONS.txt, under WARNINGS ABOUT THE EVENT RECORD.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Event Core--
+
+  $EventCoreVersion              Read by the Engine without executing the file.
+  $RequiredEventCoreVersion      The version the application pins, in its entry point. An exact match, as for every Engine core.
+  Engine-35000                   Raised where the file is loaded directly. It is the only error the core raises.
+
+  recordEvent()                  Keeps one event. Returns whether it was kept, its identifier & the reason it was not.
+  readEvents()                   Reads the events since a time, of a least severity. Returns them & what a reader should be told.
+  readEventDay()                 Reads the events of one day.
+  findEvent()                    Finds one event by its identifier. One file is opened, the one the identifier names.
+
+  eventSeverityRank()            Ranks a severity from 0 to 4.
+  eventSourceIsValid()           Says whether a string may be a Source.
+  eventKindIsValid()             Says whether a string may be a Kind.
+  eventIdentifierIsValid()       Says whether a string is an identifier this core gives.
+  eventFolderPath()              Says where the record is kept, or that it has no folder.
+  eventDayPath()                 Names the file of one day.
+  eventDaysBetween()             Names the days from one time to another, oldest first. No more than 3661 are ever named.
+  lesserEventToken()             Makes the end of an identifier where the host has no random bytes to give.
+  eventHandleIsOfPath()          Says whether an open handle is of the plain file that was examined before it was opened.
+  cleanEventValue()              Makes one value fit to keep.
+  eventValueIsClean()            Says whether a value read back is one this core could have written.
+  eventRecordIsValid()           Says whether a decoded line is an event.
+  eventLineOf()                  Writes an event as the line it is kept as, or spread over lines for a person.
+
+The core logs nothing. Each function returns the reason it could not do what was asked, & the Engine decides what to say.
+The core makes no folder. The kernel names the Events folder, loadEventCore() makes it, & the core only uses it.
+A folder that is empty text, the filesystem root, or not named from the filesystem root is no folder, & nothing is kept or read.
+
+A file is opened for writing by the kernel's openFileWithoutFollowing(), so a link or a second name is refused & never written through.
+A file is opened for reading only where it is a plain file with one name that is root's alone. The open handle is then compared with what was examined
+by device & inode, so a name swapped in between the two is refused unread.
+The lock is held for one line. The end of the file is found again once the lock is held, because another process may have written since.
+
+engine.php holds the other half, from v4.3.1. It was HRProtect's until then.
+
+  claimPrivateFolder()           Makes a missing folder, 0700, where root alone could replace the folder above it, & says whether a folder
+                                 is root's alone. It changes no folder that is there. The Events folder is one it makes.
+  eventCoreStanding()            Says which state the core is in, without loading it.
+  loadEventCore()                Loads it through the kernel's verifyCoreComponent() & makes its folder root's alone. Decided once for a command.
+  noteEvent()                    Hands one event to the core. It is the one place an application keeps an event from.
+
+The Engine never calls a function of the core's without asking whether the core is loaded, so a core that is not there costs the record & nothing else.
+An application that reads the record asks loadEventCore() first, & calls the core only where it answers ready.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About What The Record Does Not Do--
+
+It is not pruned. Nothing removes an old day, so the folder grows until an administrator moves files out of it.
+It is not chained. A line does not vouch for the line before it, so root can change the record & it will not show.
+It is not forced to the disk. An event is written & flushed, & a power cut can still lose the last of them.
+It is not sent anywhere. It stays on the machine that kept it.
+It does not hold the files it names. An event names a file & says what was found in it. The file is wherever the application left it.
+It does not say who typed a command. Only root keeps an event, & neither the record nor the log knows which person was root.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Reading It With Other Tools--
+
+The record is JSON lines. Anything that reads JSON lines reads it, as root.
+
+  sudo cat /path/to/data/Events/Events-20261116.jsonl
+  sudo jq -c 'select(.Severity == "high" or .Severity == "critical")' /path/to/data/Events/Events-20261116.jsonl
+  sudo jq -r '.Subject.PathEncoded // empty | @base64d' /path/to/data/Events/Events-20261116.jsonl
+
+The last of these prints file names as their own bytes. Send it to a file & not to a terminal.
+
+A program that reads the record itself should do what the Event Core does. Read whole lines only, & pass over a line it does not understand.
+A later Event Core writes a Record other than 1 for an event with other fields, & a reader that checks Record is never surprised by one.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.4.
+// / v4.3.1r.
 // / This file configures the Engine for the application that bundles it.
 // /
 // / This file is NOT the administrator's configuration & is not edited by a user.
@@ -50,7 +50,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, The
 // / The version of this configuration. Matched as a MINIMUM by the Engine, the same way
 // / an application matches its own configuration. A newer file carrying every required
 // / setting is fine, because a setting this Engine does not know is simply not read.
-$EngineConfigVersion = 'v4.2.4';
+$EngineConfigVersion = 'v4.3.1r';
 // / -----------------------------------------------------------------------------------
 
 
@@ -68,7 +68,8 @@ $EngineApplicationName = 'Application';
 // /  --Engine Entry Point--
 // /   The file an application is started through. The Engine runs it to start managers & the
 // /   listener, & names it in the instructions it prints. An application sets its own in
-// /   Contract/app-engine-config.php. Default 'app.php', the Engine's own example application.
+// /   Contract/app-engine-config.php. The default, 'app.php', names no file the Engine
+// /   distributes, so an application always sets its own.
 $EngineEntryPoint = 'app.php';
 
 // /  --Engine Application Slug--
@@ -76,7 +77,7 @@ $EngineEntryPoint = 'app.php';
 // /   Nothing derives this from the name above, because a name may contain anything & a
 // /   path may not.
 // /   Valid options are lowercase letters, digits & hyphens.
-// /   Default is 'hrconvert2'.
+// /   Default is 'application'.
 $EngineApplicationSlug = 'application';
 // / -----------------------------------------------------------------------------------
 
@@ -91,51 +92,6 @@ $EngineApplicationSlug = 'application';
 // / A capability that is enabled still degrades the way everything else in this project
 // / degrades. Enabling it says this application uses it, not that it must be present.
 // /
-// /  --Engine Enable Environment--
-// /   Detecting the host. Root or not, a terminal or not, a container or not, which
-// /   separator, which line ending, which account the process runs as.
-// /   Every application needs this & there is no sensible reason to disable it. It is a
-// /   toggle so that the list below is complete rather than because it is optional.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$EngineEnableEnvironment = TRUE;
-
-// /  --Engine Enable Dependency Location--
-// /   Finding an executable on the host & reporting where it was found.
-// /   An application that shells out to anything needs this. An application that does not
-// /   should turn it off, because a locator that is never called is a locator that can
-// /   still be called by mistake.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$EngineEnableDependencyLocation = TRUE;
-
-// /  --Engine Enable Startup Keys--
-// /   Proving that a process was started by this application & not by somebody else.
-// /   Required by anything that spawns a long lived worker. An application that never
-// /   spawns one does not need it.
-// /   A key travels in the environment & never on a command line, & a key that crossed a
-// /   process boundary is spent when it validates. See Documentation/ABOUT_MANAGERS.txt.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$EngineEnableStartupKeys = TRUE;
-
-// /  --Engine Enable Operating Environment Validation--
-// /   Reporting whether the host is configured the way this application needs.
-// /   Kernel settings, sandbox availability, the service manager & the policy files.
-// /   This is what -fp & -v report. An application with no installer does not need it.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$EngineEnableEnvironmentValidation = TRUE;
-
-// /  --Engine Enable Resource Limits--
-// /   Reading a per operation resource limit & turning it into something a process
-// /   supervisor understands.
-// /   Required by an application that bounds how much of a machine one unit of work may
-// /   consume. An application that does not bound its work does not need it.
-// /   Valid options are TRUE or FALSE.
-// /   Default is TRUE.
-$EngineEnableResourceLimits = TRUE;
-
 // /  --Engine Enable Authentication--
 // /   Usernames & passwords, the accounts behind them, & a folder each signed in user keeps.
 // /   An application that serves anonymous visitors only does not need it.
@@ -253,9 +209,10 @@ $EnginePerWorkerLogFiles = FALSE;
 // $EngineConnectionTimeout = 10;
 
 // /  --Engine Watch Timeout--
-// /   Seconds to supervise a detached worker before it is considered overdue.
-// /   Falls back to --Stream Watch Timeout-- & then to three hundred.
-// $EngineWatchTimeout = 300;
+// /   Minutes to supervise a detached worker before it is considered overdue.
+// /   Falls back to --Stream Duration Timeout-- in config.php, which is $StreamWatchTimeout, & then to fifteen.
+// /   Until v4.3.1 this said seconds, so a value set as documented ran sixty times as long.
+// $EngineWatchTimeout = 15;
 
 // /  --Engine Fetch Temp--
 // /   Where a remote file is written while it is being inspected.
@@ -459,6 +416,44 @@ $EnginePolicyChecks = array();
 // /   The named function accepts nothing & returns whether a logfile is in use & its path.
 // /   Leave it empty & a manager keeps the logfile it started with.
 $EngineLogProvider = '';
+
+// /  --Engine Timer Provider--
+// /   The name of a function that returns the commands of this application's own that systemd runs
+// /   on a schedule, from v4.3.1. The Setup Core writes a service & a timer for each, as it does for the
+// /   Environment Manager, & knows nothing about what a command does, because a timer is data.
+// /   The function accepts nothing & returns the timers, each keyed by a name. The units are called
+// /   after the application's slug & that name, as <slug>-<name>.service & <slug>-<name>.timer.
+// /   A name is lower case letters, digits & dashes, begins with a letter, is 32 characters at most,
+// /   & is neither environment nor listener, which are the Engine's own.
+// /   Each timer is a list keyed by name.
+// /     Description   What the units are called, after the application's name. Letters, digits, spaces & , . & -
+// /     Argument      The one argument the application is run with, which begins --app-
+// /     Calendar      When it runs, as systemd writes a calendar, such as daily, hourly or Mon *-*-* 02:30:00
+// /                   One systemd cannot read falls back to daily, with a warning.
+// /     Document      Optional. The name of a file in Documentation that the units point a reader to.
+// /     Reach         confined, for what the Environment Manager's own unit is confined by, or host, for a
+// /                   command that must see the whole server. A host unit hides nothing from its command &
+// /                   takes nothing from it, so its command is as able as root at a terminal.
+// /     Success       Optional. Exit statuses from 1 to 255, eight at most, that mean the command did its
+// /                   work, as 0 does. systemd calls every other status a failure.
+// /   A timer with a field that is not fit to be written into a unit root runs is refused whole, with a warning.
+// /   An application asks for sixteen timers at most.
+// /   --setup --install-service & --setup --install-complete write the units, & nothing enables a timer.
+// /   An administrator enables each with systemctl, & -fp writes again whichever are installed.
+// /   The Engine's applicationTimerState() says where a timer stands with systemd, for an application that reports it.
+// /   A name that is declared & not defined is a warning.
+// /   Leave it empty & the application puts nothing on a schedule.
+$EngineTimerProvider = '';
+
+// /  --Engine Protection Logo--
+// /   The logo shown on the page that keeps a folder from being listed, from v4.3.1, as a path from
+// /   the installation's root, such as UI/Logos/myApplication_logo.png.
+// /   It is a file of the application's, kept beside the Engine's own & never over it. The Engine's own is
+// /   Resources/Engine/UI/HRProprietary_logo.png, & no application removes it or writes over it.
+// /   A PNG, a JPEG, a GIF or a WebP of 256 KiB at most, inside the installation & not a link.
+// /   One that cannot be shown is refused with a warning, & the Engine's own is shown in its place.
+// /   Leave it empty & the page shows the Engine's own.
+$EngineProtectionLogo = '';
 
 // /  --Engine Accepted Pipelines--
 // /   Which pipeline folders under Resources/Pipelines this application accepts, each

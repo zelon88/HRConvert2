@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.3.
+// / v4.3.4.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -38,14 +38,14 @@
 // / can operate without a config file or against a mismatched core.
 function verifyInstallation() {
   // / Set variables.
-  global $HRConvertVersion, $EngineApplicationVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredWorkflowCoreVersion, $RequiredAuthenticationCoreVersion, $RequiredEmailCoreVersion, $RequiredEngineVersion, $RequiredConfigScript, $RequiredSecretVersion, $CoreLoaded, $Version, $EnableMemoryProtection;
+  global $HRConvertVersion, $EngineApplicationVersion, $RequiredConfigVersion, $RequiredGuiVersion, $RequiredLanguageVersion, $RequiredSetupCoreVersion, $RequiredDependencyCoreVersion, $RequiredDependsVersion, $RequiredPipelineCoreVersion, $RequiredWorkflowCoreVersion, $RequiredAuthenticationCoreVersion, $RequiredEmailCoreVersion, $RequiredEventCoreVersion, $RequiredEngineVersion, $RequiredConfigScript, $RequiredSecretVersion, $CoreLoaded, $Version, $EnableMemoryProtection;
   $InstallationIsVerified = FALSE;
   $configFile = '';
   $CoreLoaded = TRUE;
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.3.3';
+  $HRConvertVersion = 'v4.3.4';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -73,11 +73,11 @@ function verifyInstallation() {
   // / This is an exact match. A component built for another core may not be called safely.
   // / Raise this when the Setup Core itself changes.
   // / The configuration model is the Engine's engineConfigModel() & applicationConfigModel() in this file, & their defaults are the two templates, so a new setting raises nothing here.
-  $RequiredSetupCoreVersion = 'v4.2.5';
+  $RequiredSetupCoreVersion = 'v4.3.3r';
   $RequiredSetupCoreVersion = ltrim($RequiredSetupCoreVersion, 'vV');
   // / The Dependency Core component version this core requires.
   // / This is an EXACT match. A component built for another core may not be called safely.
-  $RequiredDependencyCoreVersion = 'v4.3.2';
+  $RequiredDependencyCoreVersion = 'v4.3.3ur';
   $RequiredDependencyCoreVersion = ltrim($RequiredDependencyCoreVersion, 'vV');
   // / The dependency manifest version this core requires.
   // / Raise this whenever a dependency is added, removed, or its minimum version moves.
@@ -89,20 +89,25 @@ function verifyInstallation() {
   // / Raise this when the Pipeline Core itself changes & for nothing else.
   // / It is an Engine core, at Resources/Engine/Cores/pipelineCore.php.
   // / The pipelines this application accepts are listed in its contract, in app-engine-config.php, so adding a pipeline or moving one to a new version raises nothing here.
-  $RequiredPipelineCoreVersion = 'v4.3.2';
+  $RequiredPipelineCoreVersion = 'v4.3.2ur';
   $RequiredPipelineCoreVersion = ltrim($RequiredPipelineCoreVersion, 'vV');
   // / The Workflow Core component version this core requires.
   // / This is an exact match, because a component built for another core may call an operation with arguments that have moved.
   // / Raise this when the Workflow Core itself changes & for nothing else. It is an Engine core, at Resources/Engine/Cores/workflowCore.php.
-  $RequiredWorkflowCoreVersion = 'v4.2.4';
+  $RequiredWorkflowCoreVersion = 'v4.3.1r';
   $RequiredWorkflowCoreVersion = ltrim($RequiredWorkflowCoreVersion, 'vV');
   // / The Authentication Core & Email Core component versions this core requires.
   // / Each is an exact match, for the reason every Engine core's is. The Engine loads them where accounts are on.
   // / They are Engine cores, at Resources/Engine/Cores/authenticationCore.php & Resources/Engine/Cores/emailCore.php.
-  $RequiredAuthenticationCoreVersion = 'v4.2.3';
+  $RequiredAuthenticationCoreVersion = 'v4.2.3r';
   $RequiredAuthenticationCoreVersion = ltrim($RequiredAuthenticationCoreVersion, 'vV');
-  $RequiredEmailCoreVersion = 'v4.2.0';
+  $RequiredEmailCoreVersion = 'v4.2.0r';
   $RequiredEmailCoreVersion = ltrim($RequiredEmailCoreVersion, 'vV');
+  // / The Event Core component version this core requires, from v4.3.1.
+  // / This is an exact match, for the reason every Engine core's is. The Engine loads it where a command keeps or reads an event.
+  // / It is an Engine core, at Resources/Engine/Cores/eventCore.php, & -v reports it whether or not this application keeps an event.
+  $RequiredEventCoreVersion = 'v4.3.1r';
+  $RequiredEventCoreVersion = ltrim($RequiredEventCoreVersion, 'vV');
   // / The Engine version this application requires.
   // / This is an EXACT match & it is free, because the Engine is bundled with this release
   // / rather than installed beside it. The updater replaces both together, so the pin & the
@@ -110,7 +115,7 @@ function verifyInstallation() {
   // / An administrator who edits the Engine by hand loses the edit at the next update. That
   // / is the same bargain every bundled component makes.
   // / --build cannot write this pin, because it runs inside the Engine. Move it by hand.
-  $RequiredEngineVersion = 'v4.3.2';
+  $RequiredEngineVersion = 'v4.3.3ur';
   $RequiredEngineVersion = ltrim($RequiredEngineVersion, 'vV');
   // / The bootstrap script version this core expects, as an exact match.
   // / The Engine compares the script against this, & -fp disables it as root when it differs.
@@ -2946,7 +2951,9 @@ function conversionFamilyFor($conversionFamilies, $inputExtension, $outputExtens
       if ($familyServes) $FamilyName = $familyName; } }
   if ($FamilyName === '' && $servingFamily !== '') $FamilyName = $servingFamily;
   if ($FamilyName === '') $FamilyName = ($requestedMatch !== '') ? $requestedMatch : $claimingFamily;
-  if ($requestedName !== '' && $requestedMatch === '') warningEntry('A conversion of '.$inputExtension.' to '.$outputExtension.' named the '.$requestedFamily.' family, which does not convert it, '.($FamilyName === '' ? '& no family does.' : 'so the '.$FamilyName.' family was asked instead.'));
+  // / Each outcome is a sentence of its own, so the catalogue holds each.
+  if ($requestedName !== '' && $requestedMatch === '' && $FamilyName === '') warningEntry('A conversion of '.$inputExtension.' to '.$outputExtension.' named the '.$requestedFamily.' family, which does not convert it, & no family does.');
+  else if ($requestedName !== '' && $requestedMatch === '') warningEntry('A conversion of '.$inputExtension.' to '.$outputExtension.' named the '.$requestedFamily.' family, which does not convert it, so the '.$FamilyName.' family was asked instead.');
   else if ($Verbose && $requestedMatch !== '' && $FamilyName !== $requestedMatch) logEntry('The '.$requestedMatch.' family does not convert '.$inputExtension.' to '.$outputExtension.', so the '.$FamilyName.' family was asked instead.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $familyName, $requestedName, $requestedMatch, $servingFamily, $claimingFamily, $familyFormats, $familyServes, $formatIsUnchanged, $conversionFamilies, $inputExtension, $outputExtension, $requestedFamily);
@@ -3096,7 +3103,7 @@ function userVirusScan($FilesToScan, $type) {
 // / by hand, with the version each file declares.
 // / The name this application goes by until config.php names it. The kernel labels whatever it reports with it before config.php is read.
 $DefaultApplicationName = 'HRConvert2';
-$RequiredKernelVersion = 'v4.2.4';
+$RequiredKernelVersion = 'v4.3.3r';
 $KernelFile = dirname(__FILE__).DIRECTORY_SEPARATOR.'Resources'.DIRECTORY_SEPARATOR.'Kernel'.DIRECTORY_SEPARATOR.'kernel.php';
 $KernelVersionMatch = array();
 if (!is_readable($KernelFile)) {
@@ -3461,7 +3468,8 @@ if (!$CommandLineHandled && $UserType === 'web' && admitWebRequest(basename(__FI
     // / A server with workflows off, or without the Workflow Core, answers that none are available, & says why in its log.
     if (isset($_POST['workflowLibrary']) or isset($_POST['workflowRun']) or isset($_POST['workflowDocument']) or isset($_POST['workflowStatus']) or isset($_POST['workflowStop']) or isset($_POST['workflowOperations']) or isset($_POST['workflowCheck']) or isset($_POST['workflowExport']) or isset($_POST['workflowPreview']) or isset($_POST['workflowPreviewDocument']) or isset($_POST['workflowStage'])) {
       if (!$EnableWorkflows or !$WorkflowCoreActive or !function_exists('encodeWorkflowReply')) {
-        warningEntry('A workflow was requested & '.($EnableWorkflows ? 'the Workflow Core is unavailable.' : 'workflows are disabled.'));
+        if ($EnableWorkflows) warningEntry('A workflow was requested & the Workflow Core is unavailable.');
+        else warningEntry('A workflow was requested & workflows are disabled.');
         print('{"Workflow":{"Available":false}}'.$Lol); }
       else if (isset($_POST['workflowPreview'])) print(encodeWorkflowReply(previewLibraryWorkflow($WorkflowPreview, array_values(array_intersect((array)$WorkflowFiles, getFiles($ConvertDir))))).$Lol);
       else if (isset($_POST['workflowPreviewDocument'])) print(encodeWorkflowReply(previewWorkflowDocument($WorkflowPreviewDocument, array_values(array_intersect((array)$WorkflowFiles, getFiles($ConvertDir))))).$Lol);

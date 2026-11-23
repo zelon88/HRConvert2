@@ -8,16 +8,15 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.3.
+// / v4.3.1.
 // / This file declares the ScanCore scanner pipeline.
 // /
-// / ScanCore ships inside this application rather than being installed on the host, so it
-// / is present wherever HRConvert2 is. That makes it the sensible default scanner.
-// /
-// / A SCANNER declares no input or output formats & that is not an omission.
-// / Every scanner claims every file, so there is nothing for an extension to decide. An
-// / administrator picks a scanner by name in config.php & a user may pick another if the
-// / interface offers one.
+// / A scanner declares no input or output formats & that is not an omission.
+// / Every scanner claims every file, so there is nothing for an extension to decide.
+// / A scanner is chosen by name, by an administrator in config.php or by whoever asks for a scan.
+// / This pipeline names no application & no setting of one. It asks for what it needs by the
+// / names a shared layer uses, through the kernel's applicationSetting(), so an application
+// / that accepts it maps those names in its contract & changes nothing here.
 // /
 // / <3 Open-Source
 // / -----------------------------------------------------------------------------------
@@ -31,14 +30,14 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 
 // / -----------------------------------------------------------------------------------
 // / The version of this pipeline folder. Read without executing this file, then matched
-// / exactly against the pin in getAcceptedPipelines().
-$PipelineVersion = 'v4.2.3';
+// / exactly against the pin in the application's contract.
+$PipelineVersion = 'v4.3.1';
 
 // / A scanner inspects a file & reports on it. It changes nothing.
 $PipelineKind = 'scanner';
 
-// / The name an administrator writes in --Default Virus Scanner--, & the name a user
-// / selects. Matched case insensitively, so scancore & ScanCore are the same scanner.
+// / The name an administrator writes in --Default Virus Scanner--, & the name a scan is asked
+// / for by. Matched case insensitively, so scancore & ScanCore are the same scanner.
 $PipelineFamily = 'ScanCore';
 
 $PipelineDisplayName = 'ScanCore';
@@ -49,8 +48,7 @@ $PipelinePriority = 110;
 
 $PipelineEntryPoint = 'scanWithScanCore';
 
-// / A scanner declares no formats. See the note in the header.
-// / A scanner declares EMPTY capabilities & the Pipeline Core exempts it from the rule
+// / A scanner declares empty capabilities & the Pipeline Core exempts it from the rule
 // / that a pipeline must read & write something. Every scanner claims every file.
 $Capabilities = array(
   'Input' => array(),
@@ -61,8 +59,6 @@ $PipelineSubsystem = 'Security';
 
 // / This says where the pipeline may be reached from. A scanner is useful from a terminal & from
 // / a schedule, not only from a browser, so it declares cli as well.
-// / Declaring nothing means web & gui.
-// / A pipeline that wants a command line must say so.
 $PipelineUsage = array('cli', 'web', 'gui');
 
 // / A scanner takes no request fields. It is handed paths by the caller & nothing else.
@@ -71,8 +67,8 @@ $PipelineRequestFields = array();
 $PipelineSharedModules = array();
 
 // / ScanCore is bundled rather than installed, so there is no binary to look for & nothing
-// / for verifiedToolPath to find. The dependency is declared here instead, which is how the
-// / approval record & --check-depends learn that this pipeline uses it.
+// / for verifiedToolPath to find. The dependency is declared here instead, which is how
+// / --check-depends learns that this pipeline uses it.
 $PipelineDependencies = array('ScanCore');
 // / -----------------------------------------------------------------------------------
 
@@ -81,9 +77,9 @@ $PipelineDependencies = array('ScanCore');
 // / No pair is excluded, because no pair exists.
 $PipelineExclude = array();
 
-// / The tools this pipeline cannot run without, by their names in depends.php, from v4.2.1.
-// / A pipeline is offered only where one tool of each entry is installed. An array in it names tools any one of which will do.
-// / This scanner is ScanCore, which this application bundles, so the manifest names no program for it & it is believed installed.
+// / The tools this pipeline cannot run without, by their names in the dependency manifest.
+// / A pipeline is offered only where one tool of each entry is installed.
+// / This scanner is ScanCore, which the application bundles, so the manifest names no program for it & it is believed installed.
 $PipelineRequiredDependencies = array('ScanCore');
 // / -----------------------------------------------------------------------------------
 ?>

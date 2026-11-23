@@ -303,6 +303,16 @@ $ScanURLDownloads = TRUE;
 // /   the one an administrator configured is worse than a scan that refused.
 // /   Default is 'scancore'.
 $DefaultVirusScanner = 'scancore';
+// /  --Record Events--
+// /   Whether what the application does & finds is written to the event record, in the Events folder of the data location.
+// /   An event is one line of JSON, such as a scan that began or a file that was found. The application decides what is an event.
+// /   The application does its work & reports it the same whether this is TRUE or FALSE.
+// /   Only root keeps or reads the record, & only root can open the Events folder, because an event may name files on this server.
+// /   It was HRProtect's setting until v4.3.1, when the Event Core became the Engine's.
+// /   See Documentation/ABOUT_EVENTS.txt.
+// /   Valid options are TRUE or FALSE.
+// /   Default is TRUE.
+$RecordEvents = TRUE;
 // /  --Environment Manager May Repair--
 // /   Whether the Environment Manager may change this host, or only report on it.
 // /   It runs as root on a timer, opens no socket & reads no input from anywhere but this

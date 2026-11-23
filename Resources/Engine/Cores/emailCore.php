@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.0.
+// / v4.2.0r.
 // / The Email Core, one of the Engine's cores.
 // / It sends the emails the Authentication Core asks for, through the host's own mail system & nothing else.
 // / It never connects to a mail server itself, so it makes no third party connection of its own accord.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by the application without executing this file.
-$EmailCoreVersion = 'v4.2.0';
+$EmailCoreVersion = 'v4.2.0r';
 // / -----------------------------------------------------------------------------------
 
 

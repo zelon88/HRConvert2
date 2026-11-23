@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.1.3.
+// / v4.1.3r.
 // / This file is the Request Manager. It is a manager subcomponent of the Engine.
 // / The Request Manager owns the only socket a worker may address. It refuses a request a
 // / worker may not issue & forwards the rest, so a budget request reaches the Resource
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.1.3';
+$ManagerVersion = 'v4.1.3r';
 // / -----------------------------------------------------------------------------------
 
 

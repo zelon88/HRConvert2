@@ -83,6 +83,47 @@ HISTORICAL_NAMES = {
     'applicationEnvironmentFindings': 'HRConvert2\'s environment provider until v4.2.4, cited beside $EnginePolicyChecks',
     'askOperator': 'HRConvert2\'s terminal prompt until v4.2.4, cited beside promptOperator, which took it over',
     'runApplicationRepair': 'the Engine\'s call to an application\'s repair until v4.2.4, cited beside repairInstallation'}
+# / Names the Engine's documents cite from the reference application, which an application built on the Engine does not define.
+# / The Engine's documents explain the Engine by what its reference application does with it, so they name its functions.
+# / An application that adopts those documents as they are distributed keeps each of them word for word, & defines none of these.
+# / A name earns a place here only when a document the Engine distributes cites it, & never because an application's own document does.
+REFERENCE_NAMES = {
+    'applicationOperations': 'the reference application\'s operation provider, cited to show what $EngineOperationProvider names',
+    'archiveSelection': 'the reference application\'s archiving of a selection, cited as history',
+    'buildGUI': 'the reference application\'s interface builder, cited by the coding conventions',
+    'buildMeshLabCommand': 'a function of the reference application\'s Model pipeline, cited to explain a decision',
+    'convertFiles': 'the reference application\'s conversion dispatcher, cited to show where a pipeline is called from',
+    'convertSCAD': 'the entry point of the reference application\'s Scad pipeline, cited as an example of one',
+    'convertWithLibreOffice': 'a function of the reference application\'s shared LibreOffice module, cited as an example',
+    'deleteFiles': 'the reference application\'s file removal, cited to explain a decision',
+    'findFreeOutputName': 'the reference application\'s output naming, cited to explain a decision',
+    'getFiles': 'the reference application\'s session listing, cited to show what an operation reads',
+    'placeSessionFile': 'the reference application\'s placing of a file in a session, cited as an example',
+    'rectifySCAD': 'a function of the reference application\'s Scad pipeline, cited as an example',
+    'renameFiles': 'the reference application\'s renaming, cited to explain a decision',
+    'verifyColors': 'the reference application\'s check of a color scheme, cited by its entry in the error catalogue',
+    'verifyDocumentConversionEngine': 'a function of the reference application\'s shared LibreOffice module, cited as an example',
+    'verifyFile': 'the reference application\'s check of an uploaded file, cited to show where a scan is called from',
+    'verifyIsoBootloaders': 'a function of the reference application\'s Archive pipeline, cited to explain a decision',
+    'verifyLanguage': 'the reference application\'s check of a language, cited by its entry in the error catalogue',
+    'virusScan': 'the reference application\'s scan of an upload, cited to show where a scanner is called from'}
+# / Settings the Engine's documents cite from the reference application's half of the configuration, for the same reason.
+REFERENCE_LABELS = {
+    'Default Language': 'a setting of the reference application\'s interface',
+    'Default Stream Inspection Forfeit Action': 'a setting of the reference application\'s Stream pipeline',
+    'Maximum Extracted Files': 'a setting of the reference application\'s archive extraction',
+    'Maximum Extracted Size': 'a setting of the reference application\'s archive extraction',
+    'SCAD Conversion Timeout': 'a setting of the reference application\'s Scad pipeline',
+    'Stream Inspection Files Per Layer': 'a setting of the reference application\'s Stream pipeline',
+    'Stream Inspection Layers': 'a setting of the reference application\'s Stream pipeline',
+    'Supported Archive Formats': 'a setting of the reference application\'s Archive pipeline',
+    'Supported Colors': 'a setting of the reference application\'s interface',
+    'Supported Model Formats': 'a setting of the reference application\'s Model pipeline',
+    'Use PyMeshLab Python Bindings': 'a setting of the reference application\'s Model pipeline',
+    'User File Identification': 'a setting of the reference application\'s Identify pipeline',
+    'User Virus Scanning': 'a setting of the reference application\'s Scan pipeline',
+    'User Virus Scanning ScanCore Memory Limit': 'a setting of the reference application\'s Scan pipeline',
+    'Virus Scanning': 'the reference application\'s setting that scans every upload'}
 # / Labels a document writes on purpose that no configuration file declares.
 EXAMPLE_LABELS = {
     'About The Subject': 'the example section title in ABOUT_DOCUMENTATION.txt',
@@ -128,14 +169,19 @@ def documents(root):
 
 
 # / -----------------------------------------------------------------------------------
-# / A function to tell the project's record from the documents that describe it.
-# / Accepts a path. Returns TRUE for the changelog.
-# / The changelog's entries are never changed, not even for whitespace. A fault in one is
+# / A function to tell the project's records from the documents that describe them.
+# / Accepts a path. Returns TRUE for a changelog, the application's CHANGELOG.txt or the
+# / Engine's ENGINE_CHANGELOG.txt, which is named so it never lands on the application's.
+# / A changelog's entries are never changed, not even for whitespace. A fault in one is
 # / part of the record rather than something to repair, so only its header is judged, &
 # / --fix never writes to it. A COMMIT header that is factually wrong is the one exception,
 # / & that is a correction for a person to make.
+# / An application's ENGINE_RECONCILIATION_ file is a record too, from v4.3.1. It says what that
+# / application changed in its copy of the Engine, so the names in it are that application's &
+# / are history wherever the Engine carries the file.
 def is_record(path):
-    return os.path.basename(path) == 'CHANGELOG.txt'
+    name = os.path.basename(path)
+    return name in ('CHANGELOG.txt', 'ENGINE_CHANGELOG.txt') or (name.startswith('ENGINE_RECONCILIATION_') and name.endswith('.txt'))
 
 
 # / -----------------------------------------------------------------------------------
@@ -217,7 +263,7 @@ def check_header(paths, report):
             faults += 1
         if LABELS[3] in header:
             position = header.index(LABELS[3])
-            if position + 1 >= len(header) or not re.fullmatch(r'v\d+\.\d+\.\d+\.', header[position + 1].strip()):
+            if position + 1 >= len(header) or not re.fullmatch(r'v\d+\.\d+\.\d+(?:u?r)?\.', header[position + 1].strip()):
                 report('HEADER', name + ':' + str(position + 3) + ' FILE INFORMATION does not begin with a version line such as v4.0.0.')
                 faults += 1
     return faults
@@ -234,9 +280,12 @@ def check_header(paths, report):
 # / somebody titled in sentence case is read as a subheading.
 # / The older files drawn with 83 dashes use another layout & are skipped here.
 # / ERROR_DESCRIPTIONS.txt is a list of entries rather than of sections & has its own check.
+# / A changelog is a record, so only its header is judged, whichever rule it is drawn with.
 def check_sections(paths, report):
     faults = 0
     for path in paths:
+        if is_record(path):
+            continue
         lines = read_lines(path)
         name = os.path.relpath(path)
         closing = header_end(lines) if lines[0] == RULE else None
@@ -693,10 +742,11 @@ def check_messages(root, report):
 # / -----------------------------------------------------------------------------------
 # / THE NAMES CHECK. Every function & every setting a document names still exists.
 # / A function is a camel case name written with () after it. It must be defined in some PHP
-# / file or Build tool, or be listed in HISTORICAL_NAMES with the reason it is cited.
+# / file or Build tool, or be listed in HISTORICAL_NAMES or REFERENCE_NAMES with the reason it is cited.
 # / A setting is a title case label between two pairs of dashes inside a sentence. It must
 # / be a label in either half of the configuration template, engineConfig.php or the contract, or a section
 # / title of some document, which the documents also write that way.
+# / A setting of the reference application's that a document of the Engine's cites is listed in REFERENCE_LABELS.
 # / A configuration label that carries a typo is matched as the configuration spells it,
 # / because a reader searching config.php types what the document says.
 # / The changelog is not read. A stale name in it is history.
@@ -725,7 +775,7 @@ def check_names(root, paths, markdown, report):
         for number, line in enumerate(read_lines(path), start=1):
             for found in re.finditer(r'\b([a-z][a-z0-9]*[A-Z][A-Za-z0-9]*)\(\)', line):
                 function = found.group(1)
-                if function in defined or function in HISTORICAL_NAMES:
+                if function in defined or function in HISTORICAL_NAMES or function in REFERENCE_NAMES:
                     continue
                 hint = ' The code spells it with other capitals.' if function.lower() in defined_lower else ''
                 report('NAMES', name + ':' + str(number) + ' ' + function + '() is not defined anywhere.' + hint
@@ -735,7 +785,7 @@ def check_names(root, paths, markdown, report):
                 continue
             for found in re.finditer(r"(?<![-\w])--([A-Z][A-Za-z0-9]*(?: [A-Za-z0-9&']+)*)--(?![-\w])", line):
                 label = found.group(1)
-                if label in labels or label in titles or label in EXAMPLE_LABELS:
+                if label in labels or label in titles or label in EXAMPLE_LABELS or label in REFERENCE_LABELS:
                     continue
                 report('NAMES', name + ':' + str(number) + ' --' + label + '-- is not a configuration label or a '
                        + 'section title. Name the label config.php uses')

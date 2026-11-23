@@ -219,29 +219,32 @@ check_duplicate() {
 # / Python does. ScanCore is a program of its own & declares its own $ConfigVersion, so it is not
 # / read. Until v4.0.6 whichever file the filesystem listed first answered alone.
 check_pins() {
-  grep -oE '\$Required[A-Za-z]+Version[[:space:]]*=[[:space:]]*.v?[0-9.]+.' "$ENTRY" 2>/dev/null \
-  | sed -E "s/\\\$Required([A-Za-z]+)Version[[:space:]]*=[[:space:]]*.v?([0-9.]+)./\1 \2/" \
+  grep -oE '\$Required[A-Za-z]+Version[[:space:]]*=[[:space:]]*.v?[0-9.]+(u?r)?.' "$ENTRY" 2>/dev/null \
+  | sed -E "s/\\\$Required([A-Za-z]+)Version[[:space:]]*=[[:space:]]*.v?([0-9.]+(u?r)?)./\1 \2/" \
   | while read -r component pinned; do
-      grep -rlE "\\\$${component}Version[[:space:]]*=[[:space:]]*.v?[0-9.]+." --include='*.php' --exclude-dir=ScanCore Resources/ 2>/dev/null | LC_ALL=C sort \
+      grep -rlE "\\\$${component}Version[[:space:]]*=[[:space:]]*.v?[0-9.]+(u?r)?." --include='*.php' --exclude-dir=ScanCore Resources/ 2>/dev/null | LC_ALL=C sort \
       | while read -r declaringFile; do
-          declared=$(grep -hoE "\\\$${component}Version[[:space:]]*=[[:space:]]*.v?[0-9.]+." "$declaringFile" 2>/dev/null \
-                     | sed -E "s/.*v?([0-9]+\.[0-9]+\.[0-9]+)./\1/" | head -1)
+          declared=$(grep -hoE "\\\$${component}Version[[:space:]]*=[[:space:]]*.v?[0-9.]+(u?r)?." "$declaringFile" 2>/dev/null \
+                     | sed -E "s/.*v?([0-9]+\.[0-9]+\.[0-9]+(u?r)?)./\1/" | head -1)
           if [ -n "$declared" ] && [ "$declared" != "$pinned" ]; then
             report 'PIN' "$component is pinned at $pinned & $(basename "$declaringFile") declares $declared"
           fi
         done
     done
   # / A manager is pinned by the Engine rather than by the application, & so is the Engine's half of the dependency
-  # / manifest, from v4.2.4, which declares $EngineDependsVersion in Resources/Engine/depends.php.
+  # / manifest, from v4.2.4, which declares $EngineDependsVersion in Resources/Engine/depends.php, & the Environment
+  # / Core, from v4.3.1, which declares $EnvironmentCoreVersion in Resources/Engine/Cores/environmentCore.php.
   if [ -f Resources/Engine/engine.php ]; then
-    grep -oE "'[A-Za-z]+\.php'[[:space:]]*=>[[:space:]]*'v?[0-9.]+'" Resources/Engine/engine.php 2>/dev/null \
-    | sed -E "s/'([A-Za-z]+\.php)'[[:space:]]*=>[[:space:]]*'v?([0-9.]+)'/\1 \2/" \
+    grep -oE "'[A-Za-z]+\.php'[[:space:]]*=>[[:space:]]*'v?[0-9.]+(u?r)?'" Resources/Engine/engine.php 2>/dev/null \
+    | sed -E "s/'([A-Za-z]+\.php)'[[:space:]]*=>[[:space:]]*'v?([0-9.]+(u?r)?)'/\1 \2/" \
     | while read -r manager pinned; do
-        if [ "$manager" = 'depends.php' ]; then path='Resources/Engine/depends.php'; declaration='EngineDependsVersion'; else path="Resources/Engine/Managers/$manager"; declaration='ManagerVersion'; fi
+        if [ "$manager" = 'depends.php' ]; then path='Resources/Engine/depends.php'; declaration='EngineDependsVersion';
+        elif [ "$manager" = 'environmentCore.php' ]; then path='Resources/Engine/Cores/environmentCore.php'; declaration='EnvironmentCoreVersion';
+        else path="Resources/Engine/Managers/$manager"; declaration='ManagerVersion'; fi
         if [ ! -f "$path" ]; then
           report 'PIN' "the Engine pins $manager & $path is not installed"
         else
-          declared=$(grep -oE "\\\$${declaration}[[:space:]]*=[[:space:]]*'v?[0-9.]+'" "$path" | sed -E "s/.*'v?([0-9.]+)'/\1/")
+          declared=$(grep -oE "\\\$${declaration}[[:space:]]*=[[:space:]]*'v?[0-9.]+(u?r)?'" "$path" | sed -E "s/.*'v?([0-9.]+(u?r)?)'/\1/")
           if [ -z "$declared" ]; then
             report 'PIN' "$manager reports no version & an unknown build cannot be cleared"
           elif [ "$declared" != "$pinned" ]; then
@@ -250,12 +253,35 @@ check_pins() {
         fi
       done
   fi
+  # / A pipeline is pinned in the contract's $EngineAcceptedPipelines & declares $PipelineVersion, & a shared
+  # / module is pinned in $EngineAcceptedSharedModules & declares $SharedModuleVersion, from v4.3.1.
+  # / The python tool checks the same shapes & says why. The two must agree.
+  if [ -f Resources/Contract/app-engine-config.php ]; then
+    for list in EngineAcceptedPipelines EngineAcceptedSharedModules; do
+      sed -n "/^\\\$${list}[[:space:]]*=[[:space:]]*array(/,/);/p" Resources/Contract/app-engine-config.php \
+      | grep -oE "'[A-Za-z0-9_.]+'[[:space:]]*=>[[:space:]]*'v?[0-9.]+(u?r)?'" \
+      | sed -E "s/'([A-Za-z0-9_.]+)'[[:space:]]*=>[[:space:]]*'v?([0-9.]+(u?r)?)'/\1 \2/" \
+      | while read -r name pinned; do
+          if [ "$list" = 'EngineAcceptedPipelines' ]; then path="Resources/Pipelines/$name/pipelineConfig.php"; declaration='PipelineVersion'; else path="Resources/Pipelines/Shared/$name"; declaration='SharedModuleVersion'; fi
+          if [ ! -f "$path" ]; then
+            report 'PIN' "the contract pins $name & $path is not installed"
+          else
+            declared=$(grep -oE "^[[:space:]]*\\\$${declaration}[[:space:]]*=[[:space:]]*'v?[0-9.]+(u?r)?'" "$path" | head -1 | sed -E "s/.*'v?([0-9.]+(u?r)?)'/\1/")
+            if [ -z "$declared" ]; then
+              report 'PIN' "$path declares no \$$declaration & an unknown build cannot be cleared"
+            elif [ "$declared" != "$pinned" ]; then
+              report 'PIN' "$name is pinned at $pinned & declares $declared"
+            fi
+          fi
+        done
+    done
+  fi
   # / The bootstrap script is pinned by $RequiredConfigScript & declares SCRIPT_VERSION.
   # / Its name does not follow the pattern above, so it needs a check of its own.
   script=$(ls Documentation/Build/*-setup.sh 2>/dev/null | head -1)
-  pinned=$(grep -oE "\\\$RequiredConfigScript[[:space:]]*=[[:space:]]*'v?[0-9.]+'" "$ENTRY" 2>/dev/null | sed -E "s/.*'v?([0-9.]+)'/\1/")
+  pinned=$(grep -oE "\\\$RequiredConfigScript[[:space:]]*=[[:space:]]*'v?[0-9.]+(u?r)?'" "$ENTRY" 2>/dev/null | sed -E "s/.*'v?([0-9.]+(u?r)?)'/\1/")
   if [ -n "$script" ] && [ -n "$pinned" ]; then
-    declared=$(grep -oE '^SCRIPT_VERSION="v?[0-9.]+"' "$script" | sed -E 's/.*"v?([0-9.]+)"/\1/')
+    declared=$(grep -oE '^SCRIPT_VERSION="v?[0-9.]+(u?r)?"' "$script" | sed -E 's/.*"v?([0-9.]+(u?r)?)"/\1/')
     if [ -z "$declared" ]; then
       report 'PIN' "$(basename "$script") declares no SCRIPT_VERSION & an unknown build cannot be cleared"
     elif [ "$declared" != "$pinned" ]; then
@@ -553,6 +579,25 @@ check_stray() {
 
 
 # / -----------------------------------------------------------------------------------
+# / CHECK. The Engine's own logo is the file the Engine was distributed with, from v4.3.1.
+# / An application adds a logo of its own beside it & never removes it or writes over it, so it is
+# / held to the hash buildProtectionPage() holds in engine.php.
+# / The python tool checks the same shapes. The two must agree.
+check_logo() {
+  [ -f Resources/Engine/engine.php ] || return 0
+  declared=$(grep -oE "^[[:space:]]*\\\$engineLogoSha256 = '[0-9a-f]{64}';$" Resources/Engine/engine.php | sed -E "s/.*'([0-9a-f]{64})'.*/\1/")
+  logo='Resources/Engine/UI/HRProprietary_logo.png'
+  if [ -z "$declared" ]; then
+    report 'LOGO' "Resources/Engine/engine.php holds no \$engineLogoSha256, so the Engine's logo cannot be held to it"
+  elif [ -L "$logo" ] || [ ! -f "$logo" ]; then
+    report 'LOGO' "$logo is missing or is a link. An application adds a logo beside it & never removes it"
+  elif [ "$(sha256sum "$logo" | cut -d' ' -f1)" != "$declared" ]; then
+    report 'LOGO' "$logo is not the file the Engine was distributed with. An application never writes over it"
+  fi
+}
+
+
+# / -----------------------------------------------------------------------------------
 # / CHECK. Every setting the two configuration templates hold is modelled, & is held once.
 # / config.php has two halves, & each has a template & a model. The kernel reads the names in the
 # / templates, & the configuration utility repairs only what a model holds. The python tool says why
@@ -636,7 +681,7 @@ check_owner() {
 # / first one seven times.
 
 # / Every check, in the order they run, keyed by the name --only accepts.
-CHECK_NAMES='syntax balance order duplicate pins errno guard contract kernel config caps purge exit owner stray'
+CHECK_NAMES='syntax balance order duplicate pins errno guard contract kernel config caps purge exit owner stray logo'
 
 describe() {
   case "$1" in
@@ -652,6 +697,7 @@ describe() {
     config)    printf 'every setting a configuration template holds is modelled, & held once' ;;
     caps)      printf 'no comment line is entirely capitals' ;;
     stray)     printf 'nothing ships that is not part of the application' ;;
+    logo)      printf 'the Engine\x27s own logo is the file it was distributed with' ;;
     purge)     printf 'every cleanup at a return carries its comment' ;;
     exit)      printf 'every function has one exit' ;;
     owner)     printf 'an owner is changed only through changeOwnerWithoutFollowing' ;;

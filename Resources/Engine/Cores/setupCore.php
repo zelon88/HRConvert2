@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / Fileinformation ...
-// / v4.2.5.
+// / v4.3.3r.
 // / HRConvert2 Setup Core.
 // / A detachable installation & configuration component. convertCore.php runs without it.
 // / This file defines functions only. convertCore.php dispatches into them.
@@ -39,7 +39,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$SetupCoreVersion = 'v4.2.5';
+$SetupCoreVersion = 'v4.3.3r';
 // / -----------------------------------------------------------------------------------
 
 
@@ -1029,7 +1029,7 @@ function applyWebRole($folderPath, $ownerAccount) {
   if (!is_array($folderStatus) or ((int)$folderStatus['mode'] & 0170000) !== 0040000) warningEntry('The location at '.$folderPath.' is not a folder, & a link is never followed, so it was left alone.');
   else {
     list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($folderPath, (string)$ownerAccount, (string)$ownerAccount);
-    if (!$ownerWasChanged) warningEntry($ownerNotice);
+    if (!$ownerWasChanged) warningEntry('The location at '.$folderPath.' could not be given to '.$ownerAccount.'. '.$ownerNotice);
     // / The account sets its own mode, so a folder that is still root's is reported here too.
     else list ($commandOutput, $modeExitCode) = runAsAccount('chmod 0700 -- '.escapeshellarg($folderPath).' 2>&1', (string)$ownerAccount);
     if ($modeExitCode === 0) $RoleWasApplied = TRUE;
@@ -1065,7 +1065,7 @@ function applySharedRole($folderPath, $webAccount) {
     // / Each step is reported as it actually went.
     else if ($webCanWrite) {
       list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($folderPath, 'root', '');
-      if (!$ownerWasChanged) warningEntry($ownerNotice);
+      if (!$ownerWasChanged) warningEntry('The location at '.$folderPath.' could not be given back to root. '.$ownerNotice);
       else $modeWasChanged = @chmod($folderPath, (((int)$folderStatus['mode'] & 07777) & ~0022));
       if ($ownerWasChanged && $modeWasChanged) warningEntry('The shared folder at '.$folderPath.' could be changed by another account. It now belongs to root & only root can write it. Nothing inside it was touched.');
       else if ($ownerWasChanged) warningEntry('The shared folder at '.$folderPath.' now belongs to root, & its group & other write permission could not be removed.'); }
@@ -1101,7 +1101,7 @@ function applyDataRootRole($folderPath) {
   else if (!$parentIsTrusted) warningEntry('The data root at '.$folderPath.' sits where another account could replace it, so it was left alone. '.$trustNotice);
   else {
     list ($ownerWasChanged, $ownerNotice) = changeOwnerWithoutFollowing($folderPath, 'root', 'root');
-    if (!$ownerWasChanged) warningEntry($ownerNotice);
+    if (!$ownerWasChanged) warningEntry('The data root at '.$folderPath.' could not be given back to root. '.$ownerNotice);
     // / The mode is set by name, which is safe because the folder above the root is one only
     // / root can change, so the root cannot be renamed aside between the owner change & this.
     else $modeWasChanged = @chmod($folderPath, 0755);
@@ -1790,6 +1790,7 @@ function namesToList($entryNames) {
 // / present & how many session directories were moved, in that order.
 // / The data root is owned by root, & each kind of file lives in a folder of its own below it.
 // / This creates the primary folders, which are Sessions, Cache, Logs, Engine, Secrets, Workflows & the socket folder.
+// / It also creates every folder the application declares directly below the data root in $EngineManagedLocations, under a setting of its own.
 // / correctManagedLocations gives them their roles, & runs straight after this in both --setup & -fp.
 // / Each additional data location is a root of its own the contract does not name, so its root & its Sessions folder are created & given their roles here.
 // / Nothing is put in Secrets here.
@@ -1803,7 +1804,7 @@ function namesToList($entryNames) {
 // / A folder that is not held is named, & nothing is moved into it.
 function provisionAndMigrateDataRoot($webAccount) {
   // / Set variables.
-  global $DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $WorkflowLoc, $AccountLoc, $UserLoc, $WorkflowStageLoc, $EngineEnableAuthentication, $ManagerSocketDir, $AdditionalConvertLocs, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
+  global $DataRootLoc, $SessionLoc, $CacheLoc, $LogDir, $EngineDir, $SecretLoc, $WorkflowLoc, $AccountLoc, $UserLoc, $WorkflowStageLoc, $EngineEnableAuthentication, $EngineManagedLocations, $ManagerSocketDir, $AdditionalConvertLocs, $DirSep, $Lol, $RunningAsRoot, $EnableMemoryProtection;
   $FoldersAreReady = TRUE;
   $MovedCount = 0;
   $primaryFolders = $additionalEntry = $additionalRoots = $rootEntries = $sessionEntries = $cacheStatus = $foreignEntries = $sessionNames = $strangerEntries = $entryStatus = $webRecord = array();
@@ -1811,6 +1812,8 @@ function provisionAndMigrateDataRoot($webAccount) {
   $targetIsHeld = $cacheIsHeld = $rootWasTaken = $cacheWasRemoved = FALSE;
   $webUid = -1;
   $reservedNames = array('.', '..', 'Sessions', 'Cache', 'Logs', 'Sockets', 'Engine', 'Secrets', 'Workflows', 'Accounts', 'Users', 'Staged', 'Last-Installed-Version', 'Application', 'lost+found', '.cache', '.config');
+  $engineSettings = array('ProprietaryLoc', 'InstLoc', 'DataRootLoc', 'SessionLoc', 'CacheLoc', 'LogDir', 'EngineDir', 'SecretLoc', 'ManagerSocketDir', 'WorkflowLoc', 'AccountLoc', 'UserLoc', 'WorkflowStageLoc', 'BackupLoc');
+  $declaredSetting = $declaredRole = $declaredPath = '';
   if (!$RunningAsRoot) { warningEntry('The data root can only be provisioned while running as root, so nothing was created or moved.'); $FoldersAreReady = FALSE; }
   else {
     // / Create the primary root & give it back to root first, so every folder below it is
@@ -1824,6 +1827,15 @@ function provisionAndMigrateDataRoot($webAccount) {
     if ((!isset($EngineEnableAuthentication) or $EngineEnableAuthentication === TRUE) && isset($AccountLoc, $UserLoc) && is_string($AccountLoc) && is_string($UserLoc) && $AccountLoc !== '' && $UserLoc !== '') array_push($primaryFolders, $AccountLoc, $UserLoc);
     // / The staging folder is made where the application offers accounts & names an installed library, from v4.2.2, because only an administrator's account stages a workflow for root to install.
     if ((!isset($EngineEnableAuthentication) or $EngineEnableAuthentication === TRUE) && isset($WorkflowLoc, $WorkflowStageLoc) && is_string($WorkflowLoc) && is_string($WorkflowStageLoc) && $WorkflowLoc !== '' && $WorkflowStageLoc !== '') $primaryFolders[] = $WorkflowStageLoc;
+    // / A location the contract declares directly below the data root, under a setting the Engine does not keep itself, is the application's own folder.
+    // / It is made here with the rest, & its name is known from here on, so an application neither makes it itself nor reads of it as a folder that does not belong.
+    // / The Engine's own settings are left out, because each of theirs is made above or, as the backup is, only when there is something to keep in it.
+    if (isset($EngineManagedLocations) && is_array($EngineManagedLocations)) foreach ($EngineManagedLocations as $declaredSetting => $declaredRole) {
+      if (in_array((string)$declaredSetting, $engineSettings, TRUE)) continue;
+      $declaredPath = (isset($GLOBALS[(string)$declaredSetting]) && is_string($GLOBALS[(string)$declaredSetting])) ? rtrim((string)$GLOBALS[(string)$declaredSetting], $DirSep) : '';
+      if ($declaredPath === '' or dirname($declaredPath) !== rtrim((string)$DataRootLoc, $DirSep)) continue;
+      if (!in_array($declaredPath, $primaryFolders, TRUE)) $primaryFolders[] = $declaredPath;
+      if (!in_array(basename($declaredPath), $reservedNames, TRUE)) $reservedNames[] = basename($declaredPath); }
     foreach ($primaryFolders as $folderPath) {
       if ((string)$folderPath === '') continue;
       if (!createHeldFolder($folderPath)) $FoldersAreReady = FALSE; }
@@ -1903,7 +1915,7 @@ function provisionAndMigrateDataRoot($webAccount) {
           else warningEntry('The capability cache an older release left at '.$cacheSource.' could not be removed. '.$removalNotice); } } }
     if ($MovedCount > 0) logEntry($MovedCount.' session directory or directories were moved into a Sessions folder during the data root migration.'); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $primaryFolders, $additionalEntry, $additionalRoots, $rootEntries, $sessionEntries, $cacheStatus, $foreignEntries, $sessionNames, $strangerEntries, $entryStatus, $webRecord, $folderPath, $additionalRoot, $rootToMigrate, $sessionTarget, $rootEntry, $entryPath, $holdNotice, $cacheSource, $cacheTarget, $sessionName, $removalNotice, $targetIsHeld, $cacheIsHeld, $rootWasTaken, $cacheWasRemoved, $webUid, $reservedNames, $webAccount);
+  purgeSensitiveMemory($EnableMemoryProtection, $primaryFolders, $additionalEntry, $additionalRoots, $rootEntries, $sessionEntries, $cacheStatus, $foreignEntries, $sessionNames, $strangerEntries, $entryStatus, $webRecord, $folderPath, $additionalRoot, $rootToMigrate, $sessionTarget, $rootEntry, $entryPath, $holdNotice, $cacheSource, $cacheTarget, $sessionName, $removalNotice, $targetIsHeld, $cacheIsHeld, $rootWasTaken, $cacheWasRemoved, $webUid, $reservedNames, $engineSettings, $declaredSetting, $declaredRole, $declaredPath, $webAccount);
   return array($FoldersAreReady, $MovedCount); }
 // / -----------------------------------------------------------------------------------
 
@@ -2308,6 +2320,377 @@ function installEnvironmentTimer($enableTimer) {
   purgeSensitiveMemory($EnableMemoryProtection, $timerSystemdUsable, $timerSystemdReason, $servicePath, $timerPath, $serviceContents, $timerContents, $existingService, $existingTimer, $commandOutput, $commandExitCode, $enableTimer);
   return array($TimerWasInstalled, $TimerStatus); }
 // / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether systemd reads a string as a calendar, from v4.3.1.
+// / Accepts the string. Returns TRUE when it does.
+// / A calendar is written into a unit root runs, on a line of its own, so it is held to the
+// / characters a calendar is made of before anything is asked about it. A line break in it
+// / would be a directive of the unit, & a percent sign is where systemd begins a name of its own.
+// / Where systemd-analyze is installed it is then asked, because only systemd knows what it
+// / reads. Where it is not, the characters are all that is known, & they are believed.
+function applicationCalendarIsReadable($calendarText) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $CalendarIsReadable = FALSE;
+  $analyzeBinary = '';
+  $commandOutput = array();
+  $commandExitCode = 1;
+  if (is_string($calendarText) && preg_match('/^[A-Za-z0-9*][A-Za-z0-9 :*,.\/~_-]{0,63}$/D', $calendarText) === 1) {
+    $CalendarIsReadable = TRUE;
+    $analyzeBinary = locateDependency('systemd-analyze');
+    if ($analyzeBinary !== '') {
+      // / This runs unsandboxed & convention 22 requires that to be said.
+      // / It asks the host's own systemd what it reads, which nothing in a namespace could answer.
+      // / It reads no file & changes nothing, & the one value it is handed is held to the characters above & escaped.
+      exec(escapeshellarg($analyzeBinary).' calendar '.escapeshellarg($calendarText).' 2>&1', $commandOutput, $commandExitCode);
+      $CalendarIsReadable = ($commandExitCode === 0); } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $analyzeBinary, $commandOutput, $commandExitCode, $calendarText);
+  return $CalendarIsReadable; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to hold one timer an application asks for to what a unit root runs may be made of, from v4.3.1.
+// / Accepts the name of the timer & its record, in that order.
+// / Returns whether the timer is accepted, the record as it will be written & what an
+// / administrator should be told, in that order. What is told is a warning in the log as well.
+// /
+// / --Engine Timer Provider-- in engineConfig.php says what each field is.
+// / Every field ends up in a unit, so each is held to the characters it may have, & nothing is made fit.
+// / A timer with a field that is refused is refused whole, because a unit written from half of
+// / what was asked would run something nobody asked for.
+// / The calendar is the one field an administrator's configuration usually supplies. One
+// / systemd cannot read falls back to daily, & that is said, so a mistyped setting still leaves
+// / the command on a schedule. The fallback is a local, so no configuration can replace it.
+function examineApplicationTimer($timerKey, $timerRecord) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $TimerIsAccepted = FALSE;
+  $AcceptedRecord = array();
+  $TimerNotice = '';
+  $defaultCalendar = 'daily';
+  $shownKey = $calendarText = $documentName = $refusalReason = '';
+  $successReason = 'its Success is not a list of exit statuses from 1 to 255, eight at most';
+  $successStatuses = array();
+  $successStatus = 0;
+  $shownKey = printableText(is_scalar($timerKey) ? (string)$timerKey : '', TRUE);
+  if (!applicationTimerNameIsValid($timerKey)) $refusalReason = 'its name is not one a timer of an application may have';
+  else if (!is_array($timerRecord)) $refusalReason = 'what it was given is no record';
+  else if (!isset($timerRecord['Description']) or !is_string($timerRecord['Description']) or preg_match('/^[A-Za-z0-9][A-Za-z0-9 ,.&-]{0,79}$/D', $timerRecord['Description']) !== 1) $refusalReason = 'its Description is not one a unit may carry';
+  else if (!isset($timerRecord['Argument']) or !is_string($timerRecord['Argument']) or preg_match('/^--app-[a-z0-9][a-z0-9-]{0,47}$/D', $timerRecord['Argument']) !== 1) $refusalReason = 'its Argument is not one argument beginning --app-';
+  else if (isset($timerRecord['Document']) && (!is_string($timerRecord['Document']) or ($timerRecord['Document'] !== '' && preg_match('/^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/D', $timerRecord['Document']) !== 1))) $refusalReason = 'its Document is not the name of a file';
+  else if (!isset($timerRecord['Reach']) or !in_array($timerRecord['Reach'], array('confined', 'host'), TRUE)) $refusalReason = 'its Reach is neither confined nor host';
+  else if (isset($timerRecord['Success']) && (!is_array($timerRecord['Success']) or count($timerRecord['Success']) > 8)) $refusalReason = $successReason;
+  else {
+    $TimerIsAccepted = TRUE;
+    if (isset($timerRecord['Success'])) foreach ($timerRecord['Success'] as $successStatus) {
+      if (!is_int($successStatus) or $successStatus < 1 or $successStatus > 255) $TimerIsAccepted = FALSE;
+      else if (!in_array($successStatus, $successStatuses, TRUE)) $successStatuses[] = $successStatus; }
+    if (!$TimerIsAccepted) $refusalReason = $successReason;
+    else {
+      sort($successStatuses);
+      $calendarText = (isset($timerRecord['Calendar']) && is_string($timerRecord['Calendar'])) ? trim($timerRecord['Calendar']) : '';
+      $documentName = isset($timerRecord['Document']) ? $timerRecord['Document'] : '';
+      if (!applicationCalendarIsReadable($calendarText)) {
+        $TimerNotice = 'The calendar of the timer '.$shownKey.', '.($calendarText === '' ? 'which is empty' : printableText($calendarText, TRUE)).', is not one systemd reads, so the timer runs '.$defaultCalendar.'.';
+        warningEntry($TimerNotice);
+        $calendarText = $defaultCalendar; }
+      $AcceptedRecord = array('Description' => $timerRecord['Description'], 'Argument' => $timerRecord['Argument'], 'Calendar' => $calendarText, 'Document' => $documentName, 'Reach' => $timerRecord['Reach'], 'Success' => $successStatuses); } }
+  if (!$TimerIsAccepted) {
+    $TimerNotice = 'The timer '.$shownKey.' was refused, because '.$refusalReason.'.';
+    warningEntry($TimerNotice); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $AcceptedRecord is not purged, because it is a return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $defaultCalendar, $shownKey, $calendarText, $documentName, $refusalReason, $successReason, $successStatuses, $successStatus, $timerKey, $timerRecord);
+  return array($TimerIsAccepted, $AcceptedRecord, $TimerNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to read the timers the application asks for, & to refuse each that is not fit to be a unit root runs, from v4.3.1.
+// / Accepts nothing. Returns whether the application names a provider, the timers that were
+// / accepted, each keyed by its name, & what an administrator should be told, in that order.
+// /
+// / The application names the provider in --Engine Timer Provider--. One that names none has
+// / no timers, & nothing is said.
+// / A provider that is named & not defined, or that answers with no list, is a warning, as a
+// / sandbox provider that is not defined is. An application asks for sixteen timers at most.
+// / examineApplicationTimer() holds each record to what a unit may be made of. What it says
+// / of a timer it has logged as a warning, & it is handed back so the command that asked can print it.
+function readApplicationTimers() {
+  // / Set variables.
+  global $EngineTimerProvider, $EnableMemoryProtection;
+  $ProviderIsNamed = $timerIsAccepted = FALSE;
+  $ApplicationTimers = $TimerNotices = $providedTimers = $timerRecord = $acceptedRecord = array();
+  $providerName = $timerNotice = $timerKey = $missingNotice = $shapeNotice = $countNotice = '';
+  $timersExamined = 0;
+  $providerName = (isset($EngineTimerProvider) && is_string($EngineTimerProvider)) ? trim($EngineTimerProvider) : '';
+  $ProviderIsNamed = ($providerName !== '');
+  if ($ProviderIsNamed && !function_exists($providerName)) {
+    $missingNotice = 'A timer provider named '.printableText($providerName, TRUE).' was declared & does not exist. The application puts nothing on a schedule.';
+    warningEntry($missingNotice);
+    $TimerNotices[] = $missingNotice; }
+  else if ($ProviderIsNamed) {
+    $providedTimers = $providerName();
+    if (!is_array($providedTimers)) {
+      $shapeNotice = 'The timer provider named '.printableText($providerName, TRUE).' answered with no list. The application puts nothing on a schedule.';
+      warningEntry($shapeNotice);
+      $TimerNotices[] = $shapeNotice; }
+    else foreach ($providedTimers as $timerKey => $timerRecord) {
+      if ($timersExamined >= 16) {
+        $countNotice = 'An application asks for sixteen timers at most, so every one after the sixteenth was refused.';
+        warningEntry($countNotice);
+        $TimerNotices[] = $countNotice;
+        break; }
+      $timersExamined++;
+      list ($timerIsAccepted, $acceptedRecord, $timerNotice) = examineApplicationTimer($timerKey, $timerRecord);
+      if ($timerIsAccepted === TRUE) $ApplicationTimers[(string)$timerKey] = $acceptedRecord;
+      if ((string)$timerNotice !== '') $TimerNotices[] = (string)$timerNotice; } }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $ApplicationTimers & $TimerNotices are not purged, because they are return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $timerIsAccepted, $providedTimers, $timerRecord, $acceptedRecord, $providerName, $timerNotice, $timerKey, $missingNotice, $shapeNotice, $countNotice, $timersExamined);
+  return array($ProviderIsNamed, $ApplicationTimers, $TimerNotices); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to build the service & the timer for one command of an application's, from v4.3.1.
+// / Accepts the name of the timer & its record as readApplicationTimers() accepted it, in that order.
+// / Returns whether the two were built, the service text, the timer text & why they were not built, in that order.
+// /
+// / TWO units, as the Environment Manager has, because systemd separates what runs from when
+// / it runs. The service is Type=oneshot & is never enabled on its own. The timer is what an
+// / administrator enables, & it is the only thing that starts the service.
+// / The service runs the installed copy, which serviceEntryFolder() names, as root, with the
+// / one argument the record holds. Nothing else of the record reaches the line that is run.
+// / A unit splits that line at a space & reads a percent sign & a dollar sign as its own, so a
+// / path to PHP or to the application that holds anything but letters, digits, dots, dashes,
+// / underscores & slashes is not written into one. Nothing is built then, & the reason is a warning & is handed back.
+// / A unit of the confined reach is given what the Environment Manager's own unit is given.
+// / A unit of the host reach is given nothing & has nothing taken from it, because its command
+// / must see the whole server, & a directive that hides a folder would have it call that folder clean.
+// / The start of a unit is given no limit, so a command runs for as long as its work takes, which a scan of a server does.
+// / A command an application puts on a schedule must therefore end itself.
+// / Neither text names a version, so a release that changes neither leaves both as they are.
+// / The name is asked about again here, because it is written into both, & nothing is built for one that is refused.
+function generateApplicationTimer($timerKey, $timerRecord) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $UnitsWereBuilt = FALSE;
+  $ServiceContents = $TimerContents = $BuildNotice = '';
+  $entryFolder = $corePath = $phpBinary = $unitName = $documentationLine = $successLine = $reachLines = $buildReason = '';
+  $entryFolder = serviceEntryFolder();
+  $corePath = $entryFolder.$DirSep.engineApplicationEntryPoint();
+  $phpBinary = locateDependency('php');
+  if ($phpBinary === '') $phpBinary = (string)PHP_BINARY;
+  $unitName = engineApplicationSlug().'-'.(is_string($timerKey) ? $timerKey : '');
+  if (!applicationTimerNameIsValid($timerKey)) $buildReason = 'its name is not one a timer of an application may have';
+  else if (!is_array($timerRecord) or !isset($timerRecord['Description'], $timerRecord['Argument'], $timerRecord['Calendar'], $timerRecord['Document'], $timerRecord['Reach'], $timerRecord['Success']) or !is_array($timerRecord['Success'])) $buildReason = 'its record is not whole';
+  else if (preg_match('/^\/[A-Za-z0-9_.\/-]+$/D', $phpBinary) !== 1) $buildReason = 'the path to PHP, '.printableText($phpBinary, TRUE).', holds something a unit cannot carry';
+  else if (preg_match('/^\/[A-Za-z0-9_.\/-]+$/D', $corePath) !== 1) $buildReason = 'the path to the application, '.printableText($corePath, TRUE).', holds something a unit cannot carry';
+  else {
+    $UnitsWereBuilt = TRUE;
+    if ($timerRecord['Document'] !== '') $documentationLine = 'Documentation=file:'.$entryFolder.$DirSep.'Documentation'.$DirSep.$timerRecord['Document'].PHP_EOL;
+    if (count($timerRecord['Success']) > 0) $successLine = '# / Each of these exit statuses means the command did its work, as 0 does.'.PHP_EOL
+      .'SuccessExitStatus='.implode(' ', array_map('intval', $timerRecord['Success'])).PHP_EOL;
+    if ($timerRecord['Reach'] === 'confined') $reachLines = '# / A root process is confined, as the Environment Manager\'s is.'.PHP_EOL
+      .'NoNewPrivileges=yes'.PHP_EOL
+      .'PrivateTmp=yes'.PHP_EOL
+      .'ProtectHome=yes'.PHP_EOL
+      .'RestrictSUIDSGID=yes'.PHP_EOL;
+    else $reachLines = '# / This command reaches the whole host, as its application asked. Nothing is hidden'.PHP_EOL
+      .'# / from it & nothing is taken from it, so it runs as it does for root at a terminal.'.PHP_EOL;
+    $ServiceContents = '# / -----------------------------------------------------------------------------------'.PHP_EOL
+      .'# / '.engineApplicationName().' '.$timerRecord['Description'].'. Written by --setup --install-service.'.PHP_EOL
+      .'# / Do not edit this by hand. Re-run the command above, or -fp, to rewrite it.'.PHP_EOL
+      .'# /'.PHP_EOL
+      .'# / This runs as root & is started ONLY by '.$unitName.'.timer. It runs one command'.PHP_EOL
+      .'# / of '.engineApplicationName().'\'s own & exits. It opens no socket & accepts nothing from anywhere.'.PHP_EOL
+      .PHP_EOL
+      .'[Unit]'.PHP_EOL
+      .'Description='.engineApplicationName().' '.$timerRecord['Description'].PHP_EOL
+      .$documentationLine
+      .'After=local-fs.target'.PHP_EOL
+      .PHP_EOL
+      .'[Service]'.PHP_EOL
+      .'# / It wakes, works & exits. Nothing stays resident.'.PHP_EOL
+      .'Type=oneshot'.PHP_EOL
+      .'User=root'.PHP_EOL
+      .'Group=root'.PHP_EOL
+      .'ExecStart='.$phpBinary.' '.$corePath.' '.$timerRecord['Argument'].PHP_EOL
+      .'# / The command runs for as long as its work takes. Nothing here ends it but the command.'.PHP_EOL
+      .'TimeoutStartSec=infinity'.PHP_EOL
+      .$successLine
+      .$reachLines
+      .PHP_EOL
+      .'[Install]'.PHP_EOL
+      .'# / Deliberately empty of WantedBy. The TIMER is what an administrator enables.'.PHP_EOL
+      .'# / Enabling this service on its own would run the command once at boot & never again.'.PHP_EOL;
+    $TimerContents = '# / -----------------------------------------------------------------------------------'.PHP_EOL
+      .'# / '.engineApplicationName().' '.$timerRecord['Description'].' timer. Written by --setup --install-service.'.PHP_EOL
+      .'# / Do not edit this by hand. Re-run the command above, or -fp, to rewrite it.'.PHP_EOL
+      .'# /'.PHP_EOL
+      .'# / Enable it with:  sudo systemctl enable --now '.$unitName.'.timer'.PHP_EOL
+      .'# / See when it runs next with:  systemctl list-timers '.$unitName.'.timer'.PHP_EOL
+      .'# / See what its last run said with:  sudo journalctl -u '.$unitName.'.service'.PHP_EOL
+      .PHP_EOL
+      .'[Unit]'.PHP_EOL
+      .'Description='.engineApplicationName().' '.$timerRecord['Description'].' timer'.PHP_EOL
+      .$documentationLine
+      .PHP_EOL
+      .'[Timer]'.PHP_EOL
+      .'OnCalendar='.$timerRecord['Calendar'].PHP_EOL
+      .'# / A host that was off runs the pass it missed rather than skipping it silently.'.PHP_EOL
+      .'Persistent=true'.PHP_EOL
+      .'# / Every installation on a fleet would otherwise wake on the same second.'.PHP_EOL
+      .'RandomizedDelaySec=300'.PHP_EOL
+      .'Unit='.$unitName.'.service'.PHP_EOL
+      .PHP_EOL
+      .'[Install]'.PHP_EOL
+      .'WantedBy=timers.target'.PHP_EOL; }
+  if (!$UnitsWereBuilt) {
+    $BuildNotice = 'The timer '.printableText(is_scalar($timerKey) ? (string)$timerKey : '', TRUE).' was not built, because '.$buildReason.'.';
+    warningEntry($BuildNotice); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $entryFolder, $corePath, $phpBinary, $unitName, $documentationLine, $successLine, $reachLines, $buildReason, $timerKey, $timerRecord);
+  return array($UnitsWereBuilt, $ServiceContents, $TimerContents, $BuildNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to write the two units of one timer of an application's, where they differ from what is installed, from v4.3.1.
+// / Accepts the name of the timer, the service text & the timer text, in that order.
+// / Returns whether both are now as they should be, a status word & the path of the timer, in that order.
+// / The status is 'unchanged', 'installed', 'updated' or 'failed'.
+// / Units that already match are left alone, so this is safe on every repair & changes nothing systemd holds.
+// / Each is written by the kernel's writeFileWithoutFollowing(), whole or not at all, & is never written through a link.
+// / Neither is written where either is a link. An administrator masks a unit by putting a link where it was, & the kernel
+// / would put the new unit in the place of that link, which would take the mask away without a word.
+// / A unit that cannot be written is a warning that says why, & the other is not written after it.
+// / The name is asked about again here, because it is part of both paths, & nothing is written for one that is refused.
+// / systemd is not told here. The caller reloads it once, after every timer it writes.
+function writeApplicationTimer($timerKey, $serviceContents, $timerContents) {
+  // / Set variables.
+  global $DirSep, $EnableMemoryProtection;
+  $TimerIsCurrent = $fileWasWritten = FALSE;
+  $TimerStatus = 'failed';
+  $TimerPath = $servicePath = $existingService = $existingTimer = $writeNotice = $shownName = '';
+  $nameIsValid = FALSE;
+  $nameIsValid = applicationTimerNameIsValid($timerKey);
+  $shownName = printableText(is_scalar($timerKey) ? (string)$timerKey : '', TRUE);
+  // / Until the name is known to be one a timer may have, the folder is all that is named.
+  $TimerPath = systemdUnitFolder();
+  if ($nameIsValid) {
+    $servicePath = systemdUnitFolder().$DirSep.engineApplicationSlug().'-'.$timerKey.'.service';
+    $TimerPath = systemdUnitFolder().$DirSep.engineApplicationSlug().'-'.$timerKey.'.timer';
+    clearstatcache(TRUE);
+    if (is_file($servicePath)) $existingService = (string)@file_get_contents($servicePath);
+    if (is_file($TimerPath)) $existingTimer = (string)@file_get_contents($TimerPath); }
+  if (!$nameIsValid) $writeNotice = 'Its name is not one a timer of an application may have.';
+  else if (!is_string($serviceContents) or !is_string($timerContents) or $serviceContents === '' or $timerContents === '') $writeNotice = 'There was nothing to write.';
+  else if ($existingService === $serviceContents && $existingTimer === $timerContents) {
+    $TimerIsCurrent = TRUE;
+    $TimerStatus = 'unchanged'; }
+  // / A link that leads to units which are already as they should be was left alone above. Any other link is an administrator's, & stays.
+  else if (is_link($servicePath) or is_link($TimerPath)) $writeNotice = 'One of its two units is a link, as a unit an administrator masked is, so neither was written.';
+  else {
+    list ($fileWasWritten, $writeNotice) = writeFileWithoutFollowing($servicePath, $serviceContents, 0644);
+    if ($fileWasWritten) list ($fileWasWritten, $writeNotice) = writeFileWithoutFollowing($TimerPath, $timerContents, 0644);
+    if ($fileWasWritten) {
+      $TimerIsCurrent = TRUE;
+      $TimerStatus = ($existingTimer === '') ? 'installed' : 'updated';
+      logEntry('The timer '.$shownName.' was written to '.$TimerPath.'.'); } }
+  if (!$TimerIsCurrent) warningEntry('The timer '.$shownName.' could not be written to '.$TimerPath.'. '.$writeNotice);
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $TimerPath is not purged, because it is a return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $fileWasWritten, $nameIsValid, $servicePath, $existingService, $existingTimer, $writeNotice, $shownName, $timerKey, $serviceContents, $timerContents);
+  return array($TimerIsCurrent, $TimerStatus, $TimerPath); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to install the timers an application asks for, or to write again the ones that are installed, from v4.3.1.
+// / Accepts whether a timer that is not installed yet is to be installed.
+// / Returns whether nothing failed & a status word for each timer that was accepted, keyed by its name, in that order.
+// / A status is 'unchanged', 'installed', 'updated', 'failed', 'refused', 'skipped' or 'not installed'.
+// /
+// / --setup --install-service & --setup --install-complete install every timer. -fp writes
+// / again only the ones that are installed, so they name the installed copy & hold the calendar
+// / config.php now asks for, as it does for the Environment Manager's.
+// / No timer is ever enabled here. A timer puts a root process on a schedule, & that is an
+// / administrator's to decide. What enables each is printed where one is installed.
+// / Whether a timer runs is left as it was where one is written again, & what an administrator
+// / runs to be sure a running timer holds a new calendar is printed.
+// / An application with no timer to write prints nothing here, & one whose timer is refused has
+// / the refusal printed, whichever command asked.
+// / systemd is required. A host without it gets no unit, & that is not a failure, because the
+// / command a timer runs is still run by hand or by a scheduler of the administrator's own.
+// / systemd is told to read its units again once, after everything is written.
+function installApplicationTimers($installMissing) {
+  // / Set variables.
+  global $RunningAsRoot, $DirSep, $Lol, $EnableMemoryProtection;
+  $NothingFailed = TRUE;
+  $TimerStatuses = array();
+  $providerIsNamed = $systemdIsReady = $unitsWereBuilt = $timerIsCurrent = $unitsWereWritten = $headingWasPrinted = FALSE;
+  $applicationTimers = $timerNotices = $timerRecord = $commandOutput = array();
+  $timerKey = $timerNotice = $systemdReason = $serviceContents = $timerContents = $buildNotice = $timerStatus = $timerPath = $timerUnit = '';
+  $commandExitCode = 1;
+  list ($providerIsNamed, $applicationTimers, $timerNotices) = readApplicationTimers();
+  list ($systemdIsReady, $systemdReason) = systemdIsUsable();
+  if (($installMissing === TRUE && count($applicationTimers) > 0) or count($timerNotices) > 0) {
+    print($Lol.engineApplicationName().' schedules'.$Lol);
+    $headingWasPrinted = TRUE; }
+  foreach ($timerNotices as $timerNotice) print('  '.str_pad('Note', 12).$timerNotice.$Lol);
+  if (count($applicationTimers) > 0 && !$RunningAsRoot) {
+    // / -fp & --setup are root's, so this is insurance. A repair that is not root's writes nothing & says nothing, as refreshEnvironmentTimer() does.
+    if ($installMissing === TRUE) {
+      $NothingFailed = FALSE;
+      warningEntry('The timers of '.engineApplicationName().' can only be written while running as root.');
+      print('  '.str_pad('FAILED', 12).'A timer can only be written by root.'.$Lol); } }
+  else if (count($applicationTimers) > 0 && (!$systemdIsReady or !is_dir(systemdUnitFolder()))) {
+    if ($headingWasPrinted) print('  '.str_pad('Skipped', 12).($systemdIsReady ? systemdUnitFolder().' does not exist.' : $systemdReason).$Lol);
+    foreach ($applicationTimers as $timerKey => $timerRecord) {
+      $TimerStatuses[(string)$timerKey] = 'skipped';
+      if ($headingWasPrinted) print('  '.str_pad('', 12).'Nothing here runs  '.engineApplicationEntryPoint().' '.$timerRecord['Argument'].'  on a schedule.'.$Lol); } }
+  else foreach ($applicationTimers as $timerKey => $timerRecord) {
+    redeclare($timerUnit, engineApplicationSlug().'-'.(string)$timerKey.'.timer');
+    clearstatcache(TRUE);
+    if ($installMissing !== TRUE && !is_file(systemdUnitFolder().$DirSep.$timerUnit)) {
+      $TimerStatuses[(string)$timerKey] = 'not installed';
+      continue; }
+    if (!$headingWasPrinted) {
+      print($Lol.engineApplicationName().' schedules'.$Lol);
+      $headingWasPrinted = TRUE; }
+    list ($unitsWereBuilt, $serviceContents, $timerContents, $buildNotice) = generateApplicationTimer($timerKey, $timerRecord);
+    if (!$unitsWereBuilt) {
+      $NothingFailed = FALSE;
+      $TimerStatuses[(string)$timerKey] = 'refused';
+      print('  '.str_pad('FAILED', 12).$buildNotice.$Lol);
+      continue; }
+    list ($timerIsCurrent, $timerStatus, $timerPath) = writeApplicationTimer($timerKey, $serviceContents, $timerContents);
+    $TimerStatuses[(string)$timerKey] = $timerStatus;
+    if (!$timerIsCurrent) {
+      $NothingFailed = FALSE;
+      print('  '.str_pad('FAILED', 12).$timerPath.' could not be written. The log says why.'.$Lol);
+      continue; }
+    if ($timerStatus !== 'unchanged') $unitsWereWritten = TRUE;
+    print('  '.str_pad(ucfirst($timerStatus), 12).$timerPath.$Lol);
+    print('  '.str_pad('', 12).$timerRecord['Description'].'. Calendar: '.$timerRecord['Calendar'].$Lol);
+    if ($timerStatus === 'installed') {
+      print('  '.str_pad('', 12).'The timer is NOT enabled. Run the command by hand before scheduling root.'.$Lol);
+      print('  '.str_pad('', 12).'  sudo php '.engineApplicationEntryPoint().' '.$timerRecord['Argument'].$Lol);
+      print('  '.str_pad('', 12).'  sudo systemctl enable --now '.$timerUnit.$Lol); }
+    else if ($timerStatus === 'updated') {
+      print('  '.str_pad('', 12).'Whether it is enabled is unchanged. To be sure a running timer holds a new calendar:'.$Lol);
+      print('  '.str_pad('', 12).'  sudo systemctl restart '.$timerUnit.$Lol);
+      print('  '.str_pad('', 12).'systemd may start the command at once, where the new calendar names a time since its last run.'.$Lol); } }
+  if ($unitsWereWritten) {
+    // / This runs unsandboxed, as every systemctl call does, because reloading the host's service
+    // / manager is its whole purpose. It takes no argument from anywhere.
+    exec('systemctl daemon-reload 2>&1', $commandOutput, $commandExitCode);
+    if ($commandExitCode !== 0) warningEntry('The timers of '.engineApplicationName().' were written & systemd could not be told to read them again. '.printableText(implode(' ', $commandOutput), TRUE)); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $TimerStatuses is not purged, because it is a return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $providerIsNamed, $systemdIsReady, $unitsWereBuilt, $timerIsCurrent, $unitsWereWritten, $headingWasPrinted, $applicationTimers, $timerNotices, $timerRecord, $commandOutput, $timerKey, $timerNotice, $systemdReason, $serviceContents, $timerContents, $buildNotice, $timerStatus, $timerPath, $timerUnit, $commandExitCode, $installMissing);
+  return array($NothingFailed, $TimerStatuses); }
+// / -----------------------------------------------------------------------------------
 // / A function to perform a complete installation.
 // / Accepts the dependency authorization token & a confirmation boolean, in that order.
 // / Returns a completion boolean & the number of stages that succeeded, in that order.
@@ -2331,6 +2714,8 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
   $StagesCompleted = 0;
   $stageSucceeded = $permissionsWereFixed = $locationsAreReady = $serviceWasInstalled = FALSE;
   $dependenciesReady = FALSE;
+  $schedulesAreCurrent = TRUE;
+  $scheduleStatuses = array();
   // / A missing Dependency Core is recorded rather than returned from, so this function keeps one exit.
   $componentIsAvailable = TRUE;
   $stageCount = $pathsCorrected = $locationsCreated = $optionalProblems = 0;
@@ -2394,6 +2779,10 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           // / what one pass reports rather than something a setup wizard does on their behalf.
           print($Lol.'Environment Manager schedule.'.$Lol);
           installEnvironmentTimer(FALSE);
+          // / The timers the application asks for are written with it, from v4.3.1, & are NOT enabled either, for the same reason.
+          // / One that could not be written has been logged & printed, & the stage is not failed for it, as it is not for the manager's.
+          list ($schedulesAreCurrent, $scheduleStatuses) = installApplicationTimers(TRUE);
+          if (!$schedulesAreCurrent) print('  '.str_pad('', 12).'Run  --setup --install-service  again once what stopped it is mended.'.$Lol);
           // / Stage six. Permissions again, because stages four & five both wrote files.
           // / Stage three cannot be the last word on ownership when work happens after it.
           // / writeConfigFile() leaves config.php root's & 0644 as it renames it into place, &
@@ -2422,7 +2811,7 @@ function runCompleteInstall($authorizationToken, $operatorConfirmed) {
           print('  The public URL, for share links. Set it with --config.'.$Lol);
           print('  A web server virtual host, if the installation is not served yet.'.$Lol.$Lol); } } } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $componentIsAvailable, $stageSucceeded, $permissionsWereFixed, $locationsAreReady, $serviceWasInstalled, $dependenciesReady, $stageCount, $pathsCorrected, $locationsCreated, $optionalProblems, $operatorChoice, $serviceStatus, $dependencyFindings, $authorizationToken, $operatorConfirmed, $stageTotal);
+  purgeSensitiveMemory($EnableMemoryProtection, $componentIsAvailable, $stageSucceeded, $permissionsWereFixed, $locationsAreReady, $serviceWasInstalled, $dependenciesReady, $stageCount, $pathsCorrected, $locationsCreated, $optionalProblems, $operatorChoice, $serviceStatus, $dependencyFindings, $schedulesAreCurrent, $scheduleStatuses, $authorizationToken, $operatorConfirmed, $stageTotal);
   return array($InstallCompleted, $StagesCompleted); }
 // / -----------------------------------------------------------------------------------
 
@@ -2470,6 +2859,9 @@ function runReinstallExisting($targetVersion, $operatorConfirmed) {
 // / It does one thing, which is hand the request to the installed application.
 // / The path in it is written from the installation, never typed.
 // / Root refuses to go on when the entry point or its folder could have been changed by another account, because the entry point runs before anything can check its tree.
+// / Root is identified as the kernel identifies it, by ID, from posix_geteuid or /proc/self/status, because the kernel is not loaded yet.
+// / An account whose ID cannot be read may be root, so it is refused with 28010, & a browser is told only that the application is unavailable.
+// / The loader's two globals are unset before the entry point is required, so the application inherits neither.
 // / A missing application is refused with a plain message & exit status one.
 // / A browser is told only that the application is unavailable, because the path would tell a stranger where the data location is.
 function applicationLoaderContents($applicationEntry) {
@@ -2494,9 +2886,22 @@ function applicationLoaderContents($applicationEntry) {
     .'    http_response_code(503);'.PHP_EOL
     .'    print(\''.$applicationName.' is unavailable.\'); }'.PHP_EOL
     .'  exit(1); }'.PHP_EOL
-    .'if (function_exists(\'posix_geteuid\') && posix_geteuid() === 0 && (@fileowner('.$quotedEntry.') !== 0 or (@fileperms('.$quotedEntry.') & 0022) !== 0 or @fileowner('.$quotedFolder.') !== 0 or (@fileperms('.$quotedFolder.') & 0022) !== 0)) {'.PHP_EOL
+    .'// / The account is identified as the kernel identifies it, from posix_geteuid or /proc/self/status, & never by another program.'.PHP_EOL
+    .'// / An account that cannot be identified may be root, so it is refused.'.PHP_EOL
+    .'$LoaderAccountId = -1;'.PHP_EOL
+    .'$LoaderStatusMatch = array();'.PHP_EOL
+    .'if (function_exists(\'posix_geteuid\')) $LoaderAccountId = (int)posix_geteuid();'.PHP_EOL
+    .'else if (preg_match(\'/^Uid:\s+[0-9]+\s+([0-9]+)/m\', (string)@file_get_contents(\'/proc/self/status\'), $LoaderStatusMatch) === 1) $LoaderAccountId = (int)$LoaderStatusMatch[1];'.PHP_EOL
+    .'if ($LoaderAccountId === -1) {'.PHP_EOL
+    .'  if (PHP_SAPI === \'cli\') print(\'ERROR!!! '.$applicationName.'-28010, The account running this loader could not be identified, so \'.'.$quotedEntry.'.\' was not run. Enable the posix extension in PHP.\'.PHP_EOL);'.PHP_EOL
+    .'  else {'.PHP_EOL
+    .'    http_response_code(503);'.PHP_EOL
+    .'    print(\''.$applicationName.' is unavailable.\'); }'.PHP_EOL
+    .'  exit(1); }'.PHP_EOL
+    .'if ($LoaderAccountId === 0 && (@fileowner('.$quotedEntry.') !== 0 or (@fileperms('.$quotedEntry.') & 0022) !== 0 or @fileowner('.$quotedFolder.') !== 0 or (@fileperms('.$quotedFolder.') & 0022) !== 0)) {'.PHP_EOL
     .'  print(\'ERROR!!! '.$applicationName.'-28008, Root refused to run \'.'.$quotedEntry.'.\', because an account other than root could have changed it. Run  sudo php \'.'.$quotedEntry.'.\' -fp  to give it back to root.\'.PHP_EOL);'.PHP_EOL
     .'  exit(1); }'.PHP_EOL
+    .'unset($LoaderAccountId, $LoaderStatusMatch);'.PHP_EOL
     .'require '.$quotedEntry.';'.PHP_EOL;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $LoaderContents is not purged, because it is the return value.
@@ -2568,34 +2973,96 @@ function copyApplicationEntry($sourcePath, $targetPath) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to keep the installation an application folder replaces, or to remove it.
+// / A function to move the installation an application folder holds out of the way of the one replacing it.
 // / Accepts the application folder & the backup location. Returns whether it was kept & a
 // / sentence saying what happened, in that order.
-// / It is kept as the backup when the folder the backup lives in is one only root can change &
-// / the backup is not a system folder, which is the same test an update applies to its own
-// / backup. Otherwise it is removed & that is said, because the new installation must go in.
+// / It is kept as the backup when the folder the backup lives in is one only root can change,
+// / the backup is not a system folder, & the backup is not the application folder, inside it or
+// / holding it. Otherwise it is not kept, & that is said, because the new installation must go in.
+// / One that is not kept waits beside the application folder, at oldInstallationPath(), until the new one is in place.
+// / installApplicationTree() removes it then, or puts it back where the new one cannot be put in place.
+// / Until v4.3.2 it was removed here, so a new installation that could not be put in place left none.
+// / Whatever happens, the application folder holding anything afterwards means the installation was not moved.
 function retireApplicationTree($applicationPath, $backupLoc) {
   // / Set variables.
   global $EnableMemoryProtection;
   $TreeWasKept = FALSE;
   $RetireNotice = '';
-  $backupPath = $resolvedParent = $trustNotice = '';
-  $parentIsTrusted = $backupIsUsable = FALSE;
+  $backupPath = $resolvedParent = $trustNotice = $oldPath = $removalNotice = '';
+  $parentIsTrusted = $backupIsUsable = $backupOverlaps = $leftoverWasRemoved = FALSE;
+  $applicationPath = rtrim((string)$applicationPath, DIRECTORY_SEPARATOR);
   $backupPath = rtrim((string)$backupLoc, DIRECTORY_SEPARATOR);
   if ($backupPath !== '') list ($parentIsTrusted, $resolvedParent, $trustNotice) = pathIsTrustedByRoot(dirname($backupPath));
-  $backupIsUsable = ($parentIsTrusted && $resolvedParent === dirname($backupPath));
+  // / A backup that is the application folder, is inside it or holds it would take the installation with it when it is emptied.
+  // / Both folders above them are root's & hold no link, so their names are compared as they are.
+  $backupOverlaps = ($backupPath !== '' && (strpos($backupPath.DIRECTORY_SEPARATOR, $applicationPath.DIRECTORY_SEPARATOR) === 0 or strpos($applicationPath.DIRECTORY_SEPARATOR, $backupPath.DIRECTORY_SEPARATOR) === 0));
+  if ($backupOverlaps) $trustNotice = $backupPath.' is the application folder, is inside it, or holds it.';
+  $backupIsUsable = ($parentIsTrusted && $resolvedParent === dirname($backupPath) && !$backupOverlaps);
   // / The backup before it is removed first. A link there is removed as a link, & a folder only
   // / when it is not a system folder, because a misconfigured backup would empty that instead.
   if ($backupIsUsable && (is_link($backupPath) or (file_exists($backupPath) && pathIsSafeToModifyRecursively($backupPath)))) exec('rm -rf '.escapeshellarg($backupPath).' 2>&1');
-  if ($backupIsUsable && !file_exists($backupPath) && !is_link($backupPath) && @rename((string)$applicationPath, $backupPath)) {
+  if ($backupIsUsable && !file_exists($backupPath) && !is_link($backupPath) && @rename($applicationPath, $backupPath)) {
     $TreeWasKept = TRUE;
     $RetireNotice = 'The installation it replaced is kept at '.$backupPath.'.'; }
-  if (!$TreeWasKept) {
-    if (pathIsSafeToModifyRecursively((string)$applicationPath)) exec('rm -rf '.escapeshellarg((string)$applicationPath).' 2>&1');
-    $RetireNotice = 'The installation it replaced was not kept'.($backupPath === '' ? ', because no backup location is configured.' : ', because '.$backupPath.' could not hold it.'.($trustNotice === '' ? '' : ' '.$trustNotice)); }
+  // / What an earlier run left where the installation waits is removed before it is moved there, because a rename never replaces a
+  // / folder that holds anything. A system folder is never moved, because a misconfigured application folder would move that instead.
+  if (!$TreeWasKept && $applicationPath !== '') {
+    $oldPath = oldInstallationPath($applicationPath);
+    list ($leftoverWasRemoved, $removalNotice) = removeTreeWithoutFollowing($oldPath);
+    if (!$leftoverWasRemoved) warningEntry('What an earlier installation or update left at '.$oldPath.' could not be removed, so the installation at '.$applicationPath.' was not moved aside. '.$removalNotice);
+    else if (pathIsSafeToModifyRecursively($applicationPath)) @rename($applicationPath, $oldPath); }
+  if (!$TreeWasKept) $RetireNotice = 'The installation it replaced was not kept'.($backupPath === '' ? ', because no backup location is configured.' : ', because '.$backupPath.' could not hold it.'.($trustNotice === '' ? '' : ' '.$trustNotice));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $backupPath, $resolvedParent, $trustNotice, $parentIsTrusted, $backupIsUsable, $applicationPath, $backupLoc);
+  purgeSensitiveMemory($EnableMemoryProtection, $backupPath, $resolvedParent, $trustNotice, $oldPath, $removalNotice, $parentIsTrusted, $backupIsUsable, $backupOverlaps, $leftoverWasRemoved, $applicationPath, $backupLoc);
   return array($TreeWasKept, $RetireNotice); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to name the folder an installation waits in while the one replacing it is put in place.
+// / Accepts the application folder. Returns the folder beside it, which is empty where the application folder is.
+// / It is the name an update moves the installation it replaces to, so a run of either clears what a crashed run of the other left.
+// / It is in the folder the application lives in, which installApplicationTree() requires only root can change.
+function oldInstallationPath($applicationPath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OldPath = '';
+  $applicationPath = rtrim((string)$applicationPath, DIRECTORY_SEPARATOR);
+  if ($applicationPath !== '') $OldPath = $applicationPath.'.old';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $OldPath is not purged, because it is the return value.
+  purgeSensitiveMemory($EnableMemoryProtection, $applicationPath);
+  return $OldPath; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to put a staged installation in place, or to put back the installation it was to replace.
+// / Accepts the staged copy, the application folder & the folder the installation it replaces was moved to, which is empty where
+// / there was none, in that order. Returns whether the staged copy is in place & a word saying what happened, in that order.
+// / The word is placed, restored where the installation it was to replace was put back, unrestored where that could not be put back,
+// / & failed where there was none.
+// /
+// / The staged copy is beside the application folder, so one rename puts it in place, & either it has the name or nothing does.
+// / Where nothing does, the installation that was moved aside is moved back, as an update moves back the one it replaces.
+// / Only a folder is moved back, because only a folder is moved aside, & only where nothing has the name.
+// / A mode that could not be set on a copy in place is warned about & is not a failure, because the installed copy's -fp sets it.
+function placeStagedTree($stagedPath, $applicationPath, $asidePath) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $TreeIsPlaced = FALSE;
+  $PlaceStatus = 'failed';
+  $stagedPath = (string)$stagedPath;
+  $applicationPath = (string)$applicationPath;
+  $asidePath = (string)$asidePath;
+  if ($stagedPath !== '' && $applicationPath !== '' && @rename($stagedPath, $applicationPath)) {
+    $TreeIsPlaced = TRUE;
+    $PlaceStatus = 'placed';
+    if (!@chmod($applicationPath, 0755)) warningEntry('The installation at '.$applicationPath.' is in place, & its mode could not be set to 0755. The installed copy\'s -fp sets it.'); }
+  else if ($asidePath !== '' && is_dir($asidePath) && !is_link($asidePath) && !file_exists($applicationPath) && !is_link($applicationPath) && @rename($asidePath, $applicationPath)) $PlaceStatus = 'restored';
+  else if ($asidePath !== '') $PlaceStatus = 'unrestored';
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  // / $TreeIsPlaced & $PlaceStatus are not purged, because they are the return values.
+  purgeSensitiveMemory($EnableMemoryProtection, $stagedPath, $applicationPath, $asidePath);
+  return array($TreeIsPlaced, $PlaceStatus); }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -2651,15 +3118,18 @@ function codeMissingFromTree($installedTree, $candidateTree) {
 // / Only the entries the contract names in $EngineApplicationLayout are copied, so nothing else in the folder a release was unpacked into is taken along.
 // / The DATA tree stays where the web server serves it.
 // / The copy is made in a folder only root can enter, beside the application folder, & renamed into place, so the application folder holds the whole old installation or the whole new one.
-// / The one it replaces is kept as the backup, as an update keeps one.
+// / The one it replaces is kept as the backup, as an update keeps one. One the backup cannot hold waits beside the application folder
+// / until the new one is in place, & is removed then. Where the new one cannot be put in place, the one it replaces is put back.
+// / Nothing is removed from the application folder before the new installation is in place.
 // / The running tree must be one root trusts, & the folder the application lives in must be one only root can change, or nothing is copied.
 function installApplicationTree($sourceTree, $applicationLoc, $backupLoc) {
   // / Set variables.
   global $EngineApplicationLayout, $RunningAsRoot, $EnableMemoryProtection;
   $TreeWasInstalled = FALSE;
   $InstallNotice = '';
-  $sourcePath = $applicationPath = $applicationParent = $resolvedParent = $trustNotice = $treeNotice = $stagedPath = $layoutEntry = $entryNotice = $retireNotice = '';
-  $parentIsTrusted = $treeIsTrusted = $entryWasCopied = $treeWasKept = FALSE;
+  $sourcePath = $applicationPath = $applicationParent = $resolvedParent = $trustNotice = $treeNotice = $stagedPath = $layoutEntry = $entryNotice = $retireNotice = $installFailure = '';
+  $asidePath = $placeStatus = $removalNotice = '';
+  $parentIsTrusted = $treeIsTrusted = $entryWasCopied = $treeWasKept = $oldWasRemoved = FALSE;
   $filesCopied = $entryFiles = 0;
   $layoutEntries = $missingCode = array();
   $installedWasRead = FALSE;
@@ -2678,13 +3148,14 @@ function installApplicationTree($sourceTree, $applicationLoc, $backupLoc) {
     if ($parentIsTrusted && $treeIsTrusted && is_dir($applicationPath) && !is_link($applicationPath)) {
       list ($installedWasRead, $missingCode) = codeMissingFromTree($applicationPath, $sourcePath);
       if (!$installedWasRead) warningEntry('Part of the installation at '.$applicationPath.' could not be read, so the tree at '.$sourcePath.' was compared with the rest of it.'); }
-    if (!$parentIsTrusted or $resolvedParent !== $applicationParent) $InstallNotice = 'The folder the application lives in, '.$applicationParent.', can be changed by an account other than root, so nothing was installed. '.$trustNotice;
-    else if (!$treeIsTrusted) $InstallNotice = 'The running tree at '.$sourcePath.' can be changed by an account other than root, so it was not installed. '.$treeNotice;
-    else if (count($missingCode) > 0) $InstallNotice = 'The tree at '.$sourcePath.' lacks '.count($missingCode).' file(s) of code the installation at '.$applicationPath.' holds, '.$missingCode[0].' among them, so it was not installed. A drop-in holds only the files that changed. Unpack it into '.$applicationPath.' & run -fp there.';
-    else if (is_link($applicationPath) or (file_exists($applicationPath) && !is_dir($applicationPath))) $InstallNotice = $applicationPath.' is not a folder, so nothing was installed.';
+    // / Each reason an installation that was attempted failed is kept apart from the notices above, & is the one that is warned about.
+    if (!$parentIsTrusted or $resolvedParent !== $applicationParent) $installFailure = 'The folder the application lives in, '.$applicationParent.', can be changed by an account other than root, so nothing was installed. '.$trustNotice;
+    else if (!$treeIsTrusted) $installFailure = 'The running tree at '.$sourcePath.' can be changed by an account other than root, so it was not installed. '.$treeNotice;
+    else if (count($missingCode) > 0) $installFailure = 'The tree at '.$sourcePath.' lacks '.count($missingCode).' file(s) of code the installation at '.$applicationPath.' holds, '.$missingCode[0].' among them, so it was not installed. A drop-in holds only the files that changed. Unpack it into '.$applicationPath.' & run -fp there.';
+    else if (is_link($applicationPath) or (file_exists($applicationPath) && !is_dir($applicationPath))) $installFailure = $applicationPath.' is not a folder, so nothing was installed.';
     else {
       $stagedPath = $applicationParent.DIRECTORY_SEPARATOR.'.'.basename($applicationPath).'-install-'.bin2hex(random_bytes(8));
-      if (!@mkdir($stagedPath, 0700) or !@chmod($stagedPath, 0700)) $InstallNotice = 'A folder to stage the installation in could not be created beside '.$applicationPath.'.';
+      if (!@mkdir($stagedPath, 0700) or !@chmod($stagedPath, 0700)) $installFailure = 'A folder to stage the installation in could not be created beside '.$applicationPath.'.';
       else {
         // / Each entry is a name at the top of the tree. A name that walks out of it is ignored,
         // / & an entry a release does not carry is skipped rather than refused.
@@ -2694,21 +3165,32 @@ function installApplicationTree($sourceTree, $applicationLoc, $backupLoc) {
           list ($entryWasCopied, $entryFiles, $entryNotice) = copyApplicationEntry($sourcePath.DIRECTORY_SEPARATOR.$layoutEntry, $stagedPath.DIRECTORY_SEPARATOR.$layoutEntry);
           $filesCopied = $filesCopied + (int)$entryFiles;
           if (!$entryWasCopied) {
-            $InstallNotice = 'The running tree was not installed. '.$entryNotice;
+            $installFailure = 'The running tree was not installed. '.$entryNotice;
             break; } }
-        if ($InstallNotice === '' && !is_file($stagedPath.DIRECTORY_SEPARATOR.engineApplicationEntryPoint())) $InstallNotice = 'The running tree holds no '.engineApplicationEntryPoint().', so it was not installed.';
-        if ($InstallNotice === '' && is_dir($applicationPath)) list ($treeWasKept, $retireNotice) = retireApplicationTree($applicationPath, $backupLoc);
-        if ($InstallNotice === '' && file_exists($applicationPath)) $InstallNotice = 'The installation at '.$applicationPath.' could not be moved aside, so the new one was not put in its place.';
-        else if ($InstallNotice === '' && @rename($stagedPath, $applicationPath) && @chmod($applicationPath, 0755)) {
-          $TreeWasInstalled = TRUE;
-          $InstallNotice = 'Installed '.$filesCopied.' file(s) from '.$sourcePath.' into '.$applicationPath.'.'.($retireNotice === '' ? '' : ' '.$retireNotice); }
-        else if ($InstallNotice === '') $InstallNotice = 'The staged installation could not be moved into '.$applicationPath.'.';
+        if ($installFailure === '' && !is_file($stagedPath.DIRECTORY_SEPARATOR.engineApplicationEntryPoint())) $installFailure = 'The running tree holds no '.engineApplicationEntryPoint().', so it was not installed.';
+        // / The installation it replaces is moved aside first, to the backup or beside the application folder.
+        if ($installFailure === '' && is_dir($applicationPath)) {
+          list ($treeWasKept, $retireNotice) = retireApplicationTree($applicationPath, $backupLoc);
+          $asidePath = $treeWasKept ? rtrim((string)$backupLoc, DIRECTORY_SEPARATOR) : oldInstallationPath($applicationPath); }
+        if ($installFailure === '' && (file_exists($applicationPath) or is_link($applicationPath))) $installFailure = 'The installation at '.$applicationPath.' could not be moved aside, so the new one was not put in its place.';
+        else if ($installFailure === '') {
+          list ($TreeWasInstalled, $placeStatus) = placeStagedTree($stagedPath, $applicationPath, $asidePath);
+          if ($TreeWasInstalled) $InstallNotice = 'Installed '.$filesCopied.' file(s) from '.$sourcePath.' into '.$applicationPath.'.'.($retireNotice === '' ? '' : ' '.$retireNotice);
+          else if ($placeStatus === 'restored') $installFailure = 'The staged installation could not be moved into '.$applicationPath.', so the installation it would have replaced was put back.';
+          else if ($placeStatus === 'unrestored') $installFailure = 'The staged installation could not be moved into '.$applicationPath.', & the installation it would have replaced could not be put back from '.$asidePath.'. Move it back by hand.';
+          else $installFailure = 'The staged installation could not be moved into '.$applicationPath.'.';
+          // / One the backup could not hold is removed only once the new one is in place.
+          if ($TreeWasInstalled && !$treeWasKept && $asidePath !== '') list ($oldWasRemoved, $removalNotice) = removeTreeWithoutFollowing($asidePath);
+          if ($TreeWasInstalled && !$treeWasKept && $asidePath !== '' && !$oldWasRemoved) warningEntry('The installation it replaced is left at '.$asidePath.', & could not be removed. '.$removalNotice.' Remove it by hand.'); }
         // / A staged copy that was not moved into place is removed. It is root's & only root can enter it.
         if (!$TreeWasInstalled && is_dir($stagedPath)) exec('rm -rf '.escapeshellarg($stagedPath).' 2>&1'); } } }
-  if (!$TreeWasInstalled && $RunningAsRoot && count($layoutEntries) > 0 && $sourcePath !== '' && (string)@realpath($sourcePath) !== $applicationPath) warningEntry($InstallNotice);
+  // / A failure is set only where installing was attempted, & it is the notice the caller is handed.
+  if ($installFailure !== '') {
+    $InstallNotice = $installFailure;
+    warningEntry($installFailure); }
   else if ($TreeWasInstalled) logEntry($InstallNotice);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $installedWasRead, $missingCode, $sourcePath, $applicationPath, $applicationParent, $resolvedParent, $trustNotice, $treeNotice, $stagedPath, $layoutEntry, $entryNotice, $retireNotice, $parentIsTrusted, $treeIsTrusted, $entryWasCopied, $treeWasKept, $filesCopied, $entryFiles, $layoutEntries, $sourceTree, $applicationLoc, $backupLoc);
+  purgeSensitiveMemory($EnableMemoryProtection, $installedWasRead, $missingCode, $sourcePath, $applicationPath, $applicationParent, $resolvedParent, $trustNotice, $treeNotice, $stagedPath, $layoutEntry, $entryNotice, $retireNotice, $installFailure, $asidePath, $placeStatus, $removalNotice, $parentIsTrusted, $treeIsTrusted, $entryWasCopied, $treeWasKept, $oldWasRemoved, $filesCopied, $entryFiles, $layoutEntries, $sourceTree, $applicationLoc, $backupLoc);
   return array($TreeWasInstalled, $InstallNotice); }
 // / -----------------------------------------------------------------------------------
 
@@ -3745,7 +4227,7 @@ function cleanBuildEnvironment() {
       if (is_array($buildDirContents)) foreach (array_diff($buildDirContents, array('.', '..')) as $buildDirEntry) $removalTargets[] = $buildDir.$DirSep.$buildDirEntry; }
     foreach ($removalTargets as $removalTarget) {
       list ($entryWasRemoved, $removalNotice) = removeFileWithoutFollowing($removalTarget);
-      if (!$entryWasRemoved) warningEntry($removalNotice); }
+      if (!$entryWasRemoved) warningEntry('Part of the build environment could not be removed. '.$removalNotice); }
     // / A folder left inside Build keeps it in place, which is the documented behaviour.
     if (is_array($buildDirContents)) @rmdir($buildDir);
     // / Confirm the build environment is actually gone before reporting success.
@@ -3761,7 +4243,7 @@ function cleanBuildEnvironment() {
     $removalTargets = array($changelogFile, $readmeFile);
     foreach ($removalTargets as $removalTarget) {
       list ($entryWasRemoved, $removalNotice) = removeFileWithoutFollowing($removalTarget);
-      if (!$entryWasRemoved) warningEntry($removalNotice); }
+      if (!$entryWasRemoved) warningEntry('Part of the development documentation could not be removed. '.$removalNotice); }
     // / Confirm the development documentation is actually gone before reporting success.
     clearstatcache();
     if (@lstat($changelogFile) === FALSE && @lstat($readmeFile) === FALSE) $DevDocsDeleted = TRUE;

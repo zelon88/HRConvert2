@@ -1,13 +1,13 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
+HRProprietary Engine, Copyright on 9/4/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
 
 FILE INFORMATION ...
 v3.9.0.
@@ -31,9 +31,11 @@ The two code checkers use the php binary for the syntax check and skip it with a
   python3 Documentation/Build/hrconvert2-check.py
   bash Documentation/Build/hrconvert2-check.sh
   python3 Documentation/Build/hrconvert2-doccheck.py
+  php Documentation/Build/hrconvert2-messages-cli.php
 
-The first two check the code & the third checks the documentation.
-All three are run from the installation root, beside convertCore.php. Running one from
+The first two check the code, the third the documentation, & the fourth each message the code
+can log against the error catalogue. All four are run from the installation root, beside
+convertCore.php, & the fourth takes none of the options below. Running one from
 anywhere else exits two & says so, rather than reporting that a tree it cannot see is clean.
 
 EACH READS THE ENTRY POINT & THE MODEL FROM THE CONTRACT, FROM v4.2.4.
@@ -108,6 +110,7 @@ one, believe the Python until proven otherwise.
   owner       An owner is changed only through changeOwnerWithoutFollowing().
   static      No function destroys a static it keeps. PYTHON ONLY.
   stray       Nothing ships that is not part of the application.
+  logo        The Engine's own logo is the file the Engine was distributed with.
 
 This heading carried a count until v3.9.9 & the count was wrong by three. A number in a
 heading is a status sentence with nothing checking it, so there is no number.
@@ -252,12 +255,14 @@ DEPENDENCY_APPROVALS.txt. It has no twin.
               <PLACEHOLDER> for each part the code fills in, from v4.3.1.
   names       Every function & setting a document names still exists.
 
-The layout it holds files to is the one ABOUT_DOCUMENTATION.txt describes. The changelog
-is the project's record, so only its header is judged. Its entries are never changed, not
-even for whitespace, & a COMMIT header that is factually wrong is the one exception.
+The layout it holds files to is the one ABOUT_DOCUMENTATION.txt describes. A changelog, the
+application's CHANGELOG.txt or the Engine's ENGINE_CHANGELOG.txt, is the project's record, so
+only its header is judged. Its entries are never changed, not even for whitespace, & a COMMIT
+header that is factually wrong is the one exception. An application's ENGINE_RECONCILIATION_
+file is judged the same way, from v4.3.1, because the names in it are that application's.
 
 --fix repairs trailing whitespace & the blank lines between sections, which cannot change
-what a document says, & nothing else. It never writes to the changelog. Every other finding
+what a document says, & nothing else. It never writes to a changelog. Every other finding
 is a sentence somebody has to rewrite, so it is reported & left alone.
 
 It was written after the manual pass at v4.0.0 found what it looks for by reading every
@@ -267,6 +272,56 @@ found twenty messages the code raised that no entry documented, with a script of
 which became the messages check at v4.3.1.
 What each check cannot see is written above it, as it is in the other two. None of them can
 tell whether a sentence is still true.
+
+A NAME THE ENGINE'S DOCUMENTS CITE FROM THE REFERENCE APPLICATION PASSES BY A LIST, FROM v4.3.1.
+The documents explain the Engine by what the reference application does with it, & an application
+built on the Engine carries the documents & not that application. REFERENCE_NAMES &
+REFERENCE_LABELS list each function & each setting they cite, with the reason it is cited, & a
+name in either passes as one that exists does. A name in neither still fails.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Message Checker--
+
+hrconvert2-messages-cli.php HOLDS THE CODE & THE ERROR CATALOGUE TO EACH OTHER, FROM v4.3.1.
+Rule 17 has every warning & every error documented in ERROR_DESCRIPTIONS.txt. The code checkers
+hold an error to its number, & nothing held a warning to anything, or an error to its words, until
+this. It was HRProtect's tests/check_messages.php.
+
+  php Documentation/Build/hrconvert2-messages-cli.php
+
+It reads every warningEntry(), errorEntry(), quickDie() & refuseCommandForUser() in the entry
+point & in Resources, but ScanCore's own, with PHP's tokenizer, & runs none of it. Its header
+says how a text & a number are read.
+
+  UNDOCUMENTED  A call no line of the catalogue agrees with. Write the line.
+  STALE         A warning's line no call agrees with. Correct it, or take it out.
+  UNREADABLE    A call whose text or number cannot be read. Write it so that it can.
+  VAGUE         A line with fewer than ten characters of its own, which would agree with every
+                call. Write the words the message begins with.
+
+A CALL & A LINE AGREE WHERE ONE COULD BE THE OTHER.
+A placeholder in a line stands for something the call joins to its text, & something the call
+joins stands for a placeholder, or for up to two words the line spells out. Neither stands for a
+sentence, so a call that begins with a name does not agree with every line that ends as it does.
+
+A MESSAGE HELD IN A VARIABLE IS EVERY TEXT THE VARIABLE IS GIVEN THAT CAN REACH THE CALL.
+Each must have its line. A text another call handed back, through list(), cannot be read, so such
+a call begins with a sentence of its own that says what was being done, & the notice follows it.
+An error's number is read the same way, so a number chosen as the code runs is held to the lines
+of each number it may be, & 0 is where a number is set before it is chosen.
+
+A LINE IS HELD TO A CALL ONLY IN A TREE THAT HOLDS THE FILE ITS BLOCK NAMES, FROM v4.3.2.
+The kit's catalogue documents the Example's convertCore.php & the Starter's app.php beside the
+Engine, & an application that adopts it keeps every line, because an application adds to the
+Engine's documents & takes nothing away. A block whose sentence naming its file names only files at
+the root of an application, none of which the tree holds, is another application's, & is counted
+apart rather than called stale. A block naming a file beneath Resources is held as ever.
+The documentation checker holds the kit's documents to the Example's code, so it is run from the
+Example's assembly. The other three pass from the Starter's as well.
+
+It is a PHP build tool, gated three ways, as --About Where They Live-- describes. It gives up root
+where it is given it, because it only reads, so it needs no contained run.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -378,6 +433,38 @@ other directory in this project carries.
 installation root. It does not remove Documentation/Build, & it should not while the Resource
 Manager & three source builds read scripts from that folder. None of the checking tools is
 needed at runtime & none of them is loaded by anything.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About The Engine's Tests--
+
+THE CHECKERS DO NOT RUN THE ENGINE. THE TESTS DO, FROM v4.3.1.
+Documentation/Build/Tests holds the Engine's own suites, the library they share & two runners. Its README.txt says
+how to run each & what each holds. They came from HRProtect's tests, & the Engine keeps them so an application's
+developer runs them rather than writing their own. The kit is not an application, so its assemble-example.sh puts
+the Example together in a new folder, & the suites & the checkers are run from there.
+
+A SUITE RUNS AS ROOT, & ONLY INSIDE contained.sh.
+What the suites test is root's to do, from a folder only root may open to a file root writes without following a link,
+so a suite keeps root rather than drop it as a build tool that only reads does. It is kept from a machine that matters
+another way. contained.sh runs it in bubblewrap with everything the machine has mounted bound read only, & two
+filesystems in memory as the only places anything can be written. The library does not take the runner's word for
+that. It asks the kernel whether the filesystem root, & every other filesystem it can see, could be written, & stops
+where one could. So a suite run by mistake outside the runner stops before it runs anything, & says why.
+contained-install.sh adds an installation's folders in memory, for a test that installs & runs a whole application.
+
+A SUITE IS A PHP BUILD TOOL, & CARRIES THE SAME MARKS.
+Each file of PHP ends in -cli & refuses HTTP in its first statement, as --About Where They Live-- asks. Each finds
+its library by the folder it is run in, & never from __DIR__, so it is run from the root of the application it
+tests. A web request is refused by the first of those, & could not answer the library's question about the
+filesystem if it were not.
+
+A SUITE LIFTS THE REAL FUNCTION.
+The library reads a function out of the tree under test & defines it as the tree has it, rather than copying it, so
+a suite tests the code that ships. It refuses to lift one that removes, renames or runs anything unless the suite
+names that call as one it expects. Where a check needs a fault at one exact moment, a name swapped between two looks
+at it or an account that is not root, the library lifts the function into a namespace & the check stands in for what
+it calls. Not a byte of the lifted code changes for it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

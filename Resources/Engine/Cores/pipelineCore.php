@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.2.
+// / v4.3.2ur.
 // / The Pipeline Core, one of the Engine's cores.
 // / It verifies, describes & dispatches the pipelines under Resources/Pipelines, each at the exact version the application pins.
 // / Which pipelines are accepted is the application's decision, read from its contract, so this file names none of them.
@@ -37,7 +37,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The version of this component. Read by convertCore.php WITHOUT executing this file.
-$PipelineCoreVersion = 'v4.3.2';
+$PipelineCoreVersion = 'v4.3.2ur';
 // / -----------------------------------------------------------------------------------
 
 
@@ -76,10 +76,10 @@ function getAcceptedPipelines() {
   global $EngineAcceptedPipelines;
   $AcceptedPipelines = array();
   $AcceptedPipelines = filterAllowlist(isset($EngineAcceptedPipelines) ? $EngineAcceptedPipelines : array(), '/^[A-Za-z0-9][A-Za-z0-9_-]*$/', 'list of accepted pipelines');
-  // / An empty list is reported by what it is missing rather than by what failed after it.
-  // / Without this the first sign is error 34001, which says no pipeline verified & sends an
-  // / operator into the pipeline folders, where nothing is wrong.
-  if (empty($AcceptedPipelines)) warningEntry('This application accepts no pipeline. They are named in $EngineAcceptedPipelines, which '.contractPath('app-engine-config.php').' sets.');
+  // / An application that accepts no pipeline converts nothing, which is a shape an application may have & no failure, from v4.3.2.
+  // / Until v4.3.2 it was a warning followed by error 34001 on every command, & -v counted it as a failed check.
+  // / -v says NONE, so a list an application meant to fill & did not is still seen.
+  if (empty($AcceptedPipelines)) logEntry('This application accepts no pipeline, so it converts nothing. Each is named in $EngineAcceptedPipelines, which '.contractPath('app-engine-config.php').' sets.');
   return $AcceptedPipelines; }
 // / -----------------------------------------------------------------------------------
 
@@ -334,7 +334,9 @@ function enumeratePipelines() {
     $claimedEntryPoints[$pipelineRecord['EntryPoint']] = $folderName;
     $Pipelines[$folderName] = $pipelineRecord;
     $PipelineCount++; }
-  if ($PipelineCount > 0) $EnumerationComplete = TRUE;
+  // / Enumeration is complete where a pipeline verified, & where none was accepted, because an application that accepts none converts nothing.
+  // / A list whose every pipeline was refused is the failure 34001 names.
+  if ($PipelineCount > 0 or count($acceptedPipelines) === 0) $EnumerationComplete = TRUE;
   if (!$EnumerationComplete) errorEntry('The Pipeline Core could not verify a single conversion pipeline!', 34001, FALSE);
   else if ($Verbose) logEntry('Verified '.$PipelineCount.' conversion pipeline(s).');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
@@ -1122,8 +1124,8 @@ function runConversion($conversionFamily, $pathname, $newPathname, $extension, $
         if (!$outputIsUsable) {
           $ConversionSuccess = FALSE;
           $ConversionErrors = TRUE;
-          if (count($candidateFolders) > $attemptCount) warningEntry($outputNotice);
-          else errorEntry($outputNotice, 34010, FALSE); } }
+          if (count($candidateFolders) > $attemptCount) warningEntry('The '.$candidateFolder.' pipeline\'s result was refused, so the next pipeline that claims the conversion is tried. '.$outputNotice);
+          else errorEntry('The '.$candidateFolder.' pipeline\'s result was refused, & no other pipeline claims the conversion. '.$outputNotice, 34010, FALSE); } }
       if ($ConversionSuccess) break;
       // / A failure that has another candidate behind it is a warning, never an error.
       // / The candidate already logged why it failed under its own name.

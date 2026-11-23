@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.0.8.
+// / v4.0.8r.
 // / This file is the Worker Manager. It is a manager subcomponent of the Engine.
 // / The Worker Manager ends the worker it is told to end. The Resource Manager keeps the
 // / worker registry & finds a worker that has outlived its expected runtime.
@@ -32,7 +32,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.0.8';
+$ManagerVersion = 'v4.0.8r';
 // / -----------------------------------------------------------------------------------
 
 

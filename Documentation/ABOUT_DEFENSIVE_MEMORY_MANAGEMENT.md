@@ -7,18 +7,18 @@ This document serves to provide information, context, engineering intent, & just
 ## 🛠️ Core Infrastructure Specifications
 
 ### Legal & Distribution
-* **Intellectual Property:** HRConvert2 is Copyright © 2026 by Justin Grimes ([GitHub](https://www.github.com/zelon88)).
+* **Intellectual Property:** The HRProprietary Engine is Copyright © 2026 by Justin Grimes ([GitHub](https://www.github.com/zelon88)).
 * **Licensing Model:** Protected under the strict terms of the **GNU GPLv3 Open-Source License**. Refer to the [Official License Portal](https://www.gnu.org/licenses/gpl-3.0.html) for distribution requirements.
 
 ### System Intent
-This application provides a highly accessible, unauthenticated web interface enabling file conversions directly on a server infrastructure using any modern web browser.
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
 
 | Metric | Minimum Operational Requirements |
 | :--- | :--- |
 | **Hardware** | Raspberry Pi Model B+ (or any standard x86 / x64 architecture computing platform) |
 | **Environment** | Debian Linux + Apache Web Server v2.4 + PHP v8.0 or greater |
 
-> ⚙️ **Core Dependencies:** The authoritative list of dependencies is `Resources/Contract/depends.php` and nothing else. Run `php convertCore.php -v` to see what this installation has.
+> ⚙️ **Core Dependencies:** What the Engine itself needs is `Resources/Engine/depends.php`, and `--setup` installs it with the application's own half. Run `php <entry point> -v` to see what an installation has.
 
 ---
 

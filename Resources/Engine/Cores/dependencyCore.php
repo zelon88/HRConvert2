@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.2.
+// / v4.3.3ur.
 // / A detachable dependency management component. convertCore.php runs without it.
 // / This file defines functions only. setupCore.php & convertCore.php dispatch into them.
 // /
@@ -44,7 +44,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A c
 
 // / -----------------------------------------------------------------------------------
 // / The component version. convertCore.php reads this without executing the file.
-$DependencyCoreVersion = 'v4.3.2';
+$DependencyCoreVersion = 'v4.3.3ur';
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
@@ -92,8 +92,9 @@ function resolveProbeScratchFolder() {
   $applicationSlug = preg_replace('/[^A-Za-z0-9]/', '', engineApplicationName());
   $accountSlug = preg_replace('/[^A-Za-z0-9_-]/', '', (string)$CurrentUser);
   if ($accountSlug === '') $accountSlug = 'unknown';
-  // / Some systems do not have posix extensions, so id is asked instead.
-  $accountId = function_exists('posix_geteuid') ? (int)posix_geteuid() : (int)trim((string)shell_exec('id -u'));
+  // / The account is the kernel's identifyRunningAccount's, read without another program. One it cannot identify
+  // / is -1, which owns no folder, so no folder is private to it & no dependency command runs.
+  list ($accountId) = identifyRunningAccount();
   $candidateFolder = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$applicationSlug.'-probe-'.$accountSlug;
   if (!file_exists($candidateFolder) && !is_link($candidateFolder)) @mkdir($candidateFolder, 0700);
   if (folderIsPrivateToAccount($candidateFolder, $accountId)) {
@@ -1022,7 +1023,7 @@ function removeOwnBuildTree($treePath) {
   else {
     clearstatcache(TRUE, $treePath);
     $TreeIsRemoved = (!file_exists($treePath) && !is_link($treePath)); }
-  if (!$TreeIsRemoved && $removalNotice !== '') warningEntry($removalNotice);
+  if (!$TreeIsRemoved && $removalNotice !== '') warningEntry('The build at '.$treePath.' could not be removed whole. '.$removalNotice);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $parentIsTrusted, $resolvedParent, $trustNotice, $treeName, $removalNotice, $treePath);
   return $TreeIsRemoved; }

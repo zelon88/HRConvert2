@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.2.4.
+// / v4.2.4r.
 // / This file is the Environment Manager. It watches the host & repairs it only when told.
 // /
 // / It is not a manager in the sense the other four are.
@@ -33,7 +33,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! Engine-35000, A m
 
 // / -----------------------------------------------------------------------------------
 // / The version of this manager. Read by the Engine WITHOUT executing this file.
-$ManagerVersion = 'v4.2.4';
+$ManagerVersion = 'v4.2.4r';
 // / -----------------------------------------------------------------------------------
 
 

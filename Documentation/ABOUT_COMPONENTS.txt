@@ -1,13 +1,13 @@
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 COPYRIGHT INFORMATION ...
-HRConvert2, Copyright on 8/25/2026 by Justin Grimes, www.github.com/zelon88
+HRProprietary Engine, Copyright on 8/25/2026 by Justin Grimes, www.github.com/zelon88
 
 LICENSE INFORMATION ...
 This project is protected by the GNU GPLv3 Open-Source license.
 https://www.gnu.org/licenses/gpl-3.0.html
 
 APPLICATION INFORMATION ...
-This application is designed to provide a web-interface for converting file formats on a server for users of any web browser without authentication.
+The HRProprietary Engine provides a coherent application environment. It is bundled with an application rather than installed beside one.
 
 FILE INFORMATION ...
 v3.8.8.
@@ -42,6 +42,11 @@ lost is the capability that component provides, & the loss is reported rather th
   Resources/Engine/Cores/workflowCore.php     Workflows, their libraries, their workers & their status.
   Resources/Engine/Cores/authenticationCore.php  Accounts, signing in & the key a signed in page holds.
   Resources/Engine/Cores/emailCore.php        The emails the Authentication Core sends.
+  Resources/Engine/Cores/eventCore.php        The record of what the application did & found.
+
+The Environment Core, Resources/Engine/Cores/environmentCore.php, is the one Core that is load bearing.
+It is the environment the Engine gives every application, the Engine pins it itself, & from v4.3.1 the
+Engine does not start without it. The kernel then answers -v & -h, & says the Engine is unavailable.
 
 Each Core lives in Resources/Engine/Cores, because a Core is part of the Engine. Configuration
 files do not. config.php & versionInfo.php stay in Resources, & depends.php lives in
@@ -80,6 +85,8 @@ the core does not have on its own.
   Workflow Core     Workflows, from their format to running one & reporting how it went.
   Authentication Core  Accounts, signing in & the files a signed in user keeps.
   Email Core        Sending an email through the host's own mail system.
+  Environment Core  The sandbox, the Apache configuration, the data location's protection & -fp's repair.
+  Event Core        The record of what the application did & found, from v4.3.1.
   Core Manager      Resource awareness & the manager processes.
 
 FOUR PROPERTIES SEPARATE A CORE FROM ANYTHING ELSE IN THIS APPLICATION.
@@ -176,14 +183,17 @@ one function is what surfaced that bug.
 NOT AT BOOT. ON DEMAND, BY WHATEVER NEEDS IT.
 
 A web request never installs, configures or manages dependencies, so it never pays to read a
-component it will not call. Only the Engine & Pipeline Core are resolved on every request.
+component it will not call. Only the Engine, its Environment Core & the Pipeline Core are resolved on every request.
 
   engine.php             Resolved by the kernel's loadEngine(), before verifyGlobals().
+  environmentCore.php    Resolved by the Engine's startEngine() before anything else, from v4.3.1. Until then
+                         engine.php required it as it was loaded, with no version.
   pipelineCore.php       Resolved by the Engine's startEngine(), once the session is established.
   workflowCore.php       Resolved after Pipeline Core, when workflows are on or --workflow is asked for.
   authenticationCore.php Resolved with the Engine's answer to a request, in startEngine(), when
                          accounts are on, & by --account whether or not they are.
   emailCore.php          Resolved with the Authentication Core.
+  eventCore.php          Resolved by the first event a command keeps or reads, where --Record Events-- is TRUE.
   setupCore.php          Loaded by --config, & by -fp for resource limits & the service unit.
   dependencyCore.php     Loaded by --setup.
   Managers/<role>.php    Loaded by loadEngineManager, only in a process running as that role.
@@ -207,7 +217,7 @@ did by loading Setup Core before every --setup option.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 --About Version Pins--
 
-FOURTEEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
+FIFTEEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
 
   $RequiredConfigVersion           config.php                    MINIMUM. A newer config carrying
                                                                  every required setting is fine.
@@ -219,6 +229,7 @@ FOURTEEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
   $RequiredWorkflowCoreVersion     workflowCore.php              EXACT.
   $RequiredAuthenticationCoreVersion authenticationCore.php      EXACT.
   $RequiredEmailCoreVersion        emailCore.php                 EXACT.
+  $RequiredEventCoreVersion        eventCore.php                 EXACT.
   $RequiredDependsVersion          Contract/depends.php          EXACT. The application's half.
   $RequiredSecretVersion           the install secret file       EXACT.
   $RequiredGuiVersion              every UI folder               EXACT.
@@ -227,12 +238,14 @@ FOURTEEN PINS. EVERY ONE OF THEM IS AN EXACT MATCH EXCEPT WHERE NOTED.
 
 The Engine pins its own manager roles in getAcceptedManagers, so a manager is judged by the
 Engine that runs it rather than by the core. It pins its half of the dependency manifest,
-Resources/Engine/depends.php, in getAcceptedEngineManifest from v4.2.4, for the same reason.
+Resources/Engine/depends.php, in getAcceptedEngineManifest from v4.2.4, for the same reason, & its
+Environment Core in getAcceptedEnvironmentCore from v4.3.1.
 
 Pipeline Core checks a pin for every pipeline & every shared module the application accepts.
 The pins are the application's & are set in Resources/Contract/app-engine-config.php, as
 $EngineAcceptedPipelines & $EngineAcceptedSharedModules. ABOUT_PIPELINE_COMPONENTS.txt says how
-they are judged.
+they are judged. An application that accepts none converts nothing, & from v4.3.2 that is no
+failure. -v says NONE where the pipelines are listed.
 
 THE BUILD WRITES EVERY PIN BUT THREE. THOSE ARE EDITED BY HAND.
 php convertCore.php --build --pins reads each pin's version from the component it names &
@@ -368,4 +381,24 @@ one line, which is the entire point of collapsing the three loaders into one.
 Then add it to the components showVersionReport() lists in Resources/Engine/engine.php, so -v
 reports it beside the others. A component nobody can see the version of is a component nobody
 can diagnose.
+
+AN APPLICATION MAY HAVE A CORE OF ITS OWN, & NOTHING IN THE ENGINE CHANGES FOR IT.
+A Core that owns a domain only one application has is that application's. It follows the four
+rules every component follows & is added by the same five steps, with three differences.
+
+  1  The file is Resources/Cores/yourCore.php, beside the application's contract & its
+     pipelines. Resources/Engine is the Engine's, & is replaced when a newer Engine arrives.
+  2  The pin is in the application's own verifyInstallation(), & the contract names the file
+     under the pin's name in $EnginePinSources, so the Engine's list of pins finds it.
+     verifyCoreComponent() takes a path relative to Resources, so it loads a Core from there
+     as it loads one of the Engine's.
+  3  The application reports it. showVersionReport() lists the Engine's components, & the
+     function the contract names in $EngineReportProvider adds a row for the application's.
+
+Its guard names the application & carries a number from the application's own block of
+ERROR_DESCRIPTIONS.txt, because Engine-35000 is the guard of a component of the Engine's.
+An application never calls a function of such a Core without asking whether it is loaded, so
+the application runs whatever is done with the file.
+
+HRProtect's Event Core was one until v4.3.1, when it became the Engine's, at Resources/Engine/Cores/eventCore.php.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

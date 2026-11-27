@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.4.
+// / v4.3.5.
 // / The Archive pipeline's converter. pipelineCore.php loads it only to dispatch an Archive conversion.
 // / Error block 13000, 13006 through 13011, 13013, 13014, 13105 through 13108 belongs to this pipeline.
 // / The Archiver pipeline raises 13012, & shares 13006, 13008, 13009 & 13010 with this one.
@@ -420,7 +420,10 @@ function convertArchives($pathname, $newPathname, $extension) {
               $ConversionErrors = TRUE;
               errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
             else {
-              $returnData = shell_exec($hybridCommand);
+              // / isohybrid runs through runPipelineCommand(), from v4.3.5, because an image it was changing when the time limit stopped it or a
+              // / signal ended it is neither the image mkisofs wrote nor the one asked for, so discardInterruptedOutput() removes it.
+              list ($returnData, $exitStatus) = runPipelineCommand($hybridCommand);
+              discardInterruptedOutput($newPathname, $exitStatus);
               // / Log the output of the operation to the logfile, if it is not blank.
               if ($Verbose && trim($returnData) !== '') logEntry('Isohybrid returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData))))); } } } } } }
   // / The output file is the only verdict on whether the conversion produced anything.

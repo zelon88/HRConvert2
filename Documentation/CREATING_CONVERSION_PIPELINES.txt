@@ -203,7 +203,8 @@ Read these before writing code. They are preconditions, not steps.
 3. Reserve a block of error numbers before writing any code.
   3a. Check `ERROR_DESCRIPTIONS.txt` for the highest block. Take the next.
   3b. Reserve at least six numbers. You will want the room later.
-  3c. A pipeline needs a timeout, a version failure & a sandbox refusal at minimum.
+  3c. A pipeline needs a version failure & a sandbox refusal at minimum, & a time out where its converter can loop. The time limit
+      itself is the Engine's, from v4.3.5, so a pipeline only says that its converter ran out of time, on exit status 124.
   3d. Write the `ERROR_DESCRIPTIONS.txt` entries as you write the code.
   3e. An undocumented error number is worse than none. It looks documented.
 
@@ -328,9 +329,13 @@ Read these before writing code. They are preconditions, not steps.
       stopped the last one, as a memory ceiling or a supervisor stops a converter, up to
       `$RetryCount` attempts, & stops as soon as the output exists. A converter that ran to its
       end & left nothing would leave nothing again, & one that crashed would crash again, from
-      v4.3.2. Take away an output a stopped attempt left, because it may be part of one. Sleep before
-      every attempt but the first. Raise your error once, after the loop, when the output
-      still does not exist, & name the number of attempts made.
+      v4.3.2. From v4.3.5 `pipelineRetryIsDue()` takes away what an attempt the time limit or a signal
+      ended left, because it may be part of one, so the loop needs nothing more. A command run any
+      other way hands its exit status & the path it writes to `discardInterruptedOutput()` before
+      the file is read. Never add a timeout to the command. `limitCommand()` gives every command the
+      time limit for its type, which `--Maximum Per Conversion Runtime--` sets, & it exits 124 when it
+      stops one. Sleep before every attempt but the first. Raise your error once, after the loop,
+      when the output still does not exist, & name the number of attempts made.
   8l. Log dependency output under `$Verbose`, but only when it is not blank.
   8m. Clean up every local in the cleanup line. Never null anything you return.
   8n. GIVE A TOOL A FOLDER OF ITS OWN WHERE IT WRITES MORE THAN IT IS ASKED FOR. A converter

@@ -747,9 +747,10 @@ They fall into three groups & each group has a different answer.
   worse than one that was never claimed.
 
   THE LIMIT GROUP, reached from limitCommand.
-  resolveConversionLimit & verifySystemdRun.
+  resolveConversionLimit, resolveConversionRuntime & verifySystemdRun.
   Small & mechanical. resolveConversionLimit reads the application's limit table, so the
   table becomes something the application supplies, the same way sandbox profiles are.
+  resolveConversionRuntime, from v4.3.5, reads the time limit table the same way.
 
   THE REMAINDER.
   verifyDataExposure asks whether a web server is serving a directory it should not be,

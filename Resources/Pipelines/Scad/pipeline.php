@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.3.5.
 // / The Scad pipeline's converter. pipelineCore.php loads it only to dispatch a Scad conversion.
 // / Error block 27000 through 27009 belongs to this pipeline.
 // / It holds what OpenSCAD source means.
@@ -379,7 +379,7 @@ function sanitizeAllSCADUploads() {
 // / The count of such warnings is logged, never the text, because a parse warning quotes the source.
 function convertSCAD($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $DirSep, $SCADConversionTimeout, $ScadTemp, $EnableMemoryProtection;
+  global $Verbose, $DirSep, $ScadTemp, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
   // / The last two keep their defaults, & $WorkerPID stays 0 unless a detached process is supervised.
   $OutputFilename = basename($newPathname);
@@ -389,7 +389,7 @@ function convertSCAD($pathname, $newPathname, $extension) {
   $scadBinary = $bwrapBinary = FALSE;
   $sandboxLauncher = '';
   $filesSanitized = $referencesFound = $referencesResolved = $referencesRemoved = 0;
-  $openscadExitCode = $missingIncludes = 0;
+  $openscadExitCode = $missingIncludes = $timeoutSeconds = 0;
   $sanitizedPath = $openscadCommand = $sandboxOutputName = $sandboxOutputPath = '';
   $openscadOutput = array();
   // / Confirm this server can isolate a render before anything else happens.
@@ -429,10 +429,9 @@ function convertSCAD($pathname, $newPathname, $extension) {
     // / --new-session prevents the render from injecting into the controlling terminal.
     // / /work is the only writable path, & the only path from the data location that exists.
     // / --chdir /work makes a resolved include work, because rectifySCAD() rewrites one to a bare filename.
-    // / timeout enforces a wall clock limit, because OpenSCAD will not stop on its own.
-    // / The render is wrapped in its resource ceiling below.
-    $openscadCommand = 'timeout '.(int)$SCADConversionTimeout
-      .' '.$sandboxLauncher
+    // / The render is wrapped in its time limit & its resource ceiling below. The time limit is a wall clock limit, because OpenSCAD will
+    // / not stop on its own, & is the Engine's for Scad from v4.3.5, which --Maximum Per Conversion Runtime-- sets.
+    $openscadCommand = $sandboxLauncher
       .' --unshare-all'
       .' --die-with-parent'
       .' --new-session'
@@ -469,16 +468,17 @@ function convertSCAD($pathname, $newPathname, $extension) {
       .' '.escapeshellarg($scadBinary).' -o '.escapeshellarg('/work/'.$sandboxOutputName)
       .' '.escapeshellarg('/work/'.basename($sanitizedPath))
       .' 2>&1';
-    // / Wrap the render in the ceiling configured for its type, as sandboxCommand() wraps every other pipeline.
+    // / Wrap the render in the time limit & the ceiling configured for its type, as sandboxCommand() wraps every other pipeline.
     // / Where a scope can be created the ceiling is enforced against a cgroup.
     // / Where none can, limitCommand() falls back to a niceness derived from the processor share.
     // / The stock 'Scad' => '75,1024' yields a niceness below 19, & a smaller share gives a larger one.
     $openscadCommand = limitCommand($openscadCommand, 'openscad');
     exec($openscadCommand, $openscadOutput, $openscadExitCode);
-    // / An exit code of 124 is the timeout command reporting that it killed the render.
+    // / An exit code of 124 is the Engine's time limit reporting that it stopped the render.
     if ($openscadExitCode === 124) {
       $ConversionErrors = TRUE;
-      errorEntry('The OpenSCAD converter timed out after '.(int)$SCADConversionTimeout.' seconds!', 27002, FALSE); }
+      list (, $timeoutSeconds) = resolveConversionRuntime('openscad');
+      errorEntry('The OpenSCAD converter timed out after '.$timeoutSeconds.' seconds!', 27002, FALSE); }
     else if ($openscadExitCode !== 0) {
       $ConversionErrors = TRUE;
       errorEntry('The OpenSCAD converter failed with exit code '.$openscadExitCode.'!', 27003, FALSE); }
@@ -488,7 +488,9 @@ function convertSCAD($pathname, $newPathname, $extension) {
     if ($missingIncludes > 0) warningEntry('The OpenSCAD render could not open '.$missingIncludes.' include file(s). The model may be incomplete.');
     // / Move the rendered model out of the sandbox directory to where the core expects it.
     // / This happens BEFORE the cleanup, or the cleanup would delete the model.
-    if (file_exists($sandboxOutputPath)) {
+    // / A render the time limit stopped or a signal ended is not moved, from v4.3.5, because what it left is not the whole model. The
+    // / cleanup below removes it with the sources.
+    if (!pipelineCommandWasInterrupted($openscadExitCode) && file_exists($sandboxOutputPath)) {
       if (!@rename($sandboxOutputPath, $newPathname)) {
         $ConversionErrors = TRUE;
         errorEntry('Could not move the rendered OpenSCAD model out of the sandbox!', 27008, FALSE); } }
@@ -505,7 +507,7 @@ function convertSCAD($pathname, $newPathname, $extension) {
   if (file_exists($newPathname)) $ConversionSuccess = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   // / $openscadOutput may hold quoted source lines & is cleared like everything else.
-  purgeSensitiveMemory($EnableMemoryProtection, $sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $missingIncludes, $readyToRender, $scadBinary, $bwrapBinary, $sandboxLauncher, $allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved, $sandboxOutputName, $sandboxOutputPath, $pathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $sanitizedPath, $openscadCommand, $openscadOutput, $openscadExitCode, $missingIncludes, $timeoutSeconds, $readyToRender, $scadBinary, $bwrapBinary, $sandboxLauncher, $allSanitized, $filesSanitized, $referencesFound, $referencesResolved, $referencesRemoved, $sandboxOutputName, $sandboxOutputPath, $pathname);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

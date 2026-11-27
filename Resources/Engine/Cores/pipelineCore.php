@@ -836,10 +836,15 @@ function pipelineAttemptIsDue($outputPath, $attemptsMade) {
 // / each attempt than the last, so a file a converter could not read was refused after five attempts & six seconds of waiting.
 // / One a memory ceiling or a supervisor stopped was stopped from outside, which says nothing of the file, so that one is asked
 // / again. One that crashed is not, from v4.3.2, because it would crash again on the same file. pipelineCommandWasStopped() says which.
+// / One the time limit stopped is not either, from v4.3.5, because it would run out of time again. Whatever an attempt that ended before
+// / it finished left is removed before anything is decided, as discardInterruptedOutput() explains.
 function pipelineRetryIsDue($outputPath, $attemptsMade, $lastExitStatus) {
   // / Set variables.
   global $EnableMemoryProtection;
   $RetryIsDue = FALSE;
+  // / What an attempt that ended before it finished left is removed first, from v4.3.5, so it is never taken for a result, & a
+  // / converter a ceiling stopped part way through its file is asked again rather than having its part kept.
+  if ((int)$attemptsMade > 0) discardInterruptedOutput($outputPath, $lastExitStatus);
   $RetryIsDue = (((int)$attemptsMade === 0 or pipelineCommandWasStopped($lastExitStatus)) && pipelineAttemptIsDue($outputPath, $attemptsMade));
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $outputPath, $attemptsMade, $lastExitStatus);
@@ -868,6 +873,52 @@ function pipelineCommandWasStopped($exitStatus) {
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $exitStatus);
   return $CommandWasStopped; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to say whether a command ended before it finished, from v4.3.5.
+// / Accepts the command's exit status. Returns TRUE where the time limit stopped it or a signal ended it.
+// / timeout exits 124 where the time limit stopped a command, & limitCommand() gives every command one. A command a signal ended exits
+// / 128 plus the signal's number, 129 through 159, whether something outside stopped it or it crashed.
+// / What such a command left was never finished, so it is never a result. A command that ran to its end may exit with more, as FFMPEG's
+// / 183, 234, 254 & 255 are, & none of those is counted, as pipelineCommandWasStopped() explains.
+// / A converter that exits 124 itself cannot be told from one the time limit stopped. None this application runs is known to.
+function pipelineCommandWasInterrupted($exitStatus) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $CommandWasInterrupted = FALSE;
+  $CommandWasInterrupted = ((int)$exitStatus === 124 or ((int)$exitStatus >= 128 + 1 && (int)$exitStatus <= 128 + 31));
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $exitStatus);
+  return $CommandWasInterrupted; }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
+// / A function to remove what a command left where it ended before it finished, from v4.3.5.
+// / Accepts the path the command writes & its exit status, in that order. Returns TRUE where a file was removed.
+// / A converter the time limit stopped, a ceiling killed or that crashed may have written part of its file, & a part is not the
+// / result. It must never be offered as one, & it must never stop pipelineAttemptIsDue() from asking again where it should.
+// / A file is removed. A folder or a link is left for the sweep, as pipelineOutputIsUsable() leaves one, & is never a result.
+// / A command the time limit stopped is warned of whatever it left, because only the operator can give a type more time.
+// / One a signal ended is warned of where it left something, because a pipeline that asks again says nothing of what it found.
+// / pipelineRetryIsDue() asks this after every attempt, so a pipeline that retries through it needs nothing more. A pipeline that
+// / runs a command any other way asks this itself, with the exit status, before it takes what the command left.
+function discardInterruptedOutput($outputPath, $exitStatus) {
+  // / Set variables.
+  global $EnableMemoryProtection;
+  $OutputWasDiscarded = FALSE;
+  $outputStatus = array();
+  $outputType = 0;
+  if (pipelineCommandWasInterrupted($exitStatus)) {
+    clearstatcache(TRUE, (string)$outputPath);
+    $outputStatus = @lstat((string)$outputPath);
+    if (is_array($outputStatus)) $outputType = ((int)$outputStatus['mode'] & 0170000);
+    if ($outputType === 0100000) $OutputWasDiscarded = @unlink((string)$outputPath);
+    if ((int)$exitStatus === 124) warningEntry('A converter ran out of time & was stopped'.($OutputWasDiscarded ? ', & what it left at '.basename((string)$outputPath).' was removed' : '').'. --Maximum Per Conversion Runtime-- sets how long each type of conversion may run.');
+    else if ($OutputWasDiscarded) warningEntry('A converter ended on signal '.((int)$exitStatus - 128).' before it finished, so what it left at '.basename((string)$outputPath).' was removed.'); }
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $outputStatus, $outputType, $outputPath, $exitStatus);
+  return $OutputWasDiscarded; }
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------

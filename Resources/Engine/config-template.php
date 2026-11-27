@@ -8,7 +8,7 @@
 // / https://www.gnu.org/licenses/gpl-3.0.html
 // /
 // / File Information ...
-// / v4.3.1r.
+// / v4.3.1ur.
 // / THIS IS THE ENGINE'S HALF OF THE CONFIGURATION TEMPLATE, & everything below the marker is a
 // / real config.php fragment at the Engine's default values. Not a description of one.
 // / Every setting the kernel or the Engine reads is here, with its documentation, & nowhere else.
@@ -762,6 +762,9 @@ $RetryCount = 5;
 // /   allowing the web server user to manage transient units, then restart the web server.
 // /   A conversion that reaches its memory ceiling is killed by the kernel & is reported as
 // /   a failed conversion rather than as a memory error. Keep the ceilings generous.
+// /   Where no scope can be made, a conversion is given a lower scheduling priority instead, &
+// /   each of its processes a data limit of its memory figure, through prlimit, which needs no
+// /   permission. A process that reaches it is refused the memory & the conversion fails.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $EnablePerConversionLimits = TRUE;
@@ -813,6 +816,45 @@ $DefaultPerConversionResources = '50,512';
 // /   Same 'processor,memory' format.
 // /   Default is '10,128'.
 $MinimumPerConversionResources = '10,128';
+// /  --Maximum Per Conversion Runtime--
+// /   The most seconds one conversion command of each type may run before it is stopped.
+// /   A converter can loop for ever over a crafted file, so this bounds what one upload can cost.
+// /   It applies whether or not --Enable Per Conversion Limits-- is TRUE, & it is never scaled by load.
+// /   It bounds each command, so a conversion of several steps may take several times as long.
+// /   A command it stops is not attempted again, & whatever it had written is removed.
+// /   Set a type to 0 to give it no time limit.
+// /   With resource awareness on, the listener also reaps a worker that outlives --Default Expected
+// /   Runtime-- plus --Worker Stale Grace Period--. A command that worker started still ends here.
+// /   A type that is not listed falls back to --Default Per Conversion Runtime--.
+// /   An entry that cannot be read is reported & falls back to the default.
+// /   Valid keys are Document, Image, Video, Archive, Model, Scad, Drawing, SVG, OCR, Ebook, Scan,
+// /   LaTeX, Markup, Graph, Trace, Data & Email, the types the sandbox profiles name.
+// /   Video covers Audio, Subtitle & Stream, which FFMPEG converts under the same profile.
+// /   Valid options are whole numbers of seconds, 0 & larger.
+$MaximumPerConversionRuntime = array(
+  'Document' => 600,
+  'Image'    => 600,
+  'Video'    => 7200,
+  'Archive'  => 3600,
+  'Model'    => 300,
+  'Scad'     => 180,
+  'Drawing'  => 300,
+  'SVG'      => 300,
+  'OCR'      => 1800,
+  'Ebook'    => 900,
+  'Scan'     => 3600,
+  'LaTeX'    => 120,
+  'Markup'   => 120,
+  'Graph'    => 120,
+  'Trace'    => 300,
+  'Data'     => 300,
+  'Email'    => 120);
+// /  --Default Per Conversion Runtime--
+// /   The time limit used for any conversion type not named above, in seconds.
+// /   Set to 0 to give such a type no time limit.
+// /   Valid options are whole numbers of seconds, 0 & larger.
+// /   Default is 600.
+$DefaultPerConversionRuntime = 600;
 // /  --Enable Resource Awareness--
 // /   Allows the application to check a resource budget before starting a conversion.
 // /   Requires the coreManager.php component & a running listener.

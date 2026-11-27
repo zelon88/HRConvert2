@@ -26,6 +26,21 @@ The authoritative list of dependencies is Resources/Engine/depends.php & Resourc
 
 
 --------------------
+COMMIT 11/26/2026
+v4.3.5 - Limit every conversion's time & memory at the Engine.
+
+-v4.3.5.
+-Every conversion command has a time limit for its type, from new Engine settings --Maximum Per Conversion Runtime-- & --Default Per Conversion Runtime--. 0 is none. It applies whether or not --Enable Per Conversion Limits-- is TRUE.
+-A command the time limit stops is not attempted again.
+-Where no resource scope can be made, each process of a conversion has a data limit of its type's memory figure.
+-Nothing an interrupted converter left is kept. One a ceiling killed part way through is asked again.
+-The OCR, Metadata, Archiver, PDF & Archive pipelines run every tool through runPipelineCommand().
+-Identify's time limit stops the whole sandbox.
+-Graph, LaTeX, Markup, Email, SVG, Data & Scad drop their own timeouts. --SCAD Conversion Timeout--, --LaTeX Conversion Timeout--, --Markup Conversion Timeout-- & --Graph Conversion Timeout-- are retired. Run --config --repair once after unpacking the drop in.
+-engine.php & the Pipeline Core stay v4.3.3ur & v4.3.2ur. The Engine's config template is v4.3.1ur. ENGINE_RECONCILIATION_HRCONVERT2.txt says what changed.
+-ERROR_DESCRIPTIONS, ABOUT_RESOURCE_RATE_LIMITING, ABOUT_ENGINE_CONTRACT, ABOUT_PIPELINE_COMPONENTS, CREATING_CONVERSION_PIPELINES, CODING_CONVENTIONS, INSTALLATION_INSTRUCTIONS & DEVELOPMENT_NOTES describe it.
+
+--------------------
 COMMIT 11/22/2026
 v4.3.4 - Take the HRProprietary Engine v4.3.3 starter kit.
 

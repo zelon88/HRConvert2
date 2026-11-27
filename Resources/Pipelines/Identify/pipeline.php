@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.0.
+// / v4.3.5.
 // / The Identify pipeline. pipelineCore.php loads it only to dispatch an Identify operation.
 // / Error block 37000 through 37004 belongs to this pipeline.
 // / Identify is an operation pipeline. It takes a selection of files & changes none of them.
@@ -59,7 +59,10 @@ function identifyRunCommand($commandToRun, $outputLimit, $secondsLimit) {
   $deadline = 0.0;
   $pipesReady = 0;
   // / Standard error is joined to standard output by the descriptor rather than by a redirection in the command, so it covers the whole command whatever its shape.
-  $commandProcess = @proc_open($commandToRun, array(0 => array('file', '/dev/null', 'r'), 1 => array('pipe', 'w'), 2 => array('redirect', 1)), $commandPipes);
+  // / The shell is told to become the command, from v4.3.5, so the process proc_open() reports is the command's first, which is timeout where the
+  // / Engine's time limit applies. The shell this host has stays between proc_open() & a command otherwise, & killing that shell would leave
+  // / timeout running, & the sandbox under it, until the time limit. Every command sandboxCommand() returns is one simple command.
+  $commandProcess = @proc_open('exec '.$commandToRun, array(0 => array('file', '/dev/null', 'r'), 1 => array('pipe', 'w'), 2 => array('redirect', 1)), $commandPipes);
   if (is_resource($commandProcess) && isset($commandPipes[1])) {
     $CommandRan = TRUE;
     stream_set_blocking($commandPipes[1], FALSE);
@@ -71,7 +74,7 @@ function identifyRunCommand($commandToRun, $outputLimit, $secondsLimit) {
         redeclare($outputChunk, (string)fread($commandPipes[1], 65536));
         redeclare($CommandOutput, $CommandOutput.$outputChunk); }
       if (strlen($CommandOutput) > (int)$outputLimit or microtime(TRUE) > $deadline) $OutputWasCut = TRUE; }
-    // / The shell is killed, & bubblewrap dies with its parent & takes the tool with it.
+    // / The command's first process is killed, & bubblewrap dies with its parent & takes the tool with it.
     if ($OutputWasCut) proc_terminate($commandProcess, 9);
     fclose($commandPipes[1]);
     $ExitStatus = proc_close($commandProcess); }

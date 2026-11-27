@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.5.
 // / The Markup pipeline's converter. pipelineCore.php loads it only to dispatch a Markup conversion.
 // / Error block 48000 through 48005 belongs to this pipeline.
 // / Pandoc & XeLaTeX come from verifiedToolPath().
@@ -82,14 +82,15 @@ function markupFirstError($outputLines) {
 // / -----------------------------------------------------------------------------------
 // / A function to convert a document between markup & document formats with Pandoc.
 // / Pandoc runs with --sandbox, so it reads the document it is handed & nothing else, not an image, an include or a page off the network.
-// / Its heap is held to 512 MiB, & --Markup Conversion Timeout-- stops it, because the Pandoc manual says a reader can take pathologically long
-// / over some documents, & recommends both for a document a stranger wrote.
+// / Its heap is held to 512 MiB, & the Engine's time limit for Markup stops it, because the Pandoc manual says a reader can take pathologically
+// / long over some documents, & recommends both for a document a stranger wrote. The time limit is --Maximum Per Conversion Runtime--'s from
+// / v4.3.5, & --Markup Conversion Timeout-- is retired.
 // / A PDF is typeset by XeLaTeX, which Pandoc runs in a folder of its own on the tmpfs. LaTeX in a document reaches it, so TeX is set paranoid
 // / & refused a shell, exactly as the LaTeX pipeline sets it, with the command rather than the sandbox, so it holds where no sandbox could be built too.
 // / The function is longer than most, so it returns the six value contract, whose first value is its sanity check.
 function convertMarkup($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $SleepTimer, $MarkupConversionTimeout, $EnableMemoryProtection;
+  global $Verbose, $Lol, $SleepTimer, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
@@ -98,12 +99,8 @@ function convertMarkup($pathname, $newPathname, $extension) {
   $pandocReader = $pandocWriter = $writerOptions = $pandocCommand = $firstError = '';
   $commandOutput = $pandocEnvironment = array();
   $exitStatus = -1;
-  $stopper = 0;
+  $stopper = $timeoutSeconds = 0;
   $sleepTime = $SleepTimer;
-  // / A local fallback configuration cannot overwrite, for a timeout that is missing or is not a whole number of seconds greater than 0.
-  $defaultTimeout = 120;
-  $timeoutSeconds = (is_numeric($MarkupConversionTimeout) && (int)$MarkupConversionTimeout > 0) ? (int)$MarkupConversionTimeout : $defaultTimeout;
-  if ($timeoutSeconds === $defaultTimeout && (string)$MarkupConversionTimeout !== (string)$defaultTimeout) warningEntry('--Markup Conversion Timeout-- is not a whole number of seconds greater than 0, so '.$defaultTimeout.' is used.');
   list ($pandocReader, $pandocWriter) = markupFormatNames(pathinfo((string)$pathname, PATHINFO_EXTENSION), $extension);
   // / Locate & verify Pandoc. A path is returned only when both succeeded.
   $pandocBinary = verifiedToolPath('Pandoc');
@@ -124,7 +121,7 @@ function convertMarkup($pathname, $newPathname, $extension) {
     // / Build & sandbox the command once. It does not change between retries.
     // / --sandbox keeps Pandoc to the one document, -s writes a whole document rather than a fragment, & +RTS -M512M -RTS holds its heap.
     $pandocEnvironment = array('openin_any' => 'p', 'openout_any' => 'p', 'shell_escape' => 'f');
-    $pandocCommand = 'timeout '.$timeoutSeconds.' '.escapeshellarg($pandocBinary).' +RTS -M512M -RTS --sandbox -s -f '.escapeshellarg($pandocReader).' -t '.escapeshellarg($pandocWriter).$writerOptions.' -o '.escapeshellarg($newPathname).' '.escapeshellarg($pathname);
+    $pandocCommand = escapeshellarg($pandocBinary).' +RTS -M512M -RTS --sandbox -s -f '.escapeshellarg($pandocReader).' -t '.escapeshellarg($pandocWriter).$writerOptions.' -o '.escapeshellarg($newPathname).' '.escapeshellarg($pathname);
     list ($commandMayRun, $pandocCommand) = sandboxCommand($pandocCommand, $pathname, $newPathname, FALSE, 'pandoc', '', $pandocEnvironment);
     if (!$commandMayRun) {
       $ConversionErrors = TRUE;
@@ -140,7 +137,7 @@ function convertMarkup($pathname, $newPathname, $extension) {
         redeclare($commandOutput, array());
         exec($pandocCommand.' 2>&1', $commandOutput, $exitStatus);
         // / Pandoc ends with a status other than 0 where it stopped, & a file it had begun is not the document, so it is removed.
-        // / An exit status of 124 is the timeout command reporting that it stopped Pandoc.
+        // / An exit status of 124 is the Engine's time limit reporting that it stopped Pandoc.
         if ($exitStatus !== 0) {
           @unlink($newPathname);
           if ($exitStatus === 124) $timedOut = TRUE; }
@@ -150,7 +147,8 @@ function convertMarkup($pathname, $newPathname, $extension) {
       if ($Verbose && trim(implode($Lol, $commandOutput)) !== '') logEntry('Pandoc returned the following: '.$Lol.'  '.implode($Lol.'  ', array_slice($commandOutput, 0, 40)));
       if ($timedOut) {
         $ConversionErrors = TRUE;
-        errorEntry('The markup converter was stopped after '.$timeoutSeconds.' seconds, as --Markup Conversion Timeout-- allows!', 48005, FALSE); }
+        list (, $timeoutSeconds) = resolveConversionRuntime('pandoc');
+        errorEntry('The markup converter was stopped after '.$timeoutSeconds.' seconds, as --Maximum Per Conversion Runtime-- allows!', 48005, FALSE); }
       // / Every attempt was made & none left a file. Why Pandoc stopped is said with the failure.
       else if (!file_exists($newPathname)) {
         $ConversionErrors = TRUE;
@@ -159,7 +157,7 @@ function convertMarkup($pathname, $newPathname, $extension) {
       // / The output file is the only verdict on whether the conversion produced anything.
       if (!$timedOut && file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $commandMayRun, $timedOut, $pandocBinary, $latexBinary, $pandocReader, $pandocWriter, $writerOptions, $pandocCommand, $firstError, $commandOutput, $pandocEnvironment, $exitStatus, $stopper, $sleepTime, $defaultTimeout, $timeoutSeconds, $pathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $commandMayRun, $timedOut, $pandocBinary, $latexBinary, $pandocReader, $pandocWriter, $writerOptions, $pandocCommand, $firstError, $commandOutput, $pandocEnvironment, $exitStatus, $stopper, $sleepTime, $timeoutSeconds, $pathname);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

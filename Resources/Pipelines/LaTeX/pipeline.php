@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.5.
 // / The LaTeX pipeline's converter. pipelineCore.php loads it only to dispatch a LaTeX conversion.
 // / Error block 45000 through 45005 belongs to this pipeline.
 // / XeLaTeX comes from verifiedToolPath().
@@ -77,12 +77,13 @@ function latexNeedsRerun($workFolder) {
 // / TeX is a programming language, so a document is a program. It runs in the sandbox, & is set paranoid, with openin_any & openout_any, so it
 // / refuses a file named by an absolute path, a hidden file & a path above its folder, for reading & for writing, & with shell_escape off &
 // / -no-shell-escape, so it runs no command. The settings are passed with the command rather than kept in the xelatex sandbox profile, because
-// / they must hold where no sandbox could be built too. --LaTeX Conversion Timeout-- stops it, because a document can loop for ever.
+// / they must hold where no sandbox could be built too. The Engine's time limit for LaTeX stops each pass, because a document can loop for
+// / ever. It is --Maximum Per Conversion Runtime--'s from v4.3.5, & --LaTeX Conversion Timeout-- is retired.
 // / A document is typeset alone, so one that includes another file, an image or a bibliography fails, & the error says the file was not found.
 // / The function is longer than most, so it returns the six value contract, whose first value is its sanity check.
 function typesetLaTeX($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $DirSep, $SleepTimer, $LaTeXConversionTimeout, $EnableMemoryProtection;
+  global $Verbose, $Lol, $DirSep, $SleepTimer, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
@@ -91,12 +92,8 @@ function typesetLaTeX($pathname, $newPathname, $extension) {
   $workFolder = $texPath = $pdfPath = $latexCommand = $toolStatus = $toolOutput = $firstError = $passOutput = '';
   $latexEnvironment = array();
   $exitStatus = -1;
-  $stopper = $passNumber = 0;
+  $stopper = $passNumber = $timeoutSeconds = 0;
   $sleepTime = $SleepTimer;
-  // / A local fallback configuration cannot overwrite, for a timeout that is missing or is not a whole number of seconds greater than 0.
-  $defaultTimeout = 120;
-  $timeoutSeconds = (is_numeric($LaTeXConversionTimeout) && (int)$LaTeXConversionTimeout > 0) ? (int)$LaTeXConversionTimeout : $defaultTimeout;
-  if ($timeoutSeconds === $defaultTimeout && (string)$LaTeXConversionTimeout !== (string)$defaultTimeout) warningEntry('--LaTeX Conversion Timeout-- is not a whole number of seconds greater than 0, so '.$defaultTimeout.' is used.');
   // / Locate & verify XeLaTeX. A path is returned only when both succeeded.
   $latexBinary = verifiedToolPath('XeLaTeX');
   if ($latexBinary === FALSE) {
@@ -116,7 +113,7 @@ function typesetLaTeX($pathname, $newPathname, $extension) {
     // / The document & the PDF share the work folder, so the sandbox mounts it once, writable, as the folder TeX runs in.
     // / The document is named by its name alone, which is all paranoid TeX opens, so the sandbox has no path to rewrite.
     $latexEnvironment = array('openin_any' => 'p', 'openout_any' => 'p', 'shell_escape' => 'f');
-    $latexCommand = 'timeout '.$timeoutSeconds.' '.escapeshellarg($latexBinary).' -no-shell-escape -interaction=nonstopmode -halt-on-error -file-line-error document.tex';
+    $latexCommand = escapeshellarg($latexBinary).' -no-shell-escape -interaction=nonstopmode -halt-on-error -file-line-error document.tex';
     list ($commandMayRun, $latexCommand) = sandboxCommand($latexCommand, $texPath, $pdfPath, FALSE, 'xelatex', '', $latexEnvironment);
     if (!$commandMayRun) {
       $ConversionErrors = TRUE;
@@ -135,7 +132,7 @@ function typesetLaTeX($pathname, $newPathname, $extension) {
           if ($passNumber === 2 && (!file_exists($pdfPath) or !latexNeedsRerun($workFolder))) break;
           list ($exitStatus, $passOutput) = runInWorkFolder($latexCommand, $workFolder);
           // / TeX ends with a status other than 0 where it stopped, & a PDF it had begun is not the document, so it is removed.
-          // / An exit status of 124 is the timeout command reporting that it stopped TeX.
+          // / An exit status of 124 is the Engine's time limit reporting that it stopped TeX.
           if ($exitStatus !== 0) {
             @unlink($pdfPath);
             if ($exitStatus === 124) $timedOut = TRUE;
@@ -149,7 +146,8 @@ function typesetLaTeX($pathname, $newPathname, $extension) {
       if ($Verbose && $firstError !== '') logEntry('XeLaTeX stopped at the following: '.$Lol.'  '.$firstError);
       if ($timedOut) {
         $ConversionErrors = TRUE;
-        errorEntry('The LaTeX typesetter was stopped after '.$timeoutSeconds.' seconds, as --LaTeX Conversion Timeout-- allows!', 45005, FALSE); }
+        list (, $timeoutSeconds) = resolveConversionRuntime('xelatex');
+        errorEntry('The LaTeX typesetter was stopped after '.$timeoutSeconds.' seconds, as --Maximum Per Conversion Runtime-- allows!', 45005, FALSE); }
       else if (!file_exists($pdfPath)) {
         $ConversionErrors = TRUE;
         errorEntry('The LaTeX typesetter produced no PDF after '.$stopper.' attempt(s)!'.($firstError !== '' ? ' '.$firstError : ''), 45000, FALSE); }
@@ -164,7 +162,7 @@ function typesetLaTeX($pathname, $newPathname, $extension) {
       if ($pdfWasPlaced && file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   if ($folderWasMade) removeWorkFolder($workFolder);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $commandMayRun, $folderWasMade, $pdfWasPlaced, $timedOut, $texFinished, $latexBinary, $workFolder, $texPath, $pdfPath, $latexCommand, $toolStatus, $toolOutput, $firstError, $passOutput, $latexEnvironment, $exitStatus, $stopper, $passNumber, $sleepTime, $defaultTimeout, $timeoutSeconds, $pathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $commandMayRun, $folderWasMade, $pdfWasPlaced, $timedOut, $texFinished, $latexBinary, $workFolder, $texPath, $pdfPath, $latexCommand, $toolStatus, $toolOutput, $firstError, $passOutput, $latexEnvironment, $exitStatus, $stopper, $passNumber, $sleepTime, $timeoutSeconds, $pathname);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

@@ -20,7 +20,9 @@ This application will run on just about any x86 or x64 computer.
 DEPENDENCY REQUIREMENTS ...
 Resource rate limiting requires no dependency that the Engine does not already require.
 Per conversion resource ceilings additionally require systemd, which is present on Debian by default.
-An installation without systemd runs normally & falls back to scheduling priority.
+An installation without systemd runs normally & falls back to scheduling priority & a data limit on each process.
+The data limit & a profile's address space limit use prlimit, which util-linux provides.
+The per conversion time limit uses timeout, which coreutils provides.
 
 <3 Open-Source
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -441,7 +443,18 @@ The mechanism actually in use is reported by -v & is written to the log for each
 
   user        A user scope. This is the correct configuration.
   system      A system scope. An operator configured this deliberately. Remove it.
-  none        No scope. The conversion is deprioritized with nice & has no memory ceiling.
+  none        No scope. The conversion is deprioritized with nice, & from v4.3.5 each of its processes
+              has a data limit of its type's memory figure. Until then it had no memory ceiling.
+
+WHERE NO SCOPE CAN BE MADE, MEMORY IS STILL HELD, from v4.3.5.
+Most hosts cannot make a scope for the web server account. There each process of a conversion is
+given a data limit of its type's memory figure, with prlimit, which needs no permission, beside the
+niceness it always had. A data limit counts the memory a process has allocated to write to, & not
+address space it has only reserved, so a tool that reserves far more than it uses still runs under
+it, as it would not under an address space limit. A process that reaches it is refused the memory &
+fails at once. Each process has the whole figure, where a scope holds them all to it together. The
+verbose Conversion Scope entry names it. Where prlimit is missing a warning says so & the conversion
+runs without it. Where a scope can be made the scope's ceiling is used & no data limit is set.
 
 A PROFILE MAY HOLD ITS TOOL'S ADDRESS SPACE, from v4.3.2.
 A sandbox profile setting AddressSpaceLimit is given an address space ceiling too, of the memory
@@ -464,6 +477,66 @@ serves audio, video, subtitles & streams, & which is charged at the heaviest of 
 Two profiles can share one type where an administrator would not want to tell them apart. ClamAV
 & ScanCore both resolve to Scan, in the same way LibreOffice & Poppler both resolve to Document.
 What is being tuned is what a scan may claim, not which scanner claimed it.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--About Per Conversion Time Limits--
+
+EVERY CONVERSION COMMAND HAS A TIME LIMIT, from v4.3.5.
+A converter can loop for ever over a crafted file, & one that never finishes holds its worker until
+something kills it. limitCommand() puts every command inside timeout, for as long as its type is
+allowed, so it is stopped & the worker is free again.
+
+--Maximum Per Conversion Runtime-- names the seconds each type may run, & a type it does not name
+takes --Default Per Conversion Runtime--. A figure of 0 sets no limit. The types are the ones the
+sandbox profiles name, as for the ceilings, so FFMPEG's audio, subtitle & stream work is held to
+Video's. As shipped:
+
+  Graph, LaTeX, Markup & Email          120    Each was its pipeline's own until v4.3.5.
+  Scad                                  180    It was $SCADConversionTimeout.
+  Data, Model, SVG, Trace & Drawing     300    Data's was its pipeline's own, & Resvg's was 120.
+  Document & Image                      600
+  Ebook                                 900
+  OCR                                   1800
+  Archive & Scan                        3600   Extraction stops itself after an hour too.
+  Video                                 7200
+  Any other type                        600
+
+An entry that is not a whole number of seconds is warned of & the default is used. A default that
+is not one is warned of & 600 is used, which configuration cannot change.
+
+IT APPLIES WHETHER OR NOT --Enable Per Conversion Limits-- IS TRUE. Turning the ceilings off is not
+a reason to let a hang run for ever, & the timeouts the pipelines carried applied either way.
+
+IT IS NEVER SCALED. A loaded host makes a conversion slower rather than cheaper, & a smaller limit
+would stop the very work the load is slowing.
+
+IT BOUNDS EACH COMMAND. A conversion of several steps, such as OCR's page split & then its reading,
+may take several times as long in all.
+
+timeout goes outside everything else, so the scope, the niceness & the ceilings stop with the
+sandbox. It sends TERM & never KILL. Bubblewrap ends on TERM & takes the sandbox with it. A command
+it stops exits 124, which is never attempted again, because it would run out of time again. A
+command KILL ends exits 137, which is attempted again, so KILL would have made one hang into as
+many hangs as --File Operation Retry Count-- allows.
+
+The process a shell reports for a command is timeout, & bubblewrap dies with its parent, so a
+supervisor that kills it, as the stream supervisor does, still takes the sandbox down. A shell
+left between a pipeline & a command is not, so a pipeline that kills what it started either has
+the shell become the command, as Identify does, or stops every process under it, as the archive
+extraction does.
+
+NOTHING A COMMAND LEFT IS KEPT WHERE IT ENDED BEFORE IT FINISHED.
+The time limit, a ceiling or a crash can stop a converter part way through its file, & a part is
+not the result. pipelineRetryIsDue() removes what such an attempt left before it decides whether
+to ask again, so a part is never offered, & a converter a ceiling killed is asked again rather than
+having its part kept. A pipeline that runs a command another way asks discardInterruptedOutput()
+itself. A converter the time limit stopped is warned of, naming --Maximum Per Conversion Runtime--,
+because only the operator can give a type more time.
+
+WITH RESOURCE AWARENESS ON, the listener also reaps a worker that outlives --Default Expected
+Runtime-- plus --Worker Stale Grace Period--. The reaper ends the worker, & the time limit still
+ends any command that worker left running.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

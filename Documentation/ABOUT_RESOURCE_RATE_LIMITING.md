@@ -305,7 +305,10 @@ The web server user cannot create a system scope and must not be given permissio
 | :--- | :--- |
 | `user` | A user scope. This is the correct configuration. |
 | `system` | A system scope. An operator configured this deliberately. Remove it. |
-| `none` | No scope. The conversion is deprioritized with `nice` and has no memory ceiling. |
+| `none` | No scope. The conversion is deprioritized with `nice`, and from v4.3.5 each of its processes has a data limit of its type's memory figure. |
+
+### 🧠 Memory Where No Scope Can Be Made
+From v4.3.5, where no scope can be made, which is most hosts, each process of a conversion is given a data limit of its type's memory figure with `prlimit`, which needs no permission, beside the niceness it always had. A data limit counts the memory a process has allocated to write to, and not address space it has only reserved, so a tool that reserves far more than it uses still runs under it. A process that reaches it is refused the memory and fails at once. Each process has the whole figure, where a scope holds them all to it together. Where a scope can be made, the scope's ceiling is used and no data limit is set. Where `prlimit` is missing a warning says so and the conversion runs without it.
 
 ### 🧱 An Address Space Ceiling for One Profile
 From v4.3.2 a sandbox profile setting `AddressSpaceLimit` is also given an address space ceiling of the memory its conversion type is allowed, with `prlimit`, which util-linux provides and any account may set on its own children. It goes in front of the command, inside any scope, and every process the command starts inherits it. It holds where no scope can be made, and where `--Enable Per Conversion Limits--` is `FALSE`, because the profile asked for it and the host did not. A tool that asks for more is refused the memory and fails at once, where a scope's `MemoryMax` kills it only once the memory is used.
@@ -313,6 +316,33 @@ From v4.3.2 a sandbox profile setting `AddressSpaceLimit` is also given an addre
 HRConvert2's `assimp` profile sets it. A 20 byte glb made Assimp ask for 4.1 GiB, and under the stock Model ceiling of `2048M` it fails at once having used 14 MiB.
 
 An address space is not the memory a tool uses. A tool that reserves far more than it uses, as a JVM does, would be stopped by it, so only a profile measured under it sets it. Where `prlimit` is missing a warning says so and the conversion runs without it.
+
+---
+
+## ⏱️ About Per-Conversion Time Limits
+
+From v4.3.5 every conversion command has a time limit. A converter can loop for ever over a crafted file, and one that never finishes holds its worker until something kills it. `limitCommand()` puts every command inside `timeout`, for as long as its type is allowed.
+
+`--Maximum Per Conversion Runtime--` names the seconds each type may run, and a type it does not name takes `--Default Per Conversion Runtime--`. A figure of `0` sets no limit. The types are the ones the sandbox profiles name, so FFMPEG's audio, subtitle and stream work is held to Video's.
+
+| Types | Seconds as shipped | Note |
+| :--- | :--- | :--- |
+| Graph, LaTeX, Markup, Email | 120 | Each was its pipeline's own until v4.3.5. |
+| Scad | 180 | It was `$SCADConversionTimeout`. |
+| Data, Model, SVG, Trace, Drawing | 300 | Data's was its pipeline's own, and Resvg's was 120. |
+| Document, Image | 600 | |
+| Ebook | 900 | |
+| OCR | 1800 | |
+| Archive, Scan | 3600 | Extraction stops itself after an hour too. |
+| Video | 7200 | |
+| Any other type | 600 | |
+
+- **It always applies**, whether or not `--Enable Per Conversion Limits--` is `TRUE`. The timeouts the pipelines carried applied either way.
+- **It is never scaled.** A loaded host makes a conversion slower rather than cheaper.
+- **It bounds each command.** A conversion of several steps may take several times as long in all.
+- **It sends TERM, never KILL.** Bubblewrap ends on TERM and takes the sandbox with it. A command it stops exits `124`, which is never attempted again. A command KILL ends exits `137`, which is, so KILL would have made one hang into several.
+- **Nothing a command left is kept where it ended before it finished.** `pipelineRetryIsDue()` removes what an attempt the time limit, a ceiling or a crash cut short left, so a part is never offered and a converter a ceiling killed is asked again. A pipeline that runs a command another way asks `discardInterruptedOutput()` itself.
+- **With resource awareness on**, the listener also reaps a worker that outlives `--Default Expected Runtime--` plus `--Worker Stale Grace Period--`, and the time limit still ends any command that worker left running.
 
 ---
 

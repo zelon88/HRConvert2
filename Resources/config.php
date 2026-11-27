@@ -592,44 +592,6 @@ $DefaultStreamInspectionForfeitAction = 'DENY';
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $AllowSCADIncludeResolution = TRUE;
-// /  --SCAD Conversion Timeout--
-// /   Set the maximum number of seconds an OpenSCAD render is permitted to run.
-// /   OpenSCAD has no execution limit of its own & renders until it finishes or is killed.
-// /   A crafted model can pin a CPU core indefinitely through recursion or an extreme $fn value.
-// /   This value bounds an attackers cost, not just a users patience.
-// /   A stranger can upload a three line file that consumes a PHP worker for this entire duration.
-// /   Raising it multiplies the cost of the cheapest denial of service available against this server.
-// /   Renders are niced to the lowest priority so a runaway model yields to everything else.
-// /   A large real world assembly of roughly thirty sources renders well within the default.
-// /   This setting must be lower than the PHP execution timer set in php.ini.
-// /   Valid options are integers greater than 0.
-// /   Default is 180.
-$SCADConversionTimeout = 180;
-// /  --LaTeX Conversion Timeout--
-// /   Set the maximum number of seconds XeLaTeX is permitted to typeset a LaTeX document in one pass.
-// /   TeX is a programming language, & a document can loop for ever, so this value bounds what one upload can cost.
-// /   A document that needs a second pass for its contents or its cross references is given this long again for it.
-// /   A document is typeset with no shell & cannot open a file outside the folder it is typeset in, whatever this is set to.
-// /   This setting must be lower than the PHP execution timer set in php.ini.
-// /   Valid options are integers greater than 0.
-// /   Default is 120.
-$LaTeXConversionTimeout = 120;
-// /  --Markup Conversion Timeout--
-// /   Set the maximum number of seconds Pandoc is permitted to convert a markup document.
-// /   The Pandoc manual says a reader can take pathologically long over some documents, & advises a time limit for a document a stranger wrote.
-// /   A PDF is typeset by XeLaTeX within this same time.
-// /   This setting must be lower than the PHP execution timer set in php.ini.
-// /   Valid options are integers greater than 0.
-// /   Default is 120.
-$MarkupConversionTimeout = 120;
-// /  --Graph Conversion Timeout--
-// /   Set the maximum number of seconds Graphviz is permitted to draw a graph.
-// /   A layout engine can take a very long time over a large graph, so this value bounds what one upload can cost.
-// /   A graph is drawn without reading any file but itself, whatever this is set to, so an image or a shape file it names is left out.
-// /   This setting must be lower than the PHP execution timer set in php.ini.
-// /   Valid options are integers greater than 0.
-// /   Default is 120.
-$GraphConversionTimeout = 120;
 // /  --Use PyMeshLab Python Bindings--
 // /   MeshLab replaced its legacy server application with a Python library package.
 // /   Enabling this toggle forces the core to pass geometry repairs to a local Python script.
@@ -1180,6 +1142,9 @@ $GuiMaxWidth = 1400;
 // /   allowing the web server user to manage transient units, then restart the web server.
 // /   A conversion that reaches its memory ceiling is killed by the kernel & is reported as
 // /   a failed conversion rather than as a memory error. Keep the ceilings generous.
+// /   Where no scope can be made, a conversion is given a lower scheduling priority instead, &
+// /   each of its processes a data limit of its memory figure, through prlimit, which needs no
+// /   permission. A process that reaches it is refused the memory & the conversion fails.
 // /   Valid options are TRUE or FALSE.
 // /   Default is TRUE.
 $EnablePerConversionLimits = TRUE;
@@ -1231,6 +1196,45 @@ $DefaultPerConversionResources = '50,512';
 // /   Same 'processor,memory' format.
 // /   Default is '10,128'.
 $MinimumPerConversionResources = '10,128';
+// /  --Maximum Per Conversion Runtime--
+// /   The most seconds one conversion command of each type may run before it is stopped.
+// /   A converter can loop for ever over a crafted file, so this bounds what one upload can cost.
+// /   It applies whether or not --Enable Per Conversion Limits-- is TRUE, & it is never scaled by load.
+// /   It bounds each command, so a conversion of several steps may take several times as long.
+// /   A command it stops is not attempted again, & whatever it had written is removed.
+// /   Set a type to 0 to give it no time limit.
+// /   With resource awareness on, the listener also reaps a worker that outlives --Default Expected
+// /   Runtime-- plus --Worker Stale Grace Period--. A command that worker started still ends here.
+// /   A type that is not listed falls back to --Default Per Conversion Runtime--.
+// /   An entry that cannot be read is reported & falls back to the default.
+// /   Valid keys are Document, Image, Video, Archive, Model, Scad, Drawing, SVG, OCR, Ebook, Scan,
+// /   LaTeX, Markup, Graph, Trace, Data & Email, the types the sandbox profiles name.
+// /   Video covers Audio, Subtitle & Stream, which FFMPEG converts under the same profile.
+// /   Valid options are whole numbers of seconds, 0 & larger.
+$MaximumPerConversionRuntime = array(
+  'Document' => 600,
+  'Image'    => 600,
+  'Video'    => 7200,
+  'Archive'  => 3600,
+  'Model'    => 300,
+  'Scad'     => 180,
+  'Drawing'  => 300,
+  'SVG'      => 300,
+  'OCR'      => 1800,
+  'Ebook'    => 900,
+  'Scan'     => 3600,
+  'LaTeX'    => 120,
+  'Markup'   => 120,
+  'Graph'    => 120,
+  'Trace'    => 300,
+  'Data'     => 300,
+  'Email'    => 120);
+// /  --Default Per Conversion Runtime--
+// /   The time limit used for any conversion type not named above, in seconds.
+// /   Set to 0 to give such a type no time limit.
+// /   Valid options are whole numbers of seconds, 0 & larger.
+// /   Default is 600.
+$DefaultPerConversionRuntime = 600;
 // /  --Enable Resource Awareness--
 // /   Allows the application to check a resource budget before starting a conversion.
 // /   Requires the coreManager.php component & a running listener.

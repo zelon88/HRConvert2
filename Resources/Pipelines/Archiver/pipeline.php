@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.3.5.
 // / The Archiver pipeline. pipelineCore.php loads it only to dispatch an Archive operation.
 // / Error block 4000 through 4006 belongs to this pipeline, & so does 13012.
 // / It also raises 13006, 13008, 13009 & 13010, which it shares with the Archive pipeline.
@@ -49,12 +49,16 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / An infected file is refused here, not deleted. Deleting is the application's policy, set by
 // / $AllowUserVirusScan, which a pipeline cannot read. Every file is also scanned when it lands,
 // / which is where the application deletes one.
+// / Every archiver runs through runPipelineCommand(), from v4.3.5. An archive one the time limit stopped or a signal ended was writing is
+// / removed by discardInterruptedOutput(), & is not offered. Where every file went into that archive, no file after it starts another under
+// / its name, because an archive quietly missing what went into it first is worse than none.
 function archiveSelection($FilesToArchive, $UserFilename, $UserExtension, $Method) {
   // / Set variables.
   global $Verbose, $VirusScan, $Lol, $Lolol, $EnableMemoryProtection;
   $ArchiveComplete = $ArchiveErrors = $virusFound = $skip = $variableIsSanitized = FALSE;
   $fileIsVerified = $scanComplete = $sandboxIsAvailable = $anyFileSucceeded = $loopCheck = FALSE;
-  $archiveWasStarted = FALSE;
+  $archiveWasStarted = $archiveIsCut = FALSE;
+  $exitStatus = 0;
   $sevenZipBinary = $rarBinary = $zipBinary = $tarBinary = $mkisofsBinary = FALSE;
   $clean = $copy = TRUE;
   $returnData = $file = $pathname = $oldPathname = $oldExtension = $newPathname = $archiveCommand = $resolvedFilename = '';
@@ -94,7 +98,7 @@ function archiveSelection($FilesToArchive, $UserFilename, $UserExtension, $Metho
     errorEntry('An iso image holds one file at a time, so a selection of files cannot be archived into one!', 4005, FALSE); }
   // / Iterate through the array of input files.
   foreach ($FilesToArchive as $file) {
-    $loopCheck = FALSE;
+    $loopCheck = $archiveIsCut = FALSE;
     $archiveCommand = '';
     // / Make sure the file is sanitized before processing it.
     list ($file, $variableIsSanitized) = sanitize($file, TRUE);
@@ -159,7 +163,10 @@ function archiveSelection($FilesToArchive, $UserFilename, $UserExtension, $Metho
       if (!$sandboxIsAvailable) {
         $ArchiveErrors = TRUE;
         errorEntry('Bubblewrap is missing or non functional, so this archive operation cannot be isolated!', 13006, FALSE); }
-      else $returnData = (string)shell_exec($archiveCommand); }
+      else {
+        list ($returnData, $exitStatus) = runPipelineCommand($archiveCommand);
+        discardInterruptedOutput($newPathname, $exitStatus);
+        $archiveIsCut = pipelineCommandWasInterrupted($exitStatus); } }
     // / Log the output of the archive operation to the logfile, if it is not blank.
     if ($Verbose && trim($returnData) !== '') logEntry('The archiver returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, str_replace($Lolol, $Lol, trim($returnData)))));
     // / The output file is the only verdict on whether the operation produced anything.
@@ -172,13 +179,20 @@ function archiveSelection($FilesToArchive, $UserFilename, $UserExtension, $Metho
       // / An archive several files went into is named once.
       if (!in_array($resolvedFilename, $ArchivedFiles, TRUE)) $ArchivedFiles[] = $resolvedFilename;
       if ($Verbose) logEntry('Archived file '.$pathname.' to '.$newPathname.'.'); }
+    // / An archive that was cut short is gone, so it is no longer named. Where every file was going into it, nothing that went in earlier
+    // / is in an archive any more, so the request stops & reports that nothing was archived.
+    if ($archiveIsCut) {
+      $ArchivedFiles = array_values(array_diff($ArchivedFiles, array($resolvedFilename)));
+      if ($UserFilename !== '') {
+        $anyFileSucceeded = FALSE;
+        break; } }
     // / Record that at least one file in this request succeeded.
     // / $loopCheck is reset on every iteration, so without this the result would reflect
     // / only the LAST file rather than the whole request.
     if ($loopCheck) $anyFileSucceeded = TRUE; }
   if ($anyFileSucceeded) $ArchiveComplete = TRUE;
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $archiveWasStarted, $archiveName, $resolvedFilename, $file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $newPathname, $scanComplete, $virusFound, $scanFindings, $scannerUsed, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $FilesToArchive, $UserFilename, $UserExtension, $Method);
+  purgeSensitiveMemory($EnableMemoryProtection, $archiveWasStarted, $archiveIsCut, $exitStatus, $archiveName, $resolvedFilename, $file, $rararr, $ziparr, $tararr, $isoarr, $pathname, $oldPathname, $newPathname, $scanComplete, $virusFound, $scanFindings, $scannerUsed, $returnData, $variableIsSanitized, $fileIsVerified, $oldExtension, $clean, $copy, $skip, $loopCheck, $anyFileSucceeded, $archiveCommand, $sandboxIsAvailable, $sevenZipBinary, $rarBinary, $zipBinary, $tarBinary, $mkisofsBinary, $FilesToArchive, $UserFilename, $UserExtension, $Method);
   return array($ArchiveComplete, $ArchiveErrors, $ArchivedFiles); }
 // / -----------------------------------------------------------------------------------
 ?>

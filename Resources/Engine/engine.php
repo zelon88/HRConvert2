@@ -4943,6 +4943,48 @@ function resolveConversionLimit($sandboxProfile) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
+// / A function to decide how long one conversion command may run, from v4.3.5.
+// / Accepts the sandbox profile about to run.
+// / Returns whether a time limit applies & the seconds it allows, in that order.
+// / The figure is read under the profile's type from --Maximum Per Conversion Runtime--, & a type it does not name takes
+// / --Default Per Conversion Runtime--. A figure of 0 sets no time limit for that type.
+// / A figure that is not a whole number of seconds is reported & the default is used. A default that is not one is reported &
+// / this function's own is used, which configuration cannot change, so a mistake never leaves a conversion without a limit.
+// / The listener never scales a time limit as it scales a ceiling. A loaded host makes a conversion slower rather than cheaper, &
+// / a smaller limit would stop the very work the load is slowing.
+function resolveConversionRuntime($sandboxProfile) {
+  // / Set variables.
+  global $MaximumPerConversionRuntime, $DefaultPerConversionRuntime, $Verbose, $EnableMemoryProtection;
+  $RuntimeIsLimited = FALSE;
+  $RuntimeSeconds = 0;
+  $conversionType = $runtimeSource = '';
+  $runtimeFigure = NULL;
+  // / A local fallback configuration cannot overwrite, for a default that is missing or is not a whole number of seconds.
+  $defaultRuntime = 600;
+  $conversionType = conversionTypeForProfile($sandboxProfile);
+  if (is_array($MaximumPerConversionRuntime) && isset($MaximumPerConversionRuntime[$conversionType])) {
+    $runtimeFigure = $MaximumPerConversionRuntime[$conversionType];
+    $runtimeSource = 'config.php'; }
+  // / A figure that cannot be read takes the default, & never no limit at all.
+  if ($runtimeSource !== '' && !(is_int($runtimeFigure) && $runtimeFigure >= 0) && !(is_string($runtimeFigure) && ctype_digit(trim($runtimeFigure)))) {
+    warningEntry('The '.$conversionType.' time limit in --Maximum Per Conversion Runtime-- is not a whole number of seconds, so --Default Per Conversion Runtime-- is used.');
+    $runtimeSource = ''; }
+  if ($runtimeSource === '') {
+    $runtimeFigure = isset($DefaultPerConversionRuntime) ? $DefaultPerConversionRuntime : NULL;
+    $runtimeSource = 'config.php default'; }
+  if (!(is_int($runtimeFigure) && $runtimeFigure >= 0) && !(is_string($runtimeFigure) && ctype_digit(trim($runtimeFigure)))) {
+    warningEntry('--Default Per Conversion Runtime-- is missing or is not a whole number of seconds, so '.$defaultRuntime.' is used.');
+    $runtimeFigure = $defaultRuntime;
+    $runtimeSource = 'core built-in'; }
+  $RuntimeSeconds = (int)trim((string)$runtimeFigure);
+  $RuntimeIsLimited = ($RuntimeSeconds > 0);
+  if ($Verbose) logEntry('Conversion Time Limit: '.$conversionType.', '.($RuntimeIsLimited ? $RuntimeSeconds.' seconds' : 'none').', Source: '.$runtimeSource.'.');
+  // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
+  purgeSensitiveMemory($EnableMemoryProtection, $conversionType, $runtimeSource, $runtimeFigure, $defaultRuntime, $sandboxProfile);
+  return array($RuntimeIsLimited, $RuntimeSeconds); }
+// / -----------------------------------------------------------------------------------
+
+// / -----------------------------------------------------------------------------------
 // / A function to say whether this kernel will delegate cgroup controllers to a user.
 // / Accepts nothing. Returns TRUE when a user scope could hold a real limit.
 // /
@@ -5015,7 +5057,7 @@ function verifySystemdRun() {
     $ScopeEnvironment = $probedEnvironment; }
   else {
     $locatedBinary = locateDependency('systemd-run');
-    if ($locatedBinary === '') warningEntry('systemd-run is not installed. Per conversion limits fall back to scheduling priority only.');
+    if ($locatedBinary === '') warningEntry('systemd-run is not installed. Per conversion limits fall back to scheduling priority & a data limit on each process.');
     else {
       // / Build the environment a user manager needs. Without these systemd-run cannot find
       // / the bus for this account & falls straight through to the system bus.
@@ -5049,9 +5091,9 @@ function verifySystemdRun() {
         // / A NAS or appliance kernel frequently ships without cgroup controllers delegated
         // / to a user, & nothing an administrator does will change that. Telling them to run
         // / -fp sends them round a loop that cannot end.
-        // / Scheduling priority still applies either way, so a conversion is still bounded,
+        // / Scheduling priority & a data limit on each process still apply either way, so a conversion is still bounded,
         // / just less precisely.
-        else warningEntry('A resource scope could not be created. '.(cgroupDelegationIsAvailable() ? 'Run the -fp argument as root to enable lingering for '.$ApacheUser.'.' : 'This kernel does not delegate cgroup controllers, which many NAS & appliance kernels do not. There is nothing to fix here & no scope can be made on this host.').' Per conversion limits fall back to scheduling priority alone.'); } }
+        else warningEntry('A resource scope could not be created. '.(cgroupDelegationIsAvailable() ? 'Run the -fp argument as root to enable lingering for '.$ApacheUser.'.' : 'This kernel does not delegate cgroup controllers, which many NAS & appliance kernels do not. There is nothing to fix here & no scope can be made on this host.').' Per conversion limits fall back to scheduling priority & a data limit on each process.'); } }
     $probedMode = $ScopeMode;
     $probedBinary = $ScopeBinary;
     $probedEnvironment = $ScopeEnvironment; }
@@ -5155,51 +5197,67 @@ function sandboxProfileAsks($sandboxProfile, $settingName) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to wrap a command in a transient systemd scope carrying its limits.
+// / A function to wrap a command in its time limit & its resource ceilings.
 // / Accepts the command to wrap & the sandbox profile about to run, in that order.
-// / Returns the wrapped command, or the command unchanged when limiting is unavailable.
-// / The scope wraps the SANDBOX, not the tool inside it, so the ceiling covers bubblewrap
+// / Returns the wrapped command, or the command unchanged where nothing applies or nothing can be applied.
+// / Everything wraps the SANDBOX, not the tool inside it, so each limit covers bubblewrap
 // / & every process it goes on to create.
+// / The time limit is applied to every command, from v4.3.5, whatever --Enable Per Conversion Limits-- says, because a converter
+// / that never finishes holds its worker for ever. resolveConversionRuntime() decides it, & timeout enforces it from outside
+// / everything else, so the scope, the niceness & the ceilings are stopped with the sandbox.
+// / timeout sends TERM & never KILL. Bubblewrap ends on TERM, & the sandbox ends with it. A command it stops exits 124, which
+// / pipelineCommandWasStopped() does not count, so it is not attempted again, because it would run out of time again. A command KILL
+// / ends exits 137, which is attempted again, so KILL would have made one hang into as many hangs as attempts are allowed.
+// / The process a shell reports for the command is timeout. One that supervises it, as waitForStream() does, may kill it, because
+// / bubblewrap dies with its parent & takes everything in the sandbox with it. systemd-run, nice & prlimit each become the command
+// / they run, so bubblewrap's parent is timeout whichever of them is used.
 // / CPUQuota is a percentage of ONE processor. 200% is two whole cores.
 // / MemoryMax is a hard ceiling. A conversion that reaches it is killed by the kernel &
 // / will report a conversion failure rather than a memory error, which is why the
 // / configured ceilings should be generous.
-// / With no scope mechanism the command is merely deprioritized, which needs no permission
-// / at all & still keeps a conversion from starving the web server under contention.
-// / This never refuses. A resource ceiling is a courtesy to the host & not a security
-// / control, so an unavailable limiter runs the conversion anyway.
+// / With no scope mechanism the command is deprioritized, which needs no permission at all & still keeps a conversion from starving
+// / the web server under contention. From v4.3.5 its memory is held as well, to the same figure, as a data limit on each process, set
+// / by prlimit, which needs no permission either. A data limit counts the memory a process has allocated to write to, & not address
+// / space it has only reserved, so a tool that reserves far more than it uses still runs under one, as it would not under an address
+// / space limit. A tool that reaches it is refused the memory it asked for & fails at once. Each process has the whole figure, where
+// / a scope holds them all to it together.
+// / This never refuses. A ceiling or a time limit that cannot be applied is warned of, & the conversion runs without it.
 // / A profile setting AddressSpaceLimit is given an address space ceiling as well, from v4.3.2, of the memory its type is allowed.
 // / prlimit sets it on the command it runs, & every process beneath that inherits it, so the ceiling holds per process where no
 // / scope can be made, & with per conversion limits turned off, because the profile asked for it & the host did not.
-// / It goes nearest the command, inside any scope, so the scope's own processes are never limited by it.
+// / It goes nearest the command, inside any scope, so the scope's own processes are never limited by it. The data limit goes with it.
 // / A tool that reserves far more address space than it uses would be stopped by it, so only a profile that has been measured asks.
 // / A tool that reaches it is refused the memory it asked for & fails at once, where the scope's ceiling kills only once memory is used.
 function limitCommand($command, $sandboxProfile) {
   // / Set variables.
   global $EnablePerConversionLimits, $Verbose, $EnableMemoryProtection;
   $LimitedCommand = (string)$command;
-  $scopeMode = $scopeBinary = $scopeEnvironment = $scopePrefix = $prlimitBinary = $addressSpaceNote = '';
-  $limitIsValid = $addressSpaceIsAsked = FALSE;
-  $cpuPercentage = $memoryMegabytes = $nicePriority = 0;
+  $scopeMode = $scopeBinary = $scopeEnvironment = $scopePrefix = $prlimitBinary = $prlimitFlags = $memoryNote = $timeoutBinary = '';
+  $limitIsValid = $addressSpaceIsAsked = $dataLimitIsWanted = $runtimeIsLimited = FALSE;
+  $cpuPercentage = $memoryMegabytes = $nicePriority = $runtimeSeconds = 0;
   $addressSpaceIsAsked = sandboxProfileAsks($sandboxProfile, 'AddressSpaceLimit');
-  if (!$EnablePerConversionLimits && !$addressSpaceIsAsked) $LimitedCommand = (string)$command;
-  else {
+  if ($EnablePerConversionLimits or $addressSpaceIsAsked) {
     list ($limitIsValid, $cpuPercentage, $memoryMegabytes) = resolveConversionLimit($sandboxProfile);
     if (!$limitIsValid) warningEntry('No usable per conversion limit could be resolved. This conversion runs unlimited.');
     else {
-      // / The address space ceiling is a number of bytes, & prlimit is found as every other tool the Engine runs is found.
-      if ($addressSpaceIsAsked) {
-        $prlimitBinary = locateDependency('prlimit');
-        if ($prlimitBinary === '') warningEntry('The '.strtolower(trim((string)$sandboxProfile)).' sandbox profile asks for an address space limit & prlimit is not installed, so its conversion runs without one. util-linux provides prlimit.');
-        else {
-          $LimitedCommand = escapeshellarg($prlimitBinary).' --as='.((int)$memoryMegabytes * 1048576).' -- '.$LimitedCommand;
-          $addressSpaceNote = ', address space '.(int)$memoryMegabytes.'M per process'; } }
       if ($EnablePerConversionLimits) list ($scopeMode, $scopeBinary, $scopeEnvironment) = verifySystemdRun();
+      else $scopeMode = 'off';
+      // / The memory a scope would hold is held per process where no scope can be made.
+      $dataLimitIsWanted = ($scopeMode === 'none');
+      // / Both ceilings are numbers of bytes, & prlimit is found as every other tool the Engine runs is found.
+      if ($addressSpaceIsAsked or $dataLimitIsWanted) {
+        $prlimitBinary = locateDependency('prlimit');
+        if ($prlimitBinary === '' && $addressSpaceIsAsked) warningEntry('The '.strtolower(trim((string)$sandboxProfile)).' sandbox profile asks for an address space limit & prlimit is not installed, so its conversion runs without one. util-linux provides prlimit.');
+        else if ($prlimitBinary === '') warningEntry('No resource scope can be made & prlimit is not installed, so this conversion runs with no memory ceiling. util-linux provides prlimit.');
+        else {
+          if ($addressSpaceIsAsked) $prlimitFlags = ' --as='.((int)$memoryMegabytes * 1048576);
+          if ($dataLimitIsWanted) $prlimitFlags = $prlimitFlags.' --data='.((int)$memoryMegabytes * 1048576);
+          $LimitedCommand = escapeshellarg($prlimitBinary).$prlimitFlags.' -- '.$LimitedCommand;
+          $memoryNote = ($addressSpaceIsAsked ? ', address space '.(int)$memoryMegabytes.'M per process' : '').($dataLimitIsWanted ? ', data '.(int)$memoryMegabytes.'M per process' : ''); } }
       // / --quiet keeps the unit name off stderr, which several callers capture as output.
       // / --collect releases the unit when it exits, so a failed conversion leaves nothing.
       // / Swap is pinned to zero so a memory ceiling cannot be evaded by swapping.
-      if (!$EnablePerConversionLimits) $scopeMode = 'off';
-      else if ($scopeMode === 'user' or $scopeMode === 'system') {
+      if ($scopeMode === 'user' or $scopeMode === 'system') {
         $scopePrefix = $scopeEnvironment.escapeshellarg($scopeBinary)
           .($scopeMode === 'user' ? ' --user' : '')
           .' --scope --quiet --collect'
@@ -5208,17 +5266,23 @@ function limitCommand($command, $sandboxProfile) {
           .' -p MemorySwapMax=0'
           .' -- ';
         $LimitedCommand = $scopePrefix.$LimitedCommand; }
-      else {
-        // / No cgroup is available, so the ceiling cannot be enforced. The conversion is
+      else if ($scopeMode === 'none') {
+        // / No cgroup is available, so the processor share cannot be enforced. The conversion is
         // / deprioritized instead, which is weaker but needs nothing from the operator.
         // / A smaller processor share becomes a larger niceness.
         $nicePriority = (int)round(19 - (($cpuPercentage / 100) * 19));
         if ($nicePriority < 0) $nicePriority = 0;
         if ($nicePriority > 19) $nicePriority = 19;
         $LimitedCommand = 'nice -n '.$nicePriority.' '.$LimitedCommand; }
-      if ($Verbose) logEntry('Conversion Scope: '.$scopeMode.', CPU '.$cpuPercentage.'%, Memory '.$memoryMegabytes.'M'.($scopeMode === 'none' ? ', enforced as niceness '.$nicePriority.' only' : '').$addressSpaceNote.'.'); } }
+      if ($Verbose) logEntry('Conversion Scope: '.$scopeMode.', CPU '.$cpuPercentage.'%, Memory '.$memoryMegabytes.'M'.($scopeMode === 'none' ? ', the processor share enforced as niceness '.$nicePriority : '').$memoryNote.'.'); } }
+  // / The time limit goes outside everything else, whatever else applies.
+  list ($runtimeIsLimited, $runtimeSeconds) = resolveConversionRuntime($sandboxProfile);
+  if ($runtimeIsLimited) {
+    $timeoutBinary = locateDependency('timeout');
+    if ($timeoutBinary === '') warningEntry('timeout is not installed, so this conversion runs with no time limit. coreutils provides timeout.');
+    else $LimitedCommand = escapeshellarg($timeoutBinary).' '.(int)$runtimeSeconds.' '.$LimitedCommand; }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $scopeMode, $scopeBinary, $scopeEnvironment, $scopePrefix, $prlimitBinary, $addressSpaceNote, $limitIsValid, $addressSpaceIsAsked, $cpuPercentage, $memoryMegabytes, $nicePriority, $command, $sandboxProfile);
+  purgeSensitiveMemory($EnableMemoryProtection, $scopeMode, $scopeBinary, $scopeEnvironment, $scopePrefix, $prlimitBinary, $prlimitFlags, $memoryNote, $timeoutBinary, $limitIsValid, $addressSpaceIsAsked, $dataLimitIsWanted, $runtimeIsLimited, $cpuPercentage, $memoryMegabytes, $nicePriority, $runtimeSeconds, $command, $sandboxProfile);
   return $LimitedCommand; }
 // / -----------------------------------------------------------------------------------
 
@@ -5594,6 +5658,8 @@ function engineConfigModel() {
       'MaximumPerConversionResources' => array('Type' => 'array', 'Default' => 'array( \'Document\'     => \'50,512\', \'Spreadsheet\'  => \'50,512\', \'Presentation\' => \'50,768\', \'Image\'        => \'75,1024\', \'Video\'        => \'90,2048\', \'Audio\'        => \'50,512\', \'Archive\'      => \'50,512\', \'Model\'        => \'75,2048\', \'Scad\'         => \'75,1024\', \'Drawing\'      => \'50,512\', \'SVG\'          => \'50,512\', \'Subtitle\'     => \'25,256\', \'Stream\'       => \'90,2048\', \'OCR\'          => \'75,1024\', \'Ebook\'        => \'50,768\')', 'Depends' => 'EnablePerConversionLimits', 'Description' => 'Maximum Per Conversion Resources'),
       'DefaultPerConversionResources' => array('Type' => 'string', 'Depends' => 'EnablePerConversionLimits', 'Description' => 'Default Per Conversion Resources'),
       'MinimumPerConversionResources' => array('Type' => 'string', 'Depends' => 'EnablePerConversionLimits', 'Description' => 'Minimum Per Conversion Resources'),
+      'MaximumPerConversionRuntime' => array('Type' => 'array', 'Depends' => '', 'Description' => 'Maximum Per Conversion Runtime'),
+      'DefaultPerConversionRuntime' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Default Per Conversion Runtime'),
       'EnableResourceAwareness' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Enable Resource Awareness'),
       'RequireResourceAwareness' => array('Type' => 'bool', 'Depends' => 'EnableResourceAwareness', 'Conflict' => 'so every request & every command but --config is refused with error 31013.', 'Description' => 'Require Resource Awareness'),
       'CoreManagerSubprocessPollInterval' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Core Manager Subprocess Poll Interval'),

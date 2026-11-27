@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.2.
+// / v4.3.5.
 // / The Document pipeline's converter. pipelineCore.php loads it only to dispatch a Document conversion.
 // / Error block 2005, 7000 through 7001 belongs to this pipeline.
 // / It declares the LibreOffice shared module, which Pipeline Core loads before it.
@@ -79,6 +79,8 @@ function convertDocuments($pathname, $newPathname, $extension) {
           redeclare($xpsOutput, array());
           exec($sandboxedCommand.' 2>&1', $xpsOutput, $xpsExitCode);
           redeclare($returnData, implode(PHP_EOL, $xpsOutput));
+          // / What an xpstopdf the time limit stopped or a signal ended left is not the document, from v4.3.5, so it is removed.
+          discardInterruptedOutput($newPathname, $xpsExitCode);
           redeclare($converterWasStopped, pipelineCommandWasStopped($xpsExitCode)); } }
       // / Everything else goes to LibreOffice, one sandboxed process per conversion.
       // / The shared module says why it did not run, so nothing more is said of it here.

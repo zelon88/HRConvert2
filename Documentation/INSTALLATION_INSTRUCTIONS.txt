@@ -271,7 +271,7 @@ the same package as Poppler Utils, & -v names each.
 
 RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.2.5 DROP IN, &
 BEFORE -fp. v4.2.5 adds the Data, LaTeX, Trace, Email & Markup families, the format lists of each,
-& --LaTeX Conversion Timeout-- & --Markup Conversion Timeout--. --config --repair adds the settings
+& $LaTeXConversionTimeout & $MarkupConversionTimeout. --config --repair adds the settings
 & changes none already there, so add 'Data', 'LaTeX', 'Trace', 'Email' & 'Markup' to --Allowed
 Conversion Types-- by hand. -u does both by itself. Then install the tools the families need.
 
@@ -290,7 +290,7 @@ other than BMP or PNM, which the Images subsystem installs. SVG renders with Ink
 where Resvg is missing.
 
 RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.2.6 DROP IN, &
-BEFORE -fp. v4.2.6 adds the Graph family, its two format lists & --Graph Conversion Timeout--.
+BEFORE -fp. v4.2.6 adds the Graph family, its two format lists & $GraphConversionTimeout.
 --config --repair adds the settings & changes none already there, so add 'Graph' to --Allowed
 Conversion Types-- by hand. -u does both by itself. Then install Graphviz, which Debian 12 &
 Ubuntu 24.04 both carry.
@@ -348,6 +348,17 @@ as models, & an existing config.php keeps the three in --Supported Model Formats
 --Supported Model Input Formats-- until they are taken out by hand, & a model in one fails until
 then. A dxf is still read as a drawing. Both interfaces now offer the whole of
 --Supported Model Output Formats--, so wrl, assbin & json appear in the Model menu.
+
+RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.3.5 DROP IN, &
+BEFORE -fp. v4.3.5 adds --Maximum Per Conversion Runtime-- & --Default Per Conversion Runtime--,
+the Engine's time limit for every conversion command, & every other command refuses with error
+28000 until it has run. -u adds them by itself. $SCADConversionTimeout, $LaTeXConversionTimeout,
+$MarkupConversionTimeout & $GraphConversionTimeout are retired, & nothing reads them. A figure
+changed in one of the four is not carried over, so set Scad, LaTeX, Markup or Graph in
+--Maximum Per Conversion Runtime-- to it by hand, & delete the four. Where no systemd scope
+can be made, each process of a conversion now has a data limit of its type's memory figure in
+--Maximum Per Conversion Resources--, through prlimit. A conversion that fails where it did not,
+with --Enable Per Conversion Limits-- TRUE, needs a larger figure for its type.
 
 RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.3.4 DROP IN, &
 BEFORE -fp. v4.3.4 adds --Record Events--, TRUE as shipped, & every other command refuses with

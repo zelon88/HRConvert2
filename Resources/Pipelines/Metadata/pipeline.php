@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.5.
 // / The Metadata pipeline. pipelineCore.php loads it only to dispatch a Strip Metadata operation.
 // / Error block 41000 through 41019 belongs to this pipeline.
 // / It declares the FFMPEG demuxer shared module, which Pipeline Core loads before it.
@@ -106,6 +106,8 @@ function ffmpegStripCommand($ffmpegBinary, $stagedInput, $cleanedOutput, $fileEx
 // / A video, a WAV & an AIFF are stripped by FFMPEG, from v4.3.1, under the ffmpeg profile, as metadataDemuxers() says, & mat2 strips everything else.
 // / Neither profile is run without a sandbox, so neither tool reads a file outside the sandbox. FFMPEG is asked for as it is verified.
 // / The folder goes whatever happened, & the session is the root it may be removed from.
+// / The tool runs through runPipelineCommand(), from v4.3.5, so a copy a tool the time limit stopped or a signal ended left is removed by
+// / discardInterruptedOutput() before it can be placed.
 function stripOneFile($mat2Command, $verifiedCopy, $fileExtension, $copyName) {
   // / Set variables.
   global $Verbose, $ConvertDir, $Lol, $Lolol, $EnableMemoryProtection;
@@ -114,6 +116,7 @@ function stripOneFile($mat2Command, $verifiedCopy, $fileExtension, $copyName) {
   $stagingFolder = $stagedInput = $cleanedOutput = $stripCommand = $returnData = $toolSaid = $stripTool = $stripProfile = '';
   $sandboxIsAvailable = $nameWasRefused = $stagingIsRemoved = $ffmpegStrips = $commandWasBuilt = FALSE;
   $outputLines = array();
+  $exitStatus = 0;
   $ffmpegStrips = array_key_exists((string)$fileExtension, metadataDemuxers());
   $stripTool = ($ffmpegStrips ? 'FFMPEG' : 'mat2');
   $stripProfile = ($ffmpegStrips ? 'ffmpeg' : 'mat2');
@@ -136,7 +139,8 @@ function stripOneFile($mat2Command, $verifiedCopy, $fileExtension, $copyName) {
       $StripErrors = TRUE;
       errorEntry('Bubblewrap is missing or non functional, so metadata cannot be stripped in isolation!', 41006, FALSE); }
     else {
-      $returnData = (string)shell_exec($stripCommand.' 2>&1');
+      list ($returnData, $exitStatus) = runPipelineCommand($stripCommand);
+      discardInterruptedOutput($cleanedOutput, $exitStatus);
       if ($Verbose && trim($returnData) !== '') logEntry($stripTool.' returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, trim($returnData))));
       clearstatcache(TRUE, $cleanedOutput);
       // / The copy the tool wrote is the only verdict on whether it stripped anything, because mat2 warns without failing.
@@ -158,7 +162,7 @@ function stripOneFile($mat2Command, $verifiedCopy, $fileExtension, $copyName) {
   $stagingIsRemoved = (!file_exists($stagingFolder) or cleanFiles($stagingFolder, array($ConvertDir)));
   if (!$stagingIsRemoved) warningEntry('The folder the metadata of '.$copyName.' was stripped in could not be removed. It is removed with the session.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $stagingFolder, $stagedInput, $cleanedOutput, $stripCommand, $returnData, $toolSaid, $stripTool, $stripProfile, $sandboxIsAvailable, $nameWasRefused, $stagingIsRemoved, $ffmpegStrips, $commandWasBuilt, $outputLines, $mat2Command, $verifiedCopy, $fileExtension, $copyName);
+  purgeSensitiveMemory($EnableMemoryProtection, $stagingFolder, $stagedInput, $cleanedOutput, $stripCommand, $returnData, $exitStatus, $toolSaid, $stripTool, $stripProfile, $sandboxIsAvailable, $nameWasRefused, $stagingIsRemoved, $ffmpegStrips, $commandWasBuilt, $outputLines, $mat2Command, $verifiedCopy, $fileExtension, $copyName);
   return array($CopyWasPlaced, $PlacedName, $StripErrors); }
 // / -----------------------------------------------------------------------------------
 

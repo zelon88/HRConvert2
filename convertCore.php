@@ -12,7 +12,7 @@
 // / on a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.4.
+// / v4.3.5.
 // / HRConvert2 Convert Core.
 // / This file contains the core logic of the application.
 // /
@@ -45,7 +45,7 @@ function verifyInstallation() {
   // / Define what version of HRConvert2 this core file represents.
   // / Note that this number does not have to match the version numbers of individual components listed below.
   // / The version of the core is typically several versions ahead of individual component versions. This is normal.
-  $HRConvertVersion = 'v4.3.4';
+  $HRConvertVersion = 'v4.3.5';
   $HRConvertVersion = ltrim($HRConvertVersion, 'vV');
   // / Handed to the Engine here, where it is defined, so there is only ever one copy.
   $EngineApplicationVersion = $HRConvertVersion;
@@ -2123,10 +2123,6 @@ function applicationConfigModel() {
       'StreamInspectionFilesPerLayer' => array('Type' => 'int', 'Depends' => 'StreamInspectionLayers', 'Description' => 'Stream Inspection Files Per Layer'),
       'DefaultStreamInspectionForfeitAction' => array('Type' => 'string', 'Depends' => '', 'Description' => 'Default Stream Inspection Forfeit Action'),
       'AllowSCADIncludeResolution' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow SCAD Include Resolution'),
-      'SCADConversionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'SCAD Conversion Timeout'),
-      'LaTeXConversionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'LaTeX Conversion Timeout'),
-      'MarkupConversionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Markup Conversion Timeout'),
-      'GraphConversionTimeout' => array('Type' => 'int', 'Depends' => '', 'Description' => 'Graph Conversion Timeout'),
       'UsePyMeshLab' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Use PyMeshLab Python Bindings'),
       'AllowUserURLDownload' => array('Type' => 'bool', 'Depends' => '', 'Description' => 'Allow User URL Download'),
       'URLDownloadsPerSession' => array('Type' => 'int', 'Depends' => 'AllowUserURLDownload', 'Description' => 'URL Downloads Per Session'),

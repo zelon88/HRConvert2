@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.5.
 // / The SVG pipeline's converter. pipelineCore.php loads it only to dispatch an SVG conversion.
 // / Error block 25000 through 25002 belongs to this pipeline.
 // / Inkscape & Resvg come from verifiedToolPath().
@@ -57,8 +57,9 @@ function svgRenderWithResvg($pathname, $newPathname, $height, $width) {
   else {
     if (!empty($width) && is_numeric($width) && $width > 0) $sizeArgument = ' --width '.escapeshellarg((string)(int)$width);
     else if (!empty($height) && is_numeric($height) && $height > 0) $sizeArgument = ' --height '.escapeshellarg((string)(int)$height);
-    // / Build & sandbox the command once. It does not change between retries. A drawing that never finishes is stopped after 120 seconds.
-    $resvgCommand = 'timeout 120 '.escapeshellarg($resvgBinary).' --sans-serif-family '.escapeshellarg('DejaVu Sans').' --serif-family '.escapeshellarg('DejaVu Serif')
+    // / Build & sandbox the command once. It does not change between retries. A drawing that never finishes is stopped by the Engine's
+    // / time limit for SVG, from v4.3.5, which --Maximum Per Conversion Runtime-- sets. It was 120 seconds of this pipeline's own.
+    $resvgCommand = escapeshellarg($resvgBinary).' --sans-serif-family '.escapeshellarg('DejaVu Sans').' --serif-family '.escapeshellarg('DejaVu Serif')
       .' --monospace-family '.escapeshellarg('DejaVu Sans Mono').' --font-family '.escapeshellarg('DejaVu Sans').$sizeArgument.' '.escapeshellarg($pathname).' '.escapeshellarg($newPathname);
     list ($commandMayRun, $resvgCommand) = sandboxCommand($resvgCommand, $pathname, $newPathname, FALSE, 'resvg');
     // / Where no sandbox may be built, Inkscape is asked, & refuses with this pipeline's own error.

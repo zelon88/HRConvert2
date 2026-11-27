@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.2.
+// / v4.3.5.
 // / The LibreOffice shared module, which is not a pipeline & converts nothing on its own.
 // / It holds the code the Document & OCR pipelines both need, so neither depends on the other.
 // / It is version pinned exactly as a pipeline is, by the table in Resources/Contract/app-engine-config.php.
@@ -35,7 +35,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read WITHOUT executing this file, then matched
 // / EXACTLY against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v4.3.2';
+$SharedModuleVersion = 'v4.3.5';
 // / -----------------------------------------------------------------------------------
 
 
@@ -334,6 +334,9 @@ function convertWithLibreOffice($inputPath, $outputPath, $targetExtension) {
         if ($commandExitCode === 137) warningEntry('LibreOffice was killed while it converted '.basename($inputPath).'. One killed inside a per conversion ceiling has almost always run out of the memory it was given. With --Enhanced Logging Verbosity-- on, the Conversion Limit entry names that ceiling, & --Maximum Per Conversion Resources-- in config.php sets the most each type may be given.');
         // / LibreOffice derives the output name from what it read, so rename when that differs.
         $producedPath = dirname($outputPath).$DirSep.pathinfo($readPath, PATHINFO_FILENAME).'.'.$cleanExtension;
+        // / What a LibreOffice the time limit stopped or a signal ended left is not the document, from v4.3.5, so it is removed before it
+        // / can be renamed, & a conversion a ceiling stopped is asked again rather than having its part kept.
+        discardInterruptedOutput($producedPath, $commandExitCode);
         if ($producedPath !== $outputPath && file_exists($producedPath) && !file_exists($outputPath)) @rename($producedPath, $outputPath);
         if (file_exists($outputPath)) $ConversionCompleted = TRUE; }
       if ($profileFolder !== '') $profileIsRemoved = removeLibreOfficeProfile($profileFolder);

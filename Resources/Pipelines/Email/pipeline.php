@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.5.
 // / The Email pipeline's converter. pipelineCore.php loads it only to dispatch an Email conversion.
 // / Error block 47000 through 47004 belongs to this pipeline.
 // / msgconvert comes from verifiedToolPath().
@@ -32,7 +32,8 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / A function to convert an Outlook message into a standard email with msgconvert.
 // / msgconvert writes the message as an EML file with --outfile, or delivers it into an mbox mailbox with --mbox. The output is always a new
 // / file, so the mailbox holds the one message.
-// / msgconvert is a Perl program reading a file format with tables that point at each other, so a message that loops is stopped after 120 seconds.
+// / msgconvert is a Perl program reading a file format with tables that point at each other, so a message that loops is stopped by the
+// / Engine's time limit for Email, from v4.3.5, which --Maximum Per Conversion Runtime-- sets. It was 120 seconds of this pipeline's own.
 // / msgconvert asks for the server's full name while it writes, & says on standard error that the sandbox has none. That changes nothing it writes.
 // / The function is longer than most, so it returns the six value contract, whose first value is its sanity check.
 function convertEmails($pathname, $newPathname, $extension) {
@@ -47,7 +48,7 @@ function convertEmails($pathname, $newPathname, $extension) {
   $commandOutput = array();
   $outputOptions = array('eml' => '--outfile', 'mbox' => '--mbox');
   $exitStatus = -1;
-  $stopper = 0;
+  $stopper = $timeoutSeconds = 0;
   $sleepTime = $SleepTimer;
   if (isset($outputOptions[strtolower((string)$extension)])) $outputOption = $outputOptions[strtolower((string)$extension)];
   // / Locate & verify msgconvert. A path is returned only when both succeeded.
@@ -60,7 +61,7 @@ function convertEmails($pathname, $newPathname, $extension) {
     errorEntry('The Email pipeline cannot write '.strtolower((string)$extension).'!', 47003, FALSE); }
   else {
     // / Build & sandbox the command once. It does not change between retries.
-    $emailCommand = 'timeout 120 '.escapeshellarg($emailBinary).' '.$outputOption.' '.escapeshellarg($newPathname).' '.escapeshellarg($pathname);
+    $emailCommand = escapeshellarg($emailBinary).' '.$outputOption.' '.escapeshellarg($newPathname).' '.escapeshellarg($pathname);
     list ($commandMayRun, $emailCommand) = sandboxCommand($emailCommand, $pathname, $newPathname, FALSE, 'msgconvert');
     if (!$commandMayRun) {
       $ConversionErrors = TRUE;
@@ -76,7 +77,7 @@ function convertEmails($pathname, $newPathname, $extension) {
         redeclare($commandOutput, array());
         exec($emailCommand.' 2>&1', $commandOutput, $exitStatus);
         // / msgconvert ends with a status other than 0 where it stopped, & a file it had begun is not the message, so it is removed.
-        // / An exit status of 124 is the timeout command reporting that it stopped msgconvert.
+        // / An exit status of 124 is the Engine's time limit reporting that it stopped msgconvert.
         if ($exitStatus !== 0) {
           @unlink($newPathname);
           if ($exitStatus === 124) $timedOut = TRUE; }
@@ -86,7 +87,8 @@ function convertEmails($pathname, $newPathname, $extension) {
       if ($Verbose && trim(implode($Lol, $commandOutput)) !== '') logEntry('msgconvert returned the following: '.$Lol.'  '.implode($Lol.'  ', array_slice($commandOutput, 0, 40)));
       if ($timedOut) {
         $ConversionErrors = TRUE;
-        errorEntry('The email converter was stopped after 120 seconds!', 47004, FALSE); }
+        list (, $timeoutSeconds) = resolveConversionRuntime('msgconvert');
+        errorEntry('The email converter was stopped after '.$timeoutSeconds.' seconds, as --Maximum Per Conversion Runtime-- allows!', 47004, FALSE); }
       // / Every attempt was made & none left a file.
       else if (!file_exists($newPathname)) {
         $ConversionErrors = TRUE;
@@ -94,7 +96,7 @@ function convertEmails($pathname, $newPathname, $extension) {
       // / The output file is the only verdict on whether the conversion produced anything.
       if (!$timedOut && file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $commandMayRun, $timedOut, $emailBinary, $outputOption, $emailCommand, $commandOutput, $outputOptions, $exitStatus, $stopper, $sleepTime, $pathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $commandMayRun, $timedOut, $emailBinary, $outputOption, $emailCommand, $commandOutput, $outputOptions, $exitStatus, $stopper, $timeoutSeconds, $sleepTime, $pathname);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.5.
 // / The Data pipeline's converter. pipelineCore.php loads it only to dispatch a Data conversion.
 // / Error block 44000 through 44007 belongs to this pipeline.
 // / Dasel & yq come from verifiedToolPath().
@@ -44,18 +44,19 @@ function dataFormatName($extension) {
 // / -----------------------------------------------------------------------------------
 
 // / -----------------------------------------------------------------------------------
-// / A function to put one tool command in its sandbox, with a time it may not run past.
+// / A function to put one tool command in its sandbox.
 // / Accepts the tool's command, the conversion's work folder & the sandbox profile, in that order.
 // / Returns whether the command may run & the command to run, in that order.
 // / Each tool reads its standard input & writes its standard output, which this pipeline opens, so it is handed no path.
 // / The sandbox is built around the work folder, which is empty, so a tool exploited by what it reads finds nothing there to read or change.
-// / A tool reading a hostile document is stopped after 300 seconds, because a document that never finishes parsing must not hold a request for ever.
+// / A tool reading a hostile document is stopped by the Engine's time limit for Data, which --Maximum Per Conversion Runtime-- sets, because a
+// / document that never finishes parsing must not hold a request for ever. It was 300 seconds of this pipeline's own until v4.3.5.
 function dataSandboxCommand($toolCommand, $workFolder, $sandboxProfile) {
   // / Set variables.
   global $DirSep, $EnableMemoryProtection;
   $CommandMayRun = FALSE;
   $SandboxedCommand = '';
-  list ($CommandMayRun, $SandboxedCommand) = sandboxCommand('timeout 300 '.$toolCommand, $workFolder.$DirSep.'input', $workFolder.$DirSep.'output', FALSE, $sandboxProfile);
+  list ($CommandMayRun, $SandboxedCommand) = sandboxCommand($toolCommand, $workFolder.$DirSep.'input', $workFolder.$DirSep.'output', FALSE, $sandboxProfile);
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $toolCommand, $workFolder, $sandboxProfile);
   return array($CommandMayRun, $SandboxedCommand); }

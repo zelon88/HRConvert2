@@ -4884,7 +4884,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27002, <SESSION_IDENTIFIER>: The OpenSCAD converter timed out after <ADDITIONAL_DATA> seconds!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-27002, <SESSION_IDENTIFIER>: The OpenSCAD converter timed out after <SECONDS> seconds!
 
 FILE
   Resources/Pipelines/Scad/pipeline.php
@@ -4896,9 +4896,9 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  An OpenSCAD render exceeded the time limit set by --SCAD Conversion Timeout-- in config.php and was terminated.
-  OpenSCAD has no execution limit of its own and will render until it finishes or is killed.
-  A complex assembly may legitimately need more time than the configured limit allows.
+  An OpenSCAD render exceeded its time limit and was stopped. From v4.3.5 the limit is Scad's in --Maximum Per Conversion Runtime--, &
+  $SCADConversionTimeout is retired. OpenSCAD has no execution limit of its own and will render until it finishes or is killed.
+  A complex assembly may legitimately need more time than the configured limit allows. Nothing the render wrote is kept.
   A crafted model can pin a CPU core indefinitely through recursion or an extreme $fn value.
   Renders are niced to the lowest priority, so a runaway model yields to everything else on the server.
   Raising this limit multiplies the cost of the cheapest denial of service available against this server.
@@ -8499,8 +8499,9 @@ WARNINGS ABOUT EXTRACTING ARCHIVES
       The Resource Manager refused the space the archive said it needs. This only occurs with resource awareness active.
     WARNING!!! The archive <ARCHIVE_NAME> grew past the <SIZE> --Maximum Extracted Size-- allows as it was extracted, so it was stopped & nothing it wrote was kept.
     WARNING!!! The archive <ARCHIVE_NAME> made more than the <LIMIT> files & folders --Maximum Extracted Files-- allows as it was extracted, so it was stopped & nothing it wrote was kept.
-    WARNING!!! The archive <ARCHIVE_NAME> was still being extracted after an hour, so it was stopped & nothing it wrote was kept.
-      An archive that lies about what it holds is measured while 7-Zip writes it & is stopped at the limit, which is what these say.
+    WARNING!!! The archive <ARCHIVE_NAME> was still being extracted when its time ran out, so it was stopped & nothing it wrote was kept.
+      An archive that lies about what it holds is measured while 7-Zip writes it & is stopped at the limit, which is what these say. Its
+      time runs out after an hour, or at Archive's time limit in --Maximum Per Conversion Runtime-- where that is shorter, from v4.3.5.
     WARNING!!! 7-Zip reported a problem with the archive <ARCHIVE_NAME>, such as a damaged file or a link leading out of it, so nothing it wrote was kept.
     WARNING!!! The archive <ARCHIVE_NAME> lists more than this server reads, so nothing was extracted from it.
     WARNING!!! The archive <ARCHIVE_NAME> could not be listed within five minutes, so nothing was extracted from it.
@@ -9459,7 +9460,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-45005, <SESSION_IDENTIFIER>: The LaTeX typesetter was stopped after <SECONDS> seconds, as --LaTeX Conversion Timeout-- allows!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-45005, <SESSION_IDENTIFIER>: The LaTeX typesetter was stopped after <SECONDS> seconds, as --Maximum Per Conversion Runtime-- allows!
 
 FILE
   Resources/Pipelines/LaTeX/pipeline.php
@@ -9471,9 +9472,10 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  From v4.2.5. A pass of XeLaTeX ran for as long as --LaTeX Conversion Timeout-- in config.php allows & was stopped.
+  From v4.2.5. A pass of XeLaTeX ran for as long as its time limit allows & was stopped. From v4.3.5 the limit is LaTeX's in --Maximum
+  Per Conversion Runtime--, & $LaTeXConversionTimeout is retired.
   A document can loop for ever, so the limit is what one upload can cost. A document that ran out of time is not typeset again.
-  A long real document needs a higher limit. Raise it in config.php, keeping it below the PHP execution timer set in php.ini.
+  A long real document needs a higher limit. Raise LaTeX's in config.php.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -9719,7 +9721,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-47004, <SESSION_IDENTIFIER>: The email converter was stopped after 120 seconds!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-47004, <SESSION_IDENTIFIER>: The email converter was stopped after <SECONDS> seconds, as --Maximum Per Conversion Runtime-- allows!
 
 FILE
   Resources/Pipelines/Email/pipeline.php
@@ -9731,7 +9733,8 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  From v4.2.5. A message whose tables point at each other in a loop can keep msgconvert reading for ever, so it is stopped after 120 seconds.
+  From v4.2.5. A message whose tables point at each other in a loop can keep msgconvert reading for ever, so it is stopped at its time limit.
+  From v4.3.5 the limit is Email's in --Maximum Per Conversion Runtime--, 120 seconds as shipped. It was the pipeline's own 120 seconds.
   A real message takes well under a second. The message is not converted again, because it would run out of time again.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -9849,7 +9852,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-48005, <SESSION_IDENTIFIER>: The markup converter was stopped after <SECONDS> seconds, as --Markup Conversion Timeout-- allows!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-48005, <SESSION_IDENTIFIER>: The markup converter was stopped after <SECONDS> seconds, as --Maximum Per Conversion Runtime-- allows!
 
 FILE
   Resources/Pipelines/Markup/pipeline.php
@@ -9861,9 +9864,10 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  From v4.2.5. Pandoc ran for as long as --Markup Conversion Timeout-- in config.php allows & was stopped. The Pandoc manual says a reader can
-  take pathologically long over some documents, & a PDF is typeset within the same time. A document that ran out of time is not converted again.
-  A long real document needs a higher limit. Raise it in config.php, keeping it below the PHP execution timer set in php.ini.
+  From v4.2.5. Pandoc ran for as long as its time limit allows & was stopped. From v4.3.5 the limit is Markup's in --Maximum Per Conversion
+  Runtime--, & $MarkupConversionTimeout is retired. The Pandoc manual says a reader can take pathologically long over some documents,
+  & a PDF is typeset within the same time. A document that ran out of time is not converted again.
+  A long real document needs a higher limit. Raise Markup's in config.php.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -9886,10 +9890,6 @@ WARNINGS ABOUT THE CONVERSIONS ADDED IN V4.2.5
   The Data pipeline raises this, from Resources/Pipelines/Data/pipeline.php.
     WARNING!!! A data conversion tool could not be started. PHP may have proc_open disabled.
       Dasel or yq was not run, & error 44000 or a shape or XML error follows. PHP's disable_functions setting is the usual cause.
-  The LaTeX & Markup pipelines raise these, from Resources/Pipelines/LaTeX/pipeline.php & Resources/Pipelines/Markup/pipeline.php.
-    WARNING!!! --LaTeX Conversion Timeout-- is not a whole number of seconds greater than 0, so 120 is used.
-    WARNING!!! --Markup Conversion Timeout-- is not a whole number of seconds greater than 0, so 120 is used.
-      The setting in config.php is missing or holds something else. Each conversion is given the default, & says so, until it is corrected.
   The Trace pipeline raises this, from Resources/Pipelines/Trace/pipeline.php.
     WARNING!!! The ImageMagick policy the Trace pipeline carries is missing, so this image is reduced under the host's own. Restore the pipeline from the release this installation came from.
       Policy/policy.xml beside the pipeline's converter is gone. The image is still read only by the decoder its extension names, & -v reports
@@ -9986,7 +9986,7 @@ ERROR DESCRIPTION
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 ERROR MESSAGE
-  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-49004, <SESSION_IDENTIFIER>: The graph converter was stopped after <SECONDS> seconds, as --Graph Conversion Timeout-- allows!
+  ERROR!!! <TIMESTAMP>, <APPLICATION_NAME>-49004, <SESSION_IDENTIFIER>: The graph converter was stopped after <SECONDS> seconds, as --Maximum Per Conversion Runtime-- allows!
 
 FILE
   Resources/Pipelines/Graph/pipeline.php
@@ -9998,9 +9998,10 @@ LOGGED
   YES
 
 ERROR DESCRIPTION
-  From v4.2.6. Graphviz ran for as long as --Graph Conversion Timeout-- in config.php allows & was stopped. A layout engine can take a very
-  long time over a large graph. A graph that ran out of time is not converted again.
-  A large real graph needs a higher limit. Raise it in config.php, keeping it below the PHP execution timer set in php.ini.
+  From v4.2.6. Graphviz ran for as long as its time limit allows & was stopped. From v4.3.5 the limit is Graph's in --Maximum Per
+  Conversion Runtime--, & $GraphConversionTimeout is retired. A layout engine can take a very long time over a large graph. A graph
+  that ran out of time is not converted again.
+  A large real graph needs a higher limit. Raise Graph's in config.php.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -10014,9 +10015,7 @@ ERROR NUMBER RESERVATION
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 WARNINGS ABOUT THE CONVERSIONS ADDED IN V4.2.6
   A warning carries no error number & never halts anything. Each says what happened & what was done about it.
-  The Graph pipeline raises these, from Resources/Pipelines/Graph/pipeline.php.
-    WARNING!!! --Graph Conversion Timeout-- is not a whole number of seconds greater than 0, so 120 is used.
-      The setting in config.php is missing or holds something else. Each conversion is given the default, & says so, until it is corrected.
+  The Graph pipeline raises this, from Resources/Pipelines/Graph/pipeline.php.
     WARNING!!! A graph named an image or a shape file, which was left out, because the Graph pipeline reads no file but the graph.
       A node in the graph named a file to draw, which Graphviz would read from wherever the graph said. The pipeline tells Graphviz it serves
       the web, so it reads no file but the graph, & the graph is drawn without it. A graph a stranger wrote can name any file on the server.
@@ -10623,10 +10622,10 @@ WARNINGS ABOUT PER CONVERSION LIMITS
   A warning carries no error number & never halts anything. Each says what happened & what was done about it.
   The Engine raises these, from Resources/Engine/engine.php, & the Setup Core the last, from Resources/Engine/Cores/setupCore.php.
   --Enable Per Conversion Limits-- runs each conversion's sandbox in a transient systemd scope with a ceiling on processor & memory,
-  which --Maximum Per Conversion Resources-- sets for each type. Without a scope a conversion runs at a lower priority & is not
-  limited. ABOUT_RESOURCE_RATE_LIMITING says how a limit is chosen.
-    WARNING!!! systemd-run is not installed. Per conversion limits fall back to scheduling priority only.
-    WARNING!!! A resource scope could not be created. <ADDITIONAL_DATA> Per conversion limits fall back to scheduling priority alone.
+  which --Maximum Per Conversion Resources-- sets for each type. Without a scope a conversion runs at a lower priority, & from v4.3.5
+  each of its processes has a data limit of that memory, through prlimit. ABOUT_RESOURCE_RATE_LIMITING says how a limit is chosen.
+    WARNING!!! systemd-run is not installed. Per conversion limits fall back to scheduling priority & a data limit on each process.
+    WARNING!!! A resource scope could not be created. <ADDITIONAL_DATA> Per conversion limits fall back to scheduling priority & a data limit on each process.
       No scope could be made for the web server account. What follows says whether -fp can enable lingering for it, or whether this
       kernel does not delegate cgroup controllers, which many NAS & appliance kernels do not & nothing here can change.
     WARNING!!! Per conversion limits are using a SYSTEM scope. This account holds systemd manage-units, which is enough to start a unit as root. Enable lingering for <ACCOUNT> with the -fp argument & remove that permission.
@@ -10640,12 +10639,39 @@ WARNINGS ABOUT PER CONVERSION LIMITS
     WARNING!!! The <PROFILE> sandbox profile asks for an address space limit & prlimit is not installed, so its conversion runs without one. util-linux provides prlimit.
       From v4.3.2, a profile setting AddressSpaceLimit is held to the memory its type is allowed, through prlimit, & the conversion runs
       without that ceiling where prlimit is missing, because a limit never refuses a conversion. Install util-linux.
+    WARNING!!! No resource scope can be made & prlimit is not installed, so this conversion runs with no memory ceiling. util-linux provides prlimit.
+      From v4.3.5, a conversion that runs without a scope is held to the memory its type is allowed as a data limit on each process, through
+      prlimit, & runs without it where prlimit is missing, because a limit never refuses a conversion. Install util-linux.
     WARNING!!! Per conversion resource limits could not be fully enabled. <NUMBER> step(s) completed.
       -fp gives the web server account a systemd manager of its own & the cgroup controllers a scope needs, & a step did not complete.
       Root's log says which. Conversions fall back to scheduling priority until it does.
     WARNING!!! This kernel delegates no cgroup controllers, so per conversion limits fall back to scheduling priority.
       -fp would give the web server account a systemd manager of its own, & this kernel gives it no controllers to limit with. Many
       NAS & appliance kernels do not, & nothing here can change that.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+WARNINGS ABOUT PER CONVERSION TIME LIMITS
+  A warning carries no error number & never halts anything. Each says what happened & what was done about it.
+  The Engine raises the first three, from Resources/Engine/engine.php, & the Pipeline Core the rest, from Resources/Engine/Cores/pipelineCore.php.
+  From v4.3.5 every conversion command runs inside timeout, for as many seconds as --Maximum Per Conversion Runtime-- gives its type, or
+  --Default Per Conversion Runtime-- gives a type it does not name. It applies whether or not --Enable Per Conversion Limits-- is TRUE.
+  ABOUT_RESOURCE_RATE_LIMITING says how it works.
+    WARNING!!! The <TYPE> time limit in --Maximum Per Conversion Runtime-- is not a whole number of seconds, so --Default Per Conversion Runtime-- is used.
+    WARNING!!! --Default Per Conversion Runtime-- is missing or is not a whole number of seconds, so 600 is used.
+      The figure in config.php holds something else, such as a unit, a fraction or a negative number. Each conversion of that type is given
+      the default, & says so, until it is corrected. A default that cannot be read is replaced by 600, which configuration cannot change.
+    WARNING!!! timeout is not installed, so this conversion runs with no time limit. coreutils provides timeout.
+      The conversion runs without a time limit, because a limit never refuses a conversion. Install coreutils.
+    WARNING!!! A converter ran out of time & was stopped. --Maximum Per Conversion Runtime-- sets how long each type of conversion may run.
+    WARNING!!! A converter ran out of time & was stopped, & what it left at <FILE_NAME> was removed. --Maximum Per Conversion Runtime-- sets how long each type of conversion may run.
+      A converter ran for as long as its type's time limit allows, & timeout stopped it. It is not asked again, because it would run out of
+      time again, & the pipeline's own error follows. A file it had begun is not the result, so it was removed. A crafted file can loop a
+      converter for ever, & a large real file may need more time than the limit. Raise that type's figure for the second.
+    WARNING!!! A converter ended on signal <NUMBER> before it finished, so what it left at <FILE_NAME> was removed.
+      A signal ended the converter part way through its file, so what it wrote is not the result. 9 is most often a memory ceiling, & a
+      converter it stopped is asked again where --File Operation Retry Count-- allows. 11, 6, 7, 8 & 4 are a crash, which is not.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -11351,7 +11377,8 @@ WARNINGS ABOUT SCANNING WITH CLAMAV & SCANCORE
     WARNING!!! ClamAV exited <NUMBER> scanning <FILE_NAME>, which is not a verdict.<ADDITIONAL_DATA>
     WARNING!!! ScanCore exited <NUMBER> scanning <FILE_NAME>, which is not a verdict.<ADDITIONAL_DATA>
       The scanner ended with a status that means neither clean nor found. 137 means it was killed, most often by its memory ceiling, &
-      what follows then says to raise the memory figure for Scan in --Maximum Per Conversion Resources--.
+      what follows then says to raise the memory figure for Scan in --Maximum Per Conversion Resources--. 124 means it reached its time
+      limit, from v4.3.5, which Scan's figure in --Maximum Per Conversion Runtime-- sets.
     WARNING!!! The chunk size configured for ScanCore is more than a quarter of its memory limit. ScanCore holds about three chunks at once, so a file larger than one chunk would exhaust its memory. A quarter is used instead. Set the chunk size to a quarter of the memory limit or less in config.php.
       The scan goes on with a chunk a quarter of the memory limit.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.1.7.
+// / v4.3.5.
 // / The archive extraction shared module, which is not a pipeline & extracts nothing on its own.
 // / It holds the extraction the Archive & Extractor pipelines both need, so neither depends on the other.
 // / The Archive pipeline extracts an archive to put what it holds into another, & the Extractor extracts one to give a user what it holds.
@@ -37,7 +37,7 @@ if (!isset($CoreLoaded) or $CoreLoaded !== TRUE) die('ERROR!!! HRConvert2-34000,
 // / -----------------------------------------------------------------------------------
 // / The version of this shared module. Read without executing this file, then matched
 // / exactly against the pin in getAcceptedSharedModules().
-$SharedModuleVersion = 'v4.1.7';
+$SharedModuleVersion = 'v4.3.5';
 // / -----------------------------------------------------------------------------------
 
 
@@ -420,7 +420,7 @@ function warnExtractionStopped($archiveName, $stopReason, $byteLimit, $entryLimi
   $WarningWasWritten = FALSE;
   if ($stopReason === 'bytes') $WarningWasWritten = warningEntry('The archive '.$archiveName.' grew past the '.describeByteCount($byteLimit).' --Maximum Extracted Size-- allows as it was extracted, so it was stopped & nothing it wrote was kept.');
   else if ($stopReason === 'entries') $WarningWasWritten = warningEntry('The archive '.$archiveName.' made more than the '.(int)$entryLimit.' files & folders --Maximum Extracted Files-- allows as it was extracted, so it was stopped & nothing it wrote was kept.');
-  else if ($stopReason === 'time') $WarningWasWritten = warningEntry('The archive '.$archiveName.' was still being extracted after an hour, so it was stopped & nothing it wrote was kept.');
+  else if ($stopReason === 'time') $WarningWasWritten = warningEntry('The archive '.$archiveName.' was still being extracted when its time ran out, so it was stopped & nothing it wrote was kept.');
   else if ($stopReason === 'failed') $WarningWasWritten = warningEntry('7-Zip reported a problem with the archive '.$archiveName.', such as a damaged file or a link leading out of it, so nothing it wrote was kept.');
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
   purgeSensitiveMemory($EnableMemoryProtection, $archiveName, $stopReason, $byteLimit, $entryLimit);
@@ -458,6 +458,8 @@ function extractArchiveItems($sevenZipBinary, $archivePath, $contentsFolder, $by
       $RefusalReason = 'process';
       errorEntry('7-Zip could not be started to extract '.basename((string)$archivePath).'. PHP may have proc_open disabled!', 39002, FALSE); }
     else if ($stopReason !== '') $RefusalReason = $stopReason;
+    // / 124 is the Engine's time limit, from v4.3.5, which may be shorter than the hour this module waits.
+    else if ($exitStatus === 124) $RefusalReason = 'time';
     else if ($exitStatus !== 0) $RefusalReason = 'failed';
     else $ItemsWereExtracted = TRUE;
     if ($RefusalReason !== '' && $RefusalReason !== 'process') warnExtractionStopped(basename((string)$archivePath), $RefusalReason, $byteLimit, $entryLimit); }
@@ -498,6 +500,8 @@ function streamArchiveMember($sevenZipBinary, $archivePath, $streamPath, $byteLi
       errorEntry('7-Zip could not be started to extract '.basename((string)$archivePath).'. PHP may have proc_open disabled!', 39002, FALSE); }
     else {
       if ($stopReason !== '') $RefusalReason = $stopReason;
+      // / 124 is the Engine's time limit, from v4.3.5, which may be shorter than the hour this module waits.
+      else if ($exitStatus === 124) $RefusalReason = 'time';
       else if ($exitStatus !== 0) $RefusalReason = 'failed';
       else $MemberWasStreamed = TRUE;
       if ($RefusalReason !== '') warnExtractionStopped(basename((string)$archivePath), $RefusalReason, $byteLimit, 0); } }

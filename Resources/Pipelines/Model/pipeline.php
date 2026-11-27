@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.3.
+// / v4.3.5.
 // / The Model pipeline's converter. pipelineCore.php loads it only to dispatch a Model conversion.
 // / Error block 9000 through 9008 belongs to this pipeline.
 // / Assimp & MeshLab come from verifiedToolPath().
@@ -766,6 +766,9 @@ function convertModels($pathname, $newPathname, $extension) {
       redeclare($lastCommand, $assimpCommand);
       list ($assimpData, $stageStatus) = runPipelineCommand($assimpCommand);
       redeclare($exitStatus, modelAttemptStatus($exitStatus, $stageStatus)); }
+    // / What a first stage the time limit stopped or a signal ended left between the stages is not a model, from v4.3.5, so it is taken
+    // / away & the second stage never reads it. The attempt is judged by the first stage's status, & pipelineRetryIsDue() says so once.
+    if (($conversionRoute === 'normalize' or $conversionRoute === 'bridge') && pipelineCommandWasInterrupted($stageStatus) && is_file($middlePath)) @unlink($middlePath);
     // / The second stage reads the model the first wrote, & runs only where the first left one, because the upload is read by one program.
     // / It is sandboxed separately & is judged separately. A first stage that ran does not entitle the second one to skip the check.
     if (($conversionRoute === 'normalize' or $conversionRoute === 'bridge') && is_file($middlePath) && !is_link($middlePath)) {
@@ -789,8 +792,8 @@ function convertModels($pathname, $newPathname, $extension) {
         redeclare($lastCommand, $meshlabCommand);
         list ($returnData, $stageStatus) = runPipelineCommand($meshlabCommand);
         redeclare($exitStatus, modelAttemptStatus($exitStatus, $stageStatus)); } }
-    // / An output a stopped converter left may be part of one, so it is taken away, & the attempt is made again where that is allowed.
-    if (pipelineCommandWasStopped($exitStatus) && is_file($workOutput)) @unlink($workOutput);
+    // / An output a converter that ended before it finished left may be part of one. pipelineRetryIsDue() takes it away, from v4.3.5, before
+    // / the attempt is made again where that is allowed. This pipeline took it away itself until then.
     // / Count the number of conversions to avoid infinite loops.
     $stopper++; }
   // / Every attempt was made & none left a file.

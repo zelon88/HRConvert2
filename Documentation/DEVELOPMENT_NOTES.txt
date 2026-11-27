@@ -933,7 +933,7 @@ the command, as TeX's settings do, so it holds where no sandbox could be built. 
 give a node a link, which Graphviz writes into an SVG as it was given, javascript: included, & the
 DATA directory's download & sandbox headers cover it as they cover every SVG. gv is the only input,
 because dot is a Word template to the Document family, & a layout engine can run a long time over a
-large graph, so --Graph Conversion Timeout-- bounds it.
+large graph, so $GraphConversionTimeout bounds it. From v4.3.5 the Engine's time limit for Graph does.
 
 RECIPE & OPF ARE REFUSED, & AN EPUB CANNOT BE. v4.2.7.
 A calibre recipe is a Python program calibre runs, & an OPF names by path the files calibre packs
@@ -2872,7 +2872,56 @@ because no test can set that time to the past & a deletion nobody can test is no
 
 A KERNEL THAT DELEGATES NO CGROUP CONTROLLERS CANNOT HOLD A PER CONVERSION LIMIT.
 That is the kernel's decision, & it is normal on a NAS or an appliance. Conversions there are
-still bounded by scheduling priority.
+still bounded by scheduling priority, & from v4.3.5 by a data limit on each process.
+
+EVERY COMMAND HAS A TIME LIMIT, & IT IS THE ENGINE'S. v4.3.5.
+Seven pipelines bounded their own converter, Graph, LaTeX, Markup & Scad from a setting each &
+Resvg, Email & Data from a figure in the code, & every other converter could run for ever. A
+converter that never finishes holds its worker, & with resource awareness off nothing reaps it.
+limitCommand() wraps every command sandboxCommand() returns, so the time limit went there, & the
+seven lost theirs. Each figure they used is the shipped figure for its type, but Resvg's, which is
+SVG's 300 now, because Inkscape had none & the two share a type.
+
+IT HAS A TABLE OF ITS OWN, & NOT A THIRD FIGURE IN --Maximum Per Conversion Resources--.
+The listener scales that table by load & hands it back as two figures, & parseConversionLimit()'s
+two figures are read by the Resource Manager & by --Minimum Per Conversion Resources-- too. A time
+limit must never shrink with load, because a loaded host makes a conversion slower, not cheaper.
+
+IT IS ON WHATEVER --Enable Per Conversion Limits-- SAYS. The seven timeouts held with the setting
+off, & a hang is not something an operator turns the ceilings off to allow.
+
+timeout IS OUTSIDE EVERYTHING & SENDS TERM ONLY. Outside, it stops the scope, nice & prlimit with the
+sandbox, & TERM to bubblewrap is never ignored, where a tool inside may catch it. A command it
+stops exits 124, which pipelineCommandWasStopped() does not count. With -k a stubborn command would
+be KILLed, & timeout then reports 137, which is asked again, so one hang would be three.
+systemd-run --scope, nice & prlimit each replace themselves with what they run, so bubblewrap's
+parent is timeout in every mode, & a supervisor that kills timeout still takes the sandbox down.
+
+THIS HOST'S SHELL DOES NOT REPLACE ITSELF WITH A COMMAND. Ubuntu 24.04's dash 0.5.12 keeps sh -c
+between PHP & the command, for exec(), shell_exec() & proc_open() alike. Killing that shell took
+bubblewrap down only because bubblewrap's parent was the shell. With timeout between them it left
+timeout running, & the sandbox under it until the limit. Identify's watchdog killed the shell, so
+it starts its command with exec now. The archive extraction stops every process under the shell,
+& the stream supervisor kills the PID a backgrounded job reports, which is timeout's.
+
+NOTHING AN INTERRUPTED COMMAND LEFT IS KEPT. Until v4.3.5 a converter a ceiling killed after writing
+part of its file left that part, so pipelineAttemptIsDue() saw a file & asked no more, & the part was
+offered. LibreOffice's module, OCR, Metadata, Archiver & PDF kept a part the same way, & Model's
+second stage read a part the first left. pipelineRetryIsDue() sees the path & the last status after
+every attempt, so the rule went there, & sixteen pipelines needed nothing. The rest run their command
+through runPipelineCommand() now, which says how it ended where shell_exec() did not, & hand the
+status to discardInterruptedOutput(). 124 & 129 through 159 count, & FFMPEG's 183, 234, 254 & 255 do
+not. A crash counts, so Dia's 139 on cgm removes the empty file it left at once.
+
+A DATA LIMIT, NOT AN ADDRESS SPACE LIMIT, WHERE NO SCOPE CAN BE MADE. v4.3.5.
+Measured with prlimit before it shipped. Chromium fails under an address space limit of 2G & runs
+under a data limit of 2G, because it reserves far more than it touches. Each process gets its type's
+whole memory figure. Every case of the format suite converts under the shipped figures, & the least
+each heavy converter needed was: LibreOffice under 128M, Inkscape, Resvg, Dia & mat2 under 128M,
+FFMPEG at 1080p under 512M, Calibre's PDF output, which is Chromium, 192M to 384M, XeLaTeX 256M to 288M
+whatever the document, because TeX's arrays are fixed, & PyMeshLab under 768M for a million triangles.
+XeLaTeX is the closest to its figure, LaTeX's & Markup's default 512M. A ClamAV database could not be
+measured here.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------

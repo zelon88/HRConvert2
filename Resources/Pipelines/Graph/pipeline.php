@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.3.1.
+// / v4.3.5.
 // / The Graph pipeline's converter. pipelineCore.php loads it only to dispatch a Graph conversion.
 // / Error block 49000 through 49004 belongs to this pipeline.
 // / Graphviz comes from verifiedToolPath().
@@ -73,11 +73,12 @@ function graphFirstError($outputLines) {
 // / A graph can name an image or a shape file for a node, which Graphviz would read from wherever the graph says. SERVER_NAME is set for it,
 // / so it reads no file but the graph, as Graphviz does for a web server, & leaves out what was named, which is warned about.
 // / The setting is passed with the command rather than kept in the graphviz sandbox profile, so it holds where no sandbox could be built too.
-// / --Graph Conversion Timeout-- stops it, because a large graph can take a layout engine a very long time.
+// / The Engine's time limit for Graph stops it, because a large graph can take a layout engine a very long time. It is --Maximum Per
+// / Conversion Runtime--'s from v4.3.5, & --Graph Conversion Timeout-- is retired.
 // / The function is longer than most, so it returns the six value contract, whose first value is its sanity check.
 function convertGraph($pathname, $newPathname, $extension) {
   // / Set variables.
-  global $Verbose, $Lol, $SleepTimer, $GraphConversionTimeout, $EnableMemoryProtection;
+  global $Verbose, $Lol, $SleepTimer, $EnableMemoryProtection;
   // / The six value pipeline contract. Success, errors, path, extension, filename & PID.
   $OutputFilename = basename($newPathname);
   $WorkerPID = 0;
@@ -86,12 +87,8 @@ function convertGraph($pathname, $newPathname, $extension) {
   $graphvizFormat = $graphvizCommand = $firstError = $outputLine = '';
   $commandOutput = $graphvizEnvironment = array();
   $exitStatus = -1;
-  $stopper = 0;
+  $stopper = $timeoutSeconds = 0;
   $sleepTime = $SleepTimer;
-  // / A local fallback configuration cannot overwrite, for a timeout that is missing or is not a whole number of seconds greater than 0.
-  $defaultTimeout = 120;
-  $timeoutSeconds = (is_numeric($GraphConversionTimeout) && (int)$GraphConversionTimeout > 0) ? (int)$GraphConversionTimeout : $defaultTimeout;
-  if ($timeoutSeconds === $defaultTimeout && (string)$GraphConversionTimeout !== (string)$defaultTimeout) warningEntry('--Graph Conversion Timeout-- is not a whole number of seconds greater than 0, so '.$defaultTimeout.' is used.');
   $graphvizFormat = graphFormatName(pathinfo((string)$pathname, PATHINFO_EXTENSION), $extension);
   // / Locate & verify Graphviz. A path is returned only when both succeeded.
   $graphvizBinary = verifiedToolPath('Graphviz');
@@ -104,7 +101,7 @@ function convertGraph($pathname, $newPathname, $extension) {
   if (!$ConversionErrors) {
     // / Build & sandbox the command once. It does not change between retries.
     $graphvizEnvironment = array('SERVER_NAME' => 'graph');
-    $graphvizCommand = 'timeout '.$timeoutSeconds.' '.escapeshellarg($graphvizBinary).' -T'.escapeshellarg($graphvizFormat).' -o '.escapeshellarg($newPathname).' '.escapeshellarg($pathname);
+    $graphvizCommand = escapeshellarg($graphvizBinary).' -T'.escapeshellarg($graphvizFormat).' -o '.escapeshellarg($newPathname).' '.escapeshellarg($pathname);
     list ($commandMayRun, $graphvizCommand) = sandboxCommand($graphvizCommand, $pathname, $newPathname, FALSE, 'graphviz', '', $graphvizEnvironment);
     if (!$commandMayRun) {
       $ConversionErrors = TRUE;
@@ -120,7 +117,7 @@ function convertGraph($pathname, $newPathname, $extension) {
         redeclare($commandOutput, array());
         exec($graphvizCommand.' 2>&1', $commandOutput, $exitStatus);
         // / Graphviz ends with a status other than 0 where it stopped, & a file it had begun is not the picture, so it is removed.
-        // / An exit status of 124 is the timeout command reporting that it stopped Graphviz.
+        // / An exit status of 124 is the Engine's time limit reporting that it stopped Graphviz.
         if ($exitStatus !== 0) {
           @unlink($newPathname);
           if ($exitStatus === 124) $timedOut = TRUE; }
@@ -133,7 +130,8 @@ function convertGraph($pathname, $newPathname, $extension) {
       if ($fileWasRefused) warningEntry('A graph named an image or a shape file, which was left out, because the Graph pipeline reads no file but the graph.');
       if ($timedOut) {
         $ConversionErrors = TRUE;
-        errorEntry('The graph converter was stopped after '.$timeoutSeconds.' seconds, as --Graph Conversion Timeout-- allows!', 49004, FALSE); }
+        list (, $timeoutSeconds) = resolveConversionRuntime('graphviz');
+        errorEntry('The graph converter was stopped after '.$timeoutSeconds.' seconds, as --Maximum Per Conversion Runtime-- allows!', 49004, FALSE); }
       // / Every attempt was made & none left a file. Why Graphviz stopped is said with the failure.
       else if (!file_exists($newPathname)) {
         $ConversionErrors = TRUE;
@@ -142,7 +140,7 @@ function convertGraph($pathname, $newPathname, $extension) {
       // / The output file is the only verdict on whether the conversion produced anything.
       if (!$timedOut && file_exists($newPathname)) $ConversionSuccess = TRUE; } }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $commandMayRun, $timedOut, $fileWasRefused, $graphvizBinary, $graphvizFormat, $graphvizCommand, $firstError, $outputLine, $commandOutput, $graphvizEnvironment, $exitStatus, $stopper, $sleepTime, $defaultTimeout, $timeoutSeconds, $pathname);
+  purgeSensitiveMemory($EnableMemoryProtection, $commandMayRun, $timedOut, $fileWasRefused, $graphvizBinary, $graphvizFormat, $graphvizCommand, $firstError, $outputLine, $commandOutput, $graphvizEnvironment, $exitStatus, $stopper, $sleepTime, $timeoutSeconds, $pathname);
   return array($ConversionSuccess, $ConversionErrors, $newPathname, $extension, $OutputFilename, $WorkerPID); }
 // / -----------------------------------------------------------------------------------
 

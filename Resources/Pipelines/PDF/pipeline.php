@@ -12,7 +12,7 @@
 // / a server for users of any web browser without authentication.
 // /
 // / File Information ...
-// / v4.2.1.
+// / v4.3.5.
 // / The PDF pipeline. pipelineCore.php loads it only to dispatch a Merge or a Split operation.
 // / Error block 42000 through 42019 belongs to this pipeline.
 // / It is an operation pipeline, which merges a selection of PDFs into one, or makes a PDF of each page of every PDF it is handed.
@@ -101,7 +101,11 @@ function removePageFolder($folderPath) {
 
 // / -----------------------------------------------------------------------------------
 // / A function to run a tool on PDFs inside the sandbox, in the folder it writes into.
-// / Accepts the command, a file it reads, the file it writes & the folder, in that order. Returns whether it ran & what it printed, in that order.
+// / Accepts the command, a file it reads, the file it writes & the folder, in that order. Returns whether it ran to its end & what it printed,
+// / in that order.
+// / A tool runs through runPipelineCommand(), from v4.3.5. One the time limit stopped or a signal ended did not run to its end, so nothing it
+// / wrote is merged or placed, & discardInterruptedOutput() removes the file it was writing. Until then a split it cut short placed the pages
+// / it had written.
 // / A merge reads many PDFs, which are copied into the folder & named relative to it, because the sandbox rewrites only the one input it is given.
 // / The folder is the working folder both inside the sandbox & outside it, so a relative name means the same file in either.
 function runPageTool($toolCommand, $readPath, $writePath, $folderPath) {
@@ -111,14 +115,16 @@ function runPageTool($toolCommand, $readPath, $writePath, $folderPath) {
   $ToolOutput = '';
   $sandboxIsAvailable = FALSE;
   $sandboxedCommand = '';
+  $exitStatus = 0;
   list ($sandboxIsAvailable, $sandboxedCommand) = sandboxCommand((string)$toolCommand, (string)$readPath, (string)$writePath, FALSE, 'poppler');
   if (!$sandboxIsAvailable) errorEntry('Bubblewrap is missing or non functional, so PDFs cannot be merged or split in isolation!', 42005, FALSE);
   else {
-    $ToolRan = TRUE;
-    $ToolOutput = (string)shell_exec('cd '.escapeshellarg((string)$folderPath).' && '.$sandboxedCommand.' 2>&1');
+    list ($ToolOutput, $exitStatus) = runPipelineCommand('cd '.escapeshellarg((string)$folderPath).' && '.$sandboxedCommand);
+    discardInterruptedOutput((string)$writePath, $exitStatus);
+    $ToolRan = !pipelineCommandWasInterrupted($exitStatus);
     if ($Verbose && trim($ToolOutput) !== '') logEntry('A PDF tool returned the following: '.$Lol.'  '.str_replace($Lol, $Lol.'  ', str_replace($Lolol, $Lol, trim($ToolOutput)))); }
   // / Manually clean up sensitive memory. Helps to keep track of variable assignments.
-  purgeSensitiveMemory($EnableMemoryProtection, $sandboxIsAvailable, $sandboxedCommand, $toolCommand, $readPath, $writePath, $folderPath);
+  purgeSensitiveMemory($EnableMemoryProtection, $sandboxIsAvailable, $sandboxedCommand, $exitStatus, $toolCommand, $readPath, $writePath, $folderPath);
   return array($ToolRan, $ToolOutput); }
 // / -----------------------------------------------------------------------------------
 

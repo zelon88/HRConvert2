@@ -644,7 +644,10 @@ The other three pieces are already written & are not yours to touch.
 
   THE TIMEOUT IS AN ADMINISTRATOR'S SETTING & NOT A SUGGESTION. $StreamWatchTimeout bounds
   every detached worker on the installation. Do not read it, do not extend it, & do not
-  implement a second timeout inside your pipeline.
+  implement a second timeout inside your pipeline. From v4.3.5 the Engine's time limit for the
+  worker's type bounds it too, as it bounds every command, & the worker ends at whichever comes
+  first. The PID a shell reports is then timeout's, & killing it takes the sandbox down, because
+  bubblewrap dies with its parent.
 
   max_execution_time HAS TO EXCEED IT. A PHP worker is held for the whole supervision
   window. verifyPhpConfiguration() already derives the limit from $StreamWatchTimeout &

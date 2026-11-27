@@ -668,3 +668,92 @@ RECONCILED, so an exact pin cannot tell the two files apart. Each HRConvert2 rel
 Engine, so no file of one release meets a pin of another, & nothing needs doing yet. A counter after the
 mark would need compareVersionMinimum() & both checkers to read it.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--v4.3.5--
+
+THREE ENGINE FILES CHANGED. EVERY COMMAND HAS A TIME LIMIT, & NOTHING AN INTERRUPTED COMMAND LEFT IS KEPT.
+
+  Resources/Engine/engine.php                 v4.3.3ur, changed again
+  Resources/Engine/Cores/pipelineCore.php     v4.3.2ur, changed again
+  Resources/Engine/config-template.php        v4.3.1r to v4.3.1ur
+
+The two already marked ur keep their stamps, as the note under v4.3.4 says a stamp ending ur does.
+Every change here is HRConvert2's & is un-reconciled. An application that takes them needs
+--config --repair once, because the template gains two settings the kernel then requires.
+
+--A time limit for every command--
+
+WHAT CHANGED. New resolveConversionRuntime($sandboxProfile) returns whether a time limit applies & its
+seconds. It reads the profile's type from new --Maximum Per Conversion Runtime-- & a type it does not
+name from new --Default Per Conversion Runtime--. 0 is no limit. An entry that is not a whole number of
+seconds is warned of & the default is used, & a default that is not one is warned of & 600 is used.
+limitCommand() puts timeout, found by locateDependency(), outside everything else it builds, for every
+command, whether or not --Enable Per Conversion Limits-- is TRUE. It sends TERM & never KILL, so a
+command it stops exits 124 & is never asked again. Where timeout is missing it warns & runs the command
+without one. The Engine's config model holds both settings, without a Default, so the template's is
+the one a reset writes.
+
+WHY. A converter that never finishes holds its worker for ever with resource awareness off. Seven of
+HRConvert2's pipelines bounded their own converter, each with its own figure, & the rest none, which the
+maintainer asked to have replaced by one clean, config driven limit at the Engine. Its own table, because the listener scales the resources table &
+hands it back as two figures, & a time limit must not shrink with load.
+
+HOW TO TAKE IT. Copy resolveConversionRuntime() & limitCommand(), & the two settings into the Engine's
+template & model. Each application's sandbox profiles name its types, & its table names the same
+types. A pipeline that ran a timeout of its own drops it & keeps its handling of 124.
+
+--A data limit where no scope can be made--
+
+WHAT CHANGED. Where per conversion limits are on & verifySystemdRun() reports no scope, limitCommand()
+adds prlimit --data, of the type's memory figure, nearest the command, beside the --as a profile may
+already ask for, so one prlimit sets both. Where prlimit is missing it warns, & a profile asking for
+an address space limit keeps its own warning. The two warnings verifySystemdRun() writes say the fallback
+is scheduling priority & a data limit on each process.
+
+WHY. Most hosts cannot make a scope for the web server account, so a conversion there had no memory
+ceiling at all. A data limit needs no permission & does not stop a tool that reserves more than it
+uses, as an address space limit does. Every case of HRConvert2's format suite converts under the
+template's figures. The figures measured are in DEVELOPMENT_NOTES.txt under Per Conversion Limits.
+
+--Nothing an interrupted command left is kept--
+
+WHAT CHANGED. The Pipeline Core gains pipelineCommandWasInterrupted($exitStatus), TRUE for 124 & for 129
+through 159, & discardInterruptedOutput($outputPath, $exitStatus), which removes a file an interrupted
+command left at the path & warns, & warns of the time limit whatever was left. pipelineRetryIsDue() calls
+it after every attempt, before it decides.
+
+WHY. A converter a ceiling killed after writing part of its file left the part, so no attempt followed
+& the part was offered as the result. The time limit makes a stopped command an ordinary event.
+
+HOW TO TAKE IT. Copy the two functions & pipelineRetryIsDue(). A pipeline that retries through it needs
+nothing more. One that runs a command another way runs it through runPipelineCommand() & hands the status
+to discardInterruptedOutput(). HRConvert2's OCR, Metadata, Archiver, PDF, Archive, Document & Model
+pipelines, & its libreOffice.php shared module, do.
+
+--A shell that stays--
+
+Ubuntu 24.04's dash keeps sh -c between PHP & a command, so bubblewrap's parent was the shell, & a pipeline
+that killed the shell took the sandbox with it. timeout is bubblewrap's parent now. A pipeline that kills a
+command it started has the shell replace itself, by starting the command with exec, as HRConvert2's Identify
+does, or stops every process under it, as its archive extraction does.
+
+--Seen, & left for the Engine's maintainer--
+
+THE MANIFEST DOES NOT NAME timeout OR prlimit. The Engine runs both, as it runs nice & systemd-run, &
+HRConvert2's copy of the manifest predates the 'system' type canon's v4.3.3 manifest declares Coreutils
+& Util-linux with. Canon's Coreutils names timeout. Its Util-linux names setsid alone, & needs prlimit,
+which HRConvert2's Engine has run since v4.3.2.
+
+THE SETUP CORE'S WARNING THAT A KERNEL DELEGATES NO CGROUP CONTROLLERS still says per conversion limits fall
+back to scheduling priority. They fall back to a data limit on each process too. The Setup Core is canon's,
+& unchanged here.
+
+THE ENGINE'S CONFIG MODEL GIVES --Maximum Per Conversion Resources-- A Default without Scan, which the
+template has, so a reset of that table writes one without it & the built-in Scan ceiling is used, with a
+warning. collectConfigModel() overwrites it with the template's wherever the template can be read.
+
+--Maximum Per Conversion Resources-- NAMES FIVE TYPES NO PROFILE HAS: Spreadsheet, Presentation, Audio,
+Subtitle & Stream. LibreOffice's work is Document's, & FFMPEG's is Video's, so the five are never read.
+The new runtime table names only the types the profiles name.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

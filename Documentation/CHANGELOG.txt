@@ -26,6 +26,14 @@ The authoritative list of dependencies is Resources/Engine/depends.php & Resourc
 
 
 --------------------
+COMMIT 11/28/2026
+v4.3.6 - A user scope's command runs again.
+
+-v4.3.6.
+-limitCommand() hands a user scope's variables to env. From v4.3.5 they came after timeout, which ran them as a program, so every conversion exited 127 where -fp had enabled lingering.
+-engine.php stays v4.3.3ur. The fix is canon v5.0.0's. ENGINE_RECONCILIATION_HRCONVERT2.txt says what changed.
+
+--------------------
 COMMIT 11/26/2026
 v4.3.5 - Limit every conversion's time & memory at the Engine.
 

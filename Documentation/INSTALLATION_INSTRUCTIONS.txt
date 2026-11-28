@@ -360,6 +360,11 @@ can be made, each process of a conversion now has a data limit of its type's mem
 --Maximum Per Conversion Resources--, through prlimit. A conversion that fails where it did not,
 with --Enable Per Conversion Limits-- TRUE, needs a larger figure for its type.
 
+THE v4.3.6 DROP IN NEEDS NO REPAIR. It adds no setting & changes none. Under v4.3.5 every conversion
+failed with exit status 127 on a host where -fp had enabled lingering for the web server user, which
+it does wherever per conversion limits are on. Where --Enable Per Conversion Limits-- was set FALSE
+to get round that, it can be set TRUE again.
+
 RUN  'sudo php convertCore.php --config --repair'  ONCE AFTER UNPACKING THE v4.3.4 DROP IN, &
 BEFORE -fp. v4.3.4 adds --Record Events--, TRUE as shipped, & every other command refuses with
 error 28000 until it has run. -u adds it by itself. -fp then makes Events in the data location,

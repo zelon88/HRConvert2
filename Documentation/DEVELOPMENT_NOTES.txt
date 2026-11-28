@@ -2894,8 +2894,15 @@ timeout IS OUTSIDE EVERYTHING & SENDS TERM ONLY. Outside, it stops the scope, ni
 sandbox, & TERM to bubblewrap is never ignored, where a tool inside may catch it. A command it
 stops exits 124, which pipelineCommandWasStopped() does not count. With -k a stubborn command would
 be KILLed, & timeout then reports 137, which is asked again, so one hang would be three.
-systemd-run --scope, nice & prlimit each replace themselves with what they run, so bubblewrap's
+env, systemd-run --scope, nice & prlimit each replace themselves with what they run, so bubblewrap's
 parent is timeout in every mode, & a supervisor that kills timeout still takes the sandbox down.
+
+A USER SCOPE'S VARIABLES GO TO env. v4.3.6.
+A shell reads a NAME=value word as a variable only at the start of a command. v4.3.5 put timeout in
+front of the variables a user manager is found by, & timeout ran the first of them as a program, so
+every command exited 127 on a host where -fp had enabled lingering. sandboxCommand() has always
+handed its own variables to env for the same reason. No suite here could make a user scope, which
+needs a user manager, & canon found it with a stand-in systemd-run.
 
 THIS HOST'S SHELL DOES NOT REPLACE ITSELF WITH A COMMAND. Ubuntu 24.04's dash 0.5.12 keeps sh -c
 between PHP & the command, for exec(), shell_exec() & proc_open() alike. Killing that shell took

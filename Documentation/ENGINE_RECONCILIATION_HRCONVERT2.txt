@@ -757,3 +757,26 @@ warning. collectConfigModel() overwrites it with the template's wherever the tem
 Subtitle & Stream. LibreOffice's work is Document's, & FFMPEG's is Video's, so the five are never read.
 The new runtime table names only the types the profiles name.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+--v4.3.6--
+
+ONE ENGINE FILE CHANGED, IN ONE LINE, & THE LINE IS CANON'S.
+
+  Resources/Engine/engine.php                 v4.3.3ur, changed again
+
+--A user scope's command runs--
+
+WHAT CHANGED. limitCommand() hands the variables a user manager is found by, XDG_RUNTIME_DIR &
+DBUS_SESSION_BUS_ADDRESS, to env in front of systemd-run, where it put them in front of systemd-run
+itself. The line & its comment are canon v5.0.0's, word for word, & the function is now canon's.
+
+WHY. v4.3.5 put timeout outside everything limitCommand() builds, & a user scope's variables then came
+after timeout's figure. timeout ran the first of them as a program, so every command exited 127 on a
+host whose web server account has a user manager, which -fp starts by enabling lingering wherever per
+conversion limits are on. A system scope & no scope set no variables, & were unaffected. Canon found it
+reconciling v4.3.5, & its test_limits-cli.php runs a real command through a stand-in systemd-run. None of
+HRConvert2's suites could make a user scope, which needs a user manager, so none saw it.
+
+HOW TO TAKE IT. Nothing. Canon v5.0.0 carries the same line.
+----------------------------------------------------------------------------------------------------------------------------------------------------------------

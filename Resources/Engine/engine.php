@@ -5258,7 +5258,8 @@ function limitCommand($command, $sandboxProfile) {
       // / --collect releases the unit when it exits, so a failed conversion leaves nothing.
       // / Swap is pinned to zero so a memory ceiling cannot be evaded by swapping.
       if ($scopeMode === 'user' or $scopeMode === 'system') {
-        $scopePrefix = $scopeEnvironment.escapeshellarg($scopeBinary)
+        // / The variables a user manager is found by go to env, never in front of systemd-run, because timeout comes first.
+        $scopePrefix = ($scopeEnvironment === '' ? '' : 'env '.$scopeEnvironment).escapeshellarg($scopeBinary)
           .($scopeMode === 'user' ? ' --user' : '')
           .' --scope --quiet --collect'
           .' -p CPUQuota='.(int)$cpuPercentage.'%'
